@@ -16,17 +16,14 @@
     .prompts { margin-top:30px; }
     .prompt-chip { display:inline-block; background:#334155; padding:8px 14px; margin:6px; border-radius:20px; cursor:pointer; font-size:14px; }
     .prompt-chip:hover { background:#475569; }
-    .logo { text-align:center; margin-bottom:20px; }
-    .logo img { max-width:150px; }
+    .status { color:#94a3b8; font-size:14px; margin-bottom:10px; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <img src="/static/logo_chính_thức.png" onerror="this.style.display='none'">
-    </div>
+    <div style="text-align:center"><img src="/static/logo_chính_thức.png" style="max-width:150px" onerror="this.style.display='none'"></div>
     <h1>🚀 Toàn AAS Web</h1>
-    <p>App riêng, không phụ thuộc bot Telegram.</p>
+    <p class="status">App riêng, không phụ thuộc bot Telegram. • {{ keys_count }} API key đang hoạt động</p>
 
     <textarea id="prompt" placeholder="Nhập prompt cần tạo..."></textarea>
     <button onclick="generate()">Tạo ngay</button>
@@ -35,7 +32,7 @@
 
     <div class="prompts">
       <h2>Gợi ý prompt</h2>
-      <div id="chips">
+      <div>
         {% for p in prompts %}
         <span class="prompt-chip" onclick="usePrompt(`{{ p|e }}`)">{{ p }}</span>
         {% endfor %}
@@ -44,28 +41,18 @@
   </div>
 
 <script>
-function usePrompt(text) {
-  document.getElementById('prompt').value = text;
-}
+function usePrompt(text) { document.getElementById('prompt').value = text; }
 async function generate() {
   const prompt = document.getElementById('prompt').value.trim();
   if(!prompt) return alert('Nhập prompt đã!');
-  const btn = event.target;
-  btn.disabled = true; btn.innerText = 'Đang tạo...';
-  const resultDiv = document.getElementById('result');
-  resultDiv.style.display = 'block';
-  resultDiv.innerText = 'Đang xử lý...';
-
-  const form = new FormData();
-  form.append('prompt', prompt);
-
+  const btn = event.target; btn.disabled = true; btn.innerText = 'Đang tạo...';
+  const resultDiv = document.getElementById('result'); resultDiv.style.display = 'block'; resultDiv.innerText = 'Đang xử lý...';
+  const form = new FormData(); form.append('prompt', prompt);
   try {
     const res = await fetch('/generate', { method:'POST', body:form });
     const data = await res.json();
-    resultDiv.innerText = data.result;
-  } catch(e) {
-    resultDiv.innerText = 'Lỗi: ' + e;
-  }
+    resultDiv.innerText = '✅ [' + data.model.toUpperCase() + ']\n\n' + data.result;
+  } catch(e) { resultDiv.innerText = 'Lỗi: ' + e; }
   btn.disabled = false; btn.innerText = 'Tạo ngay';
 }
 </script>
