@@ -1,0 +1,27 @@
+[
+  {
+    "id": 1,
+    "category": "ảnh sản phẩm",
+    "text": "ảnh sản phẩm [sản phẩm] trên nền trắng, ánh sáng studio, chi tiết cao, 4k"
+  },
+  {
+    "id": 2,
+    "category": "ảnh sản phẩm",
+    "text": "[sản phẩm] đặt trên bàn gỗ, phong cách lifestyle, ánh sáng tự nhiên buổi sáng"
+  },
+  {
+    "id": 3,
+    "category": "ads",
+    "text": "poster quảng cáo [sản phẩm], màu chủ đạo xanh dương, text 'MUA NGAY', phong cách hiện đại"
+  },
+  {
+    "id": 4,
+    "category": "ads",
+    "text": "banner 16:9 [chủ đề], chữ to rõ, CTA mạnh, phong cách tối giản"
+  },
+  {
+    "id": 5,
+    "category": "content",
+    "text": "ảnh minh họa [ý tưởng], phong cách flat illustration, màu pastel"
+  }
+]

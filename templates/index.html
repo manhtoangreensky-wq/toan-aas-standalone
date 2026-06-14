@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Toàn AAS - Web App</title>
+<style>
+body{font-family:system-ui;max-width:800px;margin:40px auto;padding:0 20px;background:#0f172a;color:#e2e8f0}
+h1{color:#38bdf8} textarea{width:100%;padding:12px;border-radius:8px;background:#1e293b;color:#fff;border:1px solid #334155}
+button{background:#38bdf8;color:#000;padding:10px 20px;border:none;border-radius:8px;font-weight:600;cursor:pointer;margin-top:10px}
+.card{background:#1e293b;padding:15px;border-radius:10px;margin:10px 0}
+</style>
+</head>
+<body>
+<h1>🚀 Toàn AAS Web</h1>
+<p>App riêng, không phụ thuộc bot Telegram.</p>
+<form id="form">
+<textarea name="prompt" rows="4" placeholder="Nhập prompt cần tạo..."></textarea>
+<button type="submit">Tạo ngay</button>
+</form>
+<div id="result"></div>
+<h2>Gợi ý prompt</h2>
+{% for p in prompts %}
+<div class="card"><b>{{p.category}}</b>: {{p.text}}</div>
+{% endfor %}
+<script>
+document.getElementById('form').onsubmit = async (e)=>{
+ e.preventDefault();
+ const fd = new FormData(e.target);
+ const res = await fetch('/generate',{method:'POST',body:fd});
+ const data = await res.json();
+ document.getElementById('result').innerHTML = `<div class="card">✅ ${data.result}</div>`;
+}
+</script>
+</body>
+</html>
