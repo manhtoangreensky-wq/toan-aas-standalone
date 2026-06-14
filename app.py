@@ -6,7 +6,8 @@ from config import settings
 from db import init_db
 import billing
 import user  
-import video # <--- THÊM DÒNG NÀY: Import module video
+import video 
+import ai_media # <--- THÊM DÒNG NÀY: Import trạm Media
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -27,11 +28,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Cắm điện cho các module
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
-app.include_router(user.router, prefix="/api/v1/user", tags=["User"])  
-app.include_router(video.router, prefix="/api/v1/video", tags=["Video AI"]) # <--- THÊM DÒNG NÀY
+app.include_router(user.router, prefix="/api/v1/user", tags=["User & Profile"])  
+app.include_router(video.router, prefix="/api/v1/video", tags=["Video AI"]) 
+app.include_router(ai_media.router, prefix="/api/v1/media", tags=["Media Services"]) # <--- THÊM DÒNG NÀY
 
 @app.get("/")
 async def root():
-    return {"status": "online", "message": "App đang chạy ngon lành nhé!"}
+    return {
+        "status": "online",
+        "system": settings.PROJECT_NAME,
+        "message": "App đang chạy ngon lành sếp nhé!"
+    }
