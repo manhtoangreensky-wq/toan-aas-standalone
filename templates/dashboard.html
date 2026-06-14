@@ -1,0 +1,75 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>TOAN AAS — Web Standalone</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#070b14;--card:#0f172a;--muted:#1e293b;--accent:#0ea5e9;--text:#e2e8f0}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Inter,sans-serif}
+.header{background:linear-gradient(135deg,#0ea5e9,#0284c7);padding:24px;text-align:center}
+.header h1{margin:0;font-size:28px} .header p{opacity:.9;margin:6px 0 0}
+.container{max-width:1200px;margin:0 auto;padding:24px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:16px;margin-top:20px}
+.card{background:var(--card);border:1px solid #1e293b;border-radius:16px;padding:20px;cursor:pointer;transition:.2s}
+.card:hover{border-color:var(--accent);transform:translateY(-2px)}
+.card .icon{font-size:32px;margin-bottom:8px} .card h3{margin:0 0 4px;font-size:18px} .card p{margin:0;color:#94a3b8;font-size:14px}
+.status{text-align:center;color:#94a3b8;margin:12px 0}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;padding:20px;z-index:100}
+.modal.active{display:flex}
+.modal-content{background:var(--card);border-radius:16px;width:100%;max-width:800px;max-height:90vh;display:flex;flex-direction:column}
+.modal-head{padding:20px;border-bottom:1px solid #1e293b;display:flex;justify-content:space-between;align-items:center}
+.modal-body{padding:20px;overflow:auto;flex:1}
+textarea{width:100%;height:140px;background:var(--muted);border:1px solid #334155;color:#fff;padding:12px;border-radius:10px;font-size:15px}
+.btn{background:var(--accent);color:#001018;border:none;padding:10px 20px;border-radius:10px;font-weight:600;cursor:pointer;margin-top:12px}
+.result{background:var(--muted);padding:16px;border-radius:10px;margin-top:16px;white-space:pre-wrap;min-height:80px}
+.close{cursor:pointer;font-size:24px}
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>👑 TOAN AAS — AI AUTOMATION SYSTEM</h1>
+  <p>Trợ lý AI giúp bạn làm việc nhanh hơn mỗi ngày</p>
+</div>
+<div class="container">
+  <div class="status">🎁 Số dư: Vô hạn Xu • {{ keys }} API key hoạt động • Hạng: 👑 OWNER</div>
+  <div class="grid">
+    {% for m in modules %}
+    <div class="card" onclick="openModule('{{m.id}}','{{m.name}}')">
+      <div class="icon">{{m.icon}}</div>
+      <h3>{{m.name}}</h3>
+      <p>{{m.desc}}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="modal" id="modal">
+  <div class="modal-content">
+    <div class="modal-head">
+      <h2 id="modalTitle"></h2>
+      <span class="close" onclick="closeModal()">&times;</span>
+    </div>
+    <div class="modal-body">
+      <textarea id="prompt" placeholder="Nhập yêu cầu..."></textarea>
+      <button class="btn" onclick="generate()">Tạo ngay</button>
+      <div id="result" class="result" style="display:none"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+let currentModule='';
+function openModule(id,name){currentModule=id;document.getElementById('modalTitle').innerText=name;document.getElementById('modal').classList.add('active');}
+function closeModal(){document.getElementById('modal').classList.remove('active');}
+async function generate(){
+  const p=document.getElementById('prompt').value; if(!p)return;
+  const res=document.getElementById('result'); res.style.display='block'; res.innerText='Đang tạo...';
+  const fd=new FormData(); fd.append('module',currentModule); fd.append('prompt',p);
+  const r=await fetch('/api/generate',{method:'POST',body:fd}); const d=await r.json();
+  res.innerText=d.result;
+}
+</script>
+</body>
+</html>

@@ -1,123 +1,94 @@
 
-from fastapi import FastAPI, Request, Form
+"""
+TOAN AAS WEB STANDALONE - Tách từ bot.py V15.2
+Chạy độc lập, không cần Telegram
+"""
+import os, json, sqlite3, datetime, random, asyncio
+from fastapi import FastAPI, Request, Form, UploadFile, File
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
-from fastapi.responses import JSONResponse
-import json, sqlite3, os, datetime, random
+from fastapi.responses import JSONResponse, FileResponse
+from openai import OpenAI
 
-app = FastAPI()
+app = FastAPI(title="TOAN AAS Web")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-with open("prompts.json", "r", encoding="utf-8") as f:
-    PROMPTS = json.load(f)
-
-DB_PATH = os.getenv("DB_PATH", "/data/toan_aas.db")
+# DB
+DB_PATH = os.getenv("DB_PATH", "/data/toan_aas_web.db")
 os.makedirs(os.path.dirname(DB_PATH), exist_ok=True)
 conn = sqlite3.connect(DB_PATH, check_same_thread=False)
-conn.execute("""
-CREATE TABLE IF NOT EXISTS history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    prompt TEXT,
-    result TEXT,
-    model TEXT,
-    created_at TEXT
-)
-""")
+conn.execute("""CREATE TABLE IF NOT EXISTS history (
+    id INTEGER PRIMARY KEY, module TEXT, prompt TEXT, result TEXT, created_at TEXT
+)""")
 conn.commit()
 
-def get_api_keys():
+def get_keys():
     keys = []
-    for k, v in os.environ.items():
-        if k.startswith("OPENAI_API_KEY") and v and v.startswith("sk-"):
-            keys.append(("openai", v))
-    for k, v in os.environ.items():
-        if k.startswith("GEMINI_API_KEY") and v and len(v) > 20:
-            keys.append(("gemini", v))
+    for k,v in os.environ.items():
+        if k.startswith("OPENAI_API_KEY") and v.startswith("sk-"): keys.append(("openai",v))
+        if k.startswith("GEMINI_API_KEY") and len(v)>20: keys.append(("gemini",v))
     return keys
 
-API_KEYS = get_api_keys()
+KEYS = get_keys()
 
-def generate_with_openai(prompt, api_key):
+async def ai_generate(prompt, system="Bạn là trợ lý TOAN AAS"):
+    if not KEYS:
+        return f"[DEMO] {prompt}"
+    provider,key = random.choice(KEYS)
     try:
-        from openai import OpenAI
-        client = OpenAI(api_key=api_key)
-        resp = client.chat.completions.create(
-            model="gpt-4o-mini",
-            messages=[{"role":"user","content": "Bạn là trợ lý content marketing Việt Nam. Trả lời ngắn gọn, thực tế: " + prompt}],
-            max_tokens=900
-        )
-        return resp.choices[0].message.content
+        if provider=="openai":
+            client = OpenAI(api_key=key)
+            r = client.chat.completions.create(model="gpt-4o-mini",
+                messages=[{"role":"system","content":system},{"role":"user","content":prompt}], max_tokens=1000)
+            return r.choices[0].message.content
+        else:
+            import google.generativeai as genai
+            genai.configure(api_key=key)
+            model = genai.GenerativeModel("gemini-1.5-flash-latest")
+            return model.generate_content(prompt).text
     except Exception as e:
-        return f"[OpenAI lỗi: {e}]"
+        return f"Lỗi: {e}"
 
-def generate_with_gemini(prompt, api_key):
-    try:
-        import google.generativeai as genai
-        genai.configure(api_key=api_key)
-        # Fix model name
-        model = genai.GenerativeModel("gemini-1.5-flash-latest")
-        resp = model.generate_content(prompt)
-        return resp.text
-    except Exception as e:
-        # fallback to pro
-        try:
-            model = genai.GenerativeModel("gemini-pro")
-            resp = model.generate_content(prompt)
-            return resp.text
-        except Exception as e2:
-            return f"[Gemini lỗi: {e2}]"
+def log(module, prompt, result):
+    conn.execute("INSERT INTO history VALUES (NULL,?,?,?,?)",
+        (module,prompt,result,datetime.datetime.now().isoformat()))
+    conn.commit()
 
 @app.get("/")
 async def home(request: Request):
-    cur = conn.execute("SELECT COUNT(*) FROM history")
-    total = cur.fetchone()[0]
-    cur = conn.execute("SELECT COUNT(DISTINCT date(created_at)) FROM history")
-    days = cur.fetchone()[0] or 1
-    return templates.TemplateResponse(request, "index.html", {
-        "request": request,
-        "prompts": PROMPTS,
-        "keys_count": len(API_KEYS),
-        "total": total,
-        "avg_per_day": round(total/days,1)
-    })
+    modules = [
+        {"id":"content","icon":"🎬","name":"Tạo nội dung","desc":"Kịch bản video, caption, hashtag"},
+        {"id":"ai","icon":"🤖","name":"Hỏi AI","desc":"Viết bài, ý tưởng, code"},
+        {"id":"docs","icon":"📄","name":"Tài liệu","desc":"PDF sang Word, ảnh sang PDF"},
+        {"id":"image","icon":"🖼","name":"Hình ảnh","desc":"Tạo ảnh AI, tách nền"},
+        {"id":"music","icon":"🎵","name":"Nhạc / SFX","desc":"Tìm nhạc, tạo prompt"},
+        {"id":"voice","icon":"🎤","name":"Voice","desc":"TTS, bóc băng audio"},
+        {"id":"translate","icon":"🌐","name":"Dịch thuật","desc":"Dịch văn bản, phụ đề"},
+        {"id":"memory","icon":"🧠","name":"Ghi nhớ","desc":"Lưu ghi chú, nhắc việc"},
+        {"id":"xu","icon":"💳","name":"Xu dịch vụ","desc":"Nạp Xu, bảng giá"},
+    ]
+    return templates.TemplateResponse("dashboard.html", {"request":request,"modules":modules,"keys":len(KEYS)})
 
-@app.post("/generate")
-async def generate(prompt: str = Form(...)):
-    if not API_KEYS:
-        result = f"Demo: {prompt}\n\nThêm OPENAI_API_KEY hoặc GEMINI_API_KEY vào Shared Variables để dùng AI thật."
-        model_used = "demo"
-    else:
-        provider, key = random.choice(API_KEYS)
-        if provider == "openai":
-            result = generate_with_openai(prompt, key)
-            model_used = "openai"
-        else:
-            result = generate_with_gemini(prompt, key)
-            model_used = "gemini"
-            if "lỗi" in result.lower() and any(k[0]=="openai" for k in API_KEYS):
-                # auto fallback
-                o_key = [k[1] for k in API_KEYS if k[0]=="openai"][0]
-                result = generate_with_openai(prompt, o_key)
-                model_used = "openai-fallback"
+@app.post("/api/generate")
+async def generate(module: str = Form(...), prompt: str = Form(...)):
+    systems = {
+        "content":"Bạn là chuyên gia content marketing Việt Nam",
+        "ai":"Bạn là trợ lý AI đa năng",
+        "image":"Bạn tạo prompt ảnh Midjourney chi tiết",
+        "voice":"Bạn viết kịch bản voice",
+        "translate":"Bạn dịch chính xác",
+    }
+    result = await ai_generate(prompt, systems.get(module,"Bạn là TOAN AAS"))
+    log(module,prompt,result)
+    return {"result":result}
 
-    conn.execute(
-        "INSERT INTO history (prompt, result, model, created_at) VALUES (?, ?, ?, ?)",
-        (prompt, result, model_used, datetime.datetime.now().isoformat())
-    )
-    conn.commit()
-    return JSONResponse({"result": result, "model": model_used})
-
-@app.get("/history")
+@app.get("/api/history")
 async def history():
-    cur = conn.execute("SELECT prompt, result, model, created_at FROM history ORDER BY id DESC LIMIT 100")
-    rows = [{"prompt": r[0], "result": r[1], "model": r[2], "time": r[3][:16].replace("T"," ")} for r in cur.fetchall()]
-    return JSONResponse(rows)
+    cur = conn.execute("SELECT module,prompt,result,created_at FROM history ORDER BY id DESC LIMIT 50")
+    return [{"module":r[0],"prompt":r[1],"result":r[2],"time":r[3][:16]} for r in cur.fetchall()]
 
-@app.get("/stats")
-async def stats():
-    cur = conn.execute("SELECT model, COUNT(*) FROM history GROUP BY model")
-    by_model = {r[0]: r[1] for r in cur.fetchall()}
-    cur = conn.execute("SELECT date(created_at) as d, COUNT(*) FROM history GROUP BY d ORDER BY d DESC LIMIT 7")
-    by_day = [{"date": r[0], "count": r[1]} for r in cur.fetchall()][::-1]
-    return JSONResponse({"by_model": by_model, "by_day": by_day})
+# Run
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT","8000")))
