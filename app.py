@@ -6,6 +6,7 @@ from contextlib import asynccontextmanager
 from config import settings
 from db import init_db
 import billing
+import user  
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -26,13 +27,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Gắn module billing vào
+# Gắn các Module vào hệ thống
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
+app.include_router(user.router, prefix="/api/v1/user", tags=["User & Profile"])  
 
 @app.get("/")
 async def root():
     return {
         "status": "online",
         "system": settings.PROJECT_NAME,
-        "message": "App đang chạy ngon lành sếp nhé!"
+        "message": "App đang chạy ngon lành nhé!"
     }
