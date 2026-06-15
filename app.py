@@ -1,16 +1,16 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+import logging
 
-# Khởi tạo thông số hệ thống
 from config import settings
 from db import init_db
 
-# Ép hệ thống tự động vá Database ngay khi khởi động
+# Tự động vá DB khi khởi động
 import migrate_db
 migrate_db.run_migration()
 
-# Import các Module tính năng (Chỉ gọi 1 lần cho gọn nhẹ)
+# Import các modules
 import auth_ops
 import admin_ops
 import billing
@@ -32,7 +32,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- ĐĂNG KÝ CÁC API ROUTER CHUẨN ---
+# --- ĐĂNG KÝ ROUTER ---
 app.include_router(auth_ops.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(admin_ops.router, prefix="/api/v1/admin", tags=["Admin"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
@@ -44,17 +44,16 @@ app.include_router(media_ops.router, prefix="/api/v1/media-ops", tags=["Media"])
 app.include_router(campaign_ops.router, prefix="/api/v1/campaign", tags=["Campaign"])
 app.include_router(report.router, prefix="/api/v1/report", tags=["Report"])
 
-# --- HÀM TỐI ƯU ĐỌC FILE GIAO DIỆN (Tránh lỗi 500 nếu thiếu file) ---
+# --- ĐIỀU HƯỚNG GIAO DIỆN ---
 def get_html(file_name):
     try:
         with open(file_name, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except Exception:
-        return HTMLResponse(content=f"<h1 style='color:red;'>Lỗi: Không tìm thấy file {file_name}</h1>")
+        return HTMLResponse(content=f"<h1>Lỗi: Không tìm thấy giao diện {file_name}</h1>", status_code=404)
 
-# --- CÁC ĐƯỜNG LINK GIAO DIỆN WEB ---
 @app.get("/login")
-async def login_page(): return get_html("auth.html") # Đã trỏ về bản auth.html mới
+async def login_page(): return get_html("auth.html")
 
 @app.get("/")
 async def root_page(): return get_html("index.html")

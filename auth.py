@@ -25,3 +25,16 @@ async def logout(response: Response):
     """API Đăng xuất, hủy thẻ Cookie"""
     response.delete_cookie("admin_token")
     return {"success": True}
+
+@router.get("/me/{user_id}")
+async def get_my_profile(user_id: str):
+    conn = db_connect()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT username, role, credits FROM users WHERE user_id=?", (user_id,))
+        user = c.fetchone()
+        if user:
+            return {"success": True, "username": user[0], "role": user[1], "credits": user[2]}
+        return {"success": False, "message": "Không tìm thấy người dùng"}
+    finally:
+        conn.close()
