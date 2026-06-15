@@ -3,163 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TOAN AAS - Trợ Lý AI</title>
+    <title>AAS - AI Assistant</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #0f172a; color: white; margin: 0; overflow: hidden; }
-        .app-container { max-width: 480px; margin: 0 auto; background-color: #0f172a; height: 100vh; display: flex; flex-direction: column; position: relative; }
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-header { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.05); }
-    </style>
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body>
+<body class="bg-white h-screen flex flex-col overflow-hidden text-slate-800">
 
-<div class="app-container">
-    
-    <div class="glass-header p-4 flex justify-between items-center z-20 absolute top-0 w-full">
-        <a href="/" class="text-slate-300 hover:text-white transition p-2"><i class="fas fa-chevron-left text-xl"></i></a>
-        <div class="text-center">
-            <h1 class="font-bold text-sm text-white flex items-center justify-center gap-2">
-                <i class="fas fa-robot text-blue-400"></i> Trợ Lý TOAN AAS
-            </h1>
-            <p class="text-[10px] text-emerald-400 flex items-center justify-center gap-1"><i class="fas fa-circle text-[6px]"></i> Đang trực tuyến (2 Xu/Lần)</p>
-        </div>
-        <div class="flex flex-col items-end">
-            <p class="text-[10px] text-slate-400">Ví Xu</p>
-            <p class="text-xs font-bold text-blue-400" id="wallet-balance">...</p>
-        </div>
-    </div>
-
-    <div class="flex-1 overflow-y-auto no-scrollbar p-4 pt-20 pb-24 flex flex-col gap-4" id="chat-box">
-        
-        <div class="flex gap-3 max-w-[85%]">
-            <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0 shadow-lg">
-                <i class="fas fa-robot text-xs"></i>
-            </div>
-            <div class="bg-slate-800 p-3 rounded-2xl rounded-tl-sm text-sm text-slate-200 border border-slate-700 shadow-md">
-                Xin chào Sếp! Tôi là trợ lý AI thông minh của TOAN AAS. Sếp muốn dịch thuật, viết kịch bản, hay tra cứu thông tin gì hôm nay?
+    <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center justify-between z-10 shadow-sm">
+        <div class="flex items-center gap-3">
+            <button onclick="history.back()" class="text-slate-500 hover:text-slate-800 text-xl px-2"><i class="fas fa-arrow-left"></i></button>
+            <div class="h-10 w-10 bg-gradient-to-tr from-sky-400 to-blue-600 rounded-full flex items-center justify-center text-white"><i class="fas fa-robot"></i></div>
+            <div>
+                <h1 class="font-bold text-slate-800 leading-tight">TOAN AI</h1>
+                <p class="text-[10px] text-emerald-500 font-bold"><i class="fas fa-circle text-[8px] mr-1"></i>Trực tuyến</p>
             </div>
         </div>
-
-    </div>
-
-    <div class="absolute bottom-0 w-full bg-[#1e293b] border-t border-slate-700 p-3 flex items-end gap-2 pb-safe z-20">
-        <button class="h-10 w-10 flex-shrink-0 text-slate-400 hover:text-blue-400 transition"><i class="fas fa-paperclip text-lg"></i></button>
-        <div class="flex-1 bg-slate-800 rounded-2xl border border-slate-700 flex items-center overflow-hidden">
-            <textarea id="chat-input" rows="1" class="w-full bg-transparent text-white text-sm px-4 py-3 outline-none resize-none no-scrollbar max-h-24" placeholder="Hỏi tôi bất cứ điều gì..."></textarea>
+        <div class="bg-emerald-50 text-emerald-600 px-3 py-1 rounded-full text-xs font-bold border border-emerald-200">
+            <span id="xu-balance">...</span> Xu
         </div>
-        <button id="btn-send" onclick="sendMessage()" class="h-11 w-11 flex-shrink-0 bg-blue-600 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-600/30 hover:bg-blue-500 transition active:scale-95">
-            <i class="fas fa-paper-plane text-sm"></i>
+    </header>
+
+    <main class="flex-1 overflow-y-auto p-4 bg-slate-50 space-y-4" id="chat-box">
+        <div class="flex gap-3">
+            <div class="h-8 w-8 bg-blue-600 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs"><i class="fas fa-robot"></i></div>
+            <div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-sm text-sm text-slate-700 shadow-sm max-w-[85%]">
+                Xin chào <b id="chat-username">Bạn</b>! Tôi là Trợ lý AI của TOAN AAS. Mỗi câu trả lời sẽ tiêu tốn <b>2 Xu</b>. Tôi có thể giúp gì cho bạn hôm nay?
+            </div>
+        </div>
+    </main>
+
+    <div class="bg-white border-t border-slate-200 p-3 pb-6 flex gap-2 items-end z-10">
+        <textarea id="prompt-input" rows="1" class="flex-1 bg-slate-100 border border-slate-200 rounded-2xl p-3 text-sm outline-none focus:border-blue-500 resize-none max-h-32" placeholder="Hỏi tôi bất cứ điều gì..."></textarea>
+        <button onclick="askAI()" id="btn-send" class="h-11 w-11 bg-blue-600 text-white rounded-full flex-shrink-0 flex items-center justify-center hover:bg-blue-700 transition shadow-md shadow-blue-500/30">
+            <i class="fas fa-paper-plane"></i>
         </button>
     </div>
 
-</div>
+    <script>
+        const USER_ID = localStorage.getItem('user_id');
+        const USERNAME = localStorage.getItem('username');
+        if(!USER_ID) window.location.href = '/login';
+        
+        document.getElementById('chat-username').innerText = USERNAME;
 
-<script>
-    const USER_ID = localStorage.getItem('user_id');
-    if(!USER_ID) { window.location.href = '/login'; }
-
-    // Tải số dư Xu
-    async function loadBalance() {
-        try {
-            const res = await fetch(`/api/v1/auth/me/${USER_ID}`);
-            const data = await res.json();
-            if(data.success) {
-                document.getElementById('wallet-balance').innerText = data.credits.toLocaleString('vi-VN');
-            }
-        } catch(e) {}
-    }
-
-    // Tự động kéo cuộn xuống cuối
-    function scrollToBottom() {
-        const chatBox = document.getElementById('chat-box');
-        chatBox.scrollTop = chatBox.scrollHeight;
-    }
-
-    // Gửi tin nhắn
-    async function sendMessage() {
-        const input = document.getElementById('chat-input');
-        const text = input.value.trim();
-        if(!text) return;
-
-        const chatBox = document.getElementById('chat-box');
-        const btnSend = document.getElementById('btn-send');
-
-        // 1. In tin nhắn của User ra màn hình
-        chatBox.innerHTML += `
-            <div class="flex gap-3 max-w-[85%] self-end ml-auto">
-                <div class="bg-blue-600 p-3 rounded-2xl rounded-tr-sm text-sm text-white shadow-md">${text.replace(/\\n/g, '<br>')}</div>
-            </div>
-        `;
-        input.value = '';
-        input.style.height = 'auto'; // Reset chiều cao textarea
-        scrollToBottom();
-
-        // 2. Hiện trạng thái AI đang gõ
-        const typingId = 'typing-' + Date.now();
-        chatBox.innerHTML += `
-            <div id="${typingId}" class="flex gap-3 max-w-[85%]">
-                <div class="h-8 w-8 rounded-full bg-slate-700 flex items-center justify-center text-slate-400 flex-shrink-0"><i class="fas fa-robot text-xs"></i></div>
-                <div class="bg-slate-800 p-3 rounded-2xl rounded-tl-sm text-sm text-slate-400 border border-slate-700 flex gap-1 items-center">
-                    <span class="animate-bounce">•</span><span class="animate-bounce delay-75">•</span><span class="animate-bounce delay-150">•</span>
-                </div>
-            </div>
-        `;
-        scrollToBottom();
-
-        btnSend.disabled = true;
-
-        try {
-            // 3. Gọi API
-            const res = await fetch('/api/v1/assistant/ask', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ user_id: USER_ID, prompt: text })
-            });
-            const data = await res.json();
-            
-            // Xóa trạng thái đang gõ
-            document.getElementById(typingId).remove();
-
-            if(data.success) {
-                // In câu trả lời của AI
-                chatBox.innerHTML += `
-                    <div class="flex gap-3 max-w-[90%]">
-                        <div class="h-8 w-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0 shadow-lg"><i class="fas fa-robot text-xs"></i></div>
-                        <div class="bg-slate-800 p-3 rounded-2xl rounded-tl-sm text-sm text-slate-200 border border-slate-700 shadow-md leading-relaxed">
-                            ${data.reply.replace(/\\n/g, '<br>')}
-                        </div>
-                    </div>
-                `;
-                // Cập nhật lại số dư Xu ngay lập tức
-                document.getElementById('wallet-balance').innerText = data.remaining_xu.toLocaleString('vi-VN');
-            } else {
-                chatBox.innerHTML += `
-                    <div class="flex gap-3 max-w-[85%]">
-                        <div class="bg-red-500/20 p-3 rounded-2xl rounded-tl-sm text-sm text-red-400 border border-red-500/30">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> ${data.message}
-                        </div>
-                    </div>
-                `;
-            }
-        } catch (error) {
-            document.getElementById(typingId).remove();
-            chatBox.innerHTML += `<div class="text-xs text-red-500 text-center my-2">Lỗi mất kết nối mạng.</div>`;
-        } finally {
-            btnSend.disabled = false;
-            scrollToBottom();
+        // Lấy số dư hiện tại
+        async function loadBalance() {
+            try {
+                const res = await fetch(`/api/v1/auth/me/${USER_ID}`);
+                const data = await res.json();
+                if(data.success) document.getElementById('xu-balance').innerText = data.credits;
+            } catch(e) {}
         }
-    }
+        loadBalance();
 
-    // Mở rộng ô text khi gõ nhiều dòng
-    document.getElementById('chat-input').addEventListener('input', function() {
-        this.style.height = 'auto';
-        this.style.height = (this.scrollHeight) + 'px';
-    });
+        // Tự động kéo ô nhập liệu dài ra khi gõ
+        const input = document.getElementById('prompt-input');
+        input.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = (this.scrollHeight) + 'px';
+        });
 
-    document.addEventListener('DOMContentLoaded', loadBalance);
-</script>
+        const chatBox = document.getElementById('chat-box');
+
+        function appendMessage(sender, text, isUser) {
+            const div = document.createElement('div');
+            div.className = `flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`;
+            
+            const avatar = isUser ? 
+                `<div class="h-8 w-8 bg-slate-800 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs font-bold">${sender.charAt(0)}</div>` :
+                `<div class="h-8 w-8 bg-blue-600 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs"><i class="fas fa-robot"></i></div>`;
+            
+            const bubbleClasses = isUser ? 
+                'bg-blue-600 text-white rounded-2xl rounded-tr-sm shadow-md shadow-blue-500/20' : 
+                'bg-white border border-slate-200 text-slate-700 shadow-sm rounded-2xl rounded-tl-sm';
+
+            div.innerHTML = `
+                ${avatar}
+                <div class="${bubbleClasses} p-3 text-sm max-w-[85%] whitespace-pre-wrap leading-relaxed">${text}</div>
+            `;
+            chatBox.appendChild(div);
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function askAI() {
+            const prompt = input.value.trim();
+            if(!prompt) return;
+
+            // Xóa input
+            input.value = '';
+            input.style.height = 'auto';
+            
+            // Hiện tin nhắn người dùng
+            appendMessage(USERNAME, prompt, true);
+            
+            // Nút loading
+            const btn = document.getElementById('btn-send');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            // Thêm bubble loading của AI
+            const loadingId = 'loading-' + Date.now();
+            chatBox.innerHTML += `<div id="${loadingId}" class="flex gap-3"><div class="h-8 w-8 bg-blue-600 rounded-full flex-shrink-0 flex items-center justify-center text-white text-xs"><i class="fas fa-robot"></i></div><div class="bg-white border border-slate-200 p-3 rounded-2xl rounded-tl-sm text-sm text-slate-500 shadow-sm flex items-center gap-1"><span class="h-2 w-2 bg-slate-300 rounded-full animate-bounce"></span><span class="h-2 w-2 bg-slate-300 rounded-full animate-bounce" style="animation-delay: 0.2s"></span><span class="h-2 w-2 bg-slate-300 rounded-full animate-bounce" style="animation-delay: 0.4s"></span></div></div>`;
+            chatBox.scrollTop = chatBox.scrollHeight;
+
+            try {
+                const res = await fetch('/api/v1/assistant/ask', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: USER_ID, prompt: prompt })
+                });
+                const data = await res.json();
+                
+                // Xóa loading
+                document.getElementById(loadingId).remove();
+
+                if(data.success) {
+                    appendMessage("AI", data.reply, false);
+                    document.getElementById('xu-balance').innerText = data.remaining_xu; // Cập nhật Xu
+                } else {
+                    appendMessage("AI", `❌ Lỗi: ${data.message}`, false);
+                }
+            } catch(e) {
+                document.getElementById(loadingId).remove();
+                appendMessage("AI", "❌ Lỗi kết nối mạng, vui lòng thử lại.", false);
+            }
+
+            btn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+            btn.disabled = false;
+        }
+    </script>
 </body>
 </html>
