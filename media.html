@@ -3,95 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOAN AAS - Trạm Xử Lý Media AI</title>
+    <title>TOAN AAS - Trạm Media AI</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
 <body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
     
-    <nav class="bg-orange-600 text-white p-4 shadow-lg">
+    <nav class="bg-purple-600 text-white p-4 shadow-lg">
         <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold"><i class="fas fa-photo-video mr-2"></i>AI Media Studio</h1>
-            <a href="/" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm"><i class="fas fa-home"></i> Về Dashboard</a>
+            <h1 class="text-xl font-bold"><i class="fas fa-photo-video mr-2"></i>Trạm Media AI</h1>
+            <a href="/" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm font-bold"><i class="fas fa-home"></i> Về Dashboard</a>
         </div>
     </nav>
 
-    <div class="container mx-auto mt-6 p-4 max-w-6xl grid grid-cols-1 md:grid-cols-3 gap-6">
-        
-        <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-blue-500 flex flex-col">
-            <h2 class="text-lg font-bold mb-4 text-blue-700"><i class="fas fa-microphone-alt"></i> Lồng Tiếng AI (TTS)</h2>
-            <textarea id="tts-text" rows="3" class="w-full px-3 py-2 border rounded mb-3 outline-none focus:ring-2 focus:ring-blue-500" placeholder="Nhập văn bản cần đọc..."></textarea>
-            <button onclick="runTTS()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded shadow transition mt-auto">
-                Tạo Giọng Đọc
+    <div class="container mx-auto mt-6 p-4 max-w-6xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Kho Tài Sản Số</h2>
+            <button onclick="toggleModal('addModal')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow">
+                <i class="fas fa-cloud-upload-alt"></i> Lưu Tài Nguyên Mới
             </button>
-            <div id="tts-result" class="mt-3 text-sm text-gray-600 p-2 bg-gray-50 rounded min-h-[40px]"></div>
         </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500 flex flex-col">
-            <h2 class="text-lg font-bold mb-4 text-green-700"><i class="fas fa-file-audio"></i> Bóc Băng (STT)</h2>
-            <input type="url" id="stt-url" class="w-full px-3 py-2 border rounded mb-3 outline-none focus:ring-2 focus:ring-green-500" placeholder="Nhập Link file âm thanh (.mp3)">
-            <button onclick="runSTT()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded shadow transition mt-auto">
-                Chuyển Thành Chữ
-            </button>
-            <div id="stt-result" class="mt-3 text-sm text-gray-600 p-2 bg-gray-50 rounded min-h-[40px]"></div>
+        <!-- Bảng Media -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="media-list">
+            <div class="col-span-full text-center py-10 text-gray-500">Đang tải dữ liệu...</div>
         </div>
+    </div>
 
-        <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-purple-500 flex flex-col">
-            <h2 class="text-lg font-bold mb-4 text-purple-700"><i class="fas fa-crop-alt"></i> Tách Nền Ảnh</h2>
-            <input type="url" id="bg-url" class="w-full px-3 py-2 border rounded mb-3 outline-none focus:ring-2 focus:ring-purple-500" placeholder="Nhập Link ảnh cần tách nền">
-            <button onclick="runRemoveBG()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded shadow transition mt-auto">
-                Xóa Phông Nền
-            </button>
-            <div id="bg-result" class="mt-3 text-sm text-gray-600 p-2 bg-gray-50 rounded min-h-[40px]"></div>
+    <!-- Modal Thêm Media -->
+    <div id="addModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-lg">
+            <h3 class="text-lg font-bold mb-4 border-b pb-2 text-purple-600">Lưu Trữ Media Mới</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Tiêu đề</label>
+                    <input type="text" id="m-title" placeholder="VD: Kịch bản chốt sale ngày 15/06..." class="w-full px-3 py-2 border rounded outline-none focus:border-purple-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Loại nội dung</label>
+                    <select id="m-type" class="w-full px-3 py-2 border rounded outline-none focus:border-purple-500">
+                        <option value="Kịch bản AI">Kịch bản AI</option>
+                        <option value="Prompt (Câu lệnh)">Prompt (Câu lệnh)</option>
+                        <option value="ID Ảnh/Video">ID Ảnh/Video</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Nội dung / Link lưu trữ</label>
+                    <textarea id="m-content" rows="4" class="w-full px-3 py-2 border rounded outline-none focus:border-purple-500" placeholder="Dán nội dung kịch bản hoặc link Google Drive vào đây..."></textarea>
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="toggleModal('addModal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-semibold">Hủy</button>
+                <button onclick="saveMedia()" id="btn-save" class="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 font-semibold">Lưu Trữ</button>
+            </div>
         </div>
-
     </div>
 
     <script>
-        async function runTTS() {
-            const text = document.getElementById('tts-text').value;
-            const resBox = document.getElementById('tts-result');
-            if(!text) return alert("Vui lòng nhập văn bản!");
-            resBox.innerHTML = "Đang xử lý...";
-            try {
-                const res = await fetch('/api/v1/media/tts', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ text: text })
-                });
-                const data = await res.json();
-                resBox.innerHTML = `<span class="text-green-600 font-bold">Thành công!</span><br>Link Audio: <a href="${data.mock_audio_url}" class="text-blue-500" target="_blank">${data.mock_audio_url}</a>`;
-            } catch (e) { resBox.innerHTML = "<span class='text-red-500'>Lỗi kết nối</span>"; }
+        function toggleModal(modalID) {
+            document.getElementById(modalID).classList.toggle('hidden');
         }
 
-        async function runSTT() {
-            const url = document.getElementById('stt-url').value;
-            const resBox = document.getElementById('stt-result');
-            if(!url) return alert("Vui lòng nhập link âm thanh!");
-            resBox.innerHTML = "Đang nghe và bóc băng...";
+        async function loadMedia() {
             try {
-                const res = await fetch('/api/v1/media/stt', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ audio_url: url })
-                });
+                const res = await fetch('/api/v1/media-ops/assets');
                 const data = await res.json();
-                resBox.innerHTML = `<span class="text-green-600 font-bold">Kết quả:</span><br><i>"${data.mock_transcript}"</i>`;
-            } catch (e) { resBox.innerHTML = "<span class='text-red-500'>Lỗi kết nối</span>"; }
+                const list = document.getElementById('media-list');
+                
+                if(data.success && data.data.length > 0) {
+                    list.innerHTML = data.data.map(m => {
+                        let icon = 'fa-file-alt';
+                        if(m.media_type.includes('Ảnh')) icon = 'fa-image';
+                        if(m.media_type.includes('Prompt')) icon = 'fa-terminal';
+                        
+                        return `
+                        <div class="bg-white p-5 rounded-xl shadow border border-gray-100 hover:shadow-md transition">
+                            <div class="flex justify-between items-start mb-3">
+                                <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded font-bold uppercase"><i class="fas ${icon} mr-1"></i>${m.media_type}</span>
+                                <span class="text-xs text-gray-400">${m.created_at.split(' ')[0]}</span>
+                            </div>
+                            <h4 class="font-bold text-gray-800 text-lg mb-2 truncate" title="${m.title}">${m.title}</h4>
+                            <p class="text-sm text-gray-600 line-clamp-3 mb-4 h-12">${m.content}</p>
+                            <button onclick="copyToClipboard(\`${m.content.replace(/"/g, '&quot;')}\`)" class="w-full bg-gray-50 hover:bg-gray-100 text-purple-600 font-semibold py-2 rounded text-sm border border-gray-200 transition">
+                                <i class="fas fa-copy"></i> Sao chép nội dung
+                            </button>
+                        </div>
+                        `
+                    }).join('');
+                } else {
+                    list.innerHTML = '<div class="col-span-full text-center py-10 text-gray-500">Chưa có tài sản nào. Hãy lưu trữ kịch bản đầu tiên!</div>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
         }
 
-        async function runRemoveBG() {
-            const url = document.getElementById('bg-url').value;
-            const resBox = document.getElementById('bg-result');
-            if(!url) return alert("Vui lòng nhập link ảnh!");
-            resBox.innerHTML = "Đang tách nền...";
+        async function saveMedia() {
+            const title = document.getElementById('m-title').value;
+            const media_type = document.getElementById('m-type').value;
+            const content = document.getElementById('m-content').value;
+            
+            if(!title || !content) return alert("Vui lòng nhập đủ tiêu đề và nội dung!");
+            
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true; btn.innerText = "Đang lưu...";
+
             try {
-                const res = await fetch('/api/v1/media/remove-bg', {
+                const res = await fetch('/api/v1/media-ops/assets', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ image_url: url })
+                    body: JSON.stringify({ title, media_type, content })
                 });
                 const data = await res.json();
-                resBox.innerHTML = `<span class="text-green-600 font-bold">Xong!</span><br>Link Ảnh: <a href="${data.mock_processed_image}" class="text-blue-500" target="_blank">${data.mock_processed_image}</a>`;
-            } catch (e) { resBox.innerHTML = "<span class='text-red-500'>Lỗi kết nối</span>"; }
+                if(data.success) {
+                    toggleModal('addModal');
+                    loadMedia();
+                    document.getElementById('m-title').value = '';
+                    document.getElementById('m-content').value = '';
+                } else {
+                    alert("Lỗi: " + data.message);
+                }
+            } catch (e) {
+                alert("Lỗi kết nối máy chủ");
+            } finally {
+                btn.disabled = false; btn.innerText = "Lưu Trữ";
+            }
         }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã copy nội dung thành công!");
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadMedia);
     </script>
 </body>
 </html>
