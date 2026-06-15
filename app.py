@@ -56,3 +56,8 @@ async def video_app_ui():
 @app.get("/b2b-app")
 async def b2b_app_ui():
     return FileResponse("b2b.html")
+
+# 4. Mở đường link cho trang Quản lý Affiliate B2C
+@app.get("/campaign-app")
+async def campaign_app_ui():
+    return FileResponse("campaign.html")
