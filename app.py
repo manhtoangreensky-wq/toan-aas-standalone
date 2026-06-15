@@ -83,3 +83,7 @@ async def wallet_app(): return get_html("wallet.html")
 
 @app.get("/admin-app")
 async def admin_page(): return get_html("admin.html")
+
+@app.get("/app")
+async def mobile_app_ui(): 
+    return get_html("mobile_app.html")
