@@ -18,6 +18,10 @@ import coach
 import device_ops
 import affiliate_ops
 import media_ops
+import migrate_db
+migrate_db.run_migration()
+import migrate_db
+import billing
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -68,6 +72,7 @@ app.include_router(coach.router, prefix="/api/v1/coach", tags=["AI Growth Coach"
 app.include_router(device_ops.router, prefix="/api/v1/device-ops", tags=["B2B"])
 app.include_router(affiliate_ops.router, prefix="/api/v1/affiliate", tags=["Affiliate"])
 app.include_router(media_ops.router, prefix="/api/v1/media-ops", tags=["Media"])
+app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 
 # --- ĐƯỜNG LINK GIAO DIỆN ---
 @app.get("/login")
@@ -115,4 +120,9 @@ async def affiliate_app():
 @app.get("/media-app")
 async def media_app():
     with open("media.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/wallet-app")
+async def wallet_app():
+    with open("wallet.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())
