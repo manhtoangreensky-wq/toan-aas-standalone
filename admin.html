@@ -16,6 +16,7 @@
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden text-sm">
     
+    <!-- SIDEBAR BẢN FULL KHUNG -->
     <div class="w-64 bg-[#1e293b] text-slate-300 flex flex-col h-full shadow-2xl z-20 flex-shrink-0">
         <div class="p-5 border-b border-slate-700 flex items-center gap-3">
             <div class="bg-blue-600 p-2 rounded-lg text-white"><i class="fas fa-layer-group"></i></div>
@@ -24,13 +25,16 @@
         
         <div class="flex-1 overflow-y-auto custom-scrollbar p-3">
             <ul class="space-y-1">
+                
+                <!-- TỔNG QUAN -->
                 <li class="mb-4">
                     <button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white shadow-md transition group">
                         <i class="fas fa-chart-pie w-5 text-center"></i><span class="font-medium">Bảng điều khiển</span>
                     </button>
                 </li>
 
-                <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-4">Phân hệ Kinh doanh</li>
+                <!-- PHÂN HỆ HỆ THỐNG -->
+                <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-4">Phân hệ Hệ thống</li>
                 <li>
                     <button onclick="switchTab('crm')" id="nav-crm" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
                         <i class="fas fa-handshake w-5 text-center text-slate-400 group-hover:text-blue-400"></i><span>Quan hệ Khách hàng</span>
@@ -38,19 +42,60 @@
                 </li>
                 <li>
                     <button onclick="switchTab('projects')" id="nav-projects" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
-                        <i class="fas fa-hard-hat w-5 text-center text-slate-400 group-hover:text-yellow-400"></i><span>Quản lý Dự án B2B</span>
+                        <i class="fas fa-hard-hat w-5 text-center text-slate-400 group-hover:text-yellow-400"></i><span>Quản lý Dự án</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('finance')" id="nav-finance" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-wallet w-5 text-center text-slate-400 group-hover:text-emerald-400"></i><span>Quản lý Thu Chi</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('sales')" id="nav-sales" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-shopping-cart w-5 text-center text-slate-400 group-hover:text-pink-400"></i><span>Quản lý Bán hàng</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('hr')" id="nav-hr" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-users w-5 text-center text-slate-400 group-hover:text-orange-400"></i><span>Nhân sự (Hồ sơ)</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('assets')" id="nav-assets" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-laptop w-5 text-center text-slate-400 group-hover:text-teal-400"></i><span>Tài sản Thiết bị</span>
                     </button>
                 </li>
                 <li>
                     <button onclick="switchTab('inventory')" id="nav-inventory" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
-                        <i class="fas fa-boxes w-5 text-center text-slate-400 group-hover:text-amber-400"></i><span>Quản lý Kho hàng</span>
+                        <i class="fas fa-boxes w-5 text-center text-slate-400 group-hover:text-amber-400"></i><span>Quản lý Kho</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('production')" id="nav-production" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-industry w-5 text-center text-slate-400 group-hover:text-indigo-400"></i><span>Quản lý Sản xuất</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('purchasing')" id="nav-purchasing" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-shopping-bag w-5 text-center text-slate-400 group-hover:text-rose-400"></i><span>Quản lý Mua hàng</span>
                     </button>
                 </li>
 
-                <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-6">Nhân sự & Nội bộ</li>
+                <!-- TÍNH NĂNG HỖ TRỢ -->
+                <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-6">Tính năng Hỗ trợ</li>
                 <li>
-                    <button onclick="switchTab('hr')" id="nav-hr" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
-                        <i class="fas fa-users w-5 text-center text-slate-400 group-hover:text-orange-400"></i><span>Hồ sơ Nhân sự</span>
+                    <button onclick="switchTab('goals')" id="nav-goals" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-bullseye w-5 text-center text-slate-400 group-hover:text-red-400"></i><span>Mục tiêu kinh doanh</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('social')" id="nav-social" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-hashtag w-5 text-center text-slate-400 group-hover:text-blue-400"></i><span>Mạng xã hội cơ bản</span>
+                    </button>
+                </li>
+                 <li>
+                    <button onclick="switchTab('okrs')" id="nav-okrs" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-tasks w-5 text-center text-slate-400 group-hover:text-green-400"></i><span>Quản lý OKRs</span>
                     </button>
                 </li>
                 <li>
@@ -63,6 +108,26 @@
                         <i class="fas fa-comments w-5 text-center text-slate-400 group-hover:text-sky-400"></i><span>Hệ thống Chat</span>
                     </button>
                 </li>
+                <li>
+                    <button onclick="switchTab('banners')" id="nav-banners" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-image w-5 text-center text-slate-400 group-hover:text-fuchsia-400"></i><span>Banner PR nội bộ</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('workload')" id="nav-workload" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-balance-scale w-5 text-center text-slate-400 group-hover:text-cyan-400"></i><span>Theo dõi khối lượng</span>
+                    </button>
+                </li>
+                <li>
+                    <button onclick="switchTab('approvals')" id="nav-approvals" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-check-double w-5 text-center text-slate-400 group-hover:text-emerald-400"></i><span>Phê duyệt yêu cầu</span>
+                    </button>
+                </li>
+                 <li>
+                    <button onclick="switchTab('ai-business')" id="nav-ai-business" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group">
+                        <i class="fas fa-brain w-5 text-center text-slate-400 group-hover:text-rose-500"></i><span>AI Business</span>
+                    </button>
+                </li>
             </ul>
         </div>
         
@@ -73,6 +138,7 @@
         </div>
     </div>
 
+    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden relative">
         <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10 flex-shrink-0 border-b border-slate-200">
             <h1 class="text-xl font-bold text-slate-800" id="header-title">Bảng điều khiển Tổng quan</h1>
@@ -90,6 +156,7 @@
 
         <main class="flex-1 overflow-auto p-6 relative" id="main-content">
             
+            <!-- TAB: TỔNG QUAN -->
             <div id="tab-dashboard" class="tab-panel block">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between hover:shadow-md transition">
@@ -128,6 +195,7 @@
                 </div>
             </div>
 
+            <!-- TAB: CRM KHÁCH HÀNG (SỐNG) -->
             <div id="tab-crm" class="tab-panel hidden h-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-slate-800">Cơ sở dữ liệu Khách hàng</h2>
@@ -150,6 +218,7 @@
                 </div>
             </div>
 
+            <!-- TAB: DỰ ÁN B2B (SỐNG) -->
             <div id="tab-projects" class="tab-panel hidden h-full">
                 <div class="flex justify-between items-center mb-6">
                     <h2 class="text-lg font-bold text-slate-800">Quản lý Dự án ELV & Camera</h2>
@@ -172,6 +241,7 @@
                 </div>
             </div>
 
+            <!-- PLACEHOLDER CHO CÁC TAB CHƯA LÀM -->
             <div id="tab-placeholder" class="tab-panel hidden h-full">
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 h-full flex flex-col items-center justify-center text-slate-500 p-10 text-center">
                     <i class="fas fa-tools fa-4x text-blue-200 mb-4 animate-bounce"></i>
@@ -182,6 +252,7 @@
         </main>
     </div>
 
+    <!-- MODAL CRM -->
     <div id="modal-crm" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md">
             <h3 class="text-lg font-bold mb-4 text-slate-800 border-b pb-2">Thêm Khách Hàng (Lead)</h3>
@@ -210,6 +281,7 @@
         </div>
     </div>
 
+    <!-- MODAL PROJECT -->
     <div id="modal-project" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50">
         <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-md">
             <h3 class="text-lg font-bold mb-4 text-slate-800 border-b pb-2">Khởi Tạo Dự Án ELV/Camera</h3>
@@ -242,7 +314,30 @@
         </div>
     </div>
 
+    <!-- SCRIPTS -->
     <script>
+        const titles = {
+            'dashboard': 'Bảng điều khiển Tổng quan',
+            'crm': 'Quản lý Quan hệ Khách hàng (CRM)',
+            'projects': 'Quản lý Dự án & Thi công',
+            'finance': 'Quản lý Thu Chi & Công nợ',
+            'sales': 'Quản lý Bán hàng & Hợp đồng',
+            'hr': 'Hồ sơ Nhân sự',
+            'assets': 'Quản lý Tài sản Thiết bị',
+            'inventory': 'Quản lý Kho & Tồn kho',
+            'production': 'Quản lý Sản xuất',
+            'purchasing': 'Quản lý Mua hàng',
+            'goals': 'Mục tiêu Kinh doanh',
+            'social': 'Mạng xã hội Doanh nghiệp',
+            'okrs': 'Quản lý OKRs',
+            'attendance': 'Chấm công & Bảng lương',
+            'chat': 'Hệ thống Chat Nội bộ',
+            'banners': 'Banner PR Nội bộ',
+            'workload': 'Theo dõi Khối lượng công việc',
+            'approvals': 'Phê duyệt Yêu cầu',
+            'ai-business': 'AI Business & Phân tích'
+        };
+
         // Kiểm tra quyền Admin
         document.addEventListener('DOMContentLoaded', () => {
             const role = localStorage.getItem('role');
@@ -251,20 +346,10 @@
                 setTimeout(() => window.location.href = '/', 2000);
                 return;
             }
-            loadDashboardStats(); // Mặc định tải trang tổng quan
+            loadDashboardStats();
         });
 
-        const titles = {
-            'dashboard': 'Bảng điều khiển Tổng quan',
-            'crm': 'Quản lý Quan hệ Khách hàng (CRM)',
-            'projects': 'Quản lý Dự án ELV & Camera',
-            'inventory': 'Quản lý Kho & Vật tư',
-            'hr': 'Hồ sơ Nhân sự',
-            'attendance': 'Chấm công & Bảng lương',
-            'chat': 'Hệ thống Chat Nội bộ'
-        };
-
-        // Hàm chuyển Tab SPA
+        // Hàm chuyển Tab
         function switchTab(tabId) {
             document.getElementById('header-title').innerText = titles[tabId] || 'Phân hệ Hệ thống';
 
