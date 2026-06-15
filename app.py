@@ -1,13 +1,18 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
+from pydantic import BaseModel
+import os
 
 from config import settings
-from db import init_db
+from db import init_db, db_connect
 
 # Chạy vá lỗi DB ngay khi khởi động
-import migrate_db
-migrate_db.run_migration()
+try:
+    import migrate_db
+    migrate_db.run_migration()
+except Exception as e:
+    print("Bỏ qua migrate_db:", e)
 
 # Gọi các module
 import auth_ops
@@ -57,12 +62,48 @@ def get_html(file_name):
     except Exception:
         return HTMLResponse(content=f"<h3 style='color:red; text-align:center; margin-top:50px;'>Lỗi 404: Không tìm thấy file {file_name}</h3>", status_code=404)
 
-# Khai báo đường link (Mỗi link chỉ khai báo 1 lần duy nhất)
+# -----------------------------------------------------
+# 1. API ĐĂNG NHẬP (Xác thực ID qua Database)
+# -----------------------------------------------------
+class LoginReq(BaseModel):
+    user_id: str
+
+@app.post("/api/v1/auth/login")
+async def login_api(data: LoginReq):
+    conn = db_connect()
+    c = conn.cursor()
+    c.execute("SELECT username FROM users WHERE user_id=?", (data.user_id,))
+    user = c.fetchone()
+    conn.close()
+    
+    if user:
+        # Kiểm tra xem ID này có phải là ADMIN không (Lấy từ biến môi trường)
+        admin_ids_str = os.environ.get("ADMIN_IDS", os.environ.get("ADMIN_ID", ""))
+        admin_ids = [int(x.strip()) for x in admin_ids_str.split(",") if x.strip().isdigit()]
+        
+        is_admin = int(data.user_id) in admin_ids if data.user_id.isdigit() else False
+        role = "admin" if is_admin else "user"
+        
+        return {
+            "success": True, 
+            "role": role,
+            "username": user[0],
+            "user_id": data.user_id
+        }
+    else:
+        return {"success": False, "message": "Tài khoản chưa tồn tại! Hãy vào Bot Telegram gõ /start trước."}
+
+# -----------------------------------------------------
+# 2. ĐỊNH TUYẾN GIAO DIỆN WEB (ĐÃ CHUẨN GATE CHECK)
+# -----------------------------------------------------
 @app.get("/login")
-async def login_page(): return get_html("auth.html")
+async def login_page(): return get_html("login.html")
 
 @app.get("/")
-async def root_page(): return get_html("index.html")
+async def root_page(): return get_html("customer_app.html")
+
+@app.get("/admin-app")
+async def admin_page(): return get_html("admin.html")
 
 @app.get("/video-app")
 async def video_app(): return get_html("video.html")
@@ -85,16 +126,8 @@ async def coach_app(): return get_html("coach.html")
 @app.get("/wallet-app")
 async def wallet_app(): return get_html("wallet.html")
 
-@app.get("/admin-app")
-async def admin_page(): return get_html("admin.html")
-
 @app.get("/app")
-async def mobile_app_ui(): 
-    return get_html("mobile_app.html")
-
-@app.get("/")
-async def root_page(): return get_html("customer_app.html")
+async def mobile_app_ui(): return get_html("mobile_app.html")
 
 @app.get("/assistant-app")
-async def assistant_app_ui():
-    return get_html("mobile_chat.html")
+async def assistant_app_ui(): return get_html("mobile_chat.html")
