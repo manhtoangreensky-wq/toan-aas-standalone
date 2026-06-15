@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS - Trung tâm điều hành</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans">
+    
+    <nav class="bg-blue-800 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold"><i class="fas fa-microchip mr-2"></i>TOAN AAS OS</h1>
+            <span class="bg-green-500 text-xs font-bold px-2 py-1 rounded-full animate-pulse">Hệ thống Online</span>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-8 p-4">
+        <h2 class="text-xl font-bold mb-6 border-b-2 border-blue-800 pb-2 inline-block">Báo Cáo Tổng Quan Hệ Thống</h2>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-semibold uppercase">Tổng Khách Hàng</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-users">...</p>
+                    </div>
+                    <div class="bg-blue-100 p-3 rounded-full text-blue-500">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-green-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-semibold uppercase">Doanh Thu (VNĐ)</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-revenue">...</p>
+                    </div>
+                    <div class="bg-green-100 p-3 rounded-full text-green-500">
+                        <i class="fas fa-money-bill-wave fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-yellow-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-semibold uppercase">Dự án Kỹ thuật B2B</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-projects">...</p>
+                    </div>
+                    <div class="bg-yellow-100 p-3 rounded-full text-yellow-500">
+                        <i class="fas fa-hard-hat fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-gray-500 text-sm font-semibold uppercase">Chiến dịch Affiliate</p>
+                        <p class="text-3xl font-bold text-gray-800" id="stat-campaigns">...</p>
+                    </div>
+                    <div class="bg-purple-100 p-3 rounded-full text-purple-500">
+                        <i class="fas fa-rocket fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Gọi API Report Dashboard vừa làm
+            fetch('/api/v1/report/dashboard')
+                .then(response => response.json())
+                .then(res => {
+                    if(res.success) {
+                        const data = res.data;
+                        document.getElementById('stat-users').innerText = data.total_users;
+                        // Format tiền tệ VNĐ
+                        document.getElementById('stat-revenue').innerText = data.total_revenue_vnd.toLocaleString('vi-VN');
+                        document.getElementById('stat-projects').innerText = data.total_b2b_projects;
+                        document.getElementById('stat-campaigns').innerText = data.total_b2c_campaigns;
+                    }
+                })
+                .catch(error => {
+                    console.error('Lỗi khi tải dữ liệu:', error);
+                    document.getElementById('stat-users').innerText = "Lỗi";
+                });
+        });
+    </script>
+</body>
+</html>
