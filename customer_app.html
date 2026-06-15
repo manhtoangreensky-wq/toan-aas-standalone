@@ -2,208 +2,352 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TOAN AAS - AI Ecosystem</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS OS - AI Workspace</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; background-color: #111827; color: white; }
-        /* Giả lập khung App di động khi xem trên máy tính */
-        .app-container { max-width: 480px; margin: 0 auto; background-color: #0f172a; min-height: 100vh; position: relative; box-shadow: 0 0 40px rgba(0,0,0,0.5); display: flex; flex-direction: column; }
-        /* Ẩn thanh cuộn nhưng vẫn cuộn được */
-        .no-scrollbar::-webkit-scrollbar { display: none; }
-        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        
-        /* Hiệu ứng kính mờ (Glassmorphism) */
-        .glass-btn { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .card-hover { transition: all 0.3s ease; }
+        .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
+        .hide-scroll::-webkit-scrollbar { display: none; }
+        /* Hiệu ứng Toast Notification */
+        @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
+        .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
+        .toast-exit { animation: fadeOut 0.3s ease-out forwards; }
     </style>
 </head>
-<body>
+<body class="text-slate-800 h-screen flex flex-col overflow-hidden relative">
 
-<div class="app-container">
-    
-    <!-- HEADER -->
-    <div class="p-5 pb-2 flex justify-between items-center sticky top-0 z-20 bg-[#0f172a]/90 backdrop-blur-md border-b border-white/5">
+    <!-- TOP NAVIGATION -->
+    <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center z-10 flex-shrink-0 shadow-sm">
         <div class="flex items-center gap-3">
-            <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-purple-600 p-0.5">
-                <img src="https://ui-avatars.com/api/?name=User&background=random" class="h-full w-full rounded-full object-cover" id="user-avatar">
+            <div class="bg-blue-600 text-white h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-md shadow-blue-500/30">
+                <i class="fas fa-layer-group"></i>
             </div>
-            <div>
-                <p class="text-xs text-slate-400">Xin chào,</p>
-                <h1 class="font-bold text-sm" id="user-name">Khách hàng VIP</h1>
-            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-slate-800">TOAN AAS <span class="font-light text-slate-400">OS</span></h1>
         </div>
-        <div class="flex gap-3">
-            <button class="relative text-slate-300 hover:text-white transition">
-                <i class="fas fa-bell text-xl"></i>
-                <span class="absolute -top-1 -right-1 flex h-3 w-3"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span><span class="relative inline-flex rounded-full h-3 w-3 bg-red-500 border border-slate-900"></span></span>
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-3 border-r border-slate-200 pr-6">
+                <div class="text-right">
+                    <p class="text-sm font-medium text-slate-500">Xin chào,</p>
+                    <p class="text-base font-bold text-slate-800" id="user-display-name">Sếp!</p>
+                </div>
+                <div class="h-10 w-10 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold shadow-md cursor-pointer border-2 border-white ring-2 ring-blue-100">
+                    <span id="user-avatar-text">S</span>
+                </div>
+            </div>
+            <button onclick="logout()" class="text-rose-500 hover:text-rose-700 font-semibold transition flex items-center gap-2">
+                Thoát <i class="fas fa-sign-out-alt"></i>
             </button>
         </div>
-    </div>
+    </header>
 
-    <!-- MAIN CONTENT (Scrollable) -->
-    <div class="flex-1 overflow-y-auto no-scrollbar pb-24">
-        
-        <!-- WALLET CARD -->
-        <div class="mx-5 mt-4 p-5 rounded-2xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-700 shadow-[0_10px_20px_rgba(79,70,229,0.3)] relative overflow-hidden">
-            <div class="absolute top-0 right-0 opacity-10 transform translate-x-4 -translate-y-4">
-                <i class="fas fa-microchip fa-8x"></i>
-            </div>
-            <div class="relative z-10 flex justify-between items-end">
-                <div>
-                    <p class="text-blue-100 text-xs font-semibold uppercase tracking-wider mb-1">Số dư hiện tại</p>
-                    <div class="flex items-baseline gap-1">
-                        <h2 class="text-3xl font-bold" id="balance-xu">...</h2>
-                        <span class="text-sm font-medium text-blue-200">Xu</span>
-                    </div>
+    <!-- MAIN DASHBOARD -->
+    <main class="flex-1 overflow-y-auto hide-scroll p-8 pb-20">
+        <div class="max-w-7xl mx-auto space-y-8">
+
+            <!-- THỐNG KÊ (TOP STATS ROW) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Số Dư Hiện Tại</p>
+                    <h3 class="text-3xl font-black text-emerald-600"><span id="wallet-balance-display">0</span> <span class="text-sm font-medium text-slate-500">Xu</span></h3>
                 </div>
-                <button onclick="window.location.href='/wallet-app'" class="bg-white/20 hover:bg-white/30 backdrop-blur-md px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 border border-white/20">
-                    <i class="fas fa-plus"></i> Nạp
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Video Đã Tạo</p>
+                    <h3 class="text-3xl font-black text-blue-600">12</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dự Án Đang Chạy</p>
+                    <h3 class="text-3xl font-black text-slate-800" id="stat-projects">0</h3>
+                </div>
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
+                    <div class="absolute right-0 top-0 w-2 h-full bg-pink-500"></div>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Hoa Hồng Affiliate</p>
+                    <h3 class="text-3xl font-black text-slate-800">4.5M <span class="text-sm font-medium text-slate-500">VNĐ</span></h3>
+                </div>
+            </div>
+
+            <!-- LƯỚI CHỨC NĂNG (FEATURE GRID) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                
+                <div onclick="openModal('modal-video')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-magic"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">AI Video Studio</h3>
+                    <p class="text-sm text-slate-500">Tạo kịch bản tự động, render video bằng Kling/Runway.</p>
+                </div>
+
+                <div onclick="openModal('modal-elv')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-tools"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Thi Công ELV/Camera</h3>
+                    <p class="text-sm text-slate-500">Theo dõi tiến độ dự án, xem báo giá và yêu cầu bảo hành.</p>
+                </div>
+
+                <div onclick="openModal('modal-wallet')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-4 top-4 text-emerald-100"><i class="fas fa-coins fa-4x"></i></div>
+                    <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform relative z-10"><i class="fas fa-wallet"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1 relative z-10">Ví Xu & Nạp Tiền</h3>
+                    <p class="text-sm text-slate-500 relative z-10">Thanh toán tự động bằng QR Code PayOS.</p>
+                </div>
+
+                <div onclick="openModal('modal-media')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-photo-video"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Trạm Media AI</h3>
+                    <p class="text-sm text-slate-500">Kho tài nguyên số, tách nền ảnh (RemoveBG), xử lý hình ảnh.</p>
+                </div>
+
+                <div onclick="openModal('modal-affiliate')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-shopping-cart"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Affiliate Vault</h3>
+                    <p class="text-sm text-slate-500">Lấy link tiếp thị, đo lường tỷ lệ chuyển đổi và hoa hồng.</p>
+                </div>
+
+                <div onclick="window.location.href='/assistant-app'" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-robot"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Trợ Lý AI & Dịch Thuật</h3>
+                    <p class="text-sm text-slate-500">Hỏi đáp đa năng, ghi chú, dịch thuật đa ngôn ngữ tức thì.</p>
+                </div>
+
+                <div onclick="openModal('modal-voice')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-microphone-alt"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Voice & Nhạc AI</h3>
+                    <p class="text-sm text-slate-500">Chuyển văn bản thành giọng đọc HD bằng Fish Audio/Edge.</p>
+                </div>
+
+                <div onclick="openModal('modal-feedback')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
+                    <div class="h-10 w-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-headset"></i></div>
+                    <h3 class="text-lg font-bold text-slate-800 mb-1">Góp ý / Báo lỗi</h3>
+                    <p class="text-sm text-slate-500">Gửi yêu cầu hỗ trợ trực tiếp tới hệ thống quản trị.</p>
+                </div>
+
+                <!-- Quản Trị Hệ Thống (Chỉ Admin) -->
+                <div onclick="window.location.href='/admin-app'" id="admin-panel-card" class="hidden bg-[#0f172a] p-6 rounded-2xl shadow-lg shadow-slate-900/20 card-hover cursor-pointer group relative overflow-hidden">
+                    <div class="absolute -right-4 -bottom-4 text-slate-800"><i class="fas fa-cogs fa-5x"></i></div>
+                    <div class="h-10 w-10 rounded-lg bg-slate-800 text-yellow-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform border border-slate-700 relative z-10"><i class="fas fa-shield-alt"></i></div>
+                    <h3 class="text-lg font-bold text-white mb-1 relative z-10">Quản trị hệ thống</h3>
+                    <p class="text-sm text-slate-400 relative z-10">Panel Master dành riêng cho Ban Giám Đốc (19 Module).</p>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- KHU VỰC CHỨA TOAST NOTIFICATION -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- ========================================== -->
+    <!-- CÁC MODAL CHỨC NĂNG -->
+    <!-- ========================================== -->
+
+    <!-- 1. MODAL VÍ XU PAYOS -->
+    <div id="modal-wallet" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
+            <button onclick="toggleModal('modal-wallet')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            <div class="text-center mb-6">
+                <div class="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-coins"></i></div>
+                <h2 class="text-2xl font-black text-slate-800">Nạp Xu Tự Động</h2>
+                <p class="text-sm text-slate-500 mt-1">Hệ thống xử lý QR qua PayOS 24/7</p>
+            </div>
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 flex justify-between items-center">
+                <span class="font-semibold text-slate-600">Ví của bạn:</span>
+                <span class="text-2xl font-bold text-emerald-600"><span id="modal-current-balance">0</span> Xu</span>
+            </div>
+            <div class="space-y-3">
+                <button id="btn-payos-50" onclick="processPayment(this, 50000, 500)" class="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 hover:shadow-md transition">
+                    <div class="text-left"><p class="font-bold text-slate-800">Gói Tiêu Chuẩn</p><p class="text-xs text-slate-500">Giá: 50.000đ</p></div>
+                    <div class="font-black text-emerald-600">+500 Xu</div>
+                </button>
+                <button id="btn-payos-100" onclick="processPayment(this, 100000, 1200)" class="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 hover:shadow-md transition">
+                    <div class="text-left"><p class="font-bold text-slate-800">Gói Chuyên Nghiệp</p><p class="text-xs text-slate-500">Giá: 100.000đ</p></div>
+                    <div class="font-black text-emerald-600">+1.200 Xu <span class="text-[10px] bg-red-100 text-red-600 px-1 rounded ml-1">HOT</span></div>
                 </button>
             </div>
         </div>
+    </div>
 
-        <!-- GRID MENU (Đúng như hình sếp gửi) -->
-        <div class="px-5 mt-6">
-            <h3 class="font-bold text-slate-300 text-sm mb-4 uppercase tracking-wider flex items-center gap-2">
-                <i class="fas fa-bolt text-yellow-400"></i> Tiện ích hệ sinh thái
-            </h3>
-            
-            <div class="grid grid-cols-2 gap-3">
-                <!-- Nút 1 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-green-400 group-hover:scale-110 transition"><i class="fas fa-box-open"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Công cụ miễn phí</span>
-                </a>
-                <!-- Nút 2 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-blue-400 group-hover:scale-110 transition"><i class="fas fa-user-circle"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Tài khoản</span>
-                </a>
-                
-                <!-- Nút 3: AI IMAGE -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group border-l-2 border-l-yellow-500">
-                    <div class="h-10 w-10 rounded-full bg-yellow-500/20 flex items-center justify-center text-xl text-yellow-500 group-hover:scale-110 transition"><i class="fas fa-image"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Tạo ảnh AI</span>
-                </a>
-                <!-- Nút 4: AI VIDEO -->
-                <a href="/video-app" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group border-l-2 border-l-indigo-500">
-                    <div class="h-10 w-10 rounded-full bg-indigo-500/20 flex items-center justify-center text-xl text-indigo-400 group-hover:scale-110 transition"><i class="fas fa-film"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Tạo video AI</span>
-                </a>
-
-                <!-- Nút 5 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-orange-400 group-hover:scale-110 transition"><i class="fas fa-edit"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Ghi chú / Tài liệu</span>
-                </a>
-                <!-- Nút 6 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-cyan-400 group-hover:scale-110 transition"><i class="fas fa-globe"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Dịch thuật</span>
-                </a>
-
-                <!-- Nút 7 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-pink-400 group-hover:scale-110 transition"><i class="fas fa-microphone-alt"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Voice / Nhạc</span>
-                </a>
-                <!-- Nút 8 -->
-                <a href="/wallet-app" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-emerald-400 group-hover:scale-110 transition"><i class="fas fa-coins"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Nạp Xu / Bảng giá</span>
-                </a>
-
-                <!-- Nút 9 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-red-400 group-hover:scale-110 transition"><i class="fas fa-book"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Hướng dẫn</span>
-                </a>
-                <!-- Nút 10 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-teal-400 group-hover:scale-110 transition"><i class="fas fa-headset"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Hỗ trợ</span>
-                </a>
-
-                <!-- Nút 11 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-slate-400 group-hover:scale-110 transition"><i class="fas fa-comment-dots"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Góp ý / Báo lỗi</span>
-                </a>
-                <!-- Nút 12 -->
-                <a href="#" class="glass-btn p-3 rounded-xl flex flex-col items-center justify-center gap-2 hover:bg-white/10 transition active:scale-95 group">
-                    <div class="h-10 w-10 rounded-full bg-slate-800 flex items-center justify-center text-xl text-purple-400 group-hover:scale-110 transition"><i class="fas fa-network-wired"></i></div>
-                    <span class="text-xs font-medium text-slate-300">Hub <i class="fas fa-external-link-alt text-[8px] ml-1"></i></span>
-                </a>
+    <!-- 2. MODAL DỰ ÁN ELV -->
+    <div id="modal-elv" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative">
+            <button onclick="toggleModal('modal-elv')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-tools text-orange-500 mr-2"></i>Dự Án Của Bạn</h2>
+            <div class="py-4 space-y-4">
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div class="flex justify-between items-start mb-2">
+                        <div>
+                            <h4 class="font-bold text-slate-800">Hệ thống Camera Phân xưởng B</h4>
+                            <p class="text-xs text-slate-500">Cập nhật: Hôm nay</p>
+                        </div>
+                        <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded uppercase">Đang triển khai</span>
+                    </div>
+                    <div class="w-full bg-slate-200 rounded-full h-2 mt-3 mb-1"><div class="bg-orange-500 h-2 rounded-full" style="width: 45%"></div></div>
+                    <p class="text-xs text-right font-medium text-slate-500">Tiến độ: 45%</p>
+                </div>
+                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
+                    <div>
+                        <h4 class="font-bold text-slate-800">Lắp đặt Tủ Mạng Tầng 2</h4>
+                        <p class="text-xs text-slate-500">Hoàn thành: 12/05/2026</p>
+                    </div>
+                    <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase">Đã nghiệm thu</span>
+                </div>
             </div>
-
-            <!-- NÚT ADMIN (Chỉ Admin mới thấy) -->
-            <a href="/admin-app" id="admin-btn" class="hidden mt-4 glass-btn p-4 rounded-xl flex items-center justify-center gap-3 hover:bg-blue-600/20 hover:border-blue-500/50 transition active:scale-95 border-dashed border-2 border-slate-700">
-                <i class="fas fa-lock text-yellow-500 text-lg"></i>
-                <span class="text-sm font-bold text-slate-200">Vào trang Quản trị (Admin)</span>
-            </a>
+            <button onclick="showToast('Yêu cầu báo giá mới đã gửi đến phòng Kinh Doanh!', 'success')" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition">Yêu cầu Dự án mới</button>
         </div>
     </div>
 
-    <!-- BOTTOM NAVIGATION (Thanh điều hướng dưới cùng) -->
-    <div class="absolute bottom-0 w-full bg-[#0f172a]/95 backdrop-blur-lg border-t border-white/10 pb-safe pt-2 px-6 flex justify-between items-center z-20 pb-4">
-        <a href="/" class="flex flex-col items-center gap-1 text-blue-500">
-            <i class="fas fa-home text-xl"></i>
-            <span class="text-[10px] font-semibold">Trang chủ</span>
-        </a>
-        <a href="#" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition">
-            <i class="fas fa-history text-xl"></i>
-            <span class="text-[10px] font-medium">Lịch sử</span>
-        </a>
-        <a href="/wallet-app" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition relative">
-            <div class="absolute -top-6 bg-gradient-to-r from-blue-500 to-indigo-600 h-12 w-12 rounded-full flex items-center justify-center text-white shadow-lg border-4 border-[#0f172a]">
-                <i class="fas fa-qrcode text-lg"></i>
+    <!-- 3. MODAL AFFILIATE VAULT -->
+    <div id="modal-affiliate" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative">
+            <button onclick="toggleModal('modal-affiliate')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-shopping-cart text-pink-500 mr-2"></i>Kho Link Tiếp Thị (Affiliate)</h2>
+            <div class="py-4 space-y-3">
+                <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
+                    <div><p class="font-bold text-slate-800 text-sm">Shopee Deal Điện Thoại</p><p class="text-[10px] text-pink-500">Hoa hồng: 5%</p></div>
+                    <button onclick="copyToClipboard('https://goeco.mobi/GJPRlrH3')" class="px-3 py-1 bg-white border border-slate-300 rounded shadow-sm text-xs font-bold hover:bg-slate-100 transition"><i class="far fa-copy mr-1"></i>Copy Link</button>
+                </div>
+                <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
+                    <div><p class="font-bold text-slate-800 text-sm">VPBank Mở Thẻ</p><p class="text-[10px] text-pink-500">Hoa hồng: 120.000đ/Lead</p></div>
+                    <button onclick="copyToClipboard('https://goecom.asia/Z31Vp7Ad')" class="px-3 py-1 bg-white border border-slate-300 rounded shadow-sm text-xs font-bold hover:bg-slate-100 transition"><i class="far fa-copy mr-1"></i>Copy Link</button>
+                </div>
             </div>
-            <span class="text-[10px] font-medium mt-6">Quét mã</span>
-        </a>
-        <a href="#" class="flex flex-col items-center gap-1 text-slate-500 hover:text-slate-300 transition">
-            <i class="fas fa-gift text-xl"></i>
-            <span class="text-[10px] font-medium">Ưu đãi</span>
-        </a>
-        <button onclick="logout()" class="flex flex-col items-center gap-1 text-rose-500 hover:text-rose-400 transition">
-            <i class="fas fa-sign-out-alt text-xl"></i>
-            <span class="text-[10px] font-medium">Thoát</span>
-        </button>
+            <button onclick="showToast('Tính năng rút tiền sẽ khả dụng khi số dư Hoa hồng > 200.000đ', 'warning')" class="w-full mt-2 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-lg shadow-pink-500/30 transition">Rút Tiền Hoa Hồng</button>
+        </div>
     </div>
 
-</div>
+    <!-- 4. MODAL GÓP Ý / FEEDBACK -->
+    <div id="modal-feedback" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md relative">
+            <button onclick="toggleModal('modal-feedback')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+            <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-headset text-teal-500 mr-2"></i>Gửi Yêu cầu Hỗ trợ</h2>
+            <div class="py-4">
+                <label class="block text-sm font-semibold text-slate-700 mb-2">Bạn đang gặp vấn đề gì?</label>
+                <textarea id="fb-content" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-teal-500" placeholder="Mô tả chi tiết lỗi hoặc góp ý của bạn..."></textarea>
+            </div>
+            <button onclick="submitFeedback()" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg shadow-teal-500/30 transition">Gửi Quản Trị Viên</button>
+        </div>
+    </div>
 
-<script>
-    const USER_ID = localStorage.getItem('user_id');
-    const ROLE = localStorage.getItem('role');
+    <!-- CÁC MODAL AI (Video, Media, Voice) -->
+    <div id="modal-video" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-video')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-film text-blue-500 mr-2"></i>AI Video Studio</h2><div class="py-4"><label class="block text-sm font-semibold text-slate-700 mb-2">Chủ đề Kịch bản (Prompt)</label><textarea rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500" placeholder="VD: Tạo kịch bản review đồ công nghệ..."></textarea><div class="grid grid-cols-2 gap-4 mt-4"><div><label class="block text-sm font-semibold text-slate-700 mb-1">Nền tảng</label><select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"><option>TikTok (9:16)</option><option>YouTube (16:9)</option></select></div><div><label class="block text-sm font-semibold text-slate-700 mb-1">Engine</label><select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"><option>Kling AI</option><option>Runway Gen-3</option></select></div></div></div><button onclick="simulateProcess('modal-video', 'Đang kết nối Kling AI...', '-200 Xu', 'Đã khởi tạo Job. Video sẽ trả về hòm thư!')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition">Bắt Đầu Tạo Video</button></div></div>
+    
+    <div id="modal-media" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-media')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-photo-video text-purple-500 mr-2"></i>Trạm Media AI</h2><div class="grid grid-cols-2 gap-4 py-4"><button onclick="showToast('Chức năng đang bảo trì nâng cấp model!', 'warning')" class="p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 flex flex-col items-center justify-center gap-2 text-slate-600 transition"><i class="fas fa-image fa-2x text-purple-400"></i><span class="font-bold">Sinh Ảnh AI</span></button><button onclick="simulateProcess('modal-media', 'Đang tách nền qua RemoveBG...', '-10 Xu', 'Ảnh đã tách nền thành công!')" class="p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 flex flex-col items-center justify-center gap-2 text-slate-600 transition"><i class="fas fa-eraser fa-2x text-emerald-400"></i><span class="font-bold">Tách Nền Tự Động</span></button></div></div></div>
+    
+    <div id="modal-voice" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-voice')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-microphone-alt text-rose-500 mr-2"></i>Voice & Nhạc AI</h2><div class="py-4"><label class="block text-sm font-semibold text-slate-700 mb-2">Văn bản cần đọc (TTS)</label><textarea rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-rose-500" placeholder="Nhập văn bản vào đây..."></textarea><label class="block text-sm font-semibold text-slate-700 mb-2 mt-4">Chọn Giọng Đọc (Engine)</label><select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"><option>Fish Audio HD (Cao cấp - 50 Xu)</option><option>Edge TTS (Tiêu chuẩn - 10 Xu)</option></select></div><button onclick="simulateProcess('modal-voice', 'Đang render âm thanh HD...', '-50 Xu', 'Audio đã được lưu vào thư viện!')" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-500/30 transition">Sinh Giọng Nói</button></div></div>
 
-    if(!USER_ID) { window.location.href = '/login'; }
+    <script>
+        // XÁC THỰC
+        const USER_ID = localStorage.getItem('user_id');
+        const ROLE = localStorage.getItem('role');
+        const USERNAME = localStorage.getItem('username') || 'Khách hàng';
 
-    async function loadUserData() {
-        try {
-            const res = await fetch(`/api/v1/auth/me/${USER_ID}`);
-            const data = await res.json();
-            if(data.success) {
-                document.getElementById('user-name').innerText = data.username || "Khách hàng";
-                document.getElementById('balance-xu').innerText = data.credits.toLocaleString('vi-VN');
-                document.getElementById('user-avatar').src = `https://ui-avatars.com/api/?name=${data.username}&background=random`;
-            }
-        } catch(e) { console.error("Lỗi tải dữ liệu", e); }
-    }
+        if(!USER_ID) { window.location.href = '/login'; }
 
-    document.addEventListener('DOMContentLoaded', () => {
-        loadUserData();
+        document.getElementById('user-display-name').innerText = USERNAME;
+        document.getElementById('user-avatar-text').innerText = USERNAME.charAt(0).toUpperCase();
+
         if(ROLE === 'admin') {
-            document.getElementById('admin-btn').classList.remove('hidden');
+            document.getElementById('admin-panel-card').classList.remove('hidden');
         }
-    });
 
-    function logout() {
-        localStorage.removeItem('user_id');
-        localStorage.removeItem('role');
-        window.location.href = '/login';
-    }
-</script>
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('hidden');
+        }
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login';
+        }
+
+        // HỆ THỐNG TOAST NOTIFICATION MƯỢT MÀ
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            // Màu sắc tùy loại
+            let bgColor = type === 'success' ? 'bg-slate-800' : (type === 'warning' ? 'bg-orange-500' : 'bg-red-500');
+            let icon = type === 'success' ? '<i class="fas fa-check-circle text-emerald-400 mr-2"></i>' : '<i class="fas fa-exclamation-triangle text-white mr-2"></i>';
+            
+            toast.className = `toast-enter ${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center max-w-sm pointer-events-auto`;
+            toast.innerHTML = `${icon} <span class="text-sm font-medium leading-snug">${message}</span>`;
+            
+            container.appendChild(toast);
+            
+            // Tự xóa sau 3.5 giây
+            setTimeout(() => {
+                toast.classList.replace('toast-enter', 'toast-exit');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        // COPY CLIPBOARD CHO AFFILIATE
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`Đã copy link: ${text}`, 'success');
+            });
+        }
+
+        // GỬI GÓP Ý
+        function submitFeedback() {
+            const content = document.getElementById('fb-content').value;
+            if(!content.trim()) {
+                showToast('Vui lòng nhập nội dung góp ý!', 'warning');
+                return;
+            }
+            // Giả lập gửi API
+            setTimeout(() => {
+                showToast('Cảm ơn bạn! Yêu cầu đã được ghi nhận vào hệ thống.', 'success');
+                document.getElementById('fb-content').value = '';
+                toggleModal('modal-feedback');
+            }, 600);
+        }
+
+        // XỬ LÝ PAYOS
+        function processPayment(btn, amountVND, xu) {
+            btn.innerHTML = `<div class="text-center w-full py-1"><i class="fas fa-spinner fa-spin text-emerald-600 text-xl"></i></div>`;
+            btn.disabled = true;
+            
+            // Giả lập API PayOS Create Link
+            setTimeout(() => {
+                showToast(`Đang chuyển hướng sang cổng thanh toán PayOS gói ${amountVND.toLocaleString()}đ...`, 'success');
+                toggleModal('modal-wallet');
+                
+                // Phục hồi nút
+                setTimeout(() => {
+                    btn.innerHTML = `<div class="text-left"><p class="font-bold text-slate-800">Gói Tùy Chọn</p><p class="text-xs text-slate-500">Giá: ${amountVND.toLocaleString()}đ</p></div><div class="font-black text-emerald-600">+${xu} Xu</div>`;
+                    btn.disabled = false;
+                }, 1000);
+            }, 1200);
+        }
+
+        // GIẢ LẬP PROCESS CỦA CÁC TOOL AI (Video/Voice/Image)
+        function simulateProcess(modalId, startMsg, costMsg, endMsg) {
+            showToast(`${startMsg} <span class="bg-slate-700 text-white px-2 py-0.5 rounded text-[10px] ml-2 font-bold">${costMsg}</span>`, 'success');
+            toggleModal(modalId);
+            setTimeout(() => {
+                showToast(endMsg, 'success');
+            }, 2500);
+        }
+
+        // LOAD DATA TỪ API
+        async function loadData() {
+            try {
+                const resAuth = await fetch(`/api/v1/auth/me/${USER_ID}`);
+                const dataAuth = await resAuth.json();
+                if(dataAuth.success) {
+                    const balance = dataAuth.credits.toLocaleString('vi-VN');
+                    document.getElementById('wallet-balance-display').innerText = balance;
+                    document.getElementById('modal-current-balance').innerText = balance;
+                }
+                const resStats = await fetch('/api/v1/erp/dashboard-stats');
+                const dataStats = await resStats.json();
+                if(dataStats.success) {
+                    document.getElementById('stat-projects').innerText = dataStats.data.total_projects;
+                }
+            } catch(e) { console.error("Lỗi lấy dữ liệu:", e); }
+        }
+
+        document.addEventListener('DOMContentLoaded', loadData);
+    </script>
 </body>
 </html>
