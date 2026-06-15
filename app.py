@@ -91,3 +91,7 @@ async def media_app_ui():
 @app.get("/coach-app")
 async def coach_app_ui():
     return FileResponse("coach.html")
+
+@app.get("/wallet-app")
+async def wallet_app_ui():
+    return FileResponse("wallet.html")
