@@ -33,18 +33,14 @@ def sign_payos_data(data: dict) -> str:
         hashlib.sha256
     ).hexdigest()
 
-# --- TẠO LINK THANH TOÁN (HỖ TRỢ CẢ KHÁCH WEB LẪN KHÁCH VÃNG LAI) ---
 @router.post("/create-payment-link")
 async def create_payment_link(payload: dict):
     try:
-        # Nếu là khách vãng lai từ Telegram, Bot sẽ truyền telegram_id vào ô user_id này
         user_id = str(payload.get("user_id", "guest_web"))
         amount = int(payload.get("amount", 50000))
         
-        # Tạo mã orderCode ngẫu nhiên duy nhất (PayOS bắt buộc kiểu số nguyên int)
         order_code = random.randint(100000, 99999999)
         
-        # 1. Ghi nhận đơn hàng ở trạng thái chờ duyệt (PENDING) vào hệ thống
         conn = db_connect()
         c = conn.cursor()
         c.execute(
@@ -54,7 +50,6 @@ async def create_payment_link(payload: dict):
         conn.commit()
         conn.close()
         
-        # 2. Chuẩn bị dữ liệu gọi sang cổng PayOS
         payos_data = {
             "orderCode": order_code,
             "amount": amount,
@@ -63,7 +58,6 @@ async def create_payment_link(payload: dict):
             "returnUrl": "https://app.toanaas.vn/wallet-app"
         }
         
-        # Ký số bảo mật đơn hàng
         payos_data["signature"] = sign_payos_data(payos_data)
         
         headers = {
@@ -72,7 +66,6 @@ async def create_payment_link(payload: dict):
             "Content-Type": "application/json"
         }
         
-        # Gọi API PayOS để lấy link thanh toán VietQR thật
         response = requests.post(
             "https://api-merchant.payos.vn/v2/payment-requests",
             json=payos_data,
@@ -96,25 +89,31 @@ async def create_payment_link(payload: dict):
         logger.error(f"Lỗi hệ thống tạo link: {e}")
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
 
-# --- TRẠM WEBHOOK TIẾP NHẬN TIỀN VÀ TỰ ĐỘNG CỘNG XU ---
 @router.post("/webhook/payos")
 async def payos_webhook(request: Request):
-    # Giải quyết lỗi 400 khi PayOS gọi kiểm tra hệ thống (Health Check)
     try:
         body = await request.json()
     except:
-        return JSONResponse({"success": True, "message": "Ping OK"}, status_code=200)
+        return JSONResponse({"success": True}, status_code=200)
 
     try:
-        data = body.get("data", {})
+        data = body.get("data")
+        # Xử lý an toàn khi PayOS gửi dữ liệu Test rỗng
+        if data is None:
+            data = {}
+            
         signature = body.get("signature", "")
-        
-        # Xác thực chữ ký bảo mật chống tin tặc giả mạo số tiền
-        if not verify_payos_signature(data, signature):
-            return JSONResponse({"success": False, "message": "Sai chữ ký"}, status_code=400)
-        
         order_code = str(data.get("orderCode", ""))
         amount = int(data.get("amount", 0))
+        
+        # --- LỐI ĐI VIP CHO LỆNH TEST TỪ PAYOS ---
+        # Khi bấm nút "Lưu" trên trang PayOS, nó sẽ gửi một lệnh ảo. Ta cho qua luôn bằng lệnh này!
+        if not order_code or order_code == "123" or body.get("desc") == "success" or not signature:
+            return JSONResponse({"success": True, "message": "Webhook Test OK"}, status_code=200)
+        
+        # Kiểm tra bảo mật cho các giao dịch thật
+        if not verify_payos_signature(data, signature):
+            return JSONResponse({"success": False, "message": "Sai chữ ký"}, status_code=400)
         
         conn = db_connect()
         c = conn.cursor()
@@ -122,13 +121,11 @@ async def payos_webhook(request: Request):
         try:
             c.execute("BEGIN IMMEDIATE")
             
-            # 1. Tránh xử lý trùng hóa đơn
             c.execute("SELECT 1 FROM payos_processed WHERE order_code=?", (order_code,))
             if c.fetchone():
                 conn.rollback()
                 return JSONResponse({"success": True, "message": "Đã xử lý đơn này rồi"})
                 
-            # 2. Đối chiếu kiểm tra với đơn hàng PENDING trong hệ thống
             c.execute("SELECT user_id, amount, xu, status FROM payos_orders WHERE order_code=?", (order_code,))
             order = c.fetchone()
             if not order:
@@ -141,17 +138,12 @@ async def payos_webhook(request: Request):
                 conn.rollback()
                 return JSONResponse({"success": False, "message": "Sai lệch số tiền hoặc trạng thái đơn"})
                 
-            # 3. GIẢI QUYẾT KHÁCH VÃNG LAI: Tự động khởi tạo dòng dữ liệu mới trong bảng users nếu ID chưa tồn tại
+            # Tạo tài khoản ví tự động cho người dùng mới / khách vãng lai
             c.execute("INSERT OR IGNORE INTO users (user_id, credits, created_at) VALUES (?, 0, ?)", (user_id, now_text()))
-            
-            # 4. Cộng Xu (credits) vào ví tài khoản tương ứng
             c.execute("UPDATE users SET credits = credits + ? WHERE user_id=?", (expected_xu, user_id))
-            
-            # 5. Chốt trạng thái đơn hàng thành công
             c.execute("INSERT INTO payos_processed (order_code, processed_at) VALUES (?,?)", (order_code, now_text()))
             c.execute("UPDATE payos_orders SET status='PAID', paid_at=? WHERE order_code=?", (now_text(), order_code))
             
-            # 6. Nhật ký lưu lại biến động số dư để đối soát doanh thu công khai
             c.execute("SELECT credits FROM users WHERE user_id=?", (user_id,))
             balance_after = c.fetchone()[0]
             c.execute(
@@ -160,7 +152,7 @@ async def payos_webhook(request: Request):
             )
             
             conn.commit()
-            return JSONResponse({"success": True, "message": "Hệ thống đã tự động cộng Xu thành công"})
+            return JSONResponse({"success": True, "message": "Cộng Xu thành công"})
         except Exception as db_e:
             conn.rollback()
             logger.error(f"Lỗi xử lý DB: {db_e}")
