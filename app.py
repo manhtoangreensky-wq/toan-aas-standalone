@@ -16,6 +16,7 @@ import report
 import auth 
 import coach
 import device_ops
+import affiliate_ops
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -64,6 +65,7 @@ app.include_router(device_ops.router, prefix="/api/v1/device-ops", tags=["B2B De
 app.include_router(report.router, prefix="/api/v1/report", tags=["Admin Dashboard"])
 app.include_router(coach.router, prefix="/api/v1/coach", tags=["AI Growth Coach"])
 app.include_router(device_ops.router, prefix="/api/v1/device-ops", tags=["B2B"])
+app.include_router(affiliate_ops.router, prefix="/api/v1/affiliate", tags=["Affiliate"])
 
 # --- ĐƯỜNG LINK GIAO DIỆN ---
 @app.get("/login")
@@ -101,4 +103,9 @@ async def wallet_app_ui():
 @app.get("/b2b-app")
 async def b2b_app():
     with open("b2b.html", "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
+
+@app.get("/affiliate-app")
+async def affiliate_app():
+    with open("affiliate.html", "r", encoding="utf-8") as f:
         return HTMLResponse(content=f.read())

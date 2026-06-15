@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS - Affiliate Vault</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+    
+    <nav class="bg-indigo-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fas fa-link mr-2"></i>Affiliate Vault</h1>
+            <a href="/" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm font-bold"><i class="fas fa-home"></i> Về Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-6 p-4 max-w-6xl">
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-bold text-gray-800">Kho Link Tiếp Thị</h2>
+            <button onclick="toggleModal('addModal')" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded shadow">
+                <i class="fas fa-plus"></i> Thêm Link Mới
+            </button>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-md overflow-hidden">
+            <table class="min-w-full leading-normal">
+                <thead>
+                    <tr>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Sản phẩm / Dịch vụ</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Nền tảng</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Hoa hồng</th>
+                        <th class="px-5 py-3 border-b-2 border-gray-200 bg-gray-50 text-center text-xs font-semibold text-gray-600 uppercase tracking-wider">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody id="link-list">
+                    <tr><td colspan="4" class="px-5 py-4 text-center text-sm text-gray-500">Đang tải dữ liệu...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="addModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full flex items-center justify-center">
+        <div class="bg-white p-6 rounded-xl shadow-lg w-full max-w-md">
+            <h3 class="text-lg font-bold mb-4 border-b pb-2 text-indigo-600">Thêm Link Tiếp Thị</h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Tên Sản phẩm</label>
+                    <input type="text" id="a-name" placeholder="VD: Khóa học AI, Máy hút bụi..." class="w-full px-3 py-2 border rounded outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Nền tảng</label>
+                    <select id="a-platform" class="w-full px-3 py-2 border rounded outline-none focus:border-indigo-500">
+                        <option value="Shopee">Shopee</option>
+                        <option value="TikTok Shop">TikTok Shop</option>
+                        <option value="AccessTrade">AccessTrade</option>
+                        <option value="Khác">Khác</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Đường dẫn (Link rút gọn)</label>
+                    <input type="text" id="a-url" class="w-full px-3 py-2 border rounded outline-none focus:border-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Mức hoa hồng (%)</label>
+                    <input type="text" id="a-rate" placeholder="VD: 15% hoặc 50.000đ" class="w-full px-3 py-2 border rounded outline-none focus:border-indigo-500">
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="toggleModal('addModal')" class="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 font-semibold">Hủy</button>
+                <button onclick="saveLink()" id="btn-save" class="px-4 py-2 bg-indigo-600 text-white rounded hover:bg-indigo-700 font-semibold">Lưu Link</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleModal(modalID) {
+            document.getElementById(modalID).classList.toggle('hidden');
+        }
+
+        async function loadLinks() {
+            try {
+                const res = await fetch('/api/v1/affiliate/links');
+                const data = await res.json();
+                const list = document.getElementById('link-list');
+                
+                if(data.success && data.data.length > 0) {
+                    list.innerHTML = data.data.map(l => `
+                        <tr class="hover:bg-gray-50">
+                            <td class="px-5 py-4 border-b border-gray-200 text-sm font-bold text-gray-800">${l.product_name}</td>
+                            <td class="px-5 py-4 border-b border-gray-200 text-sm text-gray-600"><span class="bg-indigo-100 text-indigo-800 text-xs px-2 py-1 rounded">${l.platform}</span></td>
+                            <td class="px-5 py-4 border-b border-gray-200 text-sm font-semibold text-green-600">${l.commission_rate}</td>
+                            <td class="px-5 py-4 border-b border-gray-200 text-sm text-center">
+                                <button onclick="copyToClipboard('${l.url}')" class="bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-1 px-3 border border-gray-300 rounded shadow-sm text-xs">
+                                    <i class="fas fa-copy text-indigo-600"></i> Copy
+                                </button>
+                                <a href="${l.url}" target="_blank" class="ml-2 bg-gray-100 hover:bg-gray-200 text-gray-800 font-semibold py-1 px-3 border border-gray-300 rounded shadow-sm text-xs">
+                                    <i class="fas fa-external-link-alt text-blue-600"></i> Test
+                                </a>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    list.innerHTML = '<tr><td colspan="4" class="px-5 py-4 text-center text-sm text-gray-500">Kho link trống. Thêm link kiếm tiền ngay!</td></tr>';
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        async function saveLink() {
+            const product_name = document.getElementById('a-name').value;
+            const platform = document.getElementById('a-platform').value;
+            const url = document.getElementById('a-url').value;
+            const commission_rate = document.getElementById('a-rate').value || "0%";
+            
+            if(!product_name || !url) return alert("Vui lòng nhập đủ tên sản phẩm và đường dẫn!");
+            
+            const btn = document.getElementById('btn-save');
+            btn.disabled = true; btn.innerText = "Đang lưu...";
+
+            try {
+                const res = await fetch('/api/v1/affiliate/links', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_name, platform, url, commission_rate })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    toggleModal('addModal');
+                    loadLinks();
+                    document.getElementById('a-name').value = '';
+                    document.getElementById('a-url').value = '';
+                    document.getElementById('a-rate').value = '';
+                } else {
+                    alert("Lỗi: " + data.message);
+                }
+            } catch (e) {
+                alert("Lỗi kết nối máy chủ");
+            } finally {
+                btn.disabled = false; btn.innerText = "Lưu Link";
+            }
+        }
+
+        function copyToClipboard(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã copy link thành công!");
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', loadLinks);
+    </script>
+</body>
+</html>
