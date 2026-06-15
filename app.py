@@ -20,6 +20,7 @@ import affiliate_ops
 import media_ops
 import campaign_ops
 import report
+import erp_core
 
 app = FastAPI(title="TOAN AAS OS")
 
@@ -42,6 +43,7 @@ app.include_router(affiliate_ops.router, prefix="/api/v1/affiliate", tags=["Affi
 app.include_router(media_ops.router, prefix="/api/v1/media-ops", tags=["Media"])
 app.include_router(campaign_ops.router, prefix="/api/v1/campaign", tags=["Campaign"])
 app.include_router(report.router, prefix="/api/v1/report", tags=["Report"])
+app.include_router(erp_core.router, prefix="/api/v1/erp", tags=["ERP Core"])
 
 # Hàm hiển thị giao diện an toàn
 def get_html(file_name):

@@ -38,13 +38,18 @@
         <div class="flex-1 overflow-auto p-6">
             
             <div id="tab-dashboard" class="tab-content block">
+                
+                <button onclick="seedDemoData()" class="mb-6 bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg shadow-md transition flex items-center gap-2">
+                    <i class="fas fa-magic"></i> Bơm Dữ Liệu Chạy Thử
+                </button>
+
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
                         <p class="text-slate-400 text-xs font-bold uppercase mb-1">Tổng Khách Hàng</p>
                         <p class="text-3xl font-bold text-slate-800" id="stat-users">...</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                        <p class="text-slate-400 text-xs font-bold uppercase mb-1">Doanh thu PayOS (VNĐ)</p>
+                        <p class="text-slate-400 text-xs font-bold uppercase mb-1">Doanh thu (VNĐ)</p>
                         <p class="text-3xl font-bold text-emerald-600" id="stat-rev">...</p>
                     </div>
                     <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -129,7 +134,7 @@
         // Tải Thống kê
         async function loadStats() {
             try {
-                const res = await fetch(`/api/v1/admin/dashboard-stats?admin_id=${admin_id}`);
+                const res = await fetch(`/api/v1/erp/dashboard-stats`);
                 const data = await res.json();
                 if(data.success) {
                     document.getElementById('stat-users').innerText = data.data.total_users;
@@ -137,6 +142,17 @@
                     document.getElementById('stat-tools').innerText = data.data.active_tools;
                 }
             } catch (e) {}
+        }
+
+        // HÀM BƠM DỮ LIỆU
+        async function seedDemoData() {
+            if(!confirm("Hệ thống sẽ tự động tạo 50 Khách hàng và 15 Dự án mẫu. Bạn có chắc chắn?")) return;
+            try {
+                const res = await fetch('/api/v1/erp/seed-demo-data', { method: 'POST' });
+                const data = await res.json();
+                alert(data.message);
+                if(data.success) window.location.reload(); // F5 lại trang
+            } catch(e) { alert("Lỗi kết nối máy chủ ERP!"); }
         }
 
         // Tải Users
