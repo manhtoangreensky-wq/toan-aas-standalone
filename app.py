@@ -1,16 +1,15 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
-import logging
 
 from config import settings
 from db import init_db
 
-# Tự động vá DB khi khởi động
+# Chạy vá lỗi DB ngay khi khởi động
 import migrate_db
 migrate_db.run_migration()
 
-# Import các modules
+# Gọi các module
 import auth_ops
 import admin_ops
 import billing
@@ -32,7 +31,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- ĐĂNG KÝ ROUTER ---
+# Đăng ký API
 app.include_router(auth_ops.router, prefix="/api/v1/auth", tags=["Auth"])
 app.include_router(admin_ops.router, prefix="/api/v1/admin", tags=["Admin"])
 app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
@@ -44,14 +43,15 @@ app.include_router(media_ops.router, prefix="/api/v1/media-ops", tags=["Media"])
 app.include_router(campaign_ops.router, prefix="/api/v1/campaign", tags=["Campaign"])
 app.include_router(report.router, prefix="/api/v1/report", tags=["Report"])
 
-# --- ĐIỀU HƯỚNG GIAO DIỆN ---
+# Hàm hiển thị giao diện an toàn
 def get_html(file_name):
     try:
         with open(file_name, "r", encoding="utf-8") as f:
             return HTMLResponse(content=f.read())
     except Exception:
-        return HTMLResponse(content=f"<h1>Lỗi: Không tìm thấy giao diện {file_name}</h1>", status_code=404)
+        return HTMLResponse(content=f"<h3 style='color:red; text-align:center; margin-top:50px;'>Lỗi 404: Không tìm thấy file {file_name}</h3>", status_code=404)
 
+# Khai báo đường link (Mỗi link chỉ khai báo 1 lần duy nhất)
 @app.get("/login")
 async def login_page(): return get_html("auth.html")
 
