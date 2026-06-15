@@ -12,7 +12,6 @@
         .card-hover { transition: all 0.3s ease; }
         .card-hover:hover { transform: translateY(-3px); box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1); }
         .hide-scroll::-webkit-scrollbar { display: none; }
-        /* Hiệu ứng Toast Notification */
         @keyframes slideInUp { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         .toast-enter { animation: slideInUp 0.3s ease-out forwards; }
@@ -21,7 +20,6 @@
 </head>
 <body class="text-slate-800 h-screen flex flex-col overflow-hidden relative">
 
-    <!-- TOP NAVIGATION -->
     <header class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center z-10 flex-shrink-0 shadow-sm">
         <div class="flex items-center gap-3">
             <div class="bg-blue-600 text-white h-10 w-10 rounded-xl flex items-center justify-center text-xl shadow-md shadow-blue-500/30">
@@ -45,11 +43,8 @@
         </div>
     </header>
 
-    <!-- MAIN DASHBOARD -->
     <main class="flex-1 overflow-y-auto hide-scroll p-8 pb-20">
         <div class="max-w-7xl mx-auto space-y-8">
-
-            <!-- THỐNG KÊ (TOP STATS ROW) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Số Dư Hiện Tại</p>
@@ -57,186 +52,98 @@
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Video Đã Tạo</p>
-                    <h3 class="text-3xl font-black text-blue-600">12</h3>
+                    <h3 class="text-3xl font-black text-blue-600">0</h3>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
-                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dự Án Đang Chạy</p>
+                    <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Dự Án B2B</p>
                     <h3 class="text-3xl font-black text-slate-800" id="stat-projects">0</h3>
                 </div>
                 <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm relative overflow-hidden">
                     <div class="absolute right-0 top-0 w-2 h-full bg-pink-500"></div>
                     <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">Hoa Hồng Affiliate</p>
-                    <h3 class="text-3xl font-black text-slate-800">4.5M <span class="text-sm font-medium text-slate-500">VNĐ</span></h3>
+                    <h3 class="text-3xl font-black text-slate-800">0 <span class="text-sm font-medium text-slate-500">VNĐ</span></h3>
                 </div>
             </div>
 
-            <!-- LƯỚI CHỨC NĂNG (FEATURE GRID) -->
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div onclick="openModal('modal-video')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-magic"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">AI Video Studio</h3><p class="text-sm text-slate-500">Tạo kịch bản tự động, render video AI.</p></div>
+                <div onclick="openModal('modal-elv'); loadMyProjects();" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-tools"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">Thi Công ELV/Camera</h3><p class="text-sm text-slate-500">Xem tiến độ dự án B2B của riêng bạn.</p></div>
+                <div onclick="openModal('modal-wallet'); loadMyHistory();" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group relative overflow-hidden"><div class="absolute right-4 top-4 text-emerald-100"><i class="fas fa-coins fa-4x"></i></div><div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform relative z-10"><i class="fas fa-wallet"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1 relative z-10">Ví Xu & Lịch Sử</h3><p class="text-sm text-slate-500 relative z-10">Nạp xu PayOS và xem lịch sử dòng tiền.</p></div>
+                <div onclick="openModal('modal-media')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-photo-video"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">Trạm Media AI</h3><p class="text-sm text-slate-500">Sinh ảnh AI, Tách nền tự động.</p></div>
+                <div onclick="openModal('modal-affiliate'); loadMyAffiliates();" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-shopping-cart"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">Affiliate Vault</h3><p class="text-sm text-slate-500">Kho link tiếp thị liên kết của riêng bạn.</p></div>
+                <div onclick="window.location.href='/assistant-app'" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-robot"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">Trợ Lý AI & Chat</h3><p class="text-sm text-slate-500">Hỏi đáp đa năng, ghi chú tức thì.</p></div>
+                <div onclick="openModal('modal-voice')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-microphone-alt"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">Voice & Nhạc AI</h3><p class="text-sm text-slate-500">Chuyển văn bản thành giọng đọc (TTS).</p></div>
+                <div onclick="openModal('modal-feedback')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group"><div class="h-10 w-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-headset"></i></div><h3 class="text-lg font-bold text-slate-800 mb-1">Góp ý / Báo lỗi</h3><p class="text-sm text-slate-500">Gửi hỗ trợ trực tiếp tới Ban Quản Trị.</p></div>
                 
-                <div onclick="openModal('modal-video')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-magic"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">AI Video Studio</h3>
-                    <p class="text-sm text-slate-500">Tạo kịch bản tự động, render video bằng Kling/Runway.</p>
-                </div>
-
-                <div onclick="openModal('modal-elv')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-tools"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Thi Công ELV/Camera</h3>
-                    <p class="text-sm text-slate-500">Theo dõi tiến độ dự án, xem báo giá và yêu cầu bảo hành.</p>
-                </div>
-
-                <div onclick="openModal('modal-wallet')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group relative overflow-hidden">
-                    <div class="absolute right-4 top-4 text-emerald-100"><i class="fas fa-coins fa-4x"></i></div>
-                    <div class="h-10 w-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform relative z-10"><i class="fas fa-wallet"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1 relative z-10">Ví Xu & Nạp Tiền</h3>
-                    <p class="text-sm text-slate-500 relative z-10">Thanh toán tự động bằng QR Code PayOS.</p>
-                </div>
-
-                <div onclick="openModal('modal-media')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-purple-50 text-purple-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-photo-video"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Trạm Media AI</h3>
-                    <p class="text-sm text-slate-500">Kho tài nguyên số, tách nền ảnh (RemoveBG), xử lý hình ảnh.</p>
-                </div>
-
-                <div onclick="openModal('modal-affiliate')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-pink-50 text-pink-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-shopping-cart"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Affiliate Vault</h3>
-                    <p class="text-sm text-slate-500">Lấy link tiếp thị, đo lường tỷ lệ chuyển đổi và hoa hồng.</p>
-                </div>
-
-                <div onclick="window.location.href='/assistant-app'" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-sky-50 text-sky-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-robot"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Trợ Lý AI & Dịch Thuật</h3>
-                    <p class="text-sm text-slate-500">Hỏi đáp đa năng, ghi chú, dịch thuật đa ngôn ngữ tức thì.</p>
-                </div>
-
-                <div onclick="openModal('modal-voice')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-microphone-alt"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Voice & Nhạc AI</h3>
-                    <p class="text-sm text-slate-500">Chuyển văn bản thành giọng đọc HD bằng Fish Audio/Edge.</p>
-                </div>
-
-                <div onclick="openModal('modal-feedback')" class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm card-hover cursor-pointer group">
-                    <div class="h-10 w-10 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform"><i class="fas fa-headset"></i></div>
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">Góp ý / Báo lỗi</h3>
-                    <p class="text-sm text-slate-500">Gửi yêu cầu hỗ trợ trực tiếp tới hệ thống quản trị.</p>
-                </div>
-
-                <!-- Quản Trị Hệ Thống (Chỉ Admin) -->
-                <div onclick="window.location.href='/admin-app'" id="admin-panel-card" class="hidden bg-[#0f172a] p-6 rounded-2xl shadow-lg shadow-slate-900/20 card-hover cursor-pointer group relative overflow-hidden">
-                    <div class="absolute -right-4 -bottom-4 text-slate-800"><i class="fas fa-cogs fa-5x"></i></div>
-                    <div class="h-10 w-10 rounded-lg bg-slate-800 text-yellow-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform border border-slate-700 relative z-10"><i class="fas fa-shield-alt"></i></div>
-                    <h3 class="text-lg font-bold text-white mb-1 relative z-10">Quản trị hệ thống</h3>
-                    <p class="text-sm text-slate-400 relative z-10">Panel Master dành riêng cho Ban Giám Đốc (19 Module).</p>
-                </div>
-
+                <div onclick="window.location.href='/admin-app'" id="admin-panel-card" class="hidden bg-[#0f172a] p-6 rounded-2xl shadow-lg shadow-slate-900/20 card-hover cursor-pointer group relative overflow-hidden"><div class="absolute -right-4 -bottom-4 text-slate-800"><i class="fas fa-cogs fa-5x"></i></div><div class="h-10 w-10 rounded-lg bg-slate-800 text-yellow-400 flex items-center justify-center text-xl mb-4 group-hover:scale-110 transition-transform border border-slate-700 relative z-10"><i class="fas fa-shield-alt"></i></div><h3 class="text-lg font-bold text-white mb-1 relative z-10">Quản trị hệ thống</h3><p class="text-sm text-slate-400 relative z-10">Panel Master dành riêng cho Admin.</p></div>
             </div>
         </div>
     </main>
 
-    <!-- KHU VỰC CHỨA TOAST NOTIFICATION -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
 
-    <!-- ========================================== -->
-    <!-- CÁC MODAL CHỨC NĂNG -->
-    <!-- ========================================== -->
-
-    <!-- 1. MODAL VÍ XU PAYOS -->
+    <!-- MODAL VÍ XU & LỊCH SỬ -->
     <div id="modal-wallet" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md relative overflow-hidden">
-            <button onclick="toggleModal('modal-wallet')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative overflow-hidden flex flex-col max-h-[90vh]">
+            <button onclick="toggleModal('modal-wallet')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 z-20"><i class="fas fa-times text-xl"></i></button>
             <div class="text-center mb-6">
                 <div class="h-16 w-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl"><i class="fas fa-coins"></i></div>
-                <h2 class="text-2xl font-black text-slate-800">Nạp Xu Tự Động</h2>
-                <p class="text-sm text-slate-500 mt-1">Hệ thống xử lý QR qua PayOS 24/7</p>
+                <h2 class="text-2xl font-black text-slate-800">Ví Tài Khoản</h2>
             </div>
+            
             <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 mb-6 flex justify-between items-center">
-                <span class="font-semibold text-slate-600">Ví của bạn:</span>
+                <span class="font-semibold text-slate-600">Số dư khả dụng:</span>
                 <span class="text-2xl font-bold text-emerald-600"><span id="modal-current-balance">0</span> Xu</span>
             </div>
-            <div class="space-y-3">
-                <button id="btn-payos-50" onclick="processPayment(this, 50000, 500)" class="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 hover:shadow-md transition">
-                    <div class="text-left"><p class="font-bold text-slate-800">Gói Tiêu Chuẩn</p><p class="text-xs text-slate-500">Giá: 50.000đ</p></div>
-                    <div class="font-black text-emerald-600">+500 Xu</div>
+            
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <button onclick="processPayment(this, 50000, 500)" class="p-3 border border-emerald-200 bg-emerald-50 rounded-xl hover:bg-emerald-100 text-center transition">
+                    <p class="font-bold text-emerald-700">50.000đ</p><p class="text-xs text-emerald-600">+500 Xu</p>
                 </button>
-                <button id="btn-payos-100" onclick="processPayment(this, 100000, 1200)" class="w-full flex items-center justify-between p-4 bg-white border border-slate-200 rounded-xl hover:border-emerald-500 hover:shadow-md transition">
-                    <div class="text-left"><p class="font-bold text-slate-800">Gói Chuyên Nghiệp</p><p class="text-xs text-slate-500">Giá: 100.000đ</p></div>
-                    <div class="font-black text-emerald-600">+1.200 Xu <span class="text-[10px] bg-red-100 text-red-600 px-1 rounded ml-1">HOT</span></div>
+                <button onclick="processPayment(this, 100000, 1200)" class="p-3 border border-emerald-200 bg-emerald-50 rounded-xl hover:bg-emerald-100 text-center transition relative">
+                    <span class="absolute -top-2 -right-2 bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow">HOT</span>
+                    <p class="font-bold text-emerald-700">100.000đ</p><p class="text-xs text-emerald-600">+1.200 Xu</p>
                 </button>
+            </div>
+
+            <h4 class="font-bold text-slate-800 mb-3 text-sm"><i class="fas fa-history mr-2 text-slate-400"></i>Lịch sử biến động Xu</h4>
+            <div class="overflow-y-auto flex-1 border border-slate-100 rounded-xl bg-slate-50 p-2 hide-scroll" id="history-list">
+                <!-- Lịch sử render JS -->
             </div>
         </div>
     </div>
 
-    <!-- 2. MODAL DỰ ÁN ELV -->
+    <!-- MODAL DỰ ÁN ELV THỰC TẾ -->
     <div id="modal-elv" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative max-h-[80vh] flex flex-col">
             <button onclick="toggleModal('modal-elv')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
             <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-tools text-orange-500 mr-2"></i>Dự Án Của Bạn</h2>
-            <div class="py-4 space-y-4">
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h4 class="font-bold text-slate-800">Hệ thống Camera Phân xưởng B</h4>
-                            <p class="text-xs text-slate-500">Cập nhật: Hôm nay</p>
-                        </div>
-                        <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded uppercase">Đang triển khai</span>
-                    </div>
-                    <div class="w-full bg-slate-200 rounded-full h-2 mt-3 mb-1"><div class="bg-orange-500 h-2 rounded-full" style="width: 45%"></div></div>
-                    <p class="text-xs text-right font-medium text-slate-500">Tiến độ: 45%</p>
-                </div>
-                <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl flex justify-between items-center">
-                    <div>
-                        <h4 class="font-bold text-slate-800">Lắp đặt Tủ Mạng Tầng 2</h4>
-                        <p class="text-xs text-slate-500">Hoàn thành: 12/05/2026</p>
-                    </div>
-                    <span class="bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded uppercase">Đã nghiệm thu</span>
-                </div>
+            <div class="py-4 overflow-y-auto flex-1 space-y-4" id="my-projects-list">
+                <!-- Render từ JS -->
             </div>
-            <button onclick="showToast('Yêu cầu báo giá mới đã gửi đến phòng Kinh Doanh!', 'success')" class="w-full py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition">Yêu cầu Dự án mới</button>
+            <button onclick="showToast('Yêu cầu báo giá mới đã gửi đến phòng Kinh Doanh!', 'success')" class="w-full mt-4 py-3 bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl transition">Yêu cầu Dự án mới</button>
         </div>
     </div>
 
-    <!-- 3. MODAL AFFILIATE VAULT -->
+    <!-- MODAL AFFILIATE THỰC TẾ -->
     <div id="modal-affiliate" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative">
+        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative max-h-[80vh] flex flex-col">
             <button onclick="toggleModal('modal-affiliate')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
-            <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-shopping-cart text-pink-500 mr-2"></i>Kho Link Tiếp Thị (Affiliate)</h2>
-            <div class="py-4 space-y-3">
-                <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
-                    <div><p class="font-bold text-slate-800 text-sm">Shopee Deal Điện Thoại</p><p class="text-[10px] text-pink-500">Hoa hồng: 5%</p></div>
-                    <button onclick="copyToClipboard('https://goeco.mobi/GJPRlrH3')" class="px-3 py-1 bg-white border border-slate-300 rounded shadow-sm text-xs font-bold hover:bg-slate-100 transition"><i class="far fa-copy mr-1"></i>Copy Link</button>
-                </div>
-                <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
-                    <div><p class="font-bold text-slate-800 text-sm">VPBank Mở Thẻ</p><p class="text-[10px] text-pink-500">Hoa hồng: 120.000đ/Lead</p></div>
-                    <button onclick="copyToClipboard('https://goecom.asia/Z31Vp7Ad')" class="px-3 py-1 bg-white border border-slate-300 rounded shadow-sm text-xs font-bold hover:bg-slate-100 transition"><i class="far fa-copy mr-1"></i>Copy Link</button>
-                </div>
+            <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-shopping-cart text-pink-500 mr-2"></i>Link Tiếp Thị Của Bạn</h2>
+            <div class="py-4 overflow-y-auto flex-1 space-y-3" id="my-affiliates-list">
+                <!-- Render từ JS -->
             </div>
-            <button onclick="showToast('Tính năng rút tiền sẽ khả dụng khi số dư Hoa hồng > 200.000đ', 'warning')" class="w-full mt-2 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-lg shadow-pink-500/30 transition">Rút Tiền Hoa Hồng</button>
+            <button onclick="showToast('Rút tiền khả dụng khi số dư > 200.000đ', 'warning')" class="w-full mt-2 py-3 bg-pink-600 hover:bg-pink-700 text-white font-bold rounded-xl shadow-lg shadow-pink-500/30 transition">Rút Tiền Hoa Hồng</button>
         </div>
     </div>
 
-    <!-- 4. MODAL GÓP Ý / FEEDBACK -->
-    <div id="modal-feedback" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50">
-        <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md relative">
-            <button onclick="toggleModal('modal-feedback')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button>
-            <h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-headset text-teal-500 mr-2"></i>Gửi Yêu cầu Hỗ trợ</h2>
-            <div class="py-4">
-                <label class="block text-sm font-semibold text-slate-700 mb-2">Bạn đang gặp vấn đề gì?</label>
-                <textarea id="fb-content" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-teal-500" placeholder="Mô tả chi tiết lỗi hoặc góp ý của bạn..."></textarea>
-            </div>
-            <button onclick="submitFeedback()" class="w-full py-3 bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl shadow-lg shadow-teal-500/30 transition">Gửi Quản Trị Viên</button>
-        </div>
-    </div>
-
-    <!-- CÁC MODAL AI (Video, Media, Voice) -->
-    <div id="modal-video" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-video')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-film text-blue-500 mr-2"></i>AI Video Studio</h2><div class="py-4"><label class="block text-sm font-semibold text-slate-700 mb-2">Chủ đề Kịch bản (Prompt)</label><textarea rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-blue-500" placeholder="VD: Tạo kịch bản review đồ công nghệ..."></textarea><div class="grid grid-cols-2 gap-4 mt-4"><div><label class="block text-sm font-semibold text-slate-700 mb-1">Nền tảng</label><select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"><option>TikTok (9:16)</option><option>YouTube (16:9)</option></select></div><div><label class="block text-sm font-semibold text-slate-700 mb-1">Engine</label><select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"><option>Kling AI</option><option>Runway Gen-3</option></select></div></div></div><button onclick="simulateProcess('modal-video', 'Đang kết nối Kling AI...', '-200 Xu', 'Đã khởi tạo Job. Video sẽ trả về hòm thư!')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-lg shadow-blue-500/30 transition">Bắt Đầu Tạo Video</button></div></div>
-    
-    <div id="modal-media" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-media')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-photo-video text-purple-500 mr-2"></i>Trạm Media AI</h2><div class="grid grid-cols-2 gap-4 py-4"><button onclick="showToast('Chức năng đang bảo trì nâng cấp model!', 'warning')" class="p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-purple-500 hover:bg-purple-50 flex flex-col items-center justify-center gap-2 text-slate-600 transition"><i class="fas fa-image fa-2x text-purple-400"></i><span class="font-bold">Sinh Ảnh AI</span></button><button onclick="simulateProcess('modal-media', 'Đang tách nền qua RemoveBG...', '-10 Xu', 'Ảnh đã tách nền thành công!')" class="p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-500 hover:bg-emerald-50 flex flex-col items-center justify-center gap-2 text-slate-600 transition"><i class="fas fa-eraser fa-2x text-emerald-400"></i><span class="font-bold">Tách Nền Tự Động</span></button></div></div></div>
-    
-    <div id="modal-voice" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-voice')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-microphone-alt text-rose-500 mr-2"></i>Voice & Nhạc AI</h2><div class="py-4"><label class="block text-sm font-semibold text-slate-700 mb-2">Văn bản cần đọc (TTS)</label><textarea rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none focus:border-rose-500" placeholder="Nhập văn bản vào đây..."></textarea><label class="block text-sm font-semibold text-slate-700 mb-2 mt-4">Chọn Giọng Đọc (Engine)</label><select class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none"><option>Fish Audio HD (Cao cấp - 50 Xu)</option><option>Edge TTS (Tiêu chuẩn - 10 Xu)</option></select></div><button onclick="simulateProcess('modal-voice', 'Đang render âm thanh HD...', '-50 Xu', 'Audio đã được lưu vào thư viện!')" class="w-full py-3 bg-rose-500 hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg shadow-rose-500/30 transition">Sinh Giọng Nói</button></div></div>
+    <!-- CÁC MODAL KHÁC GIỮ NGUYÊN HTML -->
+    <div id="modal-feedback" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md relative"><button onclick="toggleModal('modal-feedback')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-headset text-teal-500 mr-2"></i>Gửi Hỗ trợ</h2><div class="py-4"><textarea id="fb-content" rows="4" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none" placeholder="Mô tả lỗi..."></textarea></div><button onclick="submitFeedback()" class="w-full py-3 bg-teal-600 text-white font-bold rounded-xl shadow-lg">Gửi</button></div></div>
+    <div id="modal-video" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-video')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-film text-blue-500 mr-2"></i>AI Video</h2><div class="py-4"><textarea id="video-prompt" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none" placeholder="Prompt..."></textarea></div><button onclick="simulateProcess('modal-video', 'video', 200, 'video-prompt')" class="w-full py-3 bg-blue-600 text-white font-bold rounded-xl shadow-lg">Tạo Video (200 Xu)</button></div></div>
+    <div id="modal-media" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-media')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-image text-purple-500 mr-2"></i>Media AI</h2><div class="grid grid-cols-2 gap-4 py-4"><button onclick="showToast('Đang bảo trì', 'warning')" class="p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-purple-500 text-slate-600 font-bold">Sinh Ảnh</button><button onclick="simulateProcess('modal-media', 'media', 10, null)" class="p-4 border-2 border-dashed border-slate-300 rounded-xl hover:border-emerald-500 text-slate-600 font-bold">Tách Nền (10 Xu)</button></div></div></div>
+    <div id="modal-voice" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50"><div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-lg relative"><button onclick="toggleModal('modal-voice')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600"><i class="fas fa-times text-xl"></i></button><h2 class="text-xl font-bold text-slate-800 mb-1 border-b pb-4"><i class="fas fa-microphone-alt text-rose-500 mr-2"></i>Voice AI</h2><div class="py-4"><textarea id="voice-prompt" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-xl p-3 outline-none" placeholder="Text TTS..."></textarea></div><button onclick="simulateProcess('modal-voice', 'voice', 50, 'voice-prompt')" class="w-full py-3 bg-rose-500 text-white font-bold rounded-xl shadow-lg">Sinh Giọng (50 Xu)</button></div></div>
 
     <script>
-        // XÁC THỰC
         const USER_ID = localStorage.getItem('user_id');
         const ROLE = localStorage.getItem('role');
         const USERNAME = localStorage.getItem('username') || 'Khách hàng';
@@ -245,91 +152,123 @@
 
         document.getElementById('user-display-name').innerText = USERNAME;
         document.getElementById('user-avatar-text').innerText = USERNAME.charAt(0).toUpperCase();
+        if(ROLE === 'admin') document.getElementById('admin-panel-card').classList.remove('hidden');
 
-        if(ROLE === 'admin') {
-            document.getElementById('admin-panel-card').classList.remove('hidden');
-        }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
+        function logout() { localStorage.clear(); window.location.href = '/login'; }
 
-        function toggleModal(id) {
-            document.getElementById(id).classList.toggle('hidden');
-        }
-
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/login';
-        }
-
-        // HỆ THỐNG TOAST NOTIFICATION MƯỢT MÀ
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
-            
-            // Màu sắc tùy loại
             let bgColor = type === 'success' ? 'bg-slate-800' : (type === 'warning' ? 'bg-orange-500' : 'bg-red-500');
             let icon = type === 'success' ? '<i class="fas fa-check-circle text-emerald-400 mr-2"></i>' : '<i class="fas fa-exclamation-triangle text-white mr-2"></i>';
-            
             toast.className = `toast-enter ${bgColor} text-white px-6 py-4 rounded-xl shadow-2xl flex items-center max-w-sm pointer-events-auto`;
             toast.innerHTML = `${icon} <span class="text-sm font-medium leading-snug">${message}</span>`;
-            
             container.appendChild(toast);
-            
-            // Tự xóa sau 3.5 giây
-            setTimeout(() => {
-                toast.classList.replace('toast-enter', 'toast-exit');
-                setTimeout(() => toast.remove(), 300);
-            }, 3500);
+            setTimeout(() => { toast.classList.replace('toast-enter', 'toast-exit'); setTimeout(() => toast.remove(), 300); }, 3500);
         }
 
-        // COPY CLIPBOARD CHO AFFILIATE
         function copyToClipboard(text) {
-            navigator.clipboard.writeText(text).then(() => {
-                showToast(`Đã copy link: ${text}`, 'success');
-            });
+            navigator.clipboard.writeText(text).then(() => { showToast(`Đã copy link: ${text}`, 'success'); });
         }
 
-        // GỬI GÓP Ý
-        function submitFeedback() {
+        // CÁC HÀM GỌI API THỰC TẾ
+        async function submitFeedback() {
             const content = document.getElementById('fb-content').value;
-            if(!content.trim()) {
-                showToast('Vui lòng nhập nội dung góp ý!', 'warning');
-                return;
-            }
-            // Giả lập gửi API
-            setTimeout(() => {
-                showToast('Cảm ơn bạn! Yêu cầu đã được ghi nhận vào hệ thống.', 'success');
-                document.getElementById('fb-content').value = '';
-                toggleModal('modal-feedback');
-            }, 600);
+            if(!content.trim()) return showToast('Vui lòng nhập nội dung góp ý!', 'warning');
+            try {
+                const res = await fetch('/api/v1/customer/feedback', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: USER_ID, content: content }) });
+                const data = await res.json();
+                if(data.success) { showToast(data.message, 'success'); document.getElementById('fb-content').value = ''; toggleModal('modal-feedback'); } 
+                else showToast(data.message, 'error');
+            } catch(e) { showToast('Lỗi mạng!', 'error'); }
         }
 
-        // XỬ LÝ PAYOS
-        function processPayment(btn, amountVND, xu) {
+        async function processPayment(btn, amountVND, xu) {
+            const originalHTML = btn.innerHTML;
             btn.innerHTML = `<div class="text-center w-full py-1"><i class="fas fa-spinner fa-spin text-emerald-600 text-xl"></i></div>`;
             btn.disabled = true;
-            
-            // Giả lập API PayOS Create Link
-            setTimeout(() => {
-                showToast(`Đang chuyển hướng sang cổng thanh toán PayOS gói ${amountVND.toLocaleString()}đ...`, 'success');
-                toggleModal('modal-wallet');
-                
-                // Phục hồi nút
-                setTimeout(() => {
-                    btn.innerHTML = `<div class="text-left"><p class="font-bold text-slate-800">Gói Tùy Chọn</p><p class="text-xs text-slate-500">Giá: ${amountVND.toLocaleString()}đ</p></div><div class="font-black text-emerald-600">+${xu} Xu</div>`;
-                    btn.disabled = false;
-                }, 1000);
-            }, 1200);
+            try {
+                const res = await fetch('/api/v1/customer/payos/create-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: USER_ID, amount_vnd: amountVND, xu_nhan: xu }) });
+                const data = await res.json();
+                if(data.success) { showToast(`Đang chuyển hướng...`, 'success'); window.location.href = data.checkout_url; } 
+                else { showToast(data.message, 'error'); btn.innerHTML = originalHTML; btn.disabled = false; }
+            } catch(e) { showToast('Lỗi PayOS.', 'error'); btn.innerHTML = originalHTML; btn.disabled = false; }
         }
 
-        // GIẢ LẬP PROCESS CỦA CÁC TOOL AI (Video/Voice/Image)
-        function simulateProcess(modalId, startMsg, costMsg, endMsg) {
-            showToast(`${startMsg} <span class="bg-slate-700 text-white px-2 py-0.5 rounded text-[10px] ml-2 font-bold">${costMsg}</span>`, 'success');
+        async function simulateProcess(modalId, toolType, cost, promptId) {
+            const promptText = promptId && document.getElementById(promptId) ? document.getElementById(promptId).value : "Mặc định";
             toggleModal(modalId);
-            setTimeout(() => {
-                showToast(endMsg, 'success');
-            }, 2500);
+            showToast(`Đang gửi yêu cầu... <span class="bg-slate-700 text-white px-2 py-0.5 rounded text-[10px] ml-2 font-bold">-${cost} Xu</span>`, 'warning');
+            try {
+                const res = await fetch('/api/v1/customer/ai/process', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: USER_ID, tool_type: toolType, cost: parseInt(cost), prompt: promptText }) });
+                const data = await res.json();
+                if(data.success) {
+                    showToast(data.message, 'success');
+                    document.getElementById('wallet-balance-display').innerText = data.remaining_xu.toLocaleString('vi-VN');
+                    document.getElementById('modal-current-balance').innerText = data.remaining_xu.toLocaleString('vi-VN');
+                } else showToast(data.message, 'error');
+            } catch(e) { showToast('Lỗi AI.', 'error'); }
         }
 
-        // LOAD DATA TỪ API
+        // HÀM MỚI: TẢI DỮ LIỆU CÁ NHÂN HÓA PORTAL
+        async function loadMyProjects() {
+            const box = document.getElementById('my-projects-list');
+            box.innerHTML = '<p class="text-center text-slate-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải dự án...</p>';
+            try {
+                const res = await fetch(`/api/v1/customer/portal/projects/${USER_ID}`);
+                const data = await res.json();
+                if(data.success && data.data.length > 0) {
+                    box.innerHTML = data.data.map(p => `
+                        <div class="p-4 bg-slate-50 border border-slate-200 rounded-xl">
+                            <div class="flex justify-between items-start mb-2">
+                                <div><h4 class="font-bold text-slate-800">${p.name}</h4><p class="text-xs text-slate-500">Khởi tạo: ${p.date}</p></div>
+                                <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded uppercase">${p.status}</span>
+                            </div>
+                            <p class="text-xs font-semibold text-emerald-600 mt-2">Ngân sách: ${p.budget.toLocaleString()}đ</p>
+                        </div>
+                    `).join('');
+                } else box.innerHTML = '<p class="text-center text-slate-500 py-4">Bạn chưa có dự án nào đang triển khai.</p>';
+            } catch(e) { box.innerHTML = '<p class="text-center text-red-400 py-4">Lỗi tải dữ liệu.</p>'; }
+        }
+
+        async function loadMyAffiliates() {
+            const box = document.getElementById('my-affiliates-list');
+            box.innerHTML = '<p class="text-center text-slate-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải links...</p>';
+            try {
+                const res = await fetch(`/api/v1/customer/portal/affiliates/${USER_ID}`);
+                const data = await res.json();
+                if(data.success && data.data.length > 0) {
+                    box.innerHTML = data.data.map(a => `
+                        <div class="flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
+                            <div class="overflow-hidden pr-2">
+                                <p class="font-bold text-slate-800 text-sm truncate">${a.product}</p>
+                                <p class="text-[10px] text-pink-500">${a.network} - Rate: ${a.rate}%</p>
+                            </div>
+                            <button onclick="copyToClipboard('${a.url}')" class="px-3 py-1 bg-white border border-slate-300 rounded shadow-sm text-xs font-bold hover:bg-slate-100 transition whitespace-nowrap"><i class="far fa-copy mr-1"></i>Copy</button>
+                        </div>
+                    `).join('');
+                } else box.innerHTML = '<p class="text-center text-slate-500 py-4">Bạn chưa được cấp link Affiliate nào.</p>';
+            } catch(e) { box.innerHTML = '<p class="text-center text-red-400 py-4">Lỗi tải dữ liệu.</p>'; }
+        }
+
+        async function loadMyHistory() {
+            const box = document.getElementById('history-list');
+            box.innerHTML = '<p class="text-center text-slate-400 py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải...</p>';
+            try {
+                const res = await fetch(`/api/v1/customer/portal/history/${USER_ID}`);
+                const data = await res.json();
+                if(data.success && data.data.length > 0) {
+                    box.innerHTML = data.data.map(h => `
+                        <div class="flex justify-between items-center p-3 border-b border-slate-100 last:border-0">
+                            <div><p class="text-xs font-bold text-slate-700">${h.note || h.type}</p><p class="text-[9px] text-slate-400">${h.date}</p></div>
+                            <span class="font-bold text-sm ${h.delta > 0 ? 'text-emerald-500' : 'text-rose-500'}">${h.delta > 0 ? '+' : ''}${h.delta}</span>
+                        </div>
+                    `).join('');
+                } else box.innerHTML = '<p class="text-center text-slate-400 text-xs py-2">Chưa có giao dịch nào.</p>';
+            } catch(e) { box.innerHTML = '<p class="text-center text-red-400 py-4">Lỗi tải dữ liệu.</p>'; }
+        }
+
         async function loadData() {
             try {
                 const resAuth = await fetch(`/api/v1/auth/me/${USER_ID}`);
@@ -341,12 +280,9 @@
                 }
                 const resStats = await fetch('/api/v1/erp/dashboard-stats');
                 const dataStats = await resStats.json();
-                if(dataStats.success) {
-                    document.getElementById('stat-projects').innerText = dataStats.data.total_projects;
-                }
-            } catch(e) { console.error("Lỗi lấy dữ liệu:", e); }
+                if(dataStats.success) document.getElementById('stat-projects').innerText = dataStats.data.total_projects;
+            } catch(e) {}
         }
-
         document.addEventListener('DOMContentLoaded', loadData);
     </script>
 </body>

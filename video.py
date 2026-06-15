@@ -1,19 +1,26 @@
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-import google.generativeai as genai
+import os
 import logging
+import google.generativeai as genai
+from fastapi import APIRouter
+from pydantic import BaseModel
 from db import db_connect, now_text
-from config import settings
 
 router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_VIDEO")
 
-# Cấu hình Gemini AI
+# 1. Đọc Key trực tiếp từ biến môi trường
+GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+
+# 2. Cấu hình Gemini AI
 try:
-    genai.configure(api_key=settings.GEMINI_API_KEY)
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    if GEMINI_API_KEY:
+        genai.configure(api_key=GEMINI_API_KEY)
+        model = genai.GenerativeModel('gemini-1.5-flash')
+    else:
+        model = None
 except Exception as e:
     logger.error(f"Lỗi khởi tạo Gemini: {e}")
+    model = None
 
 class VideoRequest(BaseModel):
     user_id: str
@@ -21,13 +28,14 @@ class VideoRequest(BaseModel):
     platform: str
 
 # MỨC GIÁ: 10 XU CHO 1 LẦN TẠO KỊCH BẢN
-PRICE_PER_VIDEO = 10 
+PRICE_PER_VIDEO = 10
 
 @router.post("/generate-script")
 async def generate_script(data: VideoRequest):
-    if not settings.GEMINI_API_KEY:
+    # 3. Kiểm tra API Key AI
+    if not GEMINI_API_KEY or not model:
         return {"success": False, "message": "Hệ thống chưa cấu hình API Key AI."}
-        
+
     conn = db_connect()
     c = conn.cursor()
     

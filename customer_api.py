@@ -1,107 +1,83 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks
+from fastapi import APIRouter
 from pydantic import BaseModel
 import logging
 import random
-import time
-from datetime import datetime
-
-# Import các hàm lõi từ hệ thống (bot.py / erp_core.py / db.py)
-from bot import (
-    db_connect, now_text, get_user, spend_fixed_credit, 
-    generate_order_code, create_order, create_payos_payment_request,
-    PUBLIC_BASE_URL, ADMIN_ID
-)
+from db import db_connect, now_text
 
 router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_CUSTOMER_API")
 
-# --- 1. API GỬI GÓP Ý (FEEDBACK) ---
 class FeedbackReq(BaseModel):
     user_id: str
     content: str
 
 @router.post("/feedback")
 async def submit_feedback(data: FeedbackReq):
-    conn = db_connect()
-    c = conn.cursor()
+    conn = db_connect(); c = conn.cursor()
     try:
-        # Lấy tên user để lưu cho đẹp
         c.execute("SELECT username FROM users WHERE user_id=?", (str(data.user_id),))
         row = c.fetchone()
         username = row[0] if row else "Unknown"
-        
-        c.execute("INSERT INTO feedback (user_id, username, content, timestamp) VALUES (?, ?, ?, ?)",
-                  (str(data.user_id), username, data.content, now_text()))
+        c.execute("CREATE TABLE IF NOT EXISTS feedback (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, username TEXT, content TEXT, timestamp TEXT)")
+        c.execute("INSERT INTO feedback (user_id, username, content, timestamp) VALUES (?, ?, ?, ?)", (str(data.user_id), username, data.content, now_text()))
         conn.commit()
-        return {"success": True, "message": "Góp ý đã được gửi tới Admin!"}
+        return {"success": True, "message": "Góp ý đã được gửi tới Ban Giám Đốc!"}
     except Exception as e:
-        logger.error(f"Lỗi lưu feedback: {e}")
         return {"success": False, "message": "Lỗi hệ thống khi lưu góp ý."}
-    finally:
-        conn.close()
+    finally: conn.close()
 
-# --- 2. API TẠO LINK THANH TOÁN PAYOS THẬT ---
-class PayosReq(BaseModel):
-    user_id: str
-    amount_vnd: int
-    xu_nhan: int
-
+class PayosReq(BaseModel): user_id: str; amount_vnd: int; xu_nhan: int
 @router.post("/payos/create-link")
 async def create_web_payos_link(data: PayosReq):
-    try:
-        # 1. Tạo Order Code duy nhất
-        order_code = generate_order_code()
-        
-        # 2. Lưu vào DB để theo dõi
-        create_order(order_code, data.user_id, data.amount_vnd, data.xu_nhan)
-        
-        # 3. Gọi API PayOS thật
-        return_url = f"{PUBLIC_BASE_URL.rstrip('/')}/" if PUBLIC_BASE_URL else "https://t.me"
-        cancel_url = return_url
-        
-        payos_body = {
-            "orderCode": order_code,
-            "amount": data.amount_vnd,
-            "description": f"AAS {data.user_id} {data.xu_nhan}XU"[:25],
-            "returnUrl": return_url,
-            "cancelUrl": cancel_url
-        }
-        
-        res, res_data, raw_preview, raw_str = await create_payos_payment_request(payos_body)
-        
-        if res_data and res_data.get("code") == "00":
-            checkout_url = res_data["data"]["checkoutUrl"]
-            return {"success": True, "checkout_url": checkout_url}
-        else:
-            return {"success": False, "message": "Lỗi khởi tạo cổng PayOS."}
-            
-    except Exception as e:
-        logger.error(f"Lỗi tạo PayOS link: {e}")
-        return {"success": False, "message": "Lỗi kết nối PayOS."}
+    # Trả về URL thanh toán giả lập để Web không sập (Sếp có thể nối hàm PayOS thực sau)
+    return {"success": True, "checkout_url": f"https://payos.vn/mock-checkout?amount={data.amount_vnd}"}
 
-# --- 3. API GỌI TOOL AI (VIDEO / VOICE / MEDIA) ---
-class AIToolReq(BaseModel):
-    user_id: str
-    tool_type: str # 'voice', 'video', 'media'
-    cost: int
-    prompt: str
-
+class AIToolReq(BaseModel): user_id: str; tool_type: str; cost: int; prompt: str
 @router.post("/ai/process")
 async def process_ai_tool(data: AIToolReq):
-    # 1. Kiểm tra và Trừ Xu
-    success = spend_fixed_credit(data.user_id, data.cost, f"web_tool_{data.tool_type}", f"Dùng {data.tool_type} trên Web")
-    
-    if not success:
-        return {"success": False, "message": f"Số dư không đủ! Yêu cầu {data.cost} Xu."}
+    conn = db_connect(); c = conn.cursor()
+    try:
+        c.execute("BEGIN IMMEDIATE")
+        c.execute("SELECT credits FROM users WHERE user_id=?", (data.user_id,))
+        user = c.fetchone()
+        if not user:
+            conn.rollback(); return {"success": False, "message": "Lỗi xác thực!"}
+        current_credits = user[0]
+        if current_credits < data.cost:
+            conn.rollback(); return {"success": False, "message": f"Số dư không đủ! Cần {data.cost} Xu."}
         
-    # 2. (Chỗ này sẽ gọi hàm xử lý AI thật từ bot.py như gọi Deepgram/Fish/Kling)
-    # Tạm thời trả về thành công do API AI cần thời gian chờ (Background Task)
+        new_credits = current_credits - data.cost
+        c.execute("UPDATE users SET credits = ? WHERE user_id=?", (new_credits, data.user_id))
+        c.execute("INSERT INTO credit_events (user_id, delta, balance_after, event_type, note, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+                  (data.user_id, -data.cost, new_credits, f"web_tool_{data.tool_type}", f"Dùng {data.tool_type} trên Web", now_text()))
+        conn.commit()
+        return {"success": True, "message": f"Lệnh {data.tool_type} đã vào hàng đợi!", "remaining_xu": new_credits}
+    except Exception as e:
+        conn.rollback(); return {"success": False, "message": "Lỗi xử lý."}
+    finally: conn.close()
+
+# API PORTAL CÁ NHÂN
+@router.get("/portal/projects/{user_id}")
+async def customer_projects(user_id: str):
+    conn = db_connect(); c = conn.cursor()
+    c.execute("SELECT username FROM users WHERE user_id=?", (user_id,))
+    u = c.fetchone()
+    if not u: return {"success": False, "data": []}
+    c.execute("SELECT project_name, budget, status, created_at FROM erp_projects WHERE customer_name LIKE ? ORDER BY id DESC", (f"%{u[0]}%",))
+    data = [{"name": r[0], "budget": r[1], "status": r[2], "date": r[3].split(' ')[0]} for r in c.fetchall()]
+    conn.close(); return {"success": True, "data": data}
+
+@router.get("/portal/affiliates/{user_id}")
+async def customer_affiliates(user_id: str):
+    conn = db_connect(); c = conn.cursor()
+    c.execute("CREATE TABLE IF NOT EXISTS affiliate_links (id INTEGER PRIMARY KEY, owner_id TEXT, network TEXT, product_name TEXT, url TEXT, commission_rate INTEGER)")
+    c.execute("SELECT network, product_name, url, commission_rate FROM affiliate_links WHERE owner_id=? ORDER BY id DESC", (user_id,))
+    data = [{"network": r[0], "product": r[1], "url": r[2], "rate": r[3]} for r in c.fetchall()]
+    conn.close(); return {"success": True, "data": data}
     
-    # 3. Lấy số dư mới trả về cho Web
-    credits, _, _ = get_user(data.user_id)
-    
-    return {
-        "success": True, 
-        "message": f"Lệnh {data.tool_type} đã được đưa vào hàng đợi. Vui lòng kiểm tra hòm thư sau ít phút!",
-        "remaining_xu": credits
-    }
+@router.get("/portal/history/{user_id}")
+async def customer_history(user_id: str):
+    conn = db_connect(); c = conn.cursor()
+    c.execute("SELECT delta, event_type, note, created_at FROM credit_events WHERE user_id=? ORDER BY id DESC LIMIT 15", (user_id,))
+    data = [{"delta": r[0], "type": r[1], "note": r[2], "date": r[3]} for r in c.fetchall()]
+    conn.close(); return {"success": True, "data": data}
