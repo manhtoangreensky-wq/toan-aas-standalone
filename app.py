@@ -61,3 +61,8 @@ async def b2b_app_ui():
 @app.get("/campaign-app")
 async def campaign_app_ui():
     return FileResponse("campaign.html")
+
+# 5. Mở đường link cho trang Trạm Xử Lý Media
+@app.get("/media-app")
+async def media_app_ui():
+    return FileResponse("media.html")
