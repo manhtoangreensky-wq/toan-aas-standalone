@@ -88,6 +88,13 @@
                 <p class="text-sm opacity-80 mt-2">Bóc băng, Tách nền, Lồng tiếng</p>
             </a>
 
+            <!-- NÚT AI GROWTH COACH ĐÃ ĐƯỢC CHUYỂN VỀ ĐÚNG CHỖ NÀY -->
+            <a href="/coach-app" class="bg-gradient-to-br from-red-600 to-red-900 rounded-xl shadow-lg p-6 text-white hover:scale-105 transition transform block text-center group md:col-span-2 lg:col-span-4 mt-2">
+                <i class="fas fa-brain fa-3x mb-4 group-hover:animate-bounce"></i>
+                <h3 class="font-bold text-lg">AI Growth Coach</h3>
+                <p class="text-sm opacity-80 mt-2">Phân tích dữ liệu & Tối ưu chuyển đổi Affiliate</p>
+            </a>
+
         </div>
     </div>
 
@@ -107,7 +114,6 @@
                 .catch(err => console.error(err));
         });
 
-        // Hàm logout đã được đưa vào đúng nhà của nó
         async function logout() {
             try {
                 await fetch('/api/v1/auth/logout', { method: 'POST' });

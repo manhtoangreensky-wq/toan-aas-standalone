@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS - AI Growth Coach</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+    
+    <nav class="bg-red-800 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fas fa-brain mr-2"></i>AI Growth Coach</h1>
+            <a href="/" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm"><i class="fas fa-home"></i> Về Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-6 p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+        
+        <div class="w-full md:w-1/3 bg-white p-6 rounded-xl shadow-md border-t-4 border-red-500">
+            <h2 class="text-lg font-bold mb-4 text-gray-700">Thông Số Chiến Dịch</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Tên sản phẩm / Chiến dịch</label>
+                    <input type="text" id="c-name" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-red-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Số Lượt Xem (Views)</label>
+                    <input type="number" id="c-views" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" value="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Số Lượt Click Link</label>
+                    <input type="number" id="c-clicks" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" value="0">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-600 mb-1">Doanh Thu (VNĐ)</label>
+                    <input type="number" id="c-rev" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-red-500 outline-none" value="0">
+                </div>
+
+                <button onclick="askCoach()" id="btn-coach" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded shadow transition mt-4">
+                    <i class="fas fa-stethoscope"></i> Bắt Bệnh Ngay
+                </button>
+            </div>
+        </div>
+
+        <div class="w-full md:w-2/3 bg-white p-6 rounded-xl shadow-md border-t-4 border-gray-700 min-h-[300px] flex flex-col">
+            <h2 class="text-lg font-bold mb-4 text-gray-700"><i class="fas fa-comment-medical text-red-500"></i> Lời Khuyên Từ AI</h2>
+            <div id="coach-result" class="flex-1 bg-gray-50 p-4 rounded-lg border text-gray-700 whitespace-pre-wrap font-mono text-sm leading-relaxed">
+                Nhập số liệu bên trái và bấm nút để AI phân tích sức khỏe chiến dịch của sếp...
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function askCoach() {
+            const name = document.getElementById('c-name').value;
+            const views = parseInt(document.getElementById('c-views').value) || 0;
+            const clicks = parseInt(document.getElementById('c-clicks').value) || 0;
+            const rev = parseInt(document.getElementById('c-rev').value) || 0;
+            
+            const btn = document.getElementById('btn-coach');
+            const resBox = document.getElementById('coach-result');
+
+            if(!name) return alert("Sếp nhập tên sản phẩm để AI dễ tư vấn nhé!");
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tính toán xác suất...';
+            resBox.innerHTML = '<span class="text-blue-500"><i class="fas fa-circle-notch fa-spin"></i> Chuyên gia Gemini đang gõ phím...</span>';
+
+            try {
+                const res = await fetch('/api/v1/coach/analyze', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ product_name: name, views: views, clicks: clicks, revenue: rev })
+                });
+                const data = await res.json();
+                
+                if(data.success) {
+                    resBox.innerText = data.advice;
+                } else {
+                    resBox.innerText = "Lỗi: " + (data.detail || data.message);
+                }
+            } catch (error) {
+                resBox.innerText = "Lỗi kết nối máy chủ!";
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-stethoscope"></i> Bắt Bệnh Ngay';
+            }
+        }
+    </script>
+</body>
+</html>

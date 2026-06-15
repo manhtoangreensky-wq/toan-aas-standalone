@@ -14,6 +14,7 @@ import performance
 import device_ops
 import report
 import auth 
+import coach
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -60,6 +61,7 @@ app.include_router(campaign.router, prefix="/api/v1/campaign", tags=["B2C Campai
 app.include_router(performance.router, prefix="/api/v1/performance", tags=["B2C Tracking"])
 app.include_router(device_ops.router, prefix="/api/v1/device-ops", tags=["B2B Device Ops"])
 app.include_router(report.router, prefix="/api/v1/report", tags=["Admin Dashboard"])
+app.include_router(coach.router, prefix="/api/v1/coach", tags=["AI Growth Coach"])
 
 # --- ĐƯỜNG LINK GIAO DIỆN ---
 @app.get("/login")
@@ -85,3 +87,7 @@ async def campaign_app_ui():
 @app.get("/media-app")
 async def media_app_ui():
     return FileResponse("media.html")
+
+@app.get("/coach-app")
+async def coach_app_ui():
+    return FileResponse("coach.html")
