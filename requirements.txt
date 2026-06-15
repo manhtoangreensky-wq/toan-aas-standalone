@@ -4,5 +4,4 @@ pydantic==2.5.2
 pydantic-settings==2.1.0
 httpx==0.25.2
 python-multipart==0.0.6
-google-genai
 google-generativeai
