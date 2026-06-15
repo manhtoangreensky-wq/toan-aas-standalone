@@ -8,7 +8,8 @@ import billing
 import user  
 import video 
 import ai_media
-import campaign # <--- Import module mới
+import campaign 
+import performance # <--- Import module mới
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -33,7 +34,8 @@ app.include_router(billing.router, prefix="/api/v1/billing", tags=["Billing"])
 app.include_router(user.router, prefix="/api/v1/user", tags=["User & Profile"])  
 app.include_router(video.router, prefix="/api/v1/video", tags=["Video AI"]) 
 app.include_router(ai_media.router, prefix="/api/v1/media", tags=["Media Services"]) 
-app.include_router(campaign.router, prefix="/api/v1/campaign", tags=["B2C Campaign"]) # <--- THÊM DÒNG NÀY
+app.include_router(campaign.router, prefix="/api/v1/campaign", tags=["B2C Campaign"]) 
+app.include_router(performance.router, prefix="/api/v1/performance", tags=["B2C Tracking"]) # <--- THÊM DÒNG NÀY
 
 @app.get("/")
 async def root():
