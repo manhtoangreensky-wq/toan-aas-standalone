@@ -22,6 +22,7 @@ import campaign_ops
 import report
 import erp_core
 import ai_assistant
+import customer_api
 
 app = FastAPI(title="TOAN AAS OS")
 
@@ -46,6 +47,7 @@ app.include_router(campaign_ops.router, prefix="/api/v1/campaign", tags=["Campai
 app.include_router(report.router, prefix="/api/v1/report", tags=["Report"])
 app.include_router(erp_core.router, prefix="/api/v1/erp", tags=["ERP Core"])
 app.include_router(ai_assistant.router, prefix="/api/v1/assistant", tags=["AI Assistant"])
+app.include_router(customer_api.router, prefix="/api/v1/customer", tags=["Customer Web App"])
 
 # Hàm hiển thị giao diện an toàn
 def get_html(file_name):
