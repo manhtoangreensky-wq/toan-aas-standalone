@@ -16,7 +16,7 @@
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden text-sm">
     
-    <div class="w-64 bg-[#1e293b] text-slate-300 flex flex-col h-full shadow-2xl z-20 flex-shrink-0">
+    <div class="w-64 bg-[#0f172a] text-slate-300 flex flex-col h-full shadow-2xl z-20 flex-shrink-0">
         <div class="p-5 border-b border-slate-700 flex items-center gap-3">
             <div class="bg-blue-600 p-2 rounded-lg text-white"><i class="fas fa-layer-group"></i></div>
             <h2 class="text-lg font-bold text-white tracking-wide">TOAN AAS <span class="text-blue-400 font-normal">ERP</span></h2>
@@ -39,7 +39,7 @@
 
                 <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-6">Tính năng Hỗ trợ</li>
                 <li><button onclick="switchTab('goals')" id="nav-goals" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-bullseye w-5 text-center text-red-400"></i><span>Mục tiêu kinh doanh</span></button></li>
-                <li><button onclick="switchTab('social')" id="nav-social" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-hashtag w-5 text-center text-blue-500"></i><span>Mạng xã hội cơ bản</span></button></li>
+                <li><button onclick="switchTab('social')" id="nav-social" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-hashtag w-5 text-center text-blue-500"></i><span>Mạng xã hội nội bộ</span></button></li>
                 <li><button onclick="switchTab('okrs')" id="nav-okrs" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-tasks w-5 text-center text-green-400"></i><span>Quản lý OKRs</span></button></li>
                 <li><button onclick="switchTab('attendance')" id="nav-attendance" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-clock w-5 text-center text-purple-400"></i><span>Chấm công & Lương</span></button></li>
                 <li><button onclick="switchTab('chat')" id="nav-chat" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-comments w-5 text-center text-sky-400"></i><span>Hệ thống Chat</span></button></li>
@@ -50,8 +50,8 @@
             </ul>
         </div>
         
-        <div class="p-4 border-t border-slate-700 bg-[#1e293b] absolute bottom-0 w-64">
-            <a href="/" class="flex items-center justify-center gap-2 w-full p-2 bg-slate-700 hover:bg-red-600 text-white rounded-lg transition font-medium"><i class="fas fa-sign-out-alt"></i> Thoát OS</a>
+        <div class="p-4 border-t border-slate-700 bg-[#0f172a] absolute bottom-0 w-64">
+            <a href="/" class="flex items-center justify-center gap-2 w-full p-2 bg-slate-800 hover:bg-red-600 text-white rounded-lg transition font-medium"><i class="fas fa-sign-out-alt"></i> Thoát OS</a>
         </div>
     </div>
 
@@ -60,10 +60,7 @@
             <h1 class="text-xl font-bold text-slate-800" id="header-title">Bảng điều khiển Tổng quan</h1>
             <div class="flex items-center gap-4">
                 <div class="flex items-center gap-3 border-l pl-4 border-slate-200">
-                    <div class="text-right hidden md:block">
-                        <p class="text-sm font-bold text-slate-800">Sếp Toàn</p>
-                        <p class="text-xs text-green-500 font-medium">Administrator</p>
-                    </div>
+                    <div class="text-right hidden md:block"><p class="text-sm font-bold text-slate-800">Sếp Toàn</p><p class="text-xs text-green-500 font-medium">Administrator</p></div>
                     <div class="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">T</div>
                 </div>
             </div>
@@ -73,98 +70,184 @@
             
             <div id="tab-dashboard" class="tab-panel block">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
-                        <div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Khách Hàng</p><h3 class="text-2xl font-bold text-slate-800" id="stat-customers">...</h3></div>
-                        <div class="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><i class="fas fa-users"></i></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
-                        <div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Dự án Đang chạy</p><h3 class="text-2xl font-bold text-slate-800" id="stat-projects">...</h3></div>
-                        <div class="h-10 w-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600"><i class="fas fa-hard-hat"></i></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
-                        <div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Nhân sự Hệ thống</p><h3 class="text-2xl font-bold text-orange-600" id="stat-hr">...</h3></div>
-                        <div class="h-10 w-10 rounded-full bg-orange-50 flex items-center justify-center text-orange-600"><i class="fas fa-user-tie"></i></div>
-                    </div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between">
-                        <div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Doanh Thu (VNĐ)</p><h3 class="text-xl font-bold text-emerald-600" id="stat-revenue">...</h3></div>
-                        <div class="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"><i class="fas fa-money-bill-wave"></i></div>
-                    </div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Khách Hàng</p><h3 class="text-2xl font-bold text-slate-800" id="stat-customers">0</h3></div><div class="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><i class="fas fa-users"></i></div></div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Dự án Đang chạy</p><h3 class="text-2xl font-bold text-slate-800" id="stat-projects">0</h3></div><div class="h-10 w-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600"><i class="fas fa-hard-hat"></i></div></div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Tài Sản & Thiết Bị</p><h3 class="text-2xl font-bold text-teal-600" id="stat-assets">0</h3></div><div class="h-10 w-10 rounded-full bg-teal-50 flex items-center justify-center text-teal-600"><i class="fas fa-laptop"></i></div></div>
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Doanh Thu (VNĐ)</p><h3 class="text-xl font-bold text-emerald-600" id="stat-revenue">0</h3></div><div class="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"><i class="fas fa-money-bill-wave"></i></div></div>
                 </div>
             </div>
 
-            <div id="tab-crm" class="tab-panel hidden h-full">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Cơ sở dữ liệu Khách hàng</h2><button onclick="alert('Module CRM đã sẵn sàng nhận API!')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm Khách</button></div>
-                <div class="bg-white rounded-xl shadow-sm border overflow-hidden p-8 text-center text-slate-500"><i class="fas fa-database fa-3x mb-3 text-blue-200"></i><p>Dữ liệu CRM sẽ hiển thị ở đây (Đã cấu hình API)</p></div>
-            </div>
-            
-            <div id="tab-projects" class="tab-panel hidden h-full">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Dự án B2B & ELV</h2><button onclick="alert('Module Dự án đã sẵn sàng nhận API!')" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Dự án</button></div>
-                <div class="bg-white rounded-xl shadow-sm border overflow-hidden p-8 text-center text-slate-500"><i class="fas fa-hard-hat fa-3x mb-3 text-orange-200"></i><p>Dữ liệu Dự án sẽ hiển thị ở đây (Đã cấu hình API)</p></div>
+            <div id="tab-crm" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Cơ sở dữ liệu Khách hàng</h2><button onclick="toggleModal('modal-crm')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm Khách</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Công ty</th><th class="px-6 py-4">SĐT</th><th class="px-6 py-4">Phân loại</th></tr></thead><tbody id="crm-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-projects" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Dự án B2B</h2><button onclick="toggleModal('modal-project')" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Dự án</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Tên Dự án</th><th class="px-6 py-4">Chủ đầu tư</th><th class="px-6 py-4 text-right">Giá trị</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="project-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-finance" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Sổ Quỹ Thu Chi</h2><button onclick="toggleModal('modal-finance')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo phiếu</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Loại</th><th class="px-6 py-4">Nội dung</th><th class="px-6 py-4 text-right">Số tiền</th></tr></thead><tbody id="finance-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-inventory" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Kho Vật Tư</h2><button onclick="toggleModal('modal-inventory')" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Nhập Kho</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Mã VT</th><th class="px-6 py-4">Tên Thiết bị</th><th class="px-6 py-4 text-center">Tồn kho</th><th class="px-6 py-4 text-right">Đơn giá</th></tr></thead><tbody id="inventory-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-hr" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Hồ Sơ Nhân Sự</h2><button onclick="toggleModal('modal-hr')" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm NV</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Họ & Tên</th><th class="px-6 py-4">Vị trí</th><th class="px-6 py-4 text-right">Lương</th></tr></thead><tbody id="hr-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-attendance" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Chấm Công</h2><button onclick="toggleModal('modal-attendance')" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Chấm Công</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Tên NV</th><th class="px-6 py-4 text-center">Giờ vào</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="attendance-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-sales" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Bán Hàng</h2><button onclick="toggleModal('modal-sales')" class="bg-pink-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Đơn Hàng</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Mã ĐH</th><th class="px-6 py-4">Khách hàng</th><th class="px-6 py-4 text-right">Tổng Tiền</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="sales-list" class="divide-y text-slate-700"></tbody></table></div></div>
+            <div id="tab-assets" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Tài Sản Thiết Bị</h2><button onclick="toggleModal('modal-assets')" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm Tài Sản</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Mã TS</th><th class="px-6 py-4">Tên Thiết bị</th><th class="px-6 py-4">Người giữ</th><th class="px-6 py-4 text-center">Tình trạng</th></tr></thead><tbody id="assets-list" class="divide-y text-slate-700"></tbody></table></div></div>
+
+            <div id="tab-social" class="tab-panel hidden h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-800">Mạng Xã Hội Nội Bộ (Bảng tin)</h2>
+                    <button onclick="toggleModal('modal-social')" class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold shadow transition"><i class="fas fa-pen mr-2"></i>Đăng bài</button>
+                </div>
+                <div class="max-w-2xl mx-auto space-y-4 pb-20" id="social-list">
+                    </div>
             </div>
 
-            <div id="tab-inventory" class="tab-panel hidden h-full">
-                <div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Quản lý Kho</h2><button onclick="alert('Module Kho đã sẵn sàng nhận API!')" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Nhập Kho</button></div>
-                <div class="bg-white rounded-xl shadow-sm border overflow-hidden p-8 text-center text-slate-500"><i class="fas fa-boxes fa-3x mb-3 text-amber-200"></i><p>Dữ liệu Tồn kho sẽ hiển thị ở đây (Đã cấu hình API)</p></div>
+            <div id="tab-okrs" class="tab-panel hidden h-full">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-lg font-bold text-slate-800">Mục tiêu & Kết quả (OKRs)</h2>
+                    <button onclick="toggleModal('modal-okrs')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg font-semibold shadow transition"><i class="fas fa-flag mr-2"></i>Tạo OKR mới</button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="okrs-list">
+                    </div>
             </div>
 
             <div id="tab-placeholder" class="tab-panel hidden h-full">
                 <div class="bg-white rounded-xl border h-full flex flex-col items-center justify-center text-slate-500 p-10 text-center">
-                    <div class="h-24 w-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-                        <i class="fas fa-cogs fa-3x text-blue-400 animate-spin-slow"></i>
-                    </div>
+                    <div class="h-24 w-24 bg-slate-100 rounded-full flex items-center justify-center mb-4"><i class="fas fa-cogs fa-3x text-blue-400 animate-spin-slow"></i></div>
                     <h2 class="text-2xl font-bold text-slate-800 mb-2">Phân hệ chờ kết nối Backend</h2>
-                    <p class="max-w-md text-slate-500">Giao diện đã sẵn sàng. Chức năng này sẽ được kích hoạt ngay khi hoàn tất việc tạo bảng trong Database Python (erp_core.py).</p>
-                    <button onclick="switchTab('dashboard')" class="mt-6 px-6 py-2 bg-slate-800 text-white rounded-lg hover:bg-slate-700 transition">Quay lại Tổng quan</button>
+                    <p class="max-w-md text-slate-500">Giao diện đã sẵn sàng trên thanh menu. Chức năng sẽ được mở khóa ở Phase tiếp theo.</p>
                 </div>
             </div>
-
         </main>
     </div>
 
-    <script>
-        const titles = {
-            'dashboard': 'Bảng điều khiển Tổng quan', 'crm': 'Quản lý Quan hệ Khách hàng', 'projects': 'Quản lý Dự án',
-            'finance': 'Sổ quỹ Thu Chi', 'sales': 'Quản lý Bán hàng', 'hr': 'Hồ sơ Nhân sự', 'assets': 'Tài sản Thiết bị',
-            'inventory': 'Quản lý Kho', 'production': 'Quản lý Sản xuất', 'purchasing': 'Quản lý Mua hàng',
-            'goals': 'Mục tiêu kinh doanh', 'social': 'Mạng xã hội nội bộ', 'okrs': 'Quản lý OKRs',
-            'attendance': 'Chấm công & Lương', 'chat': 'Hệ thống Chat', 'banners': 'Banner PR',
-            'workload': 'Khối lượng công việc', 'approvals': 'Phê duyệt yêu cầu', 'ai_business': 'Cố vấn AI Business'
-        };
+    <div id="modal-social" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-md">
+            <h3 class="font-bold mb-4 border-b pb-2">Tạo bài viết mới</h3>
+            <input type="text" id="so-author" placeholder="Tên người đăng (VD: Nguyễn Mạnh Toàn)" class="w-full px-4 py-2 border rounded-lg mb-2 outline-none font-semibold text-blue-600">
+            <textarea id="so-content" rows="4" placeholder="Bạn muốn chia sẻ điều gì với công ty?" class="w-full px-4 py-2 border rounded-lg mb-4 outline-none resize-none"></textarea>
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleModal('modal-social')" class="px-4 py-2 bg-slate-100 rounded-lg">Hủy</button>
+                <button onclick="submitSocial()" class="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold shadow">Đăng bài</button>
+            </div>
+        </div>
+    </div>
 
-        // Danh sách các tab đã có giao diện thực tế (còn lại sẽ nhảy vào placeholder)
-        const activeTabs = ['dashboard', 'crm', 'projects', 'inventory']; 
+    <div id="modal-okrs" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl w-full max-w-md">
+            <h3 class="font-bold mb-4 border-b pb-2">Tạo Mục tiêu OKR</h3>
+            <input type="text" id="ok-obj" placeholder="Mục tiêu (Objective) - VD: Thống lĩnh thị trường ELV" class="w-full px-4 py-2 border rounded-lg mb-2 outline-none font-bold">
+            <input type="text" id="ok-kr" placeholder="Kết quả then chốt (Key Result) - VD: Ký 10 HĐ mới" class="w-full px-4 py-2 border rounded-lg mb-2 outline-none">
+            <input type="text" id="ok-owner" placeholder="Người phụ trách (Owner)" class="w-full px-4 py-2 border rounded-lg mb-2 outline-none text-slate-600">
+            <label class="block text-xs text-slate-500 mb-1 mt-2">Tiến độ hiện tại (%)</label>
+            <input type="number" id="ok-prog" placeholder="Tiến độ (%)" value="0" max="100" class="w-full px-4 py-2 border rounded-lg mb-4 outline-none">
+            <div class="flex justify-end gap-2">
+                <button onclick="toggleModal('modal-okrs')" class="px-4 py-2 bg-slate-100 rounded-lg">Hủy</button>
+                <button onclick="submitOKR()" class="px-4 py-2 bg-green-600 text-white rounded-lg font-bold shadow">Lưu OKR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modal-crm" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Khách Hàng</h3><input type="text" id="c-name" placeholder="Tên" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="c-phone" placeholder="SĐT" class="w-full px-4 py-2 border rounded mb-2"><select id="c-type" class="w-full px-4 py-2 border rounded mb-4"><option>Tiềm năng</option><option>Đã chốt</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-crm')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitCRM()" class="px-4 py-2 bg-blue-600 text-white rounded">Lưu</button></div></div></div>
+    <div id="modal-project" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Dự Án</h3><input type="text" id="p-name" placeholder="Tên DA" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="p-client" placeholder="Chủ ĐT" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="p-budget" placeholder="Giá trị" class="w-full px-4 py-2 border rounded mb-2"><select id="p-status" class="w-full px-4 py-2 border rounded mb-4"><option>Đang triển khai</option><option>Đã nghiệm thu</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-project')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitProject()" class="px-4 py-2 bg-orange-600 text-white rounded">Lưu</button></div></div></div>
+    <div id="modal-inventory" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Nhập Kho</h3><input type="text" id="i-code" placeholder="Mã" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="i-name" placeholder="Tên" class="w-full px-4 py-2 border rounded mb-2"><select id="i-category" class="w-full px-4 py-2 border rounded mb-2"><option>Camera</option><option>Cáp</option></select><input type="number" id="i-qty" placeholder="SL" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="i-price" placeholder="Giá" class="w-full px-4 py-2 border rounded mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-inventory')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitInventory()" class="px-4 py-2 bg-amber-600 text-white rounded">Lưu</button></div></div></div>
+    <div id="modal-finance" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Thu Chi</h3><select id="f-type" class="w-full px-4 py-2 border rounded mb-2"><option value="THU">THU (+)</option><option value="CHI">CHI (-)</option></select><input type="number" id="f-amount" placeholder="Tiền" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="f-category" placeholder="Danh mục" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="f-note" placeholder="Ghi chú" class="w-full px-4 py-2 border rounded mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-finance')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitFinance()" class="px-4 py-2 bg-emerald-600 text-white rounded">Lưu</button></div></div></div>
+    <div id="modal-hr" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Nhân Sự</h3><input type="text" id="h-name" placeholder="Họ và Tên" class="w-full px-4 py-2 border rounded-lg mb-2"><input type="text" id="h-position" placeholder="Vị trí" class="w-full px-4 py-2 border rounded-lg mb-2"><select id="h-dept" class="w-full px-4 py-2 border rounded-lg mb-2"><option>Kỹ thuật ELV</option><option>Kinh doanh</option></select><input type="number" id="h-salary" placeholder="Lương" class="w-full px-4 py-2 border rounded-lg mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-hr')" class="px-4 py-2 bg-slate-100 rounded-lg">Hủy</button><button onclick="submitHR()" class="px-4 py-2 bg-orange-600 text-white rounded-lg">Lưu</button></div></div></div>
+    <div id="modal-attendance" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Chấm công</h3><input type="text" id="a-name" placeholder="Tên nhân viên" class="w-full px-4 py-2 border rounded-lg mb-3"><select id="a-status" class="w-full px-4 py-2 border rounded-lg mb-4 font-semibold"><option value="Đúng giờ">Đúng giờ</option><option value="Nghỉ phép">Nghỉ phép</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-attendance')" class="px-4 py-2 bg-slate-100 rounded-lg">Hủy</button><button onclick="submitAttendance()" class="px-4 py-2 bg-purple-600 text-white rounded-lg">Lưu</button></div></div></div>
+    <div id="modal-sales" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Bán Hàng</h3><input type="text" id="s-customer" placeholder="Khách hàng" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="s-amount" placeholder="Tiền" class="w-full px-4 py-2 border rounded mb-2"><select id="s-status" class="w-full px-4 py-2 border rounded mb-4"><option>Đã thanh toán</option><option>Chờ thanh toán</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-sales')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitSales()" class="px-4 py-2 bg-pink-600 text-white rounded">Lưu</button></div></div></div>
+    <div id="modal-assets" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Tài Sản</h3><input type="text" id="as-code" placeholder="Mã TS" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="as-name" placeholder="Tên" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="as-assign" placeholder="Người giữ" class="w-full px-4 py-2 border rounded mb-2"><select id="as-cond" class="w-full px-4 py-2 border rounded mb-2"><option>Mới 100%</option><option>Đã sử dụng</option></select><select id="as-status" class="w-full px-4 py-2 border rounded mb-4"><option>Đang sử dụng</option><option>Trong kho</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-assets')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitAssets()" class="px-4 py-2 bg-teal-600 text-white rounded">Lưu</button></div></div></div>
+
+    <script>
+        // Kích hoạt tất cả 10 Tab thực tế (Các tab còn lại hiện Placeholder)
+        const titles = {'dashboard':'Tổng Quan','crm':'Khách Hàng','projects':'Dự Án','finance':'Thu Chi','inventory':'Kho Hàng','hr':'Nhân Sự','attendance':'Chấm Công', 'sales': 'Bán Hàng', 'assets': 'Tài Sản', 'social':'Mạng Xã Hội Nội Bộ', 'okrs':'Quản Lý OKRs'};
+        const activeTabs = ['dashboard', 'crm', 'projects', 'finance', 'inventory', 'hr', 'attendance', 'sales', 'assets', 'social', 'okrs'];
 
         function switchTab(tabId) {
-            document.getElementById('header-title').innerText = titles[tabId] || 'Phân hệ Hệ thống';
-            
-            // Đổi màu menu trái
+            document.getElementById('header-title').innerText = titles[tabId] || 'Phân hệ chờ phát triển';
             document.querySelectorAll('[id^="nav-"]').forEach(el => el.className = "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group");
-            const act = document.getElementById('nav-'+tabId); 
-            if(act) act.className = "w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white shadow-md transition group";
-            
-            // Ẩn tất cả nội dung
+            const act = document.getElementById('nav-'+tabId); if(act) act.className = "w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white shadow-md transition group";
             document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
             
-            // Hiện nội dung tương ứng
             if(activeTabs.includes(tabId)) {
-                const tp = document.getElementById('tab-'+tabId);
-                if(tp) tp.classList.remove('hidden');
-                if(tabId === 'dashboard') loadDashboardStats();
-            } else {
-                document.getElementById('tab-placeholder').classList.remove('hidden');
-            }
+                document.getElementById('tab-'+tabId).classList.remove('hidden'); 
+                if(tabId=='dashboard') loadDashboardStats(); if(tabId=='crm') loadCRM(); if(tabId=='projects') loadProjects();
+                if(tabId=='inventory') loadInventory(); if(tabId=='finance') loadFinance();
+                if(tabId=='hr') loadHR(); if(tabId=='attendance') loadAttendance();
+                if(tabId=='sales') loadSales(); if(tabId=='assets') loadAssets();
+                if(tabId=='social') loadSocial(); if(tabId=='okrs') loadOKRs();
+            } else document.getElementById('tab-placeholder').classList.remove('hidden');
         }
+        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
 
         async function loadDashboardStats() {
             try {
-                const r = await fetch('/api/v1/erp/dashboard-stats'); 
-                const d = await r.json();
-                if(d.success) { 
-                    document.getElementById('stat-customers').innerText = d.data.total_users; 
-                    document.getElementById('stat-revenue').innerText = d.data.total_revenue.toLocaleString('vi-VN'); 
-                    document.getElementById('stat-projects').innerText = d.data.total_projects; 
-                }
+                const r = await fetch('/api/v1/erp/dashboard-stats'); const d = await r.json();
+                if(d.success) { document.getElementById('stat-customers').innerText=d.data.total_users; document.getElementById('stat-revenue').innerText=d.data.total_revenue.toLocaleString(); document.getElementById('stat-projects').innerText=d.data.total_projects; }
+                const ras = await fetch('/api/v1/erp/assets'); const das = await ras.json();
+                if(das.success) document.getElementById('stat-assets').innerText = das.data.length;
             } catch(e) {}
+        }
+
+        // CÁC HÀM XỬ LÝ CŨ GIỮ NGUYÊN 100%
+        async function loadCRM() { const r = await fetch('/api/v1/erp/customers'); const d = await r.json(); document.getElementById('crm-list').innerHTML = d.data.map(c => `<tr><td class="px-6 py-4 font-bold">${c.name}</td><td class="px-6 py-4">${c.phone}</td><td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold bg-blue-100">${c.type}</span></td></tr>`).join(''); }
+        async function submitCRM() { await fetch('/api/v1/erp/customers', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:document.getElementById('c-name').value, phone:document.getElementById('c-phone').value, type:document.getElementById('c-type').value})}); toggleModal('modal-crm'); loadCRM(); }
+        async function loadProjects() { const r = await fetch('/api/v1/erp/projects'); const d = await r.json(); document.getElementById('project-list').innerHTML = d.data.map(p => `<tr><td class="px-6 py-4 font-bold">${p.project_name}</td><td class="px-6 py-4">${p.customer_name}</td><td class="px-6 py-4 text-right font-bold text-emerald-600">${p.budget.toLocaleString()} ₫</td><td class="px-6 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold bg-orange-100">${p.status}</span></td></tr>`).join(''); }
+        async function submitProject() { await fetch('/api/v1/erp/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({project_name:document.getElementById('p-name').value, customer_name:document.getElementById('p-client').value, budget:parseInt(document.getElementById('p-budget').value)||0, status:document.getElementById('p-status').value})}); toggleModal('modal-project'); loadProjects(); }
+        async function loadInventory() { const r = await fetch('/api/v1/erp/inventory'); const d = await r.json(); document.getElementById('inventory-list').innerHTML = d.data.map(i => `<tr><td class="px-6 py-4">${i.item_code}</td><td class="px-6 py-4 font-bold">${i.item_name}</td><td class="px-6 py-4 text-center">${i.quantity}</td><td class="px-6 py-4 text-right">${i.unit_price.toLocaleString()} ₫</td></tr>`).join(''); }
+        async function submitInventory() { await fetch('/api/v1/erp/inventory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({item_code:document.getElementById('i-code').value, item_name:document.getElementById('i-name').value, category:document.getElementById('i-category').value, quantity:parseInt(document.getElementById('i-qty').value)||0, unit_price:parseInt(document.getElementById('i-price').value)||0})}); toggleModal('modal-inventory'); loadInventory(); }
+        async function loadFinance() { const r = await fetch('/api/v1/erp/finance'); const d = await r.json(); document.getElementById('finance-list').innerHTML = d.data.map(f => `<tr><td class="px-6 py-4 font-bold">${f.trans_type}</td><td class="px-6 py-4">${f.note}</td><td class="px-6 py-4 text-right font-bold">${f.amount.toLocaleString()} ₫</td></tr>`).join(''); }
+        async function submitFinance() { await fetch('/api/v1/erp/finance', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({trans_type:document.getElementById('f-type').value, amount:parseInt(document.getElementById('f-amount').value)||0, category:document.getElementById('f-category').value, note:document.getElementById('f-note').value})}); toggleModal('modal-finance'); loadFinance(); }
+        async function loadHR() { const r = await fetch('/api/v1/erp/employees'); const d = await r.json(); document.getElementById('hr-list').innerHTML = d.data.map(h => `<tr><td class="px-6 py-4 font-bold">${h.full_name}</td><td class="px-6 py-4">${h.position}</td><td class="px-6 py-4 text-right">${h.base_salary.toLocaleString()} ₫</td></tr>`).join(''); }
+        async function submitHR() { await fetch('/api/v1/erp/employees', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({full_name:document.getElementById('h-name').value, phone:'0', position:document.getElementById('h-position').value, department:document.getElementById('h-dept').value, base_salary:parseInt(document.getElementById('h-salary').value)||0})}); toggleModal('modal-hr'); loadHR(); }
+        async function loadAttendance() { const r = await fetch('/api/v1/erp/attendance'); const d = await r.json(); document.getElementById('attendance-list').innerHTML = d.data.map(a => `<tr><td class="px-6 py-4 font-bold">${a.emp_name}</td><td class="px-6 py-4 text-center">${a.time_in}</td><td class="px-6 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold bg-purple-100">${a.status}</span></td></tr>`).join(''); }
+        async function submitAttendance() { await fetch('/api/v1/erp/attendance', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({emp_name:document.getElementById('a-name').value, status:document.getElementById('a-status').value})}); toggleModal('modal-attendance'); loadAttendance(); }
+        async function loadSales() { const r = await fetch('/api/v1/erp/sales'); const d = await r.json(); document.getElementById('sales-list').innerHTML = d.data.map(s => `<tr><td class="px-6 py-4 font-bold">${s.order_code}</td><td class="px-6 py-4">${s.customer}</td><td class="px-6 py-4 text-right">${s.total_amount.toLocaleString()} ₫</td><td class="px-6 py-4 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold bg-emerald-100">${s.status}</span></td></tr>`).join(''); }
+        async function submitSales() { await fetch('/api/v1/erp/sales', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({customer:document.getElementById('s-customer').value, total_amount:parseInt(document.getElementById('s-amount').value)||0, status:document.getElementById('s-status').value})}); toggleModal('modal-sales'); loadSales(); }
+        async function loadAssets() { const r = await fetch('/api/v1/erp/assets'); const d = await r.json(); document.getElementById('assets-list').innerHTML = d.data.map(a => `<tr><td class="px-6 py-4 font-bold">${a.asset_code}</td><td class="px-6 py-4">${a.asset_name}</td><td class="px-6 py-4">${a.assigned_to}</td><td class="px-6 py-4 text-center"><span class="px-2 py-1 rounded text-[10px] font-bold bg-blue-100">${a.status}</span></td></tr>`).join(''); }
+        async function submitAssets() { await fetch('/api/v1/erp/assets', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({asset_code:document.getElementById('as-code').value, asset_name:document.getElementById('as-name').value, assigned_to:document.getElementById('as-assign').value, condition:document.getElementById('as-cond').value, status:document.getElementById('as-status').value})}); toggleModal('modal-assets'); loadAssets(); }
+
+        // --- HÀM MỚI: MẠNG XÃ HỘI NỘI BỘ ---
+        async function loadSocial() {
+            try { const r = await fetch('/api/v1/erp/social'); const d = await r.json();
+                document.getElementById('social-list').innerHTML = d.data.map(s => `
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 font-bold">${s.author.charAt(0)}</div>
+                            <div><p class="font-bold text-slate-800">${s.author}</p><p class="text-[10px] text-slate-400">${s.created_at}</p></div>
+                        </div>
+                        <p class="text-slate-700 text-sm mb-4 leading-relaxed">${s.content}</p>
+                        <div class="border-t pt-3 flex gap-4 text-slate-500 text-sm font-medium">
+                            <button class="hover:text-blue-600 transition"><i class="far fa-thumbs-up mr-1"></i>Thích (${s.likes})</button>
+                            <button class="hover:text-blue-600 transition"><i class="far fa-comment mr-1"></i>Bình luận</button>
+                        </div>
+                    </div>`).join('');
+                if(d.data.length === 0) document.getElementById('social-list').innerHTML = '<div class="text-center text-slate-400 mt-10">Chưa có bài viết nào. Hãy chia sẻ điều gì đó!</div>';
+            } catch(e) {}
+        }
+        async function submitSocial() {
+            const author=document.getElementById('so-author').value, content=document.getElementById('so-content').value;
+            if(!author || !content) return alert("Nhập đủ tên và nội dung!");
+            await fetch('/api/v1/erp/social', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({author, content})});
+            toggleModal('modal-social'); document.getElementById('so-content').value=''; loadSocial();
+        }
+
+        // --- HÀM MỚI: OKRs ---
+        async function loadOKRs() {
+            try { const r = await fetch('/api/v1/erp/okrs'); const d = await r.json();
+                document.getElementById('okrs-list').innerHTML = d.data.map(o => `
+                    <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 hover:border-green-400 transition cursor-pointer">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="font-bold text-slate-800 text-base leading-tight">${o.objective}</h3>
+                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2 py-1 rounded">${o.progress}%</span>
+                        </div>
+                        <p class="text-sm text-slate-600 mb-4"><i class="fas fa-bullseye text-red-400 mr-2"></i>${o.key_result}</p>
+                        <div class="w-full bg-slate-100 rounded-full h-2.5 mb-3">
+                            <div class="bg-green-500 h-2.5 rounded-full" style="width: ${o.progress}%"></div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs text-slate-400">
+                            <i class="fas fa-user-circle"></i> Phụ trách: <span class="font-semibold text-slate-600">${o.owner}</span>
+                        </div>
+                    </div>`).join('');
+            } catch(e) {}
+        }
+        async function submitOKR() {
+            const objective=document.getElementById('ok-obj').value, key_result=document.getElementById('ok-kr').value, owner=document.getElementById('ok-owner').value, progress=parseInt(document.getElementById('ok-prog').value)||0;
+            if(!objective) return alert("Nhập Mục tiêu!");
+            await fetch('/api/v1/erp/okrs', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({objective, key_result, progress, owner})});
+            toggleModal('modal-okrs'); loadOKRs();
         }
 
         document.addEventListener('DOMContentLoaded', () => {
