@@ -9,25 +9,28 @@
 </head>
 <body>
     <div class="min-h-screen flex flex-col">
+        <!-- Header -->
         <nav class="bg-white border-b border-slate-200 px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-3">
                 <div class="bg-blue-600 p-2 rounded-lg text-white"><i class="fas fa-layer-group"></i></div>
                 <h1 class="text-xl font-bold text-slate-800">TOAN AAS <span class="font-light text-slate-400">OS</span></h1>
             </div>
             <div class="flex items-center gap-6">
-                <span class="text-sm font-medium text-slate-500">Xin chào, Sếp!</span>
+                <span id="user-welcome" class="text-sm font-medium text-slate-500">Xin chào!</span>
                 <button onclick="logout()" class="text-sm font-semibold text-red-500 hover:text-red-700 transition">Thoát</button>
             </div>
         </nav>
 
+        <!-- Content -->
         <main class="p-8 max-w-7xl mx-auto w-full">
+            <!-- Stats -->
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Khách hàng</p>
                     <p class="text-3xl font-bold text-slate-800" id="stat-users">-</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
-                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Doanh thu</p>
+                    <p class="text-slate-400 text-xs font-bold uppercase tracking-wider mb-1">Doanh thu (VNĐ)</p>
                     <p class="text-3xl font-bold text-emerald-600" id="stat-revenue">-</p>
                 </div>
                 <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
@@ -40,6 +43,7 @@
                 </div>
             </div>
 
+            <!-- Apps Grid -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <a href="/video-app" class="group bg-white p-6 rounded-2xl border border-slate-200 hover:border-blue-500 transition-all hover:shadow-lg">
                     <div class="text-blue-500 mb-4 text-xl"><i class="fas fa-magic"></i></div>
@@ -66,6 +70,8 @@
                     <h3 class="font-bold text-slate-800 group-hover:text-pink-600">Affiliate Vault</h3>
                     <p class="text-sm text-slate-400 mt-1">Quản lý link liên kết</p>
                 </a>
+                
+                <!-- NÚT ADMIN SẼ HIỆN Ở ĐÂY NẾU LÀ ADMIN -->
                 <a href="/admin-app" id="admin-menu" class="hidden group bg-slate-900 p-6 rounded-2xl border border-slate-800 hover:border-blue-500 transition-all hover:shadow-lg">
                     <div class="text-blue-400 mb-4 text-xl"><i class="fas fa-shield-halved"></i></div>
                     <h3 class="font-bold text-white group-hover:text-blue-400">Quản trị hệ thống</h3>
@@ -74,5 +80,48 @@
             </div>
         </main>
     </div>
-    </body>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Lấy thông tin quyền từ trình duyệt
+            const userId = localStorage.getItem('user_id');
+            const role = localStorage.getItem('role');
+            
+            // Nếu chưa đăng nhập thì văng ra login
+            if(!userId) {
+                window.location.href = '/login';
+                return;
+            }
+
+            // Nếu là Admin thì gỡ thẻ hidden cho nút Quản trị
+            if(role === 'admin') {
+                document.getElementById('admin-menu').classList.remove('hidden');
+                document.getElementById('user-welcome').innerText = "Xin chào, Sếp!";
+            } else {
+                document.getElementById('user-welcome').innerText = "Xin chào, Khách hàng!";
+            }
+
+            // Lấy dữ liệu cho các ô thống kê (Sử dụng Try-Catch để chống sập web)
+            fetch('/api/v1/report/dashboard')
+                .then(res => res.json())
+                .then(res => {
+                    if(res.success) {
+                        const data = res.data;
+                        document.getElementById('stat-users').innerText = data.total_users || 0;
+                        document.getElementById('stat-revenue').innerText = (data.total_revenue_vnd || 0).toLocaleString('vi-VN');
+                        document.getElementById('stat-projects').innerText = data.total_b2b_projects || 0;
+                        document.getElementById('stat-campaigns').innerText = data.total_b2c_campaigns || 0;
+                    }
+                })
+                .catch(err => console.error("Lỗi báo cáo:", err));
+        });
+
+        // Hàm thoát tài khoản
+        function logout() {
+            localStorage.removeItem('user_id');
+            localStorage.removeItem('role');
+            window.location.href = '/login';
+        }
+    </script>
+</body>
 </html>
