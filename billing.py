@@ -22,14 +22,20 @@ def verify_payos_signature(data: dict, received_sig: str) -> bool:
     ).hexdigest()
     return hmac.compare_digest(computed_sig, received_sig)
 
-# --- CHỈ CẦN GIỮ LẠI ĐÚNG TRẠM WEBHOOK BẢO MẬT NÀY ---
 @router.post("/webhook/payos")
 async def payos_webhook(request: Request):
+    # 1. Bắt ngoại lệ để luôn phản hồi 200 cho PayOS (tránh lỗi 400 "không hoạt động")
     try:
         body = await request.json()
+    except:
+        return JSONResponse({"success": True, "message": "OK"}, status_code=200)
+
+    # 2. Xử lý logic cộng tiền
+    try:
         data = body.get("data", {})
         signature = body.get("signature", "")
         
+        # Kiểm tra bảo mật
         if not verify_payos_signature(data, signature):
             return JSONResponse({"success": False, "message": "Sai chữ ký"}, status_code=400)
         
@@ -42,11 +48,13 @@ async def payos_webhook(request: Request):
         try:
             c.execute("BEGIN IMMEDIATE")
             
+            # Check trùng đơn
             c.execute("SELECT 1 FROM payos_processed WHERE order_code=?", (order_code,))
             if c.fetchone():
                 conn.rollback()
                 return JSONResponse({"success": True, "message": "Đã xử lý rồi"})
                 
+            # Tìm đơn hàng
             c.execute("SELECT user_id, amount, xu, status FROM payos_orders WHERE order_code=?", (order_code,))
             order = c.fetchone()
             if not order:
@@ -59,7 +67,7 @@ async def payos_webhook(request: Request):
                 conn.rollback()
                 return JSONResponse({"success": False, "message": "Trạng thái hoặc số tiền sai"})
                 
-            # Cộng tiền vào cột credits thay vì balance
+            # Cộng tiền vào database
             c.execute("UPDATE users SET credits = credits + ? WHERE user_id=?", (expected_xu, user_id))
             c.execute("INSERT INTO payos_processed (order_code, processed_at) VALUES (?,?)", (order_code, now_text()))
             c.execute("UPDATE payos_orders SET status='PAID', paid_at=? WHERE order_code=?", (now_text(), order_code))
@@ -80,4 +88,5 @@ async def payos_webhook(request: Request):
         finally:
             conn.close()
     except Exception as e:
+        logger.error(f"Lỗi Webhook: {e}")
         return JSONResponse({"success": False, "message": str(e)}, status_code=500)
