@@ -11,7 +11,7 @@ def init_erp_database():
     conn = db_connect(); c = conn.cursor()
     try:
         c.execute("BEGIN IMMEDIATE")
-        # 12 Bảng cũ
+        # 14 Bảng Cũ
         c.execute('''CREATE TABLE IF NOT EXISTS erp_customers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, email TEXT, type TEXT DEFAULT 'Tiềm năng', source TEXT, created_at TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS erp_projects (id INTEGER PRIMARY KEY AUTOINCREMENT, project_name TEXT, customer_name TEXT, budget INTEGER, status TEXT DEFAULT 'Đang triển khai', created_at TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS erp_inventory (id INTEGER PRIMARY KEY AUTOINCREMENT, item_code TEXT, item_name TEXT, category TEXT, quantity INTEGER, unit_price INTEGER, created_at TEXT)''')
@@ -26,11 +26,11 @@ def init_erp_database():
         c.execute('''CREATE TABLE IF NOT EXISTS erp_approvals (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, req_type TEXT, requested_by TEXT, status TEXT DEFAULT 'Chờ duyệt', created_at TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS erp_production (id INTEGER PRIMARY KEY AUTOINCREMENT, batch_code TEXT, product_name TEXT, quantity INTEGER, status TEXT, created_at TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS erp_workloads (id INTEGER PRIMARY KEY AUTOINCREMENT, task_name TEXT, emp_name TEXT, est_hours INTEGER, status TEXT, created_at TEXT)''')
-        
-        # BẢNG MỚI: MỤC TIÊU & BANNER PR
         c.execute('''CREATE TABLE IF NOT EXISTS erp_goals (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, target_value INTEGER, current_value INTEGER DEFAULT 0, deadline TEXT, created_at TEXT)''')
         c.execute('''CREATE TABLE IF NOT EXISTS erp_banners (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, image_url TEXT, status TEXT DEFAULT 'Hoạt động', created_at TEXT)''')
         
+        # BẢNG MỚI: CHAT NỘI BỘ
+        c.execute('''CREATE TABLE IF NOT EXISTS erp_chat (id INTEGER PRIMARY KEY AUTOINCREMENT, sender TEXT, message TEXT, created_at TEXT)''')
         conn.commit()
     except Exception as e:
         conn.rollback(); logger.error(f"Lỗi: {e}")
@@ -47,7 +47,7 @@ async def get_erp_stats():
         return {"success": True, "data": {"total_users": total_customers, "total_revenue": proj_data[1] or 0, "total_projects": proj_data[0] or 0}}
     finally: conn.close()
 
-# --- CÁC API CŨ (Đã rút gọn) ---
+# --- CÁC API CŨ (Giữ nguyên) ---
 class CustomerReq(BaseModel): name: str; phone: str; type: str
 @router.post("/customers")
 async def add_customer(data: CustomerReq): conn = db_connect(); c = conn.cursor(); c.execute("INSERT INTO erp_customers (name, phone, type, created_at) VALUES (?, ?, ?, ?)", (data.name, data.phone, data.type, now_text())); conn.commit(); conn.close(); return {"success": True}
@@ -132,33 +132,42 @@ async def add_workload(data: WorkloadReq): conn = db_connect(); c = conn.cursor(
 @router.get("/workloads")
 async def get_workloads(): conn = db_connect(); c = conn.cursor(); c.execute("SELECT id, task_name, emp_name, est_hours, status, created_at FROM erp_workloads ORDER BY id DESC"); data = [{"id": r[0], "task_name": r[1], "emp_name": r[2], "est_hours": r[3], "status": r[4], "created_at": r[5]} for r in c.fetchall()]; conn.close(); return {"success": True, "data": data}
 
-# --- 6. API MỤC TIÊU KINH DOANH & BANNER PR (MỚI) ---
 class GoalReq(BaseModel): title: str; target_value: int; deadline: str
 @router.post("/goals")
-async def add_goal(data: GoalReq):
-    conn = db_connect(); c = conn.cursor()
-    c.execute("INSERT INTO erp_goals (title, target_value, deadline, created_at) VALUES (?, ?, ?, ?)", 
-              (data.title, data.target_value, data.deadline, now_text()))
-    conn.commit(); conn.close(); return {"success": True}
-
+async def add_goal(data: GoalReq): conn = db_connect(); c = conn.cursor(); c.execute("INSERT INTO erp_goals (title, target_value, deadline, created_at) VALUES (?, ?, ?, ?)", (data.title, data.target_value, data.deadline, now_text())); conn.commit(); conn.close(); return {"success": True}
 @router.get("/goals")
-async def get_goals():
-    conn = db_connect(); c = conn.cursor()
-    c.execute("SELECT id, title, target_value, current_value, deadline FROM erp_goals ORDER BY id DESC")
-    data = [{"id": r[0], "title": r[1], "target_value": r[2], "current_value": r[3], "deadline": r[4]} for r in c.fetchall()]
-    conn.close(); return {"success": True, "data": data}
+async def get_goals(): conn = db_connect(); c = conn.cursor(); c.execute("SELECT id, title, target_value, current_value, deadline FROM erp_goals ORDER BY id DESC"); data = [{"id": r[0], "title": r[1], "target_value": r[2], "current_value": r[3], "deadline": r[4]} for r in c.fetchall()]; conn.close(); return {"success": True, "data": data}
 
 class BannerReq(BaseModel): title: str; image_url: str; status: str
 @router.post("/banners")
-async def add_banner(data: BannerReq):
-    conn = db_connect(); c = conn.cursor()
-    c.execute("INSERT INTO erp_banners (title, image_url, status, created_at) VALUES (?, ?, ?, ?)", 
-              (data.title, data.image_url, data.status, now_text()))
-    conn.commit(); conn.close(); return {"success": True}
-
+async def add_banner(data: BannerReq): conn = db_connect(); c = conn.cursor(); c.execute("INSERT INTO erp_banners (title, image_url, status, created_at) VALUES (?, ?, ?, ?)", (data.title, data.image_url, data.status, now_text())); conn.commit(); conn.close(); return {"success": True}
 @router.get("/banners")
-async def get_banners():
+async def get_banners(): conn = db_connect(); c = conn.cursor(); c.execute("SELECT id, title, image_url, status, created_at FROM erp_banners ORDER BY id DESC"); data = [{"id": r[0], "title": r[1], "image_url": r[2], "status": r[3], "created_at": r[4]} for r in c.fetchall()]; conn.close(); return {"success": True, "data": data}
+
+# --- 7. API MỚI: CHAT & AI BUSINESS ---
+class ChatReq(BaseModel): sender: str; message: str
+@router.post("/chat")
+async def add_chat(data: ChatReq):
     conn = db_connect(); c = conn.cursor()
-    c.execute("SELECT id, title, image_url, status, created_at FROM erp_banners ORDER BY id DESC")
-    data = [{"id": r[0], "title": r[1], "image_url": r[2], "status": r[3], "created_at": r[4]} for r in c.fetchall()]
-    conn.close(); return {"success": True, "data": data}
+    c.execute("INSERT INTO erp_chat (sender, message, created_at) VALUES (?, ?, ?)", (data.sender, data.message, now_text()))
+    conn.commit(); conn.close()
+    return {"success": True}
+
+@router.get("/chat")
+async def get_chat():
+    conn = db_connect(); c = conn.cursor()
+    c.execute("SELECT sender, message, created_at FROM erp_chat ORDER BY id ASC")
+    data = [{"sender": r[0], "message": r[1], "time": r[2][11:16]} for r in c.fetchall()]
+    conn.close()
+    return {"success": True, "data": data}
+
+@router.get("/ai-advice")
+async def get_ai_advice():
+    # Giả lập Cố vấn AI đọc dữ liệu ERP để đưa ra lời khuyên cho sếp
+    conn = db_connect(); c = conn.cursor()
+    c.execute("SELECT COUNT(*) FROM erp_customers"); leads = c.fetchone()[0]
+    c.execute("SELECT SUM(budget) FROM erp_projects"); rev = c.fetchone()[0] or 0
+    conn.close()
+    
+    advice = f"📊 Báo cáo AI: Sếp đang có {leads} khách hàng tiềm năng và tổng giá trị dự án là {rev:,} VNĐ.\n💡 Lời khuyên: Hãy tập trung đẩy mạnh tiến độ nghiệm thu dự án ELV để thu hồi dòng tiền mặt, đồng thời tạo thêm OKRs cho đội Sales tháng này."
+    return {"success": True, "advice": advice}
