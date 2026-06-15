@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS - Cổng Đăng Nhập</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-900 text-white font-sans min-h-screen flex items-center justify-center">
+    
+    <div class="bg-gray-800 p-8 rounded-2xl shadow-2xl w-full max-w-md border border-gray-700">
+        <div class="text-center mb-8">
+            <i class="fas fa-microchip fa-4x text-blue-500 mb-4 animate-pulse"></i>
+            <h1 class="text-2xl font-bold">TOAN AAS OS</h1>
+            <p class="text-gray-400 text-sm mt-2">Hệ thống Quản trị & AI Độc quyền</p>
+        </div>
+
+        <div class="space-y-6">
+            <div>
+                <label class="block text-sm font-semibold text-gray-300 mb-2">Mật khẩu hệ thống (Admin)</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-3 top-3 text-gray-500"></i>
+                    <input type="password" id="password" class="w-full bg-gray-900 border border-gray-600 rounded-lg py-2 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 outline-none text-white placeholder-gray-500" placeholder="Nhập mật khẩu..." onkeypress="handleEnter(event)">
+                </div>
+            </div>
+
+            <button onclick="login()" id="btn-login" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition flex justify-center items-center gap-2">
+                <i class="fas fa-sign-in-alt"></i> Mở Khóa Hệ Thống
+            </button>
+
+            <div id="msg" class="text-center text-sm font-semibold hidden"></div>
+        </div>
+    </div>
+
+    <script>
+        function handleEnter(e) { if(e.key === 'Enter') login(); }
+
+        async function login() {
+            const pwd = document.getElementById('password').value;
+            const msgBox = document.getElementById('msg');
+            const btn = document.getElementById('btn-login');
+
+            if(!pwd) {
+                msgBox.innerText = "Vui lòng nhập mật khẩu!";
+                msgBox.className = "text-center text-sm font-semibold text-red-500 block";
+                return;
+            }
+
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang xác thực...';
+            
+            try {
+                const res = await fetch('/api/v1/auth/verify', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: pwd })
+                });
+
+                if (res.ok) {
+                    msgBox.innerText = "Mở khóa thành công! Đang vào hệ thống...";
+                    msgBox.className = "text-center text-sm font-semibold text-green-500 block";
+                    setTimeout(() => window.location.href = "/", 1000); // Chuyển thẳng vào Dashboard
+                } else {
+                    msgBox.innerText = "Sai mật khẩu, vui lòng thử lại!";
+                    msgBox.className = "text-center text-sm font-semibold text-red-500 block";
+                    btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Mở Khóa Hệ Thống';
+                }
+            } catch (error) {
+                msgBox.innerText = "Lỗi kết nối máy chủ!";
+                msgBox.className = "text-center text-sm font-semibold text-red-500 block";
+                btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> Mở Khóa Hệ Thống';
+            }
+        }
+    </script>
+</body>
+</html>
