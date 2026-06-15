@@ -21,6 +21,7 @@ import media_ops
 import campaign_ops
 import report
 import erp_core
+import ai_assistant
 
 app = FastAPI(title="TOAN AAS OS")
 
@@ -44,6 +45,7 @@ app.include_router(media_ops.router, prefix="/api/v1/media-ops", tags=["Media"])
 app.include_router(campaign_ops.router, prefix="/api/v1/campaign", tags=["Campaign"])
 app.include_router(report.router, prefix="/api/v1/report", tags=["Report"])
 app.include_router(erp_core.router, prefix="/api/v1/erp", tags=["ERP Core"])
+app.include_router(ai_assistant.router, prefix="/api/v1/assistant", tags=["AI Assistant"])
 
 # Hàm hiển thị giao diện an toàn
 def get_html(file_name):
@@ -87,3 +89,10 @@ async def admin_page(): return get_html("admin.html")
 @app.get("/app")
 async def mobile_app_ui(): 
     return get_html("mobile_app.html")
+
+@app.get("/")
+async def root_page(): return get_html("customer_app.html")
+
+@app.get("/assistant-app")
+async def assistant_app_ui():
+    return get_html("mobile_chat.html")
