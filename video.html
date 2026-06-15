@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS - Trạm AI Video</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-50 text-gray-800 font-sans min-h-screen">
+    
+    <nav class="bg-gradient-to-r from-blue-800 to-indigo-900 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-2xl font-bold"><i class="fas fa-magic mr-2"></i>AI Video Script Generator</h1>
+            <a href="/" class="bg-white/20 hover:bg-white/30 px-4 py-2 rounded transition"><i class="fas fa-home mr-1"></i> Về Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-8 p-4 max-w-5xl flex flex-col md:flex-row gap-6">
+        
+        <div class="w-full md:w-1/3 bg-white p-6 rounded-xl shadow-md h-fit border-t-4 border-blue-600">
+            <h2 class="text-xl font-bold mb-4 text-blue-800">Cấu hình Kịch bản</h2>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-semibold text-gray-600 mb-2">Chủ đề video</label>
+                <textarea id="input-topic" rows="3" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition" placeholder="VD: Review máy hút bụi Xiaomi giá rẻ..."></textarea>
+            </div>
+
+            <div class="mb-6">
+                <label class="block text-sm font-semibold text-gray-600 mb-2">Nền tảng đăng tải</label>
+                <select id="input-platform" class="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                    <option value="tiktok">TikTok (Video ngắn dọc)</option>
+                    <option value="facebook">Facebook Reels</option>
+                    <option value="youtube">YouTube Shorts</option>
+                </select>
+            </div>
+
+            <button id="btn-generate" onclick="generateScript()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition flex justify-center items-center gap-2">
+                <i class="fas fa-bolt"></i> Tạo Kịch Bản Bằng AI
+            </button>
+        </div>
+
+        <div class="w-full md:w-2/3 bg-white p-6 rounded-xl shadow-md border-t-4 border-indigo-600 min-h-[400px] flex flex-col">
+            <h2 class="text-xl font-bold mb-4 text-indigo-800 flex justify-between items-center">
+                <span>Kết quả từ Gemini AI</span>
+                <button onclick="copyResult()" class="text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 py-1 px-3 rounded transition">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </h2>
+            
+            <div id="result-box" class="flex-1 bg-gray-50 rounded-lg p-4 border overflow-y-auto whitespace-pre-wrap font-mono text-sm text-gray-700">
+                Chưa có dữ liệu. Hãy nhập chủ đề và bấm "Tạo Kịch Bản" để AI xử lý...
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        async function generateScript() {
+            const topic = document.getElementById('input-topic').value;
+            const platform = document.getElementById('input-platform').value;
+            const btn = document.getElementById('btn-generate');
+            const resultBox = document.getElementById('result-box');
+
+            if (!topic.trim()) {
+                alert("Sếp vui lòng nhập chủ đề video nhé!");
+                return;
+            }
+
+            // Đổi trạng thái nút thành Đang load
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang gọi AI...';
+            resultBox.innerHTML = '<div class="flex items-center text-blue-600"><i class="fas fa-circle-notch fa-spin mr-2"></i> Gemini AI đang múa phím...</div>';
+
+            try {
+                // Gọi vào chính xác API Video mà sếp đã tạo
+                const response = await fetch('/api/v1/video/generate-script', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: "admin_web", // Truyền cứng ID tạm thời
+                        topic: topic,
+                        platform: platform
+                    })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    resultBox.innerText = data.script; // In kịch bản ra màn hình
+                } else {
+                    resultBox.innerHTML = `<span class="text-red-500">Lỗi từ máy chủ: ${data.detail || data.message || 'Không rõ nguyên nhân'}</span>`;
+                }
+            } catch (error) {
+                console.error("Lỗi:", error);
+                resultBox.innerHTML = `<span class="text-red-500">Lỗi kết nối mạng hoặc API chưa phản hồi.</span>`;
+            } finally {
+                // Trả lại trạng thái nút ban đầu
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bolt"></i> Tạo Kịch Bản Bằng AI';
+            }
+        }
+
+        function copyResult() {
+            const text = document.getElementById('result-box').innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Đã copy kịch bản!");
+            });
+        }
+    </script>
+</body>
+</html>

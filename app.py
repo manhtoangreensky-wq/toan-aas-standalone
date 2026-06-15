@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
-from fastapi.responses import FileResponse # <--- THÊM DÒNG NÀY ĐỂ MỞ WEB
+from fastapi.responses import FileResponse
 
 from config import settings
 from db import init_db
@@ -42,8 +42,12 @@ app.include_router(performance.router, prefix="/api/v1/performance", tags=["B2C 
 app.include_router(device_ops.router, prefix="/api/v1/device-ops", tags=["B2B Device Ops"])
 app.include_router(report.router, prefix="/api/v1/report", tags=["Admin Dashboard"])
 
-# --- SỬA LẠI ĐOẠN DƯỚI CÙNG NÀY ---
+# 1. Mở đường link cho trang chủ (Dashboard Báo cáo)
 @app.get("/")
 async def root():
-    # Thay vì trả về chữ, chúng ta trả thẳng về cái file Web giao diện!
     return FileResponse("index.html")
+
+# 2. Mở đường link cho trang AI Video Generator
+@app.get("/video-app")
+async def video_app_ui():
+    return FileResponse("video.html")
