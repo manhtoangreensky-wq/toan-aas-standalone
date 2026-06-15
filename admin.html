@@ -3,44 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOAN AAS - Quản Trị Hệ Thống</title>
+    <title>TOAN AAS - Master Admin</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden">
     
     <div class="w-64 bg-slate-900 text-white flex flex-col h-full shadow-2xl z-10">
         <div class="p-6 border-b border-slate-800">
-            <h2 class="text-xl font-bold text-blue-400"><i class="fas fa-shield-halved mr-2"></i>ERP ADMIN</h2>
+            <h2 class="text-xl font-bold text-blue-400 tracking-wider"><i class="fas fa-shield-halved mr-2"></i>ADMIN OS</h2>
         </div>
         <div class="flex-1 p-4 overflow-y-auto">
             <ul class="space-y-2 text-sm font-medium">
-                <li><a href="/" class="block p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-home w-6"></i>Về Trang Chủ</a></li>
-                <li><a href="#" class="block p-3 rounded-lg bg-blue-600 text-white shadow-lg"><i class="fas fa-users w-6"></i>Quản Lý Khách Hàng</a></li>
+                <li><button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full text-left p-3 rounded-lg bg-blue-600 text-white shadow-lg transition"><i class="fas fa-chart-pie w-6"></i>Tổng Quan</button></li>
+                <li><button onclick="switchTab('users')" id="nav-users" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-users w-6"></i>Khách Hàng</button></li>
+                <li><button onclick="switchTab('tools')" id="nav-tools" class="w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition"><i class="fas fa-cubes w-6"></i>Quản lý Tools AI</button></li>
+                <li class="pt-4 mt-4 border-t border-slate-800">
+                    <a href="/" class="block p-3 rounded-lg hover:bg-red-500 hover:text-white text-slate-400 transition"><i class="fas fa-sign-out-alt w-6"></i>Thoát Admin</a>
+                </li>
             </ul>
         </div>
     </div>
 
-    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-50">
-        <div class="bg-white shadow p-4 flex justify-between items-center border-b z-0">
-            <h1 class="text-xl font-bold text-slate-800">Danh Sách Tài Khoản Hệ Thống</h1>
-            <span class="text-sm bg-blue-100 text-blue-800 px-3 py-1 rounded-full font-bold shadow-sm">Master Panel</span>
+    <div class="flex-1 flex flex-col h-full overflow-hidden">
+        <div class="bg-white shadow-sm p-4 flex justify-between items-center border-b">
+            <h1 class="text-lg font-bold text-slate-800" id="header-title">Bảng Điều Khiển</h1>
+            <div class="flex items-center gap-3">
+                <span class="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold uppercase"><i class="fas fa-circle text-[8px] mr-1"></i>Hệ thống ổn định</span>
+            </div>
         </div>
         
         <div class="flex-1 overflow-auto p-6">
-            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                <table class="min-w-full text-left text-sm whitespace-nowrap">
-                    <thead class="uppercase tracking-wider border-b-2 border-slate-200 bg-slate-50 text-slate-600 font-semibold">
-                        <tr>
-                            <th class="px-6 py-4">Tài khoản</th>
-                            <th class="px-6 py-4 text-center">Quyền hạn</th>
-                            <th class="px-6 py-4 text-right">Số dư ví (Xu)</th>
-                        </tr>
-                    </thead>
-                    <tbody id="user-list" class="divide-y divide-slate-100 text-slate-700">
-                        <tr><td colspan="3" class="px-6 py-8 text-center text-slate-500"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu...</td></tr>
-                    </tbody>
-                </table>
+            
+            <div id="tab-dashboard" class="tab-content block">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <p class="text-slate-400 text-xs font-bold uppercase mb-1">Tổng Khách Hàng</p>
+                        <p class="text-3xl font-bold text-slate-800" id="stat-users">...</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <p class="text-slate-400 text-xs font-bold uppercase mb-1">Doanh thu PayOS (VNĐ)</p>
+                        <p class="text-3xl font-bold text-emerald-600" id="stat-rev">...</p>
+                    </div>
+                    <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                        <p class="text-slate-400 text-xs font-bold uppercase mb-1">Công cụ AI kích hoạt</p>
+                        <p class="text-3xl font-bold text-blue-600" id="stat-tools">...</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tab-users" class="tab-content hidden">
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <table class="min-w-full text-left text-sm whitespace-nowrap">
+                        <thead class="uppercase tracking-wider border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold text-xs">
+                            <tr>
+                                <th class="px-6 py-4">Tài khoản</th>
+                                <th class="px-6 py-4 text-center">Vai trò</th>
+                                <th class="px-6 py-4 text-right">Ví (Xu)</th>
+                                <th class="px-6 py-4 text-center">Hành động</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list" class="divide-y divide-slate-100 text-slate-700">
+                            </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div id="tab-tools" class="tab-content hidden">
+                <div class="bg-white p-10 rounded-xl shadow-sm border border-slate-200 text-center">
+                    <i class="fas fa-drafting-compass fa-4x text-slate-300 mb-4"></i>
+                    <h2 class="text-xl font-bold text-slate-600">Module Quản lý Tools đang thi công</h2>
+                    <p class="text-slate-400 mt-2">Sẽ tích hợp tính năng bật/tắt quyền dùng AI cho từng user tại đây.</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="xuModal" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-2xl shadow-2xl w-full max-w-sm">
+            <h3 class="text-lg font-bold mb-2 text-slate-800">Điều chỉnh Xu</h3>
+            <p class="text-sm text-slate-500 mb-4">Tài khoản: <span id="target-username" class="font-bold text-blue-600"></span></p>
+            <input type="hidden" id="target-userid">
+            
+            <label class="block text-sm font-semibold text-slate-600 mb-1">Số Xu (+ để cộng, - để trừ)</label>
+            <input type="number" id="xu-amount" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition" placeholder="Ví dụ: 500 hoặc -100">
+            
+            <div class="mt-6 flex justify-end gap-3">
+                <button onclick="toggleModal()" class="px-4 py-2 bg-slate-100 text-slate-600 font-semibold rounded-lg hover:bg-slate-200">Hủy</button>
+                <button onclick="submitXu()" class="px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 shadow-lg">Thực hiện</button>
             </div>
         </div>
     </div>
@@ -49,43 +102,95 @@
         const admin_id = localStorage.getItem('user_id');
         const role = localStorage.getItem('role');
 
-        // KIỂM TRA QUYỀN TRỰC TIẾP
         if (role !== 'admin') {
-            document.body.innerHTML = `
-                <div class="w-full h-screen flex items-center justify-center bg-gray-100">
-                    <div class="text-center p-8 bg-white rounded-xl shadow-xl border-t-4 border-red-500">
-                        <i class="fas fa-lock fa-4x text-red-500 mb-4"></i>
-                        <h1 class="text-2xl font-bold text-gray-800">Truy Cập Bị Từ Chối</h1>
-                        <p class="mt-2 text-gray-600">Tài khoản của sếp chưa được cấp quyền Admin trong Database.</p>
-                        <a href="/" class="mt-6 inline-block bg-blue-600 text-white font-bold py-2 px-6 rounded shadow hover:bg-blue-700">Về Trang Chủ</a>
-                    </div>
-                </div>`;
-        } else {
-            loadUsers();
+            document.body.innerHTML = '<div class="flex items-center justify-center h-screen"><h1 class="text-2xl text-red-500 font-bold">Truy Cập Bị Từ Chối</h1></div>';
+            setTimeout(() => window.location.href = '/', 2000);
         }
 
+        // Chuyển Tab
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tabId).classList.remove('hidden');
+            
+            // Đổi màu menu
+            document.querySelectorAll('[id^="nav-"]').forEach(el => {
+                el.className = "w-full text-left p-3 rounded-lg hover:bg-slate-800 text-slate-300 transition";
+            });
+            document.getElementById('nav-' + tabId).className = "w-full text-left p-3 rounded-lg bg-blue-600 text-white shadow-lg transition";
+
+            // Đổi tiêu đề
+            const titles = { 'dashboard': 'Tổng Quan', 'users': 'Quản Lý Khách Hàng', 'tools': 'Cấu Hình Hệ Thống' };
+            document.getElementById('header-title').innerText = titles[tabId];
+
+            if(tabId === 'users') loadUsers();
+            if(tabId === 'dashboard') loadStats();
+        }
+
+        // Tải Thống kê
+        async function loadStats() {
+            try {
+                const res = await fetch(`/api/v1/admin/dashboard-stats?admin_id=${admin_id}`);
+                const data = await res.json();
+                if(data.success) {
+                    document.getElementById('stat-users').innerText = data.data.total_users;
+                    document.getElementById('stat-rev').innerText = data.data.total_revenue.toLocaleString('vi-VN');
+                    document.getElementById('stat-tools').innerText = data.data.active_tools;
+                }
+            } catch (e) {}
+        }
+
+        // Tải Users
         async function loadUsers() {
             try {
                 const res = await fetch(`/api/v1/admin/users?admin_id=${admin_id}`);
                 const data = await res.json();
-                
                 const tbody = document.getElementById('user-list');
-                if (data.success && data.data.length > 0) {
+                
+                if (data.success) {
                     tbody.innerHTML = data.data.map(u => `
                         <tr class="hover:bg-slate-50 transition">
                             <td class="px-6 py-4 font-bold text-slate-800">${u.username}</td>
-                            <td class="px-6 py-4 text-center"><span class="${u.role==='admin'?'bg-red-100 text-red-700 border border-red-200':'bg-slate-100 text-slate-600 border border-slate-200'} px-3 py-1 rounded-full text-xs font-bold uppercase">${u.role}</span></td>
-                            <td class="px-6 py-4 text-right font-bold text-emerald-600 text-lg">${u.credits.toLocaleString('vi-VN')}</td>
+                            <td class="px-6 py-4 text-center"><span class="${u.role==='admin'?'bg-red-100 text-red-700':'bg-slate-100 text-slate-600'} px-2 py-1 rounded-md text-[10px] font-bold uppercase">${u.role}</span></td>
+                            <td class="px-6 py-4 text-right font-bold text-emerald-600">${u.credits.toLocaleString('vi-VN')}</td>
+                            <td class="px-6 py-4 text-center">
+                                <button onclick="openModal('${u.user_id}', '${u.username}')" class="text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1 rounded font-semibold text-xs"><i class="fas fa-coins mr-1"></i> Bơm/Trừ Xu</button>
+                            </td>
                         </tr>
                     `).join('');
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-slate-500">Hệ thống chưa có khách hàng nào.</td></tr>';
                 }
-            } catch (e) {
-                console.error(e);
-                document.getElementById('user-list').innerHTML = '<tr><td colspan="3" class="px-6 py-8 text-center text-red-500 font-bold">Lỗi kết nối đến máy chủ!</td></tr>';
-            }
+            } catch (e) {}
         }
+
+        function toggleModal() { document.getElementById('xuModal').classList.toggle('hidden'); }
+        
+        function openModal(id, name) {
+            document.getElementById('target-userid').value = id;
+            document.getElementById('target-username').innerText = name;
+            document.getElementById('xu-amount').value = '';
+            toggleModal();
+        }
+
+        async function submitXu() {
+            const target_id = document.getElementById('target-userid').value;
+            const amount = parseInt(document.getElementById('xu-amount').value);
+            if(!amount) return alert("Vui lòng nhập số Xu");
+
+            try {
+                const res = await fetch('/api/v1/admin/add-xu', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: admin_id, target_user_id: target_id, amount: amount })
+                });
+                const data = await res.json();
+                alert(data.message);
+                if(data.success) {
+                    toggleModal();
+                    loadUsers();
+                }
+            } catch (e) { alert("Lỗi kết nối!"); }
+        }
+
+        // Khởi động
+        document.addEventListener('DOMContentLoaded', loadStats);
     </script>
 </body>
 </html>
