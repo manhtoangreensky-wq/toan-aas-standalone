@@ -51,3 +51,8 @@ async def root():
 @app.get("/video-app")
 async def video_app_ui():
     return FileResponse("video.html")
+
+# 3. Mở đường link cho trang Quản lý Dự án B2B
+@app.get("/b2b-app")
+async def b2b_app_ui():
+    return FileResponse("b2b.html")

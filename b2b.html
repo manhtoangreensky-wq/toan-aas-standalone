@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOAN AAS - Quản lý Thi công</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
+    
+    <nav class="bg-yellow-600 text-white p-4 shadow-lg">
+        <div class="container mx-auto flex justify-between items-center">
+            <h1 class="text-xl font-bold"><i class="fas fa-hard-hat mr-2"></i>B2B Device Ops</h1>
+            <a href="/" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm"><i class="fas fa-home"></i> Về Dashboard</a>
+        </div>
+    </nav>
+
+    <div class="container mx-auto mt-6 p-4 max-w-6xl flex flex-col lg:flex-row gap-6">
+        
+        <div class="w-full lg:w-1/3 bg-white p-6 rounded-xl shadow-md h-fit border-t-4 border-yellow-500">
+            <h2 class="text-lg font-bold mb-4 text-gray-700">Mở Hồ Sơ Dự Án Mới</h2>
+            
+            <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Tên khách hàng/Đơn vị</label>
+                <input type="text" id="customer" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="VD: Công ty TNHH ABC">
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Hạng mục thi công</label>
+                <select id="type" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-yellow-500 outline-none">
+                    <option value="Hệ thống ELV">Hệ thống điện nhẹ (ELV)</option>
+                    <option value="Camera An Ninh">Camera giám sát an ninh</option>
+                    <option value="Âm thanh - Chiếu sáng">Thiết bị Âm thanh & Chiếu sáng</option>
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Ngân sách dự kiến (VNĐ)</label>
+                <input type="number" id="budget" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="VD: 50000000">
+            </div>
+
+            <div class="mb-5">
+                <label class="block text-sm font-semibold text-gray-600 mb-1">Ghi chú địa điểm</label>
+                <textarea id="note" rows="2" class="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="Ví dụ: Thi công cho khu căn hộ, bảo trì xưởng công nghiệp..."></textarea>
+            </div>
+
+            <button onclick="createProject()" class="w-full bg-yellow-600 hover:bg-yellow-700 text-white font-bold py-2 px-4 rounded shadow transition">
+                <i class="fas fa-plus-circle"></i> Khởi Tạo Dự Án
+            </button>
+        </div>
+
+        <div class="w-full lg:w-2/3 bg-white p-6 rounded-xl shadow-md border-t-4 border-gray-700">
+            <h2 class="text-lg font-bold mb-4 text-gray-700 flex justify-between items-center">
+                <span>Hồ sơ đang triển khai</span>
+                <button onclick="loadProjects()" class="text-sm text-blue-600 hover:text-blue-800"><i class="fas fa-sync-alt"></i> Làm mới</button>
+            </h2>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full bg-white border">
+                    <thead class="bg-gray-100 text-gray-600 text-sm">
+                        <tr>
+                            <th class="py-2 px-4 border-b text-left">Mã</th>
+                            <th class="py-2 px-4 border-b text-left">Khách hàng</th>
+                            <th class="py-2 px-4 border-b text-left">Hạng mục</th>
+                            <th class="py-2 px-4 border-b text-center">Trạng thái</th>
+                        </tr>
+                    </thead>
+                    <tbody id="project-list" class="text-sm text-gray-700">
+                        <tr><td colspan="4" class="text-center py-4">Đang tải dữ liệu...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const USER_ID = "admin_web"; // Giả lập user đăng nhập
+
+        async function loadProjects() {
+            try {
+                const res = await fetch(`/api/v1/device-ops/projects/${USER_ID}`);
+                const data = await res.json();
+                const tbody = document.getElementById('project-list');
+                
+                if (data.success && data.data.length > 0) {
+                    tbody.innerHTML = data.data.map(p => `
+                        <tr class="hover:bg-gray-50 transition">
+                            <td class="py-3 px-4 border-b font-mono text-gray-500">#${p.id}</td>
+                            <td class="py-3 px-4 border-b font-semibold">${p.customer}</td>
+                            <td class="py-3 px-4 border-b">
+                                <span class="bg-gray-200 px-2 py-1 rounded text-xs">${p.type}</span>
+                            </td>
+                            <td class="py-3 px-4 border-b text-center">
+                                <span class="text-yellow-600 font-bold text-xs bg-yellow-100 px-2 py-1 rounded-full"><i class="fas fa-clock"></i> ${p.status}</span>
+                            </td>
+                        </tr>
+                    `).join('');
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500">Chưa có dự án nào. Bắt đầu tạo mới ngay!</td></tr>`;
+                }
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        async function createProject() {
+            const customer = document.getElementById('customer').value;
+            const type = document.getElementById('type').value;
+            const budget = document.getElementById('budget').value || 0;
+            const note = document.getElementById('note').value;
+
+            if (!customer) return alert("Vui lòng nhập tên khách hàng!");
+
+            try {
+                const res = await fetch('/api/v1/device-ops/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        customer_name: customer,
+                        project_type: type,
+                        budget: parseInt(budget),
+                        note: note
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert("Tạo hồ sơ thành công!");
+                    document.getElementById('customer').value = "";
+                    document.getElementById('budget').value = "";
+                    document.getElementById('note').value = "";
+                    loadProjects(); // Tải lại danh sách
+                }
+            } catch (error) {
+                alert("Đã xảy ra lỗi khi tạo dự án.");
+            }
+        }
+
+        // Chạy ngay khi mở trang
+        document.addEventListener('DOMContentLoaded', loadProjects);
+    </script>
+</body>
+</html>
