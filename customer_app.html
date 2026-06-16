@@ -1,318 +1,64 @@
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOAN AAS - AI Enterprise Workspace</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; background-color: #f8fafc; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; height: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 4px; }
-        
-        /* Menu Sidebar Active State */
-        .nav-item { transition: all 0.2s; border-left: 3px solid transparent; }
-        .nav-item:hover:not(.active) { background-color: #f1f5f9; color: #0f172a; }
-        .nav-item.active { background-color: #eff6ff; color: #2563eb; border-left-color: #2563eb; font-weight: 600; }
-        
-        /* Card Tool Hover */
-        .tool-card { transition: all 0.2s; border: 1px solid #e2e8f0; }
-        .tool-card:hover { border-color: #93c5fd; box-shadow: 0 4px 12px -2px rgba(37, 99, 235, 0.1); transform: translateY(-2px); }
-        
-        /* Tabs Hidden */
-        .workspace-view { display: none; animation: fadeIn 0.3s ease-in-out; }
-        .workspace-view.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-    </style>
-</head>
-<body class="h-screen flex overflow-hidden text-slate-800">
+<!-- TAB 4: VÍ & THANH TOÁN (ĐÃ CHUẨN HÓA LOGIC DOANH NGHIỆP) -->
+                <div id="tab-wallet" class="tab-panel hidden space-y-6">
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        <!-- Cột Nạp tiền -->
+                        <div class="lg:col-span-1 space-y-6">
+                            <div class="bg-slate-900 rounded-2xl p-6 shadow-lg text-white relative overflow-hidden">
+                                <div class="absolute -right-10 -top-10 text-white/10"><i class="fas fa-coins fa-8x"></i></div>
+                                <p class="text-sm text-slate-400 font-medium mb-1 relative z-10">Tài khoản Xu</p>
+                                <h3 class="text-4xl font-bold mb-6 relative z-10"><span id="wallet-balance-card">0</span> <span class="text-lg font-normal text-slate-400">Xu</span></h3>
+                                
+                                <div class="relative z-10 mb-4 border-t border-slate-700 pt-4">
+                                    <p class="text-sm font-bold text-white mb-1">Chọn mức nạp (PayOS)</p>
+                                    <p class="text-[10px] text-slate-400 leading-relaxed">
+                                        * Launch Bonus & Promo Code (FIRST30, SECOND15...) sẽ được hệ thống tự động tính toán và cộng sau khi thanh toán thành công.
+                                    </p>
+                                </div>
 
-    <!-- SIDEBAR LEFT: HỆ THỐNG ĐIỀU HƯỚNG TỔNG -->
-    <aside class="w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0 z-20">
-        <!-- Logo -->
-        <div class="h-16 flex items-center px-6 border-b border-slate-100">
-            <div class="h-7 w-7 bg-slate-900 rounded flex items-center justify-center text-white mr-3">
-                <i class="fas fa-layer-group text-xs"></i>
-            </div>
-            <h1 class="text-base font-bold tracking-tight text-slate-900">TOAN AAS <span class="font-normal text-slate-500">OS</span></h1>
-        </div>
+                                <div class="space-y-2 relative z-10">
+                                    <!-- Gói 10k/20k: Không áp dụng ưu đãi -->
+                                    <div class="grid grid-cols-2 gap-2 mb-2 border-b border-slate-700 pb-2">
+                                        <button onclick="handlePayment(this, 10000, 100)" class="w-full flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition text-xs">
+                                            <span class="font-medium text-slate-300">10.000đ</span><span class="font-bold text-white">+100 Xu</span>
+                                        </button>
+                                        <button onclick="handlePayment(this, 20000, 200)" class="w-full flex flex-col items-center justify-center p-2 bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg transition text-xs">
+                                            <span class="font-medium text-slate-300">20.000đ</span><span class="font-bold text-white">+200 Xu</span>
+                                        </button>
+                                    </div>
 
-        <!-- Navigation Lists -->
-        <nav class="flex-1 overflow-y-auto custom-scrollbar py-4">
-            
-            <p class="px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tổng quan</p>
-            <button onclick="switchView('dashboard')" id="nav-dashboard" class="nav-item active w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-border-all w-6"></i> Bảng điều khiển</button>
-            <button onclick="switchView('account')" id="nav-account" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-user-circle w-6"></i> Tài khoản & Ví Xu</button>
-
-            <p class="px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">AI Production (Trả phí)</p>
-            <button onclick="switchView('video')" id="nav-video" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-film w-6"></i> Video Studio AI</button>
-            <button onclick="switchView('voice')" id="nav-voice" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-microphone-alt w-6"></i> Giọng nói / Nhạc</button>
-            <button onclick="switchView('image')" id="nav-image" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-image w-6"></i> Tạo Ảnh AI</button>
-            <button onclick="switchView('translate')" id="nav-translate" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-language w-6"></i> Hub Dịch Thuật</button>
-
-            <p class="px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Workspace (Miễn phí)</p>
-            <button onclick="switchView('free_tools')" id="nav-free_tools" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-box-open w-6"></i> Bộ công cụ lập kế hoạch</button>
-            <button onclick="switchView('notes')" id="nav-notes" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-book w-6"></i> Ghi chú / Tài liệu</button>
-
-            <p class="px-6 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 mt-6">Hỗ trợ & Quản trị</p>
-            <button onclick="switchView('support')" id="nav-support" class="nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-600"><i class="fas fa-life-ring w-6"></i> Hỗ trợ / Hướng dẫn</button>
-            <button onclick="window.location.href='/admin-app'" id="menu-admin-panel" class="hidden nav-item w-full flex items-center px-6 py-2.5 text-sm text-slate-800 font-semibold"><i class="fas fa-lock w-6"></i> Cổng Admin</button>
-        </nav>
-
-        <!-- User Mini Profile -->
-        <div class="p-4 border-t border-slate-200 bg-slate-50">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center gap-2 overflow-hidden">
-                    <div class="h-8 w-8 rounded-full bg-slate-300 flex items-center justify-center text-slate-700 font-bold text-xs" id="user-avatar-text">S</div>
-                    <div class="truncate">
-                        <p class="text-xs font-bold text-slate-800 truncate" id="user-display-name">Loading...</p>
-                        <p class="text-[10px] text-slate-500 truncate" id="user-role-display">Member</p>
-                    </div>
-                </div>
-                <button onclick="logout()" class="text-slate-400 hover:text-slate-800"><i class="fas fa-sign-out-alt"></i></button>
-            </div>
-        </div>
-    </aside>
-
-    <!-- MAIN CONTENT RIGHT -->
-    <main class="flex-1 flex flex-col h-full bg-slate-50 relative">
-        
-        <!-- Header -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-8 flex-shrink-0">
-            <h2 class="text-lg font-semibold text-slate-800" id="header-title">Bảng điều khiển</h2>
-            
-            <!-- Ví Xu Tích hợp -->
-            <div onclick="switchView('account')" class="flex items-center gap-2 bg-slate-100 border border-slate-200 px-4 py-1.5 rounded-md cursor-pointer hover:bg-slate-200 transition">
-                <i class="fas fa-wallet text-slate-500 text-sm"></i>
-                <span class="text-sm font-bold text-slate-800"><span id="wallet-balance-display">0</span> Xu</span>
-            </div>
-        </header>
-
-        <!-- Dynamic Views Area -->
-        <div class="flex-1 overflow-y-auto custom-scrollbar p-8">
-            <div class="max-w-6xl mx-auto pb-20">
-
-                <!-- 1. VIEW: TỔNG QUAN (DASHBOARD) -->
-                <div id="view-dashboard" class="workspace-view active space-y-6">
-                    <!-- Banner -->
-                    <div class="bg-slate-900 rounded-xl p-8 text-white relative overflow-hidden flex justify-between items-center">
-                        <div class="relative z-10">
-                            <h2 class="text-2xl font-bold mb-2">Chào mừng trở lại!</h2>
-                            <p class="text-slate-400 text-sm max-w-lg">Hệ thống AI Workspace đã sẵn sàng. Trạm công cụ của bạn đã kết nối đầy đủ các phân hệ Video, Voice, Text và Lưu trữ đám mây.</p>
-                        </div>
-                        <i class="fas fa-robot text-6xl text-slate-800 absolute right-8 -bottom-4"></i>
-                    </div>
-
-                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-wide border-b border-slate-200 pb-2">Truy cập nhanh công cụ</h3>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button onclick="switchView('video')" class="tool-card bg-white p-4 rounded-xl text-left group">
-                            <i class="fas fa-film text-xl text-slate-400 group-hover:text-blue-600 mb-3 block transition"></i>
-                            <h4 class="font-semibold text-slate-800 text-sm">Video Studio</h4>
-                            <p class="text-xs text-slate-500 mt-1">Render video AI, Storyboard</p>
-                        </button>
-                        <button onclick="switchView('voice')" class="tool-card bg-white p-4 rounded-xl text-left group">
-                            <i class="fas fa-microphone-alt text-xl text-slate-400 group-hover:text-blue-600 mb-3 block transition"></i>
-                            <h4 class="font-semibold text-slate-800 text-sm">Voice & Music</h4>
-                            <p class="text-xs text-slate-500 mt-1">TTS, STT, SFX, Bóc băng</p>
-                        </button>
-                        <button onclick="switchView('translate')" class="tool-card bg-white p-4 rounded-xl text-left group">
-                            <i class="fas fa-language text-xl text-slate-400 group-hover:text-blue-600 mb-3 block transition"></i>
-                            <h4 class="font-semibold text-slate-800 text-sm">Dịch Thuật</h4>
-                            <p class="text-xs text-slate-500 mt-1">Dịch file, lồng tiếng video</p>
-                        </button>
-                        <button onclick="switchView('free_tools')" class="tool-card bg-white p-4 rounded-xl text-left group">
-                            <i class="fas fa-box-open text-xl text-slate-400 group-hover:text-blue-600 mb-3 block transition"></i>
-                            <h4 class="font-semibold text-slate-800 text-sm">Planning Tools</h4>
-                            <p class="text-xs text-slate-500 mt-1">Prompt, Idea, Ghi chú</p>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- 2. VIEW: TÀI KHOẢN & VÍ XU -->
-                <div id="view-account" class="workspace-view space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <!-- Card Số dư -->
-                        <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm col-span-1">
-                            <div class="flex items-center gap-3 mb-4">
-                                <div class="h-10 w-10 bg-slate-100 rounded-full flex items-center justify-center"><i class="fas fa-user text-slate-600"></i></div>
-                                <div><p class="text-sm font-bold text-slate-800" id="acc-id-display">ID: ...</p><p class="text-xs font-semibold text-yellow-600"><i class="fas fa-crown mr-1"></i><span id="acc-role-display">MEMBER</span></p></div>
+                                    <!-- Các gói tiêu chuẩn -->
+                                    <button onclick="handlePayment(this, 50000, 500)" class="w-full flex justify-between items-center p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition text-sm">
+                                        <span class="font-medium">50.000 VNĐ</span><span class="font-bold text-emerald-400">+500 Xu</span>
+                                    </button>
+                                    <button onclick="handlePayment(this, 100000, 1000)" class="w-full flex justify-between items-center p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition text-sm">
+                                        <span class="font-medium">100.000 VNĐ</span><span class="font-bold text-emerald-400">+1.000 Xu</span>
+                                    </button>
+                                    <button onclick="handlePayment(this, 200000, 2000)" class="w-full flex justify-between items-center p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition text-sm">
+                                        <span class="font-medium">200.000 VNĐ</span><span class="font-bold text-emerald-400">+2.000 Xu</span>
+                                    </button>
+                                    <button onclick="handlePayment(this, 500000, 5000)" class="w-full flex justify-between items-center p-3 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl transition text-sm">
+                                        <span class="font-medium">500.000 VNĐ</span><span class="font-bold text-emerald-400">+5.000 Xu</span>
+                                    </button>
+                                </div>
                             </div>
-                            <div class="p-4 bg-slate-50 border border-slate-100 rounded-lg text-center mb-4">
-                                <p class="text-xs text-slate-500 mb-1">Số dư hiện tại</p>
-                                <h3 class="text-3xl font-bold text-slate-800" id="acc-balance-display">0</h3>
-                                <p class="text-xs text-slate-400 mt-1">Gói hiện tại: Chưa có gói</p>
+                        </div>
+
+                        <!-- Cột Lịch sử (Giữ nguyên) -->
+                        <div class="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm flex flex-col h-[600px]">
+                            <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                                <h3 class="font-bold text-slate-800">Lịch sử Giao dịch & Quà tặng</h3>
+                                <button onclick="alert('Nhập mã Gift Code (Đang cập nhật UI)')" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold py-1.5 px-3 rounded transition"><i class="fas fa-gift mr-1"></i>Nhập Mã Quà Tặng</button>
                             </div>
-                            <button onclick="alert('Mở cổng thanh toán PayOS...')" class="w-full py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-semibold rounded-lg transition"><i class="fas fa-coins mr-2"></i>Nạp Xu ngay</button>
-                        </div>
-                        
-                        <!-- Grid Menu Tài khoản -->
-                        <div class="col-span-2 grid grid-cols-2 gap-4 content-start">
-                            <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-4"><i class="fas fa-list-alt text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Bảng giá</h4><p class="text-xs text-slate-500">Xem các gói nạp</p></div></button>
-                            <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-4"><i class="fas fa-box text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Combo của tôi</h4><p class="text-xs text-slate-500">Quản lý gói đang dùng</p></div></button>
-                            <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-4"><i class="fas fa-link text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Link giới thiệu</h4><p class="text-xs text-slate-500">Mời bạn bè nhận Xu</p></div></button>
-                            <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-4"><i class="fas fa-users text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Đã giới thiệu</h4><p class="text-xs text-slate-500">Quản lý thành viên</p></div></button>
-                            <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-4"><i class="fas fa-gift text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Nhận thưởng</h4><p class="text-xs text-slate-500">Nhập mã / Nhận quà</p></div></button>
-                            <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-4"><i class="fas fa-globe text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Đổi ngôn ngữ</h4><p class="text-xs text-slate-500">Hệ thống Đa ngữ</p></div></button>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 3. VIEW: TẠO VIDEO AI -->
-                <div id="view-video" class="workspace-view space-y-6">
-                    <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6">
-                        <p class="text-sm text-blue-800"><b>Lưu ý:</b> Việc lên ý tưởng, prompt, storyboard là <b>miễn phí</b>. Video AI chân thật chỉ gọi provider và tính Xu sau màn xác nhận.</p>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🔥</p><h4 class="font-semibold text-sm text-slate-800">Video theo trend</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left relative"><span class="absolute top-3 right-3 text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold border border-slate-200">PRO</span><p class="text-xl mb-2">🎬</p><h4 class="font-semibold text-sm text-slate-800">Video AI chân thật</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧩</p><h4 class="font-semibold text-sm text-slate-800">Kịch bản -> Ảnh -> Video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎞️</p><h4 class="font-semibold text-sm text-slate-800">Ghép ảnh thành video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎥</p><h4 class="font-semibold text-sm text-slate-800">Tự quay & Đổi cảnh AI</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎬</p><h4 class="font-semibold text-sm text-slate-800">Phim AI nhiều cảnh</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📋</p><h4 class="font-semibold text-sm text-slate-800">Storyboard + Prompt</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📥</p><h4 class="font-semibold text-sm text-slate-800">Video / Kênh mẫu</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧠</p><h4 class="font-semibold text-sm text-slate-800">Ý tưởng video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📽️</p><h4 class="font-semibold text-sm text-slate-800">Prompt / Chuyển động</h4></button>
-                        <button onclick="switchView('translate')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🌐</p><h4 class="font-semibold text-sm text-slate-800">Dịch / Lồng tiếng</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">⚙️</p><h4 class="font-semibold text-sm text-slate-800">Chỉnh sửa local (FFmpeg)</h4></button>
-                    </div>
-                </div>
-
-                <!-- 4. VIEW: VOICE / NHẠC -->
-                <div id="view-voice" class="workspace-view space-y-6">
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-microphone text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Tạo giọng đọc (TTS)</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-headphones text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Bóc băng (STT)</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-layer-group text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Ghép Voice</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-music text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Tạo Prompt Nhạc</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-compact-disc text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Kho nhạc nền</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-volume-up text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Hiệu ứng SFX</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-folder-open text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Kho Media cá nhân</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-photo-video text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Ghép nhạc vào Video</h4></button>
-                        <button class="tool-card bg-slate-50 p-4 rounded-xl text-left"><i class="fas fa-file-contract text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Chính sách sử dụng</h4></button>
-                    </div>
-                </div>
-
-                <!-- 5. VIEW: CÔNG CỤ MIỄN PHÍ -->
-                <div id="view-free_tools" class="workspace-view space-y-6">
-                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6">
-                        <p class="text-sm text-emerald-800"><b>Khu vực Planning (Miễn phí):</b> Chuẩn bị nội dung trước khi gọi AI thật. Giúp tiết kiệm Xu tối đa.</p>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🤖</p><h4 class="font-semibold text-sm text-slate-800">Prompt Meta AI</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">✍️</p><h4 class="font-semibold text-sm text-slate-800">Caption / Hashtag</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧠</p><h4 class="font-semibold text-sm text-slate-800">Ý tưởng Content</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🖼️</p><h4 class="font-semibold text-sm text-slate-800">Prompt Ảnh/Video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📦</p><h4 class="font-semibold text-sm text-slate-800">Gói đăng bài</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📚</p><h4 class="font-semibold text-sm text-slate-800">Kho Prompt mẫu</h4></button>
-                        <button onclick="switchView('notes')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📝</p><h4 class="font-semibold text-sm text-slate-800">Ghi chú / Tài liệu</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">💾</p><h4 class="font-semibold text-sm text-slate-800">Lưu Media tạm</h4></button>
-                    </div>
-                </div>
-
-                <!-- 6. VIEW: DỊCH THUẬT -->
-                <div id="view-translate" class="workspace-view space-y-6">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
-                        <div class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
-                            <div class="h-12 w-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-language text-xl"></i></div>
-                            <h3 class="font-bold text-slate-800 mb-2">Dịch Ngôn ngữ (Text/Audio/Docs)</h3>
-                            <p class="text-sm text-slate-500">Dịch văn bản 2 chiều, tài liệu, đoạn hội thoại hoặc file ghi âm (transcript).</p>
-                        </div>
-                        <div class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
-                            <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-closed-captioning text-xl"></i></div>
-                            <h3 class="font-bold text-slate-800 mb-2">Dịch / Lồng tiếng Video</h3>
-                            <p class="text-sm text-slate-500">Sinh phụ đề tự động, dịch phụ đề, lồng tiếng Voice AI đè lên video gốc.</p>
+                            <div class="flex-1 overflow-y-auto custom-scrollbar p-6">
+                                <table class="min-w-full text-left text-sm">
+                                    <thead class="text-xs font-semibold text-slate-500 uppercase bg-slate-50 sticky top-0">
+                                        <tr><th class="px-4 py-2 rounded-l-lg">Thời gian</th><th class="px-4 py-2">Nội dung</th><th class="px-4 py-2 text-right rounded-r-lg">Biến động</th></tr>
+                                    </thead>
+                                    <tbody id="history-list" class="divide-y divide-slate-100 text-slate-700">
+                                        <!-- Render JS -->
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                     </div>
                 </div>
-
-                <!-- 7. VIEW: GHI CHÚ / TÀI LIỆU -->
-                <div id="view-notes" class="workspace-view space-y-6">
-                    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-edit text-slate-400"></i><span class="text-sm font-semibold">Tạo ghi chú</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clipboard-list text-slate-400"></i><span class="text-sm font-semibold">Ghi chú đã lưu</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clock text-slate-400"></i><span class="text-sm font-semibold">Nhắc hẹn</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-save text-slate-400"></i><span class="text-sm font-semibold">Lưu tài liệu</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-search text-slate-400"></i><span class="text-sm font-semibold">Tìm ghi chú</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-hdd text-slate-400"></i><span class="text-sm font-semibold">Dung lượng của tôi</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-file-pdf text-slate-400"></i><span class="text-sm font-semibold">Công cụ PDF/Word</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-id-card text-slate-400"></i><span class="text-sm font-semibold">Hồ sơ nội bộ</span></button>
-                    </div>
-                </div>
-
-                <!-- VIEW PLACEHOLDER (Ảnh, Hỗ trợ) -->
-                <div id="view-image" class="workspace-view"><div class="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl"><i class="fas fa-image text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Khu vực Tạo Ảnh AI đang được tích hợp giao diện (Midjourney/Stable Diffusion).</p></div></div>
-                <div id="view-support" class="workspace-view"><div class="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl"><i class="fas fa-headset text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Trung tâm Hỗ trợ Khách hàng TOAN AAS.</p></div></div>
-
-            </div>
-        </div>
-    </main>
-
-    <!-- SCRIPTS CORE -->
-    <script>
-        // 1. Core Auth
-        const USER_ID = localStorage.getItem('user_id');
-        const ROLE = localStorage.getItem('role');
-        const USERNAME = localStorage.getItem('username') || 'Member';
-
-        if(!USER_ID) { window.location.href = '/login'; }
-
-        document.getElementById('user-display-name').innerText = USERNAME;
-        document.getElementById('user-avatar-text').innerText = USERNAME.charAt(0).toUpperCase();
-        document.getElementById('acc-id-display').innerText = `ID: ${USER_ID}`;
-        
-        if(ROLE === 'admin') {
-            document.getElementById('menu-admin-panel').classList.remove('hidden');
-            document.getElementById('user-role-display').innerText = 'Administrator';
-            document.getElementById('acc-role-display').innerText = 'ADMIN';
-        }
-
-        function logout() { localStorage.clear(); window.location.href = '/login'; }
-
-        // 2. Routing System (Thay thế Modal)
-        const viewTitles = {
-            'dashboard': 'Bảng điều khiển', 'account': 'Quản lý Tài khoản & Ví Xu',
-            'video': 'Video Studio AI', 'voice': 'Xử lý Âm thanh & Nhạc',
-            'image': 'Tạo Ảnh AI', 'translate': 'Hub Dịch Thuật AI',
-            'free_tools': 'Bộ công cụ Lập Kế Hoạch (Miễn phí)', 'notes': 'Ghi chú & Tài liệu',
-            'support': 'Trung tâm Hỗ trợ'
-        };
-
-        function switchView(viewId) {
-            // Update Title
-            document.getElementById('header-title').innerText = viewTitles[viewId] || 'Workspace';
-            
-            // Sidebar Active State
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const activeNav = document.getElementById('nav-' + viewId);
-            if(activeNav) activeNav.classList.add('active');
-
-            // Hide all views, show target
-            document.querySelectorAll('.workspace-view').forEach(el => el.classList.remove('active'));
-            document.getElementById('view-' + viewId).classList.add('active');
-        }
-
-        // 3. Load Real Data
-        async function loadData() {
-            try {
-                const resAuth = await fetch(`/api/v1/auth/me/${USER_ID}`);
-                const dataAuth = await resAuth.json();
-                if(dataAuth.success) {
-                    const bal = dataAuth.credits.toLocaleString('vi-VN');
-                    document.getElementById('wallet-balance-display').innerText = bal;
-                    document.getElementById('acc-balance-display').innerText = bal;
-                }
-            } catch(e) { console.error("Lỗi lấy data:", e); }
-        }
-
-        // Init
-        document.addEventListener('DOMContentLoaded', () => { 
-            loadData();
-            switchView('dashboard'); 
-        });
-    </script>
-</body>
-</html>
