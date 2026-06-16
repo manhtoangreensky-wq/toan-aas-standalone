@@ -32,6 +32,7 @@
         @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; } }
         .toast-enter { animation: slideInRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .toast-exit { animation: fadeOut 0.2s ease-out forwards; }
+        .workflow-output { white-space: pre-wrap; }
     </style>
 </head>
 <body class="h-screen flex overflow-hidden text-slate-800">
@@ -158,9 +159,9 @@
                         <!-- CỘT CHỨC NĂNG TÀI KHOẢN -->
                         <div class="lg:col-span-2 space-y-6 flex flex-col">
                             <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <button class="tool-card bg-white p-4 rounded-xl text-left flex items-start gap-3"><i class="fas fa-box mt-1 text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Combo của tôi</h4><p class="text-[10px] text-slate-500">Quản lý lượt dùng gói</p></div></button>
-                                <button class="tool-card bg-white p-4 rounded-xl text-left flex items-start gap-3"><i class="fas fa-gift mt-1 text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Nhận Thưởng</h4><p class="text-[10px] text-slate-500">Nhập mã Gift Code</p></div></button>
-                                <button class="tool-card bg-white p-4 rounded-xl text-left flex items-start gap-3"><i class="fas fa-link mt-1 text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Mời Bạn Bè</h4><p class="text-[10px] text-slate-500">Lấy link giới thiệu</p></div></button>
+                                <button onclick="openWorkflow('account_combo')" class="tool-card bg-white p-4 rounded-xl text-left flex items-start gap-3"><i class="fas fa-box mt-1 text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Combo của tôi</h4><p class="text-[10px] text-slate-500">Quản lý lượt dùng gói</p></div></button>
+                                <button onclick="openWorkflow('account_gift')" class="tool-card bg-white p-4 rounded-xl text-left flex items-start gap-3"><i class="fas fa-gift mt-1 text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Nhận Thưởng</h4><p class="text-[10px] text-slate-500">Nhập mã Gift Code</p></div></button>
+                                <button onclick="openWorkflow('account_referral')" class="tool-card bg-white p-4 rounded-xl text-left flex items-start gap-3"><i class="fas fa-link mt-1 text-slate-400 text-lg"></i><div><h4 class="font-semibold text-sm text-slate-800">Mời Bạn Bè</h4><p class="text-[10px] text-slate-500">Lấy link giới thiệu</p></div></button>
                             </div>
 
                             <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex-1 flex flex-col overflow-hidden h-[400px]">
@@ -184,32 +185,32 @@
                 <div id="view-video" class="workspace-view space-y-6">
                     <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 mb-6"><p class="text-sm text-blue-800"><b>Lưu ý:</b> Lên ý tưởng, prompt, storyboard là <b>miễn phí</b>. Video AI chân thật chỉ gọi provider và tính Xu sau màn xác nhận.</p></div>
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🔥</p><h4 class="font-semibold text-sm text-slate-800">Video theo trend</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left relative"><span class="absolute top-3 right-3 text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold border border-slate-200">PRO</span><p class="text-xl mb-2">🎬</p><h4 class="font-semibold text-sm text-slate-800">Video AI chân thật</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧩</p><h4 class="font-semibold text-sm text-slate-800">Kịch bản -> Ảnh -> Video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎞️</p><h4 class="font-semibold text-sm text-slate-800">Ghép ảnh thành video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎥</p><h4 class="font-semibold text-sm text-slate-800">Tự quay & Đổi cảnh AI</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎬</p><h4 class="font-semibold text-sm text-slate-800">Phim AI nhiều cảnh</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📋</p><h4 class="font-semibold text-sm text-slate-800">Storyboard + Prompt</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📥</p><h4 class="font-semibold text-sm text-slate-800">Video / Kênh mẫu</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧠</p><h4 class="font-semibold text-sm text-slate-800">Ý tưởng video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📽️</p><h4 class="font-semibold text-sm text-slate-800">Prompt / Chuyển động</h4></button>
-                        <button onclick="switchView('translate')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🌐</p><h4 class="font-semibold text-sm text-slate-800">Dịch / Lồng tiếng</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">⚙️</p><h4 class="font-semibold text-sm text-slate-800">Chỉnh sửa local (FFmpeg)</h4></button>
+                        <button onclick="openWorkflow('video_trend')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🔥</p><h4 class="font-semibold text-sm text-slate-800">Video theo trend</h4><p class="text-xs text-slate-500 mt-1">Trend -> hook -> prompt video</p></button>
+                        <button onclick="openWorkflow('video_ai')" class="tool-card bg-white p-4 rounded-xl text-left relative"><span class="absolute top-3 right-3 text-[9px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-bold border border-slate-200">BETA</span><p class="text-xl mb-2">🎬</p><h4 class="font-semibold text-sm text-slate-800">Video AI chân thật</h4><p class="text-xs text-slate-500 mt-1">Prompt -> báo giá -> xác nhận</p></button>
+                        <button onclick="openWorkflow('storyboard_i2v')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧩</p><h4 class="font-semibold text-sm text-slate-800">Kịch bản -> Ảnh -> Video</h4><p class="text-xs text-slate-500 mt-1">Storyboard nhiều cảnh</p></button>
+                        <button onclick="openWorkflow('frame_video')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎞️</p><h4 class="font-semibold text-sm text-slate-800">Ghép ảnh thành video</h4><p class="text-xs text-slate-500 mt-1">Cần ảnh + worker</p></button>
+                        <button onclick="openWorkflow('self_filming')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎥</p><h4 class="font-semibold text-sm text-slate-800">Tự quay & Đổi cảnh AI</h4><p class="text-xs text-slate-500 mt-1">Kịch bản tự quay</p></button>
+                        <button onclick="openWorkflow('long_story_video')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🎬</p><h4 class="font-semibold text-sm text-slate-800">Phim AI nhiều cảnh</h4><p class="text-xs text-slate-500 mt-1">Concept điện ảnh</p></button>
+                        <button onclick="openWorkflow('storyboard_prompt')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📋</p><h4 class="font-semibold text-sm text-slate-800">Storyboard + Prompt</h4><p class="text-xs text-slate-500 mt-1">Shot pack từng cảnh</p></button>
+                        <button onclick="openWorkflow('reference_video')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📥</p><h4 class="font-semibold text-sm text-slate-800">Video / Kênh mẫu</h4><p class="text-xs text-slate-500 mt-1">Học format kênh</p></button>
+                        <button onclick="openWorkflow('video_idea')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧠</p><h4 class="font-semibold text-sm text-slate-800">Ý tưởng video</h4><p class="text-xs text-slate-500 mt-1">3 hướng triển khai</p></button>
+                        <button onclick="openWorkflow('motion_prompt')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📽️</p><h4 class="font-semibold text-sm text-slate-800">Prompt / Chuyển động</h4><p class="text-xs text-slate-500 mt-1">Camera, action, scene</p></button>
+                        <button onclick="switchView('translate')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🌐</p><h4 class="font-semibold text-sm text-slate-800">Dịch / Lồng tiếng</h4><p class="text-xs text-slate-500 mt-1">Qua Hub Dịch Thuật</p></button>
+                        <button onclick="openWorkflow('local_video_edit')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">⚙️</p><h4 class="font-semibold text-sm text-slate-800">Chỉnh sửa local (FFmpeg)</h4><p class="text-xs text-slate-500 mt-1">Guard worker/local</p></button>
                     </div>
                 </div>
 
                 <!-- 4. VIEW: VOICE / NHẠC -->
                 <div id="view-voice" class="workspace-view space-y-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-microphone text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Tạo giọng đọc (TTS)</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-headphones text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Bóc băng (STT)</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-layer-group text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Ghép Voice</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-music text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Tạo Prompt Nhạc</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-compact-disc text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Kho nhạc nền</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-volume-up text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Hiệu ứng SFX</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-folder-open text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Kho Media cá nhân</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-photo-video text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Ghép nhạc vào Video</h4></button>
+                        <button onclick="openWorkflow('tts')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-microphone text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Tạo giọng đọc (TTS)</h4><p class="text-xs text-slate-500 mt-1">Text -> voice</p></button>
+                        <button onclick="openWorkflow('stt')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-headphones text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Bóc băng (STT)</h4><p class="text-xs text-slate-500 mt-1">Audio -> transcript</p></button>
+                        <button onclick="openWorkflow('voice_mix')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-layer-group text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Ghép Voice</h4><p class="text-xs text-slate-500 mt-1">Guard local worker</p></button>
+                        <button onclick="openWorkflow('music_prompt')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-music text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Tạo Prompt Nhạc</h4><p class="text-xs text-slate-500 mt-1">Mood + Suno prompt</p></button>
+                        <button onclick="openWorkflow('music_library')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-compact-disc text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Kho nhạc nền</h4><p class="text-xs text-slate-500 mt-1">Đang chuẩn hóa</p></button>
+                        <button onclick="openWorkflow('sfx')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-volume-up text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Hiệu ứng SFX</h4><p class="text-xs text-slate-500 mt-1">Mood/SFX gợi ý</p></button>
+                        <button onclick="openWorkflow('media_library')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-folder-open text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Kho Media cá nhân</h4><p class="text-xs text-slate-500 mt-1">Lưu/tìm media</p></button>
+                        <button onclick="openWorkflow('music_to_video')" class="tool-card bg-white p-4 rounded-xl text-left"><i class="fas fa-photo-video text-slate-400 text-xl mb-3"></i><h4 class="font-semibold text-sm text-slate-800">Ghép nhạc vào Video</h4><p class="text-xs text-slate-500 mt-1">Guard hậu kỳ</p></button>
                     </div>
                 </div>
 
@@ -217,26 +218,26 @@
                 <div id="view-free_tools" class="workspace-view space-y-6">
                     <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 mb-6"><p class="text-sm text-emerald-800"><b>Khu vực Planning (Miễn phí):</b> Chuẩn bị nội dung trước khi gọi AI thật. Giúp tiết kiệm Xu tối đa.</p></div>
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🤖</p><h4 class="font-semibold text-sm text-slate-800">Prompt Meta AI</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">✍️</p><h4 class="font-semibold text-sm text-slate-800">Caption / Hashtag</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧠</p><h4 class="font-semibold text-sm text-slate-800">Ý tưởng Content</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🖼️</p><h4 class="font-semibold text-sm text-slate-800">Prompt Ảnh/Video</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📦</p><h4 class="font-semibold text-sm text-slate-800">Gói đăng bài</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📚</p><h4 class="font-semibold text-sm text-slate-800">Kho Prompt mẫu</h4></button>
+                        <button onclick="openWorkflow('meta_prompt')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🤖</p><h4 class="font-semibold text-sm text-slate-800">Prompt Meta AI</h4><p class="text-xs text-slate-500 mt-1">3 prompt để copy</p></button>
+                        <button onclick="openWorkflow('caption_hashtag')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">✍️</p><h4 class="font-semibold text-sm text-slate-800">Caption / Hashtag</h4><p class="text-xs text-slate-500 mt-1">Caption + CTA</p></button>
+                        <button onclick="openWorkflow('content_idea')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧠</p><h4 class="font-semibold text-sm text-slate-800">Ý tưởng Content</h4><p class="text-xs text-slate-500 mt-1">Hook + kịch bản</p></button>
+                        <button onclick="openWorkflow('image_video_prompt')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🖼️</p><h4 class="font-semibold text-sm text-slate-800">Prompt Ảnh/Video</h4><p class="text-xs text-slate-500 mt-1">Prompt ảnh + video</p></button>
+                        <button onclick="openWorkflow('post_pack')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📦</p><h4 class="font-semibold text-sm text-slate-800">Gói đăng bài</h4><p class="text-xs text-slate-500 mt-1">Caption, hashtag, CTA</p></button>
+                        <button onclick="openWorkflow('prompt_library')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📚</p><h4 class="font-semibold text-sm text-slate-800">Kho Prompt mẫu</h4><p class="text-xs text-slate-500 mt-1">Thư viện prompt</p></button>
                         <button onclick="switchView('notes')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">📝</p><h4 class="font-semibold text-sm text-slate-800">Ghi chú / Tài liệu</h4></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">💾</p><h4 class="font-semibold text-sm text-slate-800">Lưu Media tạm</h4></button>
+                        <button onclick="openWorkflow('temporary_media')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">💾</p><h4 class="font-semibold text-sm text-slate-800">Lưu Media tạm</h4><p class="text-xs text-slate-500 mt-1">Guard lưu trữ</p></button>
                     </div>
                 </div>
 
                 <!-- 6. VIEW: DỊCH THUẬT -->
                 <div id="view-translate" class="workspace-view space-y-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
-                        <div class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
+                        <div onclick="openWorkflow('translation_hub')" class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
                             <div class="h-12 w-12 bg-blue-50 text-blue-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-language text-xl"></i></div>
                             <h3 class="font-bold text-slate-800 mb-2">Dịch Ngôn ngữ (Text/Audio/Docs)</h3>
                             <p class="text-sm text-slate-500">Dịch văn bản 2 chiều, tài liệu, đoạn hội thoại hoặc file ghi âm.</p>
                         </div>
-                        <div class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
+                        <div onclick="openWorkflow('video_dub')" class="bg-white border border-slate-200 p-6 rounded-xl tool-card cursor-pointer">
                             <div class="h-12 w-12 bg-indigo-50 text-indigo-600 rounded-lg flex items-center justify-center mb-4"><i class="fas fa-closed-captioning text-xl"></i></div>
                             <h3 class="font-bold text-slate-800 mb-2">Dịch / Lồng tiếng Video</h3>
                             <p class="text-sm text-slate-500">Sinh phụ đề tự động, dịch phụ đề, lồng tiếng Voice AI đè lên video gốc.</p>
@@ -247,18 +248,37 @@
                 <!-- 7. VIEW: GHI CHÚ / TÀI LIỆU -->
                 <div id="view-notes" class="workspace-view space-y-6">
                     <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-edit text-slate-400"></i><span class="text-sm font-semibold">Tạo ghi chú</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clipboard-list text-slate-400"></i><span class="text-sm font-semibold">Ghi chú đã lưu</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clock text-slate-400"></i><span class="text-sm font-semibold">Nhắc hẹn</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-save text-slate-400"></i><span class="text-sm font-semibold">Lưu tài liệu</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-search text-slate-400"></i><span class="text-sm font-semibold">Tìm ghi chú</span></button>
+                        <button onclick="openWorkflow('note_create')" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-edit text-slate-400"></i><span class="text-sm font-semibold">Tạo ghi chú</span></button>
+                        <button onclick="openWorkflow('note_list')" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clipboard-list text-slate-400"></i><span class="text-sm font-semibold">Ghi chú đã lưu</span></button>
+                        <button onclick="openWorkflow('note_reminder')" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clock text-slate-400"></i><span class="text-sm font-semibold">Nhắc hẹn</span></button>
+                        <button onclick="openWorkflow('document_store')" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-save text-slate-400"></i><span class="text-sm font-semibold">Lưu tài liệu</span></button>
+                        <button onclick="openWorkflow('note_search')" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-search text-slate-400"></i><span class="text-sm font-semibold">Tìm ghi chú</span></button>
                         <button onclick="openStorageModal()" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-hdd text-slate-400"></i><span class="text-sm font-semibold">Dung lượng</span></button>
                     </div>
                 </div>
 
                 <!-- VIEW PLACEHOLDER -->
-                <div id="view-image" class="workspace-view"><div class="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl"><i class="fas fa-image text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Khu vực Tạo Ảnh AI đang được tích hợp.</p></div></div>
-                <div id="view-support" class="workspace-view"><div class="p-8 text-center border-2 border-dashed border-slate-200 rounded-xl"><i class="fas fa-headset text-4xl text-slate-300 mb-3"></i><p class="text-slate-500 font-medium">Trung tâm Hỗ trợ Khách hàng TOAN AAS.</p></div></div>
+                <div id="view-image" class="workspace-view space-y-6">
+                    <div class="bg-amber-50 border border-amber-100 rounded-xl p-4 mb-6"><p class="text-sm text-amber-900"><b>Tạo ảnh AI:</b> TOAN AAS sẽ giúp bạn chốt prompt, tỉ lệ và chất lượng trước. Khi gọi provider thật, hệ thống phải báo giá và xác nhận trước khi trừ Xu.</p></div>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button onclick="openWorkflow('quick_image')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🖼️</p><h4 class="font-semibold text-sm text-slate-800">Tạo ảnh nhanh</h4><p class="text-xs text-slate-500 mt-1">Gợi ý -> prompt -> giá</p></button>
+                        <button onclick="openWorkflow('image_prompt')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">✍️</p><h4 class="font-semibold text-sm text-slate-800">Tạo prompt ảnh</h4><p class="text-xs text-slate-500 mt-1">Prompt chất lượng cao</p></button>
+                        <button onclick="openWorkflow('image_edit')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">🧩</p><h4 class="font-semibold text-sm text-slate-800">Chỉnh sửa ảnh</h4><p class="text-xs text-slate-500 mt-1">Crop, resize, text, màu</p></button>
+                        <button onclick="openWorkflow('ai_image_edit')" class="tool-card bg-white p-4 rounded-xl text-left"><p class="text-xl mb-2">✨</p><h4 class="font-semibold text-sm text-slate-800">Chỉnh sửa AI</h4><p class="text-xs text-slate-500 mt-1">Guard provider</p></button>
+                    </div>
+                </div>
+                <div id="view-support" class="workspace-view space-y-6">
+                    <div class="bg-white border border-slate-200 rounded-xl p-6 max-w-3xl">
+                        <h3 class="font-bold text-slate-900 mb-2"><i class="fas fa-headset text-blue-600 mr-2"></i>Trung tâm Hỗ trợ TOAN AAS</h3>
+                        <p class="text-sm text-slate-600 mb-4">Bạn có thể xem hướng dẫn nhanh hoặc tạo yêu cầu hỗ trợ. Web app sẽ trả lời ngay các câu hỏi phổ biến, ticket chỉ dùng để lưu và báo admin khi cần.</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button onclick="openWorkflow('support_ticket')" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold text-left hover:border-blue-300">📩 Tạo ticket hỗ trợ</button>
+                            <button onclick="openWorkflow('support_payment')" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold text-left hover:border-blue-300">💳 Hướng dẫn nạp Xu</button>
+                            <button onclick="openWorkflow('support_video')" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold text-left hover:border-blue-300">🎬 Hướng dẫn tạo video</button>
+                            <button onclick="switchView('dashboard')" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold text-left hover:border-blue-300">🏠 Về bảng điều khiển</button>
+                        </div>
+                    </div>
+                </div>
 
             </div>
         </div>
@@ -266,6 +286,49 @@
 
     <!-- KHU VỰC TOAST NOTIFICATION -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- MODAL WORKFLOW CHUNG -->
+    <div id="modal-workflow" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-4xl relative overflow-hidden max-h-[92vh] flex flex-col">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-start gap-4 bg-slate-50">
+                <div>
+                    <p id="workflow-eyebrow" class="text-[11px] font-bold uppercase tracking-wider text-blue-600 mb-1">TOAN AAS workflow</p>
+                    <h2 id="workflow-title" class="text-lg font-bold text-slate-900">Workflow</h2>
+                    <p id="workflow-desc" class="text-sm text-slate-500 mt-1"></p>
+                </div>
+                <button onclick="closeWorkflow()" class="text-slate-400 hover:text-slate-800 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-5">
+                <div class="bg-blue-50 border border-blue-100 rounded-xl p-4 text-sm text-blue-900 leading-relaxed">
+                    <b>Chuẩn TOAN AAS:</b> chọn nhu cầu -> 3 gợi ý -> chọn/sửa/nhập riêng -> báo giá/guard -> xác nhận trước khi gọi provider. Màn này chưa tự trừ Xu.
+                </div>
+                <div>
+                    <label id="workflow-input-label" class="block text-sm font-semibold text-slate-700 mb-2">Bạn muốn làm nội dung về gì?</label>
+                    <textarea id="workflow-input" rows="3" class="w-full rounded-xl border border-slate-200 p-3 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="Ví dụ: nước hoa nam cao cấp, app AI tạo nội dung, khóa học affiliate..."></textarea>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button onclick="generateWorkflowSuggestions()" class="p-3 rounded-xl bg-blue-600 text-white text-sm font-semibold hover:bg-blue-700">✨ Tạo 3 gợi ý</button>
+                    <button onclick="generateWorkflowSuggestions(true)" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold hover:border-blue-300">🔄 Gợi ý khác</button>
+                    <button onclick="useCustomWorkflowInput()" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold hover:border-blue-300">✍️ Dùng nội dung nhập</button>
+                    <button onclick="closeWorkflow()" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold hover:border-blue-300">⬅️ Quay lại</button>
+                </div>
+                <div id="workflow-results" class="grid grid-cols-1 md:grid-cols-3 gap-4"></div>
+                <div id="workflow-selected-box" class="hidden border border-slate-200 rounded-xl p-4 bg-white">
+                    <div class="flex items-center justify-between gap-3 mb-3">
+                        <h3 class="font-bold text-slate-900">Kết quả đã chọn</h3>
+                        <span id="workflow-guard-badge" class="text-[11px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-100">Planning miễn phí</span>
+                    </div>
+                    <pre id="workflow-selected-output" class="workflow-output text-sm text-slate-700 bg-slate-50 border border-slate-100 rounded-xl p-4 overflow-x-auto"></pre>
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
+                        <button onclick="copyWorkflowOutput()" class="p-3 rounded-xl bg-slate-900 text-white text-sm font-semibold hover:bg-slate-800">📋 Copy</button>
+                        <button onclick="saveWorkflowPlan()" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold hover:border-blue-300">💾 Lưu kế hoạch</button>
+                        <button onclick="openWorkflowPricingGuard()" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold hover:border-blue-300">💳 Báo giá / guard</button>
+                        <button onclick="generateWorkflowSuggestions(true)" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold hover:border-blue-300">🔄 Đổi gợi ý</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL MUA THÊM DUNG LƯỢNG -->
     <div id="modal-storage-addon" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -358,6 +421,55 @@
         const USER_ID = localStorage.getItem('user_id');
         const ROLE = localStorage.getItem('role');
         const USERNAME = localStorage.getItem('username') || 'Member';
+        let activeWorkflowKey = null;
+        let activeWorkflowRound = 0;
+        let selectedWorkflowOutput = '';
+
+        const WORKFLOW_CONFIGS = {
+            video_trend: { title: 'Video theo trend', category: 'video', desc: 'Tạo trend, hook, storyboard, prompt video và bước tiếp theo. Chưa gọi provider và chưa trừ Xu.', guard: 'render_video' },
+            video_ai: { title: 'Video AI chân thật', category: 'video', desc: 'Chuẩn bị prompt video AI, chọn gói và guard trước khi render thật.', guard: 'render_video' },
+            storyboard_i2v: { title: 'Kịch bản -> Ảnh -> Video', category: 'storyboard', desc: 'Lập storyboard nhiều cảnh, prompt ảnh và prompt video từng cảnh.', guard: 'render_video' },
+            frame_video: { title: 'Ghép ảnh thành video', category: 'frame_video', desc: 'Lập kế hoạch slideshow/short video. Render thật cần local worker/ffmpeg an toàn.', guard: 'local_worker' },
+            self_filming: { title: 'Tự quay & Đổi cảnh AI', category: 'video', desc: 'Biến ý tưởng thành shot list tự quay, chuyển cảnh và prompt hậu kỳ AI.', guard: 'planning' },
+            long_story_video: { title: 'Phim AI nhiều cảnh', category: 'cinematic', desc: 'Tạo concept phim ngắn, cảnh, chuyển động camera và prompt điện ảnh.', guard: 'planning' },
+            storyboard_prompt: { title: 'Storyboard + Prompt', category: 'storyboard', desc: 'Tạo 3 concept, shot pack từng cảnh, prompt ảnh/video/Meta AI.', guard: 'planning' },
+            reference_video: { title: 'Video / Kênh mẫu', category: 'reference', desc: 'Phân tích format kênh mẫu và đóng gói bài đăng theo kênh.', guard: 'planning' },
+            video_idea: { title: 'Ý tưởng video', category: 'video', desc: 'Tạo hướng nội dung, hook, script ngắn và CTA.', guard: 'planning' },
+            motion_prompt: { title: 'Prompt / Chuyển động', category: 'motion', desc: 'Gợi ý camera motion, hành động chủ thể và prompt chuyển động.', guard: 'planning' },
+            local_video_edit: { title: 'Chỉnh sửa video local', category: 'local_edit', desc: 'Lập yêu cầu chỉnh sửa video. Xử lý thật cần worker/local tool.', guard: 'local_worker' },
+            tts: { title: 'Tạo giọng đọc (TTS)', category: 'voice', desc: 'Viết script giọng đọc và cấu hình voice trước khi gọi TTS.', guard: 'provider' },
+            stt: { title: 'Bóc băng (STT)', category: 'transcript', desc: 'Chuẩn bị yêu cầu bóc băng/transcript. File thật sẽ có bước upload và confirm.', guard: 'provider' },
+            voice_mix: { title: 'Ghép Voice', category: 'local_edit', desc: 'Lập kế hoạch ghép voice vào video/audio. Xử lý thật cần local worker.', guard: 'local_worker' },
+            music_prompt: { title: 'Tạo Prompt Nhạc', category: 'music', desc: 'Tạo prompt nhạc/Suno/mood/SFX cho video hoặc quảng cáo.', guard: 'planning' },
+            music_library: { title: 'Kho nhạc nền', category: 'music', desc: 'Gợi ý mood nhạc; kho media thật đang chuẩn hóa.', guard: 'planning' },
+            sfx: { title: 'Hiệu ứng SFX', category: 'music', desc: 'Gợi ý SFX theo cảnh, chuyển động và cảm xúc.', guard: 'planning' },
+            media_library: { title: 'Kho Media cá nhân', category: 'storage', desc: 'Lập thẻ lưu trữ/tags media. Upload thật sẽ nối storage quota.', guard: 'storage' },
+            music_to_video: { title: 'Ghép nhạc vào Video', category: 'local_edit', desc: 'Chuẩn bị yêu cầu hậu kỳ ghép nhạc. Xử lý thật cần worker.', guard: 'local_worker' },
+            meta_prompt: { title: 'Prompt Meta AI', category: 'meta', desc: 'Sinh prompt dùng ngay cho Meta AI hoặc công cụ ngoài.', guard: 'planning' },
+            caption_hashtag: { title: 'Caption / Hashtag', category: 'caption', desc: 'Tạo caption, hashtag, CTA và biến thể đăng bài.', guard: 'planning' },
+            content_idea: { title: 'Ý tưởng Content', category: 'content', desc: 'Tạo hook, góc nội dung và kịch bản ngắn.', guard: 'planning' },
+            image_video_prompt: { title: 'Prompt Ảnh/Video', category: 'image_video', desc: 'Sinh prompt ảnh, prompt video và hướng chuyển động.', guard: 'planning' },
+            post_pack: { title: 'Gói đăng bài', category: 'post_pack', desc: 'Đóng gói caption, hashtag, CTA và lịch đăng.', guard: 'planning' },
+            prompt_library: { title: 'Kho Prompt mẫu', category: 'library', desc: 'Gợi ý prompt mẫu theo nhóm tác vụ.', guard: 'planning' },
+            temporary_media: { title: 'Lưu Media tạm', category: 'storage', desc: 'Chuẩn hóa mô tả/tags để lưu media tạm. Upload thật nối storage quota.', guard: 'storage' },
+            translation_hub: { title: 'Dịch Ngôn ngữ', category: 'translate', desc: 'Chuẩn bị yêu cầu dịch text/audio/docs theo cặp ngôn ngữ.', guard: 'provider' },
+            video_dub: { title: 'Dịch / Lồng tiếng Video', category: 'dub', desc: 'Tạo pipeline phụ đề, dịch phụ đề, TTS/lồng tiếng và confirm trước xử lý.', guard: 'provider' },
+            quick_image: { title: 'Tạo ảnh nhanh', category: 'image', desc: 'Gợi ý chủ đề, prompt ảnh, tỉ lệ và tier giá trước khi tạo ảnh thật.', guard: 'render_image' },
+            image_prompt: { title: 'Tạo prompt ảnh', category: 'image', desc: 'Sinh prompt ảnh chất lượng cao, negative prompt và kiểm soát bố cục.', guard: 'planning' },
+            image_edit: { title: 'Chỉnh sửa ảnh', category: 'image_edit', desc: 'Chuẩn bị yêu cầu crop, resize, thêm chữ/logo, chỉnh màu/nâng nét.', guard: 'local_worker' },
+            ai_image_edit: { title: 'Chỉnh sửa AI', category: 'image_edit', desc: 'Chuẩn bị prompt chỉnh sửa AI. Provider thật cần smoke pass và confirm.', guard: 'provider' },
+            support_ticket: { title: 'Tạo ticket hỗ trợ', category: 'support', desc: 'Bot trả lời hướng dẫn trước, ticket chỉ dùng để lưu và báo admin khi cần.', guard: 'support' },
+            support_payment: { title: 'Hướng dẫn nạp Xu', category: 'support_payment', desc: 'Trả lời nhanh cách nạp Xu và lưu yêu cầu hỗ trợ nếu cần.', guard: 'support' },
+            support_video: { title: 'Hướng dẫn tạo video', category: 'support_video', desc: 'Hướng dẫn chuỗi tạo video đúng: prompt -> add-on -> giá -> xác nhận -> job.', guard: 'support' },
+            note_create: { title: 'Tạo ghi chú', category: 'storage', desc: 'Soạn ghi chú có cấu trúc, tags và gợi ý lưu trữ.', guard: 'storage' },
+            note_list: { title: 'Ghi chú đã lưu', category: 'storage', desc: 'Khu xem ghi chú sẽ nối API lưu trữ. Màn này không trừ Xu.', guard: 'storage' },
+            note_reminder: { title: 'Nhắc hẹn', category: 'storage', desc: 'Chuẩn bị nội dung nhắc hẹn và lịch theo dõi.', guard: 'storage' },
+            document_store: { title: 'Lưu tài liệu', category: 'storage', desc: 'Chuẩn bị metadata/tags để lưu tài liệu vào kho.', guard: 'storage' },
+            note_search: { title: 'Tìm ghi chú', category: 'storage', desc: 'Chuẩn hóa từ khóa/tags để tìm lại thông tin.', guard: 'storage' },
+            account_combo: { title: 'Combo của tôi', category: 'account', desc: 'Xem/quản lý lượt dùng gói combo. API ví/gói sẽ được nối vào portal.', guard: 'account' },
+            account_gift: { title: 'Nhận thưởng', category: 'account', desc: 'Chuẩn bị form nhập Gift Code và kiểm tra quyền lợi.', guard: 'account' },
+            account_referral: { title: 'Mời bạn bè', category: 'account', desc: 'Lấy link giới thiệu và theo dõi thưởng referral.', guard: 'account' }
+        };
 
         if(!USER_ID) { window.location.href = '/login'; }
 
@@ -397,6 +509,182 @@
         // Toggle Modal Function
         function toggleModal(id) { 
             document.getElementById(id).classList.toggle('hidden'); 
+        }
+
+        function openWorkflow(key) {
+            const cfg = WORKFLOW_CONFIGS[key];
+            if(!cfg) return showToast('Workflow này đang được chuẩn hóa.', 'warning');
+            activeWorkflowKey = key;
+            activeWorkflowRound = 0;
+            selectedWorkflowOutput = '';
+            document.getElementById('workflow-eyebrow').innerText = cfg.guard === 'planning' ? 'Planning miễn phí' : 'TOAN AAS guarded workflow';
+            document.getElementById('workflow-title').innerText = cfg.title;
+            document.getElementById('workflow-desc').innerText = cfg.desc;
+            document.getElementById('workflow-input-label').innerText = inputLabelFor(cfg.category);
+            document.getElementById('workflow-input').value = '';
+            document.getElementById('workflow-results').innerHTML = '';
+            document.getElementById('workflow-selected-box').classList.add('hidden');
+            document.getElementById('modal-workflow').classList.remove('hidden');
+        }
+
+        function closeWorkflow() {
+            document.getElementById('modal-workflow').classList.add('hidden');
+        }
+
+        function inputLabelFor(category) {
+            if(['video','storyboard','cinematic','motion','reference','frame_video'].includes(category)) return 'Bạn muốn làm video về sản phẩm/dịch vụ/chủ đề gì?';
+            if(['image','image_edit','image_video'].includes(category)) return 'Bạn muốn tạo/chỉnh ảnh theo chủ đề hoặc mô tả nào?';
+            if(['caption','content','post_pack','meta'].includes(category)) return 'Bạn muốn chuẩn bị nội dung cho sản phẩm/chủ đề gì?';
+            if(['translate','dub','transcript'].includes(category)) return 'Bạn muốn dịch/xử lý nội dung gì? Nêu ngôn ngữ nếu có.';
+            if(['voice','music'].includes(category)) return 'Bạn muốn tạo giọng/nhạc cho nội dung nào?';
+            if(category === 'support' || category === 'support_payment' || category === 'support_video') return 'Bạn cần TOAN AAS hỗ trợ việc gì?';
+            return 'Bạn muốn TOAN AAS chuẩn bị gì?';
+        }
+
+        function workflowBank(category) {
+            const banks = {
+                video: ['Before/After giải quyết vấn đề', 'POV tình huống đời thường', '3 mẹo nhanh có sản phẩm làm giải pháp', 'Cinematic product reveal', 'UGC review tự nhiên', 'Ad hook bán hàng trực tiếp'],
+                storyboard: ['Quảng cáo sản phẩm 5 cảnh', 'Tutorial 3 bước', 'Câu chuyện cảm xúc 15 giây', 'Affiliate demo có CTA', 'Faceless narration', 'Before/After transition'],
+                cinematic: ['Hành trình thay đổi bản thân', 'Cơ hội thành công', 'Ký ức và thời gian', 'Luxury black-and-white', 'Tương lai công nghệ', 'Gia đình và cảm xúc'],
+                motion: ['Slow push-in vào chủ thể', 'Orbit quanh sản phẩm', 'Handheld UGC nhẹ', 'Match cut theo thời gian', 'Pan ngang giới thiệu bối cảnh', 'Macro close-up chi tiết'],
+                image: ['Logo/branding tối giản', 'Ảnh sản phẩm studio', 'Banner social media', 'Lifestyle quảng cáo', 'Cinematic hero image', 'Ảnh công nghệ/AI'],
+                image_edit: ['Crop 9:16 và làm nét', 'Thêm text/logo gọn', 'Chỉnh màu sạch hơn', 'Resize cho quảng cáo', 'Nâng chi tiết sản phẩm', 'Tách nền/chủ thể'],
+                caption: ['Caption bán hàng mềm', 'Caption kể chuyện', 'Caption list 3 lợi ích', 'Caption phản biện nỗi đau', 'Caption UGC đời thường', 'Caption ưu đãi ngắn'],
+                content: ['Hook gây tò mò', 'Kịch bản 15 giây', 'Ý tưởng series 5 bài', 'Bài giải thích cho người mới', 'Bài case study ngắn', 'Bài so sánh trước/sau'],
+                meta: ['Prompt ảnh Meta AI', 'Prompt video Meta AI', 'Prompt quảng cáo sản phẩm', 'Prompt UGC creator', 'Prompt cinematic', 'Prompt banner'],
+                music: ['Piano cinematic', 'Ambient luxury', 'Electronic future', 'Upbeat viral', 'SFX chuyển cảnh nhẹ', 'Lo-fi sạch cho voiceover'],
+                translate: ['Dịch văn bản 2 chiều', 'Dịch tài liệu ngắn', 'Dịch transcript', 'Dịch hội thoại', 'Dịch voice/audio', 'Dịch phụ đề'],
+                dub: ['Tạo phụ đề', 'Dịch phụ đề', 'Lồng tiếng', 'Phụ đề + lồng tiếng', 'Giữ giọng gốc tham khảo', 'Voiceover mới'],
+                support: ['Hướng dẫn nạp Xu', 'Tư vấn gói video', 'Kiểm tra lỗi thanh toán', 'Hỏi cách tạo ảnh', 'Hỏi cách tạo video', 'Liên hệ admin'],
+                support_payment: ['PayOS tự động', 'Nạp thủ công qua QR', 'USDT quốc tế', 'ZaloPay/MoMo thủ công', 'Lịch sử nạp', 'Ưu đãi nội địa'],
+                support_video: ['Prompt -> Video AI', 'Video theo trend', 'Storyboard nhiều cảnh', 'Phụ đề/lồng tiếng', 'Gói 200/300/400', 'Kiểm tra trạng thái job'],
+                storage: ['Lưu ảnh tham chiếu', 'Lưu video mẫu', 'Tạo tags media', 'Dọn file cũ', 'Gói dung lượng', 'Lưu kế hoạch sản xuất'],
+                local_edit: ['Cắt video ngắn', 'Ghép nhạc', 'Thêm phụ đề', 'Resize dọc 9:16', 'Ghép voice', 'Nén xuất bản'],
+                frame_video: ['Slideshow fade nhẹ', 'Ken Burns zoom', 'Pan ngang sản phẩm', 'Random motion', 'Ảnh + voice', 'Ảnh + nhạc nền'],
+                reference: ['Học cấu trúc hook', 'Học nhịp dựng', 'Học caption/hashtag', 'Học CTA kênh', 'Học shot style', 'Đóng gói bài đăng'],
+                post_pack: ['Post bán hàng', 'Post giáo dục', 'Post affiliate', 'Post UGC', 'Post ra mắt sản phẩm', 'Post remarketing'],
+                library: ['Prompt logo', 'Prompt banner', 'Prompt video quảng cáo', 'Prompt phim AI', 'Prompt voice', 'Prompt caption'],
+                transcript: ['Bóc băng cuộc gọi', 'Bóc băng video', 'Tóm tắt audio', 'Trích ý chính', 'Tạo subtitle draft', 'Dịch transcript'],
+                account: ['Xem combo/lượt còn lại', 'Nhập gift code', 'Lấy link giới thiệu', 'Xem lịch sử quyền lợi', 'Kiểm tra hạng thành viên', 'Liên hệ admin']
+            };
+            return banks[category] || banks.content;
+        }
+
+        function getWorkflowTopic() {
+            return document.getElementById('workflow-input').value.trim() || 'sản phẩm/dịch vụ của bạn';
+        }
+
+        function generateWorkflowSuggestions(next = false) {
+            if(!activeWorkflowKey) return;
+            const cfg = WORKFLOW_CONFIGS[activeWorkflowKey];
+            if(next) activeWorkflowRound += 1;
+            const topic = getWorkflowTopic();
+            const bank = workflowBank(cfg.category);
+            const start = (activeWorkflowRound * 3) % bank.length;
+            const picks = [0, 1, 2].map(i => bank[(start + i) % bank.length]);
+            const box = document.getElementById('workflow-results');
+            box.innerHTML = picks.map((name, index) => {
+                const output = buildWorkflowOutput(cfg, topic, name, index + 1);
+                return `
+                    <button onclick="selectWorkflowSuggestion(${index})" data-output="${encodeURIComponent(output)}" class="workflow-choice text-left bg-white border border-slate-200 rounded-xl p-4 hover:border-blue-400 hover:shadow-md transition">
+                        <div class="text-xs font-bold text-blue-600 mb-2">Gợi ý ${index + 1}</div>
+                        <h4 class="font-bold text-slate-900 text-sm mb-2">${escapeHtml(name)}</h4>
+                        <p class="text-xs text-slate-500 leading-relaxed">${escapeHtml(shortPreview(output))}</p>
+                    </button>
+                `;
+            }).join('');
+            document.getElementById('workflow-selected-box').classList.add('hidden');
+        }
+
+        function selectWorkflowSuggestion(index) {
+            const cards = document.querySelectorAll('.workflow-choice');
+            const raw = cards[index]?.dataset.output;
+            if(!raw) return;
+            selectedWorkflowOutput = decodeURIComponent(raw);
+            document.getElementById('workflow-selected-output').textContent = selectedWorkflowOutput;
+            document.getElementById('workflow-selected-box').classList.remove('hidden');
+        }
+
+        function useCustomWorkflowInput() {
+            if(!activeWorkflowKey) return;
+            const cfg = WORKFLOW_CONFIGS[activeWorkflowKey];
+            const topic = getWorkflowTopic();
+            selectedWorkflowOutput = buildWorkflowOutput(cfg, topic, 'Tự nhập / chỉnh sửa theo mô tả riêng', 1);
+            document.getElementById('workflow-selected-output').textContent = selectedWorkflowOutput;
+            document.getElementById('workflow-selected-box').classList.remove('hidden');
+            document.getElementById('workflow-results').innerHTML = '';
+        }
+
+        function buildWorkflowOutput(cfg, topic, idea, index) {
+            const title = `${cfg.title} - ${idea}`;
+            if(['image','image_edit','image_video'].includes(cfg.category)) {
+                return `${title}\n\nChủ đề: ${topic}\n\nPrompt chính:\n${topic}, ${idea}, bố cục rõ chủ thể, ánh sáng sạch, màu sắc chuyên nghiệp, chi tiết tự nhiên, không méo chữ/logo, không watermark.\n\nTỉ lệ đề xuất:\n- 9:16 cho TikTok/Reels/Shorts\n- 1:1 cho post vuông\n- 16:9 cho banner/video ngang\n\nQuality control:\n- Giữ chủ thể rõ nét\n- Không thêm chữ thừa\n- Không biến dạng sản phẩm/người\n- Nếu tạo ảnh thật: chọn tier giá và xác nhận trước khi trừ Xu`;
+            }
+            if(['caption','content','post_pack','meta'].includes(cfg.category)) {
+                return `${title}\n\nChủ đề: ${topic}\n\nHook:\nBạn đang bỏ lỡ điều này nếu chưa thử ${topic}.\n\nNội dung chính:\n- Nêu vấn đề người xem đang gặp\n- Đưa ${topic} như giải pháp rõ ràng\n- Chứng minh bằng lợi ích cụ thể\n\nCaption mẫu:\n${topic} không cần phức tạp. Bắt đầu từ một bước nhỏ, đo kết quả, rồi tối ưu dần.\n\nHashtag:\n#toanaas #aiworkflow #contentmarketing #automation\n\nCTA:\nLưu lại để dùng khi cần và nhắn TOAN AAS nếu muốn biến ý tưởng này thành ảnh/video.`;
+            }
+            if(['music','voice','transcript'].includes(cfg.category)) {
+                return `${title}\n\nNội dung: ${topic}\n\nGợi ý xử lý:\n- Mood: ${idea}\n- Nhịp: rõ lời, không lấn voice\n- Voice: tự nhiên, tốc độ vừa\n- Nếu là TTS/STT thật: cần upload/text đầu vào, báo Xu và xác nhận trước khi gọi provider\n\nPrompt nhạc/voice:\n${idea} cho nội dung ${topic}, sạch, hiện đại, phù hợp video ngắn, không quá ồn, hỗ trợ voiceover rõ.`;
+            }
+            if(['translate','dub'].includes(cfg.category)) {
+                return `${title}\n\nNội dung: ${topic}\n\nPipeline đề xuất:\n1. Nhận text/audio/video/tài liệu\n2. Chọn ngôn ngữ gốc và ngôn ngữ đích\n3. Tạo bản dịch hoặc phụ đề nháp\n4. Nếu lồng tiếng: chọn giọng, báo Xu, xác nhận\n5. Xử lý và gửi kết quả\n\nGuard:\nTác vụ dài hoặc cần STT/TTS/provider phải báo giá trước, chưa tự trừ Xu.`;
+            }
+            if(['support','support_payment','support_video'].includes(cfg.category)) {
+                return `${title}\n\nCâu hỏi: ${topic}\n\nTrả lời nhanh:\nTOAN AAS sẽ hướng dẫn trực tiếp trước. Nếu cần admin kiểm tra, hệ thống mới lưu ticket để theo dõi.\n\nGợi ý xử lý:\n- Nạp Xu: dùng PayOS tự động hoặc QR/thủ công theo hướng dẫn trong app\n- Video: đi theo chuỗi prompt -> add-on -> giá -> xác nhận -> job -> kết quả\n- Nếu gặp lỗi: gửi ảnh màn hình/tình huống, hệ thống lưu ticket cho admin\n\nTrạng thái:\nWeb app đang chuẩn hóa ticket/CSKH tự động, chưa tự tạo ticket từ modal này.`;
+            }
+            if(cfg.category === 'account') {
+                return `${title}\n\nTài khoản: ${USERNAME} / ${USER_ID}\n\nMục cần xử lý: ${idea}\n\nTrạng thái web app:\n- Ví Xu đã đọc từ API tài khoản\n- Lịch sử giao dịch đọc từ portal history\n- Combo/gift/referral đang được chuẩn hóa thành API riêng\n\nNguyên tắc:\nKhông tự cộng/trừ Xu ở màn này. Mọi quyền lợi/gift/referral phải đi qua API kiểm tra và audit log.`;
+            }
+            if(['frame_video','local_edit','storage'].includes(cfg.category)) {
+                return `${title}\n\nChủ đề/tài sản: ${topic}\n\nKế hoạch:\n- Kiểm tra file đầu vào\n- Xác định tỉ lệ, thời lượng, hiệu ứng\n- Kiểm tra local worker/storage quota\n- Báo giá nếu xử lý thật\n- Xác nhận trước khi chạy job\n\nGuard:\nKhông render nặng trên Railway nếu worker/local tool chưa sẵn sàng. Web app chưa trừ Xu ở bước planning này.`;
+            }
+            return `${title}\n\nChủ đề: ${topic}\n\nBig idea:\nBiến ${topic} thành một câu chuyện rõ vấn đề, rõ giải pháp và có điểm nhớ.\n\nHook 3 giây:\nĐiều gì xảy ra nếu ${topic} giúp bạn tiết kiệm một nửa thời gian?\n\nScript 15s:\n0-3s: Nêu vấn đề quen thuộc.\n3-8s: Cho thấy ${topic} xuất hiện như giải pháp.\n8-12s: Hiển thị kết quả/bằng chứng.\n12-15s: CTA nhẹ.\n\nStoryboard:\n1. Close-up vấn đề hoặc bối cảnh.\n2. Sản phẩm/dịch vụ xuất hiện rõ chủ thể.\n3. Chuyển động camera ${idea.toLowerCase()}.\n4. Before/after hoặc kết quả.\n5. CTA sạch, không quá bán hàng.\n\nPrompt video:\n${topic}, ${idea}, cinematic but realistic, clean lighting, stable subject identity, natural motion, no warped text, no watermark, 9:16 vertical short video.\n\nPrompt ảnh khung chính:\n${topic}, hero frame, clear subject, clean background, premium commercial lighting, realistic details.\n\nBước tiếp theo:\nCopy kế hoạch này, hoặc nối sang báo giá/render khi web app bật provider/job thật.`;
+        }
+
+        function openWorkflowPricingGuard() {
+            if(!activeWorkflowKey) return;
+            const cfg = WORKFLOW_CONFIGS[activeWorkflowKey];
+            const messages = {
+                render_video: 'Render Video AI trên web app sẽ nối qua service/job chung. Màn này hiện chỉ chuẩn bị prompt/kế hoạch, chưa gọi provider và chưa trừ Xu.',
+                render_image: 'Tạo ảnh thật trên web app sẽ cần chọn tier giá, xác nhận và gọi provider. Màn này chưa gọi provider và chưa trừ Xu.',
+                local_worker: 'Tác vụ local/ffmpeg cần worker an toàn. Nếu worker chưa sẵn sàng, web app sẽ không render và không trừ Xu.',
+                provider: 'Tác vụ provider cần API/provider pass và màn xác nhận. Hiện chưa gọi provider từ modal này.',
+                storage: 'Tác vụ lưu trữ sẽ dùng quota 50MB miễn phí và gói mua thêm dung lượng nếu cần.',
+                support: 'CSKH sẽ trả lời trước và chỉ lưu ticket khi cần admin theo dõi.',
+                planning: 'Đây là planning miễn phí. Bạn có thể copy/lưu để dùng tiếp trong bước tạo ảnh/video/voice.'
+            };
+            showToast(messages[cfg.guard] || messages.planning, cfg.guard === 'planning' ? 'success' : 'warning');
+        }
+
+        function saveWorkflowPlan() {
+            if(!selectedWorkflowOutput) return showToast('Bạn hãy chọn hoặc tạo một gợi ý trước.', 'warning');
+            const plans = JSON.parse(localStorage.getItem('toanaas_workflow_plans') || '[]');
+            plans.unshift({ title: document.getElementById('workflow-title').innerText, content: selectedWorkflowOutput, created_at: new Date().toISOString() });
+            localStorage.setItem('toanaas_workflow_plans', JSON.stringify(plans.slice(0, 50)));
+            showToast('Đã lưu kế hoạch vào bộ nhớ trình duyệt.', 'success');
+        }
+
+        async function copyWorkflowOutput() {
+            if(!selectedWorkflowOutput) return showToast('Bạn hãy chọn hoặc tạo một gợi ý trước.', 'warning');
+            try {
+                await navigator.clipboard.writeText(selectedWorkflowOutput);
+                showToast('Đã copy nội dung.', 'success');
+            } catch(e) {
+                showToast('Không copy tự động được. Bạn có thể bôi đen nội dung để copy.', 'warning');
+            }
+        }
+
+        function shortPreview(text) {
+            return text.replace(/\s+/g, ' ').slice(0, 150) + '...';
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
         }
 
         async function openStorageModal() {
