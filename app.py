@@ -3,9 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 import os
+from datetime import datetime
 
 from config import settings
 from db import init_db, db_connect
+from security import is_admin_user
 
 # Chạy vá lỗi DB ngay khi khởi động
 try:
@@ -28,12 +30,18 @@ import report
 import erp_core
 import ai_assistant
 import customer_api
+import performance
 
-app = FastAPI(title="TOAN AAS OS")
+app = FastAPI(title="TOAN AAS Control Center")
+
+def cors_allow_origins() -> list[str]:
+    raw = os.environ.get("CORS_ALLOW_ORIGINS", "https://app.toanaas.vn,https://toanaas.vn")
+    origins = [item.strip() for item in raw.split(",") if item.strip()]
+    return origins or ["https://app.toanaas.vn", "https://toanaas.vn"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=cors_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -53,6 +61,7 @@ app.include_router(report.router, prefix="/api/v1/report", tags=["Report"])
 app.include_router(erp_core.router, prefix="/api/v1/erp", tags=["ERP Core"])
 app.include_router(ai_assistant.router, prefix="/api/v1/assistant", tags=["AI Assistant"])
 app.include_router(customer_api.router, prefix="/api/v1/customer", tags=["Customer Web App"])
+app.include_router(performance.router, prefix="/api/v1/performance", tags=["Performance"])
 
 # Hàm hiển thị giao diện an toàn
 def get_html(file_name):
@@ -77,12 +86,7 @@ async def login_api(data: LoginReq):
     conn.close()
     
     if user:
-        # Kiểm tra xem ID này có phải là ADMIN không (Lấy từ biến môi trường)
-        admin_ids_str = os.environ.get("ADMIN_IDS", os.environ.get("ADMIN_ID", ""))
-        admin_ids = [int(x.strip()) for x in admin_ids_str.split(",") if x.strip().isdigit()]
-        
-        is_admin = int(data.user_id) in admin_ids if data.user_id.isdigit() else False
-        role = "admin" if is_admin else "user"
+        role = "admin" if is_admin_user(data.user_id) else "user"
         
         return {
             "success": True, 
@@ -92,6 +96,28 @@ async def login_api(data: LoginReq):
         }
     else:
         return {"success": False, "message": "Tài khoản chưa tồn tại! Hãy vào Bot Telegram gõ /start trước."}
+
+@app.get("/health")
+async def health():
+    db_status = "ok"
+    try:
+        conn = db_connect()
+        conn.execute("SELECT 1")
+        conn.close()
+    except Exception:
+        db_status = "error"
+    return {
+        "ok": db_status == "ok",
+        "app": "TOAN AAS Control Center",
+        "domain": "app.toanaas.vn",
+        "entrypoint": "app.py",
+        "db": db_status,
+        "time": datetime.utcnow().isoformat() + "Z",
+    }
+
+@app.get("/api/v1/health")
+async def api_health():
+    return await health()
 
 # -----------------------------------------------------
 # 2. ĐỊNH TUYẾN GIAO DIỆN WEB (ĐÃ CHUẨN GATE CHECK)
