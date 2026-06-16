@@ -2,21 +2,26 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 import logging
 import os
+import time
+import hmac
+import hashlib
+import json
+import urllib.request
 from db import db_connect, now_text
-
-# Kéo các hàm "vũ khí hạng nặng" từ bot.py của sếp sang để chạy PayOS chuẩn 100%
-from bot import generate_order_code, create_order, create_payos_payment_request
 
 router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_CUSTOMER_API")
 
-# --- AUTO CREATE TABLE CHO NẠP THỦ CÔNG ---
+# --- AUTO CREATE TABLE ---
 def init_manual_db():
     conn = db_connect()
     c = conn.cursor()
     c.execute('''CREATE TABLE IF NOT EXISTS manual_orders 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, username TEXT, 
                  amount INTEGER, xu_expected INTEGER, txid TEXT, method TEXT, status TEXT DEFAULT 'pending', created_at TEXT)''')
+    c.execute('''CREATE TABLE IF NOT EXISTS payos_orders 
+                 (order_code INTEGER PRIMARY KEY, user_id TEXT, amount INTEGER, 
+                 xu_nhan INTEGER, status TEXT DEFAULT 'PENDING', created_at TEXT)''')
     conn.commit()
     conn.close()
 
@@ -38,39 +43,63 @@ async def submit_feedback(data: FeedbackReq):
     except Exception as e: return {"success": False, "message": "Lỗi hệ thống."}
     finally: conn.close()
 
-# --- 2. API PAYOS (KẾT NỐI HÀM CHUẨN CỦA BOT.PY) ---
+# --- 2. API PAYOS (ĐỘC LẬP 100% - KHÔNG GỌI BOT.PY) ---
 class PayosReq(BaseModel): user_id: str; amount_vnd: int; xu_nhan: int
 @router.post("/payos/create-link")
 async def create_web_payos_link(data: PayosReq):
     try:
-        # 1. Tạo order code bằng hàm chuẩn
-        order_code = generate_order_code()
+        # 1. Tạo order code độc lập
+        order_code = int(time.time() * 1000)
         
-        # 2. Lưu vào DB chờ webhook đối soát
-        create_order(order_code, data.user_id, data.amount_vnd, data.xu_nhan)
+        # 2. Lưu DB chờ webhook
+        conn = db_connect()
+        c = conn.cursor()
+        c.execute("INSERT INTO payos_orders (order_code, user_id, amount, xu_nhan, created_at) VALUES (?, ?, ?, ?, ?)",
+                  (order_code, data.user_id, data.amount_vnd, data.xu_nhan, now_text()))
+        conn.commit()
+        conn.close()
         
-        # 3. Gọi hàm request chuẩn xác của sếp
+        # 3. Thông số API
+        client_id = os.environ.get("PAYOS_CLIENT_ID", "")
+        api_key = os.environ.get("PAYOS_API_KEY", "")
+        checksum_key = os.environ.get("PAYOS_CHECKSUM_KEY", "")
+
+        if not client_id or not api_key or not checksum_key:
+            return {"success": False, "message": "Chưa cấu hình API Key PayOS. Vui lòng nạp thủ công."}
+
+        # 4. Ký mã HMAC SHA256 chuẩn PayOS
         return_url = os.environ.get("PUBLIC_BASE_URL", "https://app.toanaas.vn").rstrip("/") + "/"
-        
-        payos_body = {
+        cancel_url = return_url
+        description = f"AAS {data.user_id} {data.xu_nhan}XU"[:25]
+
+        data_str = f"amount={data.amount_vnd}&cancelUrl={cancel_url}&description={description}&orderCode={order_code}&returnUrl={return_url}"
+        signature = hmac.new(bytes(checksum_key, 'utf-8'), bytes(data_str, 'utf-8'), hashlib.sha256).hexdigest()
+
+        body = {
             "orderCode": order_code,
             "amount": data.amount_vnd,
-            "description": f"AAS {data.user_id} {data.xu_nhan}XU"[:25],
+            "description": description,
             "returnUrl": return_url,
-            "cancelUrl": return_url
+            "cancelUrl": cancel_url,
+            "signature": signature
         }
-        
-        res, res_data, raw_preview, raw_str = await create_payos_payment_request(payos_body)
-        
-        if res_data and res_data.get("code") == "00":
-            return {"success": True, "checkout_url": res_data["data"]["checkoutUrl"]}
-        else:
-            logger.error(f"Lỗi trả về từ PayOS: {res_data}")
-            return {"success": False, "message": "Cổng PayOS từ chối yêu cầu. Vui lòng thử Nạp Thủ Công."}
-            
+
+        # 5. Gọi API PayOS bằng urllib (không cần requests)
+        req = urllib.request.Request("https://api-merchant.payos.vn/v2/payment-requests", method="POST")
+        req.add_header("x-client-id", client_id)
+        req.add_header("x-api-key", api_key)
+        req.add_header("Content-Type", "application/json")
+
+        with urllib.request.urlopen(req, data=json.dumps(body).encode('utf-8'), timeout=10) as response:
+            res_data = json.loads(response.read().decode('utf-8'))
+            if res_data.get("code") == "00":
+                return {"success": True, "checkout_url": res_data["data"]["checkoutUrl"]}
+            else:
+                return {"success": False, "message": res_data.get("desc", "Lỗi tạo PayOS link")}
+
     except Exception as e:
-        logger.error(f"Lỗi try/except PayOS: {e}")
-        return {"success": False, "message": "Lỗi mạng kết nối PayOS. Vui lòng thử Nạp Thủ Công."}
+        logger.error(f"Lỗi PayOS: {str(e)}")
+        return {"success": False, "message": "Lỗi kết nối PayOS. Vui lòng Nạp Thủ Công."}
 
 # --- 3. API NẠP THỦ CÔNG (GỬI YÊU CẦU) ---
 class ManualTopupReq(BaseModel): user_id: str; amount: int; xu_expected: int; txid: str; method: str
