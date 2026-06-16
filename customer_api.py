@@ -71,7 +71,7 @@ async def submit_manual_topup(data: ManualTopupReq):
 
 # --- 4. API DÀNH CHO ADMIN DUYỆT ĐƠN NẠP ---
 @router.get("/admin/manual-orders")
-async def get_manual_orders(admin_id: str):
+async def get_manual_orders(admin_id: str = ""):
     denied = admin_guard_response(admin_id)
     if denied:
         return denied

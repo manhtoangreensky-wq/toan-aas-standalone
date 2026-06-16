@@ -9,7 +9,7 @@ logger = logging.getLogger("TOAN_AAS_ADMIN")
 
 # 1. API Lấy thống kê Tổng quan
 @router.get("/dashboard-stats")
-async def get_dashboard_stats(admin_id: str):
+async def get_dashboard_stats(admin_id: str = ""):
     denied = admin_guard_response(admin_id)
     if denied:
         return denied
@@ -39,7 +39,7 @@ async def get_dashboard_stats(admin_id: str):
 
 # 2. API Lấy danh sách Khách hàng
 @router.get("/users")
-async def get_all_users(admin_id: str):
+async def get_all_users(admin_id: str = ""):
     denied = admin_guard_response(admin_id)
     if denied:
         return denied
