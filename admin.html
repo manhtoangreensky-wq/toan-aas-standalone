@@ -7,213 +7,118 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 20px; }
-        .chat-container::-webkit-scrollbar { display: none; }
-    </style>
+    <style>body { font-family: 'Inter', sans-serif; } .custom-scrollbar::-webkit-scrollbar { width: 4px; } .custom-scrollbar::-webkit-scrollbar-thumb { background-color: #475569; border-radius: 20px; }</style>
 </head>
 <body class="bg-slate-50 flex h-screen overflow-hidden text-sm">
     
-    <!-- SIDEBAR KHỔNG LỒ 100% HOẠT ĐỘNG -->
     <div class="w-64 bg-[#0f172a] text-slate-300 flex flex-col h-full shadow-2xl z-20 flex-shrink-0">
         <div class="p-5 border-b border-slate-700 flex items-center gap-3">
             <div class="bg-blue-600 p-2 rounded-lg text-white"><i class="fas fa-layer-group"></i></div>
             <h2 class="text-lg font-bold text-white tracking-wide">TOAN AAS <span class="text-blue-400 font-normal">ERP</span></h2>
         </div>
-        
         <div class="flex-1 overflow-y-auto custom-scrollbar p-3 pb-20">
             <ul class="space-y-1">
-                <li class="mb-4"><button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white shadow-md transition group"><i class="fas fa-chart-pie w-5 text-center"></i><span class="font-medium">Bảng điều khiển</span></button></li>
+                <li class="mb-4"><button onclick="switchTab('dashboard')" id="nav-dashboard" class="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white transition group"><i class="fas fa-chart-pie w-5 text-center"></i><span class="font-medium">Bảng điều khiển</span></button></li>
                 
                 <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-4">Phân hệ Hệ thống</li>
-                <li><button onclick="switchTab('crm')" id="nav-crm" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-handshake w-5 text-center text-blue-400"></i><span>Quản lý Khách hàng</span></button></li>
-                <li><button onclick="switchTab('projects')" id="nav-projects" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-hard-hat w-5 text-center text-yellow-400"></i><span>Quản lý Dự án B2B</span></button></li>
-                <li><button onclick="switchTab('finance')" id="nav-finance" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-wallet w-5 text-center text-emerald-400"></i><span>Quản lý Thu Chi</span></button></li>
-                <li><button onclick="switchTab('sales')" id="nav-sales" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-shopping-cart w-5 text-center text-pink-400"></i><span>Quản lý Bán hàng</span></button></li>
-                <li><button onclick="switchTab('hr')" id="nav-hr" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-users w-5 text-center text-orange-400"></i><span>Nhân sự (Hồ sơ)</span></button></li>
-                <li><button onclick="switchTab('assets')" id="nav-assets" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-laptop w-5 text-center text-teal-400"></i><span>Tài sản Thiết bị</span></button></li>
-                <li><button onclick="switchTab('inventory')" id="nav-inventory" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-boxes w-5 text-center text-amber-400"></i><span>Quản lý Kho</span></button></li>
-                <li><button onclick="switchTab('production')" id="nav-production" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-industry w-5 text-center text-indigo-400"></i><span>Quản lý Sản xuất</span></button></li>
-                <li><button onclick="switchTab('purchasing')" id="nav-purchasing" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-shopping-bag w-5 text-center text-rose-400"></i><span>Quản lý Mua hàng</span></button></li>
-
-                <li class="text-[10px] font-bold text-slate-500 uppercase tracking-wider px-3 mb-2 mt-6">Tính năng Hỗ trợ</li>
-                <li><button onclick="switchTab('goals')" id="nav-goals" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-bullseye w-5 text-center text-red-400"></i><span>Mục tiêu kinh doanh</span></button></li>
-                <li><button onclick="switchTab('social')" id="nav-social" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-hashtag w-5 text-center text-blue-500"></i><span>Mạng xã hội nội bộ</span></button></li>
-                <li><button onclick="switchTab('okrs')" id="nav-okrs" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-tasks w-5 text-center text-green-400"></i><span>Quản lý OKRs</span></button></li>
-                <li><button onclick="switchTab('attendance')" id="nav-attendance" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-clock w-5 text-center text-purple-400"></i><span>Chấm công & Lương</span></button></li>
-                <li><button onclick="switchTab('chat')" id="nav-chat" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-comments w-5 text-center text-sky-400"></i><span>Hệ thống Chat</span></button></li>
-                <li><button onclick="switchTab('banners')" id="nav-banners" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-image w-5 text-center text-fuchsia-400"></i><span>Banner PR nội bộ</span></button></li>
-                <li><button onclick="switchTab('workload')" id="nav-workload" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-balance-scale w-5 text-center text-cyan-400"></i><span>Khối lượng công việc</span></button></li>
-                <li><button onclick="switchTab('approvals')" id="nav-approvals" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-check-double w-5 text-center text-emerald-400"></i><span>Phê duyệt yêu cầu</span></button></li>
-                <li><button onclick="switchTab('ai_business')" id="nav-ai_business" class="w-full flex items-center gap-3 p-3 rounded-lg bg-rose-500/10 hover:bg-rose-500/30 hover:text-white transition border border-rose-500/20"><i class="fas fa-brain w-5 text-center text-rose-500"></i><span class="font-bold text-rose-400">AI Business</span></button></li>
+                <li><button onclick="switchTab('topup'); loadManualOrders();" id="nav-topup" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-money-check-alt w-5 text-center text-emerald-400"></i><span class="font-bold text-emerald-400">Duyệt Nạp Xu</span></button></li>
+                
+                <li><button onclick="switchTab('crm')" id="nav-crm" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-handshake w-5 text-center text-blue-400"></i><span>Khách hàng CRM</span></button></li>
+                <li><button onclick="switchTab('projects')" id="nav-projects" class="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition"><i class="fas fa-hard-hat w-5 text-center text-yellow-400"></i><span>Quản lý Dự án</span></button></li>
             </ul>
         </div>
-        
         <div class="p-4 border-t border-slate-700 bg-[#0f172a] absolute bottom-0 w-64">
-            <a href="/" class="flex items-center justify-center gap-2 w-full p-2 bg-slate-800 hover:bg-red-600 text-white rounded-lg transition font-medium"><i class="fas fa-sign-out-alt"></i> Thoát OS</a>
+            <button onclick="logout()" class="flex items-center justify-center gap-2 w-full p-2 bg-slate-800 hover:bg-red-600 text-white rounded-lg transition font-medium"><i class="fas fa-sign-out-alt"></i> Về trang Chủ</button>
         </div>
     </div>
 
-    <!-- MAIN CONTENT -->
     <div class="flex-1 flex flex-col h-full bg-slate-50 overflow-hidden relative">
         <header class="bg-white shadow-sm h-16 flex items-center justify-between px-6 z-10 flex-shrink-0 border-b border-slate-200">
-            <h1 class="text-xl font-bold text-slate-800" id="header-title">Bảng điều khiển Tổng quan</h1>
-            <div class="flex items-center gap-4">
-                <div class="flex items-center gap-3 border-l pl-4 border-slate-200">
-                    <div class="text-right hidden md:block"><p class="text-sm font-bold text-slate-800">Sếp Toàn</p><p class="text-xs text-green-500 font-medium">Administrator</p></div>
-                    <div class="h-9 w-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">T</div>
-                </div>
-            </div>
+            <h1 class="text-xl font-bold text-slate-800" id="header-title">Bảng điều khiển</h1>
         </header>
 
         <main class="flex-1 overflow-auto p-6 relative" id="main-content">
-            
-            <!-- TỔNG QUAN -->
             <div id="tab-dashboard" class="tab-panel block">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-6">
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Khách Hàng</p><h3 class="text-2xl font-bold text-slate-800" id="stat-customers">0</h3></div><div class="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600"><i class="fas fa-users"></i></div></div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Dự án Đang chạy</p><h3 class="text-2xl font-bold text-slate-800" id="stat-projects">0</h3></div><div class="h-10 w-10 rounded-full bg-yellow-50 flex items-center justify-center text-yellow-600"><i class="fas fa-hard-hat"></i></div></div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Lệnh Sản xuất</p><h3 class="text-2xl font-bold text-indigo-600" id="stat-production">0</h3></div><div class="h-10 w-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-600"><i class="fas fa-industry"></i></div></div>
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-5 flex items-center justify-between"><div><p class="text-[11px] font-bold text-slate-500 uppercase mb-1">Doanh Thu (VNĐ)</p><h3 class="text-xl font-bold text-emerald-600" id="stat-revenue">0</h3></div><div class="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-600"><i class="fas fa-money-bill-wave"></i></div></div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-sm border p-5"><h3 class="text-2xl font-bold text-slate-800" id="stat-projects">0</h3><p class="text-slate-500">Dự án Đang chạy</p></div>
+                    <div class="bg-white rounded-xl shadow-sm border p-5"><h3 class="text-2xl font-bold text-emerald-600">Bình thường</h3><p class="text-slate-500">Trạng thái Server</p></div>
                 </div>
             </div>
 
-            <!-- 16 MODULE CŨ ĐÃ HOẠT ĐỘNG (Đã Rút gọn) -->
-            <div id="tab-crm" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Cơ sở dữ liệu Khách hàng</h2><button onclick="toggleModal('modal-crm')" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm Khách</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Công ty</th><th class="px-6 py-4">SĐT</th><th class="px-6 py-4">Phân loại</th></tr></thead><tbody id="crm-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-projects" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Dự án B2B</h2><button onclick="toggleModal('modal-project')" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Dự án</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Tên Dự án</th><th class="px-6 py-4">Chủ đầu tư</th><th class="px-6 py-4 text-right">Giá trị</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="project-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-finance" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Sổ Quỹ Thu Chi</h2><button onclick="toggleModal('modal-finance')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo phiếu</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Loại</th><th class="px-6 py-4">Nội dung</th><th class="px-6 py-4 text-right">Số tiền</th></tr></thead><tbody id="finance-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-inventory" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Kho Vật Tư</h2><button onclick="toggleModal('modal-inventory')" class="bg-amber-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Nhập Kho</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Mã VT</th><th class="px-6 py-4">Tên Thiết bị</th><th class="px-6 py-4 text-center">Tồn kho</th><th class="px-6 py-4 text-right">Đơn giá</th></tr></thead><tbody id="inventory-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-hr" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Hồ Sơ Nhân Sự</h2><button onclick="toggleModal('modal-hr')" class="bg-orange-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm NV</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Họ & Tên</th><th class="px-6 py-4">Vị trí</th><th class="px-6 py-4 text-right">Lương</th></tr></thead><tbody id="hr-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-attendance" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Chấm Công</h2><button onclick="toggleModal('modal-attendance')" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Chấm Công</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Tên NV</th><th class="px-6 py-4 text-center">Giờ vào</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="attendance-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-sales" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Bán Hàng</h2><button onclick="toggleModal('modal-sales')" class="bg-pink-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Đơn Hàng</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Mã ĐH</th><th class="px-6 py-4">Khách hàng</th><th class="px-6 py-4 text-right">Tổng Tiền</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="sales-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-assets" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Tài Sản Thiết Bị</h2><button onclick="toggleModal('modal-assets')" class="bg-teal-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Thêm Tài Sản</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Mã TS</th><th class="px-6 py-4">Tên Thiết bị</th><th class="px-6 py-4">Người giữ</th><th class="px-6 py-4 text-center">Tình trạng</th></tr></thead><tbody id="assets-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-social" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Mạng Xã Hội Nội Bộ</h2><button onclick="toggleModal('modal-social')" class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-pen mr-2"></i>Đăng bài</button></div><div class="max-w-2xl mx-auto space-y-4 pb-20" id="social-list"></div></div>
-            <div id="tab-okrs" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Mục tiêu OKRs</h2><button onclick="toggleModal('modal-okrs')" class="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-flag mr-2"></i>Tạo OKR mới</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="okrs-list"></div></div>
-            <div id="tab-purchasing" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Đơn Mua Hàng (PO)</h2><button onclick="toggleModal('modal-purchasing')" class="bg-rose-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo PO</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Nhà cung cấp</th><th class="px-6 py-4 text-right">Tổng tiền</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="purchases-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-approvals" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Phê duyệt Yêu cầu</h2><button onclick="toggleModal('modal-approvals')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Trình ký</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Yêu cầu</th><th class="px-6 py-4">Người đề xuất</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="approvals-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-production" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Sản Xuất</h2><button onclick="toggleModal('modal-production')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Lệnh</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Sản phẩm</th><th class="px-6 py-4 text-center">Số lượng</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="production-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-workload" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Khối lượng công việc</h2><button onclick="toggleModal('modal-workload')" class="bg-cyan-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Giao Việc</button></div><div class="bg-white rounded-xl shadow-sm border overflow-hidden"><table class="min-w-full text-left text-sm"><thead class="bg-slate-50 border-b"><tr><th class="px-6 py-4">Công việc</th><th class="px-6 py-4">Người phụ trách</th><th class="px-6 py-4 text-center">Trạng thái</th></tr></thead><tbody id="workload-list" class="divide-y text-slate-700"></tbody></table></div></div>
-            <div id="tab-goals" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Mục Tiêu Kinh Doanh</h2><button onclick="toggleModal('modal-goals')" class="bg-red-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Mục Tiêu</button></div><div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="goals-list"></div></div>
-            <div id="tab-banners" class="tab-panel hidden h-full"><div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Banner PR</h2><button onclick="toggleModal('modal-banners')" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg font-semibold"><i class="fas fa-plus mr-2"></i>Tạo Banner</button></div><div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="banners-list"></div></div>
-
-            <!-- TAB 18: HỆ THỐNG CHAT -->
-            <div id="tab-chat" class="tab-panel hidden h-full flex flex-col">
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 flex-1 flex flex-col overflow-hidden">
-                    <div class="p-4 border-b bg-slate-50 flex items-center justify-between"><h2 class="font-bold text-slate-800"><i class="fas fa-comments text-blue-500 mr-2"></i>Kênh trao đổi Tổng Công Ty</h2><span class="text-xs text-green-500 font-bold"><i class="fas fa-circle mr-1"></i>Online</span></div>
-                    <div class="flex-1 overflow-y-auto p-6 chat-container flex flex-col gap-4" id="chat-box">
-                        <!-- Tin nhắn JS -->
-                    </div>
-                    <div class="p-4 bg-slate-50 border-t flex gap-2">
-                        <input type="text" id="chat-input" placeholder="Nhập tin nhắn trao đổi công việc..." class="flex-1 px-4 py-2 border rounded-full outline-none focus:border-blue-500">
-                        <button onclick="sendChat()" class="h-10 w-10 bg-blue-600 rounded-full text-white hover:bg-blue-700 flex flex-shrink-0 items-center justify-center"><i class="fas fa-paper-plane"></i></button>
-                    </div>
+            <div id="tab-topup" class="tab-panel hidden h-full">
+                <div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Duyệt Đơn Nạp Thủ Công</h2></div>
+                <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
+                    <table class="min-w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b">
+                            <tr><th class="px-6 py-4">Khách hàng</th><th class="px-6 py-4 text-right">Số tiền nạp</th><th class="px-6 py-4 text-center">TxID (Mã GD)</th><th class="px-6 py-4 text-center">Trạng thái</th><th class="px-6 py-4 text-center">Hành động</th></tr>
+                        </thead>
+                        <tbody id="topup-list" class="divide-y text-slate-700">
+                            </tbody>
+                    </table>
                 </div>
             </div>
 
-            <!-- TAB 19: AI BUSINESS -->
-            <div id="tab-ai_business" class="tab-panel hidden h-full flex flex-col">
-                <div class="bg-slate-900 rounded-xl shadow-2xl border border-slate-800 flex-1 flex flex-col overflow-hidden relative">
-                    <div class="absolute inset-0 bg-gradient-to-br from-rose-900/20 to-blue-900/20 opacity-50"></div>
-                    <div class="p-6 border-b border-slate-800 flex items-center gap-3 relative z-10">
-                        <div class="h-12 w-12 rounded-full bg-rose-500/20 flex items-center justify-center border border-rose-500/50"><i class="fas fa-brain text-2xl text-rose-400"></i></div>
-                        <div><h2 class="font-bold text-lg text-white">AI Business Advisor</h2><p class="text-xs text-slate-400">Trợ lý phân tích dữ liệu ERP & Chiến lược cấp cao</p></div>
-                    </div>
-                    <div class="flex-1 p-8 flex flex-col items-center justify-center relative z-10 text-center">
-                        <div class="w-full max-w-2xl bg-slate-800/80 backdrop-blur-md p-8 rounded-2xl border border-slate-700 shadow-xl">
-                            <i class="fas fa-chart-line text-5xl text-blue-400 mb-6"></i>
-                            <h3 class="text-xl font-bold text-white mb-2">Phân tích Hệ thống Tổng thể</h3>
-                            <p class="text-slate-400 mb-8">AI sẽ quét toàn bộ dữ liệu từ CRM, Dự án và Thu Chi để đưa ra báo cáo "Sức khỏe Doanh nghiệp" và lời khuyên chiến lược cho Sếp.</p>
-                            <button onclick="askAIBusiness()" id="btn-ai" class="px-8 py-3 bg-gradient-to-r from-rose-600 to-blue-600 hover:from-rose-500 hover:to-blue-500 text-white font-bold rounded-full shadow-lg shadow-rose-500/20 transition transform hover:scale-105">
-                                <i class="fas fa-magic mr-2"></i> Bắt đầu Phân tích
-                            </button>
-                            <div id="ai-response" class="mt-8 text-left bg-slate-900/50 p-6 rounded-xl border border-slate-700 hidden">
-                                <!-- Kết quả AI -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
+            <div id="tab-crm" class="tab-panel hidden h-full"><div class="bg-white rounded-xl p-6 shadow border"><h3 class="font-bold mb-4">Cơ sở dữ liệu Khách hàng</h3><p class="text-slate-500">Dữ liệu CRM hiển thị tại đây.</p></div></div>
+            <div id="tab-projects" class="tab-panel hidden h-full"><div class="bg-white rounded-xl p-6 shadow border"><h3 class="font-bold mb-4">Dự án ELV</h3><p class="text-slate-500">Dữ liệu dự án hiển thị tại đây.</p></div></div>
         </main>
     </div>
 
-    <!-- MODAL GỘP -->
-    <div id="modal-crm" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Khách Hàng</h3><input type="text" id="c-name" placeholder="Tên" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="c-phone" placeholder="SĐT" class="w-full px-4 py-2 border rounded mb-2"><select id="c-type" class="w-full px-4 py-2 border rounded mb-4"><option>Tiềm năng</option><option>Đã chốt</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-crm')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitCRM()" class="px-4 py-2 bg-blue-600 text-white rounded">Lưu</button></div></div></div>
-    <div id="modal-project" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Dự Án</h3><input type="text" id="p-name" placeholder="Tên DA" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="p-client" placeholder="Chủ ĐT" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="p-budget" placeholder="Giá trị" class="w-full px-4 py-2 border rounded mb-2"><select id="p-status" class="w-full px-4 py-2 border rounded mb-4"><option>Đang triển khai</option><option>Đã nghiệm thu</option></select><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-project')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitProject()" class="px-4 py-2 bg-orange-600 text-white rounded">Lưu</button></div></div></div>
-    <div id="modal-inventory" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Nhập Kho</h3><input type="text" id="i-code" placeholder="Mã" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="i-name" placeholder="Tên" class="w-full px-4 py-2 border rounded mb-2"><select id="i-category" class="w-full px-4 py-2 border rounded mb-2"><option>Camera</option><option>Cáp</option></select><input type="number" id="i-qty" placeholder="SL" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="i-price" placeholder="Giá" class="w-full px-4 py-2 border rounded mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-inventory')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitInventory()" class="px-4 py-2 bg-amber-600 text-white rounded">Lưu</button></div></div></div>
-    <div id="modal-finance" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Thu Chi</h3><select id="f-type" class="w-full px-4 py-2 border rounded mb-2"><option value="THU">THU (+)</option><option value="CHI">CHI (-)</option></select><input type="number" id="f-amount" placeholder="Tiền" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="f-category" placeholder="Danh mục" class="w-full px-4 py-2 border rounded mb-2"><input type="text" id="f-note" placeholder="Ghi chú" class="w-full px-4 py-2 border rounded mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-finance')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitFinance()" class="px-4 py-2 bg-emerald-600 text-white rounded">Lưu</button></div></div></div>
-    <div id="modal-goals" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Mục Tiêu</h3><input type="text" id="g-title" placeholder="Tiêu đề" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="g-target" placeholder="Mục tiêu (Số)" class="w-full px-4 py-2 border rounded mb-2"><input type="date" id="g-deadline" class="w-full px-4 py-2 border rounded mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-goals')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitGoal()" class="px-4 py-2 bg-red-600 text-white rounded">Lưu</button></div></div></div>
-
     <script>
-        const titles = {'dashboard':'Tổng Quan','crm':'Khách Hàng','projects':'Dự Án','finance':'Thu Chi','inventory':'Kho Hàng','hr':'Nhân Sự','attendance':'Chấm Công', 'sales': 'Bán Hàng', 'assets': 'Tài Sản', 'social':'Mạng Xã Hội', 'okrs':'Quản Lý OKRs', 'purchasing': 'Mua Hàng', 'approvals': 'Phê Duyệt', 'production': 'Sản Xuất', 'workload': 'Giao Việc', 'goals': 'Mục Tiêu', 'banners': 'Banner', 'chat': 'Hệ thống Chat', 'ai_business': 'AI Business'};
-        const activeTabs = ['dashboard', 'crm', 'projects', 'finance', 'inventory', 'hr', 'attendance', 'sales', 'assets', 'social', 'okrs', 'purchasing', 'approvals', 'production', 'workload', 'goals', 'banners', 'chat', 'ai_business'];
-
+        function logout() { window.location.href = '/'; }
+        const titles = {'dashboard':'Tổng Quan', 'topup':'Duyệt Đơn Nạp Xu', 'crm':'Khách Hàng', 'projects':'Dự Án B2B'};
+        
         function switchTab(tabId) {
             document.getElementById('header-title').innerText = titles[tabId];
             document.querySelectorAll('[id^="nav-"]').forEach(el => el.className = "w-full flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 hover:text-white transition group");
             const act = document.getElementById('nav-'+tabId); 
-            if(act) {
-                if(tabId === 'ai_business') act.className = "w-full flex items-center gap-3 p-3 rounded-lg bg-rose-600 text-white shadow-md transition group";
-                else act.className = "w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white shadow-md transition group";
-            }
+            if(act) act.className = "w-full flex items-center gap-3 p-3 rounded-lg bg-blue-600 text-white shadow-md transition group";
+            
             document.querySelectorAll('.tab-panel').forEach(el => el.classList.add('hidden'));
             document.getElementById('tab-'+tabId).classList.remove('hidden'); 
-            
-            if(tabId=='dashboard') loadDashboardStats(); if(tabId=='crm') loadCRM(); if(tabId=='projects') loadProjects();
-            if(tabId=='inventory') loadInventory(); if(tabId=='finance') loadFinance(); if(tabId=='chat') loadChat();
-            if(tabId=='goals') loadGoals();
-        }
-        function toggleModal(id) { document.getElementById(id).classList.toggle('hidden'); }
-
-        async function loadDashboardStats() {
-            try { const r = await fetch('/api/v1/erp/dashboard-stats'); const d = await r.json(); if(d.success) { document.getElementById('stat-customers').innerText=d.data.total_users; document.getElementById('stat-revenue').innerText=d.data.total_revenue.toLocaleString(); document.getElementById('stat-projects').innerText=d.data.total_projects; } } catch(e) {}
         }
 
-        // Rút gọn gọi API
-        async function loadCRM() { const r = await fetch('/api/v1/erp/customers'); const d = await r.json(); document.getElementById('crm-list').innerHTML = d.data.map(c => `<tr><td class="px-6 py-4 font-bold">${c.name}</td><td class="px-6 py-4">${c.phone}</td><td class="px-6 py-4"><span class="px-2 py-1 rounded text-xs font-bold bg-blue-100">${c.type}</span></td></tr>`).join(''); }
-        async function submitCRM() { await fetch('/api/v1/erp/customers', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({name:document.getElementById('c-name').value, phone:document.getElementById('c-phone').value, type:document.getElementById('c-type').value})}); toggleModal('modal-crm'); loadCRM(); }
-        async function loadProjects() { const r = await fetch('/api/v1/erp/projects'); const d = await r.json(); document.getElementById('project-list').innerHTML = d.data.map(p => `<tr><td class="px-6 py-4 font-bold">${p.project_name}</td><td class="px-6 py-4">${p.customer_name}</td><td class="px-6 py-4 text-right font-bold text-emerald-600">${p.budget.toLocaleString()} ₫</td><td class="px-6 py-4 text-center"><span class="px-2 py-1 rounded text-xs font-bold bg-orange-100">${p.status}</span></td></tr>`).join(''); }
-        async function submitProject() { await fetch('/api/v1/erp/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({project_name:document.getElementById('p-name').value, customer_name:document.getElementById('p-client').value, budget:parseInt(document.getElementById('p-budget').value)||0, status:document.getElementById('p-status').value})}); toggleModal('modal-project'); loadProjects(); }
-        async function loadInventory() { const r = await fetch('/api/v1/erp/inventory'); const d = await r.json(); document.getElementById('inventory-list').innerHTML = d.data.map(i => `<tr><td class="px-6 py-4">${i.item_code}</td><td class="px-6 py-4 font-bold">${i.item_name}</td><td class="px-6 py-4 text-center">${i.quantity}</td><td class="px-6 py-4 text-right">${i.unit_price.toLocaleString()} ₫</td></tr>`).join(''); }
-        async function submitInventory() { await fetch('/api/v1/erp/inventory', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({item_code:document.getElementById('i-code').value, item_name:document.getElementById('i-name').value, category:document.getElementById('i-category').value, quantity:parseInt(document.getElementById('i-qty').value)||0, unit_price:parseInt(document.getElementById('i-price').value)||0})}); toggleModal('modal-inventory'); loadInventory(); }
-        async function loadFinance() { const r = await fetch('/api/v1/erp/finance'); const d = await r.json(); document.getElementById('finance-list').innerHTML = d.data.map(f => `<tr><td class="px-6 py-4 font-bold">${f.trans_type}</td><td class="px-6 py-4">${f.note}</td><td class="px-6 py-4 text-right font-bold">${f.amount.toLocaleString()} ₫</td></tr>`).join(''); }
-        async function submitFinance() { await fetch('/api/v1/erp/finance', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({trans_type:document.getElementById('f-type').value, amount:parseInt(document.getElementById('f-amount').value)||0, category:document.getElementById('f-category').value, note:document.getElementById('f-note').value})}); toggleModal('modal-finance'); loadFinance(); }
-        async function loadGoals() { const r = await fetch('/api/v1/erp/goals'); const d = await r.json(); document.getElementById('goals-list').innerHTML = d.data.map(g => `<div class="bg-white p-5 rounded-2xl shadow-sm border"><h3 class="font-bold text-lg">${g.title}</h3><p class="text-sm text-slate-500 mb-2">Mục tiêu: ${g.target_value.toLocaleString()}</p><div class="w-full bg-slate-100 rounded-full h-2"><div class="bg-red-500 h-2 rounded-full" style="width: 50%"></div></div></div>`).join(''); }
-        async function submitGoal() { await fetch('/api/v1/erp/goals', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({title:document.getElementById('g-title').value, target_value:parseInt(document.getElementById('g-target').value)||0, deadline:document.getElementById('g-deadline').value})}); toggleModal('modal-goals'); loadGoals(); }
-
-        // --- HÀM MỚI: CHAT ---
-        async function loadChat() {
-            try { const r = await fetch('/api/v1/erp/chat'); const d = await r.json();
-                const box = document.getElementById('chat-box');
-                box.innerHTML = d.data.map(c => `<div class="flex gap-3 ${c.sender=='Sếp Toàn'?'flex-row-reverse':''}"><div class="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center font-bold text-blue-600 text-xs">${c.sender.charAt(0)}</div><div class="${c.sender=='Sếp Toàn'?'bg-blue-600 text-white':'bg-white border'} p-3 rounded-2xl max-w-[70%] shadow-sm text-sm"><p class="font-bold text-[10px] opacity-70 mb-1">${c.sender} • ${c.time}</p>${c.message}</div></div>`).join('');
-                box.scrollTop = box.scrollHeight;
-            } catch(e) {}
-        }
-        async function sendChat() {
-            const msg = document.getElementById('chat-input').value; if(!msg) return;
-            await fetch('/api/v1/erp/chat', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({sender:'Sếp Toàn', message:msg})});
-            document.getElementById('chat-input').value = ''; loadChat();
-        }
-
-        // --- HÀM MỚI: AI BUSINESS ---
-        async function askAIBusiness() {
-            const btn = document.getElementById('btn-ai'); const resBox = document.getElementById('ai-response');
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Đang phân tích...'; btn.disabled = true;
+        // HÀM CALL API DUYỆT ĐƠN NẠP THỦ CÔNG
+        async function loadManualOrders() {
+            const box = document.getElementById('topup-list');
+            box.innerHTML = '<tr><td colspan="5" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu...</td></tr>';
             try {
-                const r = await fetch('/api/v1/erp/ai-advice'); const d = await r.json();
-                resBox.classList.remove('hidden');
-                resBox.innerHTML = `<p class="text-emerald-400 font-bold mb-2"><i class="fas fa-check-circle mr-1"></i>Hoàn tất phân tích!</p><p class="text-slate-200 leading-relaxed">${d.advice.replace(/\\n/g, '<br>')}</p>`;
-            } catch(e) { resBox.innerHTML = '<p class="text-red-400">Lỗi kết nối AI.</p>'; resBox.classList.remove('hidden'); }
-            btn.innerHTML = '<i class="fas fa-magic mr-2"></i> Cập nhật Phân tích'; btn.disabled = false;
+                const res = await fetch('/api/v1/customer/admin/manual-orders');
+                const data = await res.json();
+                if(data.success && data.data.length > 0) {
+                    box.innerHTML = data.data.map(o => `
+                        <tr>
+                            <td class="px-6 py-4"><b>${o.username}</b><br><span class="text-[10px] text-slate-500">ID: ${o.user_id}</span></td>
+                            <td class="px-6 py-4 text-right font-bold text-emerald-600">${o.amount.toLocaleString()}đ<br><span class="text-[10px] text-slate-500">+${o.xu.toLocaleString()} Xu</span></td>
+                            <td class="px-6 py-4 text-center"><code class="bg-slate-100 px-2 py-1 rounded text-xs">${o.txid}</code><br><span class="text-[10px]">${o.method}</span></td>
+                            <td class="px-6 py-4 text-center">
+                                ${o.status === 'pending' ? '<span class="px-2 py-1 bg-orange-100 text-orange-600 text-xs font-bold rounded">Chờ duyệt</span>' : (o.status === 'approved' ? '<span class="px-2 py-1 bg-emerald-100 text-emerald-600 text-xs font-bold rounded">Đã duyệt</span>' : '<span class="px-2 py-1 bg-red-100 text-red-600 text-xs font-bold rounded">Đã hủy</span>')}
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                ${o.status === 'pending' ? `
+                                    <button onclick="approveOrder(${o.id}, 'approve')" class="px-3 py-1 bg-emerald-600 text-white rounded text-xs font-bold mr-1">Duyệt</button>
+                                    <button onclick="approveOrder(${o.id}, 'reject')" class="px-3 py-1 bg-red-600 text-white rounded text-xs font-bold">Hủy</button>
+                                ` : '-'}
+                            </td>
+                        </tr>
+                    `).join('');
+                } else box.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-slate-500">Chưa có đơn nạp thủ công nào.</td></tr>';
+            } catch(e) { box.innerHTML = '<tr><td colspan="5" class="text-center py-4 text-red-500">Lỗi kết nối.</td></tr>'; }
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if(localStorage.getItem('role') !== 'admin') window.location.href = '/';
-            else switchTab('dashboard');
-        });
+        async function approveOrder(id, action) {
+            if(!confirm(`Bạn chắc chắn muốn ${action === 'approve' ? 'DUYỆT' : 'HỦY'} đơn này?`)) return;
+            try {
+                const res = await fetch('/api/v1/customer/admin/approve-topup', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: id, action: action })
+                });
+                const data = await res.json();
+                alert(data.message);
+                loadManualOrders(); // Tải lại bảng
+            } catch(e) { alert('Lỗi mạng!'); }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => { switchTab('dashboard'); });
     </script>
 </body>
 </html>
