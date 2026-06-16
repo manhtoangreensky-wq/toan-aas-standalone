@@ -2,6 +2,7 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 import logging
 from db import db_connect, now_text
+from security import admin_guard_response
 
 router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_ADMIN")
@@ -9,14 +10,12 @@ logger = logging.getLogger("TOAN_AAS_ADMIN")
 # 1. API Lấy thống kê Tổng quan
 @router.get("/dashboard-stats")
 async def get_dashboard_stats(admin_id: str):
+    denied = admin_guard_response(admin_id)
+    if denied:
+        return denied
     conn = db_connect()
     c = conn.cursor()
     try:
-        c.execute("SELECT role FROM users WHERE user_id=?", (admin_id,))
-        admin = c.fetchone()
-        if not admin or admin[0] != 'admin':
-            return {"success": False, "message": "Truy cập bị từ chối"}
-
         # Đếm tổng user
         c.execute("SELECT COUNT(*) FROM users")
         total_users = c.fetchone()[0]
@@ -41,18 +40,12 @@ async def get_dashboard_stats(admin_id: str):
 # 2. API Lấy danh sách Khách hàng
 @router.get("/users")
 async def get_all_users(admin_id: str):
+    denied = admin_guard_response(admin_id)
+    if denied:
+        return denied
     conn = db_connect()
     c = conn.cursor()
     try:
-        c.execute("SELECT role FROM users WHERE user_id=?", (admin_id,))
-        if not c.fetchone() or c.fetchone()[0] != 'admin' if c.rowcount > 0 else False: # check strict
-            pass # simplified check below
-        
-        c.execute("SELECT role FROM users WHERE user_id=?", (admin_id,))
-        admin = c.fetchone()
-        if not admin or admin[0] != 'admin':
-            return {"success": False, "message": "Truy cập bị từ chối"}
-            
         c.execute("SELECT user_id, username, role, credits, created_at FROM users ORDER BY created_at DESC")
         users = [{"user_id": r[0], "username": r[1] or "Khách", "role": r[2], "credits": r[3], "created_at": r[4]} for r in c.fetchall()]
         return {"success": True, "data": users}
@@ -67,16 +60,13 @@ class AddXuReq(BaseModel):
 
 @router.post("/add-xu")
 async def admin_add_xu(data: AddXuReq):
+    denied = admin_guard_response(data.admin_id)
+    if denied:
+        return denied
     conn = db_connect()
     c = conn.cursor()
     try:
         c.execute("BEGIN IMMEDIATE")
-        c.execute("SELECT role FROM users WHERE user_id=?", (data.admin_id,))
-        admin = c.fetchone()
-        if not admin or admin[0] != 'admin':
-            conn.rollback()
-            return {"success": False, "message": "Bạn không có quyền"}
-            
         c.execute("UPDATE users SET credits = credits + ? WHERE user_id=?", (data.amount, data.target_user_id))
         conn.commit()
         return {"success": True, "message": f"Đã cập nhật {data.amount} Xu thành công!"}

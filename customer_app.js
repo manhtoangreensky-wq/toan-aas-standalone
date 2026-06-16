@@ -70,14 +70,19 @@
             btn.disabled = true;
             
             try {
-                const res = await fetch('/api/v1/customer/payos/create-link', {
+                const res = await fetch('/api/v1/billing/create-payment-link', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: USER_ID, amount_vnd: amountVND, xu_nhan: xu })
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        payment_type: "topup_xu",
+                        package_id: "CUSTOM_TOPUP",
+                        amount: amountVND
+                    })
                 });
                 const data = await res.json();
                 if(data.success) {
                     showToast(`Khởi tạo thành công! Đang chuyển hướng...`, 'success');
-                    window.location.href = data.checkout_url; // Chuyển thẳng sang cổng QR PayOS
+                    window.location.href = data.checkoutUrl || data.checkout_url; // Chuyển thẳng sang cổng QR PayOS
                 } else {
                     showToast(data.message, 'error');
                     btn.innerHTML = originalHTML;

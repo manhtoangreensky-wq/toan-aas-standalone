@@ -252,7 +252,7 @@
                         <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-clock text-slate-400"></i><span class="text-sm font-semibold">Nhắc hẹn</span></button>
                         <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-save text-slate-400"></i><span class="text-sm font-semibold">Lưu tài liệu</span></button>
                         <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-search text-slate-400"></i><span class="text-sm font-semibold">Tìm ghi chú</span></button>
-                        <button class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-hdd text-slate-400"></i><span class="text-sm font-semibold">Dung lượng</span></button>
+                        <button onclick="openStorageModal()" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-hdd text-slate-400"></i><span class="text-sm font-semibold">Dung lượng</span></button>
                     </div>
                 </div>
 
@@ -266,6 +266,31 @@
 
     <!-- KHU VỰC TOAST NOTIFICATION -->
     <div id="toast-container" class="fixed bottom-6 right-6 z-[60] flex flex-col gap-3 pointer-events-none"></div>
+
+    <!-- MODAL MUA THÊM DUNG LƯỢNG -->
+    <div id="modal-storage-addon" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div class="bg-white p-0 rounded-2xl shadow-2xl w-full max-w-lg relative overflow-hidden">
+            <div class="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50">
+                <h2 class="text-lg font-bold text-slate-800"><i class="fas fa-hdd text-emerald-600 mr-2"></i>Mua thêm dung lượng</h2>
+                <button onclick="toggleModal('modal-storage-addon')" class="text-slate-400 hover:text-slate-800 transition"><i class="fas fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 text-sm text-emerald-900 leading-relaxed">
+                    <b>Dung lượng miễn phí:</b> 50MB.<br>
+                    Ghi chú text nhỏ và file đính kèm đều tính dung lượng thật. File tạm tự xóa không tính vào quota lâu dài.
+                </div>
+                <div id="storage-status-box" class="text-sm text-slate-600 bg-slate-50 border border-slate-200 rounded-xl p-3">Đang tải dung lượng...</div>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="buyStorage(this, 'storage_10k')" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 text-left"><b>10k</b><br><span class="text-xs text-slate-500">+50MB / tháng</span></button>
+                    <button onclick="buyStorage(this, 'storage_20k')" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 text-left"><b>20k</b><br><span class="text-xs text-slate-500">+100MB / tháng</span></button>
+                    <button onclick="buyStorage(this, 'storage_50k')" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 text-left"><b>50k</b><br><span class="text-xs text-slate-500">+250MB / tháng</span></button>
+                    <button onclick="buyStorage(this, 'storage_100k')" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 text-left"><b>100k</b><br><span class="text-xs text-slate-500">+500MB / tháng</span></button>
+                </div>
+                <button onclick="showToast('Gói nhập số khác đang chuẩn hóa. Vui lòng chọn block có sẵn hoặc liên hệ admin.', 'warning')" class="w-full p-3 rounded-xl border border-dashed border-slate-300 text-sm font-semibold text-slate-600">Nhập số khác</button>
+                <p class="text-xs text-slate-500">Thanh toán qua PayOS web app. Sau khi PayOS báo thành công, hệ thống tự cộng dung lượng vào tài khoản.</p>
+            </div>
+        </div>
+    </div>
 
     <!-- MODAL NẠP THỦ CÔNG (MANUAL TOPUP) -->
     <div id="modal-manual-topup" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -371,6 +396,53 @@
             document.getElementById(id).classList.toggle('hidden'); 
         }
 
+        async function openStorageModal() {
+            toggleModal('modal-storage-addon');
+            const box = document.getElementById('storage-status-box');
+            box.innerText = 'Đang tải dung lượng...';
+            try {
+                const res = await fetch(`/api/v1/billing/storage/status/${USER_ID}`);
+                const data = await res.json();
+                if(data.success) {
+                    box.innerHTML = `<b>Đang dùng:</b> ${data.used_mb}MB / ${data.total_quota_mb}MB<br><b>Còn lại:</b> ${data.remaining_mb}MB`;
+                } else {
+                    box.innerText = data.message || 'Không tải được dung lượng.';
+                }
+            } catch(e) {
+                box.innerText = 'Không tải được dung lượng lúc này.';
+            }
+        }
+
+        async function buyStorage(btn, packageId) {
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo thanh toán...';
+            try {
+                const res = await fetch('/api/v1/billing/create-payment-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        payment_type: 'storage_addon',
+                        package_id: packageId,
+                        amount: 0
+                    })
+                });
+                const data = await res.json();
+                if(data.success && (data.checkoutUrl || data.checkout_url)) {
+                    window.location.href = data.checkoutUrl || data.checkout_url;
+                } else {
+                    showToast(data.message || 'Không tạo được thanh toán dung lượng.', 'error');
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                showToast('Lỗi kết nối PayOS dung lượng.', 'error');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
         // 3. TOAST NATIVE TÙY CHỈNH
         function showToast(message, type = 'success') {
             const container = document.getElementById('toast-container');
@@ -391,9 +463,18 @@
             btn.innerHTML = `<div class="w-full text-center py-0.5"><i class="fas fa-spinner fa-spin text-lg text-slate-400"></i></div>`;
             btn.disabled = true;
             try {
-                const res = await fetch('/api/v1/customer/payos/create-link', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ user_id: USER_ID, amount_vnd: amountVND, xu_nhan: xu }) });
+                const res = await fetch('/api/v1/billing/create-payment-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        payment_type: "topup_xu",
+                        package_id: "CUSTOM_TOPUP",
+                        amount: amountVND
+                    })
+                });
                 const data = await res.json();
-                if(data.success) { showToast(`Khởi tạo thanh toán...`, 'success'); window.location.href = data.checkout_url; } 
+                if(data.success) { showToast(`Khởi tạo thanh toán...`, 'success'); window.location.href = data.checkoutUrl || data.checkout_url; }
                 else { showToast(data.message, 'error'); btn.innerHTML = originalHTML; btn.disabled = false; }
             } catch(e) { showToast('Lỗi PayOS.', 'error'); btn.innerHTML = originalHTML; btn.disabled = false; }
         }

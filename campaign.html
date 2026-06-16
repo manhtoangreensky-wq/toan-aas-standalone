@@ -71,7 +71,8 @@
     </div>
 
     <script>
-        const USER_ID = "admin_web"; // Giả lập user đăng nhập
+        const USER_ID = localStorage.getItem('user_id');
+        if(!USER_ID) { window.location.href = '/login'; }
 
         async function loadCampaigns() {
             try {

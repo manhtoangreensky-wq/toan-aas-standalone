@@ -4,6 +4,7 @@ import hashlib
 import uuid
 import logging
 from db import db_connect, now_text
+from security import is_admin_user
 
 router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_AUTH")
@@ -29,8 +30,9 @@ def upgrade_db_for_auth():
 upgrade_db_for_auth()
 
 class AuthReq(BaseModel):
-    username: str
-    password: str
+    username: str = ""
+    password: str = ""
+    user_id: str = ""
 
 def hash_pwd(pwd: str):
     return hashlib.sha256(pwd.encode()).hexdigest()
@@ -40,6 +42,8 @@ async def register(data: AuthReq):
     conn = db_connect()
     c = conn.cursor()
     try:
+        if not data.username.strip() or not data.password:
+            return {"success": False, "message": "Vui lòng nhập tên đăng nhập và mật khẩu"}
         c.execute("SELECT user_id FROM users WHERE username=?", (data.username,))
         if c.fetchone():
             return {"success": False, "message": "Tên đăng nhập đã có người sử dụng"}
@@ -47,8 +51,7 @@ async def register(data: AuthReq):
         user_id = str(uuid.uuid4())
         pwd_hash = hash_pwd(data.password)
         
-        # Mặc định tài khoản có tên 'admin' sẽ được cấp quyền tối cao
-        role = 'admin' if data.username.lower() == 'admin' else 'user'
+        role = 'user'
         
         c.execute("INSERT INTO users (user_id, username, password, role, credits, created_at) VALUES (?, ?, ?, ?, 0, ?)",
                   (user_id, data.username, pwd_hash, role, now_text()))
@@ -64,10 +67,28 @@ async def login(data: AuthReq):
     conn = db_connect()
     c = conn.cursor()
     try:
+        if data.user_id:
+            c.execute("SELECT user_id, username, credits FROM users WHERE user_id=?", (data.user_id,))
+            user = c.fetchone()
+            if user:
+                role = "admin" if is_admin_user(user[0]) else "user"
+                return {
+                    "success": True,
+                    "user_id": user[0],
+                    "username": user[1] or "Member",
+                    "role": role,
+                    "credits": user[2],
+                }
+            return {"success": False, "message": "Tài khoản chưa tồn tại! Hãy vào Bot Telegram gõ /start trước."}
+
+        if not data.username.strip() or not data.password:
+            return {"success": False, "message": "Vui lòng nhập tài khoản và mật khẩu"}
+
         c.execute("SELECT user_id, role, credits FROM users WHERE username=? AND password=?", (data.username, hash_pwd(data.password)))
         user = c.fetchone()
         if user:
-            return {"success": True, "user_id": user[0], "role": user[1], "credits": user[2]}
+            role = "admin" if is_admin_user(user[0]) else "user"
+            return {"success": True, "user_id": user[0], "role": role, "credits": user[2]}
         return {"success": False, "message": "Sai tài khoản hoặc mật khẩu!"}
     finally:
         conn.close()

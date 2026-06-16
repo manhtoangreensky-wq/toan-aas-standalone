@@ -81,6 +81,20 @@
 
             <div id="tab-topup" class="tab-panel hidden h-full">
                 <div class="flex justify-between items-center mb-6"><h2 class="text-lg font-bold text-slate-800">Duyệt Đơn Nạp Thủ Công</h2></div>
+                <div class="bg-white rounded-xl shadow-sm border p-4 mb-6">
+                    <h3 class="font-bold text-slate-800 mb-3"><i class="fas fa-hdd text-emerald-600 mr-2"></i>Tặng dung lượng lưu trữ</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        <input id="grant-storage-user" class="px-3 py-2 border rounded-lg text-sm" placeholder="User ID cần tặng">
+                        <select id="grant-storage-package" class="px-3 py-2 border rounded-lg text-sm">
+                            <option value="storage_10k">+50MB / tháng</option>
+                            <option value="storage_20k">+100MB / tháng</option>
+                            <option value="storage_50k">+250MB / tháng</option>
+                            <option value="storage_100k">+500MB / tháng</option>
+                        </select>
+                        <input id="grant-storage-note" class="px-3 py-2 border rounded-lg text-sm" placeholder="Ghi chú nội bộ">
+                        <button onclick="grantStorage()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg px-4 py-2 text-sm">Tặng dung lượng</button>
+                    </div>
+                </div>
                 <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
                     <table class="min-w-full text-left text-sm">
                         <thead class="bg-slate-50 border-b">
@@ -140,6 +154,14 @@
     <div id="modal-goals" class="hidden fixed inset-0 bg-slate-900/50 flex items-center justify-center z-50"><div class="bg-white p-6 rounded-2xl w-full max-w-sm"><h3 class="font-bold mb-4 border-b pb-2">Mục Tiêu</h3><input type="text" id="g-title" placeholder="Tiêu đề" class="w-full px-4 py-2 border rounded mb-2"><input type="number" id="g-target" placeholder="Mục tiêu (Số)" class="w-full px-4 py-2 border rounded mb-2"><input type="date" id="g-deadline" class="w-full px-4 py-2 border rounded mb-4"><div class="flex justify-end gap-2"><button onclick="toggleModal('modal-goals')" class="px-4 py-2 bg-slate-100 rounded">Hủy</button><button onclick="submitGoal()" class="px-4 py-2 bg-red-600 text-white rounded">Lưu</button></div></div></div>
 
     <script>
+        const ADMIN_USER_ID = localStorage.getItem('user_id') || '';
+        const nativeFetch = window.fetch.bind(window);
+        window.fetch = (resource, options = {}) => {
+            const headers = new Headers(options.headers || {});
+            if (ADMIN_USER_ID) headers.set('X-TOAN-AAS-User-Id', ADMIN_USER_ID);
+            return nativeFetch(resource, { ...options, headers });
+        };
+
         const titles = {'dashboard':'Tổng Quan', 'topup':'Duyệt Nạp Xu', 'crm':'Khách Hàng', 'projects':'Dự Án', 'finance':'Thu Chi', 'inventory':'Kho Hàng', 'hr':'Nhân Sự', 'attendance':'Chấm Công', 'sales':'Bán Hàng', 'assets':'Tài Sản', 'social':'Mạng Xã Hội', 'okrs':'Quản Lý OKRs', 'purchasing':'Mua Hàng', 'approvals':'Phê Duyệt', 'production':'Sản Xuất', 'workload':'Giao Việc', 'goals':'Mục Tiêu', 'banners':'Banner', 'chat':'Hệ thống Chat', 'ai_business':'AI Business'};
 
         function switchTab(tabId) {
@@ -192,7 +214,8 @@
             const box = document.getElementById('topup-list');
             box.innerHTML = '<tr><td colspan="5" class="text-center py-4"><i class="fas fa-spinner fa-spin mr-2"></i>Đang tải dữ liệu...</td></tr>';
             try {
-                const res = await fetch('/api/v1/customer/admin/manual-orders');
+                const adminId = encodeURIComponent(localStorage.getItem('user_id') || '');
+                const res = await fetch(`/api/v1/customer/admin/manual-orders?admin_id=${adminId}`);
                 const data = await res.json();
                 if(data.success && data.data.length > 0) {
                     let pendingCount = 0;
@@ -222,10 +245,31 @@
         async function approveOrder(id, action) {
             if(!confirm(`Bạn chắc chắn muốn ${action === 'approve' ? 'DUYỆT' : 'HỦY'} đơn này?`)) return;
             try {
-                const res = await fetch('/api/v1/customer/admin/approve-topup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ order_id: id, action: action }) });
+                const adminId = localStorage.getItem('user_id') || '';
+                const res = await fetch('/api/v1/customer/admin/approve-topup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ order_id: id, action: action, admin_id: adminId })
+                });
                 const data = await res.json();
                 alert(data.message); loadManualOrders();
             } catch(e) { alert('Lỗi mạng!'); }
+        }
+
+        async function grantStorage() {
+            const userId = document.getElementById('grant-storage-user').value.trim();
+            const packageId = document.getElementById('grant-storage-package').value;
+            const note = document.getElementById('grant-storage-note').value.trim();
+            if(!userId) return alert('Nhập User ID cần tặng dung lượng.');
+            try {
+                const res = await fetch('/api/v1/billing/storage/admin/grant', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ admin_id: ADMIN_USER_ID, user_id: userId, package_id: packageId, note: note })
+                });
+                const data = await res.json();
+                alert(data.message || (data.success ? 'Đã tặng dung lượng.' : 'Không tặng được dung lượng.'));
+            } catch(e) { alert('Lỗi mạng khi tặng dung lượng.'); }
         }
 
         // AI BUSINESS ADVISOR

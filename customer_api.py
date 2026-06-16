@@ -2,12 +2,9 @@ from fastapi import APIRouter
 from pydantic import BaseModel
 import logging
 import os
-import time
-import hmac
-import hashlib
-import json
-import urllib.request
 from db import db_connect, now_text
+from billing import create_payment_link
+from security import admin_guard_response
 
 router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_CUSTOMER_API")
@@ -19,9 +16,6 @@ def init_manual_db():
     c.execute('''CREATE TABLE IF NOT EXISTS manual_orders 
                  (id INTEGER PRIMARY KEY AUTOINCREMENT, user_id TEXT, username TEXT, 
                  amount INTEGER, xu_expected INTEGER, txid TEXT, method TEXT, status TEXT DEFAULT 'pending', created_at TEXT)''')
-    c.execute('''CREATE TABLE IF NOT EXISTS payos_orders 
-                 (order_code INTEGER PRIMARY KEY, user_id TEXT, amount INTEGER, 
-                 xu_nhan INTEGER, status TEXT DEFAULT 'PENDING', created_at TEXT)''')
     conn.commit()
     conn.close()
 
@@ -43,63 +37,17 @@ async def submit_feedback(data: FeedbackReq):
     except Exception as e: return {"success": False, "message": "Lỗi hệ thống."}
     finally: conn.close()
 
-# --- 2. API PAYOS (ĐỘC LẬP 100% - KHÔNG GỌI BOT.PY) ---
 class PayosReq(BaseModel): user_id: str; amount_vnd: int; xu_nhan: int
 @router.post("/payos/create-link")
 async def create_web_payos_link(data: PayosReq):
-    try:
-        # 1. Tạo order code độc lập
-        order_code = int(time.time() * 1000)
-        
-        # 2. Lưu DB chờ webhook
-        conn = db_connect()
-        c = conn.cursor()
-        c.execute("INSERT INTO payos_orders (order_code, user_id, amount, xu_nhan, created_at) VALUES (?, ?, ?, ?, ?)",
-                  (order_code, data.user_id, data.amount_vnd, data.xu_nhan, now_text()))
-        conn.commit()
-        conn.close()
-        
-        # 3. Thông số API
-        client_id = os.environ.get("PAYOS_CLIENT_ID", "")
-        api_key = os.environ.get("PAYOS_API_KEY", "")
-        checksum_key = os.environ.get("PAYOS_CHECKSUM_KEY", "")
-
-        if not client_id or not api_key or not checksum_key:
-            return {"success": False, "message": "Chưa cấu hình API Key PayOS. Vui lòng nạp thủ công."}
-
-        # 4. Ký mã HMAC SHA256 chuẩn PayOS
-        return_url = os.environ.get("PUBLIC_BASE_URL", "https://app.toanaas.vn").rstrip("/") + "/"
-        cancel_url = return_url
-        description = f"AAS {data.user_id} {data.xu_nhan}XU"[:25]
-
-        data_str = f"amount={data.amount_vnd}&cancelUrl={cancel_url}&description={description}&orderCode={order_code}&returnUrl={return_url}"
-        signature = hmac.new(bytes(checksum_key, 'utf-8'), bytes(data_str, 'utf-8'), hashlib.sha256).hexdigest()
-
-        body = {
-            "orderCode": order_code,
-            "amount": data.amount_vnd,
-            "description": description,
-            "returnUrl": return_url,
-            "cancelUrl": cancel_url,
-            "signature": signature
-        }
-
-        # 5. Gọi API PayOS bằng urllib (không cần requests)
-        req = urllib.request.Request("https://api-merchant.payos.vn/v2/payment-requests", method="POST")
-        req.add_header("x-client-id", client_id)
-        req.add_header("x-api-key", api_key)
-        req.add_header("Content-Type", "application/json")
-
-        with urllib.request.urlopen(req, data=json.dumps(body).encode('utf-8'), timeout=10) as response:
-            res_data = json.loads(response.read().decode('utf-8'))
-            if res_data.get("code") == "00":
-                return {"success": True, "checkout_url": res_data["data"]["checkoutUrl"]}
-            else:
-                return {"success": False, "message": res_data.get("desc", "Lỗi tạo PayOS link")}
-
-    except Exception as e:
-        logger.error(f"Lỗi PayOS: {str(e)}")
-        return {"success": False, "message": "Lỗi kết nối PayOS. Vui lòng Nạp Thủ Công."}
+    # Deprecated compatibility wrapper. Production single source:
+    # /api/v1/billing/create-payment-link
+    return await create_payment_link({
+        "user_id": data.user_id,
+        "payment_type": "topup_xu",
+        "package_id": "CUSTOM_TOPUP",
+        "amount": int(data.amount_vnd or 0),
+    })
 
 # --- 3. API NẠP THỦ CÔNG (GỬI YÊU CẦU) ---
 class ManualTopupReq(BaseModel): user_id: str; amount: int; xu_expected: int; txid: str; method: str
@@ -123,16 +71,22 @@ async def submit_manual_topup(data: ManualTopupReq):
 
 # --- 4. API DÀNH CHO ADMIN DUYỆT ĐƠN NẠP ---
 @router.get("/admin/manual-orders")
-async def get_manual_orders():
+async def get_manual_orders(admin_id: str):
+    denied = admin_guard_response(admin_id)
+    if denied:
+        return denied
     conn = db_connect(); c = conn.cursor()
     c.execute("SELECT id, user_id, username, amount, xu_expected, txid, method, status, created_at FROM manual_orders ORDER BY id DESC")
     data = [{"id": r[0], "user_id": r[1], "username": r[2], "amount": r[3], "xu": r[4], "txid": r[5], "method": r[6], "status": r[7], "date": r[8]} for r in c.fetchall()]
     conn.close()
     return {"success": True, "data": data}
 
-class ApproveReq(BaseModel): order_id: int; action: str
+class ApproveReq(BaseModel): order_id: int; action: str; admin_id: str
 @router.post("/admin/approve-topup")
 async def approve_manual_topup(data: ApproveReq):
+    denied = admin_guard_response(data.admin_id)
+    if denied:
+        return denied
     conn = db_connect(); c = conn.cursor()
     try:
         c.execute("BEGIN IMMEDIATE")
@@ -166,6 +120,11 @@ async def approve_manual_topup(data: ApproveReq):
 class AIToolReq(BaseModel): user_id: str; tool_type: str; cost: int; prompt: str
 @router.post("/ai/process")
 async def process_ai_tool(data: AIToolReq):
+    if os.environ.get("WEB_TOOL_PROCESS_ENABLED", "false").lower() != "true":
+        return {
+            "success": False,
+            "message": "Công cụ web đang chờ liên kết provider thật. TOAN AAS chưa trừ Xu."
+        }
     conn = db_connect(); c = conn.cursor()
     try:
         c.execute("BEGIN IMMEDIATE")

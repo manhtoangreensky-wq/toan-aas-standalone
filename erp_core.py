@@ -1,11 +1,21 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel
 import logging
 from db import db_connect, now_text
 import random
+from security import is_admin_user
 
-router = APIRouter()
 logger = logging.getLogger("TOAN_AAS_ERP")
+
+def erp_admin_guard(request: Request):
+    if request.url.path.endswith("/dashboard-stats"):
+        return True
+    admin_id = request.headers.get("x-toan-aas-user-id") or request.query_params.get("admin_id", "")
+    if not is_admin_user(admin_id):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return True
+
+router = APIRouter(dependencies=[Depends(erp_admin_guard)])
 
 def init_erp_database():
     conn = db_connect(); c = conn.cursor()

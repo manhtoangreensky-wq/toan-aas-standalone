@@ -78,7 +78,7 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        user_id: "admin_web", // Truyền cứng ID tạm thời
+                        user_id: localStorage.getItem('user_id') || "",
                         topic: topic,
                         platform: platform
                     })

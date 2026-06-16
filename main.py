@@ -4,6 +4,7 @@ from app.core.config import settings
 from app.core.db import init_db
 from app.api.v1 import billing
 from contextlib import asynccontextmanager
+import os
 
 # Chạy init_db khi khởi động app
 @asynccontextmanager
@@ -18,10 +19,15 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+def cors_allow_origins() -> list[str]:
+    raw = os.environ.get("CORS_ALLOW_ORIGINS", "https://app.toanaas.vn,https://toanaas.vn")
+    origins = [item.strip() for item in raw.split(",") if item.strip()]
+    return origins or ["https://app.toanaas.vn", "https://toanaas.vn"]
+
 # Cấu hình CORS để Web App (React/Vue) gọi API không bị lỗi
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # Có thể giới hạn domain của sếp sau này
+    allow_origins=cors_allow_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
