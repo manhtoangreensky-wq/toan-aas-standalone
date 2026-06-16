@@ -21,6 +21,22 @@ STORAGE_PACKAGES = {
     "storage_50k": {"amount": 50000, "quota_mb": 250, "days": 30},
     "storage_100k": {"amount": 100000, "quota_mb": 500, "days": 30},
 }
+STORAGE_CUSTOM_PACKAGE_ID = "storage_custom"
+STORAGE_BLOCK_AMOUNT = 10000
+STORAGE_BLOCK_MB = 50
+
+
+def storage_package_for_order(package_id: str, amount: int = 0) -> dict | None:
+    package_key = str(package_id or "").strip()
+    if package_key in STORAGE_PACKAGES:
+        return dict(STORAGE_PACKAGES[package_key])
+    if package_key != STORAGE_CUSTOM_PACKAGE_ID:
+        return None
+    amount_int = int(amount or 0)
+    if amount_int < STORAGE_BLOCK_AMOUNT or amount_int % STORAGE_BLOCK_AMOUNT != 0:
+        return None
+    blocks = amount_int // STORAGE_BLOCK_AMOUNT
+    return {"amount": amount_int, "quota_mb": blocks * STORAGE_BLOCK_MB, "days": 30}
 
 # ========================================================
 # AUTO-HEALING DATABASE: Tự động đắp cột nếu Database bị thiếu
@@ -95,9 +111,9 @@ async def create_payment_link(payload: dict):
         package_id = payload.get("package_id", "CUSTOM_TOPUP")
 
         if payment_type == "storage_addon":
-            package = STORAGE_PACKAGES.get(str(package_id))
+            package = storage_package_for_order(str(package_id), amount)
             if not package:
-                return JSONResponse({"success": False, "message": "Gói dung lượng không hợp lệ."}, status_code=400)
+                return JSONResponse({"success": False, "message": "Gói dung lượng không hợp lệ. Vui lòng chọn bội số 10.000đ."}, status_code=400)
             amount = int(package["amount"])
         
         if amount <= 0:
@@ -221,7 +237,7 @@ async def payos_webhook(request: Request):
                 )
                 apply_status = 'success'
             elif payment_type == "storage_addon":
-                package = STORAGE_PACKAGES.get(str(package_id))
+                package = storage_package_for_order(str(package_id), amount)
                 if not package:
                     conn.rollback()
                     return JSONResponse({"success": False, "message": "Gói dung lượng không hợp lệ"}, status_code=400)
@@ -260,7 +276,17 @@ async def payos_webhook(request: Request):
 
 @router.get("/storage/packages")
 async def storage_packages():
-    return {"success": True, "base_free_mb": 50, "data": STORAGE_PACKAGES}
+    return {
+        "success": True,
+        "base_free_mb": 50,
+        "custom_rule": {
+            "package_id": STORAGE_CUSTOM_PACKAGE_ID,
+            "block_amount": STORAGE_BLOCK_AMOUNT,
+            "block_mb": STORAGE_BLOCK_MB,
+            "days": 30,
+        },
+        "data": STORAGE_PACKAGES,
+    }
 
 
 @router.get("/storage/status/{user_id}")

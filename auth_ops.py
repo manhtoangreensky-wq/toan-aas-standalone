@@ -15,12 +15,15 @@ def upgrade_db_for_auth():
     c = conn.cursor()
     try:
         c.execute("BEGIN IMMEDIATE")
-        try:
-            c.execute("ALTER TABLE users ADD COLUMN username TEXT")
-            c.execute("ALTER TABLE users ADD COLUMN password TEXT")
-            c.execute("ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'user'")
-        except:
-            pass # Cột đã tồn tại
+        c.execute("PRAGMA table_info(users)")
+        existing = {row[1] for row in c.fetchall()}
+        for column_name, column_sql in [
+            ("username", "username TEXT"),
+            ("password", "password TEXT"),
+            ("role", "role TEXT DEFAULT 'user'"),
+        ]:
+            if column_name not in existing:
+                c.execute(f"ALTER TABLE users ADD COLUMN {column_sql}")
         conn.commit()
     except Exception as e:
         conn.rollback()
@@ -90,5 +93,25 @@ async def login(data: AuthReq):
             role = "admin" if is_admin_user(user[0]) else "user"
             return {"success": True, "user_id": user[0], "role": role, "credits": user[2]}
         return {"success": False, "message": "Sai tài khoản hoặc mật khẩu!"}
+    finally:
+        conn.close()
+
+@router.get("/me/{user_id}")
+async def me(user_id: str):
+    conn = db_connect()
+    c = conn.cursor()
+    try:
+        c.execute("SELECT user_id, username, credits FROM users WHERE user_id=?", (str(user_id),))
+        user = c.fetchone()
+        if not user:
+            return {"success": False, "message": "Tài khoản chưa tồn tại"}
+        role = "admin" if is_admin_user(user[0]) else "user"
+        return {
+            "success": True,
+            "user_id": user[0],
+            "username": user[1] or "Member",
+            "role": role,
+            "credits": int(user[2] or 0),
+        }
     finally:
         conn.close()

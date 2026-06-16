@@ -286,7 +286,10 @@
                     <button onclick="buyStorage(this, 'storage_50k')" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 text-left"><b>50k</b><br><span class="text-xs text-slate-500">+250MB / tháng</span></button>
                     <button onclick="buyStorage(this, 'storage_100k')" class="p-3 rounded-xl border border-slate-200 hover:border-emerald-500 text-left"><b>100k</b><br><span class="text-xs text-slate-500">+500MB / tháng</span></button>
                 </div>
-                <button onclick="showToast('Gói nhập số khác đang chuẩn hóa. Vui lòng chọn block có sẵn hoặc liên hệ admin.', 'warning')" class="w-full p-3 rounded-xl border border-dashed border-slate-300 text-sm font-semibold text-slate-600">Nhập số khác</button>
+                <div class="grid grid-cols-2 gap-3">
+                    <button onclick="buyStorageCustom(this)" class="p-3 rounded-xl border border-dashed border-slate-300 text-sm font-semibold text-slate-600">Nhập số khác</button>
+                    <button onclick="toggleModal('modal-storage-addon')" class="p-3 rounded-xl border border-slate-200 text-sm font-semibold text-slate-600">Quay lại</button>
+                </div>
                 <p class="text-xs text-slate-500">Thanh toán qua PayOS web app. Sau khi PayOS báo thành công, hệ thống tự cộng dung lượng vào tài khoản.</p>
             </div>
         </div>
@@ -426,6 +429,44 @@
                         payment_type: 'storage_addon',
                         package_id: packageId,
                         amount: 0
+                    })
+                });
+                const data = await res.json();
+                if(data.success && (data.checkoutUrl || data.checkout_url)) {
+                    window.location.href = data.checkoutUrl || data.checkout_url;
+                } else {
+                    showToast(data.message || 'Không tạo được thanh toán dung lượng.', 'error');
+                    btn.innerHTML = originalHTML;
+                    btn.disabled = false;
+                }
+            } catch(e) {
+                showToast('Lỗi kết nối PayOS dung lượng.', 'error');
+                btn.innerHTML = originalHTML;
+                btn.disabled = false;
+            }
+        }
+
+        async function buyStorageCustom(btn) {
+            const raw = prompt('Nhập số tiền muốn mua thêm dung lượng. Quy đổi: 10.000đ = 50MB/tháng. Ví dụ: 30000');
+            if(raw === null) return;
+            const amount = parseInt(String(raw).replace(/[^0-9]/g, ''), 10);
+            if(!amount || amount < 10000 || amount % 10000 !== 0) {
+                return showToast('Vui lòng nhập số tiền là bội số 10.000đ.', 'warning');
+            }
+            const quota = Math.floor(amount / 10000) * 50;
+            if(!confirm(`Mua thêm ${quota}MB/tháng với ${amount.toLocaleString('vi-VN')}đ qua PayOS?`)) return;
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tạo thanh toán...';
+            try {
+                const res = await fetch('/api/v1/billing/create-payment-link', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        payment_type: 'storage_addon',
+                        package_id: 'storage_custom',
+                        amount: amount
                     })
                 });
                 const data = await res.json();
