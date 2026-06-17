@@ -8,6 +8,8 @@ Production web app for `app.toanaas.vn`.
 - Health checks:
   - `/health`
   - `/api/v1/health`
+- Control gate status:
+  - `/api/v1/control/status` (admin-only, no secrets)
 - Customer app: `/`
 - Admin app: `/admin-app`
 
@@ -28,6 +30,7 @@ The web app is not a 1:1 copy of the Telegram bot. It is the clean TOAN AAS Cont
 - Username `admin` does not automatically become admin.
 - PayOS creation source: `/api/v1/billing/create-payment-link`.
 - PayOS webhook source: `/api/v1/billing/webhook/payos`.
+- Admin dashboard reads `/api/v1/control/status` for DB volume, PayOS, storage and feature-gate readiness.
 - Placeholder web tools do not deduct Xu unless `WEB_TOOL_PROCESS_ENABLED=true`.
 - Static assets are served from `/static`.
 

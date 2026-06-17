@@ -32,6 +32,7 @@ import erp_core
 import ai_assistant
 import customer_api
 import performance
+import control_status
 
 app = FastAPI(title="TOAN AAS Control Center")
 
@@ -66,6 +67,7 @@ app.include_router(erp_core.router, prefix="/api/v1/erp", tags=["ERP Core"])
 app.include_router(ai_assistant.router, prefix="/api/v1/assistant", tags=["AI Assistant"])
 app.include_router(customer_api.router, prefix="/api/v1/customer", tags=["Customer Web App"])
 app.include_router(performance.router, prefix="/api/v1/performance", tags=["Performance"])
+app.include_router(control_status.router, prefix="/api/v1/control", tags=["Control Center"])
 
 # Hàm hiển thị giao diện an toàn
 def get_html(file_name):
