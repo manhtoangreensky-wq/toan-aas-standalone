@@ -656,12 +656,31 @@
             showToast(messages[cfg.guard] || messages.planning, cfg.guard === 'planning' ? 'success' : 'warning');
         }
 
-        function saveWorkflowPlan() {
+        async function saveWorkflowPlan() {
             if(!selectedWorkflowOutput) return showToast('Bạn hãy chọn hoặc tạo một gợi ý trước.', 'warning');
+            const title = document.getElementById('workflow-title').innerText;
+            try {
+                const res = await fetch('/api/v1/media-ops/assets', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: USER_ID,
+                        title: title,
+                        media_type: 'Workflow Plan',
+                        content: selectedWorkflowOutput
+                    })
+                });
+                const data = await res.json();
+                if(data.success) {
+                    showToast('Đã lưu kế hoạch vào kho web app.', 'success');
+                    return;
+                }
+            } catch(e) {}
+
             const plans = JSON.parse(localStorage.getItem('toanaas_workflow_plans') || '[]');
-            plans.unshift({ title: document.getElementById('workflow-title').innerText, content: selectedWorkflowOutput, created_at: new Date().toISOString() });
+            plans.unshift({ title: title, content: selectedWorkflowOutput, created_at: new Date().toISOString() });
             localStorage.setItem('toanaas_workflow_plans', JSON.stringify(plans.slice(0, 50)));
-            showToast('Đã lưu kế hoạch vào bộ nhớ trình duyệt.', 'success');
+            showToast('API lưu trữ chưa phản hồi, đã lưu tạm trong trình duyệt.', 'warning');
         }
 
         async function copyWorkflowOutput() {

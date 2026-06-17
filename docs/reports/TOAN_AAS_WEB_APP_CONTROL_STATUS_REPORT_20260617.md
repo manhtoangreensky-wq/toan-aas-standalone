@@ -9,6 +9,8 @@ Added a guarded control-center status endpoint and admin dashboard card for the 
 - Added `/api/v1/control/status`.
 - Added admin dashboard "System Gate" card.
 - Reported DB path, DB persistence risk, table counts, PayOS bridge readiness, storage policy, and provider feature flag.
+- Connected customer workflow "Save plan" to the web app media asset API with browser-local fallback.
+- Added optional `user_id` ownership metadata to `media_assets` without breaking old rows.
 - Kept PayOS as a single source through `/api/v1/billing/create-payment-link` and `/api/v1/billing/webhook/payos`.
 - Kept provider jobs guarded unless feature flags/smoke tests are explicitly enabled.
 
