@@ -255,6 +255,18 @@
                         <button onclick="openWorkflow('note_search')" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-search text-slate-400"></i><span class="text-sm font-semibold">Tìm ghi chú</span></button>
                         <button onclick="openStorageModal()" class="tool-card bg-white p-4 rounded-xl text-left flex items-center gap-3"><i class="fas fa-hdd text-slate-400"></i><span class="text-sm font-semibold">Dung lượng</span></button>
                     </div>
+                    <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                        <div class="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                            <div>
+                                <h3 class="font-bold text-slate-800">Kế hoạch / Prompt đã lưu</h3>
+                                <p class="text-xs text-slate-500 mt-1">Các workflow bạn đã bấm “Lưu kế hoạch” sẽ nằm ở đây để copy hoặc mở lại.</p>
+                            </div>
+                            <button onclick="loadSavedPlans()" class="px-3 py-2 rounded-lg border border-slate-200 text-xs font-semibold hover:border-blue-300">🔄 Làm mới</button>
+                        </div>
+                        <div id="saved-plans-list" class="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="text-sm text-slate-400">Đang tải dữ liệu đã lưu...</div>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- VIEW PLACEHOLDER -->
@@ -424,6 +436,7 @@
         let activeWorkflowKey = null;
         let activeWorkflowRound = 0;
         let selectedWorkflowOutput = '';
+        let savedPlansCache = [];
 
         const WORKFLOW_CONFIGS = {
             video_trend: { title: 'Video theo trend', category: 'video', desc: 'Tạo trend, hook, storyboard, prompt video và bước tiếp theo. Chưa gọi provider và chưa trừ Xu.', guard: 'render_video' },
@@ -504,6 +517,7 @@
             document.getElementById('view-' + viewId).classList.add('active');
             
             if(viewId === 'account') loadMyHistory();
+            if(viewId === 'notes') loadSavedPlans();
         }
 
         // Toggle Modal Function
@@ -673,6 +687,7 @@
                 const data = await res.json();
                 if(data.success) {
                     showToast('Đã lưu kế hoạch vào kho web app.', 'success');
+                    loadSavedPlans();
                     return;
                 }
             } catch(e) {}
@@ -681,6 +696,7 @@
             plans.unshift({ title: title, content: selectedWorkflowOutput, created_at: new Date().toISOString() });
             localStorage.setItem('toanaas_workflow_plans', JSON.stringify(plans.slice(0, 50)));
             showToast('API lưu trữ chưa phản hồi, đã lưu tạm trong trình duyệt.', 'warning');
+            loadSavedPlans();
         }
 
         async function copyWorkflowOutput() {
@@ -691,6 +707,97 @@
             } catch(e) {
                 showToast('Không copy tự động được. Bạn có thể bôi đen nội dung để copy.', 'warning');
             }
+        }
+
+        function localSavedPlans() {
+            try {
+                return JSON.parse(localStorage.getItem('toanaas_workflow_plans') || '[]').map((item, index) => ({
+                    id: `local-${index}`,
+                    title: item.title || 'Kế hoạch đã lưu',
+                    media_type: item.media_type || 'Workflow Plan',
+                    content: item.content || '',
+                    created_at: item.created_at || ''
+                }));
+            } catch(e) {
+                return [];
+            }
+        }
+
+        async function loadSavedPlans() {
+            const box = document.getElementById('saved-plans-list');
+            if(!box) return;
+            box.innerHTML = '<div class="text-sm text-slate-400">Đang tải dữ liệu đã lưu...</div>';
+            let items = [];
+            try {
+                const res = await fetch(`/api/v1/media-ops/assets?user_id=${encodeURIComponent(USER_ID)}`);
+                const data = await res.json();
+                if(data.success && Array.isArray(data.data)) {
+                    items = data.data.map(item => ({
+                        id: item.id,
+                        title: item.title || 'Kế hoạch đã lưu',
+                        media_type: item.media_type || 'Workflow Plan',
+                        content: item.content || '',
+                        created_at: item.created_at || ''
+                    }));
+                }
+            } catch(e) {}
+
+            const localItems = localSavedPlans();
+            if(items.length === 0 && localItems.length > 0) items = localItems;
+            savedPlansCache = items.slice(0, 30);
+
+            if(savedPlansCache.length === 0) {
+                box.innerHTML = `
+                    <div class="md:col-span-2 rounded-xl border border-dashed border-slate-200 p-5 text-sm text-slate-500 bg-slate-50">
+                        Chưa có kế hoạch nào được lưu. Hãy mở một workflow, tạo 3 gợi ý, chọn kết quả rồi bấm “Lưu kế hoạch”.
+                    </div>
+                `;
+                return;
+            }
+
+            box.innerHTML = savedPlansCache.map((item, index) => `
+                <div class="rounded-xl border border-slate-200 p-4 bg-white hover:border-blue-300 transition">
+                    <div class="flex items-start justify-between gap-3 mb-3">
+                        <div>
+                            <h4 class="font-bold text-slate-900 text-sm">${escapeHtml(item.title)}</h4>
+                            <p class="text-[11px] text-slate-400 mt-1">${escapeHtml(item.media_type)}${item.created_at ? ' · ' + escapeHtml(item.created_at) : ''}</p>
+                        </div>
+                        <span class="text-[10px] px-2 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-100">Saved</span>
+                    </div>
+                    <p class="text-xs text-slate-500 leading-relaxed mb-4">${escapeHtml(shortPreview(item.content || ''))}</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="openSavedPlan(${index})" class="p-2 rounded-lg bg-slate-900 text-white text-xs font-semibold hover:bg-slate-800">Mở lại</button>
+                        <button onclick="copySavedPlan(${index})" class="p-2 rounded-lg border border-slate-200 text-xs font-semibold hover:border-blue-300">Copy</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function copySavedPlan(index) {
+            const item = savedPlansCache[index];
+            if(!item || !item.content) return showToast('Không tìm thấy nội dung đã lưu.', 'warning');
+            try {
+                await navigator.clipboard.writeText(item.content);
+                showToast('Đã copy kế hoạch/prompt đã lưu.', 'success');
+            } catch(e) {
+                showToast('Không copy tự động được. Hãy mở lại rồi copy thủ công.', 'warning');
+            }
+        }
+
+        function openSavedPlan(index) {
+            const item = savedPlansCache[index];
+            if(!item || !item.content) return showToast('Không tìm thấy nội dung đã lưu.', 'warning');
+            activeWorkflowKey = 'prompt_library';
+            selectedWorkflowOutput = item.content;
+            document.getElementById('workflow-eyebrow').innerText = 'Đã lưu trong kho';
+            document.getElementById('workflow-title').innerText = item.title || 'Kế hoạch đã lưu';
+            document.getElementById('workflow-desc').innerText = `${item.media_type || 'Workflow Plan'}${item.created_at ? ' · ' + item.created_at : ''}`;
+            document.getElementById('workflow-input-label').innerText = 'Nội dung đã lưu';
+            document.getElementById('workflow-input').value = '';
+            document.getElementById('workflow-results').innerHTML = '';
+            document.getElementById('workflow-selected-output').textContent = selectedWorkflowOutput;
+            document.getElementById('workflow-selected-box').classList.remove('hidden');
+            document.getElementById('modal-workflow').classList.remove('hidden');
         }
 
         function shortPreview(text) {
