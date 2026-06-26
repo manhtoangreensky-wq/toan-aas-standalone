@@ -33,6 +33,7 @@ import ai_assistant
 import customer_api
 import performance
 import control_status
+import workflow_engine
 
 app = FastAPI(title="TOAN AAS Control Center")
 
@@ -68,6 +69,7 @@ app.include_router(ai_assistant.router, prefix="/api/v1/assistant", tags=["AI As
 app.include_router(customer_api.router, prefix="/api/v1/customer", tags=["Customer Web App"])
 app.include_router(performance.router, prefix="/api/v1/performance", tags=["Performance"])
 app.include_router(control_status.router, prefix="/api/v1/control", tags=["Control Center"])
+app.include_router(workflow_engine.router, prefix="/api/v1/workflows", tags=["Workflow Engine"])
 
 # Hàm hiển thị giao diện an toàn
 def get_html(file_name):

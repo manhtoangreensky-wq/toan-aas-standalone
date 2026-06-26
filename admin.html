@@ -330,9 +330,30 @@
             btn.innerHTML = '<i class="fas fa-magic mr-2"></i> Cập nhật Phân tích'; btn.disabled = false;
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            if(localStorage.getItem('role') !== 'admin') window.location.href = '/';
-            else { switchTab('dashboard'); loadManualOrders(); }
+        async function verifyAdminAccess() {
+            if(localStorage.getItem('role') !== 'admin' || !ADMIN_USER_ID) {
+                window.location.href = '/';
+                return false;
+            }
+            try {
+                const res = await fetch('/api/v1/control/status');
+                const data = await res.json();
+                if(!data.success) {
+                    localStorage.setItem('role', 'user');
+                    alert(data.message || 'Bạn không có quyền truy cập Cổng Admin.');
+                    window.location.href = '/';
+                    return false;
+                }
+                return true;
+            } catch(e) {
+                alert('Không kiểm tra được quyền admin. Vui lòng thử lại.');
+                window.location.href = '/';
+                return false;
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', async () => {
+            if(await verifyAdminAccess()) { switchTab('dashboard'); loadManualOrders(); }
         });
     </script>
 </body>

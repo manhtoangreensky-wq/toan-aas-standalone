@@ -2,6 +2,8 @@ from pydantic_settings import BaseSettings
 import os
 
 def default_db_file() -> str:
+    if os.environ.get("DB_PATH"):
+        return os.environ["DB_PATH"]
     if os.environ.get("DB_FILE"):
         return os.environ["DB_FILE"]
     if os.path.isdir("/data"):
