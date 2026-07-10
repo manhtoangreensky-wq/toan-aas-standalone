@@ -21874,7 +21874,7 @@
       "source": "/add_voice_to_video",
       "source_kind": "command",
       "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "target": "/video/add-ons"
     },
     {
       "classification": "admin",
@@ -22558,7 +22558,7 @@
       "source": "/asset_add",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/assets"
     },
     {
       "classification": "customer",
@@ -22570,7 +22570,7 @@
       "source": "/asset_send",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/assets"
     },
     {
       "classification": "customer",
@@ -22582,7 +22582,7 @@
       "source": "/assets",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/assets"
     },
     {
       "classification": "customer",
@@ -24418,7 +24418,7 @@
       "source": "/image_to_pdf",
       "source_kind": "command",
       "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "target": "/documents/pdf"
     },
     {
       "classification": "customer",
@@ -24538,7 +24538,7 @@
       "source": "/job_context",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/jobs"
     },
     {
       "classification": "customer",
@@ -24550,7 +24550,7 @@
       "source": "/job_ready",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/jobs"
     },
     {
       "classification": "customer",
@@ -24562,7 +24562,7 @@
       "source": "/job_report",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/jobs"
     },
     {
       "classification": "customer",
@@ -24574,7 +24574,7 @@
       "source": "/job_status",
       "source_kind": "command",
       "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "target": "/jobs"
     },
     {
       "classification": "customer",
@@ -25666,7 +25666,7 @@
       "source": "/ocr_image",
       "source_kind": "command",
       "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "target": "/documents/ocr"
     },
     {
       "classification": "customer",
@@ -25678,7 +25678,7 @@
       "source": "/ocr_pdf",
       "source_kind": "command",
       "status": "COPIED_GUARDED",
-      "target": "/features/documents"
+      "target": "/documents/ocr"
     },
     {
       "classification": "customer",
@@ -26266,7 +26266,7 @@
       "source": "/pdf_to_images",
       "source_kind": "command",
       "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "target": "/documents/pdf"
     },
     {
       "classification": "customer",
@@ -27429,8 +27429,8 @@
       "handler": "cmd_remove_bg_help",
       "source": "/remove_bg",
       "source_kind": "command",
-      "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/image/remove-background"
     },
     {
       "classification": "customer",
@@ -29865,8 +29865,8 @@
       "handler": "cmd_transcribe",
       "source": "/transcribe",
       "source_kind": "command",
-      "status": "MAPPED_TO_EXISTING_ROUTE",
-      "target": "/dashboard"
+      "status": "COPIED_GUARDED",
+      "target": "/asr"
     },
     {
       "classification": "customer",
@@ -30598,7 +30598,7 @@
       "source": "/video_music",
       "source_kind": "command",
       "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "target": "/video/add-ons"
     },
     {
       "classification": "customer",
@@ -31368,8 +31368,8 @@
   "implemented_coverage_percent": 93.25,
   "mapping_coverage_percent": 100.0,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 1152,
-    "MAPPED_TO_EXISTING_ROUTE": 1430,
+    "COPIED_GUARDED": 1154,
+    "MAPPED_TO_EXISTING_ROUTE": 1428,
     "TELEGRAM_ONLY": 187
   },
   "notes": [

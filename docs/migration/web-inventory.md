@@ -124,6 +124,7 @@
 | /users | GET | get_all_users |
 | /verify | POST | verify_login |
 | /video-app | GET | legacy_video_redirect |
+| /voice/profiles | GET | voice_profiles |
 | /wallet | GET | wallet |
 | /wallet-app | GET | legacy_wallet_redirect |
 | /wallet/history | GET | wallet_history |

@@ -10,7 +10,7 @@
     {
       "file": "webapp_core_bridge.py",
       "kind": "function",
-      "line": 760,
+      "line": 1286,
       "target": "_job_rows"
     },
     {
@@ -22,7 +22,7 @@
     {
       "file": "webapp_core_bridge.py",
       "kind": "function",
-      "line": 1464,
+      "line": 1989,
       "target": "admin_jobs"
     },
     {
@@ -670,25 +670,25 @@
     {
       "file": "webapp_core_bridge.py",
       "kind": "function",
-      "line": 819,
+      "line": 1345,
       "target": "job"
     },
     {
       "file": "webapp_core_bridge.py",
       "kind": "function",
-      "line": 1366,
+      "line": 1883,
       "target": "job"
     },
     {
       "file": "webapp_core_bridge.py",
       "kind": "function",
-      "line": 816,
+      "line": 1342,
       "target": "jobs"
     },
     {
       "file": "webapp_core_bridge.py",
       "kind": "function",
-      "line": 1360,
+      "line": 1877,
       "target": "jobs"
     },
     {
@@ -15904,7 +15904,7 @@
     "database_tables": 97,
     "env_references": 381,
     "providers": 15,
-    "routes": 168
+    "routes": 169
   },
   "database_references": [
     {
@@ -16143,7 +16143,7 @@
     },
     {
       "file": "webapp_core_bridge.py",
-      "line": 904,
+      "line": 1430,
       "operation": "INSERT INTO",
       "table": "feedback"
     },
@@ -18340,12 +18340,12 @@
     },
     {
       "file": "webapp_core_bridge.py",
-      "line": 1072,
+      "line": 1598,
       "name": "CORE_BRIDGE_HMAC_SECRET"
     },
     {
       "file": "webapp_core_bridge.py",
-      "line": 1071,
+      "line": 1597,
       "name": "CORE_BRIDGE_TOKEN"
     },
     {
@@ -20010,17 +20010,17 @@
     },
     {
       "file": "webapp_core_bridge.py",
-      "line": 1262,
+      "line": 1779,
       "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
     },
     {
       "file": "webapp_core_bridge.py",
-      "line": 1261,
+      "line": 1778,
       "name": "WEBAPP_LINK_CALLBACK_TOKEN"
     },
     {
       "file": "webapp_core_bridge.py",
-      "line": 1260,
+      "line": 1777,
       "name": "WEBAPP_LINK_CALLBACK_URL"
     },
     {
@@ -20586,7 +20586,7 @@
         "docs/SALES_READINESS_CHECKLIST.md",
         "docs/SALES_SCRIPT.md"
       ],
-      "occurrences": 618,
+      "occurrences": 620,
       "provider": "Telegram"
     }
   ],
@@ -20612,7 +20612,7 @@
     {
       "endpoint": "admin_freeze",
       "file": "webapp_core_bridge.py",
-      "line": 1531,
+      "line": 2056,
       "methods": [
         "POST"
       ],
@@ -20621,7 +20621,7 @@
     {
       "endpoint": "admin_jobs",
       "file": "webapp_core_bridge.py",
-      "line": 1464,
+      "line": 1989,
       "methods": [
         "GET"
       ],
@@ -20630,7 +20630,7 @@
     {
       "endpoint": "admin_refund",
       "file": "webapp_core_bridge.py",
-      "line": 1520,
+      "line": 2045,
       "methods": [
         "POST"
       ],
@@ -20639,7 +20639,7 @@
     {
       "endpoint": "admin_retry",
       "file": "webapp_core_bridge.py",
-      "line": 1509,
+      "line": 2034,
       "methods": [
         "POST"
       ],
@@ -20648,7 +20648,7 @@
     {
       "endpoint": "admin_module",
       "file": "webapp_core_bridge.py",
-      "line": 1496,
+      "line": 2021,
       "methods": [
         "GET"
       ],
@@ -20657,7 +20657,7 @@
     {
       "endpoint": "admin_payments",
       "file": "webapp_core_bridge.py",
-      "line": 1472,
+      "line": 1997,
       "methods": [
         "GET"
       ],
@@ -20666,7 +20666,7 @@
     {
       "endpoint": "admin_providers",
       "file": "webapp_core_bridge.py",
-      "line": 1480,
+      "line": 2005,
       "methods": [
         "GET"
       ],
@@ -20675,7 +20675,7 @@
     {
       "endpoint": "admin_summary",
       "file": "webapp_core_bridge.py",
-      "line": 1448,
+      "line": 1973,
       "methods": [
         "GET"
       ],
@@ -20684,7 +20684,7 @@
     {
       "endpoint": "admin_tickets",
       "file": "webapp_core_bridge.py",
-      "line": 1488,
+      "line": 2013,
       "methods": [
         "GET"
       ],
@@ -20693,7 +20693,7 @@
     {
       "endpoint": "admin_users",
       "file": "webapp_core_bridge.py",
-      "line": 1456,
+      "line": 1981,
       "methods": [
         "GET"
       ],
@@ -21800,7 +21800,7 @@
     {
       "endpoint": "assets",
       "file": "webapp_core_bridge.py",
-      "line": 1373,
+      "line": 1890,
       "methods": [
         "GET"
       ],
@@ -21809,7 +21809,7 @@
     {
       "endpoint": "asset_download",
       "file": "webapp_core_bridge.py",
-      "line": 1379,
+      "line": 1896,
       "methods": [
         "GET"
       ],
@@ -21818,7 +21818,7 @@
     {
       "endpoint": "verify_web_link",
       "file": "webapp_core_bridge.py",
-      "line": 1542,
+      "line": 2067,
       "methods": [
         "POST"
       ],
@@ -21854,7 +21854,7 @@
     {
       "endpoint": "features_status",
       "file": "webapp_core_bridge.py",
-      "line": 1417,
+      "line": 1942,
       "methods": [
         "GET"
       ],
@@ -21863,7 +21863,7 @@
     {
       "endpoint": "feature_confirm",
       "file": "webapp_core_bridge.py",
-      "line": 1441,
+      "line": 1966,
       "methods": [
         "POST"
       ],
@@ -21872,7 +21872,7 @@
     {
       "endpoint": "feature_draft",
       "file": "webapp_core_bridge.py",
-      "line": 1423,
+      "line": 1948,
       "methods": [
         "POST"
       ],
@@ -21881,7 +21881,7 @@
     {
       "endpoint": "feature_estimate",
       "file": "webapp_core_bridge.py",
-      "line": 1432,
+      "line": 1957,
       "methods": [
         "POST"
       ],
@@ -21935,7 +21935,7 @@
     {
       "endpoint": "jobs",
       "file": "webapp_core_bridge.py",
-      "line": 1360,
+      "line": 1877,
       "methods": [
         "GET"
       ],
@@ -21944,7 +21944,7 @@
     {
       "endpoint": "job",
       "file": "webapp_core_bridge.py",
-      "line": 1366,
+      "line": 1883,
       "methods": [
         "GET"
       ],
@@ -21980,7 +21980,7 @@
     {
       "endpoint": "me",
       "file": "webapp_core_bridge.py",
-      "line": 1295,
+      "line": 1812,
       "methods": [
         "GET"
       ],
@@ -21989,7 +21989,7 @@
     {
       "endpoint": "packages",
       "file": "webapp_core_bridge.py",
-      "line": 1325,
+      "line": 1842,
       "methods": [
         "GET"
       ],
@@ -21998,7 +21998,7 @@
     {
       "endpoint": "payment_create",
       "file": "webapp_core_bridge.py",
-      "line": 1333,
+      "line": 1850,
       "methods": [
         "POST"
       ],
@@ -22007,7 +22007,7 @@
     {
       "endpoint": "payment_status",
       "file": "webapp_core_bridge.py",
-      "line": 1342,
+      "line": 1859,
       "methods": [
         "GET"
       ],
@@ -22016,7 +22016,7 @@
     {
       "endpoint": "pricing",
       "file": "webapp_core_bridge.py",
-      "line": 1317,
+      "line": 1834,
       "methods": [
         "GET"
       ],
@@ -22052,7 +22052,7 @@
     {
       "endpoint": "support_tickets",
       "file": "webapp_core_bridge.py",
-      "line": 1397,
+      "line": 1922,
       "methods": [
         "GET"
       ],
@@ -22061,7 +22061,7 @@
     {
       "endpoint": "support_ticket_create",
       "file": "webapp_core_bridge.py",
-      "line": 1403,
+      "line": 1928,
       "methods": [
         "POST"
       ],
@@ -22070,16 +22070,25 @@
     {
       "endpoint": "upload_create",
       "file": "webapp_core_bridge.py",
-      "line": 1387,
+      "line": 1912,
       "methods": [
         "POST"
       ],
       "path": "/uploads"
     },
     {
+      "endpoint": "voice_profiles",
+      "file": "webapp_core_bridge.py",
+      "line": 1904,
+      "methods": [
+        "GET"
+      ],
+      "path": "/voice/profiles"
+    },
+    {
       "endpoint": "wallet",
       "file": "webapp_core_bridge.py",
-      "line": 1302,
+      "line": 1819,
       "methods": [
         "GET"
       ],
@@ -22088,7 +22097,7 @@
     {
       "endpoint": "wallet_history",
       "file": "webapp_core_bridge.py",
-      "line": 1309,
+      "line": 1826,
       "methods": [
         "GET"
       ],
@@ -22106,6 +22115,6 @@
   ],
   "schema_version": "1.0",
   "source_files_scanned": 177,
-  "source_fingerprint_sha256": "2239d61c4137b3409f8bf4d0e19728150218174032c6063909c472b2de5350c4",
+  "source_fingerprint_sha256": "c27960b012f2c34abeced4e4dbeb67426038c3f47cb385881fcda50f6445baef",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-bot-copyfast1-bridge"
 }

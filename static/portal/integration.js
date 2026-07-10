@@ -136,12 +136,20 @@
       } else if (path === "/wallet" || path === "/wallet/topup") {
         const [wallet, history] = await Promise.all([api("/wallet"), api("/wallet/history")]);
         merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [] });
-      } else if (path === "/jobs" || path.startsWith("/jobs/")) {
+      } else if (path === "/jobs") {
         const jobs = await api("/jobs");
         merge({ jobs: jobs.data && jobs.data.items ? jobs.data.items : [] });
-      } else if (path === "/assets") {
+      } else if (path.startsWith("/jobs/")) {
+        const jobId = path.slice("/jobs/".length);
+        if (!jobId) return;
+        const job = await api(`/jobs/${encodeURIComponent(jobId)}`);
+        merge({ jobDetail: job.data || {}, pageStates: { ...(base().pageStates || {}), [path]: job.status || "read_only" } });
+      } else if (path === "/assets" || ["/image/history", "/video/preview", "/video/export", "/voice/outputs", "/music/library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [] });
+      } else if (path === "/video/progress") {
+        const jobs = await api("/jobs");
+        merge({ jobs: jobs.data && jobs.data.items ? jobs.data.items : [] });
       } else if (path.startsWith("/voice")) {
         const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
         merge({
@@ -192,25 +200,29 @@
     const priorFlow = route && base().featureFlows && base().featureFlows[route];
     const priorUploads = priorFlow && priorFlow.data && Array.isArray(priorFlow.data.uploads) ? priorFlow.data.uploads : [];
     for (const [field, value] of Object.entries(values)) {
-      if (!(typeof File !== "undefined" && value instanceof File)) continue;
-      const existing = priorUploads.find((item) => item && item.id && item.file_name === value.name && Number(item.content_size || 0) === Number(value.size || 0));
-      if (existing) {
-        uploadIds.push(existing.id);
-        delete values[field];
-        continue;
+      const files = typeof File !== "undefined" && value instanceof File
+        ? [value]
+        : (Array.isArray(value) && typeof File !== "undefined" && value.every((item) => item instanceof File) ? value : []);
+      if (!files.length) continue;
+      for (const file of files) {
+        const existing = priorUploads.find((item) => item && item.id && item.file_name === file.name && Number(item.content_size || 0) === Number(file.size || 0));
+        if (existing) {
+          uploadIds.push(existing.id);
+          continue;
+        }
+        const form = new FormData();
+        form.append("file", file, file.name);
+        // The Web App validates the bytes, then passes them only to bot-owned
+        // staging. The browser never receives a local path or provider handle.
+        const uploaded = await api("/uploads", {
+          method: "POST",
+          headers: { "Idempotency-Key": randomKey("upload") },
+          body: form
+        });
+        const uploadId = uploaded && uploaded.data && uploaded.data.id;
+        if (!uploadId) throw new Error("Core Bridge chưa xác nhận tệp đính kèm.");
+        uploadIds.push(uploadId);
       }
-      const form = new FormData();
-      form.append("file", value, value.name);
-      // The Web App validates the bytes, then passes them only to bot-owned
-      // staging. The browser never receives a local path or provider handle.
-      const uploaded = await api("/uploads", {
-        method: "POST",
-        headers: { "Idempotency-Key": randomKey("upload") },
-        body: form
-      });
-      const uploadId = uploaded && uploaded.data && uploaded.data.id;
-      if (!uploadId) throw new Error("Core Bridge chưa xác nhận tệp đính kèm.");
-      uploadIds.push(uploadId);
       delete values[field];
     }
     if (uploadIds.length) values.upload_ids = uploadIds;

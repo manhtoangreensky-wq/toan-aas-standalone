@@ -87,18 +87,73 @@
       { name: "consent", label: "Quyền sử dụng mẫu giọng", type: "checkbox", help: "Tôi xác nhận mình có quyền sử dụng mẫu giọng này và không mạo danh người khác." }
     ],
     music: [
-      { name: "brief", label: "Mô tả âm thanh", control: "textarea", placeholder: "Thể loại, nhịp độ, cảm xúc, thời lượng…" },
-      { name: "usage", label: "Mục đích sử dụng", control: "select", options: ["Nội dung ngắn", "Video sản phẩm", "SFX", "Nhạc nền"] }
+      { name: "brief", label: "Brief âm nhạc", control: "textarea", placeholder: "Bối cảnh, mood, nhịp độ, công cụ, đối tượng nghe…", help: "Bot sẽ chặn yêu cầu mô phỏng nghệ sĩ/bài hát hoặc giai điệu có bản quyền." },
+      { name: "mode", label: "Loại định hướng", control: "select", options: ["background", "melody", "custom"], help: "Chỉ tạo gợi ý prompt canonical; chưa gọi provider tạo nhạc." },
+      { name: "duration_seconds", label: "Thời lượng dự kiến (giây)", type: "number", placeholder: "Ví dụ: 30", help: "Báo giá dùng helper duration/price của bot, không tính Xu tại browser." }
     ],
-    subtitle: [
-      { name: "source", label: "Tệp media nguồn", type: "file", help: "Core Bridge phải kiểm tra ownership, định dạng và kích thước trước khi nhận tệp." },
-      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Giữ nguyên", "Tiếng Việt", "English", "Theo yêu cầu"] },
-      { name: "instructions", label: "Hướng dẫn bổ sung", control: "textarea", placeholder: "Ví dụ: giữ tên thương hiệu, xuất SRT/VTT…" }
+    musicSong: [
+      { name: "brief", label: "Brief bài hát", control: "textarea", placeholder: "Thông điệp, mood, cấu trúc, CTA và lời gốc mong muốn…", help: "Không yêu cầu cover, remix hoặc bắt chước nghệ sĩ/bài hát cụ thể." },
+      { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: ["seconds", "half", "full"], help: "Chế độ half/full được bot quy đổi theo product kind canonical." },
+      { name: "duration_seconds", label: "Thời lượng khi chọn seconds", type: "number", placeholder: "Ví dụ: 30" }
     ],
-    document: [
-      { name: "document", label: "Tài liệu nguồn", type: "file", help: "Tệp không được truyền từ browser cho tới khi có URL upload ký tạm thời." },
-      { name: "operation", label: "Thao tác", control: "select", options: ["Theo tính năng hiện tại", "OCR", "Dịch", "Gộp", "Tách", "Nén"] },
-      { name: "notes", label: "Ghi chú", control: "textarea", placeholder: "Phạm vi trang, ngôn ngữ, định dạng đầu ra…" }
+    musicSfx: [
+      { name: "brief", label: "Brief SFX", control: "textarea", placeholder: "Ví dụ: tiếng mở hộp gọn, hiện đại, không có nhạc nền…", help: "Bridge chỉ lưu query/policy và báo giá canonical; không tìm kho ngoài hay giả kết quả." },
+      { name: "item_count", label: "Số hiệu ứng dự kiến", type: "number", placeholder: "Ví dụ: 2", help: "SFX library dùng bảng giá standalone của bot, khác với add-on trong video order." },
+      { name: "duration_seconds", label: "Thời lượng video tham chiếu (giây)", type: "number", placeholder: "Ví dụ: 30" }
+    ],
+    musicUpload: [
+      { name: "audio", label: "Tệp âm thanh của bạn", type: "file", help: "Tệp chỉ vào bot-owned staging sau kiểm tra MIME/chữ ký/kích thước; chưa ghép hoặc render video." },
+      { name: "duration_seconds", label: "Thời lượng tham chiếu (giây)", type: "number", placeholder: "Ví dụ: 30" },
+      { name: "notes", label: "Ghi chú dùng nhạc", control: "textarea", placeholder: "Ví dụ: chỉ dùng làm nhạc nền, cần loop…" }
+    ],
+    subtitleCreate: [
+      { name: "source", label: "Tệp audio / video nguồn", type: "file", help: "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript." },
+      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", help: "Dùng cho estimate canonical; bot áp dụng mức tối thiểu theo phút." },
+      { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt", "vtt"], help: "File chỉ xuất hiện sau canonical job, output validation và private asset delivery." }
+    ],
+    subtitleTranslate: [
+      { name: "source", label: "Nguồn SRT/VTT hoặc audio/video", type: "file", help: "Bridge nhận tệp thuộc sở hữu bạn; không tạo bản dịch giả trong browser." },
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Tiếng Việt", "English", "Theo yêu cầu"] },
+      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75" },
+      { name: "output_format", label: "Định dạng xuất", control: "select", options: ["srt", "vtt"] }
+    ],
+    dubbing: [
+      { name: "source", label: "Tệp audio / video nguồn", type: "file", help: "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý." },
+      { name: "mode", label: "Workflow", control: "select", options: ["dubbing", "subtitle_plus_dubbing"], help: "Chọn rõ lồng tiếng hoặc phụ đề + lồng tiếng; bridge dùng mode canonical của bot." },
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Tiếng Việt", "English", "Theo yêu cầu"] },
+      { name: "voice", label: "Định hướng giọng", placeholder: "Giọng mặc định hoặc Voice Vault đã kiểm tra" },
+      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"] },
+      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75" },
+      { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt", "vtt"] }
+    ],
+    documentPdf: [
+      { name: "document", label: "Tài liệu nguồn", type: "file", help: "Tệp chỉ vào bot-owned staging sau validation; Web không giữ raw path hoặc bytes lâu dài." },
+      { name: "operation", label: "Công cụ PDF", control: "select", options: ["pdf_to_word", "pdf_to_images"], help: "Chỉ nêu đúng tool local có trong bot; delivery vẫn cần canonical job/asset." },
+      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 3" }
+    ],
+    documentOcr: [
+      { name: "document", label: "Ảnh hoặc PDF nguồn", type: "file", help: "OCR không trả text cho đến khi pipeline canonical tạo output đã kiểm tra." },
+      { name: "operation", label: "Loại OCR", control: "select", options: ["ocr_image", "ocr_pdf"] },
+      { name: "page_count", label: "Số trang khi OCR PDF", type: "number", placeholder: "Ví dụ: 2" }
+    ],
+    documentMerge: [
+      { name: "documents", label: "Các PDF cần gộp", type: "file", multiple: true, help: "Chọn từ hai PDF trở lên; thứ tự staging là thứ tự gửi. Chưa chạy merge trực tiếp từ browser." },
+      { name: "page_count", label: "Tổng trang để báo giá", type: "number", placeholder: "Ví dụ: 8" }
+    ],
+    documentSplit: [
+      { name: "document", label: "PDF nguồn", type: "file" },
+      { name: "page_range", label: "Khoảng trang", placeholder: "Ví dụ: 1-3 hoặc 2", help: "Bot canonical chỉ nhận một trang hoặc một khoảng liên tiếp N-M; không dùng danh sách có dấu phẩy." },
+      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 12" }
+    ],
+    documentCompress: [
+      { name: "document", label: "PDF nguồn", type: "file" },
+      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 12" },
+      { name: "notes", label: "Ghi chú", control: "textarea", placeholder: "Yêu cầu đầu ra (không hứa mức nén chưa có trong helper bot)…" }
+    ],
+    documentTranslate: [
+      { name: "document", label: "Tài liệu nguồn", type: "file", help: "Document translation chưa có quote/delivery adapter bền vững nên sẽ hiển thị guarded đúng trạng thái." },
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Tiếng Việt", "English", "Theo yêu cầu"] },
+      { name: "notes", label: "Yêu cầu dịch", control: "textarea", placeholder: "Giữ thương hiệu, thuật ngữ, định dạng…" }
     ],
     support: [
       { name: "subject", label: "Chủ đề", placeholder: "Tóm tắt vấn đề" },
@@ -162,6 +217,26 @@
     }, aliases);
     featuredModules.push(page);
     return page;
+  }
+
+  function readOnlyPage(path, title, description, icon, view, aliases) {
+    return definePage({
+      path,
+      title,
+      description,
+      icon,
+      section: "AI Studio",
+      type: "read-only",
+      layout: "read-only",
+      action: "none",
+      status: "empty",
+      view,
+      fields: [],
+      notes: [
+        "Trang này chỉ hiển thị dữ liệu đã qua signed session, ownership và Core Bridge.",
+        "Không tạo draft rỗng, không gọi provider và không tạo output thay thế dữ liệu canonical."
+      ]
+    }, aliases);
   }
 
   function adminPage(path, title, description, icon, extra, aliases) {
@@ -261,7 +336,7 @@
   featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi bản nháp upscale; không công bố output khi chưa kiểm tra file hợp lệ.", ICONS.image, FIELD_SETS.image);
   featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.image, ["/image/image-to-image"]);
   featurePage("/image/remove-background", "Xóa nền", "Tạo bản nháp xóa nền và đợi job hợp lệ trước khi mở tài sản.", ICONS.image, FIELD_SETS.image);
-  featurePage("/image/history", "Lịch sử ảnh", "Danh sách output ảnh thuộc phiên sẽ xuất hiện sau khi bridge xác thực.", ICONS.image, [], ["/image/assets"]);
+  readOnlyPage("/image/history", "Lịch sử ảnh", "Danh sách output ảnh thuộc phiên sẽ xuất hiện sau khi bridge xác thực.", ICONS.image, "assets", ["/image/assets"]);
 
   featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.video, ["/video"]);
   featurePage("/video/long", "Video dài", "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.", ICONS.video, FIELD_SETS.video);
@@ -271,40 +346,40 @@
   featurePage("/video/trend", "Video xu hướng", "Tạo brief video theo xu hướng và đợi engine có trạng thái sẵn sàng.", ICONS.video, FIELD_SETS.video);
   featurePage("/video/quick", "Quick Video", "Khởi tạo bản nháp video nhanh; không có kết quả giả lập trong UI.", ICONS.video, FIELD_SETS.video);
   featurePage("/video/multiscene", "Video nhiều cảnh", "Chuẩn bị nhiều cảnh và các thành phần media trước bước estimate.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/progress", "Tiến độ video", "Theo dõi các job video được bridge trả về cho phiên sở hữu.", ICONS.video, []);
-  featurePage("/video/preview", "Xem trước video", "Chỉ mở preview có URL ký tạm thời và output đã qua validation.", ICONS.video, []);
-  featurePage("/video/export", "Xuất video", "Xuất file chỉ khi output hoàn tất, thuộc sở hữu người dùng và được ký tạm thời.", ICONS.video, []);
+  readOnlyPage("/video/progress", "Tiến độ video", "Theo dõi các job video được bridge trả về cho phiên sở hữu.", ICONS.video, "jobs");
+  readOnlyPage("/video/preview", "Xem trước video", "Chỉ mở preview có URL ký tạm thời và output đã qua validation.", ICONS.video, "assets");
+  readOnlyPage("/video/export", "Xuất video", "Xuất file chỉ khi output hoàn tất, thuộc sở hữu người dùng và được ký tạm thời.", ICONS.video, "assets");
   featurePage("/video/add-ons", "Video add-ons", "Chuẩn bị voice, music, subtitle và các add-on trước khi bridge tạo job.", ICONS.video, FIELD_SETS.video);
 
-  featurePage("/voice", "Voice Vault", "Danh mục giọng nói thuộc tài khoản, không hiển thị nếu bridge chưa xác minh phiên.", ICONS.voice, [], ["/voice-vault"]);
+  readOnlyPage("/voice", "Voice Vault", "Danh mục giọng nói thuộc tài khoản, không hiển thị nếu bridge chưa xác minh phiên.", ICONS.voice, "voices", ["/voice-vault"]);
   featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"]);
   featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voice, ["/voice/vault"]);
   featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
-  featurePage("/voice/preview", "Nghe thử giọng", "Preview là output riêng tư và phải dùng signed/temporary URL.", ICONS.voice, []);
-  featurePage("/voice/outputs", "Voice outputs", "Tài sản audio đã tạo sẽ xuất hiện tại đây sau delivery hợp lệ.", ICONS.voice, []);
+  readOnlyPage("/voice/preview", "Nghe thử giọng", "Preview là output riêng tư và phải dùng signed/temporary URL.", ICONS.voice, "voices");
+  readOnlyPage("/voice/outputs", "Voice outputs", "Tài sản audio đã tạo sẽ xuất hiện tại đây sau delivery hợp lệ.", ICONS.voice, "assets");
 
-  featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với trạng thái provider do bridge cung cấp.", ICONS.music, FIELD_SETS.music);
-  featurePage("/music/library", "Thư viện nhạc", "Danh sách nhạc thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, [], ["/music-library"]);
-  featurePage("/music/sfx", "Hiệu ứng âm thanh", "Chuẩn bị brief SFX; không tạo âm thanh hay charge Xu ở browser.", ICONS.music, FIELD_SETS.music);
+  featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với prompt, policy và báo giá do bot canonical kiểm soát.", ICONS.music, FIELD_SETS.music);
+  readOnlyPage("/music/library", "Thư viện nhạc", "Danh sách nhạc thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, "assets", ["/music-library"]);
+  featurePage("/music/sfx", "Hiệu ứng âm thanh", "Chuẩn bị brief SFX; không tìm kho ngoài, tạo âm thanh hay charge Xu ở browser.", ICONS.music, FIELD_SETS.musicSfx);
   featurePage("/music/create", "Tạo nhạc AI", "Tạo bản nháp nhạc AI và đợi engine/ước tính từ Core Bridge.", ICONS.music, FIELD_SETS.music, ["/music/ai"]);
-  featurePage("/music/song", "AI Song", "Chuẩn bị yêu cầu bài hát, cấu trúc và mood; job chỉ được tạo sau confirm.", ICONS.music, FIELD_SETS.music);
-  featurePage("/music/upload", "Nhạc của tôi", "Upload nhạc chỉ được bật qua URL ký tạm thời và kiểm tra MIME server-side.", ICONS.music, FIELD_SETS.music);
+  featurePage("/music/song", "AI Song", "Chuẩn bị yêu cầu bài hát, cấu trúc và mood; job chỉ được tạo sau confirm.", ICONS.music, FIELD_SETS.musicSong);
+  featurePage("/music/upload", "Nhạc của tôi", "Upload nhạc chỉ được bật qua URL ký tạm thời và kiểm tra MIME server-side.", ICONS.music, FIELD_SETS.musicUpload);
 
-  featurePage("/subtitle", "Phụ đề", "Chuẩn bị phụ đề từ media nguồn với export SRT/VTT do job engine trả về.", ICONS.subtitle, FIELD_SETS.subtitle);
-  featurePage("/subtitle/create", "Tạo phụ đề", "Tạo bản nháp phụ đề, không giả lập transcript hay file SRT/VTT.", ICONS.subtitle, FIELD_SETS.subtitle);
-  featurePage("/translate", "Dịch nội dung", "Chuẩn bị yêu cầu dịch, giữ nguyên tên thương hiệu và ngôn ngữ mục tiêu.", ICONS.subtitle, FIELD_SETS.subtitle);
-  featurePage("/dubbing", "Lồng tiếng", "Chuẩn bị dubbing với giọng/đích ngôn ngữ do Core Bridge xác minh.", ICONS.subtitle, FIELD_SETS.subtitle);
-  featurePage("/asr", "Nhận dạng giọng nói", "Bản nháp ASR chờ output hợp lệ; không tự sinh transcript trong UI.", ICONS.subtitle, FIELD_SETS.subtitle);
-  featurePage("/subtitle/formats", "SRT / VTT", "Quản lý định dạng phụ đề chỉ sau khi file output hợp lệ được bridge trả về.", ICONS.subtitle, []);
+  featurePage("/subtitle", "Phụ đề", "Chuẩn bị phụ đề từ media nguồn với export SRT/VTT do job engine trả về.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
+  featurePage("/subtitle/create", "Tạo phụ đề", "Tạo bản nháp phụ đề, không giả lập transcript hay file SRT/VTT.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
+  featurePage("/translate", "Dịch nội dung", "Chuẩn bị yêu cầu dịch, giữ nguyên tên thương hiệu và ngôn ngữ mục tiêu.", ICONS.subtitle, FIELD_SETS.subtitleTranslate);
+  featurePage("/dubbing", "Lồng tiếng", "Chuẩn bị dubbing với giọng/đích ngôn ngữ do Core Bridge xác minh.", ICONS.subtitle, FIELD_SETS.dubbing);
+  featurePage("/asr", "Nhận dạng giọng nói", "Bản nháp ASR chờ output hợp lệ; không tự sinh transcript trong UI.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
+  readOnlyPage("/subtitle/formats", "SRT / VTT", "Quản lý định dạng phụ đề chỉ sau khi file output hợp lệ được bridge trả về.", ICONS.subtitle, "assets");
   featurePage("/video/mux", "Mux audio & video", "Chuẩn bị mux và fallback; Core Bridge chịu trách nhiệm FFmpeg/output validation.", ICONS.video, FIELD_SETS.video, ["/mux"]);
 
-  featurePage("/documents", "Document Studio", "Tập hợp workflow PDF, OCR, gộp/tách/nén và dịch tài liệu.", ICONS.document, FIELD_SETS.document);
-  featurePage("/documents/pdf", "PDF tools", "Chuẩn bị thao tác PDF; Core Bridge kiểm tra file, path và ownership.", ICONS.document, FIELD_SETS.document, ["/pdf"]);
-  featurePage("/documents/ocr", "OCR", "Chuẩn bị OCR, đợi engine trả về kết quả được kiểm tra thay vì text giả.", ICONS.document, FIELD_SETS.document);
-  featurePage("/documents/merge", "Gộp tài liệu", "Gộp tài liệu qua job có kiểm tra file server-side.", ICONS.document, FIELD_SETS.document);
-  featurePage("/documents/split", "Tách tài liệu", "Tách tài liệu theo phạm vi trang sau khi bridge xác thực input.", ICONS.document, FIELD_SETS.document);
-  featurePage("/documents/compress", "Nén tài liệu", "Nén file theo job riêng; download chỉ xuất hiện khi output hợp lệ.", ICONS.document, FIELD_SETS.document);
-  featurePage("/documents/translate", "Dịch tài liệu", "Dịch tài liệu bằng workflow server-side và output riêng tư đã xác minh.", ICONS.document, FIELD_SETS.document);
+  featurePage("/documents", "Document Studio", "Tập hợp workflow PDF, OCR, gộp/tách/nén và dịch tài liệu.", ICONS.document, FIELD_SETS.documentPdf);
+  featurePage("/documents/pdf", "PDF tools", "Chuẩn bị thao tác PDF; Core Bridge kiểm tra file, path và ownership.", ICONS.document, FIELD_SETS.documentPdf, ["/pdf"]);
+  featurePage("/documents/ocr", "OCR", "Chuẩn bị OCR, đợi engine trả về kết quả được kiểm tra thay vì text giả.", ICONS.document, FIELD_SETS.documentOcr);
+  featurePage("/documents/merge", "Gộp tài liệu", "Gộp tài liệu qua job có kiểm tra file server-side.", ICONS.document, FIELD_SETS.documentMerge);
+  featurePage("/documents/split", "Tách tài liệu", "Tách tài liệu theo phạm vi trang sau khi bridge xác thực input.", ICONS.document, FIELD_SETS.documentSplit);
+  featurePage("/documents/compress", "Nén tài liệu", "Nén file theo job riêng; download chỉ xuất hiện khi output hợp lệ.", ICONS.document, FIELD_SETS.documentCompress);
+  featurePage("/documents/translate", "Dịch tài liệu", "Dịch tài liệu bằng workflow server-side và output riêng tư đã xác minh.", ICONS.document, FIELD_SETS.documentTranslate);
 
   // ERP pages. Server routes remain the actual access-control boundary.
   adminPage("/admin", "Admin Overview", "Tổng quan ERP chỉ hiển thị dữ liệu được Core Bridge cấp cho signed admin session.", ICONS.admin, { layout: "admin-overview", action: "none" }, ["/admin/"]);
@@ -369,6 +444,7 @@
       wallet: source.wallet && typeof source.wallet === "object" ? source.wallet : null,
       walletHistory: Array.isArray(source.walletHistory) ? source.walletHistory : [],
       jobs: Array.isArray(source.jobs) ? source.jobs : [],
+      jobDetail: source.jobDetail && typeof source.jobDetail === "object" ? source.jobDetail : {},
       assets: Array.isArray(source.assets) ? source.assets : [],
       tickets: Array.isArray(source.tickets) ? source.tickets : [],
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
@@ -581,7 +657,8 @@
       } else {
         const type = ["email", "password", "file", "number", "text"].includes(field.type) ? field.type : "text";
         const autocomplete = field.autocomplete ? ` autocomplete="${safeText(field.autocomplete)}"` : "";
-        control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${autocomplete}${disabled}>`;
+        const multiple = type === "file" && field.multiple ? " multiple" : "";
+        control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${autocomplete}${multiple}${disabled}>`;
       }
       return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}</label>${control}${help}</div>`;
     }).join("")}</div>`;
@@ -670,7 +747,7 @@
       return `<a class="portal-module-card" href="${module.path}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${safeText(module.icon)}</span>${badge(stateFor(module, context))}</div>
         <div><h3>${safeText(module.title)}</h3><p>${safeText(module.description)}</p></div><span class="portal-module-card-footer"><span>${label}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
     }).join("");
-    return `<section><div class="portal-section-heading"><div><h2>Module theo feature parity</h2><p>Chỉ route và trạng thái được khai báo; không mô phỏng output.</p></div><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Studio →</a></div><div class="portal-module-grid">${cards}</div></section>`;
+    return `<section><div class="portal-section-heading"><div><span class="portal-section-kicker">Tất cả công cụ</span><h2>Workspace theo feature parity</h2><p>Chỉ route và trạng thái được khai báo; không mô phỏng output.</p></div><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Prompt Studio →</a></div><div class="portal-module-grid">${cards}</div></section>`;
   }
 
   function renderEmpty(title, text, iconText) {
@@ -690,8 +767,24 @@
   }
 
   function renderDashboard(page, context) {
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${renderModuleCards(context)}
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${renderStudioLaunchpad(context)}${renderModuleCards(context)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Job và asset thuộc phiên chỉ có mặt sau khi bridge kiểm tra ownership.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderEmpty("Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả dữ liệu trạng thái tại đây.", "⌛")}</section></article>`;
+  }
+
+  function renderStudioLaunchpad(context) {
+    const studios = [
+      { route: "/image/create", icon: ICONS.image, title: "Ảnh", description: "Prompt, tham chiếu và estimate canonical.", tags: ["Prompt", "Assets"] },
+      { route: "/video/create", icon: ICONS.video, title: "Video", description: "Brief, cảnh và tiến độ từ Job Center.", tags: ["Draft", "Jobs"] },
+      { route: "/voice/tts", icon: ICONS.voice, title: "Voice", description: "TTS, Voice Vault và consent rõ ràng.", tags: ["Vault", "Estimate"] },
+      { route: "/music/create", icon: ICONS.music, title: "Music", description: "Prompt nhạc, chính sách và báo giá bot.", tags: ["Policy", "Quote"] },
+      { route: "/content/pack", icon: ICONS.prompt, title: "Content", description: "Caption, hook, script và storyboard.", tags: ["Planning", "0 Xu draft"] },
+      { route: "/documents", icon: ICONS.document, title: "Documents", description: "PDF/OCR theo contract và delivery riêng tư.", tags: ["Files", "Guarded"] }
+    ];
+    return `<section class="portal-studio-section"><div class="portal-section-heading"><div><span class="portal-section-kicker">TOAN AAS Studio</span><h2>Chọn một workflow rõ ràng</h2><p>Mỗi studio dùng cùng hợp đồng draft → estimate → confirm; browser không gọi provider, ví hay job trực tiếp.</p></div><a class="portal-button portal-button--quiet" href="/pricing">Xem pricing canonical →</a></div><div class="portal-studio-launchpad">${studios.map((studio) => {
+      const studioPage = manifest[studio.route] || { path: studio.route, access: "member", action: "none" };
+      const state = stateFor(studioPage, context);
+      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${safeText(studio.icon)}</span>${badge(state)}</div><div><h3>${safeText(studio.title)}</h3><p>${safeText(studio.description)}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div><span class="portal-studio-open">Mở studio <b aria-hidden="true">→</b></span></a>`;
+    }).join("")}</div></section>`;
   }
 
   function renderWallet(page, context) {
@@ -744,8 +837,12 @@
 
   function renderJobDetail(page, context) {
     const record = safeText(page.recordId || "—");
+    const job = context.jobDetail && typeof context.jobDetail === "object" ? context.jobDetail : null;
+    const detail = job && Object.keys(job).length
+      ? `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tính năng</span><span class="portal-summary-value">${safeText(job.feature || job.job_type || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(job.status || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Cập nhật</span><span class="portal-summary-value">${safeText(job.updated_at || job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Output</span><span class="portal-summary-value">${job.output_available ? "Đã xác minh" : "Chưa sẵn sàng"}</span></div></div>`
+      : renderEmpty("Chưa có job detail an toàn", "Bridge cần kiểm tra ownership trước khi trả request, timeline và output của job này.", "⌛");
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job ${record}</h2><p class="portal-card-subtitle">ID hiển thị không xác thực dữ liệu hoặc quyền download.</p></div>${badge(stateFor(page, context))}</div>${renderEmpty("Chưa có job detail an toàn", "Bridge cần kiểm tra ownership trước khi trả request, timeline và output của job này.", "⌛")}</section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job ${record}</h2><p class="portal-card-subtitle">ID hiển thị không xác thực dữ liệu hoặc quyền download.</p></div>${badge(job && job.status ? job.status : stateFor(page, context))}</div>${detail}</section>
       <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Delivery protection</h2><p class="portal-card-subtitle">Không có download trực tiếp từ path đoán được.</p></div></div>${renderNotes(page)}</aside></div></article>`;
   }
 
@@ -848,6 +945,25 @@
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Voice Vault canonical</h2><p class="portal-card-subtitle">Tên, trạng thái và khả năng dùng giọng được bot kiểm tra; không hiển thị provider voice ID, file ID hay preview reference.</p></div></div>${renderRowsTable(["Giọng", "Trạng thái", "TTS", "Preview"], profiles, (profile) => `<td>${safeText(profile.display_name || "Giọng chưa đặt tên")}${profile.is_default ? " · Mặc định" : ""}</td><td>${badge(profile.status || "guarded")}</td><td>${profile.tts_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td><td>${profile.preview_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td>`, "Chưa có giọng đã được bot cấp", "Voice Vault sẽ chỉ hiển thị metadata thuộc signed session hiện tại.")}</section>`;
   }
 
+  function renderReadOnly(page, context) {
+    const assets = Array.isArray(context.assets) ? context.assets : [];
+    const jobs = Array.isArray(context.jobs) ? context.jobs : [];
+    const scope = page.path.startsWith("/image") ? "image" : page.path.startsWith("/video") ? "video" : page.path.startsWith("/voice") ? "voice" : page.path.startsWith("/music") ? "music" : page.path.startsWith("/subtitle") ? "subtitle" : "";
+    const scopedAssets = scope ? assets.filter((item) => String(item.feature || item.job_type || "").toLowerCase().includes(scope)) : assets;
+    const delivery = (item) => item.download_ready
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-download" data-asset-id="${safeText(item.id || "")}">Yêu cầu URL ký</button>`
+      : "Chưa sẵn sàng";
+    let content;
+    if (page.view === "voices") {
+      content = renderVoiceVault(context);
+    } else if (page.view === "jobs") {
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job thuộc phiên</h2><p class="portal-card-subtitle">Không có polling provider trực tiếp từ browser.</p></div></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Cập nhật"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có job được xác minh", "Core Bridge sẽ chỉ trả job thuộc signed session hiện tại.")}</section>`;
+    } else {
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản thuộc phiên</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${delivery(item)}</td>`, "Chưa có tài sản được xác minh", "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.")}</section>`;
+    }
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
+  }
+
   function renderAdminOverview(page, context) {
     const counts = context.adminData && context.adminData.counts ? context.adminData.counts : {};
     const metrics = [["Users", String(counts.users || "—"), "Dữ liệu cần role check"], ["Engine jobs", String(counts.engine_jobs || "—"), "Đọc từ queue canonical"], ["Payment", String(counts.payments || "—"), "Không có ledger client"], ["Worker jobs", String(counts.worker_jobs || "—"), "Trạng thái được redaction"]];
@@ -880,6 +996,7 @@
       case "job-detail": return renderJobDetail(page, context);
       case "assets": return renderAssets(page, context);
       case "tickets": return renderTickets(page, context);
+      case "read-only": return renderReadOnly(page, context);
       case "legal": return renderLegal(page, context);
       case "admin-overview": return renderAdminOverview(page, context);
       case "admin": return renderAdmin(page, context);
@@ -907,8 +1024,8 @@
     if (form) {
       form.querySelectorAll("input, textarea, select").forEach((input) => {
         if (input.type === "file") {
-          const selected = input.files && input.files.length ? input.files[0] : null;
-          if (selected) fields[input.name] = selected;
+          const selected = input.files ? Array.from(input.files) : [];
+          if (selected.length) fields[input.name] = input.multiple ? selected : selected[0];
           return;
         }
         fields[input.name] = input.type === "checkbox" ? input.checked : input.value;

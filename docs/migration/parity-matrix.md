@@ -8,7 +8,7 @@ Safe Web surface coverage: **93.25%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUAR
 | command | /add | /admin/add | COPIED_GUARDED |
 | command | /add_music | /features/music | COPIED_GUARDED |
 | command | /add_music_status | /features/music | COPIED_GUARDED |
-| command | /add_voice_to_video | /features/video | COPIED_GUARDED |
+| command | /add_voice_to_video | /video/add-ons | COPIED_GUARDED |
 | command | /addcal | /admin/addcal | COPIED_GUARDED |
 | command | /addlink | /admin/addlink | COPIED_GUARDED |
 | command | /addon_pricing_status | /admin/addon_pricing_status | COPIED_GUARDED |
@@ -65,9 +65,9 @@ Safe Web surface coverage: **93.25%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUAR
 | command | /approve_job | /admin/approve_job | COPIED_GUARDED |
 | command | /approve_publish | /admin/approve_publish | COPIED_GUARDED |
 | command | /approve_ready | /admin/approve_ready | COPIED_GUARDED |
-| command | /asset_add | /dashboard | MAPPED_TO_EXISTING_ROUTE |
-| command | /asset_send | /dashboard | MAPPED_TO_EXISTING_ROUTE |
-| command | /assets | /dashboard | MAPPED_TO_EXISTING_ROUTE |
+| command | /asset_add | /assets | MAPPED_TO_EXISTING_ROUTE |
+| command | /asset_send | /assets | MAPPED_TO_EXISTING_ROUTE |
+| command | /assets | /assets | MAPPED_TO_EXISTING_ROUTE |
 | command | /audio_enhance | /features/music | COPIED_GUARDED |
 | command | /audio_provider_curl | /admin/audio_provider_curl | COPIED_GUARDED |
 | command | /audio_provider_status | /admin/audio_provider_status | COPIED_GUARDED |

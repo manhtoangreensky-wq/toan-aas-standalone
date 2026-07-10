@@ -8,7 +8,7 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | /add | /admin/add | COPIED_GUARDED |
 | /add_music | /features/music | COPIED_GUARDED |
 | /add_music_status | /features/music | COPIED_GUARDED |
-| /add_voice_to_video | /features/video | COPIED_GUARDED |
+| /add_voice_to_video | /video/add-ons | COPIED_GUARDED |
 | /addcal | /admin/addcal | COPIED_GUARDED |
 | /addlink | /admin/addlink | COPIED_GUARDED |
 | /addon_pricing_status | /admin/addon_pricing_status | COPIED_GUARDED |
@@ -65,9 +65,9 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | /approve_job | /admin/approve_job | COPIED_GUARDED |
 | /approve_publish | /admin/approve_publish | COPIED_GUARDED |
 | /approve_ready | /admin/approve_ready | COPIED_GUARDED |
-| /asset_add | /dashboard | MAPPED_TO_EXISTING_ROUTE |
-| /asset_send | /dashboard | MAPPED_TO_EXISTING_ROUTE |
-| /assets | /dashboard | MAPPED_TO_EXISTING_ROUTE |
+| /asset_add | /assets | MAPPED_TO_EXISTING_ROUTE |
+| /asset_send | /assets | MAPPED_TO_EXISTING_ROUTE |
+| /assets | /assets | MAPPED_TO_EXISTING_ROUTE |
 | /audio_enhance | /features/music | COPIED_GUARDED |
 | /audio_provider_curl | /admin/audio_provider_curl | COPIED_GUARDED |
 | /audio_provider_status | /admin/audio_provider_status | COPIED_GUARDED |

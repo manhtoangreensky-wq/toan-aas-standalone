@@ -10,9 +10,11 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Web App | `python -m pytest -q` | `18 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
-| Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `12 passed` |
-| Bot bridge | `python -m py_compile bot.py`, `local_worker.py`, `webapp_core_bridge.py` | passed |
-| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values, 132 Web routes; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
+| Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
+| Bot bridge | `python -m py_compile local_worker.py`, `webapp_core_bridge.py` | passed |
+| Bot baseline | `python -m py_compile bot.py` | timed out after 124s in this local runtime; process stopped, no provider/import flow was executed |
+| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values, 133 Web routes; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
+| Portal visual smoke | local dashboard at desktop and 390px mobile viewport | passed; clean Studio launchpad, mobile horizontal card rail, no browser console errors |
 
 ## Full bot-suite baseline result
 
@@ -59,6 +61,17 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   prompt helper; multiscene/long planning uses its storyboard helper. Video
   estimates require a canonical tier and scene count, then use the bot's scene
   discount calculation rather than a browser-side formula.
+- Voice Vault returns only ownership-checked profile metadata; provider voice
+  IDs, Telegram file IDs and preview references are redacted. TTS/clone quotes
+  use the bot helpers, and clone intake requires an owned audio sample plus
+  explicit consent before a future job adapter can run it.
+- Music/SFX drafts use bot copyright checks and provider-free prompt helpers;
+  standalone music/SFX quotes retain their distinct bot pricing rules. Library
+  search, Suno creation and audio render stay guarded.
+- Subtitle, translation, dubbing and document routes now validate staged input
+  and show canonical estimates/status only. They do not invoke ASR,
+  translation, FFmpeg or local document output delivery until a canonical
+  job/asset/signed-delivery adapter exists.
 - Provider/payment switches are disabled by default. A guarded route never
   fabricates a completed output or credits Xu.
 - Asset delivery verifies ownership and completed output first; until the bot

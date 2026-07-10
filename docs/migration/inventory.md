@@ -7,7 +7,7 @@
 | Callback handlers | 55 | n/a |
 | Callback-data values | 1928 | n/a |
 | Conversation handlers | 0 | n/a |
-| FastAPI routes | 168 | 132 |
+| FastAPI routes | 169 | 133 |
 | Background/job signals | 200 | 6 |
 | Database tables | 97 | 37 |
 | Environment names | 381 | 50 |

@@ -400,4 +400,4 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 | Kling | 107 | bot.py, config/pricing_matrix_draft.json, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md |
 | Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Telegram | 618 | AGENTS.md, ARCHITECTURE.md, bot.py, code hoàn chỉnh của claude.py, CODEX_NEXT_TASK.md |
+| Telegram | 620 | AGENTS.md, ARCHITECTURE.md, bot.py, code hoàn chỉnh của claude.py, CODEX_NEXT_TASK.md |
