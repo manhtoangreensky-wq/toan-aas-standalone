@@ -12,7 +12,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `6 passed` |
 | Bot bridge | `python -m py_compile bot.py`, `local_worker.py`, `webapp_core_bridge.py` | passed |
-| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 785 commands, 1,928 callback-data values; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
+| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
 
 ## Full bot-suite baseline result
 
@@ -21,7 +21,9 @@ failures are not changed by the bridge diff:
 
 1. `tests/test_core.py::test_operations_v1a_tax_prep_and_accounting_exports`
    is an existing finance/tax export expectation in the frozen local P0
-   snapshot. COPYFAST must not modify finance, PayOS, wallet, or ledger logic
+   snapshot: the export query filters compliance notes by `created_at`, while
+   the test expects a note to appear for its `effective_from`/`effective_to`
+   period. COPYFAST must not modify finance, PayOS, wallet, or ledger logic
    merely to alter this unrelated result.
 2. `tests/test_p0_4_hard_reset_audio_video_flow.py::test_payos_not_touched`
 3. `tests/test_p0_5_audio_video_addon_button_logic.py::test_no_forbidden_payment_files_touched`
