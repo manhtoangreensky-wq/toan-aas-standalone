@@ -65,7 +65,13 @@
 
   const LANGUAGE_OPTIONS = Object.freeze([
     { value: "vi", label: "Tiếng Việt" }, { value: "en", label: "English" },
-    { value: "zh", label: "中文" }, { value: "ja", label: "日本語" }, { value: "ko", label: "한국어" }
+    { value: "zh", label: "中文" }, { value: "zh_cn", label: "中文简体" }, { value: "zh_tw", label: "中文繁體" },
+    { value: "ja", label: "日本語" }, { value: "ko", label: "한국어" }, { value: "th", label: "ไทย" },
+    { value: "fr", label: "Français" }, { value: "de", label: "Deutsch" }, { value: "es", label: "Español" },
+    { value: "id", label: "Indonesia" }, { value: "ms", label: "Malay" }, { value: "pt", label: "Português" },
+    { value: "ru", label: "Русский" }, { value: "ar", label: "العربية" }, { value: "hi", label: "हिन्दी" },
+    { value: "lo", label: "ລາວ" }, { value: "km", label: "ខ្មែរ" }, { value: "my", label: "Burmese" },
+    { value: "fil", label: "Filipino" }, { value: "auto", label: "Tự nhận diện" }
   ]);
 
   const FIELD_SETS = Object.freeze({
@@ -83,8 +89,7 @@
       { name: "telegram_code", label: "Mã liên kết Telegram", placeholder: "Nhập mã dùng một lần", help: "Mã được tạo và xác minh bởi Core Bridge; không lưu trên trình duyệt." }
     ],
     prompt: [
-      { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp.", required: true, minLength: 3 },
-      { name: "language", label: "Ngôn ngữ đầu ra", control: "select", options: ["Tiếng Việt", "English", "Theo nội dung nguồn"] }
+      { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp. Các helper content/prompt P0 hiện trả bản nháp tiếng Việt; chọn ngôn ngữ chỉ xuất hiện khi bridge có contract riêng.", required: true, minLength: 3 }
     ],
     // These names intentionally mirror the pure storyboard helper exposed by
     // the frozen Bot P0 bridge.  Keep `duration` (rather than only a display
@@ -103,8 +108,7 @@
     imageCreate: [
       { name: "prompt", label: "Mô tả hình ảnh", control: "textarea", placeholder: "Chủ thể, phong cách, bối cảnh, tỷ lệ…", required: true, minLength: 3 },
       { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Giá và quota chỉ do Core Bridge phát hành. Không nhập Xu hoặc giá thủ công.", required: true },
-      { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["1:1", "4:5", "16:9", "9:16"] },
-      { name: "reference", label: "Tệp tham chiếu (tuỳ chọn)", type: "file", accept: "image/jpeg,image/png,image/webp", help: "Chỉ hiển thị khi upload an toàn và kiểm tra MIME đã được Core Bridge bật." }
+      { name: "format", label: "Ưu tiên tỷ lệ khi chạy", control: "select", options: ["1:1", "4:5", "16:9", "9:16"], help: "Bản nháp P0 hiện chỉ sinh gợi ý 1:1 và 9:16. Lựa chọn này là preference được lưu cho adapter image canonical tương lai, không phải xác nhận output." }
     ],
     imageSource: [
       { name: "instructions", label: "Yêu cầu xử lý", control: "textarea", placeholder: "Ví dụ: giữ chủ thể, nâng độ nét, xóa nền…", help: "Estimate dùng tier canonical; output vẫn chỉ xuất hiện sau delivery hợp lệ." },
@@ -1374,7 +1378,11 @@
     }
     const content = payload.content || payload;
     const heading = data.draft ? "Bản nháp canonical" : "Ước tính canonical";
-    return `<section class="portal-canonical-result"><div class="portal-card-header"><div><h3 class="portal-card-title">${heading}</h3><p class="portal-card-subtitle">Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.</p></div>${badge(flow.status || "draft")}</div>${renderCanonicalValue(content, 0)}</section>`;
+    const selectedFormat = payload.feature === "image_create" && flow && flow.input && typeof flow.input === "object" ? String(flow.input.format || "").trim() : "";
+    const preference = selectedFormat
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Ưu tiên tỷ lệ bạn chọn: ${safeText(selectedFormat)}</strong><p>Đây là preference của request. Bản nháp P0 chưa chứng minh engine đã dùng tỷ lệ này; chỉ gợi ý canonical trong draft mới được hiển thị ở bên dưới.</p></div></div>`
+      : "";
+    return `<section class="portal-canonical-result"><div class="portal-card-header"><div><h3 class="portal-card-title">${heading}</h3><p class="portal-card-subtitle">Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.</p></div>${badge(flow.status || "draft")}</div>${preference}${renderCanonicalValue(content, 0)}</section>`;
   }
 
   function renderWorkspace(page, context) {

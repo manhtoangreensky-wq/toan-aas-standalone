@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `63 passed` |
+| Web App | `python -m pytest -q` | `65 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -102,6 +102,11 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   preflight checks prevent invalid media, missing consent, non-contiguous PDF
   ranges and invalid document combinations from entering staging; the bridge
   remains the final authority.
+- Translation, dubbing and document translation now expose the complete
+  22-code P0 target-language list and enforce that same canonical allowlist in
+  the browser and Web API. Feature inputs are capped at the Bot's maximum of
+  eight staging IDs before the browser uploads excess files or a bridge call
+  is attempted.
 - The content Storyboard form now sends the exact planning inputs read by the
   Bot P0 helper (`template`, `platform`, `format`, `duration`, `style`, `goal`
   and `notes`), while Image-to-Image requires an owned staged source image
@@ -113,6 +118,11 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   drafts use provider-free helper functions imported by `bot.py`; the Web UI
   labels them as planning drafts and never presents them as delivered engine
   output. Estimates use canonical bot pricing helpers and charge no Xu.
+- The shared content/prompt form no longer exposes an inert output-language
+  selector: its current P0 helpers only return Vietnamese planning drafts.
+  Image Create no longer stages an unused reference image; aspect ratio is
+  displayed as a future-engine preference, separate from the limited canonical
+  draft suggestions returned by the current Bot helper.
 - Video product/quick/text/image-to-video planning uses the bot's contextual
   prompt helper; multiscene/long planning uses its storyboard helper. Video
   estimates require a canonical tier and scene count, then use the bot's scene

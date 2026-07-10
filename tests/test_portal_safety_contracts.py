@@ -122,6 +122,22 @@ def test_video_music_and_dubbing_forms_forward_the_bot_planning_controls() -> No
     assert "Khi chọn Theo số giây" in INTEGRATION
 
 
+def test_translation_upload_and_image_create_forms_match_the_frozen_bot_contract() -> None:
+    for code in ("zh_cn", "zh_tw", "th", "fr", "ar", "hi", "km", "fil", "auto"):
+        assert f'value: "{code}"' in PORTAL
+        assert f'"{code}"' in INTEGRATION
+    assert "CANONICAL_TARGET_LANGUAGE_CODES" in INTEGRATION
+    assert "const MAX_FEATURE_UPLOADS = 8;" in INTEGRATION
+    assert INTEGRATION.index("if (fileCount > MAX_FEATURE_UPLOADS)") < INTEGRATION.index("async function payloadFor")
+    prompt = PORTAL[PORTAL.index("prompt: ["):PORTAL.index("contentStoryboard:")]
+    assert 'name: "language"' not in prompt
+    assert "helper content/prompt P0 hiện trả bản nháp tiếng Việt" in prompt
+    image_create = PORTAL[PORTAL.index("imageCreate:"):PORTAL.index("imageSource:")]
+    assert 'name: "reference"' not in image_create
+    assert "Ưu tiên tỷ lệ khi chạy" in image_create
+    assert "Ưu tiên tỷ lệ bạn chọn" in PORTAL
+
+
 def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert 'type="submit"' in PORTAL
     assert "form.reportValidity()" in PORTAL

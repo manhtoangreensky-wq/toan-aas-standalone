@@ -141,8 +141,10 @@ async def test_feature_action_rejects_browser_bypass_of_web_intake_contract(monk
     cases = [
         ("image_transform", {"prompt": "Đổi nền thành studio"}, "upload_required"),
         ("documents_merge", {"upload_ids": ["staged-one"]}, "multiple_uploads_required"),
+        ("documents_merge", {"upload_ids": [f"staged-{index}" for index in range(9)]}, "too_many_uploads"),
         ("voice_clone", {"upload_ids": ["staged-audio"], "consent": False}, "voice_clone_consent_required"),
         ("music_song", {"brief": "Bài hát giới thiệu sản phẩm", "mode": "lyrics", "song_length_mode": "seconds"}, "song_duration_required"),
+        ("subtitle_translate", {"upload_ids": ["staged-subtitle"], "target_language": "xx"}, "target_language_invalid"),
         ("video_single", {"prompt": "Video mới", "nested": {"user_id": "browser-forged"}}, "authority_field_not_allowed"),
     ]
     for feature, values, reason in cases:
@@ -151,6 +153,29 @@ async def test_feature_action_rejects_browser_bypass_of_web_intake_contract(monk
         assert result["error_code"] == "FEATURE_INPUT_CONTRACT_REQUIRED"
         assert result["data"] == {"feature": feature, "reason": reason}
     assert calls == []
+
+
+@pytest.mark.anyio
+async def test_feature_action_forwards_all_canonical_translation_language_codes(monkeypatch):
+    calls = []
+
+    async def fake_bridge(method, path, *, account, request, payload=None, params=None):
+        calls.append({"method": method, "path": path, "payload": payload})
+        return {"ok": True, "status": "draft", "message": "ok", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(_feature_action.__globals__, "_bridge", fake_bridge)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/features/subtitle_translate/draft", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    for feature, target in (("subtitle_translate", "th"), ("video_dub", "AR"), ("documents_translate", "zh_tw")):
+        result = await _feature_action(
+            "draft",
+            feature,
+            FeatureRequest(input={"upload_ids": [f"staged-{feature}"], "target_language": target}),
+            request,
+            account,
+        )
+        assert result["ok"] is True
+    assert [item["payload"]["input"]["target_language"] for item in calls] == ["th", "ar", "zh_tw"]
 
 
 @pytest.mark.anyio

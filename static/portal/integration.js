@@ -11,6 +11,16 @@
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
   const PAYMENT_POLL_MAX_BACKOFF_MS = 60000;
+  // Mirrors Bot P0's `TRANSLATE_LANGUAGE_OPTIONS`. Keep this explicit rather
+  // than accepting arbitrary target values from the browser.
+  const CANONICAL_TARGET_LANGUAGE_CODES = new Set([
+    "vi", "en", "zh", "zh_cn", "zh_tw", "ja", "ko", "th", "fr", "de", "es",
+    "id", "ms", "pt", "ru", "ar", "hi", "lo", "km", "my", "fil", "auto"
+  ]);
+  // Bot P0 owns staging and rejects more than eight opaque upload IDs per
+  // feature request. Preflight before `payloadFor` so the browser does not
+  // upload extra files only to receive a late canonical failure.
+  const MAX_FEATURE_UPLOADS = 8;
   let jobPollTimer = 0;
   let jobPollFailures = 0;
   let paymentPollTimer = 0;
@@ -198,6 +208,7 @@
     const images = new Set([".jpg", ".jpeg", ".png", ".webp"]);
     const pdf = new Set([".pdf"]);
     const language = String(scalarField(fields, route, "target_language") || "").trim();
+    if (fileCount > MAX_FEATURE_UPLOADS) return `Mỗi workflow chỉ nhận tối đa ${MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.`;
     if (feature === "voice_clone") {
       if (!fileCount) return "Voice Clone cần một mẫu audio đã vào staging canonical.";
       if (files.length && !anyExtensionMatches(files, audio)) return "Voice Clone chỉ nhận mẫu audio MP3, WAV, M4A hoặc OGG.";
@@ -219,7 +230,7 @@
       if (!fileCount) return "Workflow phụ đề/lồng tiếng cần media đã vào staging canonical.";
       const allowed = feature === "subtitle_translate" ? new Set([...media, ...subtitleText]) : media;
       if (files.length && !anyExtensionMatches(files, allowed)) return "Tệp nguồn chưa đúng loại media/subtitle mà Core Bridge chấp nhận.";
-      if (["subtitle_translate", "video_dub"].includes(feature) && !["vi", "en", "zh", "ja", "ko"].includes(language)) return "Hãy chọn ngôn ngữ đích canonical.";
+      if (["subtitle_translate", "video_dub"].includes(feature) && !CANONICAL_TARGET_LANGUAGE_CODES.has(language)) return "Hãy chọn ngôn ngữ đích canonical từ danh sách Bot P0 hỗ trợ.";
     }
     if (["documents", "documents_pdf", "documents_ocr", "documents_merge", "documents_split", "documents_compress", "documents_translate"].includes(feature)) {
       if (!fileCount) return "Workflow tài liệu cần tệp đã vào staging canonical.";
@@ -233,7 +244,7 @@
       if (operation === "ocr_image" && files.length && !anyExtensionMatches(files, images)) return "OCR ảnh chỉ nhận JPG, PNG hoặc WebP.";
       if (operation === "merge_pdf" && fileCount < 2) return "Gộp PDF cần ít nhất hai tệp đã vào staging canonical.";
       if (operation === "split_pdf" && !/^\d+(?:-\d+)?$/.test(String(scalarField(fields, route, "page_range") || "").trim())) return "Khoảng trang phải là một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.";
-      if (operation === "translate_document" && !["vi", "en", "zh", "ja", "ko"].includes(language)) return "Hãy chọn ngôn ngữ đích canonical cho tài liệu.";
+      if (operation === "translate_document" && !CANONICAL_TARGET_LANGUAGE_CODES.has(language)) return "Hãy chọn ngôn ngữ đích canonical cho tài liệu từ danh sách Bot P0 hỗ trợ.";
     }
     if (["image_edit", "image_upscale", "image_transform", "image_remove_background"].includes(feature)) {
       if (!fileCount) return "Workflow ảnh này cần ảnh nguồn đã vào staging canonical.";

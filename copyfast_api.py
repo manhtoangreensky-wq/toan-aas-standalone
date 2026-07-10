@@ -32,6 +32,7 @@ IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
 CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
+MAX_FEATURE_UPLOADS = 8
 IDEMPOTENCY_PENDING_SECONDS = 90
 _PENDING_IDEMPOTENCY_KEY = "_web_idempotency_pending"
 _RETRYABLE_BRIDGE_CODES = frozenset({"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_RATE_LIMITED", "CORE_BRIDGE_NOT_CONFIGURED"})
@@ -72,6 +73,10 @@ FEATURE_UPLOAD_REQUIRED = frozenset({
     "documents_compress", "documents_translate",
 })
 FEATURE_TARGET_LANGUAGE_REQUIRED = frozenset({"subtitle_translate", "video_dub", "documents_translate"})
+CANONICAL_TARGET_LANGUAGE_CODES = frozenset({
+    "vi", "en", "zh", "zh_cn", "zh_tw", "ja", "ko", "th", "fr", "de", "es",
+    "id", "ms", "pt", "ru", "ar", "hi", "lo", "km", "my", "fil", "auto",
+})
 MUSIC_PROMPT_MODES = frozenset({"background", "lyrics", "script", "melody", "custom"})
 MUSIC_SONG_LENGTH_MODES = frozenset({"seconds", "half", "full"})
 
@@ -159,7 +164,7 @@ def _canonical_upload_ids(value: Any) -> list[str] | None:
     """Accept only opaque bot staging identifiers, never paths or handles."""
     if value is None:
         return []
-    if not isinstance(value, list) or len(value) > 20:
+    if not isinstance(value, list) or len(value) > MAX_FEATURE_UPLOADS:
         return None
     identifiers = [item.strip() for item in value if isinstance(item, str)]
     if len(identifiers) != len(value) or len(set(identifiers)) != len(identifiers):
@@ -197,7 +202,10 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
     """
     if _contains_feature_authority_field(values):
         return "authority_field_not_allowed"
-    upload_ids = _canonical_upload_ids(values.get("upload_ids"))
+    raw_upload_ids = values.get("upload_ids")
+    if isinstance(raw_upload_ids, list) and len(raw_upload_ids) > MAX_FEATURE_UPLOADS:
+        return "too_many_uploads"
+    upload_ids = _canonical_upload_ids(raw_upload_ids)
     if upload_ids is None:
         return "upload_ids_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
@@ -219,8 +227,16 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
             return "song_length_mode_required"
         if length_mode == "seconds" and not _whole_number_in_range(values.get("duration_seconds"), 1, 600):
             return "song_duration_required"
-    if feature in FEATURE_TARGET_LANGUAGE_REQUIRED and not str(values.get("target_language") or "").strip():
-        return "target_language_required"
+    if feature in FEATURE_TARGET_LANGUAGE_REQUIRED:
+        target_language = str(values.get("target_language") or "").strip().lower()
+        if not target_language:
+            return "target_language_required"
+        if target_language not in CANONICAL_TARGET_LANGUAGE_CODES:
+            return "target_language_invalid"
+        # Forward one canonical spelling even if a direct caller used casing
+        # different from the select control. Subtitle/dub helpers consume the
+        # raw value, unlike the document helper which normalizes it itself.
+        values["target_language"] = target_language
     if feature == "documents_split" and not CONTIGUOUS_PAGE_RANGE_PATTERN.fullmatch(str(values.get("page_range") or "").strip()):
         return "page_range_invalid"
     return ""
@@ -230,6 +246,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
     messages = {
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
         "upload_ids_invalid": "Tham chiếu tệp staging không hợp lệ. Hãy chọn lại tệp để Web gửi qua luồng canonical.",
+        "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
         "upload_required": "Workflow này cần tệp đã vào staging canonical trước khi tiếp tục.",
         "multiple_uploads_required": "Gộp PDF cần ít nhất hai tệp đã vào staging canonical.",
@@ -239,6 +256,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "song_length_mode_required": "Hãy chọn dạng bài hát canonical trước khi tạo draft hoặc estimate.",
         "song_duration_required": "Khi chọn bài hát theo số giây, hãy nhập thời lượng nguyên từ 1 đến 600 giây.",
         "target_language_required": "Hãy chọn ngôn ngữ đích trước khi tiếp tục workflow canonical.",
+        "target_language_invalid": "Ngôn ngữ đích chưa thuộc danh sách canonical Bot P0 hỗ trợ.",
         "page_range_invalid": "Khoảng trang chỉ nhận một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.",
     }
     return envelope(
