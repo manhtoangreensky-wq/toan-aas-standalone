@@ -117,6 +117,10 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         payload = options.json()
         assert payload["status"] == "read_only"
         assert payload["data"]["payos"]["request_enabled"] is False
+        assert payload["data"]["payos"]["topup_catalog_available"] is False
+        assert payload["data"]["payos"]["topup_packages"] == []
+        assert payload["data"]["payos"]["telegram_url"] == "https://t.me/ToanAasSupportBot"
+        assert payload["data"]["payos"]["command"] == "/naptien"
         assert payload["data"]["manual"] == {
             "available": True,
             "telegram_url": "https://t.me/ToanAasSupportBot",

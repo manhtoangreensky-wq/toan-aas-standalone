@@ -85,6 +85,17 @@ def _telegram_bot_chat_url() -> str:
     return f"https://t.me/{username}"
 
 
+def _payment_topup_catalog_available() -> bool:
+    """Whether the bot bridge exposes a verified Web top-up catalog.
+
+    The frozen P0 bridge only exposes service-package catalog data, which is
+    deliberately not interchangeable with the bot's PayOS top-up
+    denominations. Keep this fail-closed until a dedicated bot read adapter is
+    added and tested; an environment flag alone must not invent payment SKUs.
+    """
+    return False
+
+
 def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
     try:
         encoded = json.dumps(value, ensure_ascii=False, separators=(",", ":"))
@@ -347,6 +358,7 @@ async def payment_options(account: dict = Depends(require_account)):
     does not read a wallet ledger and does not duplicate the bot's webhook.
     """
     _linked(account)
+    topup_catalog_available = _payment_topup_catalog_available()
     payos_available = bool(_flags()["payment_enabled"] and bridge_configured())
     bot_chat_url = _telegram_bot_chat_url()
     return envelope(
@@ -359,6 +371,13 @@ async def payment_options(account: dict = Depends(require_account)):
                 # bridge. The bot remains the only authority that may return a
                 # checkout URL, so it is intentionally not called `available`.
                 "request_enabled": payos_available,
+                # The local P0 bridge has no read-only top-up denomination
+                # catalog yet. Do not present the unrelated service-package
+                # catalog as Xu top-up choices in the browser.
+                "topup_catalog_available": topup_catalog_available,
+                "topup_packages": [],
+                "telegram_url": bot_chat_url,
+                "command": "/naptien",
                 "status": "awaiting_confirm" if payos_available else "guarded",
                 "checkout_owner": "canonical_bot",
             },
@@ -380,6 +399,8 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
     payment_type = str(payload.payment_type or "").strip().lower()
     if payment_type != "topup_xu":
         return envelope(False, "Loại thanh toán này chưa có adapter canonical được phê duyệt cho Web.", status_name="guarded", error_code="PAYMENT_TYPE_NOT_ALLOWED")
+    if not _payment_topup_catalog_available():
+        return envelope(False, "Danh mục mệnh giá nạp canonical chưa được bridge cấp cho Web.", status_name="guarded", error_code="PAYMENT_TOPUP_CATALOG_REQUIRED")
     package_id = str(payload.package_id or "").strip()
     if not package_id:
         return envelope(False, "Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")

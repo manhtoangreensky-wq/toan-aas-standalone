@@ -184,6 +184,7 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
         return {"ok": True, "status": "awaiting_confirm", "message": "ok", "data": {"payment_id": "p-1"}, "error_code": None}
 
     monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
+    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_catalog_available", lambda: True)
     request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
     account = {"id": "web-account", "canonical_user_id": "telegram-1"}
     payload = PaymentRequest(package_id="pkg-basic", payment_type="topup_xu", idempotency_key="payment-reserve-0001")
@@ -196,6 +197,29 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
     cached = await create_payment(payload, request, account)
     assert cached["data"] == {"payment_id": "p-1"}
     assert len(calls) == 1
+
+
+@pytest.mark.anyio
+async def test_web_payment_creation_requires_a_dedicated_topup_catalog_before_the_bridge(monkeypatch):
+    monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "true")
+    calls = []
+
+    async def fake_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
+    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_catalog_available", lambda: False)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    result = await create_payment(
+        PaymentRequest(package_id="starter_monthly", payment_type="topup_xu", idempotency_key="payment-catalog-guard-0001"),
+        request,
+        account,
+    )
+    assert result["status"] == "guarded"
+    assert result["error_code"] == "PAYMENT_TOPUP_CATALOG_REQUIRED"
+    assert calls == []
 
 
 @pytest.mark.anyio

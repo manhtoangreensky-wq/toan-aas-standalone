@@ -41,10 +41,11 @@ def test_dashboard_hydrates_only_canonical_metadata() -> None:
     assert "Không đồng nghĩa delivery" in PORTAL
 
 
-def test_portal_uses_canonical_price_tiers_and_real_telegram_link_flow() -> None:
+def test_portal_uses_canonical_price_tiers_topup_catalog_and_real_telegram_link_flow() -> None:
     assert 'optionsFrom: "imageTiers"' in PORTAL
     assert 'optionsFrom: "videoTiers"' in PORTAL
-    assert 'optionsFrom: "packages"' in PORTAL
+    assert 'optionsFrom: "topupPackages"' in PORTAL
+    assert 'optionsFrom: "packages"' not in PORTAL
     assert '"start-telegram-link"' in PORTAL
     assert '"start-telegram-link"' in INTEGRATION
     assert 'api("/pricing")' in INTEGRATION
@@ -147,14 +148,21 @@ def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
 def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_only_the_web_api() -> None:
     assert "function renderPaymentEntryPoints(context)" in PORTAL
     assert 'manual.command === "/thucong"' in PORTAL
-    assert 'data-portal-action="copy-manual-command"' in PORTAL
+    assert 'payos.command === "/naptien"' in PORTAL
+    assert 'data-portal-action="copy-payment-command"' in PORTAL
+    assert "function renderPaymentRequestForm(page, context)" in PORTAL
+    assert "Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu." in PORTAL
+    assert "function paymentWebCatalogReady(context)" in PORTAL
+    assert "payos.topup_catalog_available === true" in PORTAL
+    assert 'optionsFrom: "topupPackages"' in PORTAL
+    assert 'field.optionsFrom === "topupPackages"' in PORTAL
     assert "Không nhập ảnh bill, số tài khoản, OTP hay thông tin thẻ vào Web App." in PORTAL
     assert "function renderPaymentLookup(context)" in PORTAL
     assert 'data-portal-action="payment-lookup"' in PORTAL
     assert "const PAYMENT_POLL_INTERVAL_MS = 10000;" in INTEGRATION
     assert "function schedulePaymentPolling" in INTEGRATION
-    assert "function copyManualTopupCommand(value)" in INTEGRATION
-    assert 'await navigator.clipboard.writeText("/thucong")' in INTEGRATION
+    assert "function copyPaymentBotCommand(value)" in INTEGRATION
+    assert '["/naptien", "/thucong"].includes(command)' in INTEGRATION
     assert 'api("/payments/options")' in INTEGRATION
     assert 'if (account && account.canonical_user_id && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
     assert "/api/v1/billing/create-payment-link" not in PORTAL

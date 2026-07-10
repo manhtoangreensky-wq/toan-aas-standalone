@@ -72,14 +72,15 @@
     return `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
   }
 
-  async function copyManualTopupCommand(value) {
-    if (String(value || "") !== "/thucong") throw new Error("Lệnh nạp thủ công không hợp lệ.");
+  async function copyPaymentBotCommand(value) {
+    const command = String(value || "");
+    if (!["/naptien", "/thucong"].includes(command)) throw new Error("Lệnh thanh toán canonical không hợp lệ.");
     if (navigator.clipboard && window.isSecureContext) {
-      await navigator.clipboard.writeText("/thucong");
+      await navigator.clipboard.writeText(command);
       return;
     }
     const field = document.createElement("textarea");
-    field.value = "/thucong";
+    field.value = command;
     field.setAttribute("readonly", "");
     field.style.position = "fixed";
     field.style.opacity = "0";
@@ -608,9 +609,10 @@
         }
         return;
       }
-      if (action === "copy-manual-command") {
-        await copyManualTopupCommand(detail.copyText);
-        toast("Đã sao chép /thucong. Hãy dán lệnh vào bot TOAN AAS đã liên kết.");
+      if (action === "copy-payment-command") {
+        const command = String(detail.copyText || "");
+        await copyPaymentBotCommand(command);
+        toast(`Đã sao chép ${command}. Hãy dán lệnh vào bot TOAN AAS đã liên kết.`);
         return;
       }
       if (action === "filter-jobs") {
