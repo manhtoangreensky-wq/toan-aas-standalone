@@ -23,6 +23,7 @@ SESSION_COOKIE = "toan_aas_session"
 SESSION_TTL_HOURS = max(1, int(os.environ.get("WEB_SESSION_TTL_HOURS", "24")))
 LINK_TTL_MINUTES = max(1, int(os.environ.get("TELEGRAM_LINK_TTL_MINUTES", "10")))
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
 BRIDGE_CALLBACK_MAX_AGE_SECONDS = 300
 BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
 
@@ -130,6 +131,21 @@ def _account_payload(row: tuple) -> dict:
         "display_name": row[2] or "",
         "canonical_user_id": row[3],
         "role": row[4] or "user",
+    }
+
+
+def browser_account_payload(account: dict) -> dict:
+    """Return the minimum account metadata the browser needs to render safely.
+
+    ``canonical_user_id`` is the Telegram identity used by server-to-server
+    bridge calls.  It is intentionally absent from every browser-facing auth
+    response; the UI only needs to know whether a link exists.
+    """
+    return {
+        "email": str(account.get("email") or ""),
+        "display_name": str(account.get("display_name") or ""),
+        "role": "admin" if account.get("role") == "admin" else "user",
+        "telegram_linked": bool(account.get("canonical_user_id")),
     }
 
 
@@ -332,7 +348,7 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         }
         _record_audit(conn, account_id=row[0], canonical_user_id=row[4], action="auth.login", request_id=_request_id(request))
     session = _create_session(response, account["id"])
-    return envelope(True, "Đăng nhập thành công", data={"account": account, **session})
+    return envelope(True, "Đăng nhập thành công", data={"account": browser_account_payload(account), **session})
 
 
 @router.post("/logout")
@@ -348,7 +364,15 @@ async def logout(request: Request, response: Response, account: dict = Depends(r
 @router.get("/me")
 async def me(request: Request, account: dict = Depends(require_account)):
     session = current_session(request)
-    return envelope(True, "Phiên hợp lệ", data={"account": account, "csrf_token": session["csrf_token"], "expires_at": session["expires_at"]})
+    return envelope(
+        True,
+        "Phiên hợp lệ",
+        data={
+            "account": browser_account_payload(account),
+            "csrf_token": session["csrf_token"],
+            "expires_at": session["expires_at"],
+        },
+    )
 
 
 @router.post("/telegram/link/start")
@@ -364,13 +388,15 @@ async def start_telegram_link(request: Request, account: dict = Depends(require_
             (code_hash, account["id"], _link_expiry(), initiating_session_id, utc_now()),
         )
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.telegram_link_start", request_id=_request_id(request))
-    bot_username = os.environ.get("BOT_USERNAME", "").lstrip("@")
-    return envelope(True, "Mở deep link Telegram hoặc gửi /linkweb kèm mã này cho bot để xác nhận liên kết.", data={"code": code, "expires_in_minutes": LINK_TTL_MINUTES, "deep_link": f"https://t.me/{bot_username}?start=web_{code}" if bot_username else ""}, status_name="awaiting_confirm")
+    bot_username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
+    deep_link = f"https://t.me/{bot_username}?start=web_{code}" if TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(bot_username) else ""
+    return envelope(True, "Mở deep link Telegram hoặc gửi /linkweb kèm mã này cho bot để xác nhận liên kết.", data={"code": code, "expires_in_minutes": LINK_TTL_MINUTES, "deep_link": deep_link}, status_name="awaiting_confirm")
 
 
 @router.get("/telegram/link/status")
 async def telegram_link_status(account: dict = Depends(require_account)):
-    return envelope(True, "Trạng thái liên kết", data={"linked": bool(account["canonical_user_id"]), "canonical_user_id": account["canonical_user_id"]}, status_name="completed" if account["canonical_user_id"] else "awaiting_confirm")
+    linked = bool(account["canonical_user_id"])
+    return envelope(True, "Trạng thái liên kết", data={"linked": linked}, status_name="completed" if linked else "awaiting_confirm")
 
 
 async def _bridge_callback_authorized(request: Request) -> bool:

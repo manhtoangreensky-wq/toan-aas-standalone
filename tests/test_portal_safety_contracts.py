@@ -15,7 +15,8 @@ INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding
 
 def test_portal_never_offers_download_for_reported_output_metadata() -> None:
     assert "Chờ delivery canonical" in PORTAL
-    assert "Engine đã báo output" in PORTAL
+    assert "Có metadata output · chưa đủ delivery" in PORTAL
+    assert "Metadata output đã bị giữ" in PORTAL
     assert "function assetDeliveryState(item)" in PORTAL
     assert "Output hợp lệ · chờ URL ký" in PORTAL
     assert "data-portal-action=\"asset-download\"" not in PORTAL
@@ -181,7 +182,8 @@ def test_initial_hydration_is_deduplicated_and_bfcache_refresh_is_explicit() -> 
 def test_login_return_path_is_internal_and_unlinked_accounts_go_to_onboarding() -> None:
     assert "function safeReturnPath(value)" in INTEGRATION
     assert 'value.startsWith("//")' in INTEGRATION
-    assert 'window.location.assign(account.canonical_user_id ? (requested || "/dashboard") : "/onboarding");' in INTEGRATION
+    assert 'window.location.assign(account.telegram_linked ? (requested || "/dashboard") : "/onboarding");' in INTEGRATION
+    assert "account.canonical_user_id" not in INTEGRATION
 
 
 def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
@@ -214,7 +216,7 @@ def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_onl
     assert "function copyPaymentBotCommand(value)" in INTEGRATION
     assert '["/naptien", "/thucong"].includes(command)' in INTEGRATION
     assert 'api("/payments/options")' in INTEGRATION
-    assert 'if (account && account.canonical_user_id && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
+    assert 'if (account && telegramLinked && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
     assert "/api/v1/billing/create-payment-link" not in PORTAL
     assert "/api/v1/billing/create-payment-link" not in INTEGRATION
 
@@ -283,6 +285,9 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert 'backup: "backups", export: "reports"' in INTEGRATION
     assert "function adminEndpointForPath(path)" in INTEGRATION
     assert "await api(adminEndpointForPath(path))" in INTEGRATION
+    assert '"/admin/jobs/failed": "/admin/modules/failed-jobs"' in INTEGRATION
+    assert '"/admin/providers": "/admin/modules/providers"' in INTEGRATION
+    assert '"Worker jobs"' in PORTAL
 
 
 def test_registration_copy_does_not_claim_unimplemented_email_verification() -> None:
@@ -298,6 +303,8 @@ def test_feature_planning_state_is_distinguished_from_provider_engine_readiness(
 def test_support_form_does_not_silently_drop_a_file_attachment() -> None:
     assert 'name: "attachment"' not in PORTAL
     assert "form hiện tại không nhận hoặc bỏ qua file" in PORTAL
+    assert "validateSupportIntake(subject, detailText)" in INTEGRATION
+    assert "Ticket không nhận API key, token" in INTEGRATION
 
 
 def test_admin_surfaces_are_explicitly_read_only_without_a_write_adapter() -> None:
@@ -310,3 +317,30 @@ def test_admin_surfaces_are_explicitly_read_only_without_a_write_adapter() -> No
     assert "admin-retry" not in INTEGRATION
     assert "admin-refund" not in INTEGRATION
     assert "admin-freeze" not in INTEGRATION
+
+
+def test_voice_output_preview_and_history_views_do_not_overclaim_unmapped_delivery() -> None:
+    assert 'guardedFeaturePage("/voice/outputs"' in PORTAL
+    assert 'path === "/voice/outputs"' in INTEGRATION
+    assert '"/voice/outputs", "/music/library"' not in INTEGRATION
+    assert "Có preview canonical · chờ adapter URL ký" in PORTAL
+    assert "consent_status" in PORTAL
+    assert "tối đa 100" in PORTAL
+
+
+def test_ticket_statuses_and_categories_match_the_bot_support_contract() -> None:
+    for status in ("waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"):
+        assert f'"{status}"' in PORTAL
+        assert f'"{status}"' in INTEGRATION
+    assert "function canonicalTicketStatus(item)" in PORTAL
+    assert "function ticketCategoryLabel(item)" in PORTAL
+    assert "web_ticket: \"Hỗ trợ Web\"" in PORTAL
+
+
+def test_telegram_deep_links_and_session_metadata_stay_browser_safe() -> None:
+    assert "function safeTelegramLink(value)" in PORTAL
+    telegram_link_slice = PORTAL[PORTAL.index("function safeTelegramLink(value)"):PORTAL.index("function renderOnboarding")]
+    assert 'url.hostname === "t.me"' in telegram_link_slice
+    assert "url.hostname.endsWith" not in telegram_link_slice
+    assert "telegram_linked" in INTEGRATION
+    assert "account.canonical_user_id" not in INTEGRATION

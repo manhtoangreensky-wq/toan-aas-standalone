@@ -76,17 +76,17 @@
 
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true },
-      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password", required: true }
+      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254 },
+      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
-      { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name" },
-      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true },
-      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 12 ký tự", autocomplete: "new-password", required: true, minLength: 12 },
-      { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password", required: true, minLength: 12 }
+      { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name", maxLength: 120 },
+      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254 },
+      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 12 ký tự", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
+      { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
     telegramLink: [
-      { name: "telegram_code", label: "Mã liên kết Telegram", placeholder: "Nhập mã dùng một lần", help: "Mã được tạo và xác minh bởi Core Bridge; không lưu trên trình duyệt." }
+      { name: "telegram_code", label: "Mã liên kết Telegram", placeholder: "Nhập mã dùng một lần", help: "Mã được Web server tạo; bot xác minh ownership qua callback đã ký. Không lưu trên trình duyệt.", maxLength: 128 }
     ],
     prompt: [
       { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp. Các helper content/prompt P0 hiện trả bản nháp tiếng Việt; chọn ngôn ngữ chỉ xuất hiện khi bridge có contract riêng.", required: true, minLength: 3 }
@@ -239,13 +239,13 @@
       { name: "notes", label: "Yêu cầu dịch", control: "textarea", placeholder: "Giữ thương hiệu, thuật ngữ, định dạng…" }
     ],
     support: [
-      { name: "subject", label: "Chủ đề", placeholder: "Tóm tắt vấn đề", required: true, minLength: 3 },
-      { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Tệp đính kèm sẽ chỉ xuất hiện khi ticket adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file.", required: true, minLength: 3 }
+      { name: "subject", label: "Chủ đề", placeholder: "Tóm tắt vấn đề", required: true, minLength: 3, maxLength: 180 },
+      { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Web server sẽ chặn secret, OTP/CVV và số thẻ trước khi ticket được gửi. Tệp đính kèm chỉ xuất hiện khi adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file.", required: true, minLength: 3, maxLength: 4000 }
     ],
     profile: [
       { name: "display_name", label: "Tên hiển thị", placeholder: "Chờ dữ liệu phiên" },
       { name: "timezone", label: "Múi giờ", control: "select", options: ["Asia/Ho_Chi_Minh", "UTC", "Theo hồ sơ"] },
-      { name: "telegram_link", label: "Liên kết Telegram", placeholder: "Mã dùng một lần do bot cấp", help: "Không dùng raw Telegram ID từ form hoặc localStorage." }
+      { name: "telegram_link", label: "Liên kết Telegram", placeholder: "Mã dùng một lần do Web server tạo", help: "Không dùng raw Telegram ID từ form hoặc localStorage." }
     ],
     adminFilter: [
       { name: "query", label: "Tìm kiếm", placeholder: "ID, email hoặc mã job…" },
@@ -374,7 +374,7 @@
   // Public account and portal routes.
   definePage({
     path: "/login", title: "Đăng nhập an toàn", icon: ICONS.account, section: "Tài khoản",
-    description: "Đăng nhập email/mật khẩu chỉ được gửi sau khi endpoint signed-session và CSRF được máy chủ bật.",
+    description: "Đăng nhập email/mật khẩu đi qua endpoint được giới hạn tốc độ; signed session được tạo bởi máy chủ sau khi xác thực.",
     access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập", fields: copyFields(FIELD_SETS.authLogin),
     notes: ["Không lưu raw Telegram ID, token hoặc mật khẩu trên browser.", "Liên kết Telegram sử dụng mã một lần, hết hạn và chống replay."]
   });
@@ -384,7 +384,7 @@
     access: "public", layout: "auth", status: "ready", action: "auth-register", actionLabel: "Tạo tài khoản", fields: copyFields(FIELD_SETS.authRegister),
     notes: ["Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; xác minh email chưa được bật trong phase này.", "Không có tài khoản, session hoặc token nào được giả lập trong shell."]
   });
-  customerPage("/onboarding", "Thiết lập tài khoản", "Hoàn thiện hồ sơ và liên kết Telegram bằng mã dùng một lần do bot cấp.", ICONS.account, {
+  customerPage("/onboarding", "Thiết lập tài khoản", "Hoàn thiện hồ sơ và liên kết Telegram bằng mã dùng một lần do Web server tạo, bot xác nhận.", ICONS.account, {
     layout: "onboarding", fields: [], action: "start-telegram-link", actionLabel: "Tạo mã liên kết", status: "guarded",
     notes: ["Mã phải là one-time, hết hạn và được Core Bridge đánh dấu đã dùng.", "Không nhận Telegram ID thô từ URL hay localStorage."]
   });
@@ -466,7 +466,10 @@
   featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voiceSaved, ["/voice/vault"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
   readOnlyPage("/voice/preview", "Nghe thử giọng", "Preview là output riêng tư và phải dùng signed/temporary URL.", ICONS.voice, "voices");
-  readOnlyPage("/voice/outputs", "Voice outputs", "Tài sản audio đã tạo sẽ xuất hiện tại đây sau delivery hợp lệ.", ICONS.voice, "assets");
+  guardedFeaturePage("/voice/outputs", "Voice outputs", "Bot P0 chưa có adapter delivery Voice-output riêng cho Web; portal giữ trạng thái guarded thay vì trộn tài sản audio chung thành output voice.", ICONS.voice, [], [
+    "Route được map để giữ parity, nhưng adapter Voice-output canonical hiện chưa được bot công bố.",
+    "Không có preview, URL hay output thay thế nào được hiển thị trước một delivery contract đã ký."
+  ]);
 
   featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với prompt, policy và báo giá do bot canonical kiểm soát.", ICONS.music, FIELD_SETS.music);
   readOnlyPage("/music/library", "Thư viện nhạc", "Danh sách nhạc thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, "assets", ["/music-library"]);
@@ -1135,8 +1138,20 @@
     ["all", "Tất cả"], ["validated", "Output đã xác minh"], ["waiting", "Chờ delivery"], ["completed", "Job hoàn tất"], ["failed", "Không có output"]
   ]);
   const TICKET_FILTERS = Object.freeze([
-    ["all", "Tất cả"], ["queued", "Mới"], ["processing", "Đang xử lý"], ["completed", "Đã xử lý"], ["failed", "Đã đóng"]
+    ["all", "Tất cả"], ["new", "Mới"], ["reviewing", "Đang kiểm tra"], ["waiting_user", "Chờ bạn bổ sung"], ["waiting_provider", "Chờ provider"], ["refund_pending", "Chờ kiểm tra hoàn Xu"], ["resolved", "Đã xử lý"], ["closed", "Đã đóng"]
   ]);
+  const TICKET_STATUS_LABELS = Object.freeze({
+    new: "Mới", reviewing: "Đang kiểm tra", waiting_user: "Chờ khách bổ sung",
+    waiting_provider: "Chờ provider", refund_pending: "Chờ kiểm tra hoàn Xu",
+    resolved: "Đã xử lý", closed: "Đã đóng"
+  });
+  const TICKET_CATEGORY_LABELS = Object.freeze({
+    web_ticket: "Hỗ trợ Web", payment_topup: "Nạp Xu/Thanh toán", image_error: "Lỗi ảnh",
+    video_error: "Lỗi video", document_pdf: "Tài liệu/PDF", package_combo: "Gói/Combo",
+    refund: "Hoàn Xu/Refund", feature_request: "Góp ý tính năng", lead_consulting: "Tư vấn dịch vụ",
+    general_support: "Hỗ trợ chung", service_consulting: "Tư vấn gói dịch vụ",
+    premium_lead: "Đăng ký Premium", custom_bot_lead: "Kết nối bot riêng", other: "Nội dung khác"
+  });
 
   function jobStatus(item) {
     const value = String(item && item.status || "guarded").toLowerCase();
@@ -1145,16 +1160,38 @@
     return aliases[value] || "guarded";
   }
 
-  function ticketStatus(item) {
-    const value = String(item && item.status || "guarded").toLowerCase();
-    if (ALLOWED_STATES.has(value)) return value;
+  function canonicalTicketStatus(item) {
+    const value = String(item && item.status || "guarded").trim().toLowerCase();
     const aliases = {
-      new: "queued", open: "queued", pending: "queued", received: "queued",
-      reviewing: "processing", reviewed: "processing", in_progress: "processing", assigned: "processing",
-      resolved: "completed", closed: "completed", answered: "completed", done: "completed",
-      rejected: "failed", cancelled: "cancelled", canceled: "cancelled", error: "failed"
+      open: "new", pending: "new", received: "new", queued: "new",
+      reviewed: "reviewing", in_progress: "reviewing", assigned: "reviewing", processing: "reviewing",
+      answered: "resolved", done: "resolved", completed: "resolved",
+      rejected: "closed", cancelled: "closed", canceled: "closed", failed: "closed", error: "closed"
     };
-    return aliases[value] || "guarded";
+    return TICKET_STATUS_LABELS[value] ? value : (aliases[value] || "unknown");
+  }
+
+  function ticketStatus(item) {
+    const visualStates = {
+      new: "queued", reviewing: "processing", waiting_user: "awaiting_confirm",
+      waiting_provider: "processing", refund_pending: "awaiting_confirm",
+      resolved: "completed", closed: "cancelled"
+    };
+    return visualStates[canonicalTicketStatus(item)] || "guarded";
+  }
+
+  function ticketStatusLabel(item) {
+    const canonical = canonicalTicketStatus(item);
+    return TICKET_STATUS_LABELS[canonical] || "Trạng thái chưa được bot công bố";
+  }
+
+  function ticketCategoryLabel(item) {
+    const category = String(item && item.category || "").trim().toLowerCase();
+    return TICKET_CATEGORY_LABELS[category] || "Hỗ trợ";
+  }
+
+  function ticketStatusCell(item) {
+    return `<span class="portal-ticket-status">${badge(ticketStatus(item))}<small>${safeText(ticketStatusLabel(item))}</small></span>`;
   }
 
   function paymentStatus(item) {
@@ -1165,9 +1202,11 @@
   }
 
   function reportedOutput(item) {
-    return item && item.output_available
-      ? `<span class="portal-delivery-state" data-delivery="reported">Engine đã báo output</span>`
-      : `<span class="portal-delivery-state" data-delivery="waiting">Chưa có metadata</span>`;
+    if (!(item && item.output_available)) return `<span class="portal-delivery-state" data-delivery="waiting">Chưa có metadata</span>`;
+    const status = jobStatus(item);
+    if (["failed", "cancelled", "refunded"].includes(status)) return `<span class="portal-delivery-state" data-delivery="unavailable">Metadata output đã bị giữ</span>`;
+    if (status === "completed") return `<span class="portal-delivery-state" data-delivery="reported">Có metadata output · chờ validation</span>`;
+    return `<span class="portal-delivery-state" data-delivery="reported">Có metadata output · chưa đủ delivery</span>`;
   }
 
   function deliveryPending() {
@@ -1180,9 +1219,10 @@
       // validated. It is deliberately not a browser download permission.
       return `<span class="portal-delivery-state" data-delivery="validated">Output hợp lệ · chờ URL ký</span>`;
     }
-    if (item && item.output_available) return `<span class="portal-delivery-state" data-delivery="reported">Engine đã báo output</span>`;
-    if (jobStatus(item) === "completed") return `<span class="portal-delivery-state" data-delivery="pending">Job hoàn tất · chưa có delivery Web</span>`;
-    if (["failed", "cancelled", "refunded"].includes(jobStatus(item))) return `<span class="portal-delivery-state" data-delivery="unavailable">Chưa có delivery</span>`;
+    const status = jobStatus(item);
+    if (["failed", "cancelled", "refunded"].includes(status)) return `<span class="portal-delivery-state" data-delivery="unavailable">Không có delivery</span>`;
+    if (item && item.output_available) return `<span class="portal-delivery-state" data-delivery="reported">Có metadata output · chưa đủ delivery</span>`;
+    if (status === "completed") return `<span class="portal-delivery-state" data-delivery="pending">Job hoàn tất · chưa có delivery Web</span>`;
     return deliveryPending();
   }
 
@@ -1230,7 +1270,7 @@
     const counts = Object.fromEntries(JOB_FILTERS.map(([status]) => [status, status === "all" ? allJobs.length : allJobs.filter((item) => jobStatus(item) === status).length]));
     const filters = filterBar(JOB_FILTERS, selected, "filter-jobs", "data-job-filter", "Lọc job", counts);
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Danh sách job</h2><p class="portal-card-subtitle">Chỉ bao gồm job thuộc signed session hiện tại. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs"${refreshEnabled ? "" : " disabled"}>Làm mới</button><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div></div>${filters}${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, selected === "all" ? "Chưa có job được xác minh" : "Không có job ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả job sau khi tạo/confirm thành công." : "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất.")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 job mới nhất thuộc signed session. Chi phí là metadata canonical; browser không tính Xu, gọi provider hoặc tạo delivery.</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs"${refreshEnabled ? "" : " disabled"}>Làm mới</button><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div></div>${filters}${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, selected === "all" ? "Chưa có job được xác minh" : "Không có job ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả job sau khi tạo/confirm thành công." : "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Delivery được tách riêng khỏi engine</strong><p>Job completed hoặc metadata output không tạo preview/download. Cần một signed delivery contract, ownership check và validation artifact trước khi Web mở file.</p></div></div></section></article>`;
   }
 
@@ -1259,17 +1299,17 @@
     const filters = filterBar(ASSET_FILTERS, selected, "filter-assets", "data-asset-filter", "Lọc tài sản", counts);
     const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản riêng tư</h2><p class="portal-card-subtitle">Output hợp lệ và URL tải là hai contract riêng: metadata chỉ mô tả trạng thái, không cấp quyền file.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${filters}${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item)}</td>`, selected === "all" ? "Chưa có tài sản có thể mở" : "Không có tài sản ở bộ lọc này", selected === "all" ? "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge." : "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery.")}</section></article>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${filters}${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item)}</td>`, selected === "all" ? "Chưa có tài sản có thể mở" : "Không có tài sản ở bộ lọc này", selected === "all" ? "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge." : "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery.")}</section></article>`;
   }
 
   function renderTickets(page, context) {
     const allTickets = Array.isArray(context.tickets) ? context.tickets : [];
     const selected = TICKET_FILTERS.some(([value]) => value === context.ticketFilter) ? context.ticketFilter : "all";
-    const tickets = selected === "all" ? allTickets : allTickets.filter((item) => ticketStatus(item) === selected);
-    const counts = Object.fromEntries(TICKET_FILTERS.map(([value]) => [value, value === "all" ? allTickets.length : allTickets.filter((item) => ticketStatus(item) === value).length]));
+    const tickets = selected === "all" ? allTickets : allTickets.filter((item) => canonicalTicketStatus(item) === selected);
+    const counts = Object.fromEntries(TICKET_FILTERS.map(([value]) => [value, value === "all" ? allTickets.length : allTickets.filter((item) => canonicalTicketStatus(item) === value).length]));
     const filters = filterBar(TICKET_FILTERS, selected, "filter-tickets", "data-ticket-filter", "Lọc ticket", counts);
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu hỗ trợ</h2><p class="portal-card-subtitle">Nội dung chỉ được nạp cho signed session sở hữu ticket; không có inbox hay attachment provider trong browser.</p></div><a class="portal-button portal-button--quiet" href="/support">Tạo ticket →</a></div>${filters}${renderRowsTable(["Mã ticket", "Loại", "Chủ đề", "Trạng thái", "Cập nhật", "Nội dung đã gửi"], tickets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.category || "support")}</td><td>${safeText(item.subject || "—")}</td><td>${badge(ticketStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td><span class="portal-ticket-preview">${shortText(item.content, 120)}</span></td>`, selected === "all" ? "Chưa có ticket được cấp" : "Không có ticket ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả ticket theo signed session." : "Đổi bộ lọc hoặc quay lại sau khi Core Bridge cập nhật trạng thái.")}</section></article>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu hỗ trợ</h2><p class="portal-card-subtitle">Nội dung chỉ được nạp cho signed session sở hữu ticket; không có inbox hay attachment provider trong browser.</p></div><a class="portal-button portal-button--quiet" href="/support">Tạo ticket →</a></div>${filters}${renderRowsTable(["Mã ticket", "Loại", "Chủ đề", "Trạng thái canonical", "Cập nhật", "Nội dung đã gửi"], tickets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(ticketCategoryLabel(item))}</td><td>${safeText(item.subject || "—")}</td><td>${ticketStatusCell(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td><span class="portal-ticket-preview">${shortText(item.content, 120)}</span></td>`, selected === "all" ? "Chưa có ticket được cấp" : "Không có ticket ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả ticket theo signed session." : "Đổi bộ lọc hoặc quay lại sau khi Core Bridge cập nhật trạng thái.")}</section></article>`;
   }
 
   function renderAccount(page, context) {
@@ -1296,7 +1336,7 @@
     if (typeof value !== "string" || !value) return "";
     try {
       const url = new URL(value);
-      return url.protocol === "https:" && (url.hostname === "t.me" || url.hostname.endsWith(".t.me")) ? url.href : "";
+      return url.protocol === "https:" && url.hostname === "t.me" && !url.port && !url.username && !url.password ? url.href : "";
     } catch (_) {
       return "";
     }
@@ -1328,7 +1368,7 @@
     const enabled = canAct(page, context);
     const reason = actionBlockReason(page, context);
     return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p>
-      <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
+      <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
       <form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
       <div class="portal-notice" style="margin-top:16px"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div>
@@ -1391,7 +1431,7 @@
     const flowOutput = flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow)}`
       : renderEmpty("Chờ phản hồi Core Bridge", "Khi flow hoàn tất, bridge cung cấp trạng thái canonical và asset được xác minh.", "○");
-    const voiceVault = page.path.startsWith("/voice") ? renderVoiceVault(context) : "";
+    const voiceVault = page.path.startsWith("/voice") && page.path !== "/voice/outputs" ? renderVoiceVault(context) : "";
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><div>${renderFormCard(page, context)}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
       ${voiceVault}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Output & trạng thái</h2><p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p></div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
@@ -1399,7 +1439,14 @@
 
   function renderVoiceVault(context) {
     const profiles = Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Voice Vault canonical</h2><p class="portal-card-subtitle">Tên, trạng thái và khả năng dùng giọng được bot kiểm tra; không hiển thị provider voice ID, file ID hay preview reference.</p></div></div>${renderRowsTable(["Giọng", "Trạng thái", "TTS", "Preview"], profiles, (profile) => `<td>${safeText(profile.display_name || "Giọng chưa đặt tên")}${profile.is_default ? " · Mặc định" : ""}</td><td>${badge(profile.status || "guarded")}</td><td>${profile.tts_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td><td>${profile.preview_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td>`, "Chưa có giọng đã được bot cấp", "Voice Vault sẽ chỉ hiển thị metadata thuộc signed session hiện tại.")}</section>`;
+    const consentLabel = (profile) => {
+      const labels = { granted: "Đã đồng ý", confirmed: "Đã xác nhận", required: "Chờ xác nhận", pending: "Chờ xác nhận", revoked: "Đã thu hồi" };
+      return labels[String(profile && profile.consent_status || "").toLowerCase()] || "Chưa được bot xác nhận";
+    };
+    const previewLabel = (profile) => profile && profile.preview_ready
+      ? "Có preview canonical · chờ adapter URL ký"
+      : "Chưa có preview canonical";
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Voice Vault canonical</h2><p class="portal-card-subtitle">Tên, consent và trạng thái dùng giọng được bot kiểm tra; Web chưa có adapter URL ký để phát preview.</p></div></div>${renderRowsTable(["Giọng", "Trạng thái", "TTS", "Preview", "Consent", "Cập nhật"], profiles, (profile) => `<td>${safeText(profile.display_name || "Giọng chưa đặt tên")}${profile.is_default ? " · Mặc định" : ""}</td><td>${badge(profile.status || "guarded")}</td><td>${profile.tts_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td><td>${safeText(previewLabel(profile))}</td><td>${safeText(consentLabel(profile))}</td><td>${safeText(profile.updated_at || profile.created_at || "—")}</td>`, "Chưa có giọng đã được bot cấp", "Voice Vault sẽ chỉ hiển thị metadata thuộc signed session hiện tại.")}</section>`;
   }
 
   function renderReadOnly(page, context) {
@@ -1411,9 +1458,9 @@
     if (page.view === "voices") {
       content = renderVoiceVault(context);
     } else if (page.view === "jobs") {
-      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job thuộc phiên</h2><p class="portal-card-subtitle">Không có polling provider trực tiếp từ browser.</p></div></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có job được xác minh", "Core Bridge sẽ chỉ trả job thuộc signed session hiện tại.")}</section>`;
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Không có polling provider trực tiếp từ browser.</p></div></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có job được xác minh", "Core Bridge sẽ chỉ trả job thuộc signed session hiện tại.")}</section>`;
     } else {
-      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản thuộc phiên</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item)}</td>`, "Chưa có tài sản được xác minh", "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.")}</section>`;
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item)}</td>`, "Chưa có tài sản được xác minh", "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.")}</section>`;
     }
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
   }
@@ -1423,7 +1470,7 @@
     const counts = data.counts || {};
     const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
     const readyCount = readiness.filter(([, item]) => item && item.public_ready).length;
-    const metrics = [["Users", String(counts.users || "—"), "Dữ liệu cần role check"], ["Engine jobs", String(counts.engine_jobs || "—"), "Đọc từ queue canonical"], ["Payment", String(counts.payments || "—"), "Không có ledger client"], ["Readiness", readiness.length ? `${readyCount}/${readiness.length}` : "—", "Feature public-ready"]];
+    const metrics = [["Users", String(counts.users || "—"), "Dữ liệu cần role check"], ["Engine jobs", String(counts.engine_jobs || "—"), "Đọc từ queue canonical"], ["Worker jobs", String(counts.worker_jobs || "—"), "Queue worker canonical"], ["Payment", String(counts.payments || "—"), "Không có ledger client"], ["Readiness", readiness.length ? `${readyCount}/${readiness.length}` : "—", "Feature public-ready"]];
     const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
     const readinessRows = readiness.slice(0, 8);
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${context.isAdmin ? "Admin session đã được server xác nhận" : "Admin ERP đang chờ signed session"}</h2><p>${context.isAdmin ? "Tất cả read/write vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị." : "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session trước khi render dữ liệu."}</p></div></div></section>

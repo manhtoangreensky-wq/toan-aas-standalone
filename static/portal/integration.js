@@ -21,6 +21,8 @@
   // feature request. Preflight before `payloadFor` so the browser does not
   // upload extra files only to receive a late canonical failure.
   const MAX_FEATURE_UPLOADS = 8;
+  const SUPPORT_SECRET_PATTERN = /\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|client[ _-]?secret|secret(?:[ _-]?key)?|password|passphrase|authorization)\b\s*(?:[:=]|\bis\b)\s*(?:bearer\s+)?[A-Za-z0-9_./+=:-]{8,}|\bbearer\s+[A-Za-z0-9._~+/=-]{12,}|\b(?:sk|pk|rk)_[A-Za-z0-9_-]{16,}|\b(?:otp|mã\s*xác\s*thực|ma\s*xac\s*thuc|cvv|cvc)\s*[:=]?\s*\d{3,8}\b/i;
+  const SUPPORT_CARD_CANDIDATE_PATTERN = /\b(?:\d[ -]?){13,19}\b/g;
   let jobPollTimer = 0;
   let jobPollFailures = 0;
   let paymentPollTimer = 0;
@@ -39,8 +41,8 @@
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
     "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
-    "/admin/jobs/failed": "/admin/jobs", "/admin/payments": "/admin/payments",
-    "/admin/providers": "/admin/providers", "/admin/tickets": "/admin/tickets"
+    "/admin/jobs/failed": "/admin/modules/failed-jobs", "/admin/payments": "/admin/payments",
+    "/admin/providers": "/admin/modules/providers", "/admin/tickets": "/admin/tickets"
   });
   // The frozen bot exposes these two read-only adapters under plural/report
   // module names.  This preserves the friendly Web routes without inventing
@@ -70,6 +72,27 @@
   function safeReturnPath(value) {
     if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "";
     return value;
+  }
+
+  function looksLikePaymentCard(candidate) {
+    const digits = String(candidate || "").replace(/\D/g, "");
+    if (digits.length < 13 || digits.length > 19 || new Set(digits).size === 1) return false;
+    let total = 0;
+    for (let index = 0; index < digits.length; index += 1) {
+      let value = Number(digits[digits.length - 1 - index]);
+      if (index % 2 === 1) value = value > 4 ? (value * 2) - 9 : value * 2;
+      total += value;
+    }
+    return total % 10 === 0;
+  }
+
+  function validateSupportIntake(subject, detail) {
+    const text = `${String(subject || "")}\n${String(detail || "")}`;
+    const candidates = text.match(SUPPORT_CARD_CANDIDATE_PATTERN) || [];
+    if (SUPPORT_SECRET_PATTERN.test(text) || candidates.some((item) => looksLikePaymentCard(item))) {
+      return "Ticket không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ. Hãy xóa dữ liệu nhạy cảm trước khi gửi.";
+    }
+    return "";
   }
 
   function adminEndpointForPath(path) {
@@ -399,7 +422,8 @@
     const me = meResponse && meResponse.data ? meResponse.data : {};
     const account = me.account || null;
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
-    const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && account && account.canonical_user_id);
+    const telegramLinked = Boolean(account && account.telegram_linked);
+    const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
     const capabilities = {
       "auth-login": true,
       "auth-register": true,
@@ -424,7 +448,7 @@
       catalog,
       isAdmin: Boolean(account && account.role === "admin"),
       profile: account ? { displayName: account.display_name || account.email, email: account.email } : {},
-      linkStatus: { linked: Boolean(account && account.canonical_user_id) },
+      linkStatus: { linked: telegramLinked },
       session: {
         authenticated: Boolean(account), csrfReady: Boolean(me.csrf_token), csrfToken: me.csrf_token || "",
         displayName: account ? (account.display_name || account.email) : "", email: account ? account.email : ""
@@ -442,7 +466,7 @@
     // Manual top-up remains in the linked Telegram bot and does not require a
     // provider call from the Web App, so expose its safe entry point even when
     // a private bridge data read is temporarily unavailable.
-    if (account && account.canonical_user_id && currentPath === "/wallet/topup") await hydratePaymentOptions();
+    if (account && telegramLinked && currentPath === "/wallet/topup") await hydratePaymentOptions();
     if (bridgeAvailable) await hydrateCanonicalData();
   }
 
@@ -500,7 +524,13 @@
         const record = job.data || {};
         merge({ jobDetail: record, pageStates: { ...(base().pageStates || {}), [path]: job.status || "read_only" } });
         scheduleJobPolling(path, record);
-      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/voice/outputs", "/music/library", "/music-library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/voice/outputs") {
+        const readiness = await api("/features/status");
+        merge({
+          readiness: readiness.data || {},
+          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}) }
+        });
+      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/video/progress") {
@@ -602,7 +632,7 @@
         await hydrate();
         const account = result.data && result.data.account ? result.data.account : {};
         const requested = safeReturnPath(new URLSearchParams(window.location.search).get("next") || "");
-        window.location.assign(account.canonical_user_id ? (requested || "/dashboard") : "/onboarding");
+        window.location.assign(account.telegram_linked ? (requested || "/dashboard") : "/onboarding");
         return;
       }
       if (action === "auth-logout") {
@@ -645,7 +675,7 @@
         return;
       }
       if (action === "filter-tickets") {
-        const filter = ["all", "queued", "processing", "completed", "failed"].includes(detail.ticketFilter) ? detail.ticketFilter : "all";
+        const filter = ["all", "new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"].includes(detail.ticketFilter) ? detail.ticketFilter : "all";
         merge({ ticketFilter: filter });
         return;
       }
@@ -717,6 +747,8 @@
       if (action === "create-ticket") {
         const subject = String(fields.subject || "");
         const detailText = String(fields.detail || "");
+        const safetyError = validateSupportIntake(subject, detailText);
+        if (safetyError) throw new Error(safetyError);
         const submission = acquireSubmission("ticket", `${subject}\n${detailText}`);
         if (!submission) {
           toast("Ticket đang được gửi. Vui lòng chờ phản hồi canonical.", "error");

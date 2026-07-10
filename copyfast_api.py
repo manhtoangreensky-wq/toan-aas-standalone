@@ -32,6 +32,19 @@ IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
 CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
 CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
+TICKET_SECRET_ASSIGNMENT_PATTERN = re.compile(
+    r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
+    r"client[ _-]?secret|secret(?:[ _-]?key)?|password|passphrase|authorization)"
+    r"\b\s*(?:[:=]|\bis\b)\s*(?:bearer\s+)?[A-Za-z0-9_./+=:-]{8,}",
+    re.IGNORECASE,
+)
+TICKET_BEARER_PATTERN = re.compile(r"\bbearer\s+[A-Za-z0-9._~+/=-]{12,}\b", re.IGNORECASE)
+TICKET_KEY_PATTERN = re.compile(r"\b(?:sk|pk|rk)_[A-Za-z0-9_-]{16,}\b", re.IGNORECASE)
+TICKET_VERIFICATION_PATTERN = re.compile(
+    r"\b(?:otp|mã\s*xác\s*thực|ma\s*xac\s*thuc|cvv|cvc)\s*[:=]?\s*\d{3,8}\b",
+    re.IGNORECASE,
+)
+TICKET_CARD_CANDIDATE_PATTERN = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")
 MAX_FEATURE_UPLOADS = 8
 IDEMPOTENCY_PENDING_SECONDS = 90
 _PENDING_IDEMPOTENCY_KEY = "_web_idempotency_pending"
@@ -79,6 +92,12 @@ CANONICAL_TARGET_LANGUAGE_CODES = frozenset({
 })
 MUSIC_PROMPT_MODES = frozenset({"background", "lyrics", "script", "melody", "custom"})
 MUSIC_SONG_LENGTH_MODES = frozenset({"seconds", "half", "full"})
+# The canonical Telegram identity is an internal bridge routing key, not
+# browser-facing profile metadata.  Redact it consistently from every bridge
+# response, including nested wallet and admin structures.
+BROWSER_IDENTITY_KEY_NORMALIZED = frozenset({
+    "userid", "canonicaluserid", "telegramid", "chatid", "username", "telegramusername",
+})
 
 
 def _request_id(request: Request) -> str:
@@ -140,6 +159,76 @@ def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
     if len(encoded.encode("utf-8")) > 64_000:
         raise HTTPException(status_code=413, detail="Dữ liệu đầu vào quá lớn")
     return value
+
+
+def _redact_browser_identity(value: Any) -> Any:
+    """Remove raw canonical/Telegram identity fields at the Web boundary.
+
+    The signed session retains ``canonical_user_id`` on the server for bridge
+    authorization.  Responses must instead use opaque IDs and display-safe
+    labels supplied by canonical adapters.
+    """
+    if isinstance(value, dict):
+        safe: dict[str, Any] = {}
+        for key, item in value.items():
+            normalized = "".join(character for character in str(key).lower() if character.isalnum())
+            if normalized in BROWSER_IDENTITY_KEY_NORMALIZED:
+                continue
+            safe[str(key)] = _redact_browser_identity(item)
+        return safe
+    if isinstance(value, list):
+        return [_redact_browser_identity(item) for item in value]
+    if isinstance(value, tuple):
+        return [_redact_browser_identity(item) for item in value]
+    return value
+
+
+def _browser_safe_bridge_response(response: dict) -> dict:
+    result = dict(response)
+    if "data" in result:
+        result["data"] = _redact_browser_identity(result.get("data"))
+    return result
+
+
+def _looks_like_payment_card(candidate: str) -> bool:
+    digits = "".join(character for character in candidate if character.isdigit())
+    if not 13 <= len(digits) <= 19 or len(set(digits)) == 1:
+        return False
+    total = 0
+    for index, character in enumerate(reversed(digits)):
+        number = int(character)
+        if index % 2:
+            number *= 2
+            if number > 9:
+                number -= 9
+        total += number
+    return total % 10 == 0
+
+
+def _ticket_contains_sensitive_data(subject: str, detail: str) -> bool:
+    """Fail closed before a support ticket can persist a credential or card.
+
+    This is intentionally conservative: it catches explicit credential
+    assignments, bearer/JWT-style keys, OTP/CVV disclosures and Luhn-valid
+    card numbers without treating an ordinary support sentence as a secret.
+    """
+    text = f"{subject}\n{detail}"
+    if any(pattern.search(text) for pattern in (
+        TICKET_SECRET_ASSIGNMENT_PATTERN,
+        TICKET_BEARER_PATTERN,
+        TICKET_KEY_PATTERN,
+        TICKET_VERIFICATION_PATTERN,
+    )):
+        return True
+    return any(_looks_like_payment_card(match.group(0)) for match in TICKET_CARD_CANDIDATE_PATTERN.finditer(text))
+
+
+def _assert_safe_ticket_content(subject: str, detail: str) -> None:
+    if _ticket_contains_sensitive_data(subject, detail):
+        raise HTTPException(
+            status_code=422,
+            detail="Ticket không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ. Hãy xóa dữ liệu nhạy cảm trước khi gửi.",
+        )
 
 
 def _contains_feature_authority_field(value: Any) -> bool:
@@ -474,7 +563,15 @@ async def _bridge(method: str, path: str, *, account: dict, request: Request, pa
         # signed Web session.
         query = dict(params or {})
         query["user_id"] = user_id
-    return await bridge_request(method, path, payload=enriched if method.upper() != "GET" else None, params=query, request_id=_request_id(request), actor_id=user_id)
+    response = await bridge_request(
+        method,
+        path,
+        payload=enriched if method.upper() != "GET" else None,
+        params=query,
+        request_id=_request_id(request),
+        actor_id=user_id,
+    )
+    return _browser_safe_bridge_response(response)
 
 
 @router.get("/catalog")
@@ -489,7 +586,14 @@ async def core_status():
 
 @router.get("/core/me")
 async def core_me(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/me", account=account, request=request)
+    _linked(account)
+    return envelope(
+        False,
+        "Danh tính Telegram canonical chỉ được dùng trong server để xác thực Core Bridge.",
+        data={"telegram_linked": True},
+        status_name="guarded",
+        error_code="BROWSER_IDENTITY_NOT_EXPOSED",
+    )
 
 
 @router.get("/wallet")
@@ -660,6 +764,7 @@ async def support_tickets(request: Request, account: dict = Depends(require_acco
 
 @router.post("/support/tickets")
 async def create_support_ticket(payload: TicketRequest, request: Request, account: dict = Depends(require_csrf)):
+    _assert_safe_ticket_content(payload.subject, payload.detail)
     key = _require_key(payload.idempotency_key)
     scope = f"ticket:{account['id']}"
     return await _run_idempotent(

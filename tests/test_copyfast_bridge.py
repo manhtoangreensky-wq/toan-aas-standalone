@@ -98,6 +98,32 @@ async def test_bridge_redacts_nested_runtime_details_before_the_browser_boundary
 
 
 @pytest.mark.anyio
+async def test_web_bridge_redacts_canonical_identity_from_nested_browser_data(monkeypatch):
+    async def fake_bridge_request(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "ok",
+            "data": {
+                "user": {"user_id": "telegram-1", "username": "private-name", "is_vip": True},
+                "items": [{"id": "job-1", "canonical_user_id": "telegram-1", "chat_id": "123"}],
+                "wallet": {"balance": 42, "telegram_username": "private-name"},
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(_bridge.__globals__, "bridge_request", fake_bridge_request)
+    request = Request({"type": "http", "method": "GET", "path": "/api/v1/wallet", "headers": []})
+    result = await _bridge(
+        "GET",
+        "/internal/v1/wallet",
+        account={"id": "web-account", "canonical_user_id": "telegram-1"},
+        request=request,
+    )
+    assert result["data"] == {"user": {"is_vip": True}, "items": [{"id": "job-1"}], "wallet": {"balance": 42}}
+
+
+@pytest.mark.anyio
 async def test_feature_action_preserves_form_input_inside_the_core_contract(monkeypatch):
     captured = {}
 

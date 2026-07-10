@@ -79,7 +79,17 @@ def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
         csrf = register_and_link(client)
         me = client.get("/api/v1/auth/me")
         assert me.status_code == 200
-        assert me.json()["data"]["account"]["canonical_user_id"] == "telegram-123"
+        browser_account = me.json()["data"]["account"]
+        assert browser_account["telegram_linked"] is True
+        assert "canonical_user_id" not in browser_account
+        assert "telegram-123" not in me.text
+        link_status = client.get("/api/v1/auth/telegram/link/status")
+        assert link_status.json()["data"] == {"linked": True}
+        assert "telegram-123" not in link_status.text
+        core_me = client.get("/api/v1/core/me")
+        assert core_me.status_code == 200
+        assert core_me.json()["error_code"] == "BROWSER_IDENTITY_NOT_EXPOSED"
+        assert "telegram-123" not in core_me.text
         invalid = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": "wrong"})
         assert invalid.status_code == 403
         guarded = client.get("/api/v1/wallet")
@@ -92,6 +102,38 @@ def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
         )
         assert confirmed.status_code == 200
         assert confirmed.json()["error_code"] == "WEBAPP_PROVIDER_CALLS_DISABLED"
+
+
+def test_support_ticket_refuses_sensitive_data_before_it_can_reach_the_bridge(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        rejected = client.post(
+            "/api/v1/support/tickets",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "subject": "Không thể gọi provider",
+                "detail": "api_key=sk_1234567890abcdefghi",
+                "idempotency_key": "ticket-secret-guard-0001",
+            },
+        )
+        assert rejected.status_code == 422
+        assert rejected.json()["error_code"] == "REQUEST_INVALID"
+        assert "dữ liệu nhạy cảm" in rejected.json()["message"]
+
+
+def test_login_response_uses_link_boolean_not_raw_telegram_identity(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": "user@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert login.status_code == 200
+        account = login.json()["data"]["account"]
+        assert account["telegram_linked"] is True
+        assert "canonical_user_id" not in account
+        assert "telegram-123" not in login.text
 
 
 def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_bank_data(tmp_path, monkeypatch):
@@ -135,6 +177,9 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         invalid_name = client.get("/api/v1/payments/options").json()["data"]["manual"]
         assert invalid_name["available"] is False
         assert invalid_name["telegram_url"] == ""
+        invalid_deep_link = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
+        assert invalid_deep_link.status_code == 200
+        assert invalid_deep_link.json()["data"]["deep_link"] == ""
 
 
 def test_legacy_billing_router_is_not_mounted_as_a_second_payos_or_wallet_writer(tmp_path, monkeypatch):
