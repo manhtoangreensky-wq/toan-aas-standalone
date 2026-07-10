@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `51 passed` |
+| Web App | `python -m pytest -q` | `53 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -128,3 +128,12 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   portal now labels it separately from delivery and never renders a download,
   preview, provider URL or operator endpoint until a canonical temporary
   signed-delivery contract exists.
+- Job Center surfaces only redacted canonical estimates, ledger amounts,
+  refund/error categories and status explanations. Asset metadata can state
+  that output validation occurred while still requiring a signed delivery URL;
+  it never turns `download_ready` metadata into a client-side download.
+- Ticket filters and customer-visible ticket excerpts operate only on the
+  ownership-scoped response; the Admin table continues to omit ticket body,
+  username, attachment IDs and provider details. Admin backup/export routes
+  resolve to the existing read-only canonical adapters rather than inventing
+  an export or backup write action.

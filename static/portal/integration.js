@@ -23,6 +23,15 @@
     "/music": "music_background", "/music/library": "music_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
     "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/translate": "documents_translate"
   };
+  const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
+    "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
+    "/admin/jobs/failed": "/admin/jobs", "/admin/payments": "/admin/payments",
+    "/admin/providers": "/admin/providers", "/admin/tickets": "/admin/tickets"
+  });
+  // The frozen bot exposes these two read-only adapters under plural/report
+  // module names.  This preserves the friendly Web routes without inventing
+  // an exporter, backup action or extra Bot endpoint.
+  const ADMIN_MODULE_ALIASES = Object.freeze({ backup: "backups", export: "reports" });
 
   function base() {
     return window.__TOAN_AAS_PORTAL__ && typeof window.__TOAN_AAS_PORTAL__ === "object" ? window.__TOAN_AAS_PORTAL__ : {};
@@ -47,6 +56,16 @@
   function safeReturnPath(value) {
     if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "";
     return value;
+  }
+
+  function adminEndpointForPath(path) {
+    const normalized = String(path || "/admin").split("?")[0];
+    if (ADMIN_DIRECT_ENDPOINTS[normalized]) return ADMIN_DIRECT_ENDPOINTS[normalized];
+    const pieces = normalized.split("/").filter(Boolean);
+    const requestedModule = pieces[1] || "overview";
+    const module = ADMIN_MODULE_ALIASES[requestedModule] || requestedModule;
+    const recordId = pieces.length > 2 ? pieces.slice(2).join("/") : "";
+    return `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
   }
 
   function acquireSubmission(scope, fingerprint) {
@@ -402,23 +421,7 @@
         const tickets = await api("/support/tickets");
         merge({ tickets: tickets.data && tickets.data.items ? tickets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path.startsWith("/admin")) {
-        const endpoints = {
-          "/admin": "/admin/summary",
-          "/admin/users": "/admin/users",
-          "/admin/jobs": "/admin/jobs",
-          "/admin/jobs/failed": "/admin/jobs",
-          "/admin/payments": "/admin/payments",
-          "/admin/providers": "/admin/providers",
-          "/admin/tickets": "/admin/tickets"
-        };
-        let endpoint = endpoints[path];
-        if (!endpoint) {
-          const pieces = path.split("/").filter(Boolean);
-          const module = pieces[1] || "overview";
-          const recordId = pieces.length > 2 ? pieces.slice(2).join("/") : "";
-          endpoint = `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
-        }
-        const admin = await api(endpoint);
+        const admin = await api(adminEndpointForPath(path));
         merge({
           adminData: admin.data || {},
           pageStates: { ...(base().pageStates || {}), [path]: admin.status === "completed" ? "read_only" : (admin.status || "read_only") }
@@ -525,6 +528,16 @@
         merge({ jobFilter: filter });
         return;
       }
+      if (action === "filter-assets") {
+        const filter = ["all", "validated", "waiting", "completed", "failed"].includes(detail.assetFilter) ? detail.assetFilter : "all";
+        merge({ assetFilter: filter });
+        return;
+      }
+      if (action === "filter-tickets") {
+        const filter = ["all", "queued", "processing", "completed", "failed"].includes(detail.ticketFilter) ? detail.ticketFilter : "all";
+        merge({ ticketFilter: filter });
+        return;
+      }
       if (action === "refresh-jobs") {
         const result = await api("/jobs");
         const items = result.data && result.data.items ? result.data.items : [];
@@ -541,15 +554,7 @@
       }
       if (action === "refresh-admin") {
         const path = route.startsWith("/admin") ? route : "/admin";
-        const endpoints = {
-          "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
-          "/admin/jobs/failed": "/admin/jobs", "/admin/payments": "/admin/payments", "/admin/providers": "/admin/providers", "/admin/tickets": "/admin/tickets"
-        };
-        const pieces = path.split("/").filter(Boolean);
-        const module = pieces[1] || "overview";
-        const recordId = pieces.length > 2 ? pieces.slice(2).join("/") : "";
-        const endpoint = endpoints[path] || `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
-        const result = await api(endpoint);
+        const result = await api(adminEndpointForPath(path));
         merge({ adminData: result.data || {} });
         toast(result.message || "Đã làm mới dữ liệu vận hành đã được role-check.");
         return;
