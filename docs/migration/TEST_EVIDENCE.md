@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `27 passed` |
+| Web App | `python -m pytest -q` | `39 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -42,6 +42,13 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
 
 - Browser has no core token, HMAC secret, provider key, raw provider task ID,
   wallet ledger writer, or PayOS webhook.
+- `WEBAPP_COPYFAST_ENABLED` stops bridge-backed feature, upload, job, wallet
+  and asset work before identity/network calls; `WEBAPP_ADMIN_ERP_ENABLED`
+  independently guards Admin bridge calls. The portal reflects those flags in
+  its capabilities rather than offering a dead action.
+- Customer pages require a signed session and route an unlinked account to
+  onboarding. Login preserves only a validated same-origin return path; no
+  raw identity or arbitrary redirect URL is trusted from the browser.
 - Every Admin ERP HTML **and JSON** endpoint requires both a signed session
   and a current canonical bot role; a stale Web role cache is rejected.
 - Telegram link codes are one-time and expiring. The bot-to-Web callback has
@@ -81,6 +88,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   job/asset/signed-delivery adapter exists.
 - Provider/payment switches are disabled by default. A guarded route never
   fabricates a completed output or credits Xu.
+- Payment UI consumes a future canonical response only: checkout links must be
+  HTTPS PayOS URLs, and the Web App can poll a canonical payment ID but never
+  creates a webhook, finalizes payment or credits Xu. Ticket/payment submits
+  use in-memory single-flight idempotency keys to avoid duplicate clicks.
 - Job polling calls only the signed Web API. Active jobs retry transient bridge
   failures with bounded backoff and leave the canonical status unchanged rather
   than presenting a client-side completion.

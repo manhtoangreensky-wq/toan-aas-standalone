@@ -11,6 +11,7 @@
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   let jobPollTimer = 0;
   let jobPollFailures = 0;
+  const submissions = new Map();
   const FEATURE_BY_PATH = {
     "/chat": "chat", "/prompt-studio": "prompt_studio", "/content/caption": "caption",
     "/content/hashtag": "hashtag", "/content/hook": "hook", "/content/script": "script",
@@ -41,6 +42,26 @@
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
     return `${prefix}-${Array.from(bytes, (item) => item.toString(16).padStart(2, "0")).join("")}`;
+  }
+
+  function safeReturnPath(value) {
+    if (typeof value !== "string" || !value.startsWith("/") || value.startsWith("//") || value.includes("\\")) return "";
+    return value;
+  }
+
+  function acquireSubmission(scope, fingerprint) {
+    let entry = submissions.get(scope);
+    if (!entry || entry.fingerprint !== fingerprint) {
+      entry = { fingerprint, key: randomKey(scope), inFlight: false };
+      submissions.set(scope, entry);
+    }
+    if (entry.inFlight) return null;
+    entry.inFlight = true;
+    return entry;
+  }
+
+  function releaseSubmission(entry) {
+    if (entry) entry.inFlight = false;
   }
 
   async function api(path, options) {
@@ -112,6 +133,11 @@
   function featurePageStates(catalog, readiness) {
     const states = {};
     const features = (readiness && readiness.features) || {};
+    Object.entries(FEATURE_BY_PATH).forEach(([route, key]) => {
+      const state = features[key];
+      if (!state) return;
+      states[route] = state.public_ready ? "ready" : "guarded";
+    });
     (catalog || []).forEach((item) => {
       const state = features[item.key];
       if (!state) return;
@@ -131,25 +157,25 @@
     const status = statusResponse && statusResponse.data ? statusResponse.data : {};
     const me = meResponse && meResponse.data ? meResponse.data : {};
     const account = me.account || null;
-    const bridgeAvailable = Boolean(status.bridge_configured && account && account.canonical_user_id);
+    const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
+    const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && account && account.canonical_user_id);
     const capabilities = {
       "auth-login": true,
       "auth-register": true,
+      "auth-logout": Boolean(account && me.csrf_token),
       "start-telegram-link": Boolean(account),
       "refresh-link-status": Boolean(account),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
-      "refresh-admin": Boolean(account && account.role === "admin" && bridgeAvailable),
+      "refresh-payment": Boolean(bridgeAvailable),
+      "refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled && account && account.role === "admin" && bridgeAvailable),
       "payment-create": Boolean(status.flags && status.flags.payment_enabled && bridgeAvailable),
       "feature-draft": Boolean(bridgeAvailable),
       "feature-estimate": Boolean(bridgeAvailable),
       // Confirm remains clickable when the bridge is present so its canonical
       // guarded/maintenance result can be shown instead of being faked client-side.
       "feature-confirm": Boolean(bridgeAvailable),
-      "create-ticket": Boolean(bridgeAvailable),
-      "admin-retry": Boolean(account && account.role === "admin" && bridgeAvailable),
-      "admin-refund": Boolean(account && account.role === "admin" && bridgeAvailable),
-      "admin-freeze": Boolean(account && account.role === "admin" && bridgeAvailable)
+      "create-ticket": Boolean(bridgeAvailable)
     };
     merge({
       ...context,
@@ -161,7 +187,7 @@
         authenticated: Boolean(account), csrfReady: Boolean(me.csrf_token), csrfToken: me.csrf_token || "",
         displayName: account ? (account.display_name || account.email) : "", email: account ? account.email : ""
       },
-      bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured) },
+      bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled },
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
       pageStates: featurePageStates(catalog, {})
@@ -188,25 +214,27 @@
     const path = (context.path || window.location.pathname).split("?")[0];
     try {
       if (path === "/dashboard") {
-        const [wallet, jobs, assets] = await Promise.all([api("/wallet"), api("/jobs"), api("/assets")]);
+        const [wallet, jobs, assets, readiness] = await Promise.all([api("/wallet"), api("/jobs"), api("/assets"), api("/features/status")]);
         merge({
           wallet: wallet.data || null,
           jobs: jobs.data && jobs.data.items ? jobs.data.items : [],
-          assets: assets.data && assets.data.items ? assets.data.items : []
+          assets: assets.data && assets.data.items ? assets.data.items : [],
+          readiness: readiness.data || {},
+          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}), [path]: "read_only" }
         });
       } else if (path === "/pricing") {
         const pricing = await api("/pricing");
-        merge({ pricingCatalog: pricing.data || {} });
+        merge({ pricingCatalog: pricing.data || {}, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/packages") {
         const packages = await api("/packages");
-        merge({ packageCatalog: packages.data || {} });
+        merge({ packageCatalog: packages.data || {}, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/wallet" || path === "/wallet/topup") {
         const [wallet, history, packages] = await Promise.all([api("/wallet"), api("/wallet/history"), api("/packages")]);
-        merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [], packageCatalog: packages.data || {} });
+        merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [], packageCatalog: packages.data || {}, pageStates: path === "/wallet" ? { ...(base().pageStates || {}), [path]: "read_only" } : (base().pageStates || {}) });
       } else if (path === "/jobs") {
         const jobs = await api("/jobs");
         const items = jobs.data && jobs.data.items ? jobs.data.items : [];
-        merge({ jobs: items });
+        merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
         scheduleJobPolling(path, items);
       } else if (path.startsWith("/jobs/")) {
         const jobId = path.slice("/jobs/".length);
@@ -215,13 +243,13 @@
         const record = job.data || {};
         merge({ jobDetail: record, pageStates: { ...(base().pageStates || {}), [path]: job.status || "read_only" } });
         scheduleJobPolling(path, record);
-      } else if (path === "/assets" || ["/image/history", "/video/preview", "/video/export", "/voice/outputs", "/music/library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/voice/outputs", "/music/library", "/music-library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
-        merge({ assets: assets.data && assets.data.items ? assets.data.items : [] });
+        merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/video/progress") {
         const jobs = await api("/jobs");
         const items = jobs.data && jobs.data.items ? jobs.data.items : [];
-        merge({ jobs: items });
+        merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
         scheduleJobPolling(path, items);
       } else if ((path === "/image" || (path.startsWith("/image/") && path !== "/image/history")) || (path === "/video" || (path.startsWith("/video/") && !["/video/progress", "/video/preview", "/video/export"].includes(path)))) {
         const [pricing, readiness] = await Promise.all([api("/pricing"), api("/features/status")]);
@@ -230,7 +258,7 @@
           readiness: readiness.data || {},
           pageStates: featurePageStates(base().catalog || [], readiness.data || {})
         });
-      } else if (path.startsWith("/voice")) {
+      } else if (path === "/tts" || path.startsWith("/voice")) {
         const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
         merge({
           voiceProfiles: profiles.data && profiles.data.items ? profiles.data.items : [],
@@ -239,7 +267,7 @@
         });
       } else if (path === "/tickets") {
         const tickets = await api("/support/tickets");
-        merge({ tickets: tickets.data && tickets.data.items ? tickets.data.items : [] });
+        merge({ tickets: tickets.data && tickets.data.items ? tickets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path.startsWith("/admin")) {
         const endpoints = {
           "/admin": "/admin/summary",
@@ -264,7 +292,7 @@
         });
       } else {
         const readiness = await api("/features/status");
-        merge({ readiness: readiness.data || {} });
+        merge({ readiness: readiness.data || {}, pageStates: featurePageStates(base().catalog || [], readiness.data || {}) });
       }
     } catch (error) {
       // A guarded bridge is an expected state; do not manufacture data.
@@ -329,7 +357,15 @@
         const result = await api("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fields.email || "", password: fields.password || "" }) });
         toast(result.message);
         await hydrate();
-        window.location.assign("/dashboard");
+        const account = result.data && result.data.account ? result.data.account : {};
+        const requested = safeReturnPath(new URLSearchParams(window.location.search).get("next") || "");
+        window.location.assign(account.canonical_user_id ? (requested || "/dashboard") : "/onboarding");
+        return;
+      }
+      if (action === "auth-logout") {
+        const result = await api("/auth/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        toast(result.message || "Đã đăng xuất.");
+        window.location.assign("/login");
         return;
       }
       if (action === "start-telegram-link") {
@@ -350,7 +386,7 @@
         return;
       }
       if (action === "filter-jobs") {
-        const filter = ["all", "queued", "processing", "completed", "failed"].includes(detail.jobFilter) ? detail.jobFilter : "all";
+        const filter = ["all", "queued", "processing", "completed", "failed", "cancelled", "refunded"].includes(detail.jobFilter) ? detail.jobFilter : "all";
         merge({ jobFilter: filter });
         return;
       }
@@ -384,13 +420,44 @@
         return;
       }
       if (action === "payment-create") {
-        const result = await api("/payments/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: fields.package || "", payment_type: "topup_xu", idempotency_key: randomKey("payment") }) });
+        const packageId = String(fields.package || "");
+        const submission = acquireSubmission("payment", packageId);
+        if (!submission) {
+          toast("Yêu cầu thanh toán đang được gửi. Vui lòng chờ phản hồi canonical.", "error");
+          return;
+        }
+        try {
+          const result = await api("/payments/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: packageId, payment_type: "topup_xu", idempotency_key: submission.key }) });
+          merge({ paymentFlow: { status: (result.data && result.data.status) || result.status || "awaiting_confirm", message: result.message, data: result.data || {} } });
+          toast(result.message);
+        } finally {
+          releaseSubmission(submission);
+        }
+        return;
+      }
+      if (action === "refresh-payment") {
+        const paymentId = String(detail.paymentId || "").trim();
+        if (!paymentId) throw new Error("Mã giao dịch không hợp lệ.");
+        const result = await api(`/payments/${encodeURIComponent(paymentId)}`);
+        merge({ paymentFlow: { status: (result.data && result.data.status) || result.status || "guarded", message: result.message, data: result.data || {} } });
         toast(result.message);
         return;
       }
       if (action === "create-ticket") {
-        const result = await api("/support/tickets", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject: fields.subject || "", detail: fields.detail || "", idempotency_key: randomKey("ticket") }) });
-        toast(result.message);
+        const subject = String(fields.subject || "");
+        const detailText = String(fields.detail || "");
+        const submission = acquireSubmission("ticket", `${subject}\n${detailText}`);
+        if (!submission) {
+          toast("Ticket đang được gửi. Vui lòng chờ phản hồi canonical.", "error");
+          return;
+        }
+        try {
+          const result = await api("/support/tickets", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ subject, detail: detailText, idempotency_key: submission.key }) });
+          toast(result.message);
+          window.location.assign("/tickets");
+        } finally {
+          releaseSubmission(submission);
+        }
         return;
       }
       if (action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") {
@@ -409,6 +476,10 @@
       }
       toast("Thao tác này đang chờ adapter canonical được xác minh.", "error");
     } catch (error) {
+      if (action === "payment-create" && error && error.payload) {
+        const payload = error.payload;
+        merge({ paymentFlow: { status: (payload.data && payload.data.status) || payload.status || "guarded", message: payload.message || "Yêu cầu thanh toán đang được bảo vệ.", data: payload.data || {} } });
+      }
       if ((action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") && error && error.payload) {
         const feature = FEATURE_BY_PATH[route];
         const payload = error.payload;

@@ -240,6 +240,8 @@ a { color: inherit; text-decoration: none; }
 .portal-badge[data-status="draft"], .portal-badge[data-status="awaiting_confirm"], .portal-badge[data-status="queued"], .portal-badge[data-status="processing"], .portal-badge[data-status="read_only"] { color: var(--portal-info); background: rgba(131, 197, 255, .07); }
 .portal-badge[data-status="guarded"], .portal-badge[data-status="disabled"] { color: var(--portal-warning); background: rgba(255, 211, 122, .07); }
 .portal-badge[data-status="failed"], .portal-badge[data-status="error"] { color: var(--portal-danger); background: rgba(255, 156, 156, .07); }
+.portal-badge[data-status="cancelled"] { color: #c5b7e9; background: rgba(177, 151, 235, .09); }
+.portal-badge[data-status="refunded"] { color: #a3dfd4; background: rgba(101, 209, 190, .09); }
 
 .portal-canonical-result {
   margin-top: 16px;
@@ -287,6 +289,7 @@ a { color: inherit; text-decoration: none; }
 .portal-summary-value { color: var(--portal-muted-strong); font-size: 11px; font-weight: 700; text-align: right; }
 
 .portal-work-grid { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(290px, .65fr); gap: 16px; }
+.portal-stack { display: grid; gap: 16px; min-width: 0; }
 .portal-form { display: grid; gap: 16px; }
 .portal-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
 .portal-field { display: grid; gap: 7px; min-width: 0; }

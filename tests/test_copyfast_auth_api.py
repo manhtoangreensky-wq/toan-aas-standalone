@@ -134,6 +134,29 @@ def test_upload_rejects_path_traversal_and_never_falls_back_to_web_storage(tmp_p
         assert guarded.json()["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
 
 
+def test_copyfast_flag_blocks_feature_and_upload_requests_before_bridge_work(tmp_path, monkeypatch):
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "false")
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        feature = client.post(
+            "/api/v1/features/image_create/draft",
+            headers={"X-CSRF-Token": csrf},
+            json={"input": {"prompt": "an image"}},
+        )
+        assert feature.status_code == 200
+        assert feature.json()["status"] == "guarded"
+        assert feature.json()["error_code"] == "WEBAPP_COPYFAST_DISABLED"
+
+        upload = client.post(
+            "/api/v1/uploads",
+            headers={"X-CSRF-Token": csrf, "Idempotency-Key": "flag-upload-0001"},
+            files={"file": ("ignored.invalid", b"not-read", "application/octet-stream")},
+        )
+        assert upload.status_code == 200
+        assert upload.json()["status"] == "guarded"
+        assert upload.json()["error_code"] == "WEBAPP_COPYFAST_DISABLED"
+
+
 def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         catalog = client.get("/api/v1/catalog")
@@ -143,6 +166,7 @@ def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
             "video_multiscene", "voice_tts", "subtitle_asr", "admin_jobs",
             "caption", "image_remove_background", "music_song", "documents_ocr",
         }.issubset(keys)
+        register_and_link(client)
         page = client.get("/video/multiscene")
         assert page.status_code == 200
         assert "TOAN AAS" in page.text
@@ -151,6 +175,29 @@ def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
         legacy = client.get("/campaign-app", follow_redirects=False)
         assert legacy.status_code == 307
         assert legacy.headers["location"] == "/admin/campaigns"
+
+
+def test_customer_portal_redirects_follow_signed_session_and_telegram_link_state(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        unauthenticated = client.get("/dashboard", follow_redirects=False)
+        assert unauthenticated.status_code == 307
+        assert unauthenticated.headers["location"] == "/login?next=/dashboard"
+        assert client.get("/legal").status_code == 200
+
+        registration = client.post("/api/v1/auth/register", json={"email": "redirect@example.com", "password": "correct-horse-battery-staple"})
+        csrf = registration.json()["data"]["csrf_token"]
+        unlinked_dashboard = client.get("/dashboard", follow_redirects=False)
+        assert unlinked_dashboard.status_code == 307
+        assert unlinked_dashboard.headers["location"] == "/onboarding"
+        assert client.get("/account").status_code == 200
+        signed_login = client.get("/login", follow_redirects=False)
+        assert signed_login.headers["location"] == "/onboarding"
+
+        code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
+        assert confirm_link(client, code).json()["ok"] is True
+        linked_onboarding = client.get("/onboarding", follow_redirects=False)
+        assert linked_onboarding.status_code == 307
+        assert linked_onboarding.headers["location"] == "/dashboard"
 
 
 def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_path, monkeypatch):
@@ -201,6 +248,7 @@ def test_every_admin_api_rechecks_canonical_role_for_reads_and_writes(tmp_path, 
 
 def test_portal_template_uses_inert_bootstrap_for_strict_csp(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
+        register_and_link(client)
         page = client.get("/dashboard")
         assert page.status_code == 200
         assert 'id="portal-bootstrap" type="application/json"' in page.text

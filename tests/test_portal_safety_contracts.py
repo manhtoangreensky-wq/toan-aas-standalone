@@ -64,10 +64,74 @@ def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation
     assert "if (confirmation && !window.confirm(confirmation)) return;" in PORTAL
 
 
+def test_account_uses_read_only_session_data_and_server_side_logout() -> None:
+    assert 'layout: "account", fields: [], action: "none"' in PORTAL
+    assert "Hồ sơ canonical" in PORTAL
+    assert 'data-portal-action="auth-logout"' in PORTAL
+    assert '"auth-logout": Boolean(account && me.csrf_token)' in INTEGRATION
+    assert 'api("/auth/logout"' in INTEGRATION
+
+
 def test_initial_hydration_is_deduplicated_and_bfcache_refresh_is_explicit() -> None:
     assert "function startInitialHydration()" in INTEGRATION
     assert "if (!initialHydration) initialHydration = hydrate().catch(() => {});" in INTEGRATION
     assert "if (event.persisted) hydrate().catch(() => {});" in INTEGRATION
+
+
+def test_login_return_path_is_internal_and_unlinked_accounts_go_to_onboarding() -> None:
+    assert "function safeReturnPath(value)" in INTEGRATION
+    assert 'value.startsWith("//")' in INTEGRATION
+    assert 'window.location.assign(account.canonical_user_id ? (requested || "/dashboard") : "/onboarding");' in INTEGRATION
+
+
+def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
+    assert "function safePayosCheckout(value)" in PORTAL
+    assert 'url.hostname === "pay.payos.vn"' in PORTAL
+    assert "Yêu cầu thanh toán canonical" in PORTAL
+    assert 'data-portal-action="refresh-payment"' in PORTAL
+    assert 'api(`/payments/${encodeURIComponent(paymentId)}`)' in INTEGRATION
+    assert "paymentFlow" in INTEGRATION
+
+
+def test_job_and_payment_statuses_are_not_conflated() -> None:
+    assert "function paymentStatus(item)" in PORTAL
+    assert 'paid: "completed"' in PORTAL
+    job_slice = PORTAL[PORTAL.index("function jobStatus(item)"):PORTAL.index("function paymentStatus(item)")]
+    assert 'paid: "completed"' not in job_slice
+    assert '"cancelled", "Đã hủy"' in PORTAL
+    assert '"refunded", "Đã hoàn Xu"' in PORTAL
+
+
+def test_readiness_maps_all_feature_route_aliases_not_only_catalog_routes() -> None:
+    assert "Object.entries(FEATURE_BY_PATH).forEach" in INTEGRATION
+    assert 'api("/features/status")' in INTEGRATION
+    assert "pageStates: featurePageStates(base().catalog || [], readiness.data || {})" in INTEGRATION
+    assert 'path === "/tts" || path.startsWith("/voice")' in INTEGRATION
+    assert 'context.pageStates[normalizePath(context.path)]' in PORTAL
+
+
+def test_client_capabilities_respect_the_copyfast_master_flag() -> None:
+    assert "const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);" in INTEGRATION
+    assert "const bridgeAvailable = Boolean(copyfastEnabled" in INTEGRATION
+    assert '"refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled' in INTEGRATION
+
+
+def test_ticket_and_payment_submissions_are_single_flight_and_idempotent_in_memory() -> None:
+    assert "function acquireSubmission(scope, fingerprint)" in INTEGRATION
+    assert "const submissions = new Map();" in INTEGRATION
+    assert 'acquireSubmission("ticket", `${subject}\\n${detailText}`)' in INTEGRATION
+    assert 'acquireSubmission("payment", packageId)' in INTEGRATION
+    assert 'window.location.assign("/tickets");' in INTEGRATION
+
+
+def test_registration_copy_does_not_claim_unimplemented_email_verification() -> None:
+    assert "email verification được Core Bridge thực thi" not in PORTAL
+    assert "xác minh email chưa được bật trong phase này" in PORTAL
+
+
+def test_feature_planning_state_is_distinguished_from_provider_engine_readiness() -> None:
+    assert "const planningAvailable = page.type === \"feature\"" in PORTAL
+    assert "Planning draft sẵn sàng; engine vẫn được bảo vệ" in PORTAL
 
 
 def test_support_form_does_not_silently_drop_a_file_attachment() -> None:
@@ -79,3 +143,9 @@ def test_admin_surfaces_are_explicitly_read_only_without_a_write_adapter() -> No
     assert 'action: "none"' in PORTAL
     assert "Chế độ chỉ đọc" in PORTAL
     assert "data-portal-action=\"admin-review\"" not in PORTAL
+    assert "admin-retry" not in PORTAL
+    assert "admin-refund" not in PORTAL
+    assert "admin-freeze" not in PORTAL
+    assert "admin-retry" not in INTEGRATION
+    assert "admin-refund" not in INTEGRATION
+    assert "admin-freeze" not in INTEGRATION

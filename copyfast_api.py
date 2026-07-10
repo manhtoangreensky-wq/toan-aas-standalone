@@ -169,6 +169,11 @@ def _remember_idempotency(scope: str, key: str, response: dict) -> None:
 
 
 async def _bridge(method: str, path: str, *, account: dict, request: Request, payload: dict | None = None, params: dict | None = None) -> dict:
+    flags = _flags()
+    if not flags["copyfast_enabled"]:
+        return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
+    if path.startswith("/internal/v1/admin/") and not flags["admin_erp_enabled"]:
+        return envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
     user_id = _linked(account)
     enriched = dict(payload or {})
     enriched.setdefault("user_id", user_id)
@@ -276,6 +281,8 @@ async def upload_to_canonical_staging(
     The standalone Web DB records neither raw file bytes nor provider paths.
     A temporary/retried browser upload is idempotent at both Web and bot layers.
     """
+    if not _flags()["copyfast_enabled"]:
+        return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
     key = _require_key(request.headers.get("Idempotency-Key", ""))
     scope = f"upload:{account['id']}"
     if prior := _idempotency(scope, key):
@@ -325,6 +332,8 @@ async def feature_status(request: Request, account: dict = Depends(require_accou
 async def _feature_action(action: str, feature: str, payload: FeatureRequest, request: Request, account: dict) -> dict:
     if feature not in FEATURE_BY_KEY:
         raise HTTPException(status_code=404, detail="Tính năng chưa có trong parity registry")
+    if not _flags()["copyfast_enabled"]:
+        return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
     # Keep the feature input as a distinct object in the bot contract.  The
     # private bridge consumes `user_id` and `idempotency_key` at the envelope
     # level; treating form fields as that envelope silently discarded drafts

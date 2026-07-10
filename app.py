@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 import os
 import time
 import uuid
+from urllib.parse import quote
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -21,7 +22,7 @@ from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
 import copyfast_auth
-from copyfast_auth import envelope, require_canonical_admin
+from copyfast_auth import current_session, envelope, require_canonical_admin
 from copyfast_db import ensure_copyfast_schema
 from copyfast_pages import ROOT, render_portal
 
@@ -162,4 +163,26 @@ async def page(page_path: str, request: Request):
     # admin role; browser-supplied IDs never influence this decision.
     if normalized == "/admin" or normalized.startswith("/admin/"):
         await require_canonical_admin(request)
+    public_pages = {"/legal", "/privacy"}
+    if normalized in {"/login", "/register"}:
+        try:
+            existing = current_session(request)["account"]
+        except HTTPException:
+            return render_portal(page_path)
+        return RedirectResponse("/dashboard" if existing.get("canonical_user_id") else "/onboarding", status_code=307)
+    if normalized not in public_pages:
+        try:
+            session = current_session(request)
+        except HTTPException:
+            # A portal shell without a signed session is a dead end. Keep the
+            # requested internal route so login can return safely after auth.
+            return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
+        account = session["account"]
+        linked = bool(account.get("canonical_user_id"))
+        if normalized == "/":
+            return RedirectResponse("/dashboard" if linked else "/onboarding", status_code=307)
+        if not linked and normalized not in {"/onboarding", "/account"}:
+            return RedirectResponse("/onboarding", status_code=307)
+        if linked and normalized == "/onboarding":
+            return RedirectResponse("/dashboard", status_code=307)
     return render_portal(page_path)

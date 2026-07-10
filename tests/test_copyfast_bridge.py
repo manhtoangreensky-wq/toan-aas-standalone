@@ -113,3 +113,29 @@ async def test_get_bridge_keeps_canonical_identity_when_a_safe_filter_is_added(m
     assert captured["payload"] is None
     assert captured["params"] == {"record_id": "telegram-1", "user_id": "telegram-1"}
     assert captured["actor_id"] == "telegram-1"
+
+
+@pytest.mark.anyio
+async def test_web_feature_flags_guard_bridge_calls_before_identity_or_network(monkeypatch):
+    calls = []
+
+    async def fake_bridge_request(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(_bridge.__globals__, "bridge_request", fake_bridge_request)
+    request = Request({"type": "http", "method": "GET", "path": "/api/v1/wallet", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "false")
+    disabled = await _bridge("GET", "/internal/v1/wallet", account=account, request=request)
+    assert disabled["status"] == "guarded"
+    assert disabled["error_code"] == "WEBAPP_COPYFAST_DISABLED"
+    assert calls == []
+
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_ADMIN_ERP_ENABLED", "false")
+    admin_disabled = await _bridge("GET", "/internal/v1/admin/summary", account=account, request=request)
+    assert admin_disabled["status"] == "guarded"
+    assert admin_disabled["error_code"] == "WEBAPP_ADMIN_ERP_DISABLED"
+    assert calls == []
