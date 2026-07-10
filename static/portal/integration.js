@@ -127,7 +127,13 @@
     const context = base();
     const path = (context.path || window.location.pathname).split("?")[0];
     try {
-      if (path === "/wallet" || path === "/wallet/topup") {
+      if (path === "/pricing") {
+        const pricing = await api("/pricing");
+        merge({ pricingCatalog: pricing.data || {} });
+      } else if (path === "/packages") {
+        const packages = await api("/packages");
+        merge({ packageCatalog: packages.data || {} });
+      } else if (path === "/wallet" || path === "/wallet/topup") {
         const [wallet, history] = await Promise.all([api("/wallet"), api("/wallet/history")]);
         merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [] });
       } else if (path === "/jobs" || path.startsWith("/jobs/")) {
@@ -149,13 +155,18 @@
           "/admin/providers": "/admin/providers",
           "/admin/tickets": "/admin/tickets"
         };
-        const endpoint = endpoints[path];
+        let endpoint = endpoints[path];
         if (!endpoint) {
-          merge({ adminData: { items: [], guarded: true, message: "Module này đang chờ adapter read-only canonical của bot." } });
-          return;
+          const pieces = path.split("/").filter(Boolean);
+          const module = pieces[1] || "overview";
+          const recordId = pieces.length > 2 ? pieces.slice(2).join("/") : "";
+          endpoint = `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
         }
         const admin = await api(endpoint);
-        merge({ adminData: admin.data || {} });
+        merge({
+          adminData: admin.data || {},
+          pageStates: { ...(base().pageStates || {}), [path]: admin.status === "completed" ? "read_only" : (admin.status || "read_only") }
+        });
       } else {
         const readiness = await api("/features/status");
         merge({ readiness: readiness.data || {} });
@@ -166,10 +177,36 @@
     }
   }
 
-  function payloadFor(fields) {
+  async function payloadFor(fields, route) {
     const values = { ...fields };
     delete values.password;
     delete values.confirm_password;
+    const uploadIds = [];
+    const priorFlow = route && base().featureFlows && base().featureFlows[route];
+    const priorUploads = priorFlow && priorFlow.data && Array.isArray(priorFlow.data.uploads) ? priorFlow.data.uploads : [];
+    for (const [field, value] of Object.entries(values)) {
+      if (!(typeof File !== "undefined" && value instanceof File)) continue;
+      const existing = priorUploads.find((item) => item && item.id && item.file_name === value.name && Number(item.content_size || 0) === Number(value.size || 0));
+      if (existing) {
+        uploadIds.push(existing.id);
+        delete values[field];
+        continue;
+      }
+      const form = new FormData();
+      form.append("file", value, value.name);
+      // The Web App validates the bytes, then passes them only to bot-owned
+      // staging. The browser never receives a local path or provider handle.
+      const uploaded = await api("/uploads", {
+        method: "POST",
+        headers: { "Idempotency-Key": randomKey("upload") },
+        body: form
+      });
+      const uploadId = uploaded && uploaded.data && uploaded.data.id;
+      if (!uploadId) throw new Error("Core Bridge chưa xác nhận tệp đính kèm.");
+      uploadIds.push(uploadId);
+      delete values[field];
+    }
+    if (uploadIds.length) values.upload_ids = uploadIds;
     return values;
   }
 
@@ -222,7 +259,8 @@
         if (!feature) throw new Error("Tính năng này chưa có mapping bridge an toàn.");
         if (action === "feature-confirm" && !window.confirm("Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.")) return;
         const phase = action.replace("feature-", "");
-        const result = await api(`/features/${encodeURIComponent(feature)}/${phase}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input: payloadFor(fields), idempotency_key: randomKey(phase) }) });
+        const input = await payloadFor(fields, route);
+        const result = await api(`/features/${encodeURIComponent(feature)}/${phase}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input, idempotency_key: randomKey(phase) }) });
         toast(result.message);
         merge({
           pageStates: { ...(base().pageStates || {}), [route]: result.status },

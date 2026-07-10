@@ -47,7 +47,7 @@ app.add_middleware(
 )
 
 
-_login_windows: dict[str, list[float]] = {}
+_auth_rate_windows: dict[str, list[float]] = {}
 
 
 @app.middleware("http")
@@ -55,16 +55,21 @@ async def security_headers(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", "")[:80] or str(uuid.uuid4())
     request.state.request_id = request_id
     # Small in-process gate; production should additionally rate-limit at the edge.
-    if request.url.path == "/api/v1/auth/login" and request.method == "POST":
+    auth_limits = {
+        "/api/v1/auth/login": 8,
+        "/api/v1/auth/register": 4,
+    }
+    if request.url.path in auth_limits and request.method == "POST":
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
-        window = [value for value in _login_windows.get(client_ip, []) if now - value < 60]
-        if len(window) >= 8:
-            response = JSONResponse(envelope(False, "Vui lòng thử lại sau ít phút.", status_name="guarded", error_code="LOGIN_RATE_LIMITED"), status_code=429)
+        rate_key = f"{request.url.path}:{client_ip}"
+        window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < 60]
+        if len(window) >= auth_limits[request.url.path]:
+            response = JSONResponse(envelope(False, "Vui lòng thử lại sau ít phút.", status_name="guarded", error_code="AUTH_RATE_LIMITED"), status_code=429)
             response.headers["X-Request-ID"] = request_id
             return response
         window.append(now)
-        _login_windows[client_ip] = window
+        _auth_rate_windows[rate_key] = window
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Content-Type-Options"] = "nosniff"

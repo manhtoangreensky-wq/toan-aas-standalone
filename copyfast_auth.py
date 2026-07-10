@@ -23,6 +23,8 @@ SESSION_COOKIE = "toan_aas_session"
 SESSION_TTL_HOURS = max(1, int(os.environ.get("WEB_SESSION_TTL_HOURS", "24")))
 LINK_TTL_MINUTES = max(1, int(os.environ.get("TELEGRAM_LINK_TTL_MINUTES", "10")))
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+BRIDGE_CALLBACK_MAX_AGE_SECONDS = 300
+BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
 
 
 def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: str = "completed", error_code: str | None = None) -> dict:
@@ -57,6 +59,10 @@ def _expiry(hours: int = SESSION_TTL_HOURS) -> str:
 
 def _link_expiry() -> str:
     return (_now() + timedelta(minutes=LINK_TTL_MINUTES)).isoformat(timespec="seconds")
+
+
+def _bridge_callback_expiry() -> str:
+    return (_now() + timedelta(seconds=BRIDGE_CALLBACK_MAX_AGE_SECONDS + 5)).isoformat(timespec="seconds")
 
 
 def _as_time(value: str) -> datetime:
@@ -167,8 +173,8 @@ def require_admin(request: Request) -> dict:
     return session["account"]
 
 
-async def require_canonical_admin(request: Request) -> dict:
-    """Require both the signed web session and the bot's current admin role.
+async def _require_current_canonical_admin(request: Request, account: dict) -> dict:
+    """Verify an already-authenticated admin against the bot authority.
 
     The web session deliberately keeps only a cached display role so the UI can
     render without exposing any Telegram credential.  Privileged *pages* must
@@ -177,7 +183,6 @@ async def require_canonical_admin(request: Request) -> dict:
     cookie.  All privileged JSON actions are independently checked again by
     the bot bridge.
     """
-    account = require_admin(request)
     canonical_user_id = str(account.get("canonical_user_id") or "").strip()
     if not canonical_user_id:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Tài khoản chưa có quyền quản trị canonical")
@@ -197,6 +202,11 @@ async def require_canonical_admin(request: Request) -> dict:
     return account
 
 
+async def require_canonical_admin(request: Request) -> dict:
+    """Require a signed session plus the bot's current canonical admin role."""
+    return await _require_current_canonical_admin(request, require_admin(request))
+
+
 def require_csrf(request: Request) -> dict:
     session = current_session(request)
     supplied = request.headers.get("X-CSRF-Token", "")
@@ -210,6 +220,17 @@ def require_admin_csrf(request: Request) -> dict:
     if account["role"] != "admin":
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Chỉ quản trị viên được phép thực hiện thao tác này")
     return account
+
+
+async def require_canonical_admin_csrf(request: Request) -> dict:
+    """CSRF-protected admin write that also re-checks the bot's live role.
+
+    A cached browser role is intentionally insufficient for *every* Admin ERP
+    JSON write, just as it is insufficient for the HTML shell.  Keeping this
+    as a dependency prevents a newly demoted Telegram admin from retrying an
+    old, valid Web session to trigger bridge actions.
+    """
+    return await _require_current_canonical_admin(request, require_admin_csrf(request))
 
 
 def _create_session(response: Response, account_id: str) -> dict:
@@ -337,16 +358,48 @@ async def telegram_link_status(account: dict = Depends(require_account)):
     return envelope(True, "Trạng thái liên kết", data={"linked": bool(account["canonical_user_id"]), "canonical_user_id": account["canonical_user_id"]}, status_name="completed" if account["canonical_user_id"] else "awaiting_confirm")
 
 
-def _bridge_callback_authorized(request: Request) -> bool:
-    configured = os.environ.get("CORE_BRIDGE_CALLBACK_TOKEN", os.environ.get("CORE_BRIDGE_TOKEN", ""))
-    supplied = request.headers.get("X-TOAN-AAS-BRIDGE-TOKEN", "")
-    return bool(configured and supplied and hmac.compare_digest(configured, supplied))
+async def _bridge_callback_authorized(request: Request) -> bool:
+    """Authenticate the bot-to-web link callback as a separate private channel.
+
+    The callback is intentionally not allowed to reuse the browser-facing core
+    bearer token.  It requires its own bearer token *and* an HMAC over the
+    exact body, timestamp and one-time request ID.  The persistent nonce table
+    makes a captured request unusable after its first attempt or process
+    restart; the one-time link code then provides a second replay boundary.
+    """
+    token = os.environ.get("WEBAPP_LINK_CALLBACK_TOKEN", os.environ.get("CORE_BRIDGE_CALLBACK_TOKEN", "")).strip()
+    secret = os.environ.get("WEBAPP_LINK_CALLBACK_HMAC_SECRET", os.environ.get("CORE_BRIDGE_CALLBACK_HMAC_SECRET", "")).strip()
+    supplied_token = request.headers.get("X-TOAN-AAS-BRIDGE-TOKEN", "")
+    timestamp = request.headers.get("X-TOAN-AAS-Timestamp", "")
+    request_id = request.headers.get("X-TOAN-AAS-Request-ID", "")
+    signature = request.headers.get("X-TOAN-AAS-Signature", "")
+    if not token or not secret or not supplied_token or not hmac.compare_digest(token, supplied_token):
+        return False
+    if not timestamp.isdigit() or not BRIDGE_CALLBACK_REQUEST_ID_PATTERN.fullmatch(request_id):
+        return False
+    if abs(int(_now().timestamp()) - int(timestamp)) > BRIDGE_CALLBACK_MAX_AGE_SECONDS:
+        return False
+    body = await request.body()
+    digest = hashlib.sha256(body).hexdigest()
+    material = f"{timestamp}.{request_id}.{request.method.upper()}.{request.url.path}.{digest}".encode("utf-8")
+    expected = hmac.new(secret.encode("utf-8"), material, hashlib.sha256).hexdigest()
+    if not signature or not hmac.compare_digest(signature, expected):
+        return False
+    with transaction() as conn:
+        conn.execute("DELETE FROM web_bridge_callback_nonces WHERE expires_at<=?", (_now().isoformat(timespec="seconds"),))
+        if conn.execute("SELECT 1 FROM web_bridge_callback_nonces WHERE request_id=?", (request_id,)).fetchone():
+            return False
+        conn.execute(
+            "INSERT INTO web_bridge_callback_nonces (request_id, expires_at, created_at) VALUES (?, ?, ?)",
+            (request_id, _bridge_callback_expiry(), utc_now()),
+        )
+    return True
 
 
 @router.post("/internal/telegram-link/confirm")
 async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
     """Private callback for the bot after a user proves ownership in Telegram."""
-    if not _bridge_callback_authorized(request):
+    if not await _bridge_callback_authorized(request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bridge authentication failed")
     code_hash = hashlib.sha256(payload.code.encode("utf-8")).hexdigest()
     with transaction() as conn:

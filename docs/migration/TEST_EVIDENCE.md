@@ -7,12 +7,12 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `11 passed` |
+| Web App | `python -m pytest -q` | `18 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
-| Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `6 passed` |
+| Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `10 passed` |
 | Bot bridge | `python -m py_compile bot.py`, `local_worker.py`, `webapp_core_bridge.py` | passed |
-| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
+| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values, 132 Web routes; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
 
 ## Full bot-suite baseline result
 
@@ -32,19 +32,25 @@ The latter two tests compare their changed-file list to `origin/main`, while
 the user-selected local P0 baseline is intentionally divergent from that
 remote (`HEAD...origin/main` was `1` ahead and `657` behind during this run).
 They therefore see historical remote-difference files such as prior PayOS
-reports that are not part of the COPYFAST bridge diff. The bridge branch's
-own tracked change is only `bot.py`; `webapp_core_bridge.py` and its test are
-new additive files. No PayOS/wallet/ledger migration, webhook, or provider
-call was added.
+reports that are not part of the COPYFAST bridge diff. The bridge changes are
+additive (`bot.py` link entrypoints plus `webapp_core_bridge.py` and focused
+tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
 
 ## Guardrails verified by tests
 
 - Browser has no core token, HMAC secret, provider key, raw provider task ID,
   wallet ledger writer, or PayOS webhook.
-- Admin HTML requires both a signed session and a current canonical bot role;
-  a stale Web role cache is rejected.
-- Telegram link codes are one-time and expiring; private bridge request IDs
-  are signed nonces and replays are rejected.
+- Every Admin ERP HTML **and JSON** endpoint requires both a signed session
+  and a current canonical bot role; a stale Web role cache is rejected.
+- Telegram link codes are one-time and expiring. The bot-to-Web callback has
+  a directional bearer token, HMAC-bound body/timestamp/request ID and a
+  persistent nonce; private bridge requests also reject replays.
+- Uploads reject path traversal, unsupported MIME/signatures and oversized
+  payloads twice (Web and bot). Raw bytes live only in bot-owned staging and
+  feature inputs can reference only ownership-checked upload IDs.
+- Pricing, packages and Admin read-only surfaces are returned from bot helper
+  functions/tables; the portal never substitutes the feature registry as a
+  price table.
 - Provider/payment switches are disabled by default. A guarded route never
   fabricates a completed output or credits Xu.
 - Asset delivery verifies ownership and completed output first; until the bot

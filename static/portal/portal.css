@@ -237,7 +237,7 @@ a { color: inherit; text-decoration: none; }
 }
 .portal-badge::before { width: 6px; height: 6px; border-radius: 50%; background: currentColor; content: ""; }
 .portal-badge[data-status="ready"], .portal-badge[data-status="completed"] { color: var(--portal-success); background: rgba(134, 227, 164, .07); }
-.portal-badge[data-status="draft"], .portal-badge[data-status="awaiting_confirm"], .portal-badge[data-status="queued"], .portal-badge[data-status="processing"] { color: var(--portal-info); background: rgba(131, 197, 255, .07); }
+.portal-badge[data-status="draft"], .portal-badge[data-status="awaiting_confirm"], .portal-badge[data-status="queued"], .portal-badge[data-status="processing"], .portal-badge[data-status="read_only"] { color: var(--portal-info); background: rgba(131, 197, 255, .07); }
 .portal-badge[data-status="guarded"], .portal-badge[data-status="disabled"] { color: var(--portal-warning); background: rgba(255, 211, 122, .07); }
 .portal-badge[data-status="failed"], .portal-badge[data-status="error"] { color: var(--portal-danger); background: rgba(255, 156, 156, .07); }
 

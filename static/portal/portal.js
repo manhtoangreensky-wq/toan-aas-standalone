@@ -10,6 +10,7 @@
   "use strict";
 
   const ACTION_EVENT = "toanaas:portal-action";
+  let interactionsBound = false;
   try {
     const bootstrap = document.getElementById("portal-bootstrap");
     const parsed = bootstrap && JSON.parse(bootstrap.textContent || "{}");
@@ -19,7 +20,7 @@
   }
   const ALLOWED_STATES = new Set([
     "ready", "draft", "awaiting_confirm", "queued", "processing",
-    "completed", "failed", "guarded", "disabled", "error", "empty"
+    "completed", "failed", "guarded", "disabled", "read_only", "error", "empty"
   ]);
 
   const STATE_LABELS = Object.freeze({
@@ -29,6 +30,7 @@
     queued: "Đã xếp hàng",
     processing: "Đang xử lý",
     completed: "Hoàn tất",
+    read_only: "Chỉ đọc",
     failed: "Thất bại",
     guarded: "Được bảo vệ",
     disabled: "Tạm khóa",
@@ -569,6 +571,7 @@
     if (status === "queued" || status === "processing") return { icon: "◌", title: "Job đang do Core Bridge điều phối", text: "Chỉ trạng thái engine canonical mới có thể chuyển job sang completed." };
     if (status === "draft" || status === "awaiting_confirm") return { icon: "◇", title: "Bản nháp chờ luồng xác nhận", text: "Core Bridge phải estimate trước, sau đó người dùng xác nhận để tạo job." };
     if (status === "completed") return { icon: "✓", title: "Output đã hoàn tất", text: "Output cần được bridge xác thực file, ownership và URL ký tạm thời trước khi mở tải xuống." };
+    if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
     return { icon: "⌁", title: isAdmin ? "Khu vực quản trị cần quyền máy chủ" : "Core Bridge chưa cấp khả năng thực thi", text: isAdmin ? "Server cần xác nhận signed admin session trước khi hiển thị dữ liệu hoặc thao tác ERP." : "Shell chỉ cho phép chuẩn bị giao diện. Provider, wallet, PayOS và job không được gọi trực tiếp tại đây." };
@@ -681,12 +684,31 @@
   }
 
   function renderCatalog(page, context) {
-    const catalog = context.catalog || [];
+    const pricing = context.pricingCatalog && context.pricingCatalog.available ? context.pricingCatalog : null;
+    const packages = context.packageCatalog && context.packageCatalog.available ? context.packageCatalog : null;
+    // Pricing/packages must never fall back to the feature registry: a list
+    // of tools presented as prices would be misleading when the canonical bot
+    // bridge is unavailable.
+    let catalog = (page.path === "/pricing" || page.path === "/packages") ? [] : (context.catalog || []);
+    if (page.path === "/pricing" && pricing) {
+      catalog = [
+        ...(pricing.image_tiers || []).map((item) => ({ title: `Ảnh · ${item.label || item.code}`, description: item.note || "Tier ảnh canonical từ bot.", priceLabel: `${item.cost_xu || 0} Xu`, status: "completed" })),
+        ...(pricing.video_tiers || []).map((item) => ({ title: `Video · ${item.label || item.code}`, description: item.note || "Tier video canonical từ bot.", priceLabel: `${item.cost_xu || 0} Xu`, status: "completed" })),
+        ...(pricing.video_combos || []).map((item) => ({ title: item.label || item.code, description: item.summary || "Combo canonical từ bot.", priceLabel: item.display_price || (item.price_vnd ? `${item.price_vnd}đ` : "Liên hệ"), status: "completed" }))
+      ];
+    } else if (page.path === "/packages" && packages) {
+      catalog = [
+        ...(packages.monthly || []).map((item) => ({ title: item.label || item.code, description: item.note || "Gói tháng canonical từ bot.", priceLabel: item.manual ? "Admin quản lý" : (item.price_vnd ? `${item.price_vnd.toLocaleString("vi-VN")}đ` : "Chờ giá canonical"), status: "completed" })),
+        ...(packages.combos || []).map((item) => ({ title: item.label || item.code, description: item.note || "Combo canonical từ bot.", priceLabel: item.manual ? "Admin quản lý" : (item.price_vnd ? `${item.price_vnd.toLocaleString("vi-VN")}đ` : "Chờ giá canonical"), status: "completed" }))
+      ];
+    }
     const hasCatalog = catalog.length > 0;
+    const emptyTitle = page.path === "/pricing" ? "Chờ bảng giá canonical" : page.path === "/packages" ? "Chờ danh mục gói canonical" : "Catalog chưa được cấp";
+    const emptyText = page.path === "/pricing" ? "Bảng giá sẽ chỉ xuất hiện sau khi bot canonical trả dữ liệu đã ký qua Core Bridge." : page.path === "/packages" ? "Gói dịch vụ sẽ chỉ xuất hiện sau khi bot canonical xác nhận danh mục hiện hành." : "Giá, Xu và chính sách payment chỉ xuất hiện khi Core Bridge gửi catalog đã xác minh.";
     const cards = hasCatalog ? catalog.map((entry) => {
       const item = typeof entry === "string" ? { title: entry } : entry || {};
       return `<section class="portal-module-card"><div class="portal-module-card-top"><span class="portal-module-icon">◇</span>${badge(item.status && ALLOWED_STATES.has(item.status) ? item.status : "guarded")}</div><div><h3>${safeText(item.title || item.name || "Gói dịch vụ")}</h3><p>${safeText(item.description || "Thông tin quyền lợi do server phát hành.")}</p></div><span class="portal-module-card-footer"><span>${safeText(item.priceLabel || "Giá chờ Core Bridge")}</span><span class="portal-module-arrow">→</span></span></section>`;
-    }).join("") : renderEmpty("Catalog chưa được cấp", "Giá, Xu và chính sách payment chỉ xuất hiện khi Core Bridge gửi catalog đã xác minh.", "◇");
+    }).join("") : renderEmpty(emptyTitle, emptyText, "◇");
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.path === "/pricing" ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá hoặc khuyến mãi.</p></div>${badge(stateFor(page, context))}</div><div class="portal-module-grid">${cards}</div></section></article>`;
   }
 
@@ -732,7 +754,7 @@
     const enabled = canAct(page, context);
     const reason = actionBlockReason(page, context);
     return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p>
-      <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Giới hạn login/register do Core Bridge thực thi.</span></div></div>
+      <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
       <form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
       <div class="portal-notice" style="margin-top:16px"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div>
@@ -807,7 +829,11 @@
     const fields = {};
     if (form) {
       form.querySelectorAll("input, textarea, select").forEach((input) => {
-        if (input.type === "file") return;
+        if (input.type === "file") {
+          const selected = input.files && input.files.length ? input.files[0] : null;
+          if (selected) fields[input.name] = selected;
+          return;
+        }
         fields[input.name] = input.value;
       });
     }
@@ -839,23 +865,29 @@
     button.setAttribute("aria-expanded", String(opened));
   }
 
-  function bindInteractions(context) {
+  function bindInteractions() {
+    // The shell re-renders after every authenticated hydration. Delegated
+    // listeners therefore belong to the document once, while each action
+    // resolves the *current* signed-session bootstrap at click time. This
+    // prevents duplicate register/payment/feature events after re-mounting.
+    if (interactionsBound) return;
+    interactionsBound = true;
     document.addEventListener("click", (event) => {
       const menu = event.target.closest("[data-portal-menu]");
       if (menu) { toggleSidebar(); return; }
       if (event.target.closest("[data-portal-backdrop]")) { closeSidebar(); return; }
       const action = event.target.closest("[data-portal-action]");
-      if (action && !action.disabled) { dispatchAction(action, context); return; }
+      if (action && !action.disabled) { dispatchAction(action, getBootstrap()); return; }
       const link = event.target.closest(".portal-nav-link");
       if (link) closeSidebar();
-    }, { once: true });
+    });
     document.addEventListener("submit", (event) => {
       if (event.target.matches("[data-portal-form]")) {
         event.preventDefault();
         showToast("Form shell không tự gửi dữ liệu. Hãy chờ adapter FastAPI đã ký phiên.", "warning");
       }
-    }, { once: true });
-    window.addEventListener("keydown", (event) => { if (event.key === "Escape") closeSidebar(); }, { once: true });
+    });
+    window.addEventListener("keydown", (event) => { if (event.key === "Escape") closeSidebar(); });
   }
 
   function mountPortal(override) {
@@ -870,7 +902,7 @@
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
-    bindInteractions(context);
+    bindInteractions();
   }
 
   window.TOANAASPortal = Object.freeze({

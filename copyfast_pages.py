@@ -16,6 +16,19 @@ ROOT = Path(__file__).resolve().parent
 TEMPLATE = ROOT / "templates" / "portal_shell.html"
 
 
+def _portal_asset_version() -> str:
+    """Use a deterministic local asset stamp to prevent stale portal shells."""
+    asset_dir = ROOT / "static" / "portal"
+    try:
+        newest = max(
+            (item.stat().st_mtime_ns for item in asset_dir.glob("*") if item.is_file()),
+            default=0,
+        )
+    except OSError:
+        newest = 0
+    return str(newest or 1)
+
+
 def _title_for(path: str) -> str:
     normalized = path.rstrip("/") or "/"
     if normalized == "/":
@@ -33,7 +46,7 @@ def _title_for(path: str) -> str:
 def _fallback_template() -> str:
     # Keep the fallback compatible with the strict production CSP: bootstrap
     # data lives in inert JSON, never in an inline executable script.
-    return """<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>__PORTAL_TITLE__</title><link rel=\"stylesheet\" href=\"/static/portal/portal.css\"></head><body><main id=\"portal-root\"></main><script id=\"portal-bootstrap\" type=\"application/json\">__PORTAL_BOOTSTRAP__</script><script src=\"/static/portal/portal.js\" defer></script><script src=\"/static/portal/integration.js\" defer></script></body></html>"""
+    return """<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1\"><title>__PORTAL_TITLE__</title><link rel=\"stylesheet\" href=\"/static/portal/portal.css?v=__PORTAL_ASSET_VERSION__\"></head><body><main id=\"portal-root\"></main><script id=\"portal-bootstrap\" type=\"application/json\">__PORTAL_BOOTSTRAP__</script><script src=\"/static/portal/portal.js?v=__PORTAL_ASSET_VERSION__\" defer></script><script src=\"/static/portal/integration.js?v=__PORTAL_ASSET_VERSION__\" defer></script></body></html>"""
 
 
 def render_portal(path: str) -> HTMLResponse:
@@ -49,5 +62,10 @@ def render_portal(path: str) -> HTMLResponse:
         "catalogUrl": "/api/v1/catalog",
         "authUrl": "/api/v1/auth/me",
     }
-    output = template.replace("__PORTAL_TITLE__", html.escape(payload["title"])).replace("__PORTAL_BOOTSTRAP__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
+    output = (
+        template
+        .replace("__PORTAL_TITLE__", html.escape(payload["title"]))
+        .replace("__PORTAL_ASSET_VERSION__", _portal_asset_version())
+        .replace("__PORTAL_BOOTSTRAP__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
+    )
     return HTMLResponse(output)

@@ -12,6 +12,7 @@
 | /admin/jobs/{job_id}/refund | POST | admin_refund_job |
 | /admin/jobs/{job_id}/retry | POST | admin_retry_job |
 | /admin/manual-orders | GET | get_manual_orders |
+| /admin/modules/{module} | GET | admin_module |
 | /admin/payments | GET | admin_payments |
 | /admin/providers | GET | admin_providers |
 | /admin/summary | GET | admin_summary |
@@ -84,12 +85,14 @@
 | /media-app | GET | legacy_media_redirect |
 | /okrs | POST | add_okr |
 | /okrs | GET | get_okrs |
+| /packages | GET | packages |
 | /payments/create | POST | create_payment |
 | /payments/{payment_id} | GET | payment_status |
 | /payos/create-link | POST | create_web_payos_link |
 | /portal/affiliates/{user_id} | GET | customer_affiliates |
 | /portal/history/{user_id} | GET | customer_history |
 | /portal/projects/{user_id} | GET | customer_projects |
+| /pricing | GET | pricing |
 | /production | POST | add_production |
 | /production | GET | get_production |
 | /projects | POST | create_project |
@@ -117,6 +120,7 @@
 | /telegram/link/start | POST | start_telegram_link |
 | /telegram/link/status | GET | telegram_link_status |
 | /tts | POST | text_to_speech |
+| /uploads | POST | upload_to_canonical_staging |
 | /users | GET | get_all_users |
 | /verify | POST | verify_login |
 | /video-app | GET | legacy_video_redirect |

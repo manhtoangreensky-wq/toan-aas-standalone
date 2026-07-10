@@ -89,6 +89,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             """
+            CREATE TABLE IF NOT EXISTS web_bridge_callback_nonces (
+                request_id TEXT PRIMARY KEY,
+                expires_at TEXT NOT NULL,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
             CREATE TABLE IF NOT EXISTS web_idempotency (
                 scope TEXT NOT NULL,
                 key TEXT NOT NULL,
@@ -118,6 +127,9 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audit_created ON web_audit_events(created_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
         )
 
 

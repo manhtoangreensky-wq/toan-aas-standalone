@@ -1,5 +1,11 @@
 import importlib
+import hashlib
+import hmac
+import json
+from pathlib import Path
 import sys
+import time
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -14,6 +20,9 @@ def make_client(tmp_path, monkeypatch):
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-session-secret")
     monkeypatch.setenv("CORE_BRIDGE_CALLBACK_TOKEN", "bridge-test-token")
+    monkeypatch.setenv("CORE_BRIDGE_CALLBACK_HMAC_SECRET", "bridge-test-hmac")
+    monkeypatch.delenv("WEBAPP_LINK_CALLBACK_TOKEN", raising=False)
+    monkeypatch.delenv("WEBAPP_LINK_CALLBACK_HMAC_SECRET", raising=False)
     monkeypatch.delenv("CORE_BRIDGE_BASE_URL", raising=False)
     monkeypatch.delenv("CORE_BRIDGE_TOKEN", raising=False)
     monkeypatch.delenv("CORE_BRIDGE_HMAC_SECRET", raising=False)
@@ -21,6 +30,34 @@ def make_client(tmp_path, monkeypatch):
         sys.modules.pop(name, None)
     application = importlib.import_module("app").app
     return TestClient(application)
+
+
+def link_callback_headers(body, *, request_id=None, timestamp=None):
+    request_id = request_id or f"link-callback-{uuid.uuid4()}"
+    timestamp = timestamp or str(int(time.time()))
+    digest = hashlib.sha256(body).hexdigest()
+    material = f"{timestamp}.{request_id}.POST./api/v1/auth/internal/telegram-link/confirm.{digest}".encode("utf-8")
+    signature = hmac.new(b"bridge-test-hmac", material, hashlib.sha256).hexdigest()
+    return {
+        "X-TOAN-AAS-BRIDGE-TOKEN": "bridge-test-token",
+        "X-TOAN-AAS-Timestamp": timestamp,
+        "X-TOAN-AAS-Request-ID": request_id,
+        "X-TOAN-AAS-Signature": signature,
+        "Content-Type": "application/json",
+    }
+
+
+def confirm_link(client, code, *, role="user", request_id=None):
+    body = json.dumps(
+        {"code": code, "canonical_user_id": "telegram-123", "role": role},
+        ensure_ascii=False,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return client.post(
+        "/api/v1/auth/internal/telegram-link/confirm",
+        headers=link_callback_headers(body, request_id=request_id),
+        content=body,
+    )
 
 
 def register_and_link(client, *, role="user"):
@@ -31,11 +68,7 @@ def register_and_link(client, *, role="user"):
     link = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
     assert link.status_code == 200
     code = link.json()["data"]["code"]
-    confirmed = client.post(
-        "/api/v1/auth/internal/telegram-link/confirm",
-        headers={"X-TOAN-AAS-BRIDGE-TOKEN": "bridge-test-token"},
-        json={"code": code, "canonical_user_id": "telegram-123", "role": role},
-    )
+    confirmed = confirm_link(client, code, role=role)
     assert confirmed.json()["ok"] is True
     return csrf
 
@@ -58,6 +91,47 @@ def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
         )
         assert confirmed.status_code == 200
         assert confirmed.json()["error_code"] == "WEBAPP_PROVIDER_CALLS_DISABLED"
+
+
+def test_telegram_link_callback_requires_hmac_timestamp_and_one_time_nonce(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        registration = client.post("/api/v1/auth/register", json={"email": "link@example.com", "password": "correct-horse-battery-staple"})
+        csrf = registration.json()["data"]["csrf_token"]
+        code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
+        unsigned = client.post(
+            "/api/v1/auth/internal/telegram-link/confirm",
+            headers={"X-TOAN-AAS-BRIDGE-TOKEN": "bridge-test-token"},
+            json={"code": code, "canonical_user_id": "telegram-123"},
+        )
+        assert unsigned.status_code == 401
+        request_id = "link-callback-replay-0001"
+        confirmed = confirm_link(client, code, request_id=request_id)
+        assert confirmed.status_code == 200
+        replay = confirm_link(client, code, request_id=request_id)
+        assert replay.status_code == 401
+        assert replay.json()["error_code"] == "REQUEST_DENIED"
+
+
+def test_upload_rejects_path_traversal_and_never_falls_back_to_web_storage(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        headers = {"X-CSRF-Token": csrf, "Idempotency-Key": "upload-traversal-0001"}
+        traversal = client.post(
+            "/api/v1/uploads",
+            headers=headers,
+            files={"file": ("../unsafe.pdf", b"%PDF-1.4\nunsafe", "application/pdf")},
+        )
+        assert traversal.status_code == 422
+        assert traversal.json()["error_code"] == "REQUEST_INVALID"
+
+        guarded = client.post(
+            "/api/v1/uploads",
+            headers={"X-CSRF-Token": csrf, "Idempotency-Key": "upload-guarded-0001"},
+            files={"file": ("safe.pdf", b"%PDF-1.4\nsafe", "application/pdf")},
+        )
+        assert guarded.status_code == 200
+        assert guarded.json()["status"] == "guarded"
+        assert guarded.json()["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
 
 
 def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
@@ -93,12 +167,46 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
         assert stale_cached_role.json()["error_code"] == "REQUEST_DENIED"
 
 
+def test_every_admin_api_rechecks_canonical_role_for_reads_and_writes(tmp_path, monkeypatch):
+    """A stale role cache must never unlock JSON Admin ERP endpoints.
+
+    The test bridge is intentionally unconfigured, so a callback that only
+    claims ``role=admin`` proves neither the read endpoints nor CSRF-protected
+    writes can reach the bridge without live canonical confirmation.
+    """
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client, role="admin")
+        for path in (
+            "/api/v1/admin/summary",
+            "/api/v1/admin/users",
+            "/api/v1/admin/jobs",
+            "/api/v1/admin/payments",
+            "/api/v1/admin/providers",
+            "/api/v1/admin/tickets",
+        ):
+            response = client.get(path)
+            assert response.status_code == 403, path
+            assert response.json()["error_code"] == "REQUEST_DENIED"
+
+        writes = (
+            ("/api/v1/admin/jobs/job-1/retry", {"input": {}, "idempotency_key": "admin-retry-0001"}),
+            ("/api/v1/admin/jobs/job-1/refund", {"input": {}, "idempotency_key": "admin-refund-0001"}),
+            ("/api/v1/admin/features/video_single/freeze", {"frozen": True, "note": "test", "idempotency_key": "admin-freeze-0001"}),
+        )
+        for path, payload in writes:
+            response = client.post(path, headers={"X-CSRF-Token": csrf}, json=payload)
+            assert response.status_code == 403, path
+            assert response.json()["error_code"] == "REQUEST_DENIED"
+
+
 def test_portal_template_uses_inert_bootstrap_for_strict_csp(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         page = client.get("/dashboard")
         assert page.status_code == 200
         assert 'id="portal-bootstrap" type="application/json"' in page.text
         assert "window.__TOAN_AAS_PORTAL__=" not in page.text
+        assert "__PORTAL_ASSET_VERSION__" not in page.text
+        assert "/static/portal/portal.js?v=" in page.text
 
 
 def test_api_validation_errors_keep_the_standard_envelope(tmp_path, monkeypatch):
@@ -112,3 +220,34 @@ def test_api_validation_errors_keep_the_standard_envelope(tmp_path, monkeypatch)
             "data": {},
             "error_code": "REQUEST_INVALID",
         }
+
+
+def test_auth_rate_limit_is_server_side_and_separates_login_from_registration(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        for _ in range(8):
+            denied = client.post("/api/v1/auth/login", json={"email": "missing@example.com", "password": "not-the-right-password"})
+            assert denied.status_code == 200
+        login_limited = client.post("/api/v1/auth/login", json={"email": "missing@example.com", "password": "not-the-right-password"})
+        assert login_limited.status_code == 429
+        assert login_limited.json()["error_code"] == "AUTH_RATE_LIMITED"
+
+        for index in range(4):
+            registered = client.post(
+                "/api/v1/auth/register",
+                json={"email": f"rate-{index}@example.com", "password": "correct-horse-battery-staple"},
+            )
+            assert registered.status_code == 200
+        registration_limited = client.post(
+            "/api/v1/auth/register",
+            json={"email": "rate-final@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registration_limited.status_code == 429
+        assert registration_limited.json()["error_code"] == "AUTH_RATE_LIMITED"
+
+
+def test_portal_uses_a_single_delegated_listener_after_hydration():
+    source = (Path(__file__).parents[1] / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+    assert "let interactionsBound = false;" in source
+    assert "if (interactionsBound) return;" in source
+    assert "dispatchAction(action, getBootstrap())" in source
+    assert "bindInteractions(context)" not in source

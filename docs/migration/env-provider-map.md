@@ -366,8 +366,11 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `VIDEO_PUBLIC_BLOCK_TIERS`
 - `VIDEO_PUBLIC_COMING_SOON_TIERS`
 - `VIDEO_RETRY_BUFFER_FACTOR`
+- `WEBAPP_LINK_CALLBACK_HMAC_SECRET`
 - `WEBAPP_LINK_CALLBACK_TOKEN`
 - `WEBAPP_LINK_CALLBACK_URL`
+- `WEBAPP_UPLOAD_MAX_BYTES`
+- `WEBAPP_UPLOAD_MAX_MB`
 - `WEBHOOK_URL`
 - `WEBSITE_URL`
 - `WEB_BILLING_API_BASE_URL`
@@ -401,4 +404,4 @@ Only environment variable names are recorded. Values are never read and secret-s
 | Kling | 107 | bot.py, config/pricing_matrix_draft.json, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md |
 | Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Telegram | 617 | AGENTS.md, ARCHITECTURE.md, bot.py, code hoàn chỉnh của claude.py, CODEX_NEXT_TASK.md |
+| Telegram | 618 | AGENTS.md, ARCHITECTURE.md, bot.py, code hoàn chỉnh của claude.py, CODEX_NEXT_TASK.md |
