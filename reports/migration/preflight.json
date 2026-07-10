@@ -1,0 +1,19 @@
+{
+  "audit_mode": "static-only",
+  "bot": {
+    "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
+    "entrypoint_present": true,
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-bot-copyfast1-bridge"
+  },
+  "generated_at_utc": "2026-07-10T10:46:05+00:00",
+  "guarantees": [
+    "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
+    "Only source text and Python AST are read.",
+    "Report/document text is sanitized for secret-shaped literals."
+  ],
+  "schema_version": "1.0",
+  "webapp": {
+    "entrypoint_present": true,
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast1"
+  }
+}

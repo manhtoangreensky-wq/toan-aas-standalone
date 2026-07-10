@@ -1,0 +1,17 @@
+{
+  "name": "TOAN AAS Control Portal",
+  "short_name": "TOAN AAS",
+  "description": "TOAN AAS customer portal and admin control center.",
+  "start_url": "/dashboard",
+  "display": "standalone",
+  "background_color": "#07131f",
+  "theme_color": "#07131f",
+  "icons": [
+    {
+      "src": "/static/logo_chính_thức.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
