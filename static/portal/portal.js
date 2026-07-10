@@ -761,11 +761,57 @@
     </section></article>`;
   }
 
+  const RESULT_LABELS = Object.freeze({
+    title: "Tiêu đề", topic: "Chủ đề", prompt: "Prompt", meta_prompts: "Các prompt",
+    captions: "Caption", hook: "Hook", hooks: "Hook", body: "Nội dung", cta: "CTA",
+    hashtags: "Hashtag", video_ideas: "Ý tưởng video", post_ideas: "Ý tưởng bài đăng",
+    recommended_first: "Hướng nên làm trước", image_video_prompts: "Prompt ảnh/video",
+    variants: "Biến thể", script_15s: "Kịch bản 15 giây", script_30s: "Kịch bản 30 giây",
+    shots: "Danh sách cảnh", shot: "Cảnh", shot_count: "Số cảnh", image_prompt: "Prompt ảnh",
+    video_prompt: "Prompt video", scene_goal: "Mục tiêu cảnh", main_action: "Hành động chính",
+    estimated_xu: "Ước tính", pricing_rule: "Quy tắc giá", choices: "Các gói canonical",
+    label: "Tên gói", cost_xu: "Giá", note: "Ghi chú", source: "Nguồn canonical"
+  });
+
+  function resultLabel(key) {
+    return RESULT_LABELS[key] || String(key || "Dữ liệu").replace(/_/g, " ");
+  }
+
+  function renderCanonicalValue(value, depth) {
+    const level = Number(depth || 0);
+    if (value === null || value === undefined || value === "") return "<span class=\"portal-result-empty\">—</span>";
+    if (typeof value === "boolean") return `<span>${value ? "Có" : "Không"}</span>`;
+    if (typeof value === "number") return `<span>${safeText(String(value))}</span>`;
+    if (typeof value === "string") return `<span>${safeText(value)}</span>`;
+    if (level >= 3) return `<span>${safeText(JSON.stringify(value).slice(0, 500))}</span>`;
+    if (Array.isArray(value)) {
+      if (!value.length) return "<span class=\"portal-result-empty\">Chưa có dữ liệu</span>";
+      return `<ol class="portal-result-list">${value.slice(0, 8).map((item) => `<li>${renderCanonicalValue(item, level + 1)}</li>`).join("")}</ol>`;
+    }
+    if (typeof value === "object") {
+      const entries = Object.entries(value).filter(([key]) => !["available", "provider_called", "charged_xu", "requires_confirm"].includes(key)).slice(0, 14);
+      return `<div class="portal-result-grid">${entries.map(([key, item]) => `<section class="portal-result-item"><strong>${safeText(resultLabel(key))}</strong>${renderCanonicalValue(item, level + 1)}</section>`).join("")}</div>`;
+    }
+    return `<span>${safeText(String(value))}</span>`;
+  }
+
+  function renderCanonicalFlow(flow) {
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const payload = data.draft || data.estimate;
+    if (!payload || typeof payload !== "object") return "";
+    if (payload.available === false) {
+      return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Adapter chi tiết đang được bảo vệ</strong><p>${safeText(payload.reason || "Core Bridge đã nhận input nhưng chưa có helper canonical cho bước này.")}</p></div></div>`;
+    }
+    const content = payload.content || payload;
+    const heading = data.draft ? "Bản nháp từ bot.py" : "Ước tính canonical";
+    return `<section class="portal-canonical-result"><div class="portal-card-header"><div><h3 class="portal-card-title">${heading}</h3><p class="portal-card-subtitle">Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.</p></div>${badge(flow.status || "draft")}</div>${renderCanonicalValue(content, 0)}</section>`;
+  }
+
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = flow
-      ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Không có output giả được hiển thị."}</p></div></div>`
+      ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow)}`
       : renderEmpty("Chờ phản hồi Core Bridge", "Khi flow hoàn tất, bridge cung cấp trạng thái canonical và asset được xác minh.", "○");
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><div>${renderFormCard(page, context)}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
