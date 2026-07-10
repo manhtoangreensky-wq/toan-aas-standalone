@@ -190,7 +190,7 @@ def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_onl
     assert "payos.topup_catalog_available === true" in PORTAL
     assert 'optionsFrom: "topupPackages"' in PORTAL
     assert 'field.optionsFrom === "topupPackages"' in PORTAL
-    assert "Không nhập ảnh bill, số tài khoản, OTP hay thông tin thẻ vào Web App." in PORTAL
+    assert "Không nhập ảnh bill, số tài khoản, OTP, TXID hay thông tin thẻ vào Web App." in PORTAL
     assert "function renderPaymentLookup(context)" in PORTAL
     assert 'data-portal-action="payment-lookup"' in PORTAL
     assert "const PAYMENT_POLL_INTERVAL_MS = 10000;" in INTEGRATION
@@ -201,6 +201,20 @@ def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_onl
     assert 'if (account && account.canonical_user_id && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
     assert "/api/v1/billing/create-payment-link" not in PORTAL
     assert "/api/v1/billing/create-payment-link" not in INTEGRATION
+
+
+def test_manual_topup_guide_is_an_honest_bot_handoff_not_a_second_receipt_system() -> None:
+    assert "function renderManualTopupGuide(context)" in PORTAL
+    assert "Nạp thủ công: tiếp tục trong Telegram" in PORTAL
+    assert "pending_admin_review" in PORTAL
+    assert "approved" in PORTAL
+    assert "rejected" in PORTAL
+    assert "wallet_history_signal_available" in PORTAL
+    assert "Kiểm tra đơn PayOS" in PORTAL
+    assert "mã được bot tạo cho luồng thủ công" not in PORTAL
+    assert "pending_deposits" not in PORTAL
+    assert "pending_deposits" not in INTEGRATION
+    assert "manual-topup" not in INTEGRATION
 
 
 def test_job_and_payment_statuses_are_not_conflated() -> None:

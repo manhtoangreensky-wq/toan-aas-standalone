@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `62 passed` |
+| Web App | `python -m pytest -q` | `63 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -162,8 +162,14 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   `/naptien` (PayOS QR động) or `/thucong` (manual reconciliation) command;
   it never displays bank details, static QR data, bill uploads, OTPs or a
   browser-side approval action.
+- The manual top-up handoff now explains the Bot-owned sequence and labels
+  `pending_admin_review`, `approved` and `rejected` as process states without
+  claiming Web can read a bill/TXID or manual-deposit record. The current P0
+  bridge has no owner-scoped, redacted manual-deposit history adapter, so the
+  only Web-side signal after approval is the canonical wallet history.
 - A customer may query an ownership-checked payment order code through the
-  signed Web API. Pending orders use bounded signed-GET polling only; polling
-  neither calls PayOS nor changes a wallet/ledger state. The legacy billing,
+  signed Web API **for PayOS orders only**. Pending orders use bounded
+  signed-GET polling only; polling neither calls PayOS nor changes a
+  wallet/ledger state. The legacy billing,
   manual-topup and webhook routes are asserted unmounted so there is no second
   PayOS creator, webhook, order store or Xu writer in `app.py`.

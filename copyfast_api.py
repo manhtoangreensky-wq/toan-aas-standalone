@@ -530,7 +530,12 @@ async def payment_options(account: dict = Depends(require_account)):
                 "telegram_url": bot_chat_url,
                 "command": "/thucong",
                 "receipt_channel": "telegram_bot",
-                "status_lookup": True,
+                # The frozen P0 bridge can read owner-scoped PayOS orders,
+                # but intentionally has no sanitized pending-deposit history
+                # adapter. Do not imply that a browser can look up a manual
+                # bill/TXID or admin-review request.
+                "payment_lookup_available": False,
+                "wallet_history_signal_available": True,
             },
         },
     )

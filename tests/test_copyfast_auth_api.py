@@ -126,7 +126,8 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "telegram_url": "https://t.me/ToanAasSupportBot",
             "command": "/thucong",
             "receipt_channel": "telegram_bot",
-            "status_lookup": True,
+            "payment_lookup_available": False,
+            "wallet_history_signal_available": True,
         }
         assert "private-bank-account-must-not-leak" not in options.text
 
