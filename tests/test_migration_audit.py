@@ -95,6 +95,8 @@ async def dashboard():
         "known-gaps.md",
     ):
         assert (docs_dir / name).is_file()
+    assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
+    assert "Manual top-up stays a Bot handoff" in (docs_dir / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
 
 
 def test_static_audit_records_api_routes_db_env_and_background_signals(tmp_path: Path) -> None:
