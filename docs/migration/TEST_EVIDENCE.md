@@ -7,14 +7,14 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `18 passed` |
+| Web App | `python -m pytest -q` | `27 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
 | Bot bridge | `python -m py_compile local_worker.py`, `webapp_core_bridge.py` | passed |
 | Bot baseline | `python -m py_compile bot.py` | timed out after 124s in this local runtime; process stopped, no provider/import flow was executed |
 | Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values, 133 Web routes; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
-| Portal visual smoke | local dashboard at desktop and 390px mobile viewport | passed; clean Studio launchpad, mobile horizontal card rail, no browser console errors |
+| Portal visual smoke | local dashboard at desktop and 390px mobile viewport | prior launchpad smoke passed; the current Web-only Job/Onboarding/Admin refresh was not re-run because this session's browser policy refused the local URL. Syntax checks and presentation-contract tests passed instead. |
 
 ## Full bot-suite baseline result
 
@@ -47,9 +47,16 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
 - Telegram link codes are one-time and expiring. The bot-to-Web callback has
   a directional bearer token, HMAC-bound body/timestamp/request ID and a
   persistent nonce; private bridge requests also reject replays.
+- The Web onboarding screen starts the existing one-time link flow, renders
+  only its temporary code/deep link, and re-checks signed server status. It
+  neither accepts a raw Telegram ID nor alters the established PayOS webhook.
 - Uploads reject path traversal, unsupported MIME/signatures and oversized
   payloads twice (Web and bot). Raw bytes live only in bot-owned staging and
   feature inputs can reference only ownership-checked upload IDs.
+- Draft → estimate → confirm keeps only sanitized scalar form values and
+  canonical staging IDs in in-memory portal state. It never persists raw files
+  or secrets in localStorage, and re-rendering cannot silently turn a quote
+  into an empty request.
 - Pricing, packages and Admin read-only surfaces are returned from bot helper
   functions/tables; the portal never substitutes the feature registry as a
   price table.
@@ -74,6 +81,11 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   job/asset/signed-delivery adapter exists.
 - Provider/payment switches are disabled by default. A guarded route never
   fabricates a completed output or credits Xu.
-- Asset delivery verifies ownership and completed output first; until the bot
-  exposes a canonical temporary signed-delivery issuer, no result URL, file ID
-  or local path is returned to the Web App.
+- Job polling calls only the signed Web API. Active jobs retry transient bridge
+  failures with bounded backoff and leave the canonical status unchanged rather
+  than presenting a client-side completion.
+- Bridge job/asset metadata remains ownership-scoped, but a reported
+  `output_available` value is not artifact validation or delivery proof. The
+  portal now labels it separately from delivery and never renders a download,
+  preview, provider URL or operator endpoint until a canonical temporary
+  signed-delivery contract exists.

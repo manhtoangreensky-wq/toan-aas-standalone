@@ -1131,7 +1131,7 @@
         "wallet.js",
         "workflow_engine.py"
       ],
-      "occurrences": 107,
+      "occurrences": 112,
       "provider": "PayOS"
     },
     {
@@ -1328,7 +1328,7 @@
         "static/portal/portal.js",
         "video.py"
       ],
-      "occurrences": 84,
+      "occurrences": 102,
       "provider": "Telegram"
     }
   ],
@@ -2533,7 +2533,7 @@
   ],
   "schema_version": "1.0",
   "source_files_scanned": 90,
-  "source_fingerprint_sha256": "17b7903a65cb410c1e40a767ddddba258adafebaf8f7ddbfee1c61ac90b2e92c",
+  "source_fingerprint_sha256": "22650adaa590ca4b3af8ffe6bd2b4020a323c6dfe02bd60545e768838c2d5fa5",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast1",
   "ui_path_references": [
     {

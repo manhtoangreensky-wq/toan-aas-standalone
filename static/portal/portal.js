@@ -66,12 +66,13 @@
     ],
     image: [
       { name: "prompt", label: "Mô tả hình ảnh", control: "textarea", placeholder: "Chủ thể, phong cách, bối cảnh, tỷ lệ…" },
+      { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Giá và quota chỉ do Core Bridge phát hành. Không nhập Xu hoặc giá thủ công." },
       { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["1:1", "4:5", "16:9", "9:16"] },
       { name: "reference", label: "Tệp tham chiếu", type: "file", help: "Chỉ hiển thị khi upload an toàn và kiểm tra MIME đã được Core Bridge bật." }
     ],
     video: [
       { name: "brief", label: "Brief video", control: "textarea", placeholder: "Mục tiêu, cảnh, chuyển động, giọng đọc…" },
-      { name: "tier", label: "Mã tier video canonical", placeholder: "Chọn mã từ Bảng giá do bot cấp", help: "Không nhập giá hoặc Xu; Core Bridge sẽ đối chiếu mã tier với catalog hiện hành." },
+      { name: "tier", label: "Tier video", control: "select", optionsFrom: "videoTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Không nhập giá hoặc Xu; Core Bridge sẽ đối chiếu mã tier với catalog hiện hành." },
       { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 3", help: "Dùng để Core Bridge áp dụng đúng giảm giá theo cảnh của bot." },
       { name: "duration", label: "Thời lượng mục tiêu", control: "select", options: ["Theo gói hiện có", "Ngắn", "Tiêu chuẩn", "Nhiều cảnh"] },
       { name: "source", label: "Tệp / hình nguồn", type: "file", help: "Tệp chỉ vào staging canonical sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gọi provider." }
@@ -157,8 +158,7 @@
     ],
     support: [
       { name: "subject", label: "Chủ đề", placeholder: "Tóm tắt vấn đề" },
-      { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm." },
-      { name: "attachment", label: "Tệp đính kèm", type: "file", help: "Chỉ bật sau khi Core Bridge cấp upload ký tạm thời." }
+      { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Tệp đính kèm sẽ chỉ xuất hiện khi ticket adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file." }
     ],
     profile: [
       { name: "display_name", label: "Tên hiển thị", placeholder: "Chờ dữ liệu phiên" },
@@ -249,10 +249,10 @@
       type: "admin",
       access: "admin",
       layout: "admin",
-      status: "guarded",
-      action: "admin-review",
-      actionLabel: "Gửi yêu cầu review",
-      fields: copyFields(FIELD_SETS.adminFilter),
+      status: "read_only",
+      action: "none",
+      actionLabel: "",
+      fields: [],
       notes: [
         "Quyền quản trị phải được máy chủ xác nhận từ signed session.",
         "Các thao tác ghi, retry, refund và freeze đều chờ Core Bridge, CSRF và audit event."
@@ -275,7 +275,7 @@
     notes: ["Chính sách mật khẩu và email verification được Core Bridge thực thi.", "Không có tài khoản, session hoặc token nào được giả lập trong shell."]
   });
   customerPage("/onboarding", "Thiết lập tài khoản", "Hoàn thiện hồ sơ và liên kết Telegram bằng mã dùng một lần do bot cấp.", ICONS.account, {
-    fields: copyFields(FIELD_SETS.telegramLink), action: "complete-onboarding", actionLabel: "Xác minh liên kết", status: "guarded",
+    layout: "onboarding", fields: [], action: "start-telegram-link", actionLabel: "Tạo mã liên kết", status: "guarded",
     notes: ["Mã phải là one-time, hết hạn và được Core Bridge đánh dấu đã dùng.", "Không nhận Telegram ID thô từ URL hay localStorage."]
   });
   customerPage("/account", "Tài khoản & bảo mật", "Quản lý thông tin hồ sơ và trạng thái liên kết theo dữ liệu server-side.", ICONS.account, {
@@ -291,7 +291,7 @@
   customerPage("/wallet/topup", "Nạp Xu", "Khởi tạo thanh toán qua bridge canonical; giao diện này không tạo PayOS link hay webhook.", ICONS.wallet, {
     layout: "wallet", action: "payment-create", actionLabel: "Tạo yêu cầu thanh toán", status: "guarded",
     fields: [
-      { name: "package", label: "Gói nạp", control: "select", options: ["Chờ catalog từ server"] },
+      { name: "package", label: "Gói nạp", control: "select", optionsFrom: "packages", emptyLabel: "Chọn gói từ catalog canonical", help: "Catalog và giá được bot phát hành. Web không tự tính Xu hoặc tạo lại PayOS webhook." },
       { name: "note", label: "Ghi chú (tuỳ chọn)", placeholder: "Không nhập dữ liệu thẻ hoặc khoá bí mật" }
     ],
     notes: ["Payment, amount, signature và webhook chỉ do bot/Core Bridge xử lý.", "Shell không redirect, không finalize và không ghi Xu."]
@@ -308,7 +308,7 @@
   customerPage("/assets", "Thư viện tài sản", "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời.", ICONS.assets, {
     layout: "assets", action: "none", status: "empty"
   });
-  customerPage("/support", "Hỗ trợ", "Tạo yêu cầu hỗ trợ không kèm secret; tệp chỉ được nhận qua upload ký tạm thời.", ICONS.support, {
+  customerPage("/support", "Hỗ trợ", "Tạo yêu cầu hỗ trợ không kèm secret; ticket hiện nhận nội dung văn bản cho đến khi adapter tệp ký tạm thời được xác minh.", ICONS.support, {
     fields: copyFields(FIELD_SETS.support), action: "create-ticket", actionLabel: "Tạo ticket", status: "guarded"
   });
   customerPage("/tickets", "Ticket của tôi", "Theo dõi ticket thuộc sở hữu của bạn; nội dung được nạp từ Core Bridge khi phiên hợp lệ.", ICONS.ticket, {
@@ -448,6 +448,11 @@
       assets: Array.isArray(source.assets) ? source.assets : [],
       tickets: Array.isArray(source.tickets) ? source.tickets : [],
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
+      pricingCatalog: source.pricingCatalog && typeof source.pricingCatalog === "object" ? source.pricingCatalog : {},
+      packageCatalog: source.packageCatalog && typeof source.packageCatalog === "object" ? source.packageCatalog : {},
+      linkFlow: source.linkFlow && typeof source.linkFlow === "object" ? source.linkFlow : {},
+      linkStatus: source.linkStatus && typeof source.linkStatus === "object" ? source.linkStatus : {},
+      jobFilter: typeof source.jobFilter === "string" ? source.jobFilter : "all",
       readiness: source.readiness && typeof source.readiness === "object" ? source.readiness : {},
       voiceProfiles: Array.isArray(source.voiceProfiles) ? source.voiceProfiles.slice(0, 20) : [],
       profile: source.profile && typeof source.profile === "object" ? source.profile : {},
@@ -482,8 +487,8 @@
       return Object.freeze({
         path: "/admin/users/:id", routePath: normalized, title: "Chi tiết người dùng", icon: ICONS.users, section: "Admin ERP",
         description: "Thông tin người dùng chỉ xuất hiện sau permission check server-side và được redaction theo role.",
-        status: "guarded", access: "admin", layout: "admin", type: "admin", action: "admin-review", actionLabel: "Gửi yêu cầu review",
-        fields: copyFields(FIELD_SETS.adminFilter), recordId: userId,
+        status: "read_only", access: "admin", layout: "admin", type: "admin", action: "none", actionLabel: "",
+        fields: [], recordId: userId,
         notes: ["Không sử dụng admin_id do browser gửi.", "Wallet adjustment/refund cần Core Bridge, CSRF, idempotency và audit."]
       });
     }
@@ -492,7 +497,7 @@
       return Object.freeze({
         path: "/admin/:module", routePath: normalized, title: `Admin · ${label}`, icon: ICONS.admin, section: "Admin ERP",
         description: "Compatibility surface cho command quản trị của bot. Core Bridge phải xác minh quyền, confirmation, CSRF và audit trước mọi thay đổi.",
-        status: "guarded", access: "admin", layout: "admin", type: "admin", action: "admin-review", actionLabel: "Yêu cầu kiểm tra", fields: copyFields(FIELD_SETS.adminFilter),
+        status: "read_only", access: "admin", layout: "admin", type: "admin", action: "none", actionLabel: "", fields: [],
         notes: ["Không dùng admin ID do browser gửi.", "Nếu bot chưa có adapter Web đã kiểm chứng, action được giữ guarded và có audit."]
       });
     }
@@ -518,7 +523,7 @@
     const csrfReady = context.session.csrfReady === true || context.bridge.csrfReady === true;
     const bridgeReady = context.bridge.available === true;
     if (page.access === "public") return capability;
-    if (page.action === "complete-onboarding") return context.session.authenticated === true && csrfReady && capability;
+    if (page.action === "start-telegram-link" || page.action === "refresh-link-status") return context.session.authenticated === true && csrfReady && capability;
     if (page.access === "admin" && !context.isAdmin) return false;
     return context.session.authenticated === true && csrfReady && bridgeReady && capability;
   }
@@ -627,16 +632,21 @@
       </div>`;
   }
 
-  function renderFields(fields, enabled, context) {
+  function renderFields(fields, enabled, context, fieldValues) {
     if (!fields || !fields.length) return "";
+    const values = fieldValues && typeof fieldValues === "object" ? fieldValues : {};
     return `<div class="portal-fields">${fields.map((field) => {
       const wide = field.control === "textarea" || field.type === "file" || field.wide;
       const id = `portal-field-${safeText(field.name || "input").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
       const disabled = enabled ? "" : " disabled";
       const help = field.help ? `<span class="portal-field-help">${safeText(field.help)}</span>` : "";
+      const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
+      const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
+      const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
+      const staged = stagedUploadCount ? `<span class="portal-field-staged">${safeText(String(stagedUploadCount))} tệp đã vào staging canonical; không cần chọn lại để estimate/confirm.</span>` : "";
       let control;
       if (field.control === "textarea") {
-        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${disabled}></textarea>`;
+        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${disabled}>${safeText(value)}</textarea>`;
       } else if (field.control === "select") {
         let options = Array.isArray(field.options) ? field.options : [];
         if (field.optionsFrom === "voiceProfiles") {
@@ -645,22 +655,45 @@
             .filter((profile) => profile && profile.id && profile.tts_ready)
             .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || "Giọng chưa đặt tên"}${profile.is_default ? " · Mặc định" : ""}` }));
         }
-        const empty = field.emptyLabel ? `<option value="">${safeText(field.emptyLabel)}</option>` : "";
+        if (field.optionsFrom === "imageTiers" || field.optionsFrom === "videoTiers") {
+          const key = field.optionsFrom === "imageTiers" ? "image_tiers" : "video_tiers";
+          const tiers = context && context.pricingCatalog && Array.isArray(context.pricingCatalog[key]) ? context.pricingCatalog[key] : [];
+          options = tiers
+            .filter((tier) => tier && tier.code)
+            .map((tier) => ({
+              value: String(tier.code),
+              label: `${tier.label || tier.code}${Number.isFinite(Number(tier.cost_xu)) ? ` · ${tier.cost_xu} Xu` : ""}`
+            }));
+        }
+        if (field.optionsFrom === "packages") {
+          const catalog = context && context.packageCatalog && typeof context.packageCatalog === "object" ? context.packageCatalog : {};
+          options = [...(Array.isArray(catalog.monthly) ? catalog.monthly : []), ...(Array.isArray(catalog.combos) ? catalog.combos : [])]
+            .filter((item) => item && item.code && item.manual !== true)
+            .map((item) => {
+              const price = Number(item.price_vnd);
+              const priceLabel = Number.isFinite(price) && price > 0 ? ` · ${price.toLocaleString("vi-VN")}đ` : " · Chờ giá canonical";
+              return { value: String(item.code), label: `${item.label || item.code}${priceLabel}` };
+            });
+        }
+        const empty = field.emptyLabel ? `<option value=""${value === "" ? " selected" : ""}>${safeText(field.emptyLabel)}</option>` : "";
         const optionMarkup = options.map((option) => {
           const value = option && typeof option === "object" ? option.value : option;
           const label = option && typeof option === "object" ? option.label : option;
-          return `<option value="${safeText(value)}">${safeText(label)}</option>`;
+          const selected = String(value) === String(rawValue) ? " selected" : "";
+          return `<option value="${safeText(value)}"${selected}>${safeText(label)}</option>`;
         }).join("");
         control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${disabled}>${empty}${optionMarkup}</select>`;
       } else if (field.type === "checkbox") {
-        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${disabled}><span>Tôi xác nhận</span></label>`;
+        const checked = rawValue === true || rawValue === "true" || rawValue === 1 || rawValue === "1" ? " checked" : "";
+        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${disabled}><span>Tôi xác nhận</span></label>`;
       } else {
         const type = ["email", "password", "file", "number", "text"].includes(field.type) ? field.type : "text";
         const autocomplete = field.autocomplete ? ` autocomplete="${safeText(field.autocomplete)}"` : "";
         const multiple = type === "file" && field.multiple ? " multiple" : "";
-        control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${autocomplete}${multiple}${disabled}>`;
+        const valueAttribute = type === "file" || type === "password" ? "" : ` value="${safeText(value)}"`;
+        control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${disabled}>`;
       }
-      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}</label>${control}${help}</div>`;
+      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}</label>${control}${help}${staged}</div>`;
     }).join("")}</div>`;
   }
 
@@ -721,7 +754,7 @@
       ? `<div class="portal-flow-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>${flowStatus === "awaiting_confirm" ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Xác nhận chạy</button>` : ""}</div>`
       : "";
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : safeText(reason)}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
-      <form class="portal-form" id="${safeText(formId)}" data-portal-form novalidate>${renderFields(page.fields, enabled, context)}
+      <form class="portal-form" id="${safeText(formId)}" data-portal-form novalidate>${renderFields(page.fields, enabled, context, flow && flow.input)}
         <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."}</span>
           <button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel || "Tiếp tục")}</button>
         </div>
@@ -731,7 +764,8 @@
   function renderHero(page, context) {
     const state = stateFor(page, context);
     const route = page.routePath || page.path;
-    const hasAction = page.action && page.action !== "none";
+    const linkPending = page.action === "start-telegram-link" && context.linkFlow && context.linkFlow.data && context.linkFlow.data.code && !(context.linkStatus && context.linkStatus.linked === true);
+    const hasAction = page.action && page.action !== "none" && !linkPending;
     const enabled = hasAction && canAct(page, context);
     const reason = actionBlockReason(page, context);
     return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(page.section || "TOAN AAS")}</div>
@@ -767,8 +801,15 @@
   }
 
   function renderDashboard(page, context) {
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${renderStudioLaunchpad(context)}${renderModuleCards(context)}
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Job và asset thuộc phiên chỉ có mặt sau khi bridge kiểm tra ownership.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderEmpty("Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả dữ liệu trạng thái tại đây.", "⌛")}</section></article>`;
+    const jobs = Array.isArray(context.jobs) ? context.jobs.slice(0, 5) : [];
+    const assets = Array.isArray(context.assets) ? context.assets.slice(0, 5) : [];
+    const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : null;
+    const quickMetrics = wallet
+      ? `<section class="portal-admin-grid"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(String(wallet.balance_xu || 0))}</strong><em>Không tính lại ở browser</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))}</strong><em>Đọc từ ledger canonical</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`
+      : "";
+    const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; file phải chờ delivery ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${deliveryPending()}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}${renderStudioLaunchpad(context)}${renderModuleCards(context)}${activity}</article>`;
   }
 
   function renderStudioLaunchpad(context) {
@@ -829,30 +870,55 @@
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.path === "/pricing" ? "Giá theo catalog" : "Gói hiện có"}</h2><p class="portal-card-subtitle">Không tự suy đoán tỷ lệ Xu, giá hoặc khuyến mãi.</p></div>${badge(stateFor(page, context))}</div><div class="portal-module-grid">${cards}</div></section></article>`;
   }
 
+  const JOB_FILTERS = Object.freeze([
+    ["all", "Tất cả"], ["queued", "Đã xếp hàng"], ["processing", "Đang xử lý"], ["completed", "Hoàn tất"], ["failed", "Thất bại"]
+  ]);
+
+  function jobStatus(item) {
+    const value = String(item && item.status || "guarded").toLowerCase();
+    if (ALLOWED_STATES.has(value)) return value;
+    const aliases = { pending: "queued", new: "queued", running: "processing", success: "completed", succeeded: "completed", paid: "completed", active: "ready", inactive: "disabled", cancelled: "failed", canceled: "failed", error: "failed" };
+    return aliases[value] || "guarded";
+  }
+
+  function reportedOutput(item) {
+    return item && item.output_available
+      ? `<span class="portal-delivery-state" data-delivery="reported">Engine đã báo output</span>`
+      : `<span class="portal-delivery-state" data-delivery="waiting">Chưa có metadata</span>`;
+  }
+
+  function deliveryPending() {
+    return `<span class="portal-delivery-state" data-delivery="pending">Chờ delivery canonical</span>`;
+  }
+
   function renderJobs(page, context) {
-    const jobs = Array.isArray(context.jobs) ? context.jobs : [];
+    const allJobs = Array.isArray(context.jobs) ? context.jobs : [];
+    const selected = JOB_FILTERS.some(([value]) => value === context.jobFilter) ? context.jobFilter : "all";
+    const jobs = selected === "all" ? allJobs : allJobs.filter((item) => jobStatus(item) === selected);
+    const refreshEnabled = context.capabilities && context.capabilities["refresh-jobs"] === true;
+    const counts = Object.fromEntries(JOB_FILTERS.map(([status]) => [status, status === "all" ? allJobs.length : allJobs.filter((item) => jobStatus(item) === status).length]));
+    const filters = `<div class="portal-filter-bar" aria-label="Lọc job">${JOB_FILTERS.map(([status, label]) => `<button class="portal-filter-button${selected === status ? " is-active" : ""}" type="button" data-portal-action="filter-jobs" data-job-filter="${status}" aria-pressed="${selected === status}">${safeText(label)} <span>${safeText(String(counts[status] || 0))}</span></button>`).join("")}</div>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Danh sách job</h2><p class="portal-card-subtitle">Chỉ bao gồm job thuộc signed session hiện tại.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Cập nhật", "Output"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${item.output_available ? "Có output" : "Chưa có"}</td>`, "Chưa có job được xác minh", "Core Bridge sẽ trả job sau khi tạo/confirm thành công.")}</section></article>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Danh sách job</h2><p class="portal-card-subtitle">Chỉ bao gồm job thuộc signed session hiện tại. “Engine đã báo output” chưa đồng nghĩa có file Web để tải.</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-jobs" data-portal-route="/jobs"${refreshEnabled ? "" : " disabled"}>Làm mới</button><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div></div>${filters}${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Cập nhật", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td>`, selected === "all" ? "Chưa có job được xác minh" : "Không có job ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả job sau khi tạo/confirm thành công." : "Đổi bộ lọc hoặc làm mới để nhận trạng thái canonical mới nhất.")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Delivery được tách riêng khỏi engine</strong><p>Job completed hoặc metadata output không tạo preview/download. Cần một signed delivery contract, ownership check và validation artifact trước khi Web mở file.</p></div></div></section></article>`;
   }
 
   function renderJobDetail(page, context) {
     const record = safeText(page.recordId || "—");
     const job = context.jobDetail && typeof context.jobDetail === "object" ? context.jobDetail : null;
     const detail = job && Object.keys(job).length
-      ? `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tính năng</span><span class="portal-summary-value">${safeText(job.feature || job.job_type || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(job.status || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Cập nhật</span><span class="portal-summary-value">${safeText(job.updated_at || job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Output</span><span class="portal-summary-value">${job.output_available ? "Đã xác minh" : "Chưa sẵn sàng"}</span></div></div>`
+      ? `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tính năng</span><span class="portal-summary-value">${safeText(job.feature || job.job_type || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Trạng thái</span><span class="portal-summary-value">${safeText(job.status || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Cập nhật</span><span class="portal-summary-value">${safeText(job.updated_at || job.created_at || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Output engine</span><span class="portal-summary-value">${job.output_available ? "Có metadata output" : "Chưa có metadata"}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Delivery Web</span><span class="portal-summary-value">Chờ signed delivery canonical</span></div></div>`
       : renderEmpty("Chưa có job detail an toàn", "Bridge cần kiểm tra ownership trước khi trả request, timeline và output của job này.", "⌛");
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job ${record}</h2><p class="portal-card-subtitle">ID hiển thị không xác thực dữ liệu hoặc quyền download.</p></div>${badge(job && job.status ? job.status : stateFor(page, context))}</div>${detail}</section>
-      <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Delivery protection</h2><p class="portal-card-subtitle">Không có download trực tiếp từ path đoán được.</p></div></div>${renderNotes(page)}</aside></div></article>`;
+      <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Delivery protection</h2><p class="portal-card-subtitle">Không có download trực tiếp từ path đoán được.</p></div>${deliveryPending()}${renderNotes(page)}</aside></div></article>`;
   }
 
   function renderAssets(page, context) {
     const assets = Array.isArray(context.assets) ? context.assets : [];
-    const delivery = (item) => item.download_ready
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-download" data-asset-id="${safeText(item.id || "")}">Yêu cầu URL ký</button>`
-      : "Chưa sẵn sàng";
+    const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản riêng tư</h2><p class="portal-card-subtitle">Preview và download cần output validation, ownership check và signed URL.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${safeText(item.created_at || "—")}</td><td>${delivery(item)}</td>`, "Chưa có tài sản có thể mở", "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge.")}</section></article>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản riêng tư</h2><p class="portal-card-subtitle">Preview và download cần output validation, ownership check và signed URL. Metadata không phải file được cấp quyền.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${safeText(item.created_at || "—")}</td><td>${deliveryPending()}</td>`, "Chưa có tài sản có thể mở", "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge.")}</section></article>`;
   }
 
   function renderTickets(page, context) {
@@ -868,6 +934,37 @@
         <div class="portal-panel-row"><span class="portal-panel-row-icon">2</span><div><strong>${privacy ? "Quyền truy cập" : "Xác nhận rõ ràng"}</strong><span>${privacy ? "Dữ liệu riêng tư cần ownership và role check server-side trước khi render hoặc tải xuống." : "Flow feature sử dụng draft → estimate → confirm → queued/processing → completed/failed/guarded."}</span></div></div>
         <div class="portal-panel-row"><span class="portal-panel-row-icon">3</span><div><strong>Thông báo cập nhật</strong><span>Văn bản pháp lý đầy đủ sẽ thay thế khung này khi module content được đưa vào production.</span></div></div></div>
     </section></article>`;
+  }
+
+  function safeTelegramLink(value) {
+    if (typeof value !== "string" || !value) return "";
+    try {
+      const url = new URL(value);
+      return url.protocol === "https:" && (url.hostname === "t.me" || url.hostname.endsWith(".t.me")) ? url.href : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function renderOnboarding(page, context) {
+    const flow = context.linkFlow && typeof context.linkFlow === "object" ? context.linkFlow : {};
+    const data = flow.data && typeof flow.data === "object" ? flow.data : {};
+    const status = context.linkStatus && typeof context.linkStatus === "object" ? context.linkStatus : {};
+    const linked = status.linked === true || context.bridge.available === true;
+    const enabled = canAct(page, context);
+    const reason = actionBlockReason(page, context);
+    const code = typeof data.code === "string" && data.code ? data.code : "";
+    const deepLink = safeTelegramLink(data.deep_link);
+    const pending = code
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Xác minh trong Telegram</h2><p class="portal-card-subtitle">Mã chỉ sống trong phiên này; không được lưu trong localStorage hoặc gửi sang provider.</p></div>${badge("awaiting_confirm")}</div>
+        <div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Mã một lần</span><code class="portal-link-code">${safeText(code)}</code></div><div class="portal-summary-item"><span class="portal-summary-key">Hiệu lực</span><span class="portal-summary-value">${safeText(String(data.expires_in_minutes || "—"))} phút</span></div></div>
+        <div class="portal-form-footer"><span class="portal-form-note">Mở bot TOAN AAS, dùng deep link hoặc gửi <code>/linkweb &lt;mã&gt;</code>. Bot là authority duy nhất xác minh Telegram identity.</span>${deepLink ? `<a class="portal-button portal-button--primary" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">Mở Telegram</a>` : ""}<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>Kiểm tra liên kết</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-link" data-portal-route="/onboarding" data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị. Bạn có chắc muốn tiếp tục?"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>Tạo mã mới</button></div>
+      </section>`
+      : `<section class="portal-card portal-card-pad">${renderEmpty("Chưa có mã liên kết", "Tạo mã một lần, sau đó xác minh trong bot TOAN AAS. Browser không nhận Telegram ID hoặc token thô.", "⌁")}</section>`;
+    const completed = `<section class="portal-card portal-card-pad"><div class="portal-state" data-state="completed"><span class="portal-state-icon" aria-hidden="true">✓</span><div><h2>Telegram đã liên kết</h2><p>Phiên Web có thể đọc dữ liệu canonical qua Core Bridge. Xu, PayOS, job và provider vẫn do bot điều phối.</p><div class="portal-state-meta"><span>Identity canonical đã xác minh</span><span>Không lưu Telegram ID ở browser</span></div></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/dashboard">Vào Dashboard</a></div></section>`;
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
+      ${linked ? completed : pending}
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách hoạt động</h2><p class="portal-card-subtitle">Luồng liên kết không lặp lại webhook hoặc PayOS.</p></div></div><div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon">1</span><div><strong>Tạo mã một lần</strong><span>Web server tạo, băm và đặt hạn dùng cho mã liên kết.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon">2</span><div><strong>Xác nhận trong bot</strong><span>Bot xác minh Telegram identity và gọi callback nội bộ đã ký.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon">3</span><div><strong>Quay lại portal</strong><span>Portal kiểm tra trạng thái signed session; không tự nhận quyền từ dữ liệu browser.</span></div></div></div></section></article>`;
   }
 
   function renderAuth(page, context) {
@@ -924,7 +1021,7 @@
       return `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Adapter chi tiết đang được bảo vệ</strong><p>${safeText(payload.reason || "Core Bridge đã nhận input nhưng chưa có helper canonical cho bước này.")}</p></div></div>`;
     }
     const content = payload.content || payload;
-    const heading = data.draft ? "Bản nháp từ bot.py" : "Ước tính canonical";
+    const heading = data.draft ? "Bản nháp canonical" : "Ước tính canonical";
     return `<section class="portal-canonical-result"><div class="portal-card-header"><div><h3 class="portal-card-title">${heading}</h3><p class="portal-card-subtitle">Nguồn: ${safeText(payload.source || "canonical_bot")} · Chưa gọi provider · Chưa trừ Xu.</p></div>${badge(flow.status || "draft")}</div>${renderCanonicalValue(content, 0)}</section>`;
   }
 
@@ -950,36 +1047,75 @@
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
     const scope = page.path.startsWith("/image") ? "image" : page.path.startsWith("/video") ? "video" : page.path.startsWith("/voice") ? "voice" : page.path.startsWith("/music") ? "music" : page.path.startsWith("/subtitle") ? "subtitle" : "";
     const scopedAssets = scope ? assets.filter((item) => String(item.feature || item.job_type || "").toLowerCase().includes(scope)) : assets;
-    const delivery = (item) => item.download_ready
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-download" data-asset-id="${safeText(item.id || "")}">Yêu cầu URL ký</button>`
-      : "Chưa sẵn sàng";
     let content;
     if (page.view === "voices") {
       content = renderVoiceVault(context);
     } else if (page.view === "jobs") {
       content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job thuộc phiên</h2><p class="portal-card-subtitle">Không có polling provider trực tiếp từ browser.</p></div></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Cập nhật"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có job được xác minh", "Core Bridge sẽ chỉ trả job thuộc signed session hiện tại.")}</section>`;
     } else {
-      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản thuộc phiên</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${delivery(item)}</td>`, "Chưa có tài sản được xác minh", "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.")}</section>`;
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản thuộc phiên</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(item.status || "guarded")}</td><td>${deliveryPending()}</td>`, "Chưa có tài sản được xác minh", "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.")}</section>`;
     }
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   function renderAdminOverview(page, context) {
-    const counts = context.adminData && context.adminData.counts ? context.adminData.counts : {};
-    const metrics = [["Users", String(counts.users || "—"), "Dữ liệu cần role check"], ["Engine jobs", String(counts.engine_jobs || "—"), "Đọc từ queue canonical"], ["Payment", String(counts.payments || "—"), "Không có ledger client"], ["Worker jobs", String(counts.worker_jobs || "—"), "Trạng thái được redaction"]];
+    const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
+    const counts = data.counts || {};
+    const readiness = data.readiness && typeof data.readiness === "object" ? Object.entries(data.readiness) : [];
+    const readyCount = readiness.filter(([, item]) => item && item.public_ready).length;
+    const metrics = [["Users", String(counts.users || "—"), "Dữ liệu cần role check"], ["Engine jobs", String(counts.engine_jobs || "—"), "Đọc từ queue canonical"], ["Payment", String(counts.payments || "—"), "Không có ledger client"], ["Readiness", readiness.length ? `${readyCount}/${readiness.length}` : "—", "Feature public-ready"]];
+    const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
+    const readinessRows = readiness.slice(0, 8);
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${context.isAdmin ? "Admin session đã được server xác nhận" : "Admin ERP đang chờ signed session"}</h2><p>${context.isAdmin ? "Tất cả read/write vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị." : "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session trước khi render dữ liệu."}</p></div></div></section>
       <section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${label}</span><strong>${value}</strong><em>${note}</em></div>`).join("")}</section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Công việc vận hành</h2><p class="portal-card-subtitle">Queue hành động cần confirmation, CSRF và audit event.</p></div></div>${renderEmpty("Chưa có sự kiện đã được cấp", "Không có admin data, retry, refund hay provider operation giả lập.", "⌘")}</section>${renderSummary(page, context)}</div></article>`;
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Readiness canonical</h2><p class="portal-card-subtitle">Chỉ xem trạng thái bot đã redaction; không bật/tắt provider từ trình duyệt.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${renderRowsTable(["Tính năng", "Trạng thái", "Adapter"], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, "Chưa có readiness được cấp", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực.")}</section>${renderSummary(page, context)}</div></article>`;
+  }
+
+  function adminModuleKey(page, context) {
+    const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
+    return String(data.module || (page.routePath || page.path).split("/").filter(Boolean)[1] || "overview").toLowerCase().replace(/_/g, "-");
+  }
+
+  function adminNumber(value, suffix) {
+    const parsed = Number(value);
+    const display = Number.isFinite(parsed) ? parsed.toLocaleString("vi-VN") : "—";
+    return `${display}${suffix || ""}`;
+  }
+
+  function renderAdminDataTable(page, context) {
+    const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
+    const rows = Array.isArray(data.items) ? data.items : [];
+    const module = adminModuleKey(page, context);
+    if (["users", "user", "wallet"].includes(module)) {
+      return renderRowsTable(["Người dùng", "Tên hiển thị", "Số dư", "Đã dùng", "Gói", "Tạo lúc"], rows, (item) => `<td>${safeText(item.user_id || "—")}</td><td>${safeText(item.username || "—")}</td><td>${safeText(adminNumber(item.balance_xu, " Xu"))}</td><td>${safeText(adminNumber(item.total_spent_xu, " Xu"))}</td><td>${item.is_vip ? "VIP" : "Chuẩn"}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có người dùng được cấp", "Core Bridge chỉ trả các trường phù hợp với role quản trị hiện tại.");
+    }
+    if (["payments", "topups", "revenue", "refunds"].includes(module)) {
+      return renderRowsTable(["Mã giao dịch", "Người dùng", "Giá trị", "Xu", "Loại", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.order_code || item.id || "—")}</td><td>${safeText(item.user_id || "—")}</td><td>${safeText(adminNumber(item.amount_vnd, " đ"))}</td><td>${safeText(adminNumber(item.xu, " Xu"))}</td><td>${safeText(item.type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.paid_at || item.created_at || "—")}</td>`, "Chưa có giao dịch được cấp", "Web App không tính lại số tiền, Xu, refund hoặc trạng thái PayOS.");
+    }
+    if (["jobs", "failed-jobs", "workers", "runtime"].includes(module)) {
+      return renderRowsTable(["Job", "Tính năng", "Trạng thái", "Cập nhật", "Output engine", "Delivery"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || item.job_type || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td>${reportedOutput(item)}</td><td>${deliveryPending()}</td>`, "Chưa có job vận hành được cấp", "Admin view vẫn không hiển thị URL provider, local path hay download không ký.");
+    }
+    if (["providers", "provider-cost", "features", "freezes", "pricing", "promos"].includes(module)) {
+      return renderRowsTable(["Tính năng", "Trạng thái", "Lý do đã rút gọn", "Cập nhật"], rows, (item) => `<td>${safeText(item.feature || item.id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.reason || "—")}</td><td>${safeText(item.updated_at || "—")}</td>`, "Chờ trạng thái canonical", "Feature/provider readiness chỉ đọc. Freeze, giá và provider operation không được thực hiện từ UI.");
+    }
+    if (["tickets", "support"].includes(module)) {
+      return renderRowsTable(["Ticket", "Loại", "Ưu tiên", "Trạng thái", "Đính kèm", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${badge(jobStatus(item))}</td><td>${item.has_attachment ? "Có" : "Không"}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có metadata ticket được cấp", "Nội dung, username, Telegram attachment ID và thread ticket không được render trong bảng ERP này.");
+    }
+    if (["audit", "security"].includes(module)) {
+      return renderRowsTable(["Sự kiện", "Hành động", "Kết quả", "Thời điểm"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có audit event được cấp", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng.");
+    }
+    return renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Module đang chờ adapter canonical", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp.");
   }
 
   function renderAdmin(page, context) {
-    const enabled = canAct(page, context);
-    const reason = actionBlockReason(page, context);
+    const data = context.adminData && typeof context.adminData === "object" ? context.adminData : {};
+    const refreshEnabled = context.capabilities && context.capabilities["refresh-admin"] === true;
+    const module = adminModuleKey(page, context);
     const recordText = page.recordId ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>Record được yêu cầu</strong><p>ID ${safeText(page.recordId)} không cấp quyền hay dữ liệu cho browser. Core Bridge phải kiểm tra permission trước khi trả chi tiết.</p></div></div>` : "";
+    const adapterMessage = data.message ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>Trạng thái adapter</strong><p>${safeText(data.message)}</p></div></div>` : "";
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${context.isAdmin ? "Lớp quản trị có kiểm soát" : "Cần quyền quản trị được server xác minh"}</h2><p>${context.isAdmin ? "Dữ liệu hiển thị, write permission, CSRF, confirmation và audit vẫn do Core Bridge quyết định." : "Không có dữ liệu PII, wallet hoặc payment được render cho client không có signed admin session."}</p></div></div></section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bộ lọc server-side</h2><p class="portal-card-subtitle">Các trường không thực hiện truy vấn trực tiếp từ shell.</p></div>${badge(stateFor(page, context))}</div><form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled, context)}<div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Yêu cầu review sẽ được bridge xác nhận và ghi audit." : safeText(reason)}</span><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.routePath || page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form></section>
-        <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Giao thức write</h2><p class="portal-card-subtitle">Không bypass canonical business rules.</p></div></div>${renderNotes(page)}</aside></div>${recordText}
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Dữ liệu vận hành</h2><p class="portal-card-subtitle">Hiển thị sau permission, redaction và ownership checks.</p></div></div>${renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật", "Hành động"], (context.adminData && context.adminData.items) || [], (item) => `<td>${safeText(item.user_id || item.id || item.order_code || "—")}</td><td>${safeText(item.status || item.feature || "—")}</td><td>${safeText(item.updated_at || item.created_at || item.paid_at || "—")}</td><td>Read-only</td>`, "Chưa có dữ liệu được ủy quyền", "Core Bridge chưa cung cấp bản ghi cho phiên này.")}</section></article>`;
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(module)} · dữ liệu vận hành</h2><p class="portal-card-subtitle">Hiển thị sau permission, redaction và ownership checks. Bộ lọc/write sẽ chỉ xuất hiện khi có adapter canonical riêng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="${safeText(page.routePath || page.path)}"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${adapterMessage}${renderAdminDataTable(page, context)}</section>
+        <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Chế độ chỉ đọc</h2><p class="portal-card-subtitle">Không bypass canonical business rules.</p></div>${badge("read_only")}</div>${renderNotes(page)}</aside></div>${recordText}</article>`;
   }
 
   function renderNotFound(page, context) {
@@ -997,6 +1133,7 @@
       case "assets": return renderAssets(page, context);
       case "tickets": return renderTickets(page, context);
       case "read-only": return renderReadOnly(page, context);
+      case "onboarding": return renderOnboarding(page, context);
       case "legal": return renderLegal(page, context);
       case "admin-overview": return renderAdminOverview(page, context);
       case "admin": return renderAdmin(page, context);
@@ -1017,6 +1154,8 @@
 
   function dispatchAction(button, context) {
     const action = button.getAttribute("data-portal-action") || "";
+    const confirmation = button.getAttribute("data-portal-confirm") || "";
+    if (confirmation && !window.confirm(confirmation)) return;
     const route = button.getAttribute("data-portal-route") || context.path;
     const formId = button.getAttribute("data-portal-form-id") || "";
     const form = button.closest("form") || (formId ? document.getElementById(formId) : null);
@@ -1032,12 +1171,11 @@
       });
     }
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, assetId: button.getAttribute("data-asset-id") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: button.getAttribute("data-job-filter") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });
     window.dispatchEvent(event);
-    showToast("Giao diện đã phát yêu cầu cho lớp tích hợp an toàn. Không có provider, payment hay job nào được gọi trực tiếp.");
   }
 
   function closeSidebar() {

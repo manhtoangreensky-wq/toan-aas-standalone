@@ -7,6 +7,10 @@
   "use strict";
 
   const API = "/api/v1";
+  const JOB_POLL_INTERVAL_MS = 15000;
+  const JOB_POLL_MAX_BACKOFF_MS = 60000;
+  let jobPollTimer = 0;
+  let jobPollFailures = 0;
   const FEATURE_BY_PATH = {
     "/chat": "chat", "/prompt-studio": "prompt_studio", "/content/caption": "caption",
     "/content/hashtag": "hashtag", "/content/hook": "hook", "/content/script": "script",
@@ -64,6 +68,47 @@
     if (window.TOANAASPortal) window.TOANAASPortal.mount(window.__TOAN_AAS_PORTAL__);
   }
 
+  function activeJob(record) {
+    return record && ["queued", "processing", "pending", "running"].includes(String(record.status || "").toLowerCase());
+  }
+
+  function isJobPollingRoute(path) {
+    return path === "/jobs" || path.startsWith("/jobs/") || path === "/video/progress";
+  }
+
+  function scheduleJobPolling(path, records, delayMs) {
+    if (jobPollTimer || !isJobPollingRoute(path) || !base().bridge || base().bridge.available !== true) return;
+    const active = Array.isArray(records) ? records.some(activeJob) : activeJob(records);
+    if (!active) return;
+    const delay = Number.isFinite(Number(delayMs)) ? Math.max(0, Number(delayMs)) : JOB_POLL_INTERVAL_MS;
+    jobPollTimer = window.setTimeout(async () => {
+      jobPollTimer = 0;
+      try {
+        if (path.startsWith("/jobs/") && path !== "/jobs/") {
+          const jobId = path.slice("/jobs/".length);
+          const result = await api(`/jobs/${encodeURIComponent(jobId)}`);
+          const record = result.data || {};
+          merge({ jobDetail: record, pageStates: { ...(base().pageStates || {}), [path]: result.status || "read_only" } });
+          jobPollFailures = 0;
+          scheduleJobPolling(path, record);
+        } else {
+          const result = await api("/jobs");
+          const items = result.data && result.data.items ? result.data.items : [];
+          merge({ jobs: items });
+          jobPollFailures = 0;
+          scheduleJobPolling(path, items);
+        }
+      } catch (_) {
+        // Background refresh remains quiet: a guarded/temporary bridge state
+        // must never turn into client-side failure data or a fake completion.
+        jobPollFailures += 1;
+        const currentPath = (base().path || window.location.pathname).split("?")[0];
+        const retryDelay = Math.min(JOB_POLL_MAX_BACKOFF_MS, JOB_POLL_INTERVAL_MS * (2 ** Math.min(jobPollFailures, 2)));
+        if (currentPath === path) scheduleJobPolling(path, records, retryDelay);
+      }
+    }, delay);
+  }
+
   function featurePageStates(catalog, readiness) {
     const states = {};
     const features = (readiness && readiness.features) || {};
@@ -90,7 +135,11 @@
     const capabilities = {
       "auth-login": true,
       "auth-register": true,
-      "complete-onboarding": Boolean(account),
+      "start-telegram-link": Boolean(account),
+      "refresh-link-status": Boolean(account),
+      "refresh-jobs": Boolean(bridgeAvailable),
+      "refresh-assets": Boolean(bridgeAvailable),
+      "refresh-admin": Boolean(account && account.role === "admin" && bridgeAvailable),
       "payment-create": Boolean(status.flags && status.flags.payment_enabled && bridgeAvailable),
       "feature-draft": Boolean(bridgeAvailable),
       "feature-estimate": Boolean(bridgeAvailable),
@@ -98,7 +147,6 @@
       // guarded/maintenance result can be shown instead of being faked client-side.
       "feature-confirm": Boolean(bridgeAvailable),
       "create-ticket": Boolean(bridgeAvailable),
-      "admin-review": Boolean(account && account.role === "admin" && bridgeAvailable),
       "admin-retry": Boolean(account && account.role === "admin" && bridgeAvailable),
       "admin-refund": Boolean(account && account.role === "admin" && bridgeAvailable),
       "admin-freeze": Boolean(account && account.role === "admin" && bridgeAvailable)
@@ -108,6 +156,7 @@
       catalog,
       isAdmin: Boolean(account && account.role === "admin"),
       profile: account ? { displayName: account.display_name || account.email, email: account.email } : {},
+      linkStatus: { linked: Boolean(account && account.canonical_user_id) },
       session: {
         authenticated: Boolean(account), csrfReady: Boolean(me.csrf_token), csrfToken: me.csrf_token || "",
         displayName: account ? (account.display_name || account.email) : "", email: account ? account.email : ""
@@ -120,36 +169,67 @@
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/portal/service-worker.js").catch(() => {});
     }
+    if (account && (context.path || window.location.pathname).split("?")[0] === "/onboarding") await hydrateLinkStatus();
     if (bridgeAvailable) await hydrateCanonicalData();
+  }
+
+  async function hydrateLinkStatus() {
+    try {
+      const link = await api("/auth/telegram/link/status");
+      merge({ linkStatus: link.data || {} });
+    } catch (_) {
+      // The onboarding shell stays usable and does not infer a link from a
+      // failed status check.  A future refresh remains available.
+    }
   }
 
   async function hydrateCanonicalData() {
     const context = base();
     const path = (context.path || window.location.pathname).split("?")[0];
     try {
-      if (path === "/pricing") {
+      if (path === "/dashboard") {
+        const [wallet, jobs, assets] = await Promise.all([api("/wallet"), api("/jobs"), api("/assets")]);
+        merge({
+          wallet: wallet.data || null,
+          jobs: jobs.data && jobs.data.items ? jobs.data.items : [],
+          assets: assets.data && assets.data.items ? assets.data.items : []
+        });
+      } else if (path === "/pricing") {
         const pricing = await api("/pricing");
         merge({ pricingCatalog: pricing.data || {} });
       } else if (path === "/packages") {
         const packages = await api("/packages");
         merge({ packageCatalog: packages.data || {} });
       } else if (path === "/wallet" || path === "/wallet/topup") {
-        const [wallet, history] = await Promise.all([api("/wallet"), api("/wallet/history")]);
-        merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [] });
+        const [wallet, history, packages] = await Promise.all([api("/wallet"), api("/wallet/history"), api("/packages")]);
+        merge({ wallet: wallet.data, walletHistory: history.data && history.data.items ? history.data.items : [], packageCatalog: packages.data || {} });
       } else if (path === "/jobs") {
         const jobs = await api("/jobs");
-        merge({ jobs: jobs.data && jobs.data.items ? jobs.data.items : [] });
+        const items = jobs.data && jobs.data.items ? jobs.data.items : [];
+        merge({ jobs: items });
+        scheduleJobPolling(path, items);
       } else if (path.startsWith("/jobs/")) {
         const jobId = path.slice("/jobs/".length);
         if (!jobId) return;
         const job = await api(`/jobs/${encodeURIComponent(jobId)}`);
-        merge({ jobDetail: job.data || {}, pageStates: { ...(base().pageStates || {}), [path]: job.status || "read_only" } });
+        const record = job.data || {};
+        merge({ jobDetail: record, pageStates: { ...(base().pageStates || {}), [path]: job.status || "read_only" } });
+        scheduleJobPolling(path, record);
       } else if (path === "/assets" || ["/image/history", "/video/preview", "/video/export", "/voice/outputs", "/music/library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [] });
       } else if (path === "/video/progress") {
         const jobs = await api("/jobs");
-        merge({ jobs: jobs.data && jobs.data.items ? jobs.data.items : [] });
+        const items = jobs.data && jobs.data.items ? jobs.data.items : [];
+        merge({ jobs: items });
+        scheduleJobPolling(path, items);
+      } else if ((path === "/image" || (path.startsWith("/image/") && path !== "/image/history")) || (path === "/video" || (path.startsWith("/video/") && !["/video/progress", "/video/preview", "/video/export"].includes(path)))) {
+        const [pricing, readiness] = await Promise.all([api("/pricing"), api("/features/status")]);
+        merge({
+          pricingCatalog: pricing.data || {},
+          readiness: readiness.data || {},
+          pageStates: featurePageStates(base().catalog || [], readiness.data || {})
+        });
       } else if (path.startsWith("/voice")) {
         const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
         merge({
@@ -193,11 +273,12 @@
   }
 
   async function payloadFor(fields, route) {
-    const values = { ...fields };
+    const priorFlow = route && base().featureFlows && base().featureFlows[route];
+    const priorInput = priorFlow && priorFlow.input && typeof priorFlow.input === "object" ? priorFlow.input : {};
+    const values = { ...priorInput, ...fields };
     delete values.password;
     delete values.confirm_password;
-    const uploadIds = [];
-    const priorFlow = route && base().featureFlows && base().featureFlows[route];
+    const uploadIds = Array.isArray(priorInput.upload_ids) ? priorInput.upload_ids.filter((item) => typeof item === "string" && item) : [];
     const priorUploads = priorFlow && priorFlow.data && Array.isArray(priorFlow.data.uploads) ? priorFlow.data.uploads : [];
     for (const [field, value] of Object.entries(values)) {
       const files = typeof File !== "undefined" && value instanceof File
@@ -221,7 +302,7 @@
         });
         const uploadId = uploaded && uploaded.data && uploaded.data.id;
         if (!uploadId) throw new Error("Core Bridge chưa xác nhận tệp đính kèm.");
-        uploadIds.push(uploadId);
+        if (!uploadIds.includes(uploadId)) uploadIds.push(uploadId);
       }
       delete values[field];
     }
@@ -234,6 +315,7 @@
     const action = detail.action;
     const route = (detail.route || window.location.pathname).split("?")[0];
     const fields = detail.fields || {};
+    let featureInput = null;
     try {
       if (action === "auth-register") {
         if (fields.password !== fields.confirm_password) throw new Error("Xác nhận mật khẩu chưa khớp.");
@@ -250,10 +332,55 @@
         window.location.assign("/dashboard");
         return;
       }
-      if (action === "complete-onboarding") {
+      if (action === "start-telegram-link") {
         const result = await api("/auth/telegram/link/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-        const code = result.data && result.data.code;
-        toast(code ? `Mã liên kết: ${code}. Hãy gửi mã này cho bot TOAN AAS.` : result.message);
+        merge({ linkFlow: { status: result.status || "awaiting_confirm", message: result.message, data: result.data || {} }, linkStatus: { linked: false } });
+        toast(result.message);
+        return;
+      }
+      if (action === "refresh-link-status") {
+        const result = await api("/auth/telegram/link/status");
+        merge({ linkStatus: result.data || {} });
+        if (result.data && result.data.linked) {
+          await hydrate();
+          toast("Telegram đã được liên kết. Bạn có thể mở Dashboard.");
+        } else {
+          toast(result.message);
+        }
+        return;
+      }
+      if (action === "filter-jobs") {
+        const filter = ["all", "queued", "processing", "completed", "failed"].includes(detail.jobFilter) ? detail.jobFilter : "all";
+        merge({ jobFilter: filter });
+        return;
+      }
+      if (action === "refresh-jobs") {
+        const result = await api("/jobs");
+        const items = result.data && result.data.items ? result.data.items : [];
+        merge({ jobs: items });
+        scheduleJobPolling("/jobs", items);
+        toast(result.message || "Đã làm mới danh sách job canonical.");
+        return;
+      }
+      if (action === "refresh-assets") {
+        const result = await api("/assets");
+        merge({ assets: result.data && result.data.items ? result.data.items : [] });
+        toast(result.message || "Đã làm mới metadata tài sản.");
+        return;
+      }
+      if (action === "refresh-admin") {
+        const path = route.startsWith("/admin") ? route : "/admin";
+        const endpoints = {
+          "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
+          "/admin/jobs/failed": "/admin/jobs", "/admin/payments": "/admin/payments", "/admin/providers": "/admin/providers", "/admin/tickets": "/admin/tickets"
+        };
+        const pieces = path.split("/").filter(Boolean);
+        const module = pieces[1] || "overview";
+        const recordId = pieces.length > 2 ? pieces.slice(2).join("/") : "";
+        const endpoint = endpoints[path] || `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
+        const result = await api(endpoint);
+        merge({ adminData: result.data || {} });
+        toast(result.message || "Đã làm mới dữ liệu vận hành đã được role-check.");
         return;
       }
       if (action === "payment-create") {
@@ -266,24 +393,17 @@
         toast(result.message);
         return;
       }
-      if (action === "asset-download") {
-        const assetId = String(detail.assetId || "");
-        if (!assetId) throw new Error("Tài sản không hợp lệ.");
-        const result = await api(`/assets/${encodeURIComponent(assetId)}/download`);
-        toast(result.message);
-        return;
-      }
       if (action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") {
         const feature = FEATURE_BY_PATH[route];
         if (!feature) throw new Error("Tính năng này chưa có mapping bridge an toàn.");
         if (action === "feature-confirm" && !window.confirm("Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.")) return;
         const phase = action.replace("feature-", "");
-        const input = await payloadFor(fields, route);
-        const result = await api(`/features/${encodeURIComponent(feature)}/${phase}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input, idempotency_key: randomKey(phase) }) });
+        featureInput = await payloadFor(fields, route);
+        const result = await api(`/features/${encodeURIComponent(feature)}/${phase}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input: featureInput, idempotency_key: randomKey(phase) }) });
         toast(result.message);
         merge({
           pageStates: { ...(base().pageStates || {}), [route]: result.status },
-          featureFlows: { ...(base().featureFlows || {}), [route]: { feature, status: result.status, message: result.message, data: result.data || {} } }
+          featureFlows: { ...(base().featureFlows || {}), [route]: { feature, status: result.status, message: result.message, data: result.data || {}, input: featureInput } }
         });
         return;
       }
@@ -294,7 +414,7 @@
         const payload = error.payload;
         merge({
           pageStates: { ...(base().pageStates || {}), [route]: payload.status || "guarded" },
-          featureFlows: { ...(base().featureFlows || {}), [route]: { feature, status: payload.status || "guarded", message: payload.message || "Yêu cầu đang được bảo vệ.", data: payload.data || {} } }
+          featureFlows: { ...(base().featureFlows || {}), [route]: { feature, status: payload.status || "guarded", message: payload.message || "Yêu cầu đang được bảo vệ.", data: payload.data || {}, input: featureInput || (base().featureFlows && base().featureFlows[route] && base().featureFlows[route].input) || {} } }
         });
       }
       toast((error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.", "error");
@@ -302,7 +422,15 @@
   }
 
   window.addEventListener("toanaas:portal-action", handleAction);
-  window.addEventListener("pageshow", () => { hydrate().catch(() => {}); }, { once: true });
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", () => { hydrate().catch(() => {}); }, { once: true });
-  else hydrate().catch(() => {});
+  let initialHydration = null;
+  function startInitialHydration() {
+    if (!initialHydration) initialHydration = hydrate().catch(() => {});
+    return initialHydration;
+  }
+  // A normal navigation emits both DOMContentLoaded and pageshow.  Hydrate
+  // once for that load, then deliberately refresh only when a page is restored
+  // from the back-forward cache.
+  window.addEventListener("pageshow", (event) => { if (event.persisted) hydrate().catch(() => {}); });
+  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", startInitialHydration, { once: true });
+  else startInitialHydration();
 }());
