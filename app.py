@@ -12,7 +12,7 @@ from contextlib import asynccontextmanager
 import os
 import time
 import uuid
-from urllib.parse import quote
+from urllib.parse import quote, urlparse
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
@@ -22,18 +22,31 @@ from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
 import copyfast_auth
-from copyfast_auth import current_session, envelope, require_canonical_admin
+from copyfast_auth import current_session, ensure_auth_configuration, envelope, require_canonical_admin
 from copyfast_db import ensure_copyfast_schema
 from copyfast_pages import ROOT, render_portal
 
 
 def _origins() -> list[str]:
     raw = os.environ.get("CORS_ALLOW_ORIGINS", "https://app.toanaas.vn,https://toanaas.vn")
-    return [item.strip() for item in raw.split(",") if item.strip()]
+    origins = [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
+    if not origins or "*" in origins:
+        raise RuntimeError("CORS_ALLOW_ORIGINS phải là danh sách origin tường minh khi dùng cookie")
+    environment_values = (os.environ.get("APP_ENV", ""), os.environ.get("ENVIRONMENT", ""), os.environ.get("RAILWAY_ENVIRONMENT", ""))
+    production = any(value.strip().lower() in {"production", "prod"} for value in environment_values if value)
+    for origin in origins:
+        parsed = urlparse(origin)
+        local_http = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+        if not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in {"", "/"}:
+            raise RuntimeError("CORS_ALLOW_ORIGINS chứa origin không hợp lệ")
+        if parsed.scheme != "https" and not (local_http and not production):
+            raise RuntimeError("CORS_ALLOW_ORIGINS chỉ chấp nhận HTTPS, trừ localhost khi phát triển")
+    return origins
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    ensure_auth_configuration()
     ensure_copyfast_schema()
     yield
 
@@ -76,7 +89,9 @@ async def security_headers(request: Request, call_next):
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["Referrer-Policy"] = "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; frame-ancestors 'none'"
+    response.headers["Content-Security-Policy"] = "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
+    if request.url.path.startswith("/api/v1/") or request.url.path.startswith("/internal/"):
+        response.headers["Cache-Control"] = "no-store, private"
     return response
 
 

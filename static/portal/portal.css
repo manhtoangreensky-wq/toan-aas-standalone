@@ -46,6 +46,17 @@ a { color: inherit; text-decoration: none; }
   transition: transform .16s ease;
 }
 .skip-link:focus { transform: translateY(0); }
+.portal-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
 
 .portal-shell {
   display: grid;
@@ -219,6 +230,7 @@ a { color: inherit; text-decoration: none; }
 .portal-button--primary:hover:not(:disabled) { border-color: #a6fff0; background: linear-gradient(135deg, #8defe0, #4bc9bf); }
 .portal-button--quiet { border-color: transparent; background: transparent; color: var(--portal-muted-strong); }
 .portal-button--danger { color: #ffd1d1; }
+.portal-button[aria-busy="true"] { cursor: progress; opacity: .68; }
 
 .portal-badge {
   display: inline-flex;
@@ -295,6 +307,7 @@ a { color: inherit; text-decoration: none; }
 .portal-field { display: grid; gap: 7px; min-width: 0; }
 .portal-field--wide { grid-column: 1 / -1; }
 .portal-field label { color: #cce0e9; font-size: 11px; font-weight: 760; }
+.portal-required-mark { margin-left: 3px; color: var(--portal-warning); }
 .portal-field-help { color: #7d9aa9; font-size: 10px; line-height: 1.45; }
 .portal-field-staged { color: #9acfc6; font-size: 10px; line-height: 1.45; }
 .portal-input, .portal-select, .portal-textarea {
@@ -439,7 +452,7 @@ a { color: inherit; text-decoration: none; }
   .portal-section-heading { align-items: flex-start; }
   .portal-card-header { gap: 11px; }
   .portal-inline-actions { justify-content: flex-start; }
-  .portal-section-heading > .portal-button { display: none; }
+  .portal-section-heading > .portal-button { flex: 0 0 auto; }
   .portal-module-grid, .portal-admin-grid { grid-template-columns: 1fr; }
   .portal-card-pad { padding: 17px; }
   .portal-auth-intro { padding: 0; }
@@ -450,4 +463,7 @@ a { color: inherit; text-decoration: none; }
   .portal-header-actions { margin-left: auto; }
   .portal-session-chip { max-width: 128px; }
   .portal-button { padding: 9px 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }

@@ -20,6 +20,14 @@ import httpx
 
 
 PUBLIC_GUARD = "Hệ thống đang bảo trì/nâng cấp. TOAN AAS chưa xử lý và chưa trừ Xu. Vui lòng thử lại sau."
+_MAX_SAFE_DATA_DEPTH = 6
+_MAX_SAFE_DATA_ITEMS = 80
+_MAX_SAFE_STRING_LENGTH = 4_000
+_SENSITIVE_KEY_PARTS = frozenset({
+    "token", "secret", "apikey", "authorization", "signature", "traceback", "stack",
+    "outputpath", "filesystempath", "providertask", "rawresponse", "privatekey",
+    "password", "cookie", "telegramfileid",
+})
 
 
 def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: str = "completed", error_code: str | None = None) -> dict:
@@ -87,9 +95,13 @@ class CoreBridgeClient:
         if not self.configured:
             return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_NOT_CONFIGURED")
         normalized_path = "/" + path.lstrip("/")
-        request_id = request_id or str(uuid.uuid4())
+        # ``request_id`` is a public Web correlation value.  The bot treats
+        # X-TOAN-AAS-Request-ID as an HMAC nonce, so reusing a browser-supplied
+        # value (or reusing it for a retry) makes the canonical bridge reject
+        # a legitimate retry as a replay.  Keep the caller-facing argument for
+        # API compatibility, but mint an opaque server-side nonce per attempt.
+        _ = request_id
         body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8") if payload is not None else b""
-        headers = self._headers(method, normalized_path, body, request_id=request_id, actor_id=actor_id)
         # Retrying an unsafe write could create a duplicate payment, credit or
         # job. GET is safe to retry; POST is retried only when callers supply
         # the canonical idempotency key enforced by both bridge layers.
@@ -98,6 +110,14 @@ class CoreBridgeClient:
         response: httpx.Response | None = None
         for attempt in range(attempts):
             try:
+                bridge_request_id = str(uuid.uuid4())
+                headers = self._headers(
+                    method,
+                    normalized_path,
+                    body,
+                    request_id=bridge_request_id,
+                    actor_id=actor_id,
+                )
                 async with httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(12.0, connect=4.0), transport=self.transport) as client:
                     response = await client.request(method.upper(), normalized_path, content=body or None, params=params, headers=headers)
             except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError):
@@ -124,11 +144,48 @@ class CoreBridgeClient:
         return _sanitize_envelope(data)
 
 
+def _sensitive_key(value: object) -> bool:
+    normalized = "".join(character for character in str(value).lower() if character.isalnum())
+    return any(part in normalized for part in _SENSITIVE_KEY_PARTS)
+
+
+def _sanitize_data(value: Any, *, depth: int = 0) -> Any:
+    """Recursively remove bridge/runtime details which never belong in a browser.
+
+    Bridge payloads contain nested job and provider structures in several bot
+    workflows.  Filtering only the top-level keys accidentally exposed nested
+    provider task IDs, filesystem paths, raw responses and credentials.  Keep
+    the public envelope flexible, but bound it and redact those values at every
+    level before it crosses the Web boundary.
+    """
+    if depth > _MAX_SAFE_DATA_DEPTH:
+        return "[Dữ liệu lồng quá sâu đã được ẩn]"
+    if isinstance(value, dict):
+        result: dict[str, Any] = {}
+        for index, (key, item) in enumerate(value.items()):
+            if index >= _MAX_SAFE_DATA_ITEMS:
+                break
+            if _sensitive_key(key):
+                continue
+            result[str(key)[:160]] = _sanitize_data(item, depth=depth + 1)
+        return result
+    if isinstance(value, (list, tuple)):
+        return [_sanitize_data(item, depth=depth + 1) for item in value[:_MAX_SAFE_DATA_ITEMS]]
+    if isinstance(value, str):
+        return value[:_MAX_SAFE_STRING_LENGTH]
+    if value is None or isinstance(value, (bool, int, float)):
+        return value
+    # Do not stringify arbitrary provider/runtime objects: their repr may
+    # contain credentials or internal paths.
+    return None
+
+
 def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict:
     """Keep bridge contract while preventing raw/debug keys from escaping."""
-    safe_data = value.get("data") if isinstance(value.get("data"), dict) else {}
-    forbidden = {"token", "secret", "api_key", "authorization", "traceback", "stack", "output_path", "filesystem_path", "provider_task_id", "raw_response"}
-    filtered = {key: item for key, item in safe_data.items() if key.lower() not in forbidden}
+    raw_data = value.get("data") if isinstance(value.get("data"), dict) else {}
+    safe_data = _sanitize_data(raw_data)
+    if not isinstance(safe_data, dict):
+        safe_data = {}
     status_name = str(value.get("status") or "failed")
     allowed_statuses = {"draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge", "guarded", "cancelled", "refunded", "read_only"}
     if status_name not in allowed_statuses:
@@ -136,7 +193,7 @@ def _sanitize_envelope(value: dict, *, fallback_code: str | None = None) -> dict
     return envelope(
         bool(value.get("ok")),
         str(value.get("message") or ("Hoàn tất" if value.get("ok") else PUBLIC_GUARD))[:500],
-        data=filtered,
+        data=safe_data,
         status_name=status_name,
         error_code=str(value.get("error_code") or fallback_code or "") or None,
     )

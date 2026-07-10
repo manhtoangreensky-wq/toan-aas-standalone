@@ -7,6 +7,7 @@ import sys
 import time
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 
 
@@ -242,8 +243,11 @@ def test_every_admin_api_rechecks_canonical_role_for_reads_and_writes(tmp_path, 
         )
         for path, payload in writes:
             response = client.post(path, headers={"X-CSRF-Token": csrf}, json=payload)
-            assert response.status_code == 403, path
-            assert response.json()["error_code"] == "REQUEST_DENIED"
+            # The Web ERP deliberately ships read-only. A local cached admin role
+            # still cannot wake the bot bridge unless a separate write flag and
+            # canonical adapter are explicitly enabled.
+            assert response.status_code == 200, path
+            assert response.json()["error_code"] == "WEBAPP_ADMIN_WRITES_DISABLED"
 
 
 def test_portal_template_uses_inert_bootstrap_for_strict_csp(tmp_path, monkeypatch):
@@ -291,6 +295,86 @@ def test_auth_rate_limit_is_server_side_and_separates_login_from_registration(tm
         )
         assert registration_limited.status_code == 429
         assert registration_limited.json()["error_code"] == "AUTH_RATE_LIMITED"
+
+
+def test_telegram_link_revokes_other_sessions_but_keeps_the_initiating_session(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        registration = client.post(
+            "/api/v1/auth/register",
+            json={"email": "two-sessions@example.com", "password": "correct-horse-battery-staple"},
+        )
+        csrf = registration.json()["data"]["csrf_token"]
+        with TestClient(client.app) as other_client:
+            second_login = other_client.post(
+                "/api/v1/auth/login",
+                json={"email": "two-sessions@example.com", "password": "correct-horse-battery-staple"},
+            )
+            assert second_login.status_code == 200
+            assert other_client.get("/api/v1/auth/me").status_code == 200
+
+            code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
+            assert confirm_link(client, code).json()["ok"] is True
+            assert client.get("/api/v1/auth/me").status_code == 200
+            revoked = other_client.get("/api/v1/auth/me")
+            assert revoked.status_code == 401
+            assert revoked.json()["error_code"] == "REQUEST_DENIED"
+
+
+def test_a_canonical_telegram_identity_cannot_link_two_web_accounts(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        first = client.post(
+            "/api/v1/auth/register",
+            json={"email": "first-link@example.com", "password": "correct-horse-battery-staple"},
+        )
+        first_code = client.post(
+            "/api/v1/auth/telegram/link/start",
+            headers={"X-CSRF-Token": first.json()["data"]["csrf_token"]},
+        ).json()["data"]["code"]
+        assert confirm_link(client, first_code).json()["ok"] is True
+
+        with TestClient(client.app) as other_client:
+            second = other_client.post(
+                "/api/v1/auth/register",
+                json={"email": "second-link@example.com", "password": "correct-horse-battery-staple"},
+            )
+            second_code = other_client.post(
+                "/api/v1/auth/telegram/link/start",
+                headers={"X-CSRF-Token": second.json()["data"]["csrf_token"]},
+            ).json()["data"]["code"]
+            collision = confirm_link(other_client, second_code)
+            assert collision.status_code == 200
+            assert collision.json()["ok"] is False
+            assert collision.json()["error_code"] == "TELEGRAM_ALREADY_LINKED"
+
+
+def test_production_environment_requires_a_real_secret_and_sets_secure_session_cookie(tmp_path, monkeypatch):
+    monkeypatch.setenv("ENVIRONMENT", "production")
+    with make_client(tmp_path, monkeypatch) as client:
+        registration = client.post(
+            "/api/v1/auth/register",
+            json={"email": "production-cookie@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registration.status_code == 200
+        assert "Secure" in registration.headers["set-cookie"]
+        assert registration.headers["cache-control"] == "no-store, private"
+
+    import copyfast_auth
+
+    monkeypatch.delenv("WEB_SESSION_SECRET", raising=False)
+    with pytest.raises(RuntimeError, match="WEB_SESSION_SECRET"):
+        copyfast_auth.ensure_auth_configuration()
+
+
+def test_credentialed_cors_rejects_wildcards_and_non_https_remote_origins(monkeypatch):
+    application = importlib.import_module("app")
+    monkeypatch.setenv("CORS_ALLOW_ORIGINS", "*")
+    with pytest.raises(RuntimeError, match="tường minh"):
+        application._origins()
+    monkeypatch.setenv("CORS_ALLOW_ORIGINS", "http://example.invalid")
+    with pytest.raises(RuntimeError, match="HTTPS"):
+        application._origins()
+    monkeypatch.setenv("CORS_ALLOW_ORIGINS", "http://localhost:8877,https://app.toanaas.vn")
+    assert application._origins() == ["http://localhost:8877", "https://app.toanaas.vn"]
 
 
 def test_portal_uses_a_single_delegated_listener_after_hydration():

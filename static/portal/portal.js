@@ -11,6 +11,8 @@
 
   const ACTION_EVENT = "toanaas:portal-action";
   let interactionsBound = false;
+  const transientFormDrafts = new Map();
+  let sidebarReturnFocus = null;
   try {
     const bootstrap = document.getElementById("portal-bootstrap");
     const parsed = bootstrap && JSON.parse(bootstrap.textContent || "{}");
@@ -48,119 +50,157 @@
     reports: "◒", security: "◈", ticket: "✉", default: "·"
   });
 
+  const LANGUAGE_OPTIONS = Object.freeze([
+    { value: "vi", label: "Tiếng Việt" }, { value: "en", label: "English" },
+    { value: "zh", label: "中文" }, { value: "ja", label: "日本語" }, { value: "ko", label: "한국어" }
+  ]);
+
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email" },
-      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password" }
+      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true },
+      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password", required: true }
     ],
     authRegister: [
       { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name" },
-      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email" },
-      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu theo chính sách máy chủ", autocomplete: "new-password" },
-      { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password" }
+      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true },
+      { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 12 ký tự", autocomplete: "new-password", required: true, minLength: 12 },
+      { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password", required: true, minLength: 12 }
     ],
     telegramLink: [
       { name: "telegram_code", label: "Mã liên kết Telegram", placeholder: "Nhập mã dùng một lần", help: "Mã được tạo và xác minh bởi Core Bridge; không lưu trên trình duyệt." }
     ],
     prompt: [
-      { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp." },
+      { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp.", required: true, minLength: 3 },
       { name: "language", label: "Ngôn ngữ đầu ra", control: "select", options: ["Tiếng Việt", "English", "Theo nội dung nguồn"] }
     ],
-    image: [
-      { name: "prompt", label: "Mô tả hình ảnh", control: "textarea", placeholder: "Chủ thể, phong cách, bối cảnh, tỷ lệ…" },
-      { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Giá và quota chỉ do Core Bridge phát hành. Không nhập Xu hoặc giá thủ công." },
+    imageCreate: [
+      { name: "prompt", label: "Mô tả hình ảnh", control: "textarea", placeholder: "Chủ thể, phong cách, bối cảnh, tỷ lệ…", required: true, minLength: 3 },
+      { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Giá và quota chỉ do Core Bridge phát hành. Không nhập Xu hoặc giá thủ công.", required: true },
       { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["1:1", "4:5", "16:9", "9:16"] },
-      { name: "reference", label: "Tệp tham chiếu", type: "file", help: "Chỉ hiển thị khi upload an toàn và kiểm tra MIME đã được Core Bridge bật." }
+      { name: "reference", label: "Tệp tham chiếu (tuỳ chọn)", type: "file", accept: "image/jpeg,image/png,image/webp", help: "Chỉ hiển thị khi upload an toàn và kiểm tra MIME đã được Core Bridge bật." }
     ],
-    video: [
-      { name: "brief", label: "Brief video", control: "textarea", placeholder: "Mục tiêu, cảnh, chuyển động, giọng đọc…" },
-      { name: "tier", label: "Tier video", control: "select", optionsFrom: "videoTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Không nhập giá hoặc Xu; Core Bridge sẽ đối chiếu mã tier với catalog hiện hành." },
-      { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 3", help: "Dùng để Core Bridge áp dụng đúng giảm giá theo cảnh của bot." },
-      { name: "duration", label: "Thời lượng mục tiêu", control: "select", options: ["Theo gói hiện có", "Ngắn", "Tiêu chuẩn", "Nhiều cảnh"] },
-      { name: "source", label: "Tệp / hình nguồn", type: "file", help: "Tệp chỉ vào staging canonical sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gọi provider." }
+    imageSource: [
+      { name: "instructions", label: "Yêu cầu xử lý", control: "textarea", placeholder: "Ví dụ: giữ chủ thể, nâng độ nét, xóa nền…", help: "Estimate dùng tier canonical; output vẫn chỉ xuất hiện sau delivery hợp lệ." },
+      { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", required: true },
+      { name: "source", label: "Ảnh nguồn", type: "file", accept: "image/jpeg,image/png,image/webp", requiredUpload: true, help: "Ảnh chỉ vào staging canonical sau kiểm tra MIME, chữ ký, kích thước và ownership." }
+    ],
+    videoContextual: [
+      { name: "brief", label: "Brief video", control: "textarea", placeholder: "Mục tiêu, cảnh, chuyển động, giọng đọc…", required: true, minLength: 3 },
+      { name: "tier", label: "Tier video", control: "select", optionsFrom: "videoTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Không nhập giá hoặc Xu; Core Bridge sẽ đối chiếu mã tier với catalog hiện hành.", required: true },
+      { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 3", help: "Dùng để Core Bridge áp dụng đúng giảm giá theo cảnh của bot.", required: true, min: 1, max: 20, step: 1, inputMode: "numeric" },
+      { name: "duration_seconds", label: "Thời lượng mục tiêu (giây)", type: "number", placeholder: "Ví dụ: 15", required: true, min: 1, max: 600, step: 1, inputMode: "numeric" },
+      { name: "platform", label: "Kênh phát hành", control: "select", options: ["TikTok", "YouTube", "Facebook", "Instagram", "Khác"] },
+      { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["9:16", "16:9", "1:1", "4:5"] },
+      { name: "goal", label: "Mục tiêu / CTA", placeholder: "Ví dụ: giới thiệu sản phẩm và dẫn về trang mua" },
+      { name: "source", label: "Tệp / hình nguồn (tuỳ chọn)", type: "file", accept: "image/jpeg,image/png,image/webp,video/mp4,video/quicktime,video/webm", help: "Tệp chỉ vào staging canonical sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gọi provider." }
+    ],
+    videoStoryboard: [
+      { name: "brief", label: "Chủ đề / brief", control: "textarea", placeholder: "Mục tiêu, câu chuyện, sản phẩm và CTA…", required: true, minLength: 3 },
+      { name: "tier", label: "Tier video", control: "select", optionsFrom: "videoTiers", emptyLabel: "Chọn tier từ bảng giá canonical", required: true },
+      { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 3", required: true, min: 1, max: 20, step: 1, inputMode: "numeric" },
+      { name: "duration", label: "Thời lượng mục tiêu (giây)", type: "number", placeholder: "Ví dụ: 30", required: true, min: 1, max: 600, step: 1, inputMode: "numeric", help: "Storyboard canonical nhận thời lượng số để xây dựng gói cảnh." },
+      { name: "template", label: "Mẫu storyboard", control: "select", options: ["product_ad", "ugc", "story", "explainer"] },
+      { name: "platform", label: "Kênh phát hành", control: "select", options: ["TikTok", "YouTube", "Facebook", "Instagram", "Khác"] },
+      { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["9:16", "16:9", "1:1", "4:5"] },
+      { name: "style", label: "Phong cách", placeholder: "Ví dụ: gọn, hiện đại, có phụ đề rõ" },
+      { name: "goal", label: "Mục tiêu / CTA", placeholder: "Ví dụ: tăng nhận diện và dẫn về landing page" },
+      { name: "notes", label: "Ghi chú cảnh", control: "textarea", placeholder: "Các điểm bắt buộc, giới hạn thương hiệu hoặc tham chiếu an toàn…" }
+    ],
+    videoImageToVideo: [
+      { name: "brief", label: "Chuyển động mong muốn", control: "textarea", placeholder: "Mô tả camera, chủ thể và chuyển động…", required: true, minLength: 3 },
+      { name: "tier", label: "Tier video", control: "select", optionsFrom: "videoTiers", emptyLabel: "Chọn tier từ bảng giá canonical", required: true },
+      { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 1", required: true, min: 1, max: 20, step: 1, inputMode: "numeric" },
+      { name: "duration_seconds", label: "Thời lượng mục tiêu (giây)", type: "number", placeholder: "Ví dụ: 8", required: true, min: 1, max: 600, step: 1, inputMode: "numeric" },
+      { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["9:16", "16:9", "1:1", "4:5"] },
+      { name: "source", label: "Ảnh nguồn", type: "file", accept: "image/jpeg,image/png,image/webp", requiredUpload: true, help: "Ảnh phải vào staging canonical trước khi Core Bridge có thể kiểm tra ownership." }
     ],
     voice: [
-      { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…" },
+      { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
       { name: "voice_profile_id", label: "Giọng đã lưu (tuỳ chọn)", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Dùng giọng mặc định do bot cấp", help: "Danh sách chỉ gồm metadata Voice Vault đã qua ownership check. Core Bridge luôn kiểm tra lại lựa chọn khi estimate/confirm." },
       { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"], help: "Thời lượng hiển thị trong estimate được tính bởi helper canonical của bot." }
     ],
+    voiceSaved: [
+      { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…", required: true, minLength: 1 },
+      { name: "voice_profile_id", label: "Giọng từ Voice Vault", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Chọn một giọng đã sẵn sàng", help: "Saved TTS chỉ estimate khi Voice Vault canonical xác nhận profile này thuộc tài khoản và sẵn sàng.", required: true },
+      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"], help: "Thời lượng hiển thị trong estimate được tính bởi helper canonical của bot." }
+    ],
     voiceClone: [
-      { name: "display_name", label: "Tên giọng", placeholder: "Ví dụ: Giọng thương hiệu TOAN AAS" },
-      { name: "sample", label: "Mẫu audio để clone", type: "file", help: "Mẫu chỉ vào bot-owned staging sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gửi tới provider." },
-      { name: "consent", label: "Quyền sử dụng mẫu giọng", type: "checkbox", help: "Tôi xác nhận mình có quyền sử dụng mẫu giọng này và không mạo danh người khác." }
+      { name: "display_name", label: "Tên giọng", placeholder: "Ví dụ: Giọng thương hiệu TOAN AAS", required: true, minLength: 2 },
+      { name: "sample", label: "Mẫu audio để clone", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg", requiredUpload: true, help: "Mẫu chỉ vào bot-owned staging sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gửi tới provider." },
+      { name: "consent", label: "Quyền sử dụng mẫu giọng", type: "checkbox", required: true, help: "Tôi xác nhận mình có quyền sử dụng mẫu giọng này và không mạo danh người khác." }
     ],
     music: [
-      { name: "brief", label: "Brief âm nhạc", control: "textarea", placeholder: "Bối cảnh, mood, nhịp độ, công cụ, đối tượng nghe…", help: "Bot sẽ chặn yêu cầu mô phỏng nghệ sĩ/bài hát hoặc giai điệu có bản quyền." },
+      { name: "brief", label: "Brief âm nhạc", control: "textarea", placeholder: "Bối cảnh, mood, nhịp độ, công cụ, đối tượng nghe…", help: "Bot sẽ chặn yêu cầu mô phỏng nghệ sĩ/bài hát hoặc giai điệu có bản quyền.", required: true, minLength: 3 },
       { name: "mode", label: "Loại định hướng", control: "select", options: ["background", "melody", "custom"], help: "Chỉ tạo gợi ý prompt canonical; chưa gọi provider tạo nhạc." },
-      { name: "duration_seconds", label: "Thời lượng dự kiến (giây)", type: "number", placeholder: "Ví dụ: 30", help: "Báo giá dùng helper duration/price của bot, không tính Xu tại browser." }
+      { name: "duration_seconds", label: "Thời lượng dự kiến (giây)", type: "number", placeholder: "Ví dụ: 30", help: "Báo giá dùng helper duration/price của bot, không tính Xu tại browser.", required: true, min: 1, max: 600, step: 1, inputMode: "numeric" }
     ],
     musicSong: [
-      { name: "brief", label: "Brief bài hát", control: "textarea", placeholder: "Thông điệp, mood, cấu trúc, CTA và lời gốc mong muốn…", help: "Không yêu cầu cover, remix hoặc bắt chước nghệ sĩ/bài hát cụ thể." },
-      { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: ["seconds", "half", "full"], help: "Chế độ half/full được bot quy đổi theo product kind canonical." },
-      { name: "duration_seconds", label: "Thời lượng khi chọn seconds", type: "number", placeholder: "Ví dụ: 30" }
+      { name: "brief", label: "Brief bài hát", control: "textarea", placeholder: "Thông điệp, mood, cấu trúc, CTA và lời gốc mong muốn…", help: "Không yêu cầu cover, remix hoặc bắt chước nghệ sĩ/bài hát cụ thể.", required: true, minLength: 3 },
+      { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: ["seconds", "half", "full"], help: "Chế độ half/full được bot quy đổi theo product kind canonical.", required: true },
+      { name: "duration_seconds", label: "Thời lượng khi chọn seconds", type: "number", placeholder: "Ví dụ: 30", min: 1, max: 600, step: 1, inputMode: "numeric", help: "Chỉ điền khi chọn seconds; half/full dùng product kind canonical." }
     ],
     musicSfx: [
-      { name: "brief", label: "Brief SFX", control: "textarea", placeholder: "Ví dụ: tiếng mở hộp gọn, hiện đại, không có nhạc nền…", help: "Bridge chỉ lưu query/policy và báo giá canonical; không tìm kho ngoài hay giả kết quả." },
-      { name: "item_count", label: "Số hiệu ứng dự kiến", type: "number", placeholder: "Ví dụ: 2", help: "SFX library dùng bảng giá standalone của bot, khác với add-on trong video order." },
-      { name: "duration_seconds", label: "Thời lượng video tham chiếu (giây)", type: "number", placeholder: "Ví dụ: 30" }
+      { name: "brief", label: "Brief SFX", control: "textarea", placeholder: "Ví dụ: tiếng mở hộp gọn, hiện đại, không có nhạc nền…", help: "Bridge chỉ lưu query/policy và báo giá canonical; không tìm kho ngoài hay giả kết quả.", required: true, minLength: 3 },
+      { name: "item_count", label: "Số hiệu ứng dự kiến", type: "number", placeholder: "Ví dụ: 2", help: "SFX library dùng bảng giá standalone của bot, khác với add-on trong video order.", required: true, min: 1, max: 20, step: 1, inputMode: "numeric" },
+      { name: "duration_seconds", label: "Thời lượng video tham chiếu (giây)", type: "number", placeholder: "Ví dụ: 30", required: true, min: 1, max: 600, step: 1, inputMode: "numeric" }
     ],
     musicUpload: [
-      { name: "audio", label: "Tệp âm thanh của bạn", type: "file", help: "Tệp chỉ vào bot-owned staging sau kiểm tra MIME/chữ ký/kích thước; chưa ghép hoặc render video." },
-      { name: "duration_seconds", label: "Thời lượng tham chiếu (giây)", type: "number", placeholder: "Ví dụ: 30" },
+      { name: "audio", label: "Tệp âm thanh của bạn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg", requiredUpload: true, help: "Tệp chỉ vào bot-owned staging sau kiểm tra MIME/chữ ký/kích thước; chưa ghép hoặc render video." },
+      { name: "duration_seconds", label: "Thời lượng tham chiếu (giây)", type: "number", placeholder: "Ví dụ: 30", required: true, min: 1, max: 600, step: 1, inputMode: "numeric" },
       { name: "notes", label: "Ghi chú dùng nhạc", control: "textarea", placeholder: "Ví dụ: chỉ dùng làm nhạc nền, cần loop…" }
     ],
     subtitleCreate: [
-      { name: "source", label: "Tệp audio / video nguồn", type: "file", help: "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript." },
-      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", help: "Dùng cho estimate canonical; bot áp dụng mức tối thiểu theo phút." },
+      { name: "source", label: "Tệp audio / video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Core Bridge kiểm tra ownership, MIME và kích thước trước khi nhận tệp; không tự sinh transcript." },
+      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", help: "Dùng cho estimate canonical; bot áp dụng mức tối thiểu theo phút.", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
       { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt", "vtt"], help: "File chỉ xuất hiện sau canonical job, output validation và private asset delivery." }
     ],
     subtitleTranslate: [
-      { name: "source", label: "Nguồn SRT/VTT hoặc audio/video", type: "file", help: "Bridge nhận tệp thuộc sở hữu bạn; không tạo bản dịch giả trong browser." },
-      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Tiếng Việt", "English", "Theo yêu cầu"] },
-      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75" },
+      { name: "source", label: "Nguồn SRT/VTT hoặc audio/video", type: "file", accept: ".srt,.vtt,text/plain,text/vtt,application/x-subrip,audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Bridge nhận tệp thuộc sở hữu bạn; không tạo bản dịch giả trong browser." },
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true },
+      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
       { name: "output_format", label: "Định dạng xuất", control: "select", options: ["srt", "vtt"] }
     ],
     dubbing: [
-      { name: "source", label: "Tệp audio / video nguồn", type: "file", help: "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý." },
+      { name: "source", label: "Tệp audio / video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý." },
       { name: "mode", label: "Workflow", control: "select", options: ["dubbing", "subtitle_plus_dubbing"], help: "Chọn rõ lồng tiếng hoặc phụ đề + lồng tiếng; bridge dùng mode canonical của bot." },
-      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Tiếng Việt", "English", "Theo yêu cầu"] },
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true },
       { name: "voice", label: "Định hướng giọng", placeholder: "Giọng mặc định hoặc Voice Vault đã kiểm tra" },
       { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"] },
-      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75" },
+      { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
       { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt", "vtt"] }
     ],
     documentPdf: [
-      { name: "document", label: "Tài liệu nguồn", type: "file", help: "Tệp chỉ vào bot-owned staging sau validation; Web không giữ raw path hoặc bytes lâu dài." },
-      { name: "operation", label: "Công cụ PDF", control: "select", options: ["pdf_to_word", "pdf_to_images"], help: "Chỉ nêu đúng tool local có trong bot; delivery vẫn cần canonical job/asset." },
-      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 3" }
+      { name: "document", label: "Tài liệu nguồn", type: "file", accept: "application/pdf,image/jpeg,image/png,image/webp", requiredUpload: true, help: "Tệp chỉ vào bot-owned staging sau validation; Web không giữ raw path hoặc bytes lâu dài." },
+      { name: "operation", label: "Công cụ PDF", control: "select", options: ["pdf_to_word", "pdf_to_images", "image_to_pdf"], help: "Chỉ nêu đúng tool local có trong bot; delivery vẫn cần canonical job/asset.", required: true },
+      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 3", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" }
     ],
     documentOcr: [
-      { name: "document", label: "Ảnh hoặc PDF nguồn", type: "file", help: "OCR không trả text cho đến khi pipeline canonical tạo output đã kiểm tra." },
-      { name: "operation", label: "Loại OCR", control: "select", options: ["ocr_image", "ocr_pdf"] },
-      { name: "page_count", label: "Số trang khi OCR PDF", type: "number", placeholder: "Ví dụ: 2" }
+      { name: "document", label: "Ảnh hoặc PDF nguồn", type: "file", accept: "application/pdf,image/jpeg,image/png,image/webp", requiredUpload: true, help: "OCR không trả text cho đến khi pipeline canonical tạo output đã kiểm tra." },
+      { name: "operation", label: "Loại OCR", control: "select", options: ["ocr_image", "ocr_pdf"], required: true },
+      { name: "page_count", label: "Số trang khi OCR PDF", type: "number", placeholder: "Ví dụ: 2", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" }
     ],
     documentMerge: [
-      { name: "documents", label: "Các PDF cần gộp", type: "file", multiple: true, help: "Chọn từ hai PDF trở lên; thứ tự staging là thứ tự gửi. Chưa chạy merge trực tiếp từ browser." },
-      { name: "page_count", label: "Tổng trang để báo giá", type: "number", placeholder: "Ví dụ: 8" }
+      { name: "documents", label: "Các PDF cần gộp", type: "file", accept: "application/pdf", multiple: true, requiredUpload: true, help: "Chọn từ hai PDF trở lên; thứ tự staging là thứ tự gửi. Chưa chạy merge trực tiếp từ browser." },
+      { name: "page_count", label: "Tổng trang để báo giá", type: "number", placeholder: "Ví dụ: 8", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" }
     ],
     documentSplit: [
-      { name: "document", label: "PDF nguồn", type: "file" },
-      { name: "page_range", label: "Khoảng trang", placeholder: "Ví dụ: 1-3 hoặc 2", help: "Bot canonical chỉ nhận một trang hoặc một khoảng liên tiếp N-M; không dùng danh sách có dấu phẩy." },
-      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 12" }
+      { name: "document", label: "PDF nguồn", type: "file", accept: "application/pdf", requiredUpload: true },
+      { name: "page_range", label: "Khoảng trang", placeholder: "Ví dụ: 1-3 hoặc 2", help: "Bot canonical chỉ nhận một trang hoặc một khoảng liên tiếp N-M; không dùng danh sách có dấu phẩy.", required: true, pattern: "\\d+(?:-\\d+)?" },
+      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 12", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" }
     ],
     documentCompress: [
-      { name: "document", label: "PDF nguồn", type: "file" },
-      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 12" },
+      { name: "document", label: "PDF nguồn", type: "file", accept: "application/pdf", requiredUpload: true },
+      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 12", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" },
       { name: "notes", label: "Ghi chú", control: "textarea", placeholder: "Yêu cầu đầu ra (không hứa mức nén chưa có trong helper bot)…" }
     ],
     documentTranslate: [
-      { name: "document", label: "Tài liệu nguồn", type: "file", help: "Document translation chưa có quote/delivery adapter bền vững nên sẽ hiển thị guarded đúng trạng thái." },
-      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: ["Tiếng Việt", "English", "Theo yêu cầu"] },
+      { name: "document", label: "Tài liệu nguồn", type: "file", accept: "application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain", requiredUpload: true, help: "Document translation chưa có quote/delivery adapter bền vững nên sẽ hiển thị guarded đúng trạng thái." },
+      { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true },
       { name: "notes", label: "Yêu cầu dịch", control: "textarea", placeholder: "Giữ thương hiệu, thuật ngữ, định dạng…" }
     ],
     support: [
-      { name: "subject", label: "Chủ đề", placeholder: "Tóm tắt vấn đề" },
-      { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Tệp đính kèm sẽ chỉ xuất hiện khi ticket adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file." }
+      { name: "subject", label: "Chủ đề", placeholder: "Tóm tắt vấn đề", required: true, minLength: 3 },
+      { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Tệp đính kèm sẽ chỉ xuất hiện khi ticket adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file.", required: true, minLength: 3 }
     ],
     profile: [
       { name: "display_name", label: "Tên hiển thị", placeholder: "Chờ dữ liệu phiên" },
@@ -201,7 +241,8 @@
     return definePage({ path, title, description, icon, section: "Khách hàng", ...extra });
   }
 
-  function featurePage(path, title, description, icon, fields, aliases) {
+  function featurePage(path, title, description, icon, fields, aliases, options) {
+    const settings = options && typeof options === "object" ? options : {};
     const page = definePage({
       path,
       title,
@@ -215,6 +256,33 @@
       notes: [
         "Không có provider nào được gọi từ giao diện này.",
         "Core Bridge là nơi duy nhất ước tính Xu, tạo job và xác nhận output."
+      ],
+      ...settings,
+      fields: copyFields(settings.fields || fields),
+      notes: settings.notes ? [...settings.notes] : [
+        "Không có provider nào được gọi từ giao diện này.",
+        "Core Bridge là nơi duy nhất ước tính Xu, tạo job và xác nhận output."
+      ]
+    }, aliases);
+    featuredModules.push(page);
+    return page;
+  }
+
+  function guardedFeaturePage(path, title, description, icon, aliases, notes) {
+    const page = definePage({
+      path,
+      title,
+      description,
+      icon,
+      section: "AI Studio",
+      type: "feature",
+      action: "none",
+      layout: "workspace",
+      status: "guarded",
+      fields: [],
+      notes: notes || [
+        "Route này đã được map để giữ parity với bot, nhưng chưa có planning/job adapter canonical riêng.",
+        "Portal không mở form hoặc tạo output thay thế khi contract chưa đủ."
       ]
     }, aliases);
     featuredModules.push(page);
@@ -324,7 +392,7 @@
   });
 
   // Content, image, video, voice, music, language and document feature routes.
-  featurePage("/chat", "AI Chat", "Chuẩn bị hội thoại có ngữ cảnh; Core Bridge quyết định provider, quota và lưu lịch sử.", ICONS.chat, FIELD_SETS.prompt, ["/tools/chat"]);
+  featurePage("/chat", "AI Chat", "Chuẩn bị hội thoại có ngữ cảnh; Core Bridge quyết định provider, quota và lưu lịch sử.", ICONS.chat, FIELD_SETS.prompt, ["/tools/chat"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/prompt-studio", "Prompt Studio", "Soạn và tinh chỉnh prompt thành bản nháp an toàn trước khi xác nhận.", ICONS.prompt, FIELD_SETS.prompt, ["/prompts"]);
   featurePage("/content/caption", "Caption", "Chuẩn bị caption theo brief, giọng điệu và kênh phát hành.", ICONS.prompt, FIELD_SETS.prompt, ["/caption"]);
   featurePage("/content/hashtag", "Hashtag", "Tạo bản nháp hashtag theo nội dung và nền tảng.", ICONS.prompt, FIELD_SETS.prompt, ["/hashtag"]);
@@ -333,29 +401,29 @@
   featurePage("/content/storyboard", "Storyboard", "Lập storyboard thành bản nháp; chưa tạo media hay trừ Xu.", ICONS.prompt, FIELD_SETS.prompt, ["/storyboard"]);
   featurePage("/content/pack", "Content Pack", "Gom brief nội dung thành một bản nháp có thể ước tính qua bridge.", ICONS.prompt, FIELD_SETS.prompt, ["/content-pack"]);
 
-  featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.image, ["/image"]);
-  featurePage("/image/edit", "Chỉnh sửa ảnh", "Chuẩn bị thay đổi ảnh; upload và xử lý chỉ diễn ra qua đường dẫn được ký tạm thời.", ICONS.image, FIELD_SETS.image);
-  featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi bản nháp upscale; không công bố output khi chưa kiểm tra file hợp lệ.", ICONS.image, FIELD_SETS.image);
-  featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.image, ["/image/image-to-image"]);
-  featurePage("/image/remove-background", "Xóa nền", "Tạo bản nháp xóa nền và đợi job hợp lệ trước khi mở tài sản.", ICONS.image, FIELD_SETS.image);
+  featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image"]);
+  featurePage("/image/edit", "Chỉnh sửa ảnh", "Chuẩn bị thay đổi ảnh; upload và xử lý chỉ diễn ra qua đường dẫn được ký tạm thời.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi yêu cầu upscale từ ảnh nguồn và nhận quote canonical trước khi xác nhận.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.imageCreate, ["/image/image-to-image"]);
+  featurePage("/image/remove-background", "Xóa nền", "Tạo quote xóa nền từ ảnh nguồn; job chỉ xuất hiện sau adapter canonical.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   readOnlyPage("/image/history", "Lịch sử ảnh", "Danh sách output ảnh thuộc phiên sẽ xuất hiện sau khi bridge xác thực.", ICONS.image, "assets", ["/image/assets"]);
 
-  featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.video, ["/video"]);
-  featurePage("/video/long", "Video dài", "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/product", "Video sản phẩm", "Chuẩn bị brief video sản phẩm, cảnh và CTA theo flow draft → estimate → confirm.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/text-to-video", "Text-to-Video", "Chuẩn bị yêu cầu text-to-video mà không gọi provider từ trình duyệt.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/image-to-video", "Image-to-Video", "Chuẩn bị input hình nguồn; bridge kiểm tra quyền sở hữu và định dạng.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/trend", "Video xu hướng", "Tạo brief video theo xu hướng và đợi engine có trạng thái sẵn sàng.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/quick", "Quick Video", "Khởi tạo bản nháp video nhanh; không có kết quả giả lập trong UI.", ICONS.video, FIELD_SETS.video);
-  featurePage("/video/multiscene", "Video nhiều cảnh", "Chuẩn bị nhiều cảnh và các thành phần media trước bước estimate.", ICONS.video, FIELD_SETS.video);
+  featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.videoContextual, ["/video"]);
+  featurePage("/video/long", "Video dài", "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.", ICONS.video, FIELD_SETS.videoStoryboard);
+  featurePage("/video/product", "Video sản phẩm", "Chuẩn bị brief video sản phẩm, cảnh và CTA theo flow draft → estimate → confirm.", ICONS.video, FIELD_SETS.videoContextual);
+  featurePage("/video/text-to-video", "Text-to-Video", "Chuẩn bị yêu cầu text-to-video mà không gọi provider từ trình duyệt.", ICONS.video, FIELD_SETS.videoContextual);
+  featurePage("/video/image-to-video", "Image-to-Video", "Chuẩn bị input hình nguồn; bridge kiểm tra quyền sở hữu và định dạng.", ICONS.video, FIELD_SETS.videoImageToVideo);
+  featurePage("/video/trend", "Video xu hướng", "Tạo brief video theo xu hướng và đợi engine có trạng thái sẵn sàng.", ICONS.video, FIELD_SETS.videoContextual);
+  featurePage("/video/quick", "Quick Video", "Khởi tạo bản nháp video nhanh; không có kết quả giả lập trong UI.", ICONS.video, FIELD_SETS.videoContextual);
+  featurePage("/video/multiscene", "Video nhiều cảnh", "Chuẩn bị nhiều cảnh và các thành phần media trước bước estimate.", ICONS.video, FIELD_SETS.videoStoryboard);
   readOnlyPage("/video/progress", "Tiến độ video", "Theo dõi các job video được bridge trả về cho phiên sở hữu.", ICONS.video, "jobs");
   readOnlyPage("/video/preview", "Xem trước video", "Chỉ mở preview có URL ký tạm thời và output đã qua validation.", ICONS.video, "assets");
   readOnlyPage("/video/export", "Xuất video", "Xuất file chỉ khi output hoàn tất, thuộc sở hữu người dùng và được ký tạm thời.", ICONS.video, "assets");
-  featurePage("/video/add-ons", "Video add-ons", "Chuẩn bị voice, music, subtitle và các add-on trước khi bridge tạo job.", ICONS.video, FIELD_SETS.video);
+  guardedFeaturePage("/video/add-ons", "Video add-ons", "Voice, music và subtitle add-ons vẫn chờ adapter planning/job canonical riêng.", ICONS.video);
 
   readOnlyPage("/voice", "Voice Vault", "Danh mục giọng nói thuộc tài khoản, không hiển thị nếu bridge chưa xác minh phiên.", ICONS.voice, "voices", ["/voice-vault"]);
-  featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"]);
-  featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voice, ["/voice/vault"]);
+  featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voiceSaved, ["/voice/vault"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
   readOnlyPage("/voice/preview", "Nghe thử giọng", "Preview là output riêng tư và phải dùng signed/temporary URL.", ICONS.voice, "voices");
   readOnlyPage("/voice/outputs", "Voice outputs", "Tài sản audio đã tạo sẽ xuất hiện tại đây sau delivery hợp lệ.", ICONS.voice, "assets");
@@ -373,7 +441,7 @@
   featurePage("/dubbing", "Lồng tiếng", "Chuẩn bị dubbing với giọng/đích ngôn ngữ do Core Bridge xác minh.", ICONS.subtitle, FIELD_SETS.dubbing);
   featurePage("/asr", "Nhận dạng giọng nói", "Bản nháp ASR chờ output hợp lệ; không tự sinh transcript trong UI.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
   readOnlyPage("/subtitle/formats", "SRT / VTT", "Quản lý định dạng phụ đề chỉ sau khi file output hợp lệ được bridge trả về.", ICONS.subtitle, "assets");
-  featurePage("/video/mux", "Mux audio & video", "Chuẩn bị mux và fallback; Core Bridge chịu trách nhiệm FFmpeg/output validation.", ICONS.video, FIELD_SETS.video, ["/mux"]);
+  guardedFeaturePage("/video/mux", "Mux audio & video", "Mux/fallback vẫn chờ adapter canonical có output validation và private delivery.", ICONS.video, ["/mux"]);
 
   featurePage("/documents", "Document Studio", "Tập hợp workflow PDF, OCR, gộp/tách/nén và dịch tài liệu.", ICONS.document, FIELD_SETS.documentPdf);
   featurePage("/documents/pdf", "PDF tools", "Chuẩn bị thao tác PDF; Core Bridge kiểm tra file, path và ownership.", ICONS.document, FIELD_SETS.documentPdf, ["/pdf"]);
@@ -572,9 +640,15 @@
         ]
       },
       {
+        label: "Thanh toán & gói",
+        links: [
+          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
+        ]
+      },
+      {
         label: "Tài khoản",
         links: [
-          ["/wallet", "Ví Xu", ICONS.wallet], ["/support", "Hỗ trợ", ICONS.support], ["/account", "Tài khoản", ICONS.account]
+          ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/account", "Tài khoản", ICONS.account]
         ]
       }
     ];
@@ -642,14 +716,25 @@
       const wide = field.control === "textarea" || field.type === "file" || field.wide;
       const id = `portal-field-${safeText(field.name || "input").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
       const disabled = enabled ? "" : " disabled";
-      const help = field.help ? `<span class="portal-field-help">${safeText(field.help)}</span>` : "";
       const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
       const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
       const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
-      const staged = stagedUploadCount ? `<span class="portal-field-staged">${safeText(String(stagedUploadCount))} tệp đã vào staging canonical; không cần chọn lại để estimate/confirm.</span>` : "";
+      const descriptionIds = [];
+      const help = field.help ? (descriptionIds.push(`${id}-help`), `<span id="${id}-help" class="portal-field-help">${safeText(field.help)}</span>`) : "";
+      const staged = stagedUploadCount ? (descriptionIds.push(`${id}-staged`), `<span id="${id}-staged" class="portal-field-staged">${safeText(String(stagedUploadCount))} tệp đã vào staging canonical; không cần chọn lại để estimate/confirm.</span>`) : "";
+      const describedBy = descriptionIds.length ? ` aria-describedby="${descriptionIds.join(" ")}"` : "";
+      const required = field.required === true && field.type !== "file" ? " required" : "";
+      const ariaRequired = (field.required === true || field.requiredUpload === true) ? ' aria-required="true"' : "";
+      const min = field.min !== undefined ? ` min="${safeText(String(field.min))}"` : "";
+      const max = field.max !== undefined ? ` max="${safeText(String(field.max))}"` : "";
+      const step = field.step !== undefined ? ` step="${safeText(String(field.step))}"` : "";
+      const minLength = field.minLength !== undefined ? ` minlength="${safeText(String(field.minLength))}"` : "";
+      const maxLength = field.maxLength !== undefined ? ` maxlength="${safeText(String(field.maxLength))}"` : "";
+      const pattern = field.pattern ? ` pattern="${safeText(field.pattern)}"` : "";
+      const inputMode = field.inputMode ? ` inputmode="${safeText(field.inputMode)}"` : "";
       let control;
       if (field.control === "textarea") {
-        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${disabled}>${safeText(value)}</textarea>`;
+        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${required}${ariaRequired}${minLength}${maxLength}${describedBy}${disabled}>${safeText(value)}</textarea>`;
       } else if (field.control === "select") {
         let options = Array.isArray(field.options) ? field.options : [];
         if (field.optionsFrom === "voiceProfiles") {
@@ -685,18 +770,20 @@
           const selected = String(value) === String(rawValue) ? " selected" : "";
           return `<option value="${safeText(value)}"${selected}>${safeText(label)}</option>`;
         }).join("");
-        control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${disabled}>${empty}${optionMarkup}</select>`;
+        control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${required}${ariaRequired}${describedBy}${disabled}>${empty}${optionMarkup}</select>`;
       } else if (field.type === "checkbox") {
         const checked = rawValue === true || rawValue === "true" || rawValue === 1 || rawValue === "1" ? " checked" : "";
-        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${disabled}><span>Tôi xác nhận</span></label>`;
+        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${required}${ariaRequired}${describedBy}${disabled}><span>Tôi xác nhận</span></label>`;
       } else {
         const type = ["email", "password", "file", "number", "text"].includes(field.type) ? field.type : "text";
         const autocomplete = field.autocomplete ? ` autocomplete="${safeText(field.autocomplete)}"` : "";
         const multiple = type === "file" && field.multiple ? " multiple" : "";
+        const accept = type === "file" && field.accept ? ` accept="${safeText(field.accept)}"` : "";
         const valueAttribute = type === "file" || type === "password" ? "" : ` value="${safeText(value)}"`;
-        control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${disabled}>`;
+        control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${disabled}>`;
       }
-      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}</label>${control}${help}${staged}</div>`;
+      const requiredMark = field.required === true || field.requiredUpload === true ? '<span class="portal-required-mark" aria-hidden="true">*</span><span class="portal-sr-only"> bắt buộc</span>' : "";
+      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}${requiredMark}</label>${control}${help}${staged}</div>`;
     }).join("")}</div>`;
   }
 
@@ -712,7 +799,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const planningAvailable = page.type === "feature" && context.capabilities && context.capabilities["feature-draft"] === true;
+    const planningAvailable = page.type === "feature" && page.action !== "none" && context.capabilities && context.capabilities["feature-draft"] === true;
     if (planningAvailable) return { icon: "◇", title: "Planning draft sẵn sàng; engine vẫn được bảo vệ", text: "Bạn có thể tạo draft/estimate canonical nếu bridge cấp helper tương ứng. Confirm, charge và output vẫn do bot quyết định." };
     return { icon: "⌁", title: isAdmin ? "Khu vực quản trị cần quyền máy chủ" : "Core Bridge chưa cấp khả năng thực thi", text: isAdmin ? "Server cần xác nhận signed admin session trước khi hiển thị dữ liệu hoặc thao tác ERP." : "Shell chỉ cho phép chuẩn bị giao diện. Provider, wallet, PayOS và job không được gọi trực tiếp tại đây." };
   }
@@ -745,6 +832,19 @@
     return `<div class="portal-panel-list">${notes.map((note, index) => `<div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">${index ? "✓" : "i"}</span><div><strong>${index ? "Nguyên tắc an toàn" : "Trạng thái tích hợp"}</strong><span>${safeText(note)}</span></div></div>`).join("")}</div>`;
   }
 
+  function flowHasFreshEstimate(flow) {
+    const estimate = flow && flow.data && typeof flow.data === "object" ? flow.data.estimate : null;
+    return Boolean(
+      flow && flow.phase === "estimate" && flow.status === "awaiting_confirm" &&
+      estimate && estimate.available === true && typeof flow.estimateFingerprint === "string" && flow.estimateFingerprint
+    );
+  }
+
+  function transientFormValues(route) {
+    const values = transientFormDrafts.get(route);
+    return values && typeof values === "object" ? values : {};
+  }
+
   function renderFormCard(page, context) {
     const enabled = canAct(page, context);
     const reason = actionBlockReason(page, context);
@@ -755,15 +855,23 @@
     const route = page.routePath || page.path;
     const flow = context.featureFlows && context.featureFlows[route];
     const flowStatus = flow && ALLOWED_STATES.has(flow.status) ? flow.status : "";
-    const canAdvance = enabled && page.action === "feature-draft" && (flowStatus === "draft" || flowStatus === "awaiting_confirm");
+    const hasFreshEstimate = flowHasFreshEstimate(flow);
+    const canEstimate = enabled && page.type === "feature" && !hasFreshEstimate && (
+      page.action === "feature-estimate" || page.estimateDirect === true || flowStatus === "draft"
+    );
     const formId = `portal-form-${safeText(route).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-    const flowControls = canAdvance
-      ? `<div class="portal-flow-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>${flowStatus === "awaiting_confirm" ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Xác nhận chạy</button>` : ""}</div>`
+    const estimateControl = canEstimate && page.action !== "feature-estimate"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>`
       : "";
+    const confirmControl = hasFreshEstimate
+      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.">Xác nhận chạy</button>`
+      : "";
+    const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
+    const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : safeText(reason)}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
-      <form class="portal-form" id="${safeText(formId)}" data-portal-form novalidate>${renderFields(page.fields, enabled, context, flow && flow.input)}
+      <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}" novalidate>${renderFields(page.fields, enabled, context, fieldValues)}
         <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."}</span>
-          <button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel || "Tiếp tục")}</button>
+          <button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel || "Tiếp tục")}</button>
         </div>
       </form>${flowControls}</section>`;
   }
@@ -861,7 +969,7 @@
     const wallet = context.wallet && typeof context.wallet === "object" ? context.wallet : null;
     const history = Array.isArray(context.walletHistory) ? context.walletHistory : [];
     const walletCard = wallet
-      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Số dư canonical</h2><p class="portal-card-subtitle">Dữ liệu được đọc từ bot qua private bridge, không tính lại trong browser.</p></div>${badge("completed")}</div><div class="portal-admin-grid"><div class="portal-metric"><span>Số dư</span><strong>${safeText(String(wallet.balance_xu || 0))} Xu</strong><em>Canonical wallet</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))} Xu</strong><em>Lịch sử canonical</em></div><div class="portal-metric"><span>Gói</span><strong>${safeText((wallet.plan && (wallet.plan.plan_name || wallet.plan.current_plan)) || "—")}</strong><em>${safeText((wallet.plan && wallet.plan.plan_status) || "Không có gói")}</em></div></div></section>`
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Số dư canonical</h2><p class="portal-card-subtitle">Dữ liệu được đọc từ bot qua private bridge, không tính lại trong browser.</p></div>${badge("completed")}</div><div class="portal-admin-grid"><div class="portal-metric"><span>Số dư</span><strong>${safeText(String(wallet.balance_xu || 0))} Xu</strong><em>Canonical wallet</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))} Xu</strong><em>Lịch sử canonical</em></div><div class="portal-metric"><span>Gói</span><strong>${safeText((wallet.plan && (wallet.plan.plan_name || wallet.plan.current_plan)) || "—")}</strong><em>${safeText((wallet.plan && wallet.plan.plan_status) || "Không có gói")}</em></div></div><div class="portal-form-footer"><span class="portal-form-note">Nạp Xu, gói và bảng giá chỉ mở dữ liệu/luồng đã được Core Bridge cấp.</span><a class="portal-button portal-button--primary" href="/wallet/topup">Nạp Xu</a><a class="portal-button portal-button--quiet" href="/packages">Xem gói</a><a class="portal-button portal-button--quiet" href="/pricing">Bảng giá</a></div></section>`
       : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Số dư canonical</h2><p class="portal-card-subtitle">Số dư không được cache hoặc tính lại tại browser.</p></div>${badge("guarded")}</div>${renderEmpty("Chờ dữ liệu ví", "Core Bridge phải trả số dư và lịch sử đã xác minh cho signed session.", "◌")}</section>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><div class="portal-stack">${topup ? `${renderFormCard(page, context)}${renderPaymentFlow(context)}` : walletCard}</div>
@@ -1020,7 +1128,7 @@
     return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p>
       <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
-      <form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled, context)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
+      <form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
       <div class="portal-notice" style="margin-top:16px"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div>
     </section></article>`;
   }
@@ -1199,39 +1307,88 @@
     window.setTimeout(() => { toast.remove(); }, 4800);
   }
 
-  function dispatchAction(button, context) {
-    const action = button.getAttribute("data-portal-action") || "";
-    const confirmation = button.getAttribute("data-portal-confirm") || "";
-    if (confirmation && !window.confirm(confirmation)) return;
-    const route = button.getAttribute("data-portal-route") || context.path;
-    const formId = button.getAttribute("data-portal-form-id") || "";
-    const form = button.closest("form") || (formId ? document.getElementById(formId) : null);
+  function rememberTransientFormDraft(form) {
+    if (!form) return;
+    const route = form.getAttribute("data-portal-route") || "";
+    if (!route) return;
+    const values = {};
+    form.querySelectorAll("input, textarea, select").forEach((input) => {
+      if (!input.name || input.type === "file" || input.type === "password") return;
+      values[input.name] = input.type === "checkbox" ? input.checked : input.value;
+    });
+    transientFormDrafts.set(route, values);
+  }
+
+  function collectFormFields(form) {
     const fields = {};
-    if (form) {
-      form.querySelectorAll("input, textarea, select").forEach((input) => {
-        if (input.type === "file") {
-          const selected = input.files ? Array.from(input.files) : [];
-          if (selected.length) fields[input.name] = input.multiple ? selected : selected[0];
-          return;
-        }
-        fields[input.name] = input.type === "checkbox" ? input.checked : input.value;
-      });
+    if (!form) return fields;
+    form.querySelectorAll("input, textarea, select").forEach((input) => {
+      if (!input.name) return;
+      if (input.type === "file") {
+        const selected = input.files ? Array.from(input.files) : [];
+        if (selected.length) fields[input.name] = input.multiple ? selected : selected[0];
+        return;
+      }
+      fields[input.name] = input.type === "checkbox" ? input.checked : input.value;
+    });
+    return fields;
+  }
+
+  function dispatchAction(source, context) {
+    const action = source.getAttribute("data-portal-action") || "";
+    const confirmation = source.getAttribute("data-portal-confirm") || "";
+    if (confirmation && !window.confirm(confirmation)) return;
+    const route = source.getAttribute("data-portal-route") || context.path;
+    const formId = source.getAttribute("data-portal-form-id") || "";
+    const form = source.matches("form") ? source : (source.closest("form") || (formId ? document.getElementById(formId) : null));
+    if (form && !form.reportValidity()) {
+      const invalid = form.querySelector(":invalid");
+      if (invalid && typeof invalid.focus === "function") invalid.focus();
+      showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
+      return;
     }
+    if (form) rememberTransientFormDraft(form);
+    const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: button.getAttribute("data-job-filter") || "", paymentId: button.getAttribute("data-payment-id") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });
     window.dispatchEvent(event);
   }
 
-  function closeSidebar() {
+  function sidebarFocusables(sidebar) {
+    if (!sidebar) return [];
+    return Array.from(sidebar.querySelectorAll("a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled])"))
+      .filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
+  }
+
+  function setWorkspaceInert(opened) {
+    const workspace = document.querySelector(".portal-workspace");
+    if (!workspace) return;
+    if ("inert" in workspace) workspace.inert = opened;
+    if (opened) workspace.setAttribute("aria-hidden", "true");
+    else workspace.removeAttribute("aria-hidden");
+  }
+
+  function closeSidebar(options) {
+    const settings = options && typeof options === "object" ? options : {};
     const sidebar = document.querySelector("[data-portal-sidebar]");
     const backdrop = document.querySelector("[data-portal-backdrop]");
     const button = document.querySelector("[data-portal-menu]");
+    const wasOpen = Boolean(sidebar && sidebar.classList.contains("is-open"));
     if (sidebar) sidebar.classList.remove("is-open");
     if (backdrop) backdrop.hidden = true;
+    if (sidebar) {
+      sidebar.removeAttribute("role");
+      sidebar.removeAttribute("aria-modal");
+    }
+    setWorkspaceInert(false);
     if (button) button.setAttribute("aria-expanded", "false");
+    if (wasOpen && settings.restoreFocus !== false && sidebarReturnFocus && typeof sidebarReturnFocus.focus === "function") {
+      sidebarReturnFocus.focus({ preventScroll: true });
+    }
+    sidebarReturnFocus = null;
   }
 
   function toggleSidebar() {
@@ -1242,6 +1399,39 @@
     const opened = sidebar.classList.toggle("is-open");
     backdrop.hidden = !opened;
     button.setAttribute("aria-expanded", String(opened));
+    if (!opened) {
+      closeSidebar();
+      return;
+    }
+    sidebarReturnFocus = button;
+    sidebar.setAttribute("role", "dialog");
+    sidebar.setAttribute("aria-modal", "true");
+    setWorkspaceInert(true);
+    window.requestAnimationFrame(() => {
+      const first = sidebarFocusables(sidebar)[0];
+      if (first && typeof first.focus === "function") first.focus({ preventScroll: true });
+    });
+  }
+
+  function focusSnapshot() {
+    const active = document.activeElement;
+    if (!active || !active.matches || !active.matches("input, textarea, select")) return null;
+    const snapshot = { id: active.id || "", name: active.name || "", selectionStart: null, selectionEnd: null };
+    if (typeof active.selectionStart === "number") {
+      snapshot.selectionStart = active.selectionStart;
+      snapshot.selectionEnd = active.selectionEnd;
+    }
+    return snapshot;
+  }
+
+  function restoreFocus(snapshot) {
+    if (!snapshot) return;
+    const target = snapshot.id ? document.getElementById(snapshot.id) : document.querySelector(`[name="${snapshot.name.replace(/"/g, "\\\"")}"]`);
+    if (!target || typeof target.focus !== "function") return;
+    target.focus({ preventScroll: true });
+    if (snapshot.selectionStart !== null && typeof target.setSelectionRange === "function") {
+      try { target.setSelectionRange(snapshot.selectionStart, snapshot.selectionEnd); } catch (_) { /* non-text controls */ }
+    }
   }
 
   function bindInteractions() {
@@ -1256,32 +1446,60 @@
       if (menu) { toggleSidebar(); return; }
       if (event.target.closest("[data-portal-backdrop]")) { closeSidebar(); return; }
       const action = event.target.closest("[data-portal-action]");
-      if (action && !action.disabled) { dispatchAction(action, getBootstrap()); return; }
+      if (action && !action.disabled) {
+        if (action.tagName === "BUTTON" && action.type === "submit") return;
+        dispatchAction(action, getBootstrap());
+        return;
+      }
       const link = event.target.closest(".portal-nav-link");
-      if (link) closeSidebar();
+      if (link) closeSidebar({ restoreFocus: false });
     });
     document.addEventListener("submit", (event) => {
       if (event.target.matches("[data-portal-form]")) {
         event.preventDefault();
-        showToast("Form shell không tự gửi dữ liệu. Hãy chờ adapter FastAPI đã ký phiên.", "warning");
+        dispatchAction(event.target, getBootstrap());
       }
     });
-    window.addEventListener("keydown", (event) => { if (event.key === "Escape") closeSidebar(); });
+    document.addEventListener("input", (event) => {
+      const form = event.target.closest && event.target.closest("[data-portal-form]");
+      if (form) rememberTransientFormDraft(form);
+    });
+    document.addEventListener("change", (event) => {
+      const form = event.target.closest && event.target.closest("[data-portal-form]");
+      if (form) rememberTransientFormDraft(form);
+    });
+    window.addEventListener("keydown", (event) => {
+      const sidebar = document.querySelector("[data-portal-sidebar]");
+      const opened = Boolean(sidebar && sidebar.classList.contains("is-open"));
+      if (event.key === "Escape" && opened) { event.preventDefault(); closeSidebar(); return; }
+      if (event.key !== "Tab" || !opened) return;
+      const focusables = sidebarFocusables(sidebar);
+      if (!focusables.length) return;
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+    });
   }
 
   function mountPortal(override) {
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
+    const focus = focusSnapshot();
     const context = getBootstrap();
     const page = resolvePage(context.path);
     const sidebar = document.querySelector("[data-portal-sidebar]");
     const header = document.querySelector("[data-portal-header]");
     const main = document.querySelector("[data-portal-main]");
     if (!sidebar || !header || !main) return;
+    // A hydration remount must not leave the responsive navigation in an
+    // inert/modal state with a replaced header button behind it.
+    if (sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
     document.title = `${context.title || page.title} · TOAN AAS`;
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
     bindInteractions();
+    restoreFocus(focus);
   }
 
   window.TOANAASPortal = Object.freeze({

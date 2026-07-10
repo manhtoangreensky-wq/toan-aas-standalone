@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `39 passed` |
+| Web App | `python -m pytest -q` | `51 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -54,6 +54,25 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
 - Telegram link codes are one-time and expiring. The bot-to-Web callback has
   a directional bearer token, HMAC-bound body/timestamp/request ID and a
   persistent nonce; private bridge requests also reject replays.
+- Every private-bridge retry now signs a fresh server-side nonce while keeping
+  the canonical idempotency key. Nested runtime/provider credentials, task IDs
+  and filesystem paths are recursively redacted before an envelope reaches a
+  browser.
+- Web idempotency reserves payment, upload, ticket, feature-confirm and
+  future Admin-write keys atomically before a bridge call. A concurrent retry
+  receives an in-progress guard instead of creating another canonical call.
+- Admin write endpoints are locally CSRF/admin-gated and disabled by the
+  explicit `WEBAPP_ADMIN_WRITES_ENABLED=false` default; the customer-facing
+  Admin ERP stays read-only until a separate canonical write adapter is
+  approved.
+- Production session detection is consistent across `APP_ENV`, `ENVIRONMENT`
+  and Railway environment markers; startup fails without a real production
+  session secret and always emits Secure cookies. Credentialed CORS rejects
+  wildcards and non-HTTPS remote origins.
+- Linking a Telegram identity records the initiating session and revokes every
+  other session for that Web account, so stale sessions cannot inherit a newly
+  bound canonical identity. A canonical Telegram identity cannot be linked to
+  two Web accounts.
 - The Web onboarding screen starts the existing one-time link flow, renders
   only its temporary code/deep link, and re-checks signed server status. It
   neither accepts a raw Telegram ID nor alters the established PayOS webhook.
@@ -64,6 +83,15 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   canonical staging IDs in in-memory portal state. It never persists raw files
   or secrets in localStorage, and re-rendering cannot silently turn a quote
   into an empty request.
+- Quote-capable Chat, TTS and image workflows can start at estimate when their
+  bot helper has no planning-draft adapter. Confirm is offered only after a
+  matching canonical estimate; changing text or files forces a new estimate,
+  and matching feature submissions are single-flight with a stable key.
+- Feature forms use the actual canonical naming/constraints for video context
+  and storyboard, Voice Vault, subtitle/dubbing and document flows. Client
+  preflight checks prevent invalid media, missing consent, non-contiguous PDF
+  ranges and invalid document combinations from entering staging; the bridge
+  remains the final authority.
 - Pricing, packages and Admin read-only surfaces are returned from bot helper
   functions/tables; the portal never substitutes the feature registry as a
   price table.

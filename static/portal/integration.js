@@ -64,6 +64,139 @@
     if (entry) entry.inFlight = false;
   }
 
+  function setActionBusy(action, route, busy) {
+    document.querySelectorAll("[data-portal-action]").forEach((control) => {
+      const matches = control.getAttribute("data-portal-action") === action && (control.getAttribute("data-portal-route") || window.location.pathname) === route;
+      if (!matches) return;
+      control.disabled = Boolean(busy);
+      control.setAttribute("aria-busy", String(Boolean(busy)));
+    });
+    document.querySelectorAll("[data-portal-form]").forEach((form) => {
+      const matches = form.getAttribute("data-portal-action") === action && (form.getAttribute("data-portal-route") || window.location.pathname) === route;
+      if (!matches) return;
+      const submit = form.querySelector('button[type="submit"]');
+      if (submit) {
+        submit.disabled = Boolean(busy);
+        submit.setAttribute("aria-busy", String(Boolean(busy)));
+      }
+    });
+  }
+
+  function stableValue(value) {
+    if (typeof File !== "undefined" && value instanceof File) {
+      return { file_name: value.name, content_size: Number(value.size || 0), content_type: value.type || "", modified_at: Number(value.lastModified || 0) };
+    }
+    if (Array.isArray(value)) return value.map(stableValue);
+    if (value && typeof value === "object") {
+      return Object.keys(value).sort().reduce((result, key) => {
+        result[key] = stableValue(value[key]);
+        return result;
+      }, {});
+    }
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean" || value === null) return value;
+    return null;
+  }
+
+  function featureFingerprint(value) {
+    return JSON.stringify(stableValue(value && typeof value === "object" ? value : {}));
+  }
+
+  function priorFeatureFlow(route) {
+    const flows = base().featureFlows;
+    return flows && typeof flows === "object" && flows[route] && typeof flows[route] === "object" ? flows[route] : {};
+  }
+
+  function selectedFiles(fields) {
+    const files = [];
+    Object.values(fields || {}).forEach((value) => {
+      if (typeof File !== "undefined" && value instanceof File) files.push(value);
+      else if (Array.isArray(value) && typeof File !== "undefined") value.forEach((item) => { if (item instanceof File) files.push(item); });
+    });
+    return files;
+  }
+
+  function extensionOf(item) {
+    const name = String((item && (item.name || item.file_name)) || "").toLowerCase();
+    const index = name.lastIndexOf(".");
+    return index >= 0 ? name.slice(index) : "";
+  }
+
+  function uploadItemsFor(route, fields) {
+    const flow = priorFeatureFlow(route);
+    const staged = flow.data && Array.isArray(flow.data.uploads) ? flow.data.uploads : [];
+    return [...selectedFiles(fields), ...staged.filter((item) => item && typeof item === "object")];
+  }
+
+  function uploadCountFor(route, fields) {
+    const flow = priorFeatureFlow(route);
+    const stagedIds = flow.input && Array.isArray(flow.input.upload_ids) ? flow.input.upload_ids.filter((item) => typeof item === "string" && item) : [];
+    return Math.max(selectedFiles(fields).length + stagedIds.length, uploadItemsFor(route, fields).length);
+  }
+
+  function allExtensionsMatch(items, allowed) {
+    return items.length > 0 && items.every((item) => allowed.has(extensionOf(item)));
+  }
+
+  function anyExtensionMatches(items, allowed) {
+    return items.some((item) => allowed.has(extensionOf(item)));
+  }
+
+  function scalarField(fields, route, name) {
+    if (Object.prototype.hasOwnProperty.call(fields || {}, name)) return fields[name];
+    const flow = priorFeatureFlow(route);
+    return flow.input && typeof flow.input === "object" ? flow.input[name] : "";
+  }
+
+  function validateFeatureIntake(feature, route, fields) {
+    const files = uploadItemsFor(route, fields);
+    const fileCount = uploadCountFor(route, fields);
+    const audio = new Set([".mp3", ".wav", ".m4a", ".ogg"]);
+    const media = new Set([".mp3", ".wav", ".m4a", ".ogg", ".mp4", ".mov", ".webm"]);
+    const subtitleText = new Set([".srt", ".vtt", ".txt"]);
+    const images = new Set([".jpg", ".jpeg", ".png", ".webp"]);
+    const pdf = new Set([".pdf"]);
+    const language = String(scalarField(fields, route, "target_language") || "").trim();
+    if (feature === "voice_clone") {
+      if (!fileCount) return "Voice Clone cần một mẫu audio đã vào staging canonical.";
+      if (files.length && !anyExtensionMatches(files, audio)) return "Voice Clone chỉ nhận mẫu audio MP3, WAV, M4A hoặc OGG.";
+      if (scalarField(fields, route, "consent") !== true) return "Hãy xác nhận quyền sử dụng mẫu giọng trước khi tiếp tục.";
+    }
+    if (feature === "music_upload") {
+      if (!fileCount) return "Hãy chọn tệp âm thanh trước khi tạo draft.";
+      if (files.length && !allExtensionsMatch(files, audio)) return "Nhạc của tôi chỉ nhận MP3, WAV, M4A hoặc OGG.";
+    }
+    if (["subtitle_asr", "subtitle_create", "asr", "subtitle_translate", "video_dub"].includes(feature)) {
+      if (!fileCount) return "Workflow phụ đề/lồng tiếng cần media đã vào staging canonical.";
+      const allowed = feature === "subtitle_translate" ? new Set([...media, ...subtitleText]) : media;
+      if (files.length && !anyExtensionMatches(files, allowed)) return "Tệp nguồn chưa đúng loại media/subtitle mà Core Bridge chấp nhận.";
+      if (["subtitle_translate", "video_dub"].includes(feature) && !["vi", "en", "zh", "ja", "ko"].includes(language)) return "Hãy chọn ngôn ngữ đích canonical.";
+    }
+    if (["documents", "documents_pdf", "documents_ocr", "documents_merge", "documents_split", "documents_compress", "documents_translate"].includes(feature)) {
+      if (!fileCount) return "Workflow tài liệu cần tệp đã vào staging canonical.";
+      const operationByFeature = {
+        documents_ocr: String(scalarField(fields, route, "operation") || "ocr_image"),
+        documents_merge: "merge_pdf", documents_split: "split_pdf", documents_compress: "compress_pdf", documents_translate: "translate_document"
+      };
+      const operation = operationByFeature[feature] || String(scalarField(fields, route, "operation") || "pdf_to_word");
+      if (operation === "image_to_pdf" && files.length && !allExtensionsMatch(files, images)) return "Image-to-PDF chỉ nhận JPG, PNG hoặc WebP.";
+      if (["pdf_to_word", "pdf_to_images", "merge_pdf", "split_pdf", "compress_pdf", "ocr_pdf"].includes(operation) && files.length && !allExtensionsMatch(files, pdf)) return "Thao tác này chỉ nhận tệp PDF.";
+      if (operation === "ocr_image" && files.length && !anyExtensionMatches(files, images)) return "OCR ảnh chỉ nhận JPG, PNG hoặc WebP.";
+      if (operation === "merge_pdf" && fileCount < 2) return "Gộp PDF cần ít nhất hai tệp đã vào staging canonical.";
+      if (operation === "split_pdf" && !/^\d+(?:-\d+)?$/.test(String(scalarField(fields, route, "page_range") || "").trim())) return "Khoảng trang phải là một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.";
+      if (operation === "translate_document" && !["vi", "en", "zh", "ja", "ko"].includes(language)) return "Hãy chọn ngôn ngữ đích canonical cho tài liệu.";
+    }
+    if (["image_edit", "image_upscale", "image_remove_background"].includes(feature)) {
+      if (!fileCount) return "Workflow ảnh này cần ảnh nguồn đã vào staging canonical.";
+      if (files.length && !anyExtensionMatches(files, images)) return "Workflow ảnh này chỉ nhận JPG, PNG hoặc WebP.";
+    }
+    if (feature === "video_image_to_video") {
+      if (!fileCount) return "Image-to-Video cần ảnh nguồn đã vào staging canonical.";
+      if (files.length && !anyExtensionMatches(files, images)) return "Image-to-Video chỉ nhận JPG, PNG hoặc WebP.";
+    }
+    if (feature === "voice_saved_tts" && !String(scalarField(fields, route, "voice_profile_id") || "").trim()) return "Hãy chọn một giọng Voice Vault đã sẵn sàng.";
+    return "";
+  }
+
   async function api(path, options) {
     const context = base();
     const headers = new Headers((options && options.headers) || {});
@@ -344,6 +477,8 @@
     const route = (detail.route || window.location.pathname).split("?")[0];
     const fields = detail.fields || {};
     let featureInput = null;
+    let featurePhase = "";
+    let featureSubmission = null;
     try {
       if (action === "auth-register") {
         if (fields.password !== fields.confirm_password) throw new Error("Xác nhận mật khẩu chưa khớp.");
@@ -463,14 +598,51 @@
       if (action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") {
         const feature = FEATURE_BY_PATH[route];
         if (!feature) throw new Error("Tính năng này chưa có mapping bridge an toàn.");
-        if (action === "feature-confirm" && !window.confirm("Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.")) return;
-        const phase = action.replace("feature-", "");
+        featurePhase = action.replace("feature-", "");
+        const intakeError = validateFeatureIntake(feature, route, fields);
+        if (intakeError) throw new Error(intakeError);
+        if (featurePhase === "confirm" && selectedFiles(fields).length) {
+          throw new Error("Tệp nguồn đã thay đổi. Hãy estimate lại trước khi xác nhận để Core Bridge kiểm tra đúng input.");
+        }
+        const draftScope = `feature:${route}:${featurePhase}`;
+        const initialFingerprint = featureFingerprint({ ...priorFeatureFlow(route).input, ...fields, phase: featurePhase });
+        featureSubmission = acquireSubmission(draftScope, initialFingerprint);
+        if (!featureSubmission) {
+          toast("Yêu cầu feature đang được gửi. Vui lòng chờ phản hồi canonical.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
         featureInput = await payloadFor(fields, route);
-        const result = await api(`/features/${encodeURIComponent(feature)}/${phase}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ input: featureInput, idempotency_key: randomKey(phase) }) });
+        const inputFingerprint = featureFingerprint(featureInput);
+        if (featurePhase === "confirm") {
+          const prior = priorFeatureFlow(route);
+          const estimate = prior.data && typeof prior.data === "object" ? prior.data.estimate : null;
+          if (!prior || prior.phase !== "estimate" || prior.status !== "awaiting_confirm" || !estimate || estimate.available !== true || prior.estimateFingerprint !== inputFingerprint) {
+            throw new Error("Thông tin đã thay đổi hoặc chưa có estimate canonical hợp lệ. Hãy ước tính lại trước khi xác nhận.");
+          }
+        }
+        const result = await api(`/features/${encodeURIComponent(feature)}/${featurePhase}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ input: featureInput, idempotency_key: featureSubmission.key })
+        });
+        const estimateAvailable = featurePhase === "estimate" && result.data && result.data.estimate && result.data.estimate.available === true;
         toast(result.message);
         merge({
           pageStates: { ...(base().pageStates || {}), [route]: result.status },
-          featureFlows: { ...(base().featureFlows || {}), [route]: { feature, status: result.status, message: result.message, data: result.data || {}, input: featureInput } }
+          featureFlows: {
+            ...(base().featureFlows || {}),
+            [route]: {
+              feature,
+              phase: featurePhase,
+              status: result.status,
+              message: result.message,
+              data: result.data || {},
+              input: featureInput,
+              inputFingerprint,
+              estimateFingerprint: estimateAvailable ? inputFingerprint : ""
+            }
+          }
         });
         return;
       }
@@ -483,12 +655,30 @@
       if ((action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") && error && error.payload) {
         const feature = FEATURE_BY_PATH[route];
         const payload = error.payload;
+        const previous = priorFeatureFlow(route);
         merge({
           pageStates: { ...(base().pageStates || {}), [route]: payload.status || "guarded" },
-          featureFlows: { ...(base().featureFlows || {}), [route]: { feature, status: payload.status || "guarded", message: payload.message || "Yêu cầu đang được bảo vệ.", data: payload.data || {}, input: featureInput || (base().featureFlows && base().featureFlows[route] && base().featureFlows[route].input) || {} } }
+          featureFlows: {
+            ...(base().featureFlows || {}),
+            [route]: {
+              feature,
+              phase: featurePhase || previous.phase || "draft",
+              status: payload.status || "guarded",
+              message: payload.message || "Yêu cầu đang được bảo vệ.",
+              data: payload.data || {},
+              input: featureInput || previous.input || {},
+              inputFingerprint: featureInput ? featureFingerprint(featureInput) : (previous.inputFingerprint || ""),
+              estimateFingerprint: previous.estimateFingerprint || ""
+            }
+          }
         });
       }
       toast((error && error.payload && error.payload.message) || (error && error.message) || "Yêu cầu chưa được xác nhận.", "error");
+    } finally {
+      if (featureSubmission) {
+        releaseSubmission(featureSubmission);
+        setActionBusy(action, route, false);
+      }
     }
   }
 

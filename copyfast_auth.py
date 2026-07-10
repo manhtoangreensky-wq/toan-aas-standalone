@@ -37,16 +37,30 @@ def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: s
     }
 
 
+def _is_production() -> bool:
+    """Use one environment decision for secret and cookie protections."""
+    values = (
+        os.environ.get("APP_ENV", ""),
+        os.environ.get("ENVIRONMENT", ""),
+        os.environ.get("RAILWAY_ENVIRONMENT", ""),
+    )
+    return any(value.strip().lower() in {"production", "prod"} for value in values if value)
+
+
 def _secret() -> bytes:
     value = os.environ.get("WEB_SESSION_SECRET", "").strip()
-    environment = os.environ.get("APP_ENV", os.environ.get("ENVIRONMENT", "development")).lower()
-    if not value and environment in {"production", "prod"}:
+    if not value and _is_production():
         raise RuntimeError("WEB_SESSION_SECRET chưa được cấu hình")
     return (value or "copyfast-local-development-secret-only").encode("utf-8")
 
 
 def _cookie_secure() -> bool:
-    return os.environ.get("WEB_COOKIE_SECURE", "").lower() in {"1", "true", "yes"} or os.environ.get("APP_ENV", "").lower() in {"production", "prod"}
+    return os.environ.get("WEB_COOKIE_SECURE", "").lower() in {"1", "true", "yes"} or _is_production()
+
+
+def ensure_auth_configuration() -> None:
+    """Fail deployment startup before serving production sessions unsafely."""
+    _secret()
 
 
 def _now() -> datetime:
@@ -341,12 +355,13 @@ async def me(request: Request, account: dict = Depends(require_account)):
 async def start_telegram_link(request: Request, account: dict = Depends(require_csrf)):
     code = secrets.token_urlsafe(18).replace("-", "A").replace("_", "B")
     code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    initiating_session_id = current_session(request)["session_id"]
     with transaction() as conn:
         conn.execute("DELETE FROM telegram_link_codes WHERE account_id=? AND consumed_at IS NULL", (account["id"],))
         conn.execute(
-            """INSERT INTO telegram_link_codes (code_hash, account_id, expires_at, created_at)
-            VALUES (?, ?, ?, ?)""",
-            (code_hash, account["id"], _link_expiry(), utc_now()),
+            """INSERT INTO telegram_link_codes (code_hash, account_id, expires_at, initiating_session_id, created_at)
+            VALUES (?, ?, ?, ?, ?)""",
+            (code_hash, account["id"], _link_expiry(), initiating_session_id, utc_now()),
         )
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.telegram_link_start", request_id=_request_id(request))
     bot_username = os.environ.get("BOT_USERNAME", "").lstrip("@")
@@ -402,21 +417,57 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
     if not await _bridge_callback_authorized(request):
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bridge authentication failed")
     code_hash = hashlib.sha256(payload.code.encode("utf-8")).hexdigest()
+    canonical_user_id = payload.canonical_user_id.strip()
+    if not canonical_user_id:
+        return envelope(False, "Telegram identity không hợp lệ", status_name="failed", error_code="LINK_IDENTITY_INVALID")
     with transaction() as conn:
         row = conn.execute(
-            "SELECT account_id, expires_at, consumed_at FROM telegram_link_codes WHERE code_hash=?",
+            "SELECT account_id, expires_at, consumed_at, initiating_session_id FROM telegram_link_codes WHERE code_hash=?",
             (code_hash,),
         ).fetchone()
         if not row or row[2] or _as_time(row[1]) <= _now():
             return envelope(False, "Mã liên kết không hợp lệ hoặc đã hết hạn", status_name="failed", error_code="LINK_CODE_INVALID")
+        account_id, _expires_at, _consumed_at, initiating_session_id = row
+        existing = conn.execute(
+            "SELECT id FROM web_accounts WHERE canonical_user_id=? AND id<>?",
+            (canonical_user_id, account_id),
+        ).fetchone()
+        if existing:
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="auth.telegram_link_confirm",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="canonical identity already linked to another account",
+            )
+            return envelope(False, "Tài khoản Telegram này đã liên kết với một tài khoản Web khác", status_name="failed", error_code="TELEGRAM_ALREADY_LINKED")
         role = "admin" if payload.role == "admin" else "user"
         conn.execute(
             """UPDATE web_accounts SET canonical_user_id=?, role_cache=?, display_name=COALESCE(NULLIF(?, ''), display_name), updated_at=? WHERE id=?""",
-            (payload.canonical_user_id, role, payload.display_name.strip(), utc_now(), row[0]),
+            (canonical_user_id, role, payload.display_name.strip(), utc_now(), account_id),
         )
         conn.execute(
             "UPDATE telegram_link_codes SET consumed_at=?, canonical_user_id=? WHERE code_hash=?",
-            (utc_now(), payload.canonical_user_id, code_hash),
+            (utc_now(), canonical_user_id, code_hash),
         )
-        _record_audit(conn, account_id=row[0], canonical_user_id=payload.canonical_user_id, action="auth.telegram_link_confirm", request_id=_request_id(request))
-    return envelope(True, "Đã xác nhận liên kết Telegram", data={"canonical_user_id": payload.canonical_user_id})
+        # A successful link changes the account's canonical Telegram identity.
+        # Other existing web sessions must not silently inherit that identity.
+        # The session that created this one-time code remains valid so the user
+        # can finish onboarding without an unnecessary login loop.  Legacy
+        # codes without a recorded initiating session fail closed by revoking
+        # every active session for that account.
+        revoked_at = utc_now()
+        if initiating_session_id:
+            conn.execute(
+                "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND id<>? AND revoked_at IS NULL",
+                (revoked_at, account_id, initiating_session_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+                (revoked_at, account_id),
+            )
+        _record_audit(conn, account_id=account_id, canonical_user_id=canonical_user_id, action="auth.telegram_link_confirm", request_id=_request_id(request))
+    return envelope(True, "Đã xác nhận liên kết Telegram", data={"canonical_user_id": canonical_user_id})

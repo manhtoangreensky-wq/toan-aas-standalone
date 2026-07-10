@@ -82,11 +82,19 @@ def ensure_copyfast_schema() -> None:
                 expires_at TEXT NOT NULL,
                 consumed_at TEXT,
                 canonical_user_id TEXT,
+                initiating_session_id TEXT,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
         )
+        # Older COPYFAST databases were created before link codes recorded
+        # the initiating session.  This is deliberately additive: it lets a
+        # successful Telegram callback revoke *other* sessions without
+        # logging out the browser that created the one-time code.
+        link_columns = {row[1] for row in conn.execute("PRAGMA table_info(telegram_link_codes)").fetchall()}
+        if "initiating_session_id" not in link_columns:
+            conn.execute("ALTER TABLE telegram_link_codes ADD COLUMN initiating_session_id TEXT")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_bridge_callback_nonces (

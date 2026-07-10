@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 import base64
+from datetime import datetime, timedelta, timezone
 import hashlib
 import json
 import os
 import re
+import uuid
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
@@ -17,6 +19,7 @@ from copyfast_auth import (
     require_account,
     require_canonical_admin,
     require_canonical_admin_csrf,
+    require_admin_csrf,
     require_csrf,
 )
 from copyfast_bridge import bridge_configured, bridge_request
@@ -26,6 +29,9 @@ from copyfast_registry import FEATURE_BY_KEY, catalog
 
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
+IDEMPOTENCY_PENDING_SECONDS = 90
+_PENDING_IDEMPOTENCY_KEY = "_web_idempotency_pending"
+_RETRYABLE_BRIDGE_CODES = frozenset({"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_RATE_LIMITED", "CORE_BRIDGE_NOT_CONFIGURED"})
 UPLOAD_EXTENSIONS = frozenset({
     ".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mov", ".webm",
     ".mp3", ".wav", ".m4a", ".ogg", ".pdf", ".txt", ".srt", ".vtt", ".docx",
@@ -50,6 +56,10 @@ def _flags() -> dict[str, bool]:
         "provider_calls_enabled": enabled("WEBAPP_PROVIDER_CALLS_ENABLED", False),
         "payment_enabled": enabled("WEBAPP_PAYMENT_ENABLED", False),
         "admin_erp_enabled": enabled("WEBAPP_ADMIN_ERP_ENABLED", True),
+        # Admin ERP is intentionally read-only until a separate canonical
+        # write adapter is reviewed.  Keeping this false prevents direct API
+        # callers from bypassing the presentation shell's read-only posture.
+        "admin_writes_enabled": enabled("WEBAPP_ADMIN_WRITES_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
@@ -149,23 +159,113 @@ def _require_key(key: str) -> str:
     return key
 
 
-def _idempotency(scope: str, key: str) -> dict | None:
-    with transaction() as conn:
-        row = conn.execute("SELECT response_json FROM web_idempotency WHERE scope=? AND key=?", (scope, key)).fetchone()
-    if not row:
-        return None
+def _pending_marker() -> str:
+    return json.dumps({_PENDING_IDEMPOTENCY_KEY: str(uuid.uuid4())}, separators=(",", ":"))
+
+
+def _pending_response(value: str) -> bool:
     try:
-        return json.loads(row[0])
+        decoded = json.loads(value)
     except (TypeError, ValueError):
-        return None
+        return False
+    return isinstance(decoded, dict) and isinstance(decoded.get(_PENDING_IDEMPOTENCY_KEY), str)
 
 
-def _remember_idempotency(scope: str, key: str, response: dict) -> None:
+def _pending_is_stale(created_at: str) -> bool:
+    try:
+        created = datetime.fromisoformat(created_at)
+        if created.tzinfo is None:
+            created = created.replace(tzinfo=timezone.utc)
+        return datetime.now(timezone.utc) - created > timedelta(seconds=IDEMPOTENCY_PENDING_SECONDS)
+    except (TypeError, ValueError):
+        return True
+
+
+def _reserve_idempotency(scope: str, key: str) -> tuple[str, dict | None, str]:
+    """Atomically reserve a write key before the bridge can observe it.
+
+    The old check-then-call-then-insert sequence let two concurrent Web
+    requests create two bridge calls before either response was saved.  A
+    short-lived pending record gives exactly one request ownership; a stale
+    record can be safely reclaimed after a process crash because the bot also
+    receives the same canonical idempotency key.
+    """
+    marker = _pending_marker()
+    now = utc_now()
+    with transaction() as conn:
+        row = conn.execute(
+            "SELECT response_json, created_at FROM web_idempotency WHERE scope=? AND key=?",
+            (scope, key),
+        ).fetchone()
+        if row:
+            stored, created_at = str(row[0] or ""), str(row[1] or "")
+            if _pending_response(stored):
+                if not _pending_is_stale(created_at):
+                    return "pending", None, ""
+                conn.execute(
+                    "UPDATE web_idempotency SET response_json=?, created_at=? WHERE scope=? AND key=? AND response_json=?",
+                    (marker, now, scope, key, stored),
+                )
+                return "owner", None, marker
+            try:
+                cached = json.loads(stored)
+            except (TypeError, ValueError):
+                cached = None
+            if isinstance(cached, dict):
+                return "cached", cached, ""
+            conn.execute(
+                "UPDATE web_idempotency SET response_json=?, created_at=? WHERE scope=? AND key=?",
+                (marker, now, scope, key),
+            )
+            return "owner", None, marker
+        conn.execute(
+            "INSERT INTO web_idempotency (scope, key, response_json, created_at) VALUES (?, ?, ?, ?)",
+            (scope, key, marker, now),
+        )
+    return "owner", None, marker
+
+
+def _complete_idempotency(scope: str, key: str, marker: str, response: dict) -> None:
     with transaction() as conn:
         conn.execute(
-            "INSERT OR IGNORE INTO web_idempotency (scope, key, response_json, created_at) VALUES (?, ?, ?, ?)",
-            (scope, key, json.dumps(response, ensure_ascii=False, separators=(",", ":")), utc_now()),
+            "UPDATE web_idempotency SET response_json=?, created_at=? WHERE scope=? AND key=? AND response_json=?",
+            (json.dumps(response, ensure_ascii=False, separators=(",", ":")), utc_now(), scope, key, marker),
         )
+
+
+def _release_idempotency(scope: str, key: str, marker: str) -> None:
+    with transaction() as conn:
+        conn.execute(
+            "DELETE FROM web_idempotency WHERE scope=? AND key=? AND response_json=?",
+            (scope, key, marker),
+        )
+
+
+def _retryable_bridge_response(response: dict) -> bool:
+    return not bool(response.get("ok")) and str(response.get("error_code") or "") in _RETRYABLE_BRIDGE_CODES
+
+
+async def _run_idempotent(scope: str, key: str, operation) -> dict:
+    state, cached, marker = _reserve_idempotency(scope, key)
+    if state == "cached" and cached is not None:
+        return cached
+    if state == "pending":
+        return envelope(
+            False,
+            "Yêu cầu cùng mã idempotency đang được xử lý. Vui lòng chờ phản hồi canonical.",
+            status_name="guarded",
+            error_code="IDEMPOTENCY_IN_PROGRESS",
+        )
+    try:
+        result = await operation()
+    except Exception:
+        _release_idempotency(scope, key, marker)
+        raise
+    if _retryable_bridge_response(result):
+        _release_idempotency(scope, key, marker)
+    else:
+        _complete_idempotency(scope, key, marker, result)
+    return result
 
 
 async def _bridge(method: str, path: str, *, account: dict, request: Request, payload: dict | None = None, params: dict | None = None) -> dict:
@@ -176,7 +276,10 @@ async def _bridge(method: str, path: str, *, account: dict, request: Request, pa
         return envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
     user_id = _linked(account)
     enriched = dict(payload or {})
-    enriched.setdefault("user_id", user_id)
+    # The browser must never be able to choose the canonical target identity.
+    # Do not use setdefault here: a forged outer payload could otherwise
+    # override the signed session's Telegram identity on POST requests.
+    enriched["user_id"] = user_id
     query = None
     if method.upper() == "GET":
         # A route may add safe filters (for example an admin record ID), but
@@ -228,14 +331,14 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         return envelope(False, "Nạp Xu trên Web đang chờ xác minh core payment.", status_name="guarded", error_code="WEBAPP_PAYMENT_DISABLED")
     key = _require_key(payload.idempotency_key)
     scope = f"payment:{account['id']}"
-    if prior := _idempotency(scope, key):
-        return prior
-    response = await _bridge(
-        "POST", "/internal/v1/payments/create", account=account, request=request,
-        payload={"package_id": payload.package_id, "payment_type": payload.payment_type, "idempotency_key": key},
+    return await _run_idempotent(
+        scope,
+        key,
+        lambda: _bridge(
+            "POST", "/internal/v1/payments/create", account=account, request=request,
+            payload={"package_id": payload.package_id, "payment_type": payload.payment_type, "idempotency_key": key},
+        ),
     )
-    _remember_idempotency(scope, key, response)
-    return response
 
 
 @router.get("/payments/{payment_id}")
@@ -285,27 +388,27 @@ async def upload_to_canonical_staging(
         return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
     key = _require_key(request.headers.get("Idempotency-Key", ""))
     scope = f"upload:{account['id']}"
-    if prior := _idempotency(scope, key):
-        return prior
     try:
         name, media_type, content, checksum = await _read_validated_upload(file)
     finally:
         await file.close()
-    result = await _bridge(
-        "POST",
-        "/internal/v1/uploads",
-        account=account,
-        request=request,
-        payload={
-            "file_name": name,
-            "content_type": media_type,
-            "content_base64": base64.b64encode(content).decode("ascii"),
-            "sha256": checksum,
-            "idempotency_key": key,
-        },
+    return await _run_idempotent(
+        scope,
+        key,
+        lambda: _bridge(
+            "POST",
+            "/internal/v1/uploads",
+            account=account,
+            request=request,
+            payload={
+                "file_name": name,
+                "content_type": media_type,
+                "content_base64": base64.b64encode(content).decode("ascii"),
+                "sha256": checksum,
+                "idempotency_key": key,
+            },
+        ),
     )
-    _remember_idempotency(scope, key, result)
-    return result
 
 
 @router.get("/support/tickets")
@@ -317,11 +420,17 @@ async def support_tickets(request: Request, account: dict = Depends(require_acco
 async def create_support_ticket(payload: TicketRequest, request: Request, account: dict = Depends(require_csrf)):
     key = _require_key(payload.idempotency_key)
     scope = f"ticket:{account['id']}"
-    if prior := _idempotency(scope, key):
-        return prior
-    result = await _bridge("POST", "/internal/v1/support/tickets", account=account, request=request, payload={"subject": payload.subject, "detail": payload.detail, "idempotency_key": key})
-    _remember_idempotency(scope, key, result)
-    return result
+    return await _run_idempotent(
+        scope,
+        key,
+        lambda: _bridge(
+            "POST",
+            "/internal/v1/support/tickets",
+            account=account,
+            request=request,
+            payload={"subject": payload.subject, "detail": payload.detail, "idempotency_key": key},
+        ),
+    )
 
 
 @router.get("/features/status")
@@ -341,22 +450,28 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
     values = _safe_input(dict(payload.input))
     key = payload.idempotency_key or request.headers.get("Idempotency-Key", "")
     if action == "confirm":
+        if not _flags()["provider_calls_enabled"]:
+            return envelope(False, "Tính năng đang ở chế độ an toàn và chưa gọi engine từ Web.", status_name="guarded", error_code="WEBAPP_PROVIDER_CALLS_DISABLED")
         key = _require_key(key)
         scope = f"feature:{account['id']}:{feature}:confirm"
-        if prior := _idempotency(scope, key):
-            return prior
-    if action == "confirm" and not _flags()["provider_calls_enabled"]:
-        return envelope(False, "Tính năng đang ở chế độ an toàn và chưa gọi engine từ Web.", status_name="guarded", error_code="WEBAPP_PROVIDER_CALLS_DISABLED")
-    result = await _bridge(
+        return await _run_idempotent(
+            scope,
+            key,
+            lambda: _bridge(
+                "POST",
+                f"/internal/v1/features/{feature}/{action}",
+                account=account,
+                request=request,
+                payload={"input": values, "idempotency_key": key},
+            ),
+        )
+    return await _bridge(
         "POST",
         f"/internal/v1/features/{feature}/{action}",
         account=account,
         request=request,
         payload={"input": values, "idempotency_key": key if key else None},
     )
-    if action == "confirm":
-        _remember_idempotency(scope, key, result)
-    return result
 
 
 @router.post("/features/{feature}/draft")
@@ -412,18 +527,51 @@ async def admin_module(module: str, request: Request, account: dict = Depends(re
 
 
 @router.post("/admin/jobs/{job_id}/retry")
-async def admin_retry_job(job_id: str, payload: FeatureRequest, request: Request, account: dict = Depends(require_canonical_admin_csrf)):
+async def admin_retry_job(job_id: str, payload: FeatureRequest, request: Request):
+    # Retain local session/CSRF/admin protection even while the write gate is
+    # disabled, but do not contact the bot authority unless a separately
+    # reviewed write adapter has been explicitly enabled.
+    account = require_admin_csrf(request)
+    if not _flags()["admin_writes_enabled"]:
+        return envelope(False, "Admin ERP Web hiện chỉ đọc; retry job chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+    account = await require_canonical_admin_csrf(request)
     key = _require_key(payload.idempotency_key or request.headers.get("Idempotency-Key", ""))
-    return await _bridge("POST", f"/internal/v1/admin/jobs/{job_id}/retry", account=account, request=request, payload={"idempotency_key": key})
+    return await _run_idempotent(
+        f"admin:{account['id']}:retry:{job_id}",
+        key,
+        lambda: _bridge("POST", f"/internal/v1/admin/jobs/{job_id}/retry", account=account, request=request, payload={"idempotency_key": key}),
+    )
 
 
 @router.post("/admin/jobs/{job_id}/refund")
-async def admin_refund_job(job_id: str, payload: FeatureRequest, request: Request, account: dict = Depends(require_canonical_admin_csrf)):
+async def admin_refund_job(job_id: str, payload: FeatureRequest, request: Request):
+    account = require_admin_csrf(request)
+    if not _flags()["admin_writes_enabled"]:
+        return envelope(False, "Admin ERP Web hiện chỉ đọc; refund chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+    account = await require_canonical_admin_csrf(request)
     key = _require_key(payload.idempotency_key or request.headers.get("Idempotency-Key", ""))
-    return await _bridge("POST", f"/internal/v1/admin/jobs/{job_id}/refund", account=account, request=request, payload={"idempotency_key": key})
+    return await _run_idempotent(
+        f"admin:{account['id']}:refund:{job_id}",
+        key,
+        lambda: _bridge("POST", f"/internal/v1/admin/jobs/{job_id}/refund", account=account, request=request, payload={"idempotency_key": key}),
+    )
 
 
 @router.post("/admin/features/{feature}/freeze")
-async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Request, account: dict = Depends(require_canonical_admin_csrf)):
+async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Request):
+    account = require_admin_csrf(request)
+    if not _flags()["admin_writes_enabled"]:
+        return envelope(False, "Admin ERP Web hiện chỉ đọc; freeze feature chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+    account = await require_canonical_admin_csrf(request)
     key = _require_key(payload.idempotency_key)
-    return await _bridge("POST", f"/internal/v1/admin/features/{feature}/freeze", account=account, request=request, payload={"frozen": payload.frozen, "note": payload.note, "idempotency_key": key})
+    return await _run_idempotent(
+        f"admin:{account['id']}:freeze:{feature}",
+        key,
+        lambda: _bridge(
+            "POST",
+            f"/internal/v1/admin/features/{feature}/freeze",
+            account=account,
+            request=request,
+            payload={"frozen": payload.frozen, "note": payload.note, "idempotency_key": key},
+        ),
+    )

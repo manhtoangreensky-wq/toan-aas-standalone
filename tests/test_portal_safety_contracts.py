@@ -54,8 +54,55 @@ def test_feature_flow_keeps_sanitized_form_values_and_staged_upload_ids() -> Non
     assert "const priorInput = priorFlow" in INTEGRATION
     assert "const values = { ...priorInput, ...fields };" in INTEGRATION
     assert "input: featureInput" in INTEGRATION
-    assert "renderFields(page.fields, enabled, context, flow && flow.input)" in PORTAL
+    assert "const fieldValues = { ...(flow && flow.input" in PORTAL
+    assert "transientFormDrafts" in PORTAL
     assert "tệp đã vào staging canonical" in PORTAL
+
+
+def test_quote_capable_workflows_can_estimate_directly_and_confirm_only_a_fresh_quote() -> None:
+    assert 'featurePage("/chat"' in PORTAL
+    assert 'action: "feature-estimate"' in PORTAL
+    assert 'featurePage("/voice/tts"' in PORTAL
+    assert "function flowHasFreshEstimate(flow)" in PORTAL
+    assert "flow.estimateFingerprint" in PORTAL
+    assert "const estimateAvailable = featurePhase === \"estimate\"" in INTEGRATION
+    assert "Thông tin đã thay đổi hoặc chưa có estimate canonical hợp lệ" in INTEGRATION
+
+
+def test_feature_submissions_are_single_flight_and_reuse_an_idempotency_key_for_a_matching_input() -> None:
+    assert "const draftScope = `feature:${route}:${featurePhase}`;" in INTEGRATION
+    assert "featureSubmission = acquireSubmission(draftScope, initialFingerprint);" in INTEGRATION
+    assert "idempotency_key: featureSubmission.key" in INTEGRATION
+    assert "setActionBusy(action, route, true);" in INTEGRATION
+    assert "setActionBusy(action, route, false);" in INTEGRATION
+
+
+def test_workflow_forms_follow_the_supported_bot_contracts_before_staging() -> None:
+    assert "videoStoryboard" in PORTAL
+    assert 'name: "duration_seconds"' in PORTAL
+    assert 'name: "platform"' in PORTAL
+    assert 'name: "template"' in PORTAL
+    assert 'name: "voice_profile_id"' in PORTAL
+    assert "requiredUpload: true" in PORTAL
+    assert '"image_to_pdf"' in PORTAL
+    assert "LANGUAGE_OPTIONS" in PORTAL
+    assert "function validateFeatureIntake(feature, route, fields)" in INTEGRATION
+    assert "Voice Clone cần một mẫu audio" in INTEGRATION
+    assert "Gộp PDF cần ít nhất hai tệp" in INTEGRATION
+    assert "Image-to-Video chỉ nhận JPG, PNG hoặc WebP" in INTEGRATION
+
+
+def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
+    assert 'type="submit"' in PORTAL
+    assert "form.reportValidity()" in PORTAL
+    assert "dispatchAction(event.target, getBootstrap());" in PORTAL
+    assert "function focusSnapshot()" in PORTAL
+    assert "function restoreFocus(snapshot)" in PORTAL
+    assert "sidebar.setAttribute(\"aria-modal\", \"true\")" in PORTAL
+    assert "function setWorkspaceInert(opened)" in PORTAL
+    assert '"/wallet/topup", "Nạp Xu"' in PORTAL
+    assert '"/packages", "Gói dịch vụ"' in PORTAL
+    assert "prefers-reduced-motion" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
 
 def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation() -> None:
@@ -130,7 +177,7 @@ def test_registration_copy_does_not_claim_unimplemented_email_verification() -> 
 
 
 def test_feature_planning_state_is_distinguished_from_provider_engine_readiness() -> None:
-    assert "const planningAvailable = page.type === \"feature\"" in PORTAL
+    assert "const planningAvailable = page.type === \"feature\" && page.action !== \"none\"" in PORTAL
     assert "Planning draft sẵn sàng; engine vẫn được bảo vệ" in PORTAL
 
 
