@@ -127,6 +127,32 @@ async def test_feature_action_preserves_form_input_inside_the_core_contract(monk
 
 
 @pytest.mark.anyio
+async def test_feature_action_rejects_browser_bypass_of_web_intake_contract(monkeypatch):
+    """File/identity contracts must hold even when a caller skips portal JS."""
+    calls = []
+
+    async def fake_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "draft", "message": "unexpected", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(_feature_action.__globals__, "_bridge", fake_bridge)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/features/image_transform/draft", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    cases = [
+        ("image_transform", {"prompt": "Đổi nền thành studio"}, "upload_required"),
+        ("documents_merge", {"upload_ids": ["staged-one"]}, "multiple_uploads_required"),
+        ("voice_clone", {"upload_ids": ["staged-audio"], "consent": False}, "voice_clone_consent_required"),
+        ("video_single", {"prompt": "Video mới", "nested": {"user_id": "browser-forged"}}, "authority_field_not_allowed"),
+    ]
+    for feature, values, reason in cases:
+        result = await _feature_action("draft", feature, FeatureRequest(input=values), request, account)
+        assert result["status"] == "guarded"
+        assert result["error_code"] == "FEATURE_INPUT_CONTRACT_REQUIRED"
+        assert result["data"] == {"feature": feature, "reason": reason}
+    assert calls == []
+
+
+@pytest.mark.anyio
 async def test_get_bridge_keeps_canonical_identity_when_a_safe_filter_is_added(monkeypatch):
     captured = {}
 

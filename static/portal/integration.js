@@ -227,7 +227,7 @@
       if (operation === "split_pdf" && !/^\d+(?:-\d+)?$/.test(String(scalarField(fields, route, "page_range") || "").trim())) return "Khoảng trang phải là một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.";
       if (operation === "translate_document" && !["vi", "en", "zh", "ja", "ko"].includes(language)) return "Hãy chọn ngôn ngữ đích canonical cho tài liệu.";
     }
-    if (["image_edit", "image_upscale", "image_remove_background"].includes(feature)) {
+    if (["image_edit", "image_upscale", "image_transform", "image_remove_background"].includes(feature)) {
       if (!fileCount) return "Workflow ảnh này cần ảnh nguồn đã vào staging canonical.";
       if (files.length && !anyExtensionMatches(files, images)) return "Workflow ảnh này chỉ nhận JPG, PNG hoặc WebP.";
     }

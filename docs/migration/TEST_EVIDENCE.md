@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `58 passed` |
+| Web App | `python -m pytest -q` | `60 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -79,6 +79,12 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
 - Uploads reject path traversal, unsupported MIME/signatures and oversized
   payloads twice (Web and bot). Raw bytes live only in bot-owned staging and
   feature inputs can reference only ownership-checked upload IDs.
+- The Web API mirrors the browser's minimum intake contract before a feature
+  payload reaches Bot: it rejects forged identity/Xu/provider/job/output
+  fields, malformed staging IDs, missing file staging/voice-clone consent,
+  missing target language and invalid merge/split document requests. This is
+  defense in depth only; Bot remains authoritative for file ownership, MIME,
+  pricing, job creation, ledger writes and delivery.
 - Draft → estimate → confirm keeps only sanitized scalar form values and
   canonical staging IDs in in-memory portal state. It never persists raw files
   or secrets in localStorage, and re-rendering cannot silently turn a quote
@@ -92,6 +98,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   preflight checks prevent invalid media, missing consent, non-contiguous PDF
   ranges and invalid document combinations from entering staging; the bridge
   remains the final authority.
+- The content Storyboard form now sends the exact planning inputs read by the
+  Bot P0 helper (`template`, `platform`, `format`, `duration`, `style`, `goal`
+  and `notes`), while Image-to-Image requires an owned staged source image
+  instead of silently behaving like text-to-image.
 - Pricing, packages and Admin read-only surfaces are returned from bot helper
   functions/tables; the portal never substitutes the feature registry as a
   price table.

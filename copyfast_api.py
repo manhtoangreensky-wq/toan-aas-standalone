@@ -30,6 +30,8 @@ from copyfast_registry import FEATURE_BY_KEY, catalog
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
+CANONICAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,160}$")
+CONTIGUOUS_PAGE_RANGE_PATTERN = re.compile(r"^\d+(?:-\d+)?$")
 IDEMPOTENCY_PENDING_SECONDS = 90
 _PENDING_IDEMPOTENCY_KEY = "_web_idempotency_pending"
 _RETRYABLE_BRIDGE_CODES = frozenset({"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_RATE_LIMITED", "CORE_BRIDGE_NOT_CONFIGURED"})
@@ -43,6 +45,33 @@ UPLOAD_MIME_TYPES = frozenset({
     "application/pdf", "text/plain", "text/vtt", "application/x-subrip", "application/octet-stream",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 })
+
+# Browser forms must never be able to attach a value that looks like a bot
+# authority decision.  Identity, provider settings, wallet/payment fields,
+# job lifecycle and output/delivery metadata belong to the canonical Bot only.
+# This is deliberately a deny-list of authority fields, not a provider schema:
+# normal product metadata can still evolve through the private bridge.
+FEATURE_AUTHORITY_FIELDS = frozenset({
+    "user_id", "canonical_user_id", "telegram_id", "chat_id", "account_id", "wallet_id",
+    "balance", "balance_xu", "credit", "credits", "xu", "charged_xu", "estimated_xu",
+    "amount", "amount_vnd", "price", "cost", "currency", "payment_id", "order_code",
+    "checkout_url", "webhook", "provider", "provider_id", "api_key", "api_token", "token",
+    "secret", "job_id", "job_status", "status", "output", "output_url", "asset_id", "download_url",
+})
+FEATURE_TEXT_KEYS = ("request", "prompt", "brief", "script", "text", "topic", "description", "instructions", "notes")
+FEATURE_TEXT_REQUIRED = frozenset({
+    "chat", "prompt_studio", "caption", "hashtag", "hook", "script", "storyboard", "content_pack",
+    "image_create", "image_transform", "video_single", "video_product", "video_trend",
+    "video_text_to_video", "video_quick", "video_image_to_video", "video_multiscene", "video_long",
+    "voice_tts", "voice_saved_tts", "music_background", "music_song", "music_sfx",
+})
+FEATURE_UPLOAD_REQUIRED = frozenset({
+    "image_edit", "image_upscale", "image_transform", "image_remove_background", "video_image_to_video",
+    "voice_clone", "music_upload", "subtitle_asr", "subtitle_create", "asr", "subtitle_translate",
+    "video_dub", "documents", "documents_pdf", "documents_ocr", "documents_merge", "documents_split",
+    "documents_compress", "documents_translate",
+})
+FEATURE_TARGET_LANGUAGE_REQUIRED = frozenset({"subtitle_translate", "video_dub", "documents_translate"})
 
 
 def _request_id(request: Request) -> str:
@@ -104,6 +133,97 @@ def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
     if len(encoded.encode("utf-8")) > 64_000:
         raise HTTPException(status_code=413, detail="Dữ liệu đầu vào quá lớn")
     return value
+
+
+def _contains_feature_authority_field(value: Any) -> bool:
+    """Find forged authority fields without logging their contents.
+
+    Feature payloads are forwarded to a separate, private Bot authority.  A
+    nested object must not become a side channel for browser-provided wallet,
+    provider, job or delivery state when a future feature adapter is added.
+    """
+    if isinstance(value, dict):
+        for key, child in value.items():
+            if str(key or "").strip().lower() in FEATURE_AUTHORITY_FIELDS:
+                return True
+            if _contains_feature_authority_field(child):
+                return True
+    elif isinstance(value, (list, tuple)):
+        return any(_contains_feature_authority_field(child) for child in value)
+    return False
+
+
+def _canonical_upload_ids(value: Any) -> list[str] | None:
+    """Accept only opaque bot staging identifiers, never paths or handles."""
+    if value is None:
+        return []
+    if not isinstance(value, list) or len(value) > 20:
+        return None
+    identifiers = [item.strip() for item in value if isinstance(item, str)]
+    if len(identifiers) != len(value) or len(set(identifiers)) != len(identifiers):
+        return None
+    if any(not CANONICAL_IDENTIFIER_PATTERN.fullmatch(item) for item in identifiers):
+        return None
+    return identifiers
+
+
+def _has_feature_text(values: dict[str, Any]) -> bool:
+    return any(isinstance(values.get(key), str) and values[key].strip() for key in FEATURE_TEXT_KEYS)
+
+
+def _affirmed(value: Any) -> bool:
+    return value is True or (isinstance(value, str) and value.strip().lower() in {"1", "true", "yes", "on"})
+
+
+def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
+    """Mirror the safe Web intake promises before the request reaches Bot.
+
+    This is not a replacement for Bot ownership/MIME/provider checks.  It
+    stops direct API callers from bypassing the same minimum semantic contract
+    that the browser forms enforce, while Bot stays authoritative for upload
+    ownership, pricing, jobs, Xu and delivery.
+    """
+    if _contains_feature_authority_field(values):
+        return "authority_field_not_allowed"
+    upload_ids = _canonical_upload_ids(values.get("upload_ids"))
+    if upload_ids is None:
+        return "upload_ids_invalid"
+    if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
+        return "text_required"
+    if feature in FEATURE_UPLOAD_REQUIRED and not upload_ids:
+        return "upload_required"
+    if feature == "documents_merge" and len(upload_ids) < 2:
+        return "multiple_uploads_required"
+    if feature == "voice_clone" and not _affirmed(values.get("consent")):
+        return "voice_clone_consent_required"
+    if feature == "voice_saved_tts" and not str(values.get("voice_profile_id") or "").strip():
+        return "voice_profile_required"
+    if feature in FEATURE_TARGET_LANGUAGE_REQUIRED and not str(values.get("target_language") or "").strip():
+        return "target_language_required"
+    if feature == "documents_split" and not CONTIGUOUS_PAGE_RANGE_PATTERN.fullmatch(str(values.get("page_range") or "").strip()):
+        return "page_range_invalid"
+    return ""
+
+
+def _feature_input_contract_response(feature: str, reason: str) -> dict:
+    messages = {
+        "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
+        "upload_ids_invalid": "Tham chiếu tệp staging không hợp lệ. Hãy chọn lại tệp để Web gửi qua luồng canonical.",
+        "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
+        "upload_required": "Workflow này cần tệp đã vào staging canonical trước khi tiếp tục.",
+        "multiple_uploads_required": "Gộp PDF cần ít nhất hai tệp đã vào staging canonical.",
+        "voice_clone_consent_required": "Voice Clone cần mẫu audio thuộc tài khoản và xác nhận quyền sử dụng.",
+        "voice_profile_required": "Hãy chọn một Voice Vault profile đã sẵn sàng.",
+        "target_language_required": "Hãy chọn ngôn ngữ đích trước khi tiếp tục workflow canonical.",
+        "page_range_invalid": "Khoảng trang chỉ nhận một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.",
+    }
+    return envelope(
+        False,
+        messages.get(reason, "Input chưa đáp ứng contract an toàn của workflow."),
+        status_name="guarded",
+        data={"feature": feature, "reason": reason},
+        error_code="FEATURE_INPUT_CONTRACT_REQUIRED",
+    )
 
 
 def _upload_max_bytes() -> int:
@@ -527,6 +647,9 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
     if action == "confirm":
         if not _flags()["provider_calls_enabled"]:
             return envelope(False, "Tính năng đang ở chế độ an toàn và chưa gọi engine từ Web.", status_name="guarded", error_code="WEBAPP_PROVIDER_CALLS_DISABLED")
+        contract_error = _feature_input_contract_error(feature, values)
+        if contract_error:
+            return _feature_input_contract_response(feature, contract_error)
         key = _require_key(key)
         scope = f"feature:{account['id']}:{feature}:confirm"
         return await _run_idempotent(
@@ -540,6 +663,9 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                 payload={"input": values, "idempotency_key": key},
             ),
         )
+    contract_error = _feature_input_contract_error(feature, values)
+    if contract_error:
+        return _feature_input_contract_response(feature, contract_error)
     return await _bridge(
         "POST",
         f"/internal/v1/features/{feature}/{action}",

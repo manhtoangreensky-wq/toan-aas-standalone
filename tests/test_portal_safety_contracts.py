@@ -95,6 +95,18 @@ def test_workflow_forms_follow_the_supported_bot_contracts_before_staging() -> N
     assert "Image-to-Video chỉ nhận JPG, PNG hoặc WebP" in INTEGRATION
 
 
+def test_storyboard_and_image_to_image_keep_their_bot_specific_intake_contracts() -> None:
+    assert "contentStoryboard" in PORTAL
+    assert 'name: "template"' in PORTAL
+    assert 'name: "duration", label: "Thời lượng mục tiêu (giây)"' in PORTAL
+    assert 'featurePage("/content/storyboard"' in PORTAL
+    assert "FIELD_SETS.contentStoryboard" in PORTAL
+    assert "imageTransform" in PORTAL
+    assert 'featurePage("/image/transform"' in PORTAL
+    assert "FIELD_SETS.imageTransform" in PORTAL
+    assert '"image_transform", "image_remove_background"' in INTEGRATION
+
+
 def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert 'type="submit"' in PORTAL
     assert "form.reportValidity()" in PORTAL

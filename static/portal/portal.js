@@ -86,6 +86,20 @@
       { name: "request", label: "Yêu cầu", control: "textarea", placeholder: "Mô tả nội dung bạn muốn tạo…", help: "Bản nháp chỉ được chuyển khi phiên, CSRF và Core Bridge đã được máy chủ cấp.", required: true, minLength: 3 },
       { name: "language", label: "Ngôn ngữ đầu ra", control: "select", options: ["Tiếng Việt", "English", "Theo nội dung nguồn"] }
     ],
+    // These names intentionally mirror the pure storyboard helper exposed by
+    // the frozen Bot P0 bridge.  Keep `duration` (rather than only a display
+    // value) because the canonical helper reads this exact input when it
+    // builds the planning pack.
+    contentStoryboard: [
+      { name: "request", label: "Chủ đề / brief", control: "textarea", placeholder: "Mục tiêu, câu chuyện, sản phẩm và thông điệp chính…", required: true, minLength: 3 },
+      { name: "template", label: "Mẫu storyboard", control: "select", options: ["product_ad", "ugc", "story", "explainer"], required: true, help: "Mẫu được gửi nguyên trạng cho helper storyboard canonical của bot." },
+      { name: "platform", label: "Kênh phát hành", control: "select", options: ["TikTok", "YouTube", "Facebook", "Instagram", "Khác"], required: true },
+      { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["9:16", "16:9", "1:1", "4:5"], required: true },
+      { name: "duration", label: "Thời lượng mục tiêu (giây)", type: "number", placeholder: "Ví dụ: 30", required: true, min: 1, max: 600, step: 1, inputMode: "numeric", help: "Bot dùng giá trị này để lập kế hoạch storyboard; đây chưa phải thời lượng output đã cam kết." },
+      { name: "style", label: "Phong cách", placeholder: "Ví dụ: rõ nhịp, hiện đại, có phụ đề dễ đọc" },
+      { name: "goal", label: "Mục tiêu / CTA", placeholder: "Ví dụ: giới thiệu sản phẩm và dẫn về trang mua" },
+      { name: "notes", label: "Ghi chú", control: "textarea", placeholder: "Yêu cầu thương hiệu, điểm bắt buộc hoặc giới hạn an toàn…" }
+    ],
     imageCreate: [
       { name: "prompt", label: "Mô tả hình ảnh", control: "textarea", placeholder: "Chủ thể, phong cách, bối cảnh, tỷ lệ…", required: true, minLength: 3 },
       { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", help: "Giá và quota chỉ do Core Bridge phát hành. Không nhập Xu hoặc giá thủ công.", required: true },
@@ -96,6 +110,12 @@
       { name: "instructions", label: "Yêu cầu xử lý", control: "textarea", placeholder: "Ví dụ: giữ chủ thể, nâng độ nét, xóa nền…", help: "Estimate dùng tier canonical; output vẫn chỉ xuất hiện sau delivery hợp lệ." },
       { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", required: true },
       { name: "source", label: "Ảnh nguồn", type: "file", accept: "image/jpeg,image/png,image/webp", requiredUpload: true, help: "Ảnh chỉ vào staging canonical sau kiểm tra MIME, chữ ký, kích thước và ownership." }
+    ],
+    imageTransform: [
+      { name: "prompt", label: "Mô tả biến thể", control: "textarea", placeholder: "Giữ chủ thể, thay đổi phong cách, bối cảnh hoặc ánh sáng…", required: true, minLength: 3 },
+      { name: "tier", label: "Tier ảnh", control: "select", optionsFrom: "imageTiers", emptyLabel: "Chọn tier từ bảng giá canonical", required: true },
+      { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["1:1", "4:5", "16:9", "9:16"] },
+      { name: "source", label: "Ảnh nguồn", type: "file", accept: "image/jpeg,image/png,image/webp", requiredUpload: true, help: "Image-to-Image chỉ tiếp tục khi ảnh thuộc tài khoản đã vào staging canonical; browser không gửi ảnh tới provider." }
     ],
     videoContextual: [
       { name: "brief", label: "Brief video", control: "textarea", placeholder: "Mục tiêu, cảnh, chuyển động, giọng đọc…", required: true, minLength: 3 },
@@ -411,13 +431,13 @@
   featurePage("/content/hashtag", "Hashtag", "Tạo bản nháp hashtag theo nội dung và nền tảng.", ICONS.prompt, FIELD_SETS.prompt, ["/hashtag"]);
   featurePage("/content/hook", "Hook", "Phác thảo hook ngắn để kiểm tra trước khi gọi engine.", ICONS.prompt, FIELD_SETS.prompt, ["/hook"]);
   featurePage("/content/script", "Kịch bản", "Chuẩn bị kịch bản với mục tiêu, giọng điệu và call-to-action.", ICONS.prompt, FIELD_SETS.prompt, ["/script"]);
-  featurePage("/content/storyboard", "Storyboard", "Lập storyboard thành bản nháp; chưa tạo media hay trừ Xu.", ICONS.prompt, FIELD_SETS.prompt, ["/storyboard"]);
+  featurePage("/content/storyboard", "Storyboard", "Lập storyboard bằng đúng brief, template, kênh và thời lượng mà helper canonical của bot dùng; chưa tạo media hay trừ Xu.", ICONS.prompt, FIELD_SETS.contentStoryboard, ["/storyboard"]);
   featurePage("/content/pack", "Content Pack", "Gom brief nội dung thành một bản nháp có thể ước tính qua bridge.", ICONS.prompt, FIELD_SETS.prompt, ["/content-pack"]);
 
   featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image"]);
   featurePage("/image/edit", "Chỉnh sửa ảnh", "Chuẩn bị thay đổi ảnh; upload và xử lý chỉ diễn ra qua đường dẫn được ký tạm thời.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi yêu cầu upscale từ ảnh nguồn và nhận quote canonical trước khi xác nhận.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
-  featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.imageCreate, ["/image/image-to-image"]);
+  featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.imageTransform, ["/image/image-to-image"]);
   featurePage("/image/remove-background", "Xóa nền", "Tạo quote xóa nền từ ảnh nguồn; job chỉ xuất hiện sau adapter canonical.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   readOnlyPage("/image/history", "Lịch sử ảnh", "Danh sách output ảnh thuộc phiên sẽ xuất hiện sau khi bridge xác thực.", ICONS.image, "assets", ["/image/assets"]);
 
