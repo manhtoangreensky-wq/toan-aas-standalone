@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `60 passed` |
+| Web App | `python -m pytest -q` | `62 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -89,6 +89,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   canonical staging IDs in in-memory portal state. It never persists raw files
   or secrets in localStorage, and re-rendering cannot silently turn a quote
   into an empty request.
+- A page with form fields no longer exposes a duplicate hero CTA that could
+  submit an empty action. Feature/customer writes now originate from the
+  validated form that collects its current fields, staged uploads and quote
+  fingerprint.
 - Quote-capable Chat, TTS and image workflows can start at estimate when their
   bot helper has no planning-draft adapter. Confirm is offered only after a
   matching canonical estimate; changing text or files forces a new estimate,
@@ -113,6 +117,11 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   prompt helper; multiscene/long planning uses its storyboard helper. Video
   estimates require a canonical tier and scene count, then use the bot's scene
   discount calculation rather than a browser-side formula.
+- Image-to-Video now supplies the contextual helper's `platform` and `goal`
+  fields. AI Song supplies its canonical prompt mode and cannot silently quote
+  a default 30-second song when the user selected a per-second duration.
+  Dubbing selects only ownership-scoped Voice Vault profile IDs rather than
+  accepting an arbitrary provider voice name from the browser.
 - Voice Vault returns only ownership-checked profile metadata; provider voice
   IDs, Telegram file IDs and preview references are redacted. TTS/clone quotes
   use the bot helpers, and clone intake requires an owned audio sample plus

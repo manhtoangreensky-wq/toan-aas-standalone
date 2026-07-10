@@ -145,6 +145,8 @@
       { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 1", required: true, min: 1, max: 20, step: 1, inputMode: "numeric" },
       { name: "duration_seconds", label: "Thời lượng mục tiêu (giây)", type: "number", placeholder: "Ví dụ: 8", required: true, min: 1, max: 600, step: 1, inputMode: "numeric" },
       { name: "format", label: "Tỷ lệ khung hình", control: "select", options: ["9:16", "16:9", "1:1", "4:5"] },
+      { name: "platform", label: "Kênh phát hành", control: "select", options: ["TikTok", "YouTube", "Facebook", "Instagram", "Khác"], help: "Helper canonical dùng kênh phát hành cùng tỷ lệ và thời lượng để lập prompt video có ngữ cảnh." },
+      { name: "goal", label: "Mục tiêu / CTA", placeholder: "Ví dụ: tạo chuyển động sản phẩm để dùng cho quảng cáo dọc" },
       { name: "source", label: "Ảnh nguồn", type: "file", accept: "image/jpeg,image/png,image/webp", requiredUpload: true, help: "Ảnh phải vào staging canonical trước khi Core Bridge có thể kiểm tra ownership." }
     ],
     voice: [
@@ -169,8 +171,9 @@
     ],
     musicSong: [
       { name: "brief", label: "Brief bài hát", control: "textarea", placeholder: "Thông điệp, mood, cấu trúc, CTA và lời gốc mong muốn…", help: "Không yêu cầu cover, remix hoặc bắt chước nghệ sĩ/bài hát cụ thể.", required: true, minLength: 3 },
-      { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: ["seconds", "half", "full"], help: "Chế độ half/full được bot quy đổi theo product kind canonical.", required: true },
-      { name: "duration_seconds", label: "Thời lượng khi chọn seconds", type: "number", placeholder: "Ví dụ: 30", min: 1, max: 600, step: 1, inputMode: "numeric", help: "Chỉ điền khi chọn seconds; half/full dùng product kind canonical." }
+      { name: "mode", label: "Kiểu sáng tác", control: "select", options: [{ value: "lyrics", label: "Bài hát có lời gốc" }, { value: "melody", label: "Giai điệu / instrumental" }, { value: "custom", label: "Tuỳ biến theo brief" }], help: "Giá trị này được gửi trực tiếp tới helper prompt canonical của bot.", required: true },
+      { name: "song_length_mode", label: "Dạng bài hát", control: "select", options: [{ value: "seconds", label: "Theo số giây" }, { value: "half", label: "Bản nửa" }, { value: "full", label: "Bản đầy đủ" }], emptyLabel: "Chọn dạng bài hát canonical", help: "Chế độ half/full được bot quy đổi theo product kind canonical.", required: true },
+      { name: "duration_seconds", label: "Thời lượng khi chọn theo số giây", type: "number", placeholder: "Ví dụ: 30", min: 1, max: 600, step: 1, inputMode: "numeric", help: "Bắt buộc khi chọn Theo số giây; half/full dùng product kind canonical." }
     ],
     musicSfx: [
       { name: "brief", label: "Brief SFX", control: "textarea", placeholder: "Ví dụ: tiếng mở hộp gọn, hiện đại, không có nhạc nền…", help: "Bridge chỉ lưu query/policy và báo giá canonical; không tìm kho ngoài hay giả kết quả.", required: true, minLength: 3 },
@@ -197,7 +200,7 @@
       { name: "source", label: "Tệp audio / video nguồn", type: "file", accept: "audio/mpeg,audio/wav,audio/x-wav,audio/mp4,audio/ogg,video/mp4,video/quicktime,video/webm", requiredUpload: true, help: "Tệp cần qua staging canonical trước khi bot báo giá hoặc quyết định khả năng xử lý." },
       { name: "mode", label: "Workflow", control: "select", options: ["dubbing", "subtitle_plus_dubbing"], help: "Chọn rõ lồng tiếng hoặc phụ đề + lồng tiếng; bridge dùng mode canonical của bot." },
       { name: "target_language", label: "Ngôn ngữ đích", control: "select", options: LANGUAGE_OPTIONS, emptyLabel: "Chọn ngôn ngữ canonical", required: true },
-      { name: "voice", label: "Định hướng giọng", placeholder: "Giọng mặc định hoặc Voice Vault đã kiểm tra" },
+      { name: "voice_profile_id", label: "Giọng từ Voice Vault (tuỳ chọn)", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Dùng giọng mặc định do bot chọn", help: "Chỉ profile thuộc tài khoản và sẵn sàng TTS mới xuất hiện. Browser gửi ID canonical, không gửi provider voice ID hoặc tên giọng tự do." },
       { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"] },
       { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
       { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt", "vtt"] }
@@ -931,11 +934,16 @@
     const route = page.routePath || page.path;
     const linkPending = page.action === "start-telegram-link" && context.linkFlow && context.linkFlow.data && context.linkFlow.data.code && !(context.linkStatus && context.linkStatus.linked === true);
     const hasAction = page.action && page.action !== "none" && !linkPending;
+    // A feature/customer form must submit through its own validated form so
+    // that field values, staged upload IDs and the current quote fingerprint
+    // are collected. A duplicate hero button used to emit an empty action.
+    const hasFields = Array.isArray(page.fields) && page.fields.length > 0;
+    const showHeroAction = hasAction && !hasFields;
     const enabled = hasAction && canAct(page, context);
     const reason = actionBlockReason(page, context);
     return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(page.section || "TOAN AAS")}</div>
       <h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p></div>
-      <div class="portal-hero-actions">${badge(state)}${hasAction ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button>` : ""}</div>
+      <div class="portal-hero-actions">${badge(state)}${showHeroAction ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button>` : ""}</div>
     </section>`;
   }
 

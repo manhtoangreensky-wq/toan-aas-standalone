@@ -72,6 +72,8 @@ FEATURE_UPLOAD_REQUIRED = frozenset({
     "documents_compress", "documents_translate",
 })
 FEATURE_TARGET_LANGUAGE_REQUIRED = frozenset({"subtitle_translate", "video_dub", "documents_translate"})
+MUSIC_PROMPT_MODES = frozenset({"background", "lyrics", "script", "melody", "custom"})
+MUSIC_SONG_LENGTH_MODES = frozenset({"seconds", "half", "full"})
 
 
 def _request_id(request: Request) -> str:
@@ -175,6 +177,16 @@ def _affirmed(value: Any) -> bool:
     return value is True or (isinstance(value, str) and value.strip().lower() in {"1", "true", "yes", "on"})
 
 
+def _whole_number_in_range(value: Any, minimum: int, maximum: int) -> bool:
+    if isinstance(value, bool):
+        return False
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return False
+    return parsed.is_integer() and minimum <= int(parsed) <= maximum
+
+
 def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
     """Mirror the safe Web intake promises before the request reaches Bot.
 
@@ -198,6 +210,15 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
         return "voice_clone_consent_required"
     if feature == "voice_saved_tts" and not str(values.get("voice_profile_id") or "").strip():
         return "voice_profile_required"
+    if feature == "music_song":
+        prompt_mode = str(values.get("mode") or "").strip().lower()
+        if prompt_mode and prompt_mode not in MUSIC_PROMPT_MODES:
+            return "music_prompt_mode_invalid"
+        length_mode = str(values.get("song_length_mode") or "").strip().lower()
+        if length_mode not in MUSIC_SONG_LENGTH_MODES:
+            return "song_length_mode_required"
+        if length_mode == "seconds" and not _whole_number_in_range(values.get("duration_seconds"), 1, 600):
+            return "song_duration_required"
     if feature in FEATURE_TARGET_LANGUAGE_REQUIRED and not str(values.get("target_language") or "").strip():
         return "target_language_required"
     if feature == "documents_split" and not CONTIGUOUS_PAGE_RANGE_PATTERN.fullmatch(str(values.get("page_range") or "").strip()):
@@ -214,6 +235,9 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "multiple_uploads_required": "Gộp PDF cần ít nhất hai tệp đã vào staging canonical.",
         "voice_clone_consent_required": "Voice Clone cần mẫu audio thuộc tài khoản và xác nhận quyền sử dụng.",
         "voice_profile_required": "Hãy chọn một Voice Vault profile đã sẵn sàng.",
+        "music_prompt_mode_invalid": "Kiểu sáng tác nhạc chưa thuộc mode canonical của bot.",
+        "song_length_mode_required": "Hãy chọn dạng bài hát canonical trước khi tạo draft hoặc estimate.",
+        "song_duration_required": "Khi chọn bài hát theo số giây, hãy nhập thời lượng nguyên từ 1 đến 600 giây.",
         "target_language_required": "Hãy chọn ngôn ngữ đích trước khi tiếp tục workflow canonical.",
         "page_range_invalid": "Khoảng trang chỉ nhận một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.",
     }

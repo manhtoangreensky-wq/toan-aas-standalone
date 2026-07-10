@@ -107,6 +107,21 @@ def test_storyboard_and_image_to_image_keep_their_bot_specific_intake_contracts(
     assert '"image_transform", "image_remove_background"' in INTEGRATION
 
 
+def test_video_music_and_dubbing_forms_forward_the_bot_planning_controls() -> None:
+    image_to_video = PORTAL[PORTAL.index("videoImageToVideo:"):PORTAL.index("voice: [")]
+    assert 'name: "platform"' in image_to_video
+    assert 'name: "goal"' in image_to_video
+    music_song = PORTAL[PORTAL.index("musicSong:"):PORTAL.index("musicSfx:")]
+    assert 'name: "mode"' in music_song
+    assert 'name: "song_length_mode"' in music_song
+    assert "Bắt buộc khi chọn Theo số giây" in music_song
+    dubbing = PORTAL[PORTAL.index("dubbing: ["):PORTAL.index("documentPdf:")]
+    assert 'name: "voice_profile_id"' in dubbing
+    assert 'optionsFrom: "voiceProfiles"' in dubbing
+    assert "if (feature === \"music_song\")" in INTEGRATION
+    assert "Khi chọn Theo số giây" in INTEGRATION
+
+
 def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert 'type="submit"' in PORTAL
     assert "form.reportValidity()" in PORTAL
@@ -118,6 +133,13 @@ def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert '"/wallet/topup", "Nạp Xu"' in PORTAL
     assert '"/packages", "Gói dịch vụ"' in PORTAL
     assert "prefers-reduced-motion" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+
+
+def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:
+    assert "const hasFields = Array.isArray(page.fields) && page.fields.length > 0;" in PORTAL
+    assert "const showHeroAction = hasAction && !hasFields;" in PORTAL
+    assert "duplicate hero button used to emit an empty action" in PORTAL
+    assert "field values, staged upload IDs and the current quote fingerprint" in PORTAL
 
 
 def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation() -> None:

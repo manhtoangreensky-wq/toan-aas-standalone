@@ -203,6 +203,14 @@
       if (files.length && !anyExtensionMatches(files, audio)) return "Voice Clone chỉ nhận mẫu audio MP3, WAV, M4A hoặc OGG.";
       if (scalarField(fields, route, "consent") !== true) return "Hãy xác nhận quyền sử dụng mẫu giọng trước khi tiếp tục.";
     }
+    if (feature === "music_song") {
+      const lengthMode = String(scalarField(fields, route, "song_length_mode") || "").trim();
+      if (!["seconds", "half", "full"].includes(lengthMode)) return "Hãy chọn dạng bài hát canonical trước khi tiếp tục.";
+      if (lengthMode === "seconds") {
+        const duration = Number(scalarField(fields, route, "duration_seconds"));
+        if (!Number.isInteger(duration) || duration < 1 || duration > 600) return "Khi chọn Theo số giây, hãy nhập thời lượng nguyên từ 1 đến 600 giây.";
+      }
+    }
     if (feature === "music_upload") {
       if (!fileCount) return "Hãy chọn tệp âm thanh trước khi tạo draft.";
       if (files.length && !allExtensionsMatch(files, audio)) return "Nhạc của tôi chỉ nhận MP3, WAV, M4A hoặc OGG.";

@@ -142,6 +142,7 @@ async def test_feature_action_rejects_browser_bypass_of_web_intake_contract(monk
         ("image_transform", {"prompt": "Đổi nền thành studio"}, "upload_required"),
         ("documents_merge", {"upload_ids": ["staged-one"]}, "multiple_uploads_required"),
         ("voice_clone", {"upload_ids": ["staged-audio"], "consent": False}, "voice_clone_consent_required"),
+        ("music_song", {"brief": "Bài hát giới thiệu sản phẩm", "mode": "lyrics", "song_length_mode": "seconds"}, "song_duration_required"),
         ("video_single", {"prompt": "Video mới", "nested": {"user_id": "browser-forged"}}, "authority_field_not_allowed"),
     ]
     for feature, values, reason in cases:
