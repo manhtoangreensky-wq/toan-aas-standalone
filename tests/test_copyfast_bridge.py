@@ -124,6 +124,36 @@ async def test_web_bridge_redacts_canonical_identity_from_nested_browser_data(mo
 
 
 @pytest.mark.anyio
+async def test_canonical_admin_read_can_keep_only_erp_user_references(monkeypatch):
+    async def fake_bridge_request(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "ok",
+            "data": {
+                "items": [{
+                    "user_id": "telegram-user-ref",
+                    "username": "customer_public_name",
+                    "canonical_user_id": "must-stay-server-side",
+                    "chat_id": "must-stay-server-side",
+                }],
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(_bridge.__globals__, "bridge_request", fake_bridge_request)
+    request = Request({"type": "http", "method": "GET", "path": "/api/v1/admin/users", "headers": []})
+    result = await _bridge(
+        "GET",
+        "/internal/v1/admin/users",
+        account={"id": "web-admin", "canonical_user_id": "telegram-admin", "role": "admin"},
+        request=request,
+        admin_read=True,
+    )
+    assert result["data"] == {"items": [{"user_id": "telegram-user-ref", "username": "customer_public_name"}]}
+
+
+@pytest.mark.anyio
 async def test_wallet_history_drops_unrendered_ledger_notes_and_references(monkeypatch):
     async def fake_bridge(*_args, **_kwargs):
         return {

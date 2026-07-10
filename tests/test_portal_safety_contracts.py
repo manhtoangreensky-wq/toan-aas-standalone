@@ -11,6 +11,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 
 
 def test_portal_never_offers_download_for_reported_output_metadata() -> None:
@@ -265,6 +266,15 @@ def test_client_capabilities_respect_the_copyfast_master_flag() -> None:
     assert '"refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled' in INTEGRATION
 
 
+def test_pwa_caches_only_the_fixed_public_shell() -> None:
+    assert 'const SHELL = Object.freeze([' in SERVICE_WORKER
+    assert 'const SHELL_PATHS = new Set(SHELL);' in SERVICE_WORKER
+    assert '!SHELL_PATHS.has(url.pathname)' in SERVICE_WORKER
+    assert 'cache.put(' not in SERVICE_WORKER
+    assert '"/api/' not in SERVICE_WORKER
+    assert 'wallet, payment, admin' in SERVICE_WORKER
+
+
 def test_ticket_and_payment_submissions_are_single_flight_and_idempotent_in_memory() -> None:
     assert "function acquireSubmission(scope, fingerprint)" in INTEGRATION
     assert "const submissions = new Map();" in INTEGRATION
@@ -324,6 +334,14 @@ def test_admin_surfaces_are_explicitly_read_only_without_a_write_adapter() -> No
     assert "admin-retry" not in INTEGRATION
     assert "admin-refund" not in INTEGRATION
     assert "admin-freeze" not in INTEGRATION
+
+
+def test_admin_erp_can_render_canonical_user_references_only_after_server_role_check() -> None:
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert 'account: dict = Depends(require_canonical_admin)' in api
+    assert 'request=request, admin_read=True' in api
+    assert 'allow_admin_user_refs and normalized in {"userid", "username"}' in api
+    assert '"canonicaluserid"' in api
 
 
 def test_voice_output_preview_and_history_views_do_not_overclaim_unmapped_delivery() -> None:

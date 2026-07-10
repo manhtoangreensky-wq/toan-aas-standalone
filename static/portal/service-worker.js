@@ -1,12 +1,13 @@
 /* Only public portal shell assets are cached.  API, wallet, payment, admin,
    uploads and private delivery URLs are intentionally never cached. */
-const CACHE_NAME = "toan-aas-portal-shell-v1";
-const SHELL = [
+const CACHE_NAME = "toan-aas-portal-shell-v2";
+const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal.js",
   "/static/portal/integration.js",
   "/static/portal/manifest.webmanifest"
-];
+]);
+const SHELL_PATHS = new Set(SHELL);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL)).then(() => self.skipWaiting()));
@@ -19,11 +20,10 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const request = event.request;
   const url = new URL(request.url);
-  if (request.method !== "GET" || url.origin !== self.location.origin || !url.pathname.startsWith("/static/portal/")) return;
-  event.respondWith(caches.match(request).then((cached) => cached || fetch(request).then((response) => {
-    if (!response || !response.ok || response.type !== "basic") return response;
-    const copy = response.clone();
-    caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-    return response;
-  })));
+  // Never turn a broad static folder into an implicit cache policy.  Only the
+  // fixed public shell above can be served from Cache Storage; API responses,
+  // signed file URLs and any future private/static asset fall through to the
+  // browser's normal network path without being persisted by this worker.
+  if (request.method !== "GET" || url.origin !== self.location.origin || !SHELL_PATHS.has(url.pathname)) return;
+  event.respondWith(caches.match(url.pathname).then((cached) => cached || fetch(request)));
 });

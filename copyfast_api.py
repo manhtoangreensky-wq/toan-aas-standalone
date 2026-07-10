@@ -161,7 +161,7 @@ def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
-def _redact_browser_identity(value: Any) -> Any:
+def _redact_browser_identity(value: Any, *, allow_admin_user_refs: bool = False) -> Any:
     """Remove raw canonical/Telegram identity fields at the Web boundary.
 
     The signed session retains ``canonical_user_id`` on the server for bridge
@@ -172,21 +172,27 @@ def _redact_browser_identity(value: Any) -> Any:
         safe: dict[str, Any] = {}
         for key, item in value.items():
             normalized = "".join(character for character in str(key).lower() if character.isalnum())
-            if normalized in BROWSER_IDENTITY_KEY_NORMALIZED:
+            # A canonical-admin read may show the Bot's user reference and
+            # public username in its ERP table.  It still never receives a
+            # canonical session identity, Telegram chat ID, or any customer
+            # identity from normal customer routes.
+            if normalized in BROWSER_IDENTITY_KEY_NORMALIZED and not (
+                allow_admin_user_refs and normalized in {"userid", "username"}
+            ):
                 continue
-            safe[str(key)] = _redact_browser_identity(item)
+            safe[str(key)] = _redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs)
         return safe
     if isinstance(value, list):
-        return [_redact_browser_identity(item) for item in value]
+        return [_redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs) for item in value]
     if isinstance(value, tuple):
-        return [_redact_browser_identity(item) for item in value]
+        return [_redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs) for item in value]
     return value
 
 
-def _browser_safe_bridge_response(response: dict) -> dict:
+def _browser_safe_bridge_response(response: dict, *, allow_admin_user_refs: bool = False) -> dict:
     result = dict(response)
     if "data" in result:
-        result["data"] = _redact_browser_identity(result.get("data"))
+        result["data"] = _redact_browser_identity(result.get("data"), allow_admin_user_refs=allow_admin_user_refs)
     return result
 
 
@@ -568,7 +574,16 @@ async def _run_idempotent(scope: str, key: str, operation) -> dict:
     return result
 
 
-async def _bridge(method: str, path: str, *, account: dict, request: Request, payload: dict | None = None, params: dict | None = None) -> dict:
+async def _bridge(
+    method: str,
+    path: str,
+    *,
+    account: dict,
+    request: Request,
+    payload: dict | None = None,
+    params: dict | None = None,
+    admin_read: bool = False,
+) -> dict:
     flags = _flags()
     if not flags["copyfast_enabled"]:
         return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
@@ -595,7 +610,12 @@ async def _bridge(method: str, path: str, *, account: dict, request: Request, pa
         request_id=_request_id(request),
         actor_id=user_id,
     )
-    return _browser_safe_bridge_response(response)
+    allow_admin_user_refs = bool(
+        admin_read
+        and path.startswith("/internal/v1/admin/")
+        and account.get("role") == "admin"
+    )
+    return _browser_safe_bridge_response(response, allow_admin_user_refs=allow_admin_user_refs)
 
 
 @router.get("/catalog")
@@ -876,39 +896,46 @@ async def feature_confirm(feature: str, payload: FeatureRequest, request: Reques
 
 @router.get("/admin/summary")
 async def admin_summary(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/summary", account=account, request=request)
+    return await _bridge("GET", "/internal/v1/admin/summary", account=account, request=request, admin_read=True)
 
 
 @router.get("/admin/users")
 async def admin_users(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/users", account=account, request=request)
+    return await _bridge("GET", "/internal/v1/admin/users", account=account, request=request, admin_read=True)
 
 
 @router.get("/admin/jobs")
 async def admin_jobs(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request)
+    return await _bridge("GET", "/internal/v1/admin/jobs", account=account, request=request, admin_read=True)
 
 
 @router.get("/admin/payments")
 async def admin_payments(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/payments", account=account, request=request)
+    return await _bridge("GET", "/internal/v1/admin/payments", account=account, request=request, admin_read=True)
 
 
 @router.get("/admin/providers")
 async def admin_providers(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/providers", account=account, request=request)
+    return await _bridge("GET", "/internal/v1/admin/providers", account=account, request=request, admin_read=True)
 
 
 @router.get("/admin/tickets")
 async def admin_tickets(request: Request, account: dict = Depends(require_canonical_admin)):
-    return await _bridge("GET", "/internal/v1/admin/tickets", account=account, request=request)
+    return await _bridge("GET", "/internal/v1/admin/tickets", account=account, request=request, admin_read=True)
 
 
 @router.get("/admin/modules/{module}")
 async def admin_module(module: str, request: Request, account: dict = Depends(require_canonical_admin)):
     record_id = str(request.query_params.get("record_id") or "").strip()
     params = {"record_id": record_id} if record_id else None
-    return await _bridge("GET", f"/internal/v1/admin/modules/{module}", account=account, request=request, params=params)
+    return await _bridge(
+        "GET",
+        f"/internal/v1/admin/modules/{module}",
+        account=account,
+        request=request,
+        params=params,
+        admin_read=True,
+    )
 
 
 @router.post("/admin/jobs/{job_id}/retry")
