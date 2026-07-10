@@ -16,7 +16,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 ## Full bot-suite baseline result
 
-`python -m pytest -q` completed with **1,319 passed and 3 failed**. The three
+`python -m pytest -q` completed with **1,321 passed and 3 failed**. The three
 failures are not changed by the bridge diff:
 
 1. `tests/test_core.py::test_operations_v1a_tax_prep_and_accounting_exports`
