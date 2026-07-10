@@ -224,10 +224,17 @@ def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_onl
 def test_manual_topup_guide_is_an_honest_bot_handoff_not_a_second_receipt_system() -> None:
     assert "function renderManualTopupGuide(context)" in PORTAL
     assert "Nạp thủ công: tiếp tục trong Telegram" in PORTAL
+    assert "Nạp VND: gửi ảnh bill trong Bot." in PORTAL
+    assert "Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot." in PORTAL
+    assert "pending</code> hoặc <code>pending_admin_review" in PORTAL
     assert "pending_admin_review" in PORTAL
     assert "approved" in PORTAL
     assert "rejected" in PORTAL
     assert "wallet_history_signal_available" in PORTAL
+    assert "history_in_web === false" in PORTAL
+    assert "Lịch sử nạp thủ công" in PORTAL
+    assert "const manualActions = manualAvailable" in PORTAL
+    assert "Chưa có URL Bot hợp lệ để bắt đầu nạp thủ công." in PORTAL
     assert "Kiểm tra đơn PayOS" in PORTAL
     assert "mã được bot tạo cho luồng thủ công" not in PORTAL
     assert "pending_deposits" not in PORTAL

@@ -190,6 +190,30 @@ def _browser_safe_bridge_response(response: dict) -> dict:
     return result
 
 
+def _browser_safe_wallet_history_response(response: dict) -> dict:
+    """Remove free-text ledger metadata that the wallet UI never renders.
+
+    Bot credit-event notes and references may contain a customer prompt, a
+    payment reference or other operational context.  The Web wallet needs
+    only time, event type, delta and post-event balance to show the canonical
+    ledger; retain those bot-owned facts while stripping unneeded free text.
+    """
+    result = dict(response)
+    data = result.get("data")
+    if not isinstance(data, dict):
+        return result
+    safe_data = dict(data)
+    items = safe_data.get("items")
+    if isinstance(items, list):
+        safe_data["items"] = [
+            {key: value for key, value in item.items() if str(key).lower() not in {"reference", "note"}}
+            if isinstance(item, dict) else item
+            for item in items
+        ]
+    result["data"] = safe_data
+    return result
+
+
 def _looks_like_payment_card(candidate: str) -> bool:
     digits = "".join(character for character in candidate if character.isdigit())
     if not 13 <= len(digits) <= 19 or len(set(digits)) == 1:
@@ -603,7 +627,8 @@ async def wallet(request: Request, account: dict = Depends(require_account)):
 
 @router.get("/wallet/history")
 async def wallet_history(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/wallet/history", account=account, request=request)
+    response = await _bridge("GET", "/internal/v1/wallet/history", account=account, request=request)
+    return _browser_safe_wallet_history_response(response)
 
 
 @router.get("/pricing")
@@ -658,6 +683,13 @@ async def payment_options(account: dict = Depends(require_account)):
                 # bill/TXID or admin-review request.
                 "payment_lookup_available": False,
                 "wallet_history_signal_available": True,
+                # Manual receipt history remains a user-owned Bot view. These
+                # presentation-only fields prevent a future Web page from
+                # mistaking the wallet ledger for a second receipt system.
+                "history_in_web": False,
+                "history_channel": "telegram_bot",
+                "history_command": "/thucong",
+                "history_menu_label": "Lịch sử nạp thủ công",
             },
         },
     )

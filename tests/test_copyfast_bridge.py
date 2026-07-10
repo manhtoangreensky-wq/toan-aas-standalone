@@ -5,7 +5,7 @@ import pytest
 from starlette.requests import Request
 
 from copyfast_bridge import CoreBridgeClient
-from copyfast_api import FeatureRequest, PaymentRequest, _bridge, _feature_action, admin_retry_job, create_payment
+from copyfast_api import FeatureRequest, PaymentRequest, _bridge, _feature_action, admin_retry_job, create_payment, wallet_history
 from copyfast_db import ensure_copyfast_schema
 
 
@@ -121,6 +121,37 @@ async def test_web_bridge_redacts_canonical_identity_from_nested_browser_data(mo
         request=request,
     )
     assert result["data"] == {"user": {"is_vip": True}, "items": [{"id": "job-1"}], "wallet": {"balance": 42}}
+
+
+@pytest.mark.anyio
+async def test_wallet_history_drops_unrendered_ledger_notes_and_references(monkeypatch):
+    async def fake_bridge(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "ok",
+            "data": {
+                "items": [{
+                    "event_type": "charge",
+                    "delta_xu": -12,
+                    "balance_after_xu": 88,
+                    "created_at": "2026-07-11T00:00:00Z",
+                    "reference": "order-private",
+                    "note": "prompt riêng tư của khách",
+                }],
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(wallet_history.__globals__, "_bridge", fake_bridge)
+    request = Request({"type": "http", "method": "GET", "path": "/api/v1/wallet/history", "headers": []})
+    result = await wallet_history(request, {"id": "web-account", "canonical_user_id": "telegram-1"})
+    assert result["data"]["items"] == [{
+        "event_type": "charge",
+        "delta_xu": -12,
+        "balance_after_xu": 88,
+        "created_at": "2026-07-11T00:00:00Z",
+    }]
 
 
 @pytest.mark.anyio

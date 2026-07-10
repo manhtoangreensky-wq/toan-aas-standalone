@@ -170,6 +170,10 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "receipt_channel": "telegram_bot",
             "payment_lookup_available": False,
             "wallet_history_signal_available": True,
+            "history_in_web": False,
+            "history_channel": "telegram_bot",
+            "history_command": "/thucong",
+            "history_menu_label": "Lịch sử nạp thủ công",
         }
         assert "private-bank-account-must-not-leak" not in options.text
 

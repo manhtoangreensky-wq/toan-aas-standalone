@@ -5,7 +5,7 @@
     "entrypoint_present": true,
     "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-bot-copyfast1-bridge"
   },
-  "generated_at_utc": "2026-07-10T17:51:54+00:00",
+  "generated_at_utc": "2026-07-10T18:07:50+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text and Python AST are read.",
