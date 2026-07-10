@@ -260,6 +260,11 @@ async def asset_download(asset_id: str, request: Request, account: dict = Depend
     return await _bridge("GET", f"/internal/v1/assets/{asset_id}/download", account=account, request=request)
 
 
+@router.get("/voice/profiles")
+async def voice_profiles(request: Request, account: dict = Depends(require_account)):
+    return await _bridge("GET", "/internal/v1/voice/profiles", account=account, request=request)
+
+
 @router.post("/uploads")
 async def upload_to_canonical_staging(
     request: Request,

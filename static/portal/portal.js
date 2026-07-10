@@ -78,7 +78,13 @@
     ],
     voice: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…" },
-      { name: "voice", label: "Giọng đã lưu", control: "select", options: ["Chờ Voice Vault", "Giọng mặc định theo server"] }
+      { name: "voice_profile_id", label: "Giọng đã lưu (tuỳ chọn)", control: "select", optionsFrom: "voiceProfiles", emptyLabel: "Dùng giọng mặc định do bot cấp", help: "Danh sách chỉ gồm metadata Voice Vault đã qua ownership check. Core Bridge luôn kiểm tra lại lựa chọn khi estimate/confirm." },
+      { name: "speed", label: "Tốc độ đọc", control: "select", options: ["normal", "slow", "fast"], help: "Thời lượng hiển thị trong estimate được tính bởi helper canonical của bot." }
+    ],
+    voiceClone: [
+      { name: "display_name", label: "Tên giọng", placeholder: "Ví dụ: Giọng thương hiệu TOAN AAS" },
+      { name: "sample", label: "Mẫu audio để clone", type: "file", help: "Mẫu chỉ vào bot-owned staging sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gửi tới provider." },
+      { name: "consent", label: "Quyền sử dụng mẫu giọng", type: "checkbox", help: "Tôi xác nhận mình có quyền sử dụng mẫu giọng này và không mạo danh người khác." }
     ],
     music: [
       { name: "brief", label: "Mô tả âm thanh", control: "textarea", placeholder: "Thể loại, nhịp độ, cảm xúc, thời lượng…" },
@@ -272,8 +278,8 @@
 
   featurePage("/voice", "Voice Vault", "Danh mục giọng nói thuộc tài khoản, không hiển thị nếu bridge chưa xác minh phiên.", ICONS.voice, [], ["/voice-vault"]);
   featurePage("/voice/tts", "Text-to-Speech", "Chuẩn bị lời thoại và lựa chọn giọng trong flow có estimate rõ ràng.", ICONS.voice, FIELD_SETS.voice, ["/tts", "/voice/create"]);
-  featurePage("/voice/saved", "Giọng đã lưu", "Chờ Voice Vault trả về danh sách giọng thuộc sở hữu bạn.", ICONS.voice, [], ["/voice/vault"]);
-  featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voice);
+  featurePage("/voice/saved", "Giọng đã lưu", "Chọn một giọng từ Voice Vault thuộc sở hữu bạn; Core Bridge kiểm tra lại trạng thái trước khi estimate/confirm.", ICONS.voice, FIELD_SETS.voice, ["/voice/vault"]);
+  featurePage("/voice/clone", "Voice Clone", "Tính năng clone chỉ khả dụng nếu engine, mẫu audio và quyền sử dụng đã được bridge cho phép.", ICONS.voice, FIELD_SETS.voiceClone);
   featurePage("/voice/preview", "Nghe thử giọng", "Preview là output riêng tư và phải dùng signed/temporary URL.", ICONS.voice, []);
   featurePage("/voice/outputs", "Voice outputs", "Tài sản audio đã tạo sẽ xuất hiện tại đây sau delivery hợp lệ.", ICONS.voice, []);
 
@@ -367,6 +373,7 @@
       tickets: Array.isArray(source.tickets) ? source.tickets : [],
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
       readiness: source.readiness && typeof source.readiness === "object" ? source.readiness : {},
+      voiceProfiles: Array.isArray(source.voiceProfiles) ? source.voiceProfiles.slice(0, 20) : [],
       profile: source.profile && typeof source.profile === "object" ? source.profile : {},
       notifications: Array.isArray(source.notifications) ? source.notifications.slice(0, 5) : []
     };
@@ -544,7 +551,7 @@
       </div>`;
   }
 
-  function renderFields(fields, enabled) {
+  function renderFields(fields, enabled, context) {
     if (!fields || !fields.length) return "";
     return `<div class="portal-fields">${fields.map((field) => {
       const wide = field.control === "textarea" || field.type === "file" || field.wide;
@@ -555,10 +562,24 @@
       if (field.control === "textarea") {
         control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${disabled}></textarea>`;
       } else if (field.control === "select") {
-        const options = (field.options || []).map((option) => `<option>${safeText(option)}</option>`).join("");
-        control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${disabled}>${options}</select>`;
+        let options = Array.isArray(field.options) ? field.options : [];
+        if (field.optionsFrom === "voiceProfiles") {
+          const profiles = context && Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
+          options = profiles
+            .filter((profile) => profile && profile.id && profile.tts_ready)
+            .map((profile) => ({ value: String(profile.id), label: `${profile.display_name || "Giọng chưa đặt tên"}${profile.is_default ? " · Mặc định" : ""}` }));
+        }
+        const empty = field.emptyLabel ? `<option value="">${safeText(field.emptyLabel)}</option>` : "";
+        const optionMarkup = options.map((option) => {
+          const value = option && typeof option === "object" ? option.value : option;
+          const label = option && typeof option === "object" ? option.label : option;
+          return `<option value="${safeText(value)}">${safeText(label)}</option>`;
+        }).join("");
+        control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${disabled}>${empty}${optionMarkup}</select>`;
+      } else if (field.type === "checkbox") {
+        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${disabled}><span>Tôi xác nhận</span></label>`;
       } else {
-        const type = ["email", "password", "file", "text"].includes(field.type) ? field.type : "text";
+        const type = ["email", "password", "file", "number", "text"].includes(field.type) ? field.type : "text";
         const autocomplete = field.autocomplete ? ` autocomplete="${safeText(field.autocomplete)}"` : "";
         control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${autocomplete}${disabled}>`;
       }
@@ -618,11 +639,12 @@
     const flow = context.featureFlows && context.featureFlows[route];
     const flowStatus = flow && ALLOWED_STATES.has(flow.status) ? flow.status : "";
     const canAdvance = enabled && page.action === "feature-draft" && (flowStatus === "draft" || flowStatus === "awaiting_confirm");
+    const formId = `portal-form-${safeText(route).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
     const flowControls = canAdvance
-      ? `<div class="portal-flow-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}">Ước tính Xu</button>${flowStatus === "awaiting_confirm" ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}">Xác nhận chạy</button>` : ""}</div>`
+      ? `<div class="portal-flow-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>${flowStatus === "awaiting_confirm" ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Xác nhận chạy</button>` : ""}</div>`
       : "";
     return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : safeText(reason)}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
-      <form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled)}
+      <form class="portal-form" id="${safeText(formId)}" data-portal-form novalidate>${renderFields(page.fields, enabled, context)}
         <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."}</span>
           <button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel || "Tiếp tục")}</button>
         </div>
@@ -758,7 +780,7 @@
     return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p>
       <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
-      <form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
+      <form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled, context)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
       <div class="portal-notice" style="margin-top:16px"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div>
     </section></article>`;
   }
@@ -815,9 +837,15 @@
     const flowOutput = flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow)}`
       : renderEmpty("Chờ phản hồi Core Bridge", "Khi flow hoàn tất, bridge cung cấp trạng thái canonical và asset được xác minh.", "○");
+    const voiceVault = page.path.startsWith("/voice") ? renderVoiceVault(context) : "";
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><div>${renderFormCard(page, context)}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Output & trạng thái</h2><p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p></div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
+      ${voiceVault}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Output & trạng thái</h2><p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p></div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
+  }
+
+  function renderVoiceVault(context) {
+    const profiles = Array.isArray(context.voiceProfiles) ? context.voiceProfiles : [];
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Voice Vault canonical</h2><p class="portal-card-subtitle">Tên, trạng thái và khả năng dùng giọng được bot kiểm tra; không hiển thị provider voice ID, file ID hay preview reference.</p></div></div>${renderRowsTable(["Giọng", "Trạng thái", "TTS", "Preview"], profiles, (profile) => `<td>${safeText(profile.display_name || "Giọng chưa đặt tên")}${profile.is_default ? " · Mặc định" : ""}</td><td>${badge(profile.status || "guarded")}</td><td>${profile.tts_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td><td>${profile.preview_ready ? "Sẵn sàng" : "Chưa sẵn sàng"}</td>`, "Chưa có giọng đã được bot cấp", "Voice Vault sẽ chỉ hiển thị metadata thuộc signed session hiện tại.")}</section>`;
   }
 
   function renderAdminOverview(page, context) {
@@ -833,7 +861,7 @@
     const reason = actionBlockReason(page, context);
     const recordText = page.recordId ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon">i</span><div><strong>Record được yêu cầu</strong><p>ID ${safeText(page.recordId)} không cấp quyền hay dữ liệu cho browser. Core Bridge phải kiểm tra permission trước khi trả chi tiết.</p></div></div>` : "";
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${context.isAdmin ? "Lớp quản trị có kiểm soát" : "Cần quyền quản trị được server xác minh"}</h2><p>${context.isAdmin ? "Dữ liệu hiển thị, write permission, CSRF, confirmation và audit vẫn do Core Bridge quyết định." : "Không có dữ liệu PII, wallet hoặc payment được render cho client không có signed admin session."}</p></div></div></section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bộ lọc server-side</h2><p class="portal-card-subtitle">Các trường không thực hiện truy vấn trực tiếp từ shell.</p></div>${badge(stateFor(page, context))}</div><form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled)}<div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Yêu cầu review sẽ được bridge xác nhận và ghi audit." : safeText(reason)}</span><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.routePath || page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bộ lọc server-side</h2><p class="portal-card-subtitle">Các trường không thực hiện truy vấn trực tiếp từ shell.</p></div>${badge(stateFor(page, context))}</div><form class="portal-form" data-portal-form novalidate>${renderFields(page.fields, enabled, context)}<div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Yêu cầu review sẽ được bridge xác nhận và ghi audit." : safeText(reason)}</span><button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.routePath || page.path)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form></section>
         <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Giao thức write</h2><p class="portal-card-subtitle">Không bypass canonical business rules.</p></div></div>${renderNotes(page)}</aside></div>${recordText}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Dữ liệu vận hành</h2><p class="portal-card-subtitle">Hiển thị sau permission, redaction và ownership checks.</p></div></div>${renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật", "Hành động"], (context.adminData && context.adminData.items) || [], (item) => `<td>${safeText(item.user_id || item.id || item.order_code || "—")}</td><td>${safeText(item.status || item.feature || "—")}</td><td>${safeText(item.updated_at || item.created_at || item.paid_at || "—")}</td><td>Read-only</td>`, "Chưa có dữ liệu được ủy quyền", "Core Bridge chưa cung cấp bản ghi cho phiên này.")}</section></article>`;
   }
@@ -873,7 +901,8 @@
   function dispatchAction(button, context) {
     const action = button.getAttribute("data-portal-action") || "";
     const route = button.getAttribute("data-portal-route") || context.path;
-    const form = button.closest("form");
+    const formId = button.getAttribute("data-portal-form-id") || "";
+    const form = button.closest("form") || (formId ? document.getElementById(formId) : null);
     const fields = {};
     if (form) {
       form.querySelectorAll("input, textarea, select").forEach((input) => {
@@ -882,7 +911,7 @@
           if (selected) fields[input.name] = selected;
           return;
         }
-        fields[input.name] = input.value;
+        fields[input.name] = input.type === "checkbox" ? input.checked : input.value;
       });
     }
     const event = new CustomEvent(ACTION_EVENT, {

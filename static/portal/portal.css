@@ -309,6 +309,10 @@ a { color: inherit; text-decoration: none; }
 .portal-input::placeholder, .portal-textarea::placeholder { color: #6b8999; }
 .portal-input:focus, .portal-select:focus, .portal-textarea:focus { border-color: var(--portal-accent); box-shadow: 0 0 0 3px rgba(99, 225, 208, .12); }
 .portal-input:disabled, .portal-select:disabled, .portal-textarea:disabled { border-color: rgba(154, 207, 231, .1); background: rgba(2, 18, 28, .29); color: #6f8998; }
+.portal-checkbox { display: inline-flex; align-items: center; gap: 9px; min-height: 40px; padding: 10px 11px; border: 1px solid rgba(154, 207, 231, .18); border-radius: 10px; background: rgba(4, 24, 37, .82); color: #d8edf4 !important; font-size: 12px !important; font-weight: 620 !important; cursor: pointer; }
+.portal-checkbox input { width: 16px; height: 16px; accent-color: var(--portal-accent); cursor: pointer; }
+.portal-checkbox:has(input:focus-visible) { border-color: var(--portal-accent); box-shadow: 0 0 0 3px rgba(99, 225, 208, .12); }
+.portal-checkbox:has(input:disabled) { cursor: not-allowed; opacity: .58; }
 .portal-form-footer { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; padding-top: 2px; }
 .portal-form-note { flex: 1 1 220px; color: var(--portal-muted); font-size: 10px; line-height: 1.5; }
 .portal-flow-actions { display: flex; flex-wrap: wrap; gap: 9px; align-items: center; margin-top: 13px; padding-top: 13px; border-top: 1px solid rgba(154, 207, 231, .12); }

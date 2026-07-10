@@ -142,6 +142,13 @@
       } else if (path === "/assets") {
         const assets = await api("/assets");
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [] });
+      } else if (path.startsWith("/voice")) {
+        const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
+        merge({
+          voiceProfiles: profiles.data && profiles.data.items ? profiles.data.items : [],
+          readiness: readiness.data || {},
+          pageStates: featurePageStates(base().catalog || [], readiness.data || {})
+        });
       } else if (path === "/tickets") {
         const tickets = await api("/support/tickets");
         merge({ tickets: tickets.data && tickets.data.items ? tickets.data.items : [] });
