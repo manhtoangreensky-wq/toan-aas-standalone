@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `53 passed` |
+| Web App | `python -m pytest -q` | `57 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
@@ -137,3 +137,12 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   username, attachment IDs and provider details. Admin backup/export routes
   resolve to the existing read-only canonical adapters rather than inventing
   an export or backup write action.
+- The top-up portal separates a guarded PayOS bridge request from the manual
+  reconciliation flow. It can open the configured linked Telegram bot and
+  copy only the canonical `/thucong` command; it never displays bank details,
+  static QR data, bill uploads, OTPs or a browser-side approval action.
+- A customer may query an ownership-checked payment order code through the
+  signed Web API. Pending orders use bounded signed-GET polling only; polling
+  neither calls PayOS nor changes a wallet/ledger state. The legacy billing,
+  manual-topup and webhook routes are asserted unmounted so there is no second
+  PayOS creator, webhook, order store or Xu writer in `app.py`.

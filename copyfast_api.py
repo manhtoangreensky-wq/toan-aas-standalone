@@ -29,6 +29,7 @@ from copyfast_registry import FEATURE_BY_KEY, catalog
 
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
+TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
 IDEMPOTENCY_PENDING_SECONDS = 90
 _PENDING_IDEMPOTENCY_KEY = "_web_idempotency_pending"
 _RETRYABLE_BRIDGE_CODES = frozenset({"CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_RATE_LIMITED", "CORE_BRIDGE_NOT_CONFIGURED"})
@@ -69,6 +70,19 @@ def _linked(account: dict) -> str:
     if not user_id:
         raise HTTPException(status_code=409, detail="Hãy liên kết Telegram trước khi dùng dữ liệu hoặc tính năng bot")
     return user_id
+
+
+def _telegram_bot_chat_url() -> str:
+    """Return a public bot-chat URL only when the configured username is safe.
+
+    Manual-payment details, receipt handling and approval remain exclusively in
+    the already-linked Telegram bot.  The Web App intentionally exposes no
+    bank account, QR image, payment secret or user identity in this helper.
+    """
+    username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
+    if not TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(username):
+        return ""
+    return f"https://t.me/{username}"
 
 
 def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
@@ -325,10 +339,50 @@ async def packages(request: Request, account: dict = Depends(require_account)):
     return await _bridge("GET", "/internal/v1/packages", account=account, request=request)
 
 
+@router.get("/payments/options")
+async def payment_options(account: dict = Depends(require_account)):
+    """Publish safe payment-entry metadata without creating a payment.
+
+    This endpoint is deliberately local/read-only.  It makes no PayOS call,
+    does not read a wallet ledger and does not duplicate the bot's webhook.
+    """
+    _linked(account)
+    payos_available = bool(_flags()["payment_enabled"] and bridge_configured())
+    bot_chat_url = _telegram_bot_chat_url()
+    return envelope(
+        True,
+        "Các lựa chọn thanh toán luôn do bot canonical xác minh.",
+        status_name="read_only",
+        data={
+            "payos": {
+                # This only confirms that Web may send a signed request to the
+                # bridge. The bot remains the only authority that may return a
+                # checkout URL, so it is intentionally not called `available`.
+                "request_enabled": payos_available,
+                "status": "awaiting_confirm" if payos_available else "guarded",
+                "checkout_owner": "canonical_bot",
+            },
+            "manual": {
+                "available": bool(bot_chat_url),
+                "telegram_url": bot_chat_url,
+                "command": "/thucong",
+                "receipt_channel": "telegram_bot",
+                "status_lookup": True,
+            },
+        },
+    )
+
+
 @router.post("/payments/create")
 async def create_payment(payload: PaymentRequest, request: Request, account: dict = Depends(require_csrf)):
     if not _flags()["payment_enabled"]:
         return envelope(False, "Nạp Xu trên Web đang chờ xác minh core payment.", status_name="guarded", error_code="WEBAPP_PAYMENT_DISABLED")
+    payment_type = str(payload.payment_type or "").strip().lower()
+    if payment_type != "topup_xu":
+        return envelope(False, "Loại thanh toán này chưa có adapter canonical được phê duyệt cho Web.", status_name="guarded", error_code="PAYMENT_TYPE_NOT_ALLOWED")
+    package_id = str(payload.package_id or "").strip()
+    if not package_id:
+        return envelope(False, "Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
     key = _require_key(payload.idempotency_key)
     scope = f"payment:{account['id']}"
     return await _run_idempotent(
@@ -336,7 +390,7 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         key,
         lambda: _bridge(
             "POST", "/internal/v1/payments/create", account=account, request=request,
-            payload={"package_id": payload.package_id, "payment_type": payload.payment_type, "idempotency_key": key},
+            payload={"package_id": package_id, "payment_type": payment_type, "idempotency_key": key},
         ),
     )
 

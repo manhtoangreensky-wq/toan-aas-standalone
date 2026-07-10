@@ -199,6 +199,28 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
 
 
 @pytest.mark.anyio
+async def test_web_payment_creation_rejects_non_topup_types_before_the_bridge(monkeypatch):
+    monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "true")
+    calls = []
+
+    async def fake_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    result = await create_payment(
+        PaymentRequest(package_id="storage-custom", payment_type="storage_addon", idempotency_key="payment-type-guard-0001"),
+        request,
+        account,
+    )
+    assert result["status"] == "guarded"
+    assert result["error_code"] == "PAYMENT_TYPE_NOT_ALLOWED"
+    assert calls == []
+
+
+@pytest.mark.anyio
 async def test_admin_write_gate_does_not_contact_canonical_bridge_when_disabled(monkeypatch):
     local_checks = []
     canonical_checks = []

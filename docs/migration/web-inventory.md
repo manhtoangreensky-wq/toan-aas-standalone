@@ -87,6 +87,7 @@
 | /okrs | GET | get_okrs |
 | /packages | GET | packages |
 | /payments/create | POST | create_payment |
+| /payments/options | GET | payment_options |
 | /payments/{payment_id} | GET | payment_status |
 | /payos/create-link | POST | create_web_payos_link |
 | /portal/affiliates/{user_id} | GET | customer_affiliates |

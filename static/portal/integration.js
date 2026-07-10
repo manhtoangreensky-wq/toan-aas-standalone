@@ -9,8 +9,12 @@
   const API = "/api/v1";
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
+  const PAYMENT_POLL_INTERVAL_MS = 10000;
+  const PAYMENT_POLL_MAX_BACKOFF_MS = 60000;
   let jobPollTimer = 0;
   let jobPollFailures = 0;
+  let paymentPollTimer = 0;
+  let paymentPollFailures = 0;
   const submissions = new Map();
   const FEATURE_BY_PATH = {
     "/chat": "chat", "/prompt-studio": "prompt_studio", "/content/caption": "caption",
@@ -66,6 +70,24 @@
     const module = ADMIN_MODULE_ALIASES[requestedModule] || requestedModule;
     const recordId = pieces.length > 2 ? pieces.slice(2).join("/") : "";
     return `/admin/modules/${encodeURIComponent(module)}${recordId ? `?record_id=${encodeURIComponent(recordId)}` : ""}`;
+  }
+
+  async function copyManualTopupCommand(value) {
+    if (String(value || "") !== "/thucong") throw new Error("Lệnh nạp thủ công không hợp lệ.");
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText("/thucong");
+      return;
+    }
+    const field = document.createElement("textarea");
+    field.value = "/thucong";
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    const copied = document.execCommand("copy");
+    field.remove();
+    if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép. Hãy copy lệnh hiển thị bên cạnh.");
   }
 
   function acquireSubmission(scope, fingerprint) {
@@ -282,6 +304,53 @@
     }, delay);
   }
 
+  function paymentIdFromData(data) {
+    const source = data && typeof data === "object" ? data : {};
+    return String(source.payment_id || source.order_code || source.id || "").trim();
+  }
+
+  function validPaymentId(value) {
+    return /^[A-Za-z0-9._:-]{1,120}$/.test(String(value || "").trim());
+  }
+
+  function paymentNeedsPolling(flow) {
+    const data = flow && flow.data && typeof flow.data === "object" ? flow.data : {};
+    const status = String(data.status || (flow && flow.status) || "").toLowerCase();
+    return ["pending", "queued", "awaiting_confirm", "processing", "waiting", "unpaid"].includes(status);
+  }
+
+  function schedulePaymentPolling(paymentId, flow, delayMs, replaceExisting) {
+    const route = (base().path || window.location.pathname).split("?")[0];
+    if (!paymentId || route !== "/wallet/topup" || !base().bridge || base().bridge.available !== true || !paymentNeedsPolling(flow)) return;
+    if (replaceExisting && paymentPollTimer) {
+      window.clearTimeout(paymentPollTimer);
+      paymentPollTimer = 0;
+    }
+    if (paymentPollTimer) return;
+    const delay = Number.isFinite(Number(delayMs)) ? Math.max(0, Number(delayMs)) : PAYMENT_POLL_INTERVAL_MS;
+    paymentPollTimer = window.setTimeout(async () => {
+      paymentPollTimer = 0;
+      try {
+        const result = await api(`/payments/${encodeURIComponent(paymentId)}`);
+        const nextFlow = {
+          status: (result.data && result.data.status) || result.status || "guarded",
+          message: result.message,
+          data: result.data || {}
+        };
+        merge({ paymentFlow: nextFlow });
+        paymentPollFailures = 0;
+        schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow);
+      } catch (_) {
+        // Payment polling is strictly a signed GET read.  A temporary bridge
+        // error never changes a payment state or makes a ledger decision.
+        paymentPollFailures += 1;
+        const currentRoute = (base().path || window.location.pathname).split("?")[0];
+        const retryDelay = Math.min(PAYMENT_POLL_MAX_BACKOFF_MS, PAYMENT_POLL_INTERVAL_MS * (2 ** Math.min(paymentPollFailures, 2)));
+        if (currentRoute === "/wallet/topup") schedulePaymentPolling(paymentId, flow, retryDelay);
+      }
+    }, delay);
+  }
+
   function featurePageStates(catalog, readiness) {
     const states = {};
     const features = (readiness && readiness.features) || {};
@@ -320,6 +389,7 @@
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
+      "payment-lookup": Boolean(bridgeAvailable),
       "refresh-admin": Boolean(status.flags && status.flags.admin_erp_enabled && account && account.role === "admin" && bridgeAvailable),
       "payment-create": Boolean(status.flags && status.flags.payment_enabled && bridgeAvailable),
       "feature-draft": Boolean(bridgeAvailable),
@@ -347,7 +417,12 @@
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/portal/service-worker.js").catch(() => {});
     }
-    if (account && (context.path || window.location.pathname).split("?")[0] === "/onboarding") await hydrateLinkStatus();
+    const currentPath = (context.path || window.location.pathname).split("?")[0];
+    if (account && currentPath === "/onboarding") await hydrateLinkStatus();
+    // Manual top-up remains in the linked Telegram bot and does not require a
+    // provider call from the Web App, so expose its safe entry point even when
+    // a private bridge data read is temporarily unavailable.
+    if (account && account.canonical_user_id && currentPath === "/wallet/topup") await hydratePaymentOptions();
     if (bridgeAvailable) await hydrateCanonicalData();
   }
 
@@ -358,6 +433,16 @@
     } catch (_) {
       // The onboarding shell stays usable and does not infer a link from a
       // failed status check.  A future refresh remains available.
+    }
+  }
+
+  async function hydratePaymentOptions() {
+    try {
+      const options = await api("/payments/options");
+      merge({ paymentOptions: options.data || {} });
+    } catch (_) {
+      // This local/read-only metadata is optional presentation.  Do not infer
+      // a payment method or expose legacy billing data after a failed request.
     }
   }
 
@@ -523,6 +608,11 @@
         }
         return;
       }
+      if (action === "copy-manual-command") {
+        await copyManualTopupCommand(detail.copyText);
+        toast("Đã sao chép /thucong. Hãy dán lệnh vào bot TOAN AAS đã liên kết.");
+        return;
+      }
       if (action === "filter-jobs") {
         const filter = ["all", "queued", "processing", "completed", "failed", "cancelled", "refunded"].includes(detail.jobFilter) ? detail.jobFilter : "all";
         merge({ jobFilter: filter });
@@ -560,7 +650,8 @@
         return;
       }
       if (action === "payment-create") {
-        const packageId = String(fields.package || "");
+        const packageId = String(fields.package || "").trim();
+        if (!packageId) throw new Error("Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.");
         const submission = acquireSubmission("payment", packageId);
         if (!submission) {
           toast("Yêu cầu thanh toán đang được gửi. Vui lòng chờ phản hồi canonical.", "error");
@@ -568,18 +659,37 @@
         }
         try {
           const result = await api("/payments/create", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ package_id: packageId, payment_type: "topup_xu", idempotency_key: submission.key }) });
-          merge({ paymentFlow: { status: (result.data && result.data.status) || result.status || "awaiting_confirm", message: result.message, data: result.data || {} } });
+          const nextFlow = { status: (result.data && result.data.status) || result.status || "awaiting_confirm", message: result.message, data: result.data || {} };
+          merge({ paymentFlow: nextFlow });
+          schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow, undefined, true);
           toast(result.message);
         } finally {
           releaseSubmission(submission);
         }
         return;
       }
+      if (action === "payment-lookup") {
+        const paymentId = String(fields.payment_id || "").trim();
+        if (!validPaymentId(paymentId)) throw new Error("Mã đơn chỉ gồm chữ, số, dấu chấm, gạch nối, gạch dưới hoặc dấu hai chấm.");
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/payments/${encodeURIComponent(paymentId)}`);
+          const nextFlow = { status: (result.data && result.data.status) || result.status || "guarded", message: result.message, data: result.data || {} };
+          merge({ paymentFlow: nextFlow });
+          schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow, undefined, true);
+          toast(result.message);
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "refresh-payment") {
         const paymentId = String(detail.paymentId || "").trim();
-        if (!paymentId) throw new Error("Mã giao dịch không hợp lệ.");
+        if (!validPaymentId(paymentId)) throw new Error("Mã giao dịch không hợp lệ.");
         const result = await api(`/payments/${encodeURIComponent(paymentId)}`);
-        merge({ paymentFlow: { status: (result.data && result.data.status) || result.status || "guarded", message: result.message, data: result.data || {} } });
+        const nextFlow = { status: (result.data && result.data.status) || result.status || "guarded", message: result.message, data: result.data || {} };
+        merge({ paymentFlow: nextFlow });
+        schedulePaymentPolling(paymentIdFromData(nextFlow.data), nextFlow, undefined, true);
         toast(result.message);
         return;
       }
@@ -653,7 +763,7 @@
       }
       toast("Thao tác này đang chờ adapter canonical được xác minh.", "error");
     } catch (error) {
-      if (action === "payment-create" && error && error.payload) {
+      if ((action === "payment-create" || action === "payment-lookup") && error && error.payload) {
         const payload = error.payload;
         merge({ paymentFlow: { status: (payload.data && payload.data.status) || payload.status || "guarded", message: payload.message || "Yêu cầu thanh toán đang được bảo vệ.", data: payload.data || {} } });
       }

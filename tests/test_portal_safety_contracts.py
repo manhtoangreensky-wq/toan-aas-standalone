@@ -140,6 +140,25 @@ def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
     assert 'data-portal-action="refresh-payment"' in PORTAL
     assert 'api(`/payments/${encodeURIComponent(paymentId)}`)' in INTEGRATION
     assert "paymentFlow" in INTEGRATION
+    assert "const PAYMENT_STATUS_LABELS" in PORTAL
+    assert 'queued: "Chờ thanh toán"' in PORTAL
+
+
+def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_only_the_web_api() -> None:
+    assert "function renderPaymentEntryPoints(context)" in PORTAL
+    assert 'manual.command === "/thucong"' in PORTAL
+    assert 'data-portal-action="copy-manual-command"' in PORTAL
+    assert "Không nhập ảnh bill, số tài khoản, OTP hay thông tin thẻ vào Web App." in PORTAL
+    assert "function renderPaymentLookup(context)" in PORTAL
+    assert 'data-portal-action="payment-lookup"' in PORTAL
+    assert "const PAYMENT_POLL_INTERVAL_MS = 10000;" in INTEGRATION
+    assert "function schedulePaymentPolling" in INTEGRATION
+    assert "function copyManualTopupCommand(value)" in INTEGRATION
+    assert 'await navigator.clipboard.writeText("/thucong")' in INTEGRATION
+    assert 'api("/payments/options")' in INTEGRATION
+    assert 'if (account && account.canonical_user_id && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
+    assert "/api/v1/billing/create-payment-link" not in PORTAL
+    assert "/api/v1/billing/create-payment-link" not in INTEGRATION
 
 
 def test_job_and_payment_statuses_are_not_conflated() -> None:

@@ -94,6 +94,65 @@ def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
         assert confirmed.json()["error_code"] == "WEBAPP_PROVIDER_CALLS_DISABLED"
 
 
+def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_bank_data(tmp_path, monkeypatch):
+    monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
+    monkeypatch.setenv("MANUAL_BANK_ACCOUNT", "private-bank-account-must-not-leak")
+    monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "false")
+    with make_client(tmp_path, monkeypatch) as client:
+        denied = client.get("/api/v1/payments/options")
+        assert denied.status_code == 401
+
+        registration = client.post(
+            "/api/v1/auth/register",
+            json={"email": "payment-options@example.com", "password": "correct-horse-battery-staple"},
+        )
+        csrf = registration.json()["data"]["csrf_token"]
+        unlinked = client.get("/api/v1/payments/options")
+        assert unlinked.status_code == 409
+
+        code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
+        assert confirm_link(client, code).json()["ok"] is True
+        options = client.get("/api/v1/payments/options")
+        assert options.status_code == 200
+        payload = options.json()
+        assert payload["status"] == "read_only"
+        assert payload["data"]["payos"]["request_enabled"] is False
+        assert payload["data"]["manual"] == {
+            "available": True,
+            "telegram_url": "https://t.me/ToanAasSupportBot",
+            "command": "/thucong",
+            "receipt_channel": "telegram_bot",
+            "status_lookup": True,
+        }
+        assert "private-bank-account-must-not-leak" not in options.text
+
+        monkeypatch.setenv("BOT_USERNAME", "not/a-valid-telegram-username")
+        invalid_name = client.get("/api/v1/payments/options").json()["data"]["manual"]
+        assert invalid_name["available"] is False
+        assert invalid_name["telegram_url"] == ""
+
+
+def test_legacy_billing_router_is_not_mounted_as_a_second_payos_or_wallet_writer(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        paths = {getattr(route, "path", "") for route in client.app.routes}
+        assert "/api/v1/billing/create-payment-link" not in paths
+        assert "/api/v1/billing/webhook/payos" not in paths
+        assert "/api/v1/webhook/payos" not in paths
+        assert "/payos/create-link" not in paths
+        assert "/manual-topup" not in paths
+        assert "/admin/manual-orders" not in paths
+        assert "/admin/approve-topup" not in paths
+        for path in (
+            "/api/v1/billing/create-payment-link",
+            "/api/v1/billing/webhook/payos",
+            "/payos/create-link",
+            "/manual-topup",
+            "/admin/approve-topup",
+        ):
+            response = client.post(path, json={})
+            assert response.status_code in {404, 405}, path
+
+
 def test_telegram_link_callback_requires_hmac_timestamp_and_one_time_nonce(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         registration = client.post("/api/v1/auth/register", json={"email": "link@example.com", "password": "correct-horse-battery-staple"})
