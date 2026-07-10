@@ -71,8 +71,10 @@
     ],
     video: [
       { name: "brief", label: "Brief video", control: "textarea", placeholder: "Mục tiêu, cảnh, chuyển động, giọng đọc…" },
+      { name: "tier", label: "Mã tier video canonical", placeholder: "Chọn mã từ Bảng giá do bot cấp", help: "Không nhập giá hoặc Xu; Core Bridge sẽ đối chiếu mã tier với catalog hiện hành." },
+      { name: "scene_count", label: "Số cảnh", type: "number", placeholder: "Ví dụ: 3", help: "Dùng để Core Bridge áp dụng đúng giảm giá theo cảnh của bot." },
       { name: "duration", label: "Thời lượng mục tiêu", control: "select", options: ["Theo gói hiện có", "Ngắn", "Tiêu chuẩn", "Nhiều cảnh"] },
-      { name: "source", label: "Tệp / hình nguồn", type: "file", help: "Không tải lên hay gọi provider từ shell này." }
+      { name: "source", label: "Tệp / hình nguồn", type: "file", help: "Tệp chỉ vào staging canonical sau kiểm tra MIME, chữ ký, kích thước và ownership; browser không gọi provider." }
     ],
     voice: [
       { name: "script", label: "Nội dung lời thoại", control: "textarea", placeholder: "Nhập văn bản để chuẩn bị giọng nói…" },

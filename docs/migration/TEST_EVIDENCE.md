@@ -10,7 +10,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Web App | `python -m pytest -q` | `18 passed` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
-| Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `11 passed` |
+| Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `12 passed` |
 | Bot bridge | `python -m py_compile bot.py`, `local_worker.py`, `webapp_core_bridge.py` | passed |
 | Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values, 132 Web routes; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
 
@@ -55,6 +55,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   drafts use provider-free helper functions imported by `bot.py`; the Web UI
   labels them as planning drafts and never presents them as delivered engine
   output. Estimates use canonical bot pricing helpers and charge no Xu.
+- Video product/quick/text/image-to-video planning uses the bot's contextual
+  prompt helper; multiscene/long planning uses its storyboard helper. Video
+  estimates require a canonical tier and scene count, then use the bot's scene
+  discount calculation rather than a browser-side formula.
 - Provider/payment switches are disabled by default. A guarded route never
   fabricates a completed output or credits Xu.
 - Asset delivery verifies ownership and completed output first; until the bot
