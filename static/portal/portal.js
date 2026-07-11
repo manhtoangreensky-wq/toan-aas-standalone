@@ -76,12 +76,12 @@
 
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254 },
+      { name: "email", label: "Email hoặc Gmail", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Dùng email đã tạo tài khoản, bao gồm địa chỉ Gmail. Google OAuth chỉ được bật khi server có cấu hình OAuth riêng." },
       { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
-      { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name", maxLength: 120 },
-      { name: "email", label: "Email", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254 },
+      { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name", maxLength: 120, help: "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh." },
+      { name: "email", label: "Email hoặc Gmail", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức đăng nhập email/mật khẩu hiện có; địa chỉ Gmail được hỗ trợ như một email bình thường." },
       { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 12 ký tự", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
@@ -254,7 +254,6 @@
   });
 
   const manifest = Object.create(null);
-  const featuredModules = [];
 
   function copyFields(fields) {
     return (fields || []).map((field) => ({ ...field, options: field.options ? [...field.options] : undefined }));
@@ -304,7 +303,6 @@
         "Core Bridge là nơi duy nhất ước tính Xu, tạo job và xác nhận output."
       ]
     }, aliases);
-    featuredModules.push(page);
     return page;
   }
 
@@ -325,12 +323,11 @@
         "Portal không mở form hoặc tạo output thay thế khi contract chưa đủ."
       ]
     }, aliases);
-    featuredModules.push(page);
     return page;
   }
 
   function readOnlyPage(path, title, description, icon, view, aliases) {
-    return definePage({
+    const page = definePage({
       path,
       title,
       description,
@@ -347,6 +344,7 @@
         "Không tạo draft rỗng, không gọi provider và không tạo output thay thế dữ liệu canonical."
       ]
     }, aliases);
+    return page;
   }
 
   function adminPage(path, title, description, icon, extra, aliases) {
@@ -374,15 +372,15 @@
   // Public account and portal routes.
   definePage({
     path: "/login", title: "Đăng nhập an toàn", icon: ICONS.account, section: "Tài khoản",
-    description: "Đăng nhập email/mật khẩu đi qua endpoint được giới hạn tốc độ; signed session được tạo bởi máy chủ sau khi xác thực.",
+    description: "Đăng nhập bằng email/Gmail và mật khẩu hoặc xác minh Telegram một lần trong bot; signed session chỉ do máy chủ tạo sau xác thực.",
     access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập", fields: copyFields(FIELD_SETS.authLogin),
-    notes: ["Không lưu raw Telegram ID, token hoặc mật khẩu trên browser.", "Liên kết Telegram sử dụng mã một lần, hết hạn và chống replay."]
+    notes: ["Không nhập raw Telegram ID vào browser; Bot xác minh ownership qua mã dùng một lần, hết hạn và chống replay.", "GitHub OAuth chỉ xuất hiện ở trạng thái chờ cho đến khi server được cấp OAuth client/callback riêng."]
   });
   definePage({
     path: "/register", title: "Tạo tài khoản", icon: ICONS.account, section: "Tài khoản",
-    description: "Tạo hồ sơ mới với mật khẩu được băm phía máy chủ và giới hạn tốc độ đăng ký.",
+    description: "Gửi yêu cầu tạo hồ sơ với mật khẩu được băm phía máy chủ, sau đó đăng nhập để nhận signed session.",
     access: "public", layout: "auth", status: "ready", action: "auth-register", actionLabel: "Tạo tài khoản", fields: copyFields(FIELD_SETS.authRegister),
-    notes: ["Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; xác minh email chưa được bật trong phase này.", "Không có tài khoản, session hoặc token nào được giả lập trong shell."]
+    notes: ["Hồ sơ mới được tạo với locale vi, múi giờ Asia/Ho_Chi_Minh và avatar gradient; Web không tự lưu Telegram ID hay dữ liệu bot.", "Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; response đăng ký không tiết lộ email đã có tài khoản hay chưa.", "Chỉ Đăng nhập mới cấp signed session và CSRF; shell không giả lập token hoặc session."]
   });
   customerPage("/onboarding", "Thiết lập tài khoản", "Hoàn thiện hồ sơ và liên kết Telegram bằng mã dùng một lần do Web server tạo, bot xác nhận.", ICONS.account, {
     layout: "onboarding", fields: [], action: "start-telegram-link", actionLabel: "Tạo mã liên kết", status: "guarded",
@@ -395,6 +393,10 @@
   customerPage("/dashboard", "Không gian làm việc", "Điểm xuất phát cho các bản nháp, job và tài sản do Core Bridge sở hữu.", ICONS.dashboard, {
     layout: "dashboard", action: "none", status: "guarded"
   }, ["/", "/app"]);
+  customerPage("/features", "Tất cả công cụ", "Khám phá các workflow Web đã được định tuyến. Mỗi trạng thái vẫn do Core Bridge canonical cấp, không phải do browser suy đoán.", ICONS.prompt, {
+    section: "AI Studio", type: "feature-catalog", layout: "feature-catalog", action: "none", status: "read_only",
+    notes: ["Danh mục là bản đồ route Web App, không phải tuyên bố provider/engine đang chạy.", "Workflow guarded hoặc admin-only vẫn hiển thị đúng trạng thái, không tạo output thay thế."]
+  });
   customerPage("/wallet", "Ví Xu", "Số dư, lịch sử và quyền sử dụng Xu chỉ hiển thị từ ledger canonical của bot.", ICONS.wallet, {
     layout: "wallet", action: "none", status: "guarded",
     notes: ["Web App không giữ ledger Xu và không tự cộng/trừ số dư.", "Dữ liệu wallet cần Core Bridge kiểm tra signed session và ownership."]
@@ -473,6 +475,7 @@
 
   featurePage("/music", "Music Studio", "Không gian chuẩn bị nhạc AI/SFX với prompt, policy và báo giá do bot canonical kiểm soát.", ICONS.music, FIELD_SETS.music);
   readOnlyPage("/music/library", "Thư viện nhạc", "Danh sách nhạc thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, "assets", ["/music-library"]);
+  readOnlyPage("/music/sfx-library", "Thư viện SFX", "Danh sách hiệu ứng âm thanh thuộc phiên chỉ được bridge cung cấp sau kiểm tra ownership.", ICONS.music, "assets");
   featurePage("/music/sfx", "Hiệu ứng âm thanh", "Chuẩn bị brief SFX; không tìm kho ngoài, tạo âm thanh hay charge Xu ở browser.", ICONS.music, FIELD_SETS.musicSfx);
   featurePage("/music/create", "Tạo nhạc AI", "Tạo bản nháp nhạc AI và đợi engine/ước tính từ Core Bridge.", ICONS.music, FIELD_SETS.music, ["/music/ai"]);
   featurePage("/music/song", "AI Song", "Chuẩn bị yêu cầu bài hát, cấu trúc và mood; job chỉ được tạo sau confirm.", ICONS.music, FIELD_SETS.musicSong);
@@ -505,8 +508,10 @@
   adminPage("/admin/jobs", "Jobs", "Theo dõi toàn bộ job, trạng thái delivery và lỗi từ Core Bridge.", ICONS.jobs);
   adminPage("/admin/jobs/failed", "Jobs thất bại", "Xem job thất bại; retry chỉ được bridge quyết định để tránh double-charge.", ICONS.jobs);
   adminPage("/admin/providers", "Providers & chi phí", "Trạng thái provider/cost do runtime canonical phát hành, không lộ secret.", ICONS.providers);
+  adminPage("/admin/provider-cost", "Chi phí provider", "Chi phí runtime chỉ đọc do Core Bridge redaction; không sửa rate hoặc gọi provider từ browser.", ICONS.providers);
   adminPage("/admin/workers", "Workers", "Sức khỏe worker và queue chỉ đọc qua bridge có kiểm soát.", ICONS.system);
   adminPage("/admin/features", "Feature readiness", "Kiểm tra trạng thái, guarded mode và maintenance của từng feature.", ICONS.system);
+  adminPage("/admin/freezes", "Bảo trì & freeze", "Theo dõi maintenance/freeze canonical; thao tác thay đổi vẫn chờ adapter write có audit.", ICONS.system);
   adminPage("/admin/pricing", "Giá & Xu", "Review pricing catalog; không thay đổi rate hoặc chính sách trong UI tĩnh.", ICONS.pricing);
   adminPage("/admin/packages", "Packages", "Xem và review packages do backend canonical quản lý.", ICONS.pricing);
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
@@ -518,7 +523,7 @@
   adminPage("/admin/export", "Xuất dữ liệu", "Xuất file qua signed URL sau ownership/permission checks.", ICONS.reports);
   adminPage("/admin/runtime", "Runtime", "Tình trạng runtime và queue chỉ đọc, không thao tác hạ tầng từ browser.", ICONS.system);
   adminPage("/admin/system", "Hệ thống", "Xem thiết lập hệ thống được redaction; write actions không nằm ở shell.", ICONS.system);
-  adminPage("/admin/backup", "Sao lưu", "Trạng thái backup/disaster recovery là dữ liệu server-side được phân quyền.", ICONS.system);
+  adminPage("/admin/backups", "Sao lưu", "Trạng thái backup/disaster recovery là dữ liệu server-side được phân quyền.", ICONS.system, {}, ["/admin/backup"]);
   adminPage("/admin/security", "Bảo mật", "Kiểm tra access control, session và secret hygiene với audit event.", ICONS.security);
   adminPage("/admin/access", "Quyền truy cập", "Review role/capability canonical; client không tự quyết định quyền.", ICONS.security);
 
@@ -547,7 +552,9 @@
       path: normalizePath(source.path),
       title: typeof source.title === "string" ? source.title : "",
       isAdmin: source.isAdmin === true,
-      catalog: Array.isArray(source.catalog) ? source.catalog.slice(0, 24) : [],
+      // The registry is static, redacted route metadata. Do not truncate it:
+      // `/features` must be able to disclose every mapped customer workflow.
+      catalog: Array.isArray(source.catalog) ? source.catalog.slice() : [],
       apiBase: typeof source.apiBase === "string" ? source.apiBase : "",
       session,
       bridge,
@@ -667,6 +674,14 @@
     return typeof candidate === "string" && candidate.trim() ? candidate.trim().slice(0, 80) : "Phiên bảo mật đang chờ";
   }
 
+  function displayPageTitle(page, context) {
+    const serverTitle = typeof context.title === "string" ? context.title.trim() : "";
+    // The server intentionally uses the generic product name for unknown and
+    // compatibility paths. A resolved portal page has richer metadata, so do
+    // not let that generic placeholder erase its title in the UI/tab.
+    return serverTitle && serverTitle !== "TOAN AAS" ? serverTitle : (page.title || "TOAN AAS");
+  }
+
   function initials(name) {
     return safeText((name || "T").trim().charAt(0).toUpperCase() || "T");
   }
@@ -682,8 +697,8 @@
       {
         label: "AI Studio",
         links: [
-          ["/chat", "AI Chat", ICONS.chat], ["/prompt-studio", "Prompt Studio", ICONS.prompt], ["/image/create", "Image", ICONS.image],
-          ["/video/product", "Video", ICONS.video], ["/voice/tts", "Voice", ICONS.voice], ["/music", "Music", ICONS.music],
+          ["/features", "Tất cả công cụ", ICONS.prompt], ["/chat", "AI Chat", ICONS.chat], ["/prompt-studio", "Prompt Studio", ICONS.prompt], ["/image/create", "Image", ICONS.image],
+          ["/video/create", "Video", ICONS.video], ["/voice/tts", "Voice", ICONS.voice], ["/music", "Music", ICONS.music],
           ["/subtitle", "Ngôn ngữ", ICONS.subtitle], ["/documents", "Documents", ICONS.document]
         ]
       },
@@ -704,7 +719,7 @@
       groups.push({
         label: "Admin ERP",
         links: [
-          ["/admin", "Overview", ICONS.admin], ["/admin/users", "Người dùng", ICONS.users], ["/admin/jobs", "Jobs", ICONS.jobs],
+          ["/admin", "Tất cả module", ICONS.admin], ["/admin/users", "Người dùng", ICONS.users], ["/admin/jobs", "Jobs", ICONS.jobs],
           ["/admin/payments", "Thanh toán", ICONS.payments], ["/admin/providers", "Providers", ICONS.providers], ["/admin/audit", "Audit", ICONS.security]
         ]
       });
@@ -712,10 +727,35 @@
     return groups;
   }
 
+  function matchesRouteFamily(path, root) {
+    return path === root || path.indexOf(`${root}/`) === 0;
+  }
+
   function isNavCurrent(linkPath, page) {
-    if (linkPath === "/dashboard") return page.path === "/dashboard";
-    if (linkPath === "/admin") return page.path === "/admin";
-    return page.path === linkPath || page.path.indexOf(`${linkPath}/`) === 0;
+    const path = normalizePath(page.routePath || page.path);
+    if (linkPath === "/dashboard") return path === "/dashboard";
+    if (linkPath === "/features") return matchesRouteFamily(path, "/features");
+    if (linkPath === "/chat") return path === "/chat" || path === "/tools/chat";
+    if (linkPath === "/prompt-studio") return path === "/prompt-studio" || path === "/prompts" || matchesRouteFamily(path, "/content");
+    if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");
+    if (linkPath === "/video/create") return path === "/video" || matchesRouteFamily(path, "/video");
+    if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");
+    if (linkPath === "/music") return matchesRouteFamily(path, "/music");
+    if (linkPath === "/subtitle") return matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path);
+    if (linkPath === "/documents") return matchesRouteFamily(path, "/documents");
+    if (linkPath === "/wallet") return path === "/wallet";
+    if (linkPath === "/wallet/topup") return matchesRouteFamily(path, "/wallet/topup");
+    if (linkPath === "/account") return path === "/account" || path === "/onboarding";
+    if (linkPath === "/admin/users") return matchesRouteFamily(path, "/admin/users");
+    if (linkPath === "/admin/jobs") return matchesRouteFamily(path, "/admin/jobs");
+    if (linkPath === "/admin/payments") return matchesRouteFamily(path, "/admin/payments");
+    if (linkPath === "/admin/providers") return matchesRouteFamily(path, "/admin/providers") || path === "/admin/provider-cost";
+    if (linkPath === "/admin/audit") return matchesRouteFamily(path, "/admin/audit") || ["/admin/security", "/admin/access"].includes(path);
+    if (linkPath === "/admin") {
+      const directAdminFamilies = ["/admin/users", "/admin/jobs", "/admin/payments", "/admin/providers", "/admin/provider-cost", "/admin/audit", "/admin/security", "/admin/access"];
+      return path === "/admin" || (matchesRouteFamily(path, "/admin") && !directAdminFamilies.some((root) => matchesRouteFamily(path, root)));
+    }
+    return matchesRouteFamily(path, linkPath);
   }
 
   function renderSidebar(page, context) {
@@ -733,6 +773,7 @@
     return `<div class="portal-brand">
       <span class="portal-brand-mark" aria-hidden="true">TA</span>
       <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">Control portal</span></span>
+      <button class="portal-sidebar-close" type="button" aria-label="Đóng điều hướng" data-portal-close-menu>×</button>
     </div>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
@@ -923,8 +964,11 @@
     const estimateControl = canEstimate && page.action !== "feature-estimate"
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>`
       : "";
+    const executionReady = context.capabilities && context.capabilities["feature-confirm"] === true && context.bridge && context.bridge.featureExecutionAvailable === true;
     const confirmControl = hasFreshEstimate
-      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.">Xác nhận chạy</button>`
+      ? (executionReady
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="feature-confirm" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-portal-confirm="Xác nhận gửi yêu cầu cho Core Bridge? Xu, job và trạng thái chỉ do bot canonical quyết định.">Xác nhận chạy</button>`
+        : `<span class="portal-flow-note" role="status">Đã có estimate canonical. Web App đang chờ adapter tạo job canonical; chưa thể xác nhận chạy hoặc trừ Xu.</span>`)
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
@@ -949,19 +993,114 @@
     const enabled = hasAction && canAct(page, context);
     const reason = actionBlockReason(page, context);
     return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(page.section || "TOAN AAS")}</div>
-      <h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p></div>
+      <h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p></div>
       <div class="portal-hero-actions">${badge(state)}${showHeroAction ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button>` : ""}</div>
     </section>`;
   }
 
+  const FEATURE_CATALOG_GROUPS = Object.freeze([
+    { key: "account", title: "Bắt đầu & tài khoản", description: "Onboarding, session và hồ sơ đã được server kiểm soát." },
+    { key: "wallet", title: "Ví, nạp & gói", description: "Xu, pricing và thanh toán chỉ đọc qua authority canonical." },
+    { key: "jobs", title: "Job & tài sản", description: "Theo dõi work, delivery và metadata thuộc phiên sở hữu." },
+    { key: "content", title: "Content & Chat", description: "Prompt, caption, script và planning nội dung." },
+    { key: "image", title: "Image Studio", description: "Tạo, chỉnh sửa và xử lý ảnh theo workflow canonical." },
+    { key: "video", title: "Video Studio", description: "Brief, cảnh, tiến độ, preview và export có kiểm soát." },
+    { key: "voice", title: "Voice Studio", description: "TTS, Voice Vault, clone và preview riêng tư." },
+    { key: "music", title: "Music & SFX", description: "Nhạc AI, bài hát, SFX và thư viện tài sản âm thanh." },
+    { key: "subtitle", title: "Phụ đề & ngôn ngữ", description: "ASR, SRT/VTT, dịch và lồng tiếng." },
+    { key: "documents", title: "Documents & PDF", description: "PDF, OCR, gộp, tách, nén và dịch tài liệu." },
+    { key: "support", title: "Hỗ trợ & thông tin", description: "Ticket, bảng giá và thông tin pháp lý." }
+  ]);
+
+  function safeCatalogRoute(value) {
+    if (typeof value !== "string") return "";
+    const route = value.trim();
+    if (!route.startsWith("/") || route.startsWith("//") || route.includes("\\") || route.includes("\u0000")) return "";
+    return route;
+  }
+
+  function catalogEntryRoute(entry) {
+    if (typeof entry === "string") return safeCatalogRoute(entry);
+    if (!entry || typeof entry !== "object") return "";
+    return safeCatalogRoute(entry.route || entry.path || "");
+  }
+
+  function catalogEntryState(module, page, context) {
+    const key = module && typeof module === "object" && typeof module.key === "string" ? module.key : "";
+    const readiness = context.readiness && context.readiness.features && key ? context.readiness.features[key] : null;
+    if (readiness && typeof readiness === "object") return readiness.public_ready && context.bridge && context.bridge.featureExecutionAvailable === true ? "ready" : "guarded";
+    return stateFor(page, context);
+  }
+
+  function moduleCard(module, context, label) {
+    const route = safeCatalogRoute(module.route || module.path || "");
+    if (!route) return "";
+    const path = normalizePath(route);
+    const page = manifest[path] || { path, status: "guarded", access: "member" };
+    const title = typeof module.title === "string" && module.title ? module.title : page.title || "Workflow";
+    const description = typeof module.description === "string" && module.description
+      ? module.description
+      : (typeof module.input_hint === "string" && module.input_hint ? module.input_hint : "Route được Core Bridge quản lý trạng thái theo phiên.");
+    return `<a class="portal-module-card" href="${safeText(route)}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${safeText(module.icon || page.icon || ICONS.default)}</span>${badge(catalogEntryState(module, page, context))}</div>
+      <div><h3>${safeText(title)}</h3><p>${safeText(description)}</p></div><span class="portal-module-card-footer"><span>${safeText(label || "Mở workspace")}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
+  }
+
+  function fallbackCatalogGroup(path) {
+    if (["/dashboard", "/account"].includes(path)) return "account";
+    if (path.startsWith("/wallet") || ["/packages"].includes(path)) return "wallet";
+    if (["/jobs", "/assets"].includes(path)) return "jobs";
+    if (path === "/chat" || path === "/prompt-studio" || path.startsWith("/content")) return "content";
+    if (path.startsWith("/image")) return "image";
+    if (path.startsWith("/video")) return "video";
+    if (path.startsWith("/voice")) return "voice";
+    if (path.startsWith("/music")) return "music";
+    if (["/subtitle", "/translate", "/dubbing", "/asr"].includes(path) || path.startsWith("/subtitle/")) return "subtitle";
+    if (path.startsWith("/documents")) return "documents";
+    return "support";
+  }
+
+  function fallbackFeatureCatalog() {
+    const seen = new Set();
+    return Object.values(manifest).filter((page) => {
+      if (!page || page.access === "admin" || ["/features", "/login", "/register", "/onboarding", "/not-found"].includes(page.path) || seen.has(page.path)) return false;
+      seen.add(page.path);
+      return true;
+    }).map((page) => ({
+      route: page.path,
+      title: page.title,
+      description: page.description,
+      group: fallbackCatalogGroup(page.path),
+      icon: page.icon,
+      kind: "customer"
+    }));
+  }
+
+  function customerCatalog(context) {
+    const entries = (context.catalog || []).filter((entry) => {
+      const route = catalogEntryRoute(entry);
+      return route && route !== "/features" && (!entry || typeof entry !== "object" || entry.kind !== "admin");
+    });
+    return entries.length ? entries : fallbackFeatureCatalog();
+  }
+
   function renderModuleCards(context) {
-    const catalogRoutes = new Set((context.catalog || []).map((entry) => typeof entry === "string" ? entry : entry && entry.path).filter(Boolean));
-    const cards = featuredModules.slice(0, 18).map((module) => {
-      const label = catalogRoutes.size && !catalogRoutes.has(module.path) ? "Chờ catalog" : "Mở workspace";
-      return `<a class="portal-module-card" href="${module.path}"><div class="portal-module-card-top"><span class="portal-module-icon" aria-hidden="true">${safeText(module.icon)}</span>${badge(stateFor(module, context))}</div>
-        <div><h3>${safeText(module.title)}</h3><p>${safeText(module.description)}</p></div><span class="portal-module-card-footer"><span>${label}</span><span class="portal-module-arrow" aria-hidden="true">→</span></span></a>`;
-    }).join("");
-    return `<section><div class="portal-section-heading"><div><span class="portal-section-kicker">Tất cả công cụ</span><h2>Workspace theo feature parity</h2><p>Chỉ route và trạng thái được khai báo; không mô phỏng output.</p></div><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Prompt Studio →</a></div><div class="portal-module-grid">${cards}</div></section>`;
+    const quickRoutes = ["/chat", "/content/pack", "/image/create", "/image/edit", "/video/product", "/video/multiscene", "/voice/tts", "/voice/clone", "/music/create", "/subtitle", "/dubbing", "/documents"];
+    const cards = quickRoutes.map((path) => manifest[path]).filter(Boolean).map((module) => moduleCard(module, context, "Mở workspace")).join("");
+    return `<section><div class="portal-section-heading"><div><span class="portal-section-kicker">Khám phá nhanh</span><h2>Bắt đầu từ workflow phù hợp</h2><p>Một số workspace tiêu biểu; toàn bộ route Web được xem trong danh mục riêng.</p></div><a class="portal-button portal-button--quiet" href="/features">Xem tất cả công cụ →</a></div><div class="portal-module-grid">${cards}</div></section>`;
+  }
+
+  function renderFeatureCatalog(page, context) {
+    const entries = customerCatalog(context);
+    const grouped = FEATURE_CATALOG_GROUPS.map((group) => ({ ...group, entries: entries.filter((entry) => entry && typeof entry === "object" && entry.group === group.key) })).filter((group) => group.entries.length);
+    const knownGroups = new Set(FEATURE_CATALOG_GROUPS.map((group) => group.key));
+    const otherEntries = entries.filter((entry) => !entry || typeof entry !== "object" || !knownGroups.has(entry.group));
+    if (otherEntries.length) grouped.push({ key: "other", title: "Workflow khác", description: "Các route customer được registry công bố ngoài nhóm Studio chuẩn.", entries: otherEntries });
+    const jumps = grouped.length
+      ? `<nav class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ">${grouped.map((group) => `<a class="portal-feature-jump" href="#feature-group-${safeText(group.key)}">${safeText(group.title)}</a>`).join("")}</nav>`
+      : "";
+    const groups = grouped.map((group) => `<section class="portal-feature-group" aria-labelledby="feature-group-${safeText(group.key)}"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(group.title)}</span><h2 id="feature-group-${safeText(group.key)}">${safeText(group.title)}</h2><p>${safeText(group.description)}</p></div><span class="portal-feature-count">${safeText(String(group.entries.length))} workflow</span></div><div class="portal-module-grid">${group.entries.map((entry) => moduleCard(entry, context, "Mở workflow")).join("")}</div></section>`).join("");
+    const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web App catalogue</span><h2>Tất cả workflow đã định tuyến</h2><p>${safeText(String(entries.length))} route customer từ registry hoặc manifest fallback. Trạng thái engine/output luôn do Core Bridge cấp sau signed session.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${jumps}${body}</section></article>`;
   }
 
   function renderEmpty(title, text, iconText) {
@@ -1041,7 +1180,7 @@
     const manualCommand = manual.command === "/thucong" ? manual.command : "/thucong";
     const payosCopy = payosWebReady
       ? "Bridge đã công bố catalog nạp riêng cho Web. Bot vẫn là authority duy nhất cấp checkout URL đã ký."
-      : "QR động vẫn dùng được trong bot đã liên kết. Local P0 chưa công bố catalog mệnh giá nạp cho Web nên browser không dùng nhầm catalog gói dịch vụ.";
+      : "Mở Bot đã liên kết để kiểm tra và khởi tạo PayOS QR động canonical hiện tại. Bot có thể chuyển sang luồng thủ công theo trạng thái runtime; Web không suy đoán QR luôn sẵn sàng.";
     const manualCopy = manualAvailable
       ? "Mở bot đã liên kết, gửi /thucong và làm theo đúng luồng Telegram. VND cần ảnh bill; nạp quốc tế/USDT dùng TXID đầy đủ hoặc ảnh bill. Xu chỉ được ghi sau đối soát thật."
       : "Bot URL chưa sẵn sàng nên Web không hiển thị lệnh/copy action. Web không giữ số tài khoản, QR tĩnh, bill hoặc quyết định cộng Xu.";
@@ -1068,12 +1207,12 @@
     }
     return `<section class="portal-card portal-card-pad" data-manual-topup-guide><div class="portal-card-header"><div><h2 class="portal-card-title">Nạp thủ công: tiếp tục trong Telegram</h2><p class="portal-card-subtitle">Bot canonical giữ toàn bộ state, chứng từ, đối soát và quyết định ghi Xu. Web chỉ hướng dẫn và hiển thị dữ liệu ví đã được xác minh.</p></div>${badge("read_only")}</div>
       <div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">1</span><div><strong>Mở bot và gửi <code>/thucong</code></strong><span>Chọn tiền tệ, mệnh giá và phương thức trong cuộc hội thoại Telegram đang được Bot kiểm soát.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">2</span><div><strong>Gửi chứng từ đúng nơi</strong><span>Nạp VND: gửi ảnh bill trong Bot. Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot. Không gửi số tài khoản, QR, bill, OTP hay TXID vào Web App.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">3</span><div><strong>Chờ admin đối soát</strong><span><code>pending</code> hoặc <code>pending_admin_review</code> đều đang chờ đối soát; chưa phải Xu đã được cộng.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon" aria-hidden="true">4</span><div><strong>Đối chiếu kết quả canonical</strong><span><code>approved</code> mới là đã duyệt; <code>rejected</code> là bị từ chối. Xu hiển thị trước đối soát là ước tính; số Xu trong wallet/ledger canonical sau duyệt mới là cuối cùng.</span></div></div></div>
-      <div class="portal-form-footer"><span class="portal-form-note">${historyInBot ? `Xem yêu cầu trong Bot: <code>${safeText(historyCommand)}</code> → ${safeText(historyMenu)}. ` : ""}${historySignal ? "Bridge chưa có lịch sử manual-topup đã redaction, vì vậy Web không tra bill/TXID hoặc suy đoán trạng thái." : "Lịch sử Xu chỉ xuất hiện khi Core Bridge cấp dữ liệu canonical cho phiên."}</span><a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot để xem lịch sử</a><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu canonical</a></div></section>`;
+      <div class="portal-form-footer"><span class="portal-form-note">${historyInBot ? `Xem yêu cầu trong Bot: <code>${safeText(historyCommand)}</code> → ${safeText(historyMenu)}. ` : ""}${historySignal ? "Bridge chưa có lịch sử manual-topup đã redaction, vì vậy Web không tra bill/TXID hoặc suy đoán trạng thái." : "Lịch sử Xu chỉ xuất hiện khi Core Bridge cấp dữ liệu canonical cho phiên."}</span>${historyInBot ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-payment-command" data-copy-text="${safeText(historyCommand)}">Sao chép ${safeText(historyCommand)}</button>` : ""}<a class="portal-button portal-button--quiet" href="${safeText(manualUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><a class="portal-button portal-button--quiet" href="/wallet">Xem lịch sử Xu canonical</a></div></section>`;
   }
 
   function renderPaymentRequestForm(page, context) {
     if (paymentWebCatalogReady(context)) return renderFormCard(page, context);
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Checkout Web đang được bảo vệ</h2><p class="portal-card-subtitle">Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu.</p></div>${badge("guarded")}</div>${renderEmpty("Chờ catalog nạp canonical", "Khi bot công bố adapter danh mục nạp riêng cho bridge, form checkout Web mới được bật. Trong thời gian này dùng /naptien trong bot để tạo PayOS QR động.", "◈")}</section>`;
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Checkout Web đang được bảo vệ</h2><p class="portal-card-subtitle">Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu.</p></div>${badge("guarded")}</div>${renderEmpty("Chờ catalog nạp canonical", "Khi bot công bố adapter danh mục nạp riêng cho bridge, form checkout Web mới được bật. Trong thời gian này dùng /naptien trong Bot để kiểm tra hoặc khởi tạo PayOS QR động canonical.", "◈")}</section>`;
   }
 
   function renderPaymentLookup(context) {
@@ -1330,7 +1469,13 @@
     const session = context.session && typeof context.session === "object" ? context.session : {};
     const linked = context.bridge.available === true || (context.linkStatus && context.linkStatus.linked === true);
     const logoutEnabled = context.capabilities && context.capabilities["auth-logout"] === true;
-    const accountRows = `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tên hiển thị</span><span class="portal-summary-value">${safeText(profile.displayName || profile.name || session.displayName || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Email</span><span class="portal-summary-value">${safeText(profile.email || session.email || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Telegram</span><span class="portal-summary-value">${linked ? "Đã liên kết canonical" : "Chưa liên kết"}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Phiên</span><span class="portal-summary-value">${session.authenticated ? "Signed session hợp lệ" : "Đang chờ xác minh"}</span></div></div>`;
+    const loginMethods = profile.loginMethods && typeof profile.loginMethods === "object" ? profile.loginMethods : {};
+    const methodSummary = [
+      loginMethods.email !== false ? "Email/Gmail" : "",
+      loginMethods.telegram === true ? "Telegram đã liên kết" : "",
+      loginMethods.github === true ? "GitHub OAuth" : "GitHub OAuth chờ cấu hình server"
+    ].filter(Boolean).join(" · ");
+    const accountRows = `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tên hiển thị</span><span class="portal-summary-value">${safeText(profile.displayName || profile.name || session.displayName || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Email</span><span class="portal-summary-value">${safeText(profile.email || session.email || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mặc định hồ sơ</span><span class="portal-summary-value">${safeText(profile.locale || "vi")} · ${safeText(profile.timezone || "Asia/Ho_Chi_Minh")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đăng nhập</span><span class="portal-summary-value">${safeText(methodSummary || "Email/Gmail")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Telegram</span><span class="portal-summary-value">${linked ? "Đã liên kết canonical" : "Chưa liên kết"}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Phiên</span><span class="portal-summary-value">${session.authenticated ? "Signed session hợp lệ" : "Đang chờ xác minh"}</span></div></div>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hồ sơ canonical</h2><p class="portal-card-subtitle">Thông tin được lấy từ signed session; browser không lưu Telegram ID, password hay token.</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><span class="portal-form-note">${linked ? "Liên kết Telegram đã được xác minh qua bot." : "Hoàn tất liên kết Telegram để dùng dữ liệu wallet, jobs và assets canonical."}</span>${linked ? "" : `<a class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>`}</div></section>
       <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bảo mật phiên</h2><p class="portal-card-subtitle">Logout luôn đi qua server để thu hồi session hiện tại.</p></div></div>${renderNotes(page)}<div class="portal-form-footer" style="margin-top:16px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?"${logoutEnabled ? "" : " disabled"}>Đăng xuất</button></div></aside></div></article>`;
@@ -1376,14 +1521,30 @@
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách hoạt động</h2><p class="portal-card-subtitle">Luồng liên kết không lặp lại webhook hoặc PayOS.</p></div></div><div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon">1</span><div><strong>Tạo mã một lần</strong><span>Web server tạo, băm và đặt hạn dùng cho mã liên kết.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon">2</span><div><strong>Xác nhận trong bot</strong><span>Bot xác minh Telegram identity và gọi callback nội bộ đã ký.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon">3</span><div><strong>Quay lại portal</strong><span>Portal kiểm tra trạng thái signed session; không tự nhận quyền từ dữ liệu browser.</span></div></div></div></section></article>`;
   }
 
+  function renderTelegramLoginMethod(context) {
+    const flow = context.telegramLoginFlow && typeof context.telegramLoginFlow === "object" ? context.telegramLoginFlow : {};
+    const data = flow.data && typeof flow.data === "object" ? flow.data : {};
+    const code = typeof data.code === "string" ? data.code : "";
+    const deepLink = safeTelegramLink(data.deep_link);
+    const ready = data.ready === true;
+    const pending = code
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Xác minh Telegram</strong><p>Không nhập Telegram ID vào Web. Mở bot, dùng deep link hoặc gửi <code>/linkweb &lt;mã&gt;</code>; sau đó quay lại kiểm tra cùng trình duyệt này.</p><div class="portal-form-footer" style="margin-top:10px"><code class="portal-link-code">${safeText(code)}</code>${deepLink ? `<a class="portal-button portal-button--quiet" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">Mở Telegram</a>` : ""}<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${ready ? "Hoàn tất đăng nhập" : "Kiểm tra Telegram"}</button></div></div></div>`
+      : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Telegram</strong><p>Dùng tài khoản Telegram đã từng liên kết với Web App. Bot chứng minh ownership; Web không nhận Telegram ID thô.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login">Đăng nhập với Telegram</button></div></div></div>`;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">Cách đăng nhập khác</h3><p class="portal-card-subtitle">Email/Gmail dùng form ở trên. Telegram dùng challenge riêng; GitHub OAuth chờ server credentials.</p></div></div>${pending}<div class="portal-notice" style="margin-top:10px"><span class="portal-notice-icon" aria-hidden="true">◎</span><div><strong>GitHub</strong><p>GitHub OAuth chưa được bật vì server chưa có client ID, secret và callback URL đã đăng ký. Nút được giữ khóa để không giả lập đăng nhập.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" disabled title="Cần GitHub OAuth server configuration">Tiếp tục với GitHub</button></div></div></div></section>`;
+  }
+
   function renderAuth(page, context) {
     const alternative = page.path === "/login" ? ["/register", "Tạo tài khoản"] : ["/login", "Đăng nhập"];
     const enabled = canAct(page, context);
     const reason = actionBlockReason(page, context);
-    return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(context.title || page.title)}</h1><p class="portal-description">${safeText(page.description)}</p>
+    const registrationHandoff = page.path === "/login" && new URLSearchParams(window.location.search).get("registered") === "1"
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiếp tục bằng đăng nhập</strong><p>Nếu email vừa gửi chưa có tài khoản, hồ sơ đã được tạo. Đăng nhập để khởi tạo signed session và liên kết Telegram.</p></div></div>`
+      : "";
+    return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p>
       <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
-      <form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
+      ${registrationHandoff}<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
+      ${page.path === "/login" ? renderTelegramLoginMethod(context) : ""}
       <div class="portal-notice" style="margin-top:16px"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div>
     </section></article>`;
   }
@@ -1465,7 +1626,7 @@
   function renderReadOnly(page, context) {
     const assets = Array.isArray(context.assets) ? context.assets : [];
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
-    const scope = page.path.startsWith("/image") ? "image" : page.path.startsWith("/video") ? "video" : page.path.startsWith("/voice") ? "voice" : page.path.startsWith("/music") ? "music" : page.path.startsWith("/subtitle") ? "subtitle" : "";
+    const scope = page.path === "/music/sfx-library" ? "sfx" : page.path.startsWith("/image") ? "image" : page.path.startsWith("/video") ? "video" : page.path.startsWith("/voice") ? "voice" : page.path.startsWith("/music") ? "music" : page.path.startsWith("/subtitle") ? "subtitle" : "";
     const scopedAssets = scope ? assets.filter((item) => String(item.feature || item.job_type || "").toLowerCase().includes(scope)) : assets;
     let content;
     if (page.view === "voices") {
@@ -1473,9 +1634,56 @@
     } else if (page.view === "jobs") {
       content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Không có polling provider trực tiếp từ browser.</p></div></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Chi phí canonical", "Cập nhật"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${jobCost(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có job được xác minh", "Core Bridge sẽ chỉ trả job thuộc signed session hiện tại.")}</section>`;
     } else {
-      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item)}</td>`, "Chưa có tài sản được xác minh", "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.")}</section>`;
+      const isSfxLibrary = page.path === "/music/sfx-library";
+      const isMusicLibrary = page.path === "/music/library";
+      const assetTitle = isSfxLibrary ? "Hiệu ứng âm thanh gần đây (tối đa 100)" : "Tài sản gần đây (tối đa 100)";
+      const emptyTitle = isSfxLibrary ? "Chưa có SFX được xác minh" : "Chưa có tài sản được xác minh";
+      const emptyText = isSfxLibrary ? "Core Bridge chỉ trả metadata SFX thuộc signed session; không phát hoặc tải output chưa có delivery ký." : "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.";
+      const siblingLibrary = isSfxLibrary ? { href: "/music/library", label: "Mở thư viện nhạc" } : isMusicLibrary ? { href: "/music/sfx-library", label: "Mở thư viện SFX" } : null;
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${assetTitle}</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div>${siblingLibrary ? `<a class="portal-button portal-button--quiet" href="${siblingLibrary.href}">${siblingLibrary.label} →</a>` : ""}</div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item)}</td>`, emptyTitle, emptyText)}</section>`;
     }
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
+  }
+
+  const ADMIN_DIRECTORY_GROUPS = Object.freeze([
+    { key: "identity", title: "Tổng quan & quyền truy cập", description: "Người dùng, ví, lead, CSKH và access control." },
+    { key: "billing", title: "Thanh toán & thương mại", description: "Payment, topup, revenue, refund, giá và khuyến mãi." },
+    { key: "operations", title: "Jobs & vận hành", description: "Queue, provider, worker, readiness và maintenance." },
+    { key: "governance", title: "Governance & hệ thống", description: "Audit, report, runtime, backup và hệ thống." }
+  ]);
+
+  function adminDirectoryGroup(path) {
+    if (["/admin", "/admin/users", "/admin/wallet", "/admin/leads", "/admin/tickets", "/admin/support", "/admin/access", "/admin/security"].includes(path)) return "identity";
+    if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/promos"].includes(path)) return "billing";
+    if (["/admin/jobs", "/admin/jobs/failed", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime"].includes(path)) return "operations";
+    return "governance";
+  }
+
+  function adminDirectoryEntries() {
+    const seen = new Set();
+    return Object.values(manifest).filter((candidate) => {
+      if (!candidate || candidate.access !== "admin" || !candidate.path || !candidate.path.startsWith("/admin") || seen.has(candidate.path)) return false;
+      seen.add(candidate.path);
+      return true;
+    }).map((candidate) => ({
+      key: candidate.path,
+      route: candidate.path,
+      title: candidate.title,
+      description: candidate.description,
+      icon: candidate.icon,
+      group: adminDirectoryGroup(candidate.path),
+      kind: "admin"
+    }));
+  }
+
+  function renderAdminDirectory(context) {
+    // This is navigation metadata only. The FastAPI route and every bridge
+    // read remain the security boundary; a browser flag never grants Admin.
+    if (context.isAdmin !== true) return "";
+    const entries = adminDirectoryEntries();
+    const groups = ADMIN_DIRECTORY_GROUPS.map((group) => ({ ...group, entries: entries.filter((entry) => entry.group === group.key) })).filter((group) => group.entries.length);
+    if (!groups.length) return "";
+    return `<section class="portal-card portal-card-pad portal-admin-directory"><div class="portal-card-header"><div><h2 class="portal-card-title">Danh mục Admin ERP</h2><p class="portal-card-subtitle">Chỉ route điều hướng đã được server bảo vệ; mỗi module vẫn tự kiểm tra signed admin session, capability và redaction.</p></div>${badge("read_only")}</div><div class="portal-admin-directory-groups">${groups.map((group) => `<section class="portal-admin-directory-group" aria-labelledby="admin-directory-${safeText(group.key)}"><div class="portal-admin-directory-head"><div><h3 id="admin-directory-${safeText(group.key)}">${safeText(group.title)}</h3><p>${safeText(group.description)}</p></div><span class="portal-feature-count">${safeText(String(group.entries.length))} module</span></div><div class="portal-module-grid">${group.entries.map((entry) => moduleCard(entry, context, "Mở module")).join("")}</div></section>`).join("")}</div></section>`;
   }
 
   function renderAdminOverview(page, context) {
@@ -1488,7 +1696,7 @@
     const readinessRows = readiness.slice(0, 8);
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>${context.isAdmin ? "Admin session đã được server xác nhận" : "Admin ERP đang chờ signed session"}</h2><p>${context.isAdmin ? "Tất cả read/write vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị." : "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session trước khi render dữ liệu."}</p></div></div></section>
       <section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${label}</span><strong>${value}</strong><em>${note}</em></div>`).join("")}</section>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Readiness canonical</h2><p class="portal-card-subtitle">Chỉ xem trạng thái bot đã redaction; không bật/tắt provider từ trình duyệt.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${renderRowsTable(["Tính năng", "Trạng thái", "Adapter"], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, "Chưa có readiness được cấp", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực.")}</section>${renderSummary(page, context)}</div></article>`;
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Readiness canonical</h2><p class="portal-card-subtitle">Chỉ xem trạng thái bot đã redaction; không bật/tắt provider từ trình duyệt.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${renderRowsTable(["Tính năng", "Trạng thái", "Adapter"], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, "Chưa có readiness được cấp", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực.")}</section>${renderSummary(page, context)}</div>${renderAdminDirectory(context)}</article>`;
   }
 
   function adminModuleKey(page, context) {
@@ -1546,6 +1754,7 @@
     switch (page.layout) {
       case "auth": return renderAuth(page, context);
       case "dashboard": return renderDashboard(page, context);
+      case "feature-catalog": return renderFeatureCatalog(page, context);
       case "wallet": return renderWallet(page, context);
       case "catalog": return renderCatalog(page, context);
       case "jobs": return renderJobs(page, context);
@@ -1637,6 +1846,12 @@
     else workspace.removeAttribute("aria-hidden");
   }
 
+  function setSidebarMenuState(button, opened) {
+    if (!button) return;
+    button.setAttribute("aria-expanded", String(opened));
+    button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng");
+  }
+
   function closeSidebar(options) {
     const settings = options && typeof options === "object" ? options : {};
     const sidebar = document.querySelector("[data-portal-sidebar]");
@@ -1650,7 +1865,7 @@
       sidebar.removeAttribute("aria-modal");
     }
     setWorkspaceInert(false);
-    if (button) button.setAttribute("aria-expanded", "false");
+    setSidebarMenuState(button, false);
     if (wasOpen && settings.restoreFocus !== false && sidebarReturnFocus && typeof sidebarReturnFocus.focus === "function") {
       sidebarReturnFocus.focus({ preventScroll: true });
     }
@@ -1664,7 +1879,7 @@
     if (!sidebar || !backdrop || !button) return;
     const opened = sidebar.classList.toggle("is-open");
     backdrop.hidden = !opened;
-    button.setAttribute("aria-expanded", String(opened));
+    setSidebarMenuState(button, opened);
     if (!opened) {
       closeSidebar();
       return;
@@ -1677,6 +1892,12 @@
       const first = sidebarFocusables(sidebar)[0];
       if (first && typeof first.focus === "function") first.focus({ preventScroll: true });
     });
+  }
+
+  function closeSidebarAboveMobileBreakpoint() {
+    if (!window.matchMedia || !window.matchMedia("(min-width: 981px)").matches) return;
+    const sidebar = document.querySelector("[data-portal-sidebar]");
+    if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
   }
 
   function focusSnapshot() {
@@ -1710,6 +1931,7 @@
     document.addEventListener("click", (event) => {
       const menu = event.target.closest("[data-portal-menu]");
       if (menu) { toggleSidebar(); return; }
+      if (event.target.closest("[data-portal-close-menu]")) { closeSidebar(); return; }
       if (event.target.closest("[data-portal-backdrop]")) { closeSidebar(); return; }
       const action = event.target.closest("[data-portal-action]");
       if (action && !action.disabled) {
@@ -1746,6 +1968,7 @@
       if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
       else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
     });
+    window.addEventListener("resize", closeSidebarAboveMobileBreakpoint);
   }
 
   function mountPortal(override) {
@@ -1760,7 +1983,7 @@
     // A hydration remount must not leave the responsive navigation in an
     // inert/modal state with a replaced header button behind it.
     if (sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
-    document.title = `${context.title || page.title} · TOAN AAS`;
+    document.title = `${displayPageTitle(page, context)} · TOAN AAS`;
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);

@@ -36,7 +36,7 @@
     "/video": "video_single", "/video/create": "video_single", "/video/long": "video_long", "/video/image-to-video": "video_image_to_video",
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
-    "/music": "music_background", "/music/library": "music_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
+    "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
     "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/translate": "documents_translate"
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
@@ -394,18 +394,18 @@
     }, delay);
   }
 
-  function featurePageStates(catalog, readiness) {
+  function featurePageStates(catalog, readiness, executionAvailable) {
     const states = {};
     const features = (readiness && readiness.features) || {};
     Object.entries(FEATURE_BY_PATH).forEach(([route, key]) => {
       const state = features[key];
       if (!state) return;
-      states[route] = state.public_ready ? "ready" : "guarded";
+      states[route] = state.public_ready && executionAvailable === true ? "ready" : "guarded";
     });
     (catalog || []).forEach((item) => {
       const state = features[item.key];
       if (!state) return;
-      states[item.route && item.route.split("?")[0]] = state.public_ready ? "ready" : "guarded";
+      states[item.route && item.route.split("?")[0]] = state.public_ready && executionAvailable === true ? "ready" : "guarded";
     });
     return states;
   }
@@ -424,9 +424,16 @@
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
+    const webFeatureExecutionAvailable = Boolean(
+      bridgeAvailable
+      && status.flags && status.flags.provider_calls_enabled
+      && status.web_feature_execution_available === true
+    );
     const capabilities = {
       "auth-login": true,
       "auth-register": true,
+      "start-telegram-login": true,
+      "refresh-telegram-login": true,
       "auth-logout": Boolean(account && me.csrf_token),
       "start-telegram-link": Boolean(account),
       "refresh-link-status": Boolean(account),
@@ -438,25 +445,30 @@
       "payment-create": Boolean(status.flags && status.flags.payment_enabled && bridgeAvailable),
       "feature-draft": Boolean(bridgeAvailable),
       "feature-estimate": Boolean(bridgeAvailable),
-      // Confirm remains clickable when the bridge is present so its canonical
-      // guarded/maintenance result can be shown instead of being faked client-side.
-      "feature-confirm": Boolean(bridgeAvailable),
+      "feature-confirm": webFeatureExecutionAvailable,
       "create-ticket": Boolean(bridgeAvailable)
     };
     merge({
       ...context,
       catalog,
       isAdmin: Boolean(account && account.role === "admin"),
-      profile: account ? { displayName: account.display_name || account.email, email: account.email } : {},
+      profile: account ? {
+        displayName: account.display_name || account.email,
+        email: account.email,
+        locale: account.profile && account.profile.locale,
+        timezone: account.profile && account.profile.timezone,
+        avatarStyle: account.profile && account.profile.avatar_style,
+        loginMethods: account.login_methods || {}
+      } : {},
       linkStatus: { linked: telegramLinked },
       session: {
         authenticated: Boolean(account), csrfReady: Boolean(me.csrf_token), csrfToken: me.csrf_token || "",
         displayName: account ? (account.display_name || account.email) : "", email: account ? account.email : ""
       },
-      bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled },
+      bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled, featureExecutionAvailable: webFeatureExecutionAvailable },
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
-      pageStates: featurePageStates(catalog, {})
+      pageStates: featurePageStates(catalog, {}, webFeatureExecutionAvailable)
     });
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/portal/service-worker.js").catch(() => {});
@@ -501,7 +513,7 @@
           jobs: jobs.data && jobs.data.items ? jobs.data.items : [],
           assets: assets.data && assets.data.items ? assets.data.items : [],
           readiness: readiness.data || {},
-          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}), [path]: "read_only" }
+          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable)), [path]: "read_only" }
         });
       } else if (path === "/pricing") {
         const pricing = await api("/pricing");
@@ -528,9 +540,9 @@
         const readiness = await api("/features/status");
         merge({
           readiness: readiness.data || {},
-          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}) }
+          pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable)) }
         });
-      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
       } else if (path === "/video/progress") {
@@ -543,14 +555,14 @@
         merge({
           pricingCatalog: pricing.data || {},
           readiness: readiness.data || {},
-          pageStates: featurePageStates(base().catalog || [], readiness.data || {})
+          pageStates: featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable))
         });
       } else if (path === "/tts" || path.startsWith("/voice")) {
         const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
         merge({
           voiceProfiles: profiles.data && profiles.data.items ? profiles.data.items : [],
           readiness: readiness.data || {},
-          pageStates: featurePageStates(base().catalog || [], readiness.data || {})
+          pageStates: featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable))
         });
       } else if (path === "/tickets") {
         const tickets = await api("/support/tickets");
@@ -563,7 +575,7 @@
         });
       } else {
         const readiness = await api("/features/status");
-        merge({ readiness: readiness.data || {}, pageStates: featurePageStates(base().catalog || [], readiness.data || {}) });
+        merge({ readiness: readiness.data || {}, pageStates: featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable)) });
       }
     } catch (error) {
       // A guarded bridge is an expected state; do not manufacture data.
@@ -622,8 +634,11 @@
         if (fields.password !== fields.confirm_password) throw new Error("Xác nhận mật khẩu chưa khớp.");
         const result = await api("/auth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fields.email || "", password: fields.password || "", display_name: fields.name || "" }) });
         toast(result.message);
-        await hydrate();
-        window.location.assign("/onboarding");
+        // Registration deliberately does not start a signed session. Keeping
+        // both new and existing email responses identical prevents account
+        // enumeration; login is the single password flow that issues cookie
+        // and CSRF credentials.
+        window.location.assign("/login?registered=1");
         return;
       }
       if (action === "auth-login") {
@@ -631,6 +646,28 @@
         toast(result.message);
         await hydrate();
         const account = result.data && result.data.account ? result.data.account : {};
+        const requested = safeReturnPath(new URLSearchParams(window.location.search).get("next") || "");
+        window.location.assign(account.telegram_linked ? (requested || "/dashboard") : "/onboarding");
+        return;
+      }
+      if (action === "start-telegram-login") {
+        const result = await api("/auth/telegram/login/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        merge({ telegramLoginFlow: { status: result.status || "awaiting_confirm", message: result.message, data: result.data || {} } });
+        toast(result.message);
+        return;
+      }
+      if (action === "refresh-telegram-login") {
+        const status = await api("/auth/telegram/login/status");
+        const previous = base().telegramLoginFlow && typeof base().telegramLoginFlow === "object" ? base().telegramLoginFlow : {};
+        merge({ telegramLoginFlow: { ...previous, status: status.status || "awaiting_confirm", message: status.message, data: { ...(previous.data || {}), ...(status.data || {}) } } });
+        if (!(status.data && status.data.ready === true)) {
+          toast(status.message);
+          return;
+        }
+        const completed = await api("/auth/telegram/login/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        toast(completed.message);
+        await hydrate();
+        const account = completed.data && completed.data.account ? completed.data.account : {};
         const requested = safeReturnPath(new URLSearchParams(window.location.search).get("next") || "");
         window.location.assign(account.telegram_linked ? (requested || "/dashboard") : "/onboarding");
         return;

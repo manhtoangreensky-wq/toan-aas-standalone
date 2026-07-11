@@ -1,11 +1,13 @@
 import importlib
 import hashlib
 import hmac
+from io import BytesIO
 import json
 from pathlib import Path
 import sys
 import time
 import uuid
+from zipfile import ZipFile
 
 import pytest
 from fastapi.testclient import TestClient
@@ -64,8 +66,12 @@ def confirm_link(client, code, *, role="user", request_id=None):
 def register_and_link(client, *, role="user"):
     response = client.post("/api/v1/auth/register", json={"email": "user@example.com", "password": "correct-horse-battery-staple", "display_name": "User"})
     assert response.status_code == 200
-    payload = response.json()
-    csrf = payload["data"]["csrf_token"]
+    assert response.json()["ok"] is True
+    # Register never creates a session; login is the one indistinguishable
+    # password flow that issues the signed cookie and CSRF credential.
+    login = client.post("/api/v1/auth/login", json={"email": "user@example.com", "password": "correct-horse-battery-staple"})
+    assert login.status_code == 200
+    csrf = login.json()["data"]["csrf_token"]
     link = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
     assert link.status_code == 200
     code = link.json()["data"]["code"]
@@ -102,6 +108,15 @@ def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
         )
         assert confirmed.status_code == 200
         assert confirmed.json()["error_code"] == "WEBAPP_PROVIDER_CALLS_DISABLED"
+
+        monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "true")
+        still_guarded = client.post(
+            "/api/v1/features/video_single/confirm",
+            headers={"X-CSRF-Token": csrf, "Idempotency-Key": "feature-confirm-adapter-0001"},
+            json={"input": {"prompt": "test"}, "idempotency_key": "feature-confirm-adapter-0001"},
+        )
+        assert still_guarded.status_code == 200
+        assert still_guarded.json()["error_code"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
 
 
 def test_support_ticket_refuses_sensitive_data_before_it_can_reach_the_bridge(tmp_path, monkeypatch):
@@ -148,7 +163,9 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "/api/v1/auth/register",
             json={"email": "payment-options@example.com", "password": "correct-horse-battery-staple"},
         )
-        csrf = registration.json()["data"]["csrf_token"]
+        assert registration.json()["ok"] is True
+        login = client.post("/api/v1/auth/login", json={"email": "payment-options@example.com", "password": "correct-horse-battery-staple"})
+        csrf = login.json()["data"]["csrf_token"]
         unlinked = client.get("/api/v1/payments/options")
         assert unlinked.status_code == 409
 
@@ -176,6 +193,17 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
             "history_menu_label": "Lịch sử nạp thủ công",
         }
         assert "private-bank-account-must-not-leak" not in options.text
+
+        # An enabled Web-payment flag and configured bridge are not enough:
+        # until the dedicated top-up SKU catalog exists, the browser must keep
+        # the request path guarded and hand the customer back to the Bot.
+        monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "true")
+        monkeypatch.setenv("CORE_BRIDGE_BASE_URL", "http://bridge.test")
+        monkeypatch.setenv("CORE_BRIDGE_TOKEN", "test-token")
+        monkeypatch.setenv("CORE_BRIDGE_HMAC_SECRET", "test-hmac")
+        blocked_catalog = client.get("/api/v1/payments/options").json()["data"]["payos"]
+        assert blocked_catalog["request_enabled"] is False
+        assert blocked_catalog["status"] == "guarded"
 
         monkeypatch.setenv("BOT_USERNAME", "not/a-valid-telegram-username")
         invalid_name = client.get("/api/v1/payments/options").json()["data"]["manual"]
@@ -210,7 +238,9 @@ def test_legacy_billing_router_is_not_mounted_as_a_second_payos_or_wallet_writer
 def test_telegram_link_callback_requires_hmac_timestamp_and_one_time_nonce(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         registration = client.post("/api/v1/auth/register", json={"email": "link@example.com", "password": "correct-horse-battery-staple"})
-        csrf = registration.json()["data"]["csrf_token"]
+        assert registration.json()["ok"] is True
+        login = client.post("/api/v1/auth/login", json={"email": "link@example.com", "password": "correct-horse-battery-staple"})
+        csrf = login.json()["data"]["csrf_token"]
         code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
         unsigned = client.post(
             "/api/v1/auth/internal/telegram-link/confirm",
@@ -224,6 +254,42 @@ def test_telegram_link_callback_requires_hmac_timestamp_and_one_time_nonce(tmp_p
         replay = confirm_link(client, code, request_id=request_id)
         assert replay.status_code == 401
         assert replay.json()["error_code"] == "REQUEST_DENIED"
+
+
+def test_telegram_passwordless_login_is_browser_bound_and_never_accepts_a_raw_id(tmp_path, monkeypatch):
+    monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
+        assert client.get("/api/v1/auth/me").status_code == 401
+
+        started = client.post("/api/v1/auth/telegram/login/start", json={"telegram_id": "browser-forged"})
+        assert started.status_code == 200
+        payload = started.json()
+        assert payload["status"] == "awaiting_confirm"
+        assert payload["data"]["raw_telegram_id_accepted"] is False
+        assert payload["data"]["deep_link"].startswith("https://t.me/ToanAasSupportBot?start=web_")
+        assert "browser-forged" not in started.text
+        code = payload["data"]["code"]
+
+        with TestClient(client.app) as other_client:
+            other_status = other_client.get("/api/v1/auth/telegram/login/status")
+            assert other_status.json()["error_code"] == "TELEGRAM_LOGIN_CHALLENGE_REQUIRED"
+            assert confirm_link(client, code).json()["data"] == {"mode": "login"}
+            assert other_client.post("/api/v1/auth/telegram/login/complete", json={}).json()["error_code"] == "TELEGRAM_LOGIN_CHALLENGE_REQUIRED"
+
+        status = client.get("/api/v1/auth/telegram/login/status")
+        assert status.json()["data"] == {"ready": True}
+        completed = client.post("/api/v1/auth/telegram/login/complete", json={})
+        assert completed.status_code == 200
+        account = completed.json()["data"]["account"]
+        assert account["telegram_linked"] is True
+        assert "canonical_user_id" not in completed.text
+        assert account["profile"] == {"locale": "vi", "timezone": "Asia/Ho_Chi_Minh", "avatar_style": "gradient"}
+        assert account["login_methods"] == {"email": True, "telegram": True, "github": False}
+        assert client.get("/api/v1/auth/me").status_code == 200
+        replay = client.post("/api/v1/auth/telegram/login/complete", json={})
+        assert replay.json()["error_code"] == "TELEGRAM_LOGIN_CHALLENGE_REQUIRED"
 
 
 def test_upload_rejects_path_traversal_and_never_falls_back_to_web_storage(tmp_path, monkeypatch):
@@ -246,6 +312,47 @@ def test_upload_rejects_path_traversal_and_never_falls_back_to_web_storage(tmp_p
         assert guarded.status_code == 200
         assert guarded.json()["status"] == "guarded"
         assert guarded.json()["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
+
+
+def test_upload_rejects_mime_spoofed_media_and_non_docx_zip_before_bridge(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        headers = {"X-CSRF-Token": csrf, "Idempotency-Key": "upload-media-spoof-0001"}
+        fake_video = client.post(
+            "/api/v1/uploads",
+            headers=headers,
+            files={"file": ("clip.mp4", b"not-a-video-container", "video/mp4")},
+        )
+        assert fake_video.status_code == 422
+        assert fake_video.json()["error_code"] == "REQUEST_INVALID"
+
+        mime_mismatch = client.post(
+            "/api/v1/uploads",
+            headers={"X-CSRF-Token": csrf, "Idempotency-Key": "upload-mime-mismatch-0001"},
+            files={"file": ("image.png", b"\x89PNG\r\n\x1a\nvalid", "application/pdf")},
+        )
+        assert mime_mismatch.status_code == 415
+        assert mime_mismatch.json()["error_code"] == "REQUEST_INVALID"
+
+        raw_zip = client.post(
+            "/api/v1/uploads",
+            headers={"X-CSRF-Token": csrf, "Idempotency-Key": "upload-docx-zip-guard-0001"},
+            files={"file": ("report.docx", b"PK\x03\x04not-a-docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document")},
+        )
+        assert raw_zip.status_code == 422
+        assert raw_zip.json()["error_code"] == "REQUEST_INVALID"
+
+        docx_buffer = BytesIO()
+        with ZipFile(docx_buffer, "w") as archive:
+            archive.writestr("[Content_Types].xml", "<Types/>")
+            archive.writestr("word/document.xml", "<w:document/>")
+        valid_docx = client.post(
+            "/api/v1/uploads",
+            headers={"X-CSRF-Token": csrf, "Idempotency-Key": "upload-docx-valid-0001"},
+            files={"file": ("report.docx", docx_buffer.getvalue(), "application/octet-stream")},
+        )
+        assert valid_docx.status_code == 200
+        assert valid_docx.json()["error_code"] == "CORE_BRIDGE_NOT_CONFIGURED"
 
 
 def test_copyfast_flag_blocks_feature_and_upload_requests_before_bridge_work(tmp_path, monkeypatch):
@@ -278,12 +385,21 @@ def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
         keys = {item["key"] for item in catalog.json()["data"]["features"]}
         assert {
             "video_multiscene", "voice_tts", "subtitle_asr", "admin_jobs",
-            "caption", "image_remove_background", "music_song", "documents_ocr",
+            "caption", "image_remove_background", "music_song", "documents_ocr", "feature_catalog",
         }.issubset(keys)
         register_and_link(client)
         page = client.get("/video/multiscene")
         assert page.status_code == 200
         assert "TOAN AAS" in page.text
+        feature_catalog = client.get("/features")
+        assert feature_catalog.status_code == 200
+        assert "Tất cả công cụ" in feature_catalog.text
+        legacy_sfx_library = client.get("/music/library?type=sfx", follow_redirects=False)
+        assert legacy_sfx_library.status_code == 307
+        assert legacy_sfx_library.headers["location"] == "/music/sfx-library"
+        sfx_library = client.get("/music/sfx-library")
+        assert sfx_library.status_code == 200
+        assert "Thư viện SFX" in sfx_library.text
         compatibility = client.get("/features/image")
         assert compatibility.status_code == 200
         legacy = client.get("/campaign-app", follow_redirects=False)
@@ -299,7 +415,9 @@ def test_customer_portal_redirects_follow_signed_session_and_telegram_link_state
         assert client.get("/legal").status_code == 200
 
         registration = client.post("/api/v1/auth/register", json={"email": "redirect@example.com", "password": "correct-horse-battery-staple"})
-        csrf = registration.json()["data"]["csrf_token"]
+        assert registration.json()["ok"] is True
+        login = client.post("/api/v1/auth/login", json={"email": "redirect@example.com", "password": "correct-horse-battery-staple"})
+        csrf = login.json()["data"]["csrf_token"]
         unlinked_dashboard = client.get("/dashboard", follow_redirects=False)
         assert unlinked_dashboard.status_code == 307
         assert unlinked_dashboard.headers["location"] == "/onboarding"
@@ -410,13 +528,38 @@ def test_auth_rate_limit_is_server_side_and_separates_login_from_registration(tm
         assert registration_limited.json()["error_code"] == "AUTH_RATE_LIMITED"
 
 
+def test_registration_does_not_disclose_that_an_email_already_exists(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        first = client.post(
+            "/api/v1/auth/register",
+            json={"email": "existing@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert first.status_code == 200
+        duplicate = client.post(
+            "/api/v1/auth/register",
+            json={"email": "existing@example.com", "password": "different-correct-horse-battery"},
+        )
+        assert duplicate.status_code == 200
+        assert first.json() == duplicate.json() == {
+            "ok": True,
+            "status": "awaiting_confirm",
+            "message": "Nếu email chưa có tài khoản, yêu cầu đăng ký đã được tiếp nhận. Hãy đăng nhập để tiếp tục hoặc dùng chức năng khôi phục mật khẩu khi được phát hành.",
+            "data": {},
+            "error_code": None,
+        }
+        assert "set-cookie" not in first.headers
+        assert "set-cookie" not in duplicate.headers
+
+
 def test_telegram_link_revokes_other_sessions_but_keeps_the_initiating_session(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         registration = client.post(
             "/api/v1/auth/register",
             json={"email": "two-sessions@example.com", "password": "correct-horse-battery-staple"},
         )
-        csrf = registration.json()["data"]["csrf_token"]
+        assert registration.json()["ok"] is True
+        first_login = client.post("/api/v1/auth/login", json={"email": "two-sessions@example.com", "password": "correct-horse-battery-staple"})
+        csrf = first_login.json()["data"]["csrf_token"]
         with TestClient(client.app) as other_client:
             second_login = other_client.post(
                 "/api/v1/auth/login",
@@ -439,9 +582,11 @@ def test_a_canonical_telegram_identity_cannot_link_two_web_accounts(tmp_path, mo
             "/api/v1/auth/register",
             json={"email": "first-link@example.com", "password": "correct-horse-battery-staple"},
         )
+        assert first.json()["ok"] is True
+        first_login = client.post("/api/v1/auth/login", json={"email": "first-link@example.com", "password": "correct-horse-battery-staple"})
         first_code = client.post(
             "/api/v1/auth/telegram/link/start",
-            headers={"X-CSRF-Token": first.json()["data"]["csrf_token"]},
+            headers={"X-CSRF-Token": first_login.json()["data"]["csrf_token"]},
         ).json()["data"]["code"]
         assert confirm_link(client, first_code).json()["ok"] is True
 
@@ -450,9 +595,11 @@ def test_a_canonical_telegram_identity_cannot_link_two_web_accounts(tmp_path, mo
                 "/api/v1/auth/register",
                 json={"email": "second-link@example.com", "password": "correct-horse-battery-staple"},
             )
+            assert second.json()["ok"] is True
+            second_login = other_client.post("/api/v1/auth/login", json={"email": "second-link@example.com", "password": "correct-horse-battery-staple"})
             second_code = other_client.post(
                 "/api/v1/auth/telegram/link/start",
-                headers={"X-CSRF-Token": second.json()["data"]["csrf_token"]},
+                headers={"X-CSRF-Token": second_login.json()["data"]["csrf_token"]},
             ).json()["data"]["code"]
             collision = confirm_link(other_client, second_code)
             assert collision.status_code == 200
@@ -468,8 +615,10 @@ def test_production_environment_requires_a_real_secret_and_sets_secure_session_c
             json={"email": "production-cookie@example.com", "password": "correct-horse-battery-staple"},
         )
         assert registration.status_code == 200
-        assert "Secure" in registration.headers["set-cookie"]
-        assert registration.headers["cache-control"] == "no-store, private"
+        assert "set-cookie" not in registration.headers
+        login = client.post("/api/v1/auth/login", json={"email": "production-cookie@example.com", "password": "correct-horse-battery-staple"})
+        assert "Secure" in login.headers["set-cookie"]
+        assert login.headers["cache-control"] == "no-store, private"
 
     import copyfast_auth
 

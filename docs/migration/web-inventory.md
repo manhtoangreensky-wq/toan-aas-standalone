@@ -120,6 +120,9 @@
 | /sync | POST | sync_user |
 | /telegram/link/start | POST | start_telegram_link |
 | /telegram/link/status | GET | telegram_link_status |
+| /telegram/login/complete | POST | complete_telegram_login |
+| /telegram/login/start | POST | start_telegram_login |
+| /telegram/login/status | GET | telegram_login_status |
 | /tts | POST | text_to_speech |
 | /uploads | POST | upload_to_canonical_staging |
 | /users | GET | get_all_users |

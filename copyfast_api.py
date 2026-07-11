@@ -6,10 +6,13 @@ import base64
 from datetime import datetime, timedelta, timezone
 import hashlib
 import json
+import math
 import os
 import re
 import uuid
+from io import BytesIO
 from typing import Any
+from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from pydantic import BaseModel, Field
@@ -53,12 +56,27 @@ UPLOAD_EXTENSIONS = frozenset({
     ".jpg", ".jpeg", ".png", ".webp", ".mp4", ".mov", ".webm",
     ".mp3", ".wav", ".m4a", ".ogg", ".pdf", ".txt", ".srt", ".vtt", ".docx",
 })
-UPLOAD_MIME_TYPES = frozenset({
-    "image/jpeg", "image/png", "image/webp", "video/mp4", "video/quicktime", "video/webm",
-    "audio/mpeg", "audio/wav", "audio/x-wav", "audio/mp4", "audio/ogg", "application/ogg",
-    "application/pdf", "text/plain", "text/vtt", "application/x-subrip", "application/octet-stream",
-    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-})
+UPLOAD_CANONICAL_MIME_BY_EXTENSION = {
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
+    ".mp4": "video/mp4", ".mov": "video/quicktime", ".webm": "video/webm",
+    ".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/mp4", ".ogg": "audio/ogg",
+    ".pdf": "application/pdf", ".txt": "text/plain", ".srt": "application/x-subrip", ".vtt": "text/vtt",
+    ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+}
+UPLOAD_ACCEPTED_MIME_BY_EXTENSION = {
+    ".jpg": frozenset({"image/jpeg"}), ".jpeg": frozenset({"image/jpeg"}),
+    ".png": frozenset({"image/png"}), ".webp": frozenset({"image/webp"}),
+    ".mp4": frozenset({"video/mp4"}), ".mov": frozenset({"video/quicktime"}),
+    ".webm": frozenset({"video/webm"}), ".mp3": frozenset({"audio/mpeg"}),
+    ".wav": frozenset({"audio/wav", "audio/x-wav"}), ".m4a": frozenset({"audio/mp4"}),
+    ".ogg": frozenset({"audio/ogg", "application/ogg"}), ".pdf": frozenset({"application/pdf"}),
+    ".txt": frozenset({"text/plain"}), ".srt": frozenset({"application/x-subrip", "text/plain"}),
+    ".vtt": frozenset({"text/vtt", "text/plain"}),
+    ".docx": frozenset({"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}),
+}
+TEXT_UPLOAD_EXTENSIONS = frozenset({".txt", ".srt", ".vtt"})
+MAX_DOCX_ARCHIVE_MEMBERS = 2_000
+MAX_DOCX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 
 # Browser forms must never be able to attach a value that looks like a bot
 # authority decision.  Identity, provider settings, wallet/payment fields,
@@ -72,6 +90,10 @@ FEATURE_AUTHORITY_FIELDS = frozenset({
     "checkout_url", "webhook", "provider", "provider_id", "api_key", "api_token", "token",
     "secret", "job_id", "job_status", "status", "output", "output_url", "asset_id", "download_url",
 })
+FEATURE_AUTHORITY_FIELDS_NORMALIZED = frozenset(
+    "".join(character for character in field.lower() if character.isalnum())
+    for field in FEATURE_AUTHORITY_FIELDS
+)
 FEATURE_TEXT_KEYS = ("request", "prompt", "brief", "script", "text", "topic", "description", "instructions", "notes")
 FEATURE_TEXT_REQUIRED = frozenset({
     "chat", "prompt_studio", "caption", "hashtag", "hook", "script", "storyboard", "content_pack",
@@ -98,6 +120,64 @@ MUSIC_SONG_LENGTH_MODES = frozenset({"seconds", "half", "full"})
 BROWSER_IDENTITY_KEY_NORMALIZED = frozenset({
     "userid", "canonicaluserid", "telegramid", "chatid", "username", "telegramusername",
 })
+BROWSER_PRIVATE_KEY_NORMALIZED = frozenset({
+    "email", "emailaddress", "phone", "phonenumber", "mobile", "address", "bank", "bankaccount",
+    "accountnumber", "accountname", "qrcode", "qr", "txid", "transactionid", "receipt", "bill",
+    "paymentproof", "cardnumber", "cvv", "cvc", "otp", "authorization", "cookie", "password",
+    "secret", "token", "apikey", "rawresponse", "traceback", "stack", "filesystempath", "outputpath",
+    "provider", "providertask", "providerid", "telegramfileid", "fileid", "checkouturl", "paymenturl",
+    "downloadurl", "outputurl", "publicurl",
+})
+BROWSER_PRIVATE_KEY_PARTS = (
+    "email", "phone", "mobile", "address", "bank", "txid", "transaction", "receipt", "bill", "card",
+    "cvv", "cvc", "otp", "authorization", "cookie", "password", "secret", "token", "apikey", "provider",
+    "telegramfile", "fileid", "checkouturl", "paymenturl", "downloadurl", "outputurl", "publicurl", "filesystem",
+    "outputpath", "rawresponse", "traceback", "stack",
+)
+# Feature planning results are intentionally rich enough to render a
+# provider-free draft/estimate, but they are not a delivery channel.  Keep a
+# stricter field policy for this surface than the generic bridge redactor so
+# a future Bot adapter cannot accidentally put an output, a signed URL, a
+# job/provider handle, or payment/ledger metadata inside a planning object.
+FEATURE_RESPONSE_PRIVATE_KEY_PARTS = (
+    "url", "uri", "link", "path", "file", "attachment", "media", "artifact", "preview",
+    "output", "delivery", "download", "job", "provider", "payment", "checkout", "invoice",
+    "wallet", "ledger", "transaction", "refund", "charge", "webhook", "token", "secret",
+    "signature", "nonce", "session", "cookie", "password", "email", "phone", "address",
+    "telegram", "canonicaluser", "chatid", "accountid", "userid", "bank", "card", "otp",
+)
+_PUBLIC_BRIDGE_STATUSES = frozenset({
+    "draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge",
+    "guarded", "cancelled", "refunded", "read_only",
+})
+_PUBLIC_BRIDGE_MESSAGES = {
+    "draft": "Bản nháp canonical đã được cập nhật.",
+    "awaiting_confirm": "Dữ liệu canonical đang chờ bước xác nhận phù hợp.",
+    "queued": "Yêu cầu đã được canonical queue ghi nhận.",
+    "processing": "Core Bridge đang cập nhật trạng thái canonical.",
+    "completed": "Dữ liệu canonical đã được cập nhật.",
+    "failed": "Core Bridge chưa thể cấp dữ liệu an toàn.",
+    "failed_no_charge": "Yêu cầu không tạo kết quả; ledger canonical không bị browser thay đổi.",
+    "guarded": "Khả năng này đang được Core Bridge bảo vệ.",
+    "cancelled": "Yêu cầu đã được canonical hủy.",
+    "refunded": "Core Bridge đã ghi nhận trạng thái hoàn Xu canonical.",
+    "read_only": "Dữ liệu canonical chỉ được hiển thị ở chế độ đọc.",
+}
+# Error codes produced inside this Web bridge client are already generic and
+# do not expose Bot implementation details. Any other code coming from an
+# evolving Bot adapter is collapsed before it reaches the browser.
+_PUBLIC_BRIDGE_ERROR_CODES = frozenset({
+    "CORE_BRIDGE_NOT_CONFIGURED", "CORE_BRIDGE_UNAVAILABLE", "CORE_BRIDGE_UNAUTHORIZED",
+    "CORE_BRIDGE_FORBIDDEN", "CORE_BRIDGE_NOT_AVAILABLE", "CORE_BRIDGE_RATE_LIMITED",
+    "CORE_BRIDGE_INVALID_RESPONSE",
+})
+ADMIN_BRIDGE_MODULES = frozenset({
+    "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
+    "jobs", "failed-jobs", "providers", "provider-cost", "workers", "features", "freezes", "pricing",
+    "packages", "promos", "leads", "tickets", "support", "audit", "reports", "runtime", "system",
+    "backups", "security", "access",
+})
+ADMIN_BRIDGE_MODULE_ALIASES = {"backup": "backups", "export": "reports"}
 
 
 def _request_id(request: Request) -> str:
@@ -120,6 +200,16 @@ def _flags() -> dict[str, bool]:
     }
 
 
+def _web_feature_execution_available() -> bool:
+    """Whether a reviewed Web-to-canonical-job adapter exists for confirms.
+
+    Bot/provider readiness is not enough. The frozen P0 bridge deliberately
+    has no Web job-creation adapter, so keep confirm fail-closed even if a
+    future environment accidentally enables provider calls in this Web App.
+    """
+    return False
+
+
 def _linked(account: dict) -> str:
     user_id = str(account.get("canonical_user_id") or "").strip()
     if not user_id:
@@ -140,15 +230,53 @@ def _telegram_bot_chat_url() -> str:
     return f"https://t.me/{username}"
 
 
-def _payment_topup_catalog_available() -> bool:
-    """Whether the bot bridge exposes a verified Web top-up catalog.
+def _payment_topup_catalog() -> tuple[dict[str, Any], ...]:
+    """Return raw canonical top-up SKUs when a reviewed bridge read exists.
 
     The frozen P0 bridge only exposes service-package catalog data, which is
     deliberately not interchangeable with the bot's PayOS top-up
-    denominations. Keep this fail-closed until a dedicated bot read adapter is
-    added and tested; an environment flag alone must not invent payment SKUs.
+    denominations. Keep this empty and fail-closed until a dedicated bot read
+    adapter is added and tested; an environment flag alone must not invent
+    payment SKUs or make a browser checkout available.
     """
-    return False
+    return ()
+
+
+def _payment_topup_packages() -> list[dict[str, int | str | bool]]:
+    """Project only selectable, well-formed canonical PayOS top-up SKUs.
+
+    This boundary is intentionally local and strict: a future bridge adapter
+    may supply raw data through ``_payment_topup_catalog``, but neither a
+    browser-supplied code nor an empty/partial catalog can unlock checkout.
+    """
+    raw = _payment_topup_catalog()
+    if not isinstance(raw, (list, tuple)):
+        return []
+    packages: list[dict[str, int | str | bool]] = []
+    seen: set[str] = set()
+    for item in raw[:80]:
+        if not isinstance(item, dict) or item.get("available") is False:
+            continue
+        code = str(item.get("code") or "").strip()
+        label = str(item.get("label") or "").strip()
+        amount_vnd = item.get("amount_vnd")
+        xu = item.get("xu")
+        if (
+            not CANONICAL_IDENTIFIER_PATTERN.fullmatch(code)
+            or not label
+            or len(label) > 120
+            or isinstance(amount_vnd, bool)
+            or isinstance(xu, bool)
+            or not isinstance(amount_vnd, int)
+            or not isinstance(xu, int)
+            or amount_vnd <= 0
+            or xu <= 0
+            or code in seen
+        ):
+            continue
+        seen.add(code)
+        packages.append({"code": code, "label": label, "amount_vnd": amount_vnd, "xu": xu, "available": True})
+    return packages
 
 
 def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
@@ -161,63 +289,335 @@ def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
     return value
 
 
-def _redact_browser_identity(value: Any, *, allow_admin_user_refs: bool = False) -> Any:
-    """Remove raw canonical/Telegram identity fields at the Web boundary.
+def _canonical_route_identifier(value: Any, label: str) -> str:
+    identifier = str(value or "").strip()
+    if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(identifier):
+        raise HTTPException(status_code=422, detail=f"{label} không hợp lệ")
+    return identifier
 
-    The signed session retains ``canonical_user_id`` on the server for bridge
-    authorization.  Responses must instead use opaque IDs and display-safe
-    labels supplied by canonical adapters.
+
+def _canonical_admin_module(value: Any) -> str:
+    module = str(value or "").strip().lower().replace("_", "-")
+    module = ADMIN_BRIDGE_MODULE_ALIASES.get(module, module)
+    if module not in ADMIN_BRIDGE_MODULES:
+        raise HTTPException(status_code=404, detail="Module Admin chưa được công bố")
+    return module
+
+
+_MISSING = object()
+
+
+def _redact_browser_identity(value: Any, *, allow_admin_user_refs: bool = False, depth: int = 0) -> Any:
+    """Bound and redact values before any bridge result reaches a browser.
+
+    The Bot is authoritative but its response shape can evolve. This generic
+    pass removes raw identity plus common payment/provider/PII fields even
+    when a future adapter nests or changes their spelling. Surface-specific
+    projections below then reduce high-risk responses further.
     """
+    if depth > 6:
+        return None
     if isinstance(value, dict):
         safe: dict[str, Any] = {}
-        for key, item in value.items():
-            normalized = "".join(character for character in str(key).lower() if character.isalnum())
-            # A canonical-admin read may show the Bot's user reference and
-            # public username in its ERP table.  It still never receives a
-            # canonical session identity, Telegram chat ID, or any customer
-            # identity from normal customer routes.
+        for index, (key, item) in enumerate(value.items()):
+            if index >= 100:
+                break
+            name = str(key)[:160]
+            normalized = "".join(character for character in name.lower() if character.isalnum())
+            # A canonical-admin read may show only the Bot's user reference
+            # and public username. It still never receives a canonical
+            # session identity, Telegram chat ID, or payment/provider PII.
+            if normalized in BROWSER_PRIVATE_KEY_NORMALIZED or any(part in normalized for part in BROWSER_PRIVATE_KEY_PARTS):
+                continue
             if normalized in BROWSER_IDENTITY_KEY_NORMALIZED and not (
                 allow_admin_user_refs and normalized in {"userid", "username"}
             ):
                 continue
-            safe[str(key)] = _redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs)
+            safe[name] = _redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs, depth=depth + 1)
         return safe
-    if isinstance(value, list):
-        return [_redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs) for item in value]
-    if isinstance(value, tuple):
-        return [_redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs) for item in value]
+    if isinstance(value, (list, tuple)):
+        return [_redact_browser_identity(item, allow_admin_user_refs=allow_admin_user_refs, depth=depth + 1) for item in value[:100]]
+    if isinstance(value, str):
+        return value[:2_000]
+    if isinstance(value, (bool, int)) or value is None:
+        return value
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    return None
+
+
+def _browser_scalar(value: Any, *, maximum: int = 200) -> str | int | float | bool | None | object:
+    if isinstance(value, str):
+        return value.strip()[:maximum]
+    if isinstance(value, (bool, int)) or value is None:
+        return value
+    if isinstance(value, float) and math.isfinite(value):
+        return value
+    return _MISSING
+
+
+def _project_record(value: Any, fields: tuple[str, ...], *, text_limit: int = 200) -> dict[str, Any]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, Any] = {}
+    for field in fields:
+        if field not in value:
+            continue
+        item = _browser_scalar(value.get(field), maximum=text_limit)
+        if item is not _MISSING:
+            result[field] = item
+    return result
+
+
+def _project_items(value: Any, fields: tuple[str, ...], *, allow_admin_user_refs: bool = False) -> list[dict[str, Any]]:
+    if not isinstance(value, list):
+        return []
+    result: list[dict[str, Any]] = []
+    for item in value[:100]:
+        record = _project_record(item, fields)
+        if allow_admin_user_refs and isinstance(item, dict):
+            for field in ("user_id", "username"):
+                safe = _browser_scalar(item.get(field), maximum=120)
+                if safe is not _MISSING:
+                    record[field] = safe
+        if record:
+            result.append(record)
+    return result
+
+
+def _project_readiness(value: Any) -> dict[str, dict[str, Any]]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, dict[str, Any]] = {}
+    fields = ("configured", "public_ready", "guarded", "reason", "adapter", "alias_of")
+    for key, item in list(value.items())[:120]:
+        name = str(key)
+        if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(name):
+            continue
+        record = _project_record(item, fields, text_limit=160)
+        if isinstance(item, dict) and isinstance(item.get("missing"), list):
+            record["missing"] = [str(part).strip()[:80] for part in item["missing"][:20] if isinstance(part, str) and part.strip()]
+        if record:
+            result[name] = record
+    return result
+
+
+def _safe_payos_checkout(value: Any) -> str:
+    if not isinstance(value, str) or not value:
+        return ""
+    from urllib.parse import urlparse
+
+    parsed = urlparse(value)
+    hostname = (parsed.hostname or "").lower()
+    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in {None, 443} or (hostname != "pay.payos.vn" and not hostname.endswith(".payos.vn")):
+        return ""
+    return value[:1_000]
+
+
+def _project_feature_document(value: Any, *, depth: int = 0) -> Any:
+    """Project a provider-free planning document for a feature response.
+
+    Draft/estimate content is intentionally flexible because the Bot's
+    provider-free planners produce different structured briefs.  This small
+    recursive projector preserves public text, costs and choices while
+    refusing any field that could act as a delivery, identity, job, provider
+    or payment side channel.  Actual files remain available only through a
+    separately reviewed private-delivery adapter.
+    """
+    if depth > 5:
+        return None
+    if isinstance(value, dict):
+        result: dict[str, Any] = {}
+        for index, (key, item) in enumerate(value.items()):
+            if index >= 80:
+                break
+            name = str(key)[:120]
+            normalized = "".join(character for character in name.lower() if character.isalnum())
+            if any(part in normalized for part in FEATURE_RESPONSE_PRIVATE_KEY_PARTS):
+                continue
+            projected = _project_feature_document(item, depth=depth + 1)
+            if projected is not _MISSING:
+                result[name] = projected
+        return result
+    if isinstance(value, (list, tuple)):
+        return [
+            projected
+            for item in value[:80]
+            if (projected := _project_feature_document(item, depth=depth + 1)) is not _MISSING
+        ]
+    if isinstance(value, str):
+        return value.strip()[:2_000]
+    if isinstance(value, (bool, int)) or value is None:
+        return value
+    if isinstance(value, float):
+        return value if math.isfinite(value) else None
+    return _MISSING
+
+
+def _project_feature_response(value: dict[str, Any]) -> dict[str, Any]:
+    """Expose only planning and staging metadata needed by the Portal."""
+    result = _project_record(
+        value,
+        ("feature", "requires_confirm", "quote_expires_at", "quote_valid_until", "status"),
+        text_limit=160,
+    )
+    for field in ("draft", "estimate"):
+        document = _project_feature_document(value.get(field))
+        if isinstance(document, dict):
+            result[field] = document
+    if isinstance(value.get("uploads"), list):
+        result["uploads"] = _project_items(
+            value.get("uploads"),
+            ("id", "upload_id", "stage_id", "file_name", "content_size", "status", "created_at"),
+        )
+    return result
+
+
+def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: bool = False) -> dict[str, Any]:
+    value = _redact_browser_identity(data, allow_admin_user_refs=allow_admin_user_refs)
+    if not isinstance(value, dict):
+        return {}
+    if surface == "wallet":
+        result = _project_record(value, ("balance_xu", "total_spent_xu", "is_vip", "source"))
+        plan = _project_record(value.get("plan"), ("current_plan", "plan_name", "plan_status", "plan_expires_at", "plan_xu_remaining"))
+        if plan:
+            result["plan"] = plan
+        return result
+    if surface == "pricing":
+        result = _project_record(value, ("available", "billing_mode", "price_table_source", "trend_workflow_content_total_cost_xu"))
+        tier_fields = ("code", "label", "cost_xu", "note", "retry_warranty_count")
+        combo_fields = ("code", "label", "price_vnd", "display_price", "summary")
+        result["image_tiers"] = _project_items(value.get("image_tiers"), tier_fields)
+        result["video_tiers"] = _project_items(value.get("video_tiers"), tier_fields)
+        result["video_combos"] = _project_items(value.get("video_combos"), combo_fields)
+        return result
+    if surface == "packages":
+        result = _project_record(value, ("available",))
+        package_fields = ("code", "type", "label", "note", "default_days", "price_vnd", "manual")
+        for group in ("monthly", "combos"):
+            rows: list[dict[str, Any]] = []
+            raw_rows = value.get(group) if isinstance(value.get(group), list) else []
+            for source in raw_rows[:100]:
+                row = _project_record(source, package_fields)
+                if not row:
+                    continue
+                source = source if isinstance(source, dict) else {}
+                raw_items = source.get("items") if isinstance(source.get("items"), dict) else {}
+                row["items"] = {
+                    str(key)[:80]: amount
+                    for key, amount in list(raw_items.items())[:40]
+                    if isinstance(key, str) and isinstance(amount, int) and not isinstance(amount, bool) and amount >= 0
+                }
+                rows.append(row)
+            result[group] = rows
+        return result
+    if surface == "payment":
+        result = _project_record(value, ("payment_id", "order_code", "id", "status", "amount_vnd", "xu", "created_at", "paid_at"))
+        checkout = _safe_payos_checkout(value.get("checkout_url") or value.get("payment_url") or value.get("url"))
+        if checkout:
+            result["checkout_url"] = checkout
+        return result
+    if surface == "job":
+        fields = ("id", "feature", "job_type", "status", "created_at", "updated_at", "estimated_xu", "charged_xu", "refund_status", "output_available", "error_category", "download_ready")
+        if isinstance(value.get("items"), list):
+            return {"items": _project_items(value.get("items"), fields)}
+        return _project_record(value, fields)
+    if surface == "asset":
+        fields = ("id", "feature", "status", "created_at", "output_available", "download_ready")
+        return {"items": _project_items(value.get("items"), fields)} if isinstance(value.get("items"), list) else _project_record(value, fields)
+    if surface == "voice":
+        fields = ("id", "display_name", "status", "is_default", "consent_status", "tts_ready", "preview_ready", "created_at", "updated_at")
+        return {"items": _project_items(value.get("items"), fields)}
+    if surface == "tickets":
+        fields = ("id", "category", "related_tool", "subject", "status", "created_at", "updated_at")
+        return {"items": _project_items(value.get("items"), fields)}
+    if surface == "readiness":
+        return {"features": _project_readiness(value.get("features"))}
+    if surface == "feature":
+        return _project_feature_response(value)
+    if surface == "admin":
+        result = _project_record(value, ("module", "read_only", "message"))
+        counts = value.get("counts") if isinstance(value.get("counts"), dict) else {}
+        safe_counts = {str(key)[:80]: amount for key, amount in list(counts.items())[:40] if isinstance(amount, int) and not isinstance(amount, bool) and amount >= 0}
+        if safe_counts:
+            result["counts"] = safe_counts
+        if "readiness" in value:
+            result["readiness"] = _project_readiness(value.get("readiness"))
+        fields = ("id", "feature", "job_type", "status", "created_at", "updated_at", "balance_xu", "total_spent_xu", "is_vip", "amount_vnd", "xu", "type", "paid_at", "refund_status", "output_available", "error_category", "download_ready", "reason", "action", "priority", "category", "related_tool", "has_attachment")
+        if isinstance(value.get("items"), list):
+            result["items"] = _project_items(value.get("items"), fields, allow_admin_user_refs=allow_admin_user_refs)
+        return result
+    if surface == "upload":
+        return _project_record(value, ("id", "upload_id", "stage_id", "status", "created_at"))
+    if surface == "delivery":
+        # A delivery URL requires its own reviewed adapter. Do not let a
+        # future bridge response smuggle a URL or file reference here.
+        return _project_record(value, ("id", "status", "download_ready"))
     return value
 
 
-def _browser_safe_bridge_response(response: dict, *, allow_admin_user_refs: bool = False) -> dict:
-    result = dict(response)
-    if "data" in result:
-        result["data"] = _redact_browser_identity(result.get("data"), allow_admin_user_refs=allow_admin_user_refs)
-    return result
+def _browser_safe_bridge_response(response: dict, *, allow_admin_user_refs: bool = False, surface: str = "generic") -> dict:
+    source = response if isinstance(response, dict) else {}
+    status = str(source.get("status") or "guarded")
+    if status not in _PUBLIC_BRIDGE_STATUSES:
+        status = "guarded"
+    raw_error_code = str(source.get("error_code") or "")
+    if raw_error_code in _PUBLIC_BRIDGE_ERROR_CODES:
+        error_code = raw_error_code
+    elif raw_error_code:
+        # Do not allow an adapter-specific code to become an oracle for
+        # provider/runtime state. Its status and public message above remain
+        # enough for a customer to understand that the request is guarded.
+        error_code = "CORE_BRIDGE_RESPONSE_GUARDED"
+    else:
+        error_code = ""
+    return envelope(
+        bool(source.get("ok")),
+        _PUBLIC_BRIDGE_MESSAGES[status],
+        data=_project_surface_data(source.get("data"), surface, allow_admin_user_refs=allow_admin_user_refs),
+        status_name=status,
+        error_code=error_code or None,
+    )
 
 
 def _browser_safe_wallet_history_response(response: dict) -> dict:
-    """Remove free-text ledger metadata that the wallet UI never renders.
+    """Allowlist the small ledger projection the wallet UI actually renders.
 
-    Bot credit-event notes and references may contain a customer prompt, a
-    payment reference or other operational context.  The Web wallet needs
-    only time, event type, delta and post-event balance to show the canonical
-    ledger; retain those bot-owned facts while stripping unneeded free text.
+    Bot event IDs, notes and references may contain a payment reference or
+    other operational context. The Web wallet needs only time, event type,
+    delta and post-event balance to render canonical history. Keeping this as
+    an allowlist prevents future bridge fields from silently reaching browsers.
     """
-    result = dict(response)
-    data = result.get("data")
-    if not isinstance(data, dict):
-        return result
-    safe_data = dict(data)
-    items = safe_data.get("items")
-    if isinstance(items, list):
-        safe_data["items"] = [
-            {key: value for key, value in item.items() if str(key).lower() not in {"reference", "note"}}
-            if isinstance(item, dict) else item
-            for item in items
-        ]
-    result["data"] = safe_data
-    return result
+    data = response.get("data") if isinstance(response, dict) else {}
+    raw_items = data.get("items") if isinstance(data, dict) else []
+    safe_items: list[dict[str, int | float | str]] = []
+    if isinstance(raw_items, list):
+        for item in raw_items[:100]:
+            if not isinstance(item, dict):
+                continue
+            safe_item: dict[str, int | float | str] = {}
+            for field in ("created_at", "event_type"):
+                value = item.get(field)
+                if isinstance(value, str) and value.strip():
+                    safe_item[field] = value.strip()[:160]
+            for field in ("delta_xu", "balance_after_xu"):
+                value = item.get(field)
+                if isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value):
+                    safe_item[field] = value
+            if safe_item:
+                safe_items.append(safe_item)
+    status = str(response.get("status") or "guarded") if isinstance(response, dict) else "guarded"
+    if status not in {"draft", "awaiting_confirm", "queued", "processing", "completed", "failed", "failed_no_charge", "guarded", "cancelled", "refunded", "read_only"}:
+        status = "guarded"
+    message = response.get("message") if isinstance(response, dict) else ""
+    error_code = response.get("error_code") if isinstance(response, dict) else None
+    return envelope(
+        bool(response.get("ok")) if isinstance(response, dict) else False,
+        message[:500] if isinstance(message, str) and message else "Lịch sử ví đang chờ dữ liệu canonical.",
+        data={"items": safe_items},
+        status_name=status,
+        error_code=error_code[:120] if isinstance(error_code, str) else None,
+    )
 
 
 def _looks_like_payment_card(candidate: str) -> bool:
@@ -270,7 +670,8 @@ def _contains_feature_authority_field(value: Any) -> bool:
     """
     if isinstance(value, dict):
         for key, child in value.items():
-            if str(key or "").strip().lower() in FEATURE_AUTHORITY_FIELDS:
+            normalized = "".join(character for character in str(key or "").lower() if character.isalnum())
+            if normalized in FEATURE_AUTHORITY_FIELDS_NORMALIZED:
                 return True
             if _contains_feature_authority_field(child):
                 return True
@@ -407,11 +808,92 @@ def _validate_upload_name(file_name: str | None) -> tuple[str, str]:
     return name, extension
 
 
+def _canonical_upload_media_type(extension: str, supplied: str) -> str:
+    """Verify MIME/extension consistency and return a server-owned MIME type.
+
+    Browsers often provide ``application/octet-stream`` for a local file with
+    no type association.  That fallback is accepted only after the structural
+    content checks below succeed; a non-generic MIME must match the extension.
+    The bridge always receives this canonical value, never the browser header.
+    """
+    canonical = UPLOAD_CANONICAL_MIME_BY_EXTENSION.get(extension)
+    accepted = UPLOAD_ACCEPTED_MIME_BY_EXTENSION.get(extension)
+    if not canonical or not accepted:
+        raise HTTPException(status_code=415, detail="Định dạng tệp chưa được hỗ trợ")
+    if supplied != "application/octet-stream" and supplied not in accepted:
+        raise HTTPException(status_code=415, detail="MIME không khớp với định dạng tệp")
+    return canonical
+
+
+def _validate_docx_container(content: bytes) -> None:
+    """Accept only a bounded Office Open XML document package, never a raw ZIP."""
+    if not content.startswith((b"PK\x03\x04", b"PK\x05\x06", b"PK\x07\x08")):
+        raise HTTPException(status_code=422, detail="DOCX không hợp lệ")
+    try:
+        with ZipFile(BytesIO(content)) as archive:
+            members = archive.infolist()
+            if not members or len(members) > MAX_DOCX_ARCHIVE_MEMBERS:
+                raise HTTPException(status_code=422, detail="DOCX có cấu trúc không an toàn")
+            total_uncompressed = 0
+            names: set[str] = set()
+            for member in members:
+                name = str(member.filename or "")
+                if not name or name.startswith("/") or "\\" in name or any(part == ".." for part in name.split("/")):
+                    raise HTTPException(status_code=422, detail="DOCX có đường dẫn không an toàn")
+                total_uncompressed += max(0, int(member.file_size))
+                if total_uncompressed > MAX_DOCX_UNCOMPRESSED_BYTES:
+                    raise HTTPException(status_code=413, detail="DOCX vượt quá giới hạn giải nén an toàn")
+                names.add(name)
+            if "[Content_Types].xml" not in names or "word/document.xml" not in names:
+                raise HTTPException(status_code=422, detail="DOCX không có cấu trúc tài liệu hợp lệ")
+    except BadZipFile as exc:
+        raise HTTPException(status_code=422, detail="DOCX không hợp lệ") from exc
+
+
+def _validate_upload_content(extension: str, content: bytes) -> None:
+    """Perform bounded format checks before untrusted bytes enter Bot staging.
+
+    These guards intentionally validate only the container/signature boundary;
+    the Bot remains responsible for ownership and any feature-specific media
+    decoding before a worker or provider consumes the staged object.
+    """
+    if extension == ".pdf":
+        valid = content.startswith(b"%PDF-")
+    elif extension == ".png":
+        valid = content.startswith(b"\x89PNG\r\n\x1a\n")
+    elif extension in {".jpg", ".jpeg"}:
+        valid = content.startswith(b"\xff\xd8\xff")
+    elif extension == ".webp":
+        valid = len(content) >= 12 and content.startswith(b"RIFF") and content[8:12] == b"WEBP"
+    elif extension in {".mp4", ".mov", ".m4a"}:
+        valid = len(content) >= 12 and content[4:8] == b"ftyp"
+    elif extension == ".webm":
+        valid = content.startswith(b"\x1a\x45\xdf\xa3")
+    elif extension == ".mp3":
+        valid = content.startswith(b"ID3") or (len(content) >= 2 and content[0] == 0xFF and content[1] in {0xE2, 0xE3, 0xF2, 0xF3, 0xFA, 0xFB})
+    elif extension == ".wav":
+        valid = len(content) >= 12 and content.startswith(b"RIFF") and content[8:12] == b"WAVE"
+    elif extension == ".ogg":
+        valid = content.startswith(b"OggS")
+    elif extension == ".docx":
+        _validate_docx_container(content)
+        return
+    elif extension in TEXT_UPLOAD_EXTENSIONS:
+        try:
+            text = content.decode("utf-8-sig")
+        except UnicodeDecodeError as exc:
+            raise HTTPException(status_code=422, detail="Tệp văn bản phải dùng UTF-8") from exc
+        valid = bool(text.strip()) and "\x00" not in text
+    else:
+        valid = False
+    if not valid:
+        raise HTTPException(status_code=422, detail="Nội dung tệp không khớp với định dạng đã chọn")
+
+
 async def _read_validated_upload(file: UploadFile) -> tuple[str, str, bytes, str]:
     name, extension = _validate_upload_name(file.filename)
     media_type = str(file.content_type or "application/octet-stream").split(";", 1)[0].strip().lower()
-    if media_type not in UPLOAD_MIME_TYPES:
-        raise HTTPException(status_code=415, detail="MIME của tệp không được hỗ trợ")
+    canonical_media_type = _canonical_upload_media_type(extension, media_type)
     chunks: list[bytes] = []
     total = 0
     limit = _upload_max_bytes()
@@ -426,14 +908,8 @@ async def _read_validated_upload(file: UploadFile) -> tuple[str, str, bytes, str
     content = b"".join(chunks)
     if not content:
         raise HTTPException(status_code=422, detail="Tệp không có dữ liệu")
-    # Apply cheap signature checks before the bytes ever cross into the bot.
-    if extension == ".pdf" and not content.startswith(b"%PDF-"):
-        raise HTTPException(status_code=422, detail="PDF không hợp lệ")
-    if extension == ".png" and not content.startswith(b"\x89PNG\r\n\x1a\n"):
-        raise HTTPException(status_code=422, detail="PNG không hợp lệ")
-    if extension in {".jpg", ".jpeg"} and not content.startswith(b"\xff\xd8\xff"):
-        raise HTTPException(status_code=422, detail="JPEG không hợp lệ")
-    return name, media_type, content, hashlib.sha256(content).hexdigest()
+    _validate_upload_content(extension, content)
+    return name, canonical_media_type, content, hashlib.sha256(content).hexdigest()
 
 
 class FeatureRequest(BaseModel):
@@ -551,6 +1027,37 @@ def _retryable_bridge_response(response: dict) -> bool:
     return not bool(response.get("ok")) and str(response.get("error_code") or "") in _RETRYABLE_BRIDGE_CODES
 
 
+def _bridge_surface(path: str) -> str:
+    normalized = "/" + str(path or "").lstrip("/")
+    if normalized == "/internal/v1/wallet":
+        return "wallet"
+    if normalized == "/internal/v1/pricing":
+        return "pricing"
+    if normalized == "/internal/v1/packages":
+        return "packages"
+    if normalized.startswith("/internal/v1/payments/"):
+        return "payment"
+    if normalized == "/internal/v1/jobs" or normalized.startswith("/internal/v1/jobs/"):
+        return "job"
+    if normalized == "/internal/v1/assets":
+        return "asset"
+    if normalized.startswith("/internal/v1/assets/"):
+        return "delivery"
+    if normalized == "/internal/v1/voice/profiles":
+        return "voice"
+    if normalized == "/internal/v1/support/tickets":
+        return "tickets"
+    if normalized == "/internal/v1/features/status":
+        return "readiness"
+    if normalized.startswith("/internal/v1/features/"):
+        return "feature"
+    if normalized.startswith("/internal/v1/admin/"):
+        return "admin"
+    if normalized == "/internal/v1/uploads":
+        return "upload"
+    return "generic"
+
+
 async def _run_idempotent(scope: str, key: str, operation) -> dict:
     state, cached, marker = _reserve_idempotency(scope, key)
     if state == "cached" and cached is not None:
@@ -615,7 +1122,11 @@ async def _bridge(
         and path.startswith("/internal/v1/admin/")
         and account.get("role") == "admin"
     )
-    return _browser_safe_bridge_response(response, allow_admin_user_refs=allow_admin_user_refs)
+    return _browser_safe_bridge_response(
+        response,
+        allow_admin_user_refs=allow_admin_user_refs,
+        surface=_bridge_surface(path),
+    )
 
 
 @router.get("/catalog")
@@ -625,7 +1136,15 @@ async def feature_catalog():
 
 @router.get("/core/status")
 async def core_status():
-    return envelope(True, "Trạng thái kết nối", data={"bridge_configured": bridge_configured(), "flags": _flags()})
+    return envelope(
+        True,
+        "Trạng thái kết nối",
+        data={
+            "bridge_configured": bridge_configured(),
+            "flags": _flags(),
+            "web_feature_execution_available": _web_feature_execution_available(),
+        },
+    )
 
 
 @router.get("/core/me")
@@ -669,8 +1188,14 @@ async def payment_options(account: dict = Depends(require_account)):
     does not read a wallet ledger and does not duplicate the bot's webhook.
     """
     _linked(account)
-    topup_catalog_available = _payment_topup_catalog_available()
-    payos_available = bool(_flags()["payment_enabled"] and bridge_configured())
+    topup_packages = _payment_topup_packages()
+    topup_catalog_available = bool(topup_packages)
+    # Do not advertise a Web payment request unless the same dedicated top-up
+    # catalog that protects POST /payments/create is available. An enabled
+    # flag alone cannot turn service packages into payment denominations.
+    payos_available = bool(
+        _flags()["payment_enabled"] and bridge_configured() and topup_catalog_available
+    )
     bot_chat_url = _telegram_bot_chat_url()
     return envelope(
         True,
@@ -679,14 +1204,15 @@ async def payment_options(account: dict = Depends(require_account)):
         data={
             "payos": {
                 # This only confirms that Web may send a signed request to the
-                # bridge. The bot remains the only authority that may return a
-                # checkout URL, so it is intentionally not called `available`.
+                # bridge *and* render a validated dedicated top-up SKU. The
+                # bot remains the only authority that may return a checkout
+                # URL, so it is intentionally not called `available`.
                 "request_enabled": payos_available,
                 # The local P0 bridge has no read-only top-up denomination
                 # catalog yet. Do not present the unrelated service-package
                 # catalog as Xu top-up choices in the browser.
                 "topup_catalog_available": topup_catalog_available,
-                "topup_packages": [],
+                "topup_packages": topup_packages,
                 "telegram_url": bot_chat_url,
                 "command": "/naptien",
                 "status": "awaiting_confirm" if payos_available else "guarded",
@@ -722,11 +1248,14 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
     payment_type = str(payload.payment_type or "").strip().lower()
     if payment_type != "topup_xu":
         return envelope(False, "Loại thanh toán này chưa có adapter canonical được phê duyệt cho Web.", status_name="guarded", error_code="PAYMENT_TYPE_NOT_ALLOWED")
-    if not _payment_topup_catalog_available():
+    topup_packages = _payment_topup_packages()
+    if not topup_packages:
         return envelope(False, "Danh mục mệnh giá nạp canonical chưa được bridge cấp cho Web.", status_name="guarded", error_code="PAYMENT_TOPUP_CATALOG_REQUIRED")
     package_id = str(payload.package_id or "").strip()
     if not package_id:
         return envelope(False, "Hãy chọn gói từ catalog canonical trước khi tạo yêu cầu thanh toán.", status_name="failed", error_code="PAYMENT_PACKAGE_REQUIRED")
+    if package_id not in {str(item["code"]) for item in topup_packages}:
+        return envelope(False, "Mệnh giá nạp không còn thuộc catalog canonical hiện hành.", status_name="failed", error_code="PAYMENT_PACKAGE_NOT_IN_CATALOG")
     key = _require_key(payload.idempotency_key)
     scope = f"payment:{account['id']}"
     return await _run_idempotent(
@@ -741,6 +1270,7 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
 
 @router.get("/payments/{payment_id}")
 async def payment_status(payment_id: str, request: Request, account: dict = Depends(require_account)):
+    payment_id = _canonical_route_identifier(payment_id, "Mã payment")
     return await _bridge("GET", f"/internal/v1/payments/{payment_id}", account=account, request=request)
 
 
@@ -751,6 +1281,7 @@ async def list_jobs(request: Request, account: dict = Depends(require_account)):
 
 @router.get("/jobs/{job_id}")
 async def job_detail(job_id: str, request: Request, account: dict = Depends(require_account)):
+    job_id = _canonical_route_identifier(job_id, "Mã job")
     return await _bridge("GET", f"/internal/v1/jobs/{job_id}", account=account, request=request)
 
 
@@ -763,6 +1294,7 @@ async def assets(request: Request, account: dict = Depends(require_account)):
 async def asset_download(asset_id: str, request: Request, account: dict = Depends(require_account)):
     # The core either returns a short-lived, ownership-checked delivery URL or
     # stays guarded. The Web App must never reconstruct provider URLs itself.
+    asset_id = _canonical_route_identifier(asset_id, "Mã tài sản")
     return await _bridge("GET", f"/internal/v1/assets/{asset_id}/download", account=account, request=request)
 
 
@@ -851,6 +1383,8 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
     if action == "confirm":
         if not _flags()["provider_calls_enabled"]:
             return envelope(False, "Tính năng đang ở chế độ an toàn và chưa gọi engine từ Web.", status_name="guarded", error_code="WEBAPP_PROVIDER_CALLS_DISABLED")
+        if not _web_feature_execution_available():
+            return envelope(False, "Web App chưa có adapter tạo job canonical đã được phê duyệt; chỉ draft và estimate đang khả dụng.", status_name="guarded", error_code="WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED")
         contract_error = _feature_input_contract_error(feature, values)
         if contract_error:
             return _feature_input_contract_response(feature, contract_error)
@@ -926,7 +1460,10 @@ async def admin_tickets(request: Request, account: dict = Depends(require_canoni
 
 @router.get("/admin/modules/{module}")
 async def admin_module(module: str, request: Request, account: dict = Depends(require_canonical_admin)):
+    module = _canonical_admin_module(module)
     record_id = str(request.query_params.get("record_id") or "").strip()
+    if record_id:
+        record_id = _canonical_route_identifier(record_id, "ID bản ghi")
     params = {"record_id": record_id} if record_id else None
     return await _bridge(
         "GET",
@@ -944,6 +1481,7 @@ async def admin_retry_job(job_id: str, payload: FeatureRequest, request: Request
     # disabled, but do not contact the bot authority unless a separately
     # reviewed write adapter has been explicitly enabled.
     account = require_admin_csrf(request)
+    job_id = _canonical_route_identifier(job_id, "Mã job")
     if not _flags()["admin_writes_enabled"]:
         return envelope(False, "Admin ERP Web hiện chỉ đọc; retry job chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
     account = await require_canonical_admin_csrf(request)
@@ -958,6 +1496,7 @@ async def admin_retry_job(job_id: str, payload: FeatureRequest, request: Request
 @router.post("/admin/jobs/{job_id}/refund")
 async def admin_refund_job(job_id: str, payload: FeatureRequest, request: Request):
     account = require_admin_csrf(request)
+    job_id = _canonical_route_identifier(job_id, "Mã job")
     if not _flags()["admin_writes_enabled"]:
         return envelope(False, "Admin ERP Web hiện chỉ đọc; refund chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
     account = await require_canonical_admin_csrf(request)
@@ -972,6 +1511,8 @@ async def admin_refund_job(job_id: str, payload: FeatureRequest, request: Reques
 @router.post("/admin/features/{feature}/freeze")
 async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Request):
     account = require_admin_csrf(request)
+    if feature not in FEATURE_BY_KEY:
+        raise HTTPException(status_code=404, detail="Tính năng chưa có trong parity registry")
     if not _flags()["admin_writes_enabled"]:
         return envelope(False, "Admin ERP Web hiện chỉ đọc; freeze feature chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
     account = await require_canonical_admin_csrf(request)

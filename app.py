@@ -72,6 +72,8 @@ async def security_headers(request: Request, call_next):
     auth_limits = {
         "/api/v1/auth/login": 8,
         "/api/v1/auth/register": 4,
+        "/api/v1/auth/telegram/login/start": 5,
+        "/api/v1/auth/telegram/login/complete": 8,
     }
     if request.url.path in auth_limits and request.method == "POST":
         client_ip = request.client.host if request.client else "unknown"
@@ -172,6 +174,11 @@ async def legacy_b2b_redirect():
 async def page(page_path: str, request: Request):
     normalized = ("/" + page_path.lstrip("/")) if page_path else "/"
     normalized = normalized.rstrip("/") or "/"
+    # Earlier registry builds pointed SFX Library to a query variant of the
+    # Music Library. Keep that existing bookmark usable while routing it to
+    # its own Web surface so it can have independent readiness and filtering.
+    if normalized == "/music/library" and request.query_params.get("type") == "sfx":
+        return RedirectResponse("/music/sfx-library", status_code=307)
     # The portal renderer is intentionally generic for parity routes, so this
     # explicit guard is necessary before it can render any /admin/* surface.
     # It verifies both the signed web session and the bot's current canonical

@@ -25,6 +25,7 @@ class WebFeature:
 
 CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("dashboard", "Tổng quan", "account", "/dashboard", description="Tài khoản, Xu, job và trạng thái gần đây."),
+    WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá các workflow Web đã được định tuyến và trạng thái canonical của chúng."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
     WebFeature("wallet", "Ví Xu", "wallet", "/wallet", description="Số dư và lịch sử canonical từ bot."),
     WebFeature("wallet_topup", "Nạp Xu", "wallet", "/wallet/topup", description="Tạo thanh toán qua core PayOS canonical."),
@@ -65,7 +66,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("voice_preview", "Nghe thử giọng", "voice", "/voice/preview"),
     WebFeature("voice_outputs", "Voice outputs", "voice", "/voice/outputs"),
     WebFeature("music_library", "Thư viện nhạc", "music", "/music/library"),
-    WebFeature("sfx_library", "Hiệu ứng âm thanh", "music", "/music/library?type=sfx"),
+    WebFeature("sfx_library", "Thư viện SFX", "music", "/music/sfx-library", description="Tài sản hiệu ứng âm thanh thuộc phiên đã được Core Bridge xác minh."),
     WebFeature("music_background", "Nhạc nền AI", "music", "/music/ai", input_hint="Phong cách, mood và thời lượng."),
     WebFeature("music_song", "Bài hát AI", "music", "/music/song", input_hint="Lời, phong cách và chế độ half/full."),
     WebFeature("music_sfx", "SFX", "music", "/music/sfx", input_hint="Brief hiệu ứng âm thanh."),

@@ -2,10 +2,15 @@ import asyncio
 
 import httpx
 import pytest
+from fastapi import HTTPException
 from starlette.requests import Request
 
 from copyfast_bridge import CoreBridgeClient
-from copyfast_api import FeatureRequest, PaymentRequest, _bridge, _feature_action, admin_retry_job, create_payment, wallet_history
+from copyfast_api import (
+    FeatureRequest, PaymentRequest, _bridge, _feature_action, _payment_topup_packages,
+    admin_module, admin_retry_job, asset_download, create_payment, job_detail,
+    payment_status, wallet_history,
+)
 from copyfast_db import ensure_copyfast_schema
 
 
@@ -105,9 +110,13 @@ async def test_web_bridge_redacts_canonical_identity_from_nested_browser_data(mo
             "status": "completed",
             "message": "ok",
             "data": {
-                "user": {"user_id": "telegram-1", "username": "private-name", "is_vip": True},
+                "balance_xu": 42,
+                "total_spent_xu": 9,
+                "is_vip": True,
+                "user": {"user_id": "telegram-1", "username": "private-name"},
                 "items": [{"id": "job-1", "canonical_user_id": "telegram-1", "chat_id": "123"}],
                 "wallet": {"balance": 42, "telegram_username": "private-name"},
+                "bank_account": "must-not-reach-browser",
             },
             "error_code": None,
         }
@@ -120,7 +129,7 @@ async def test_web_bridge_redacts_canonical_identity_from_nested_browser_data(mo
         account={"id": "web-account", "canonical_user_id": "telegram-1"},
         request=request,
     )
-    assert result["data"] == {"user": {"is_vip": True}, "items": [{"id": "job-1"}], "wallet": {"balance": 42}}
+    assert result["data"] == {"balance_xu": 42, "total_spent_xu": 9, "is_vip": True}
 
 
 @pytest.mark.anyio
@@ -161,15 +170,21 @@ async def test_wallet_history_drops_unrendered_ledger_notes_and_references(monke
             "status": "completed",
             "message": "ok",
             "data": {
+                "reference": "top-level-private-order",
+                "note": "top-level-private-note",
+                "next_cursor": "private-cursor",
                 "items": [{
+                    "id": "wallet-event-private-id",
                     "event_type": "charge",
                     "delta_xu": -12,
                     "balance_after_xu": 88,
                     "created_at": "2026-07-11T00:00:00Z",
                     "reference": "order-private",
                     "note": "prompt riêng tư của khách",
-                }],
+                    "provider": "private-provider-context",
+                }, "private-receipt-string", {"event_type": ["not-a-scalar"], "delta_xu": "not-a-number"}],
             },
+            "debug_context": "private-bridge-detail",
             "error_code": None,
         }
 
@@ -182,6 +197,8 @@ async def test_wallet_history_drops_unrendered_ledger_notes_and_references(monke
         "balance_after_xu": 88,
         "created_at": "2026-07-11T00:00:00Z",
     }]
+    assert set(result["data"]) == {"items"}
+    assert "private" not in str(result)
 
 
 @pytest.mark.anyio
@@ -233,6 +250,9 @@ async def test_feature_action_rejects_browser_bypass_of_web_intake_contract(monk
         ("music_song", {"brief": "Bài hát giới thiệu sản phẩm", "mode": "lyrics", "song_length_mode": "seconds"}, "song_duration_required"),
         ("subtitle_translate", {"upload_ids": ["staged-subtitle"], "target_language": "xx"}, "target_language_invalid"),
         ("video_single", {"prompt": "Video mới", "nested": {"user_id": "browser-forged"}}, "authority_field_not_allowed"),
+        ("video_single", {"prompt": "Video mới", "nested": {"canonicalUserId": "browser-forged"}}, "authority_field_not_allowed"),
+        ("video_single", {"prompt": "Video mới", "paymentId": "browser-forged"}, "authority_field_not_allowed"),
+        ("video_single", {"prompt": "Video mới", "nested": {"output-url": "https://invalid.example/output"}}, "authority_field_not_allowed"),
     ]
     for feature, values, reason in cases:
         result = await _feature_action("draft", feature, FeatureRequest(input=values), request, account)
@@ -289,6 +309,37 @@ async def test_get_bridge_keeps_canonical_identity_when_a_safe_filter_is_added(m
 
 
 @pytest.mark.anyio
+async def test_untrusted_route_identifiers_and_admin_modules_fail_before_the_bridge(monkeypatch):
+    """Path fragments must not become a signed internal route or query filter."""
+    bridge_calls = []
+
+    async def fake_bridge(*args, **kwargs):
+        bridge_calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}}
+
+    for handler in (payment_status, job_detail, asset_download, admin_module):
+        monkeypatch.setitem(handler.__globals__, "_bridge", fake_bridge)
+    account = {"id": "web-account", "canonical_user_id": "telegram-1", "role": "admin"}
+    request = Request({"type": "http", "method": "GET", "path": "/api/v1/payments/invalid", "headers": []})
+
+    with pytest.raises(HTTPException, match="Mã payment không hợp lệ"):
+        await payment_status("../admin/payments", request, account)
+    with pytest.raises(HTTPException, match="Mã job không hợp lệ"):
+        await job_detail("job?other=1", request, account)
+    with pytest.raises(HTTPException, match="Mã tài sản không hợp lệ"):
+        await asset_download("asset/../secret", request, account)
+    with pytest.raises(HTTPException, match="Module Admin chưa được công bố"):
+        await admin_module("private-runtime", request, account)
+    record_request = Request({
+        "type": "http", "method": "GET", "path": "/api/v1/admin/modules/users",
+        "query_string": b"record_id=../other-user", "headers": [],
+    })
+    with pytest.raises(HTTPException, match="ID bản ghi không hợp lệ"):
+        await admin_module("users", record_request, account)
+    assert bridge_calls == []
+
+
+@pytest.mark.anyio
 async def test_post_bridge_overwrites_a_forged_canonical_identity(monkeypatch):
     captured = {}
 
@@ -311,6 +362,72 @@ async def test_post_bridge_overwrites_a_forged_canonical_identity(monkeypatch):
 
 
 @pytest.mark.anyio
+async def test_feature_bridge_projection_keeps_planning_but_drops_delivery_and_operator_side_channels(monkeypatch):
+    """A future feature adapter must not turn draft/estimate into delivery."""
+
+    async def fake_bridge_request(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "awaiting_confirm",
+            "message": "provider debug: https://private.example/trace",
+            "error_code": "BRIDGE_DEBUG_SHOULD_NOT_LEAK",
+            "data": {
+                "feature": "video_single",
+                "draft": {
+                    "available": True,
+                    "source": "canonical_planner",
+                    "content": {
+                        "script": "Kịch bản planning hợp lệ",
+                        "estimated_xu": 18,
+                        "preview_url": "https://provider.example/preview",
+                        "output": "output giả không được render",
+                        "providerTask": "private-task",
+                    },
+                },
+                "estimate": {
+                    "available": True,
+                    "estimated_xu": 30,
+                    "choices": [{"label": "Standard", "cost_xu": 30}],
+                    "checkout_url": "https://pay.payos.vn/private-checkout",
+                },
+                "uploads": [{
+                    "id": "stage-1", "file_name": "clip.mp4", "content_size": 12,
+                    "provider_id": "private-provider", "download_url": "https://private.example/download",
+                }],
+                "job_id": "job-private",
+                "unrelated_internal_field": "must-not-reach-browser",
+            },
+        }
+
+    monkeypatch.setitem(_bridge.__globals__, "bridge_request", fake_bridge_request)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/features/video_single/estimate", "headers": []})
+    result = await _bridge(
+        "POST",
+        "/internal/v1/features/video_single/estimate",
+        account={"id": "web-account", "canonical_user_id": "telegram-1"},
+        request=request,
+        payload={"input": {"prompt": "Video giới thiệu"}},
+    )
+
+    assert result["message"] == "Dữ liệu canonical đang chờ bước xác nhận phù hợp."
+    assert result["error_code"] == "CORE_BRIDGE_RESPONSE_GUARDED"
+    assert result["data"] == {
+        "feature": "video_single",
+        "draft": {
+            "available": True,
+            "source": "canonical_planner",
+            "content": {"script": "Kịch bản planning hợp lệ", "estimated_xu": 18},
+        },
+        "estimate": {
+            "available": True,
+            "estimated_xu": 30,
+            "choices": [{"label": "Standard", "cost_xu": 30}],
+        },
+        "uploads": [{"id": "stage-1", "file_name": "clip.mp4", "content_size": 12}],
+    }
+
+
+@pytest.mark.anyio
 async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_call(tmp_path, monkeypatch):
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "idempotency.db"))
     monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "true")
@@ -323,7 +440,9 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
         return {"ok": True, "status": "awaiting_confirm", "message": "ok", "data": {"payment_id": "p-1"}, "error_code": None}
 
     monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
-    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_catalog_available", lambda: True)
+    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_packages", lambda: [{
+        "code": "pkg-basic", "label": "Gói cơ bản", "amount_vnd": 10000, "xu": 100, "available": True,
+    }])
     request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
     account = {"id": "web-account", "canonical_user_id": "telegram-1"}
     payload = PaymentRequest(package_id="pkg-basic", payment_type="topup_xu", idempotency_key="payment-reserve-0001")
@@ -348,7 +467,7 @@ async def test_web_payment_creation_requires_a_dedicated_topup_catalog_before_th
         return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
 
     monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
-    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_catalog_available", lambda: False)
+    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_packages", lambda: [])
     request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
     account = {"id": "web-account", "canonical_user_id": "telegram-1"}
     result = await create_payment(
@@ -359,6 +478,44 @@ async def test_web_payment_creation_requires_a_dedicated_topup_catalog_before_th
     assert result["status"] == "guarded"
     assert result["error_code"] == "PAYMENT_TOPUP_CATALOG_REQUIRED"
     assert calls == []
+
+
+@pytest.mark.anyio
+async def test_web_payment_creation_rejects_codes_outside_the_current_canonical_topup_catalog(monkeypatch):
+    monkeypatch.setenv("WEBAPP_PAYMENT_ENABLED", "true")
+    calls = []
+
+    async def fake_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
+    monkeypatch.setitem(create_payment.__globals__, "_payment_topup_packages", lambda: [{
+        "code": "topup-100", "label": "100 Xu", "amount_vnd": 10000, "xu": 100, "available": True,
+    }])
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    result = await create_payment(
+        PaymentRequest(package_id="forged-package", payment_type="topup_xu", idempotency_key="payment-outside-catalog-0001"),
+        request,
+        account,
+    )
+    assert result["status"] == "failed"
+    assert result["error_code"] == "PAYMENT_PACKAGE_NOT_IN_CATALOG"
+    assert calls == []
+
+
+def test_payment_topup_catalog_projects_only_selectable_well_formed_skus(monkeypatch):
+    monkeypatch.setitem(_payment_topup_packages.__globals__, "_payment_topup_catalog", lambda: [
+        {"code": "topup-100", "label": "100 Xu", "amount_vnd": 10000, "xu": 100, "available": True, "internal_note": "do-not-leak"},
+        {"code": "topup-100", "label": "Duplicate", "amount_vnd": 20000, "xu": 200, "available": True},
+        {"code": "invalid code with spaces", "label": "Bad", "amount_vnd": 10000, "xu": 100, "available": True},
+        {"code": "hidden", "label": "Hidden", "amount_vnd": 10000, "xu": 100, "available": False},
+        {"code": "zero", "label": "Zero", "amount_vnd": 0, "xu": 0, "available": True},
+    ])
+    assert _payment_topup_packages() == [{
+        "code": "topup-100", "label": "100 Xu", "amount_vnd": 10000, "xu": 100, "available": True,
+    }]
 
 
 @pytest.mark.anyio

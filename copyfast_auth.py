@@ -20,6 +20,7 @@ from copyfast_db import ensure_copyfast_schema, transaction, utc_now
 router = APIRouter(tags=["COPYFAST Auth"])
 
 SESSION_COOKIE = "toan_aas_session"
+TELEGRAM_LOGIN_COOKIE = "toan_aas_telegram_login"
 SESSION_TTL_HOURS = max(1, int(os.environ.get("WEB_SESSION_TTL_HOURS", "24")))
 LINK_TTL_MINUTES = max(1, int(os.environ.get("TELEGRAM_LINK_TTL_MINUTES", "10")))
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
@@ -124,6 +125,37 @@ def _parse_session_cookie(value: str | None) -> str | None:
     return session_id
 
 
+def _telegram_login_cookie_value(browser_token: str) -> str:
+    """Sign a short-lived Telegram login challenge separately from sessions."""
+    material = f"telegram-login.{browser_token}".encode("utf-8")
+    signature = hmac.new(_secret(), material, hashlib.sha256).hexdigest()
+    return f"{browser_token}.{signature}"
+
+
+def _parse_telegram_login_cookie(value: str | None) -> str | None:
+    if not value or "." not in value:
+        return None
+    browser_token, signature = value.rsplit(".", 1)
+    if not browser_token:
+        return None
+    expected = hmac.new(_secret(), f"telegram-login.{browser_token}".encode("utf-8"), hashlib.sha256).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        return None
+    return browser_token
+
+
+def _new_telegram_code() -> str:
+    # Match the existing bot `/start web_<code>` and `/linkweb <code>` shape.
+    return secrets.token_urlsafe(18).replace("-", "A").replace("_", "B")
+
+
+def _telegram_deep_link(code: str) -> str:
+    bot_username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
+    if not TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(bot_username):
+        return ""
+    return f"https://t.me/{bot_username}?start=web_{code}"
+
+
 def _account_payload(row: tuple) -> dict:
     return {
         "id": row[0],
@@ -146,6 +178,18 @@ def browser_account_payload(account: dict) -> dict:
         "display_name": str(account.get("display_name") or ""),
         "role": "admin" if account.get("role") == "admin" else "user",
         "telegram_linked": bool(account.get("canonical_user_id")),
+        "profile": {
+            "locale": str(account.get("locale") or "vi"),
+            "timezone": str(account.get("timezone") or "Asia/Ho_Chi_Minh"),
+            "avatar_style": str(account.get("avatar_style") or "gradient"),
+        },
+        "login_methods": {
+            "email": True,
+            "telegram": bool(account.get("canonical_user_id")),
+            # OAuth credentials are intentionally not inferred from browser
+            # state. GitHub is advertised only as a setup-required option.
+            "github": False,
+        },
     }
 
 
@@ -170,8 +214,10 @@ def current_session(request: Request) -> dict:
     with transaction() as conn:
         row = conn.execute(
             """SELECT s.id, s.csrf_token, s.expires_at, a.id, a.email, a.display_name,
-                      a.canonical_user_id, a.role_cache, a.is_active
+                      a.canonical_user_id, a.role_cache, a.is_active,
+                      p.locale, p.timezone, p.avatar_style
                FROM web_sessions s JOIN web_accounts a ON a.id=s.account_id
+               LEFT JOIN web_account_profiles p ON p.account_id=a.id
                WHERE s.id=? AND s.revoked_at IS NULL""",
             (session_id,),
         ).fetchone()
@@ -188,6 +234,9 @@ def current_session(request: Request) -> dict:
             "display_name": row[5] or "",
             "canonical_user_id": row[6],
             "role": row[7] or "user",
+            "locale": row[9] or "vi",
+            "timezone": row[10] or "Asia/Ho_Chi_Minh",
+            "avatar_style": row[11] or "gradient",
         },
     }
 
@@ -313,21 +362,39 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
     ensure_copyfast_schema()
     account_id = str(uuid.uuid4())
     now = utc_now()
+    # Do this before the insert attempt for both new and existing addresses.
+    # The endpoint deliberately does not create a signed session, so its
+    # browser-visible result cannot reveal whether an email already existed.
+    password_hash = _password_hash(payload.password)
     try:
         with transaction() as conn:
             conn.execute(
                 """INSERT INTO web_accounts
                 (id, email, password_hash, display_name, created_at, updated_at)
                 VALUES (?, ?, ?, ?, ?, ?)""",
-                (account_id, email, _password_hash(payload.password), payload.display_name.strip(), now, now),
+                (account_id, email, password_hash, payload.display_name.strip(), now, now),
+            )
+            conn.execute(
+                """INSERT INTO web_account_profiles
+                (account_id, locale, timezone, avatar_style, created_at, updated_at)
+                VALUES (?, 'vi', 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)""",
+                (account_id, now, now),
             )
             _record_audit(conn, account_id=account_id, canonical_user_id=None, action="auth.register", request_id=_request_id(request))
     except Exception as exc:
         if "UNIQUE constraint failed" in str(exc):
-            return envelope(False, "Email đã được sử dụng", status_name="failed", error_code="EMAIL_EXISTS")
-        raise
-    session = _create_session(response, account_id)
-    return envelope(True, "Đăng ký thành công. Hãy liên kết Telegram để dùng dữ liệu bot.", data={"account_id": account_id, **session}, status_name="awaiting_confirm")
+            # Existing and newly-created accounts receive the same public
+            # handoff below.  Do not set a cookie or return an account ID/CSRF
+            # token here: login is the only password flow that starts a signed
+            # session, making this response non-enumerating by design.
+            pass
+        else:
+            raise
+    return envelope(
+        True,
+        "Nếu email chưa có tài khoản, yêu cầu đăng ký đã được tiếp nhận. Hãy đăng nhập để tiếp tục hoặc dùng chức năng khôi phục mật khẩu khi được phát hành.",
+        status_name="awaiting_confirm",
+    )
 
 
 @router.post("/login")
@@ -336,7 +403,10 @@ async def login(payload: LoginRequest, request: Request, response: Response):
     email = payload.email.strip().lower()
     with transaction() as conn:
         row = conn.execute(
-            "SELECT id, email, password_hash, display_name, canonical_user_id, role_cache, is_active FROM web_accounts WHERE email=?",
+            """SELECT a.id, a.email, a.password_hash, a.display_name, a.canonical_user_id, a.role_cache, a.is_active,
+                      p.locale, p.timezone, p.avatar_style
+               FROM web_accounts a LEFT JOIN web_account_profiles p ON p.account_id=a.id
+               WHERE a.email=?""",
             (email,),
         ).fetchone()
         if not row or not row[6] or not _verify_password(payload.password, row[2]):
@@ -345,6 +415,7 @@ async def login(payload: LoginRequest, request: Request, response: Response):
         account = {
             "id": row[0], "email": row[1], "display_name": row[3] or "",
             "canonical_user_id": row[4], "role": row[5] or "user",
+            "locale": row[7] or "vi", "timezone": row[8] or "Asia/Ho_Chi_Minh", "avatar_style": row[9] or "gradient",
         }
         _record_audit(conn, account_id=row[0], canonical_user_id=row[4], action="auth.login", request_id=_request_id(request))
     session = _create_session(response, account["id"])
@@ -375,9 +446,131 @@ async def me(request: Request, account: dict = Depends(require_account)):
     )
 
 
+@router.post("/telegram/login/start")
+async def start_telegram_login(request: Request, response: Response):
+    """Start passwordless sign-in without accepting a raw Telegram ID.
+
+    The visible code is proven only inside the already authenticated Telegram
+    bot. A separate HttpOnly browser challenge prevents a copied code from
+    issuing a Web session in another browser.
+    """
+    ensure_copyfast_schema()
+    code = _new_telegram_code()
+    browser_token = secrets.token_urlsafe(32)
+    code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    browser_token_hash = hashlib.sha256(browser_token.encode("utf-8")).hexdigest()
+    with transaction() as conn:
+        now = utc_now()
+        conn.execute("DELETE FROM telegram_login_codes WHERE expires_at<=?", (now,))
+        conn.execute(
+            """INSERT INTO telegram_login_codes
+            (code_hash, browser_token_hash, expires_at, created_at)
+            VALUES (?, ?, ?, ?)""",
+            (code_hash, browser_token_hash, _link_expiry(), now),
+        )
+        _record_audit(conn, account_id=None, canonical_user_id=None, action="auth.telegram_login_start", request_id=_request_id(request))
+    response.set_cookie(
+        TELEGRAM_LOGIN_COOKIE,
+        _telegram_login_cookie_value(browser_token),
+        httponly=True,
+        secure=_cookie_secure(),
+        samesite="lax",
+        max_age=LINK_TTL_MINUTES * 60,
+        path="/",
+    )
+    return envelope(
+        True,
+        "Mở Telegram để xác minh quyền sở hữu, sau đó quay lại Web để hoàn tất đăng nhập.",
+        data={
+            "code": code,
+            "expires_in_minutes": LINK_TTL_MINUTES,
+            "deep_link": _telegram_deep_link(code),
+            "raw_telegram_id_accepted": False,
+        },
+        status_name="awaiting_confirm",
+    )
+
+
+def _telegram_login_challenge(request: Request) -> tuple[str, str] | None:
+    browser_token = _parse_telegram_login_cookie(request.cookies.get(TELEGRAM_LOGIN_COOKIE))
+    if not browser_token:
+        return None
+    return browser_token, hashlib.sha256(browser_token.encode("utf-8")).hexdigest()
+
+
+def _clear_telegram_login_cookie(response: Response) -> None:
+    response.delete_cookie(
+        TELEGRAM_LOGIN_COOKIE,
+        path="/",
+        secure=_cookie_secure(),
+        httponly=True,
+        samesite="lax",
+    )
+
+
+@router.get("/telegram/login/status")
+async def telegram_login_status(request: Request, response: Response):
+    """Report challenge state only; POST /complete is the session write."""
+    challenge = _telegram_login_challenge(request)
+    if not challenge:
+        return envelope(False, "Hãy tạo một mã đăng nhập Telegram mới.", data={"ready": False}, status_name="guarded", error_code="TELEGRAM_LOGIN_CHALLENGE_REQUIRED")
+    _browser_token, token_hash = challenge
+    with transaction() as conn:
+        row = conn.execute(
+            "SELECT expires_at, consumed_at, canonical_user_id FROM telegram_login_codes WHERE browser_token_hash=?",
+            (token_hash,),
+        ).fetchone()
+        if not row or _as_time(row[0]) <= _now():
+            conn.execute("DELETE FROM telegram_login_codes WHERE browser_token_hash=?", (token_hash,))
+            _clear_telegram_login_cookie(response)
+            return envelope(False, "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới.", data={"ready": False}, status_name="failed", error_code="TELEGRAM_LOGIN_EXPIRED")
+        if not row[1] or not row[2]:
+            return envelope(True, "Đang chờ bot xác minh Telegram.", data={"ready": False}, status_name="awaiting_confirm")
+    return envelope(True, "Telegram đã được xác minh. Bạn có thể hoàn tất đăng nhập an toàn.", data={"ready": True}, status_name="awaiting_confirm")
+
+
+@router.post("/telegram/login/complete")
+async def complete_telegram_login(request: Request, response: Response):
+    """Exchange one browser-bound, bot-verified challenge for a session."""
+    challenge = _telegram_login_challenge(request)
+    if not challenge:
+        return envelope(False, "Phiên xác minh Telegram không còn hợp lệ. Hãy tạo mã mới.", status_name="guarded", error_code="TELEGRAM_LOGIN_CHALLENGE_REQUIRED")
+    _browser_token, token_hash = challenge
+    account: dict | None = None
+    with transaction() as conn:
+        row = conn.execute(
+            "SELECT code_hash, expires_at, consumed_at, canonical_user_id FROM telegram_login_codes WHERE browser_token_hash=?",
+            (token_hash,),
+        ).fetchone()
+        if not row or _as_time(row[1]) <= _now():
+            conn.execute("DELETE FROM telegram_login_codes WHERE browser_token_hash=?", (token_hash,))
+            _clear_telegram_login_cookie(response)
+            return envelope(False, "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới.", status_name="failed", error_code="TELEGRAM_LOGIN_EXPIRED")
+        if not row[2] or not row[3]:
+            return envelope(False, "Bot chưa xác minh Telegram cho mã này.", status_name="awaiting_confirm", error_code="TELEGRAM_LOGIN_PENDING")
+        account_row = conn.execute(
+            "SELECT id, email, display_name, canonical_user_id, role_cache, is_active FROM web_accounts WHERE canonical_user_id=?",
+            (row[3],),
+        ).fetchone()
+        if not account_row or not account_row[5]:
+            conn.execute("DELETE FROM telegram_login_codes WHERE code_hash=?", (row[0],))
+            _clear_telegram_login_cookie(response)
+            _record_audit(conn, account_id=None, canonical_user_id=None, action="auth.telegram_login_complete", request_id=_request_id(request), outcome="denied", detail="no active linked web account")
+            return envelope(False, "Telegram đã được xác minh nhưng chưa có tài khoản Web đang hoạt động. Hãy đăng ký/đăng nhập email một lần rồi liên kết Telegram.", status_name="guarded", error_code="TELEGRAM_LOGIN_ACCOUNT_REQUIRED")
+        account = {
+            "id": account_row[0], "email": account_row[1], "display_name": account_row[2] or "",
+            "canonical_user_id": account_row[3], "role": account_row[4] or "user",
+        }
+        conn.execute("DELETE FROM telegram_login_codes WHERE code_hash=?", (row[0],))
+        _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.telegram_login_complete", request_id=_request_id(request))
+    _clear_telegram_login_cookie(response)
+    session = _create_session(response, account["id"])
+    return envelope(True, "Đăng nhập Telegram thành công", data={"account": browser_account_payload(account), **session})
+
+
 @router.post("/telegram/link/start")
 async def start_telegram_link(request: Request, account: dict = Depends(require_csrf)):
-    code = secrets.token_urlsafe(18).replace("-", "A").replace("_", "B")
+    code = _new_telegram_code()
     code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
     initiating_session_id = current_session(request)["session_id"]
     with transaction() as conn:
@@ -388,8 +581,7 @@ async def start_telegram_link(request: Request, account: dict = Depends(require_
             (code_hash, account["id"], _link_expiry(), initiating_session_id, utc_now()),
         )
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.telegram_link_start", request_id=_request_id(request))
-    bot_username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
-    deep_link = f"https://t.me/{bot_username}?start=web_{code}" if TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(bot_username) else ""
+    deep_link = _telegram_deep_link(code)
     return envelope(True, "Mở deep link Telegram hoặc gửi /linkweb kèm mã này cho bot để xác nhận liên kết.", data={"code": code, "expires_in_minutes": LINK_TTL_MINUTES, "deep_link": deep_link}, status_name="awaiting_confirm")
 
 
@@ -451,7 +643,24 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
             "SELECT account_id, expires_at, consumed_at, initiating_session_id FROM telegram_link_codes WHERE code_hash=?",
             (code_hash,),
         ).fetchone()
-        if not row or row[2] or _as_time(row[1]) <= _now():
+        if not row:
+            # The Bot intentionally calls the same signed callback for both
+            # link and passwordless-login codes. Login codes are browser-bound
+            # separately and do not update any account here; the matching
+            # browser performs the one-time session exchange afterwards.
+            login_row = conn.execute(
+                "SELECT expires_at, consumed_at FROM telegram_login_codes WHERE code_hash=?",
+                (code_hash,),
+            ).fetchone()
+            if not login_row or login_row[1] or _as_time(login_row[0]) <= _now():
+                return envelope(False, "Mã liên kết không hợp lệ hoặc đã hết hạn", status_name="failed", error_code="LINK_CODE_INVALID")
+            conn.execute(
+                "UPDATE telegram_login_codes SET consumed_at=?, canonical_user_id=? WHERE code_hash=?",
+                (utc_now(), canonical_user_id, code_hash),
+            )
+            _record_audit(conn, account_id=None, canonical_user_id=None, action="auth.telegram_login_confirm", request_id=_request_id(request))
+            return envelope(True, "Đã xác minh Telegram cho phiên đăng nhập Web", data={"mode": "login"})
+        if row[2] or _as_time(row[1]) <= _now():
             return envelope(False, "Mã liên kết không hợp lệ hoặc đã hết hạn", status_name="failed", error_code="LINK_CODE_INVALID")
         account_id, _expires_at, _consumed_at, initiating_session_id = row
         existing = conn.execute(

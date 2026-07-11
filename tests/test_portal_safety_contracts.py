@@ -150,7 +150,60 @@ def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert "function setWorkspaceInert(opened)" in PORTAL
     assert '"/wallet/topup", "Nạp Xu"' in PORTAL
     assert '"/packages", "Gói dịch vụ"' in PORTAL
-    assert "prefers-reduced-motion" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    assert '"/features", "Tất cả công cụ"' in PORTAL
+    css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    assert "prefers-reduced-motion" in css
+    assert 'data-portal-close-menu' in PORTAL
+    assert "function setSidebarMenuState(button, opened)" in PORTAL
+    assert 'button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng")' in PORTAL
+    assert "function closeSidebarAboveMobileBreakpoint()" in PORTAL
+    assert 'window.addEventListener("resize", closeSidebarAboveMobileBreakpoint);' in PORTAL
+    assert 'window.matchMedia("(min-width: 981px)")' in PORTAL
+    assert ".portal-sidebar-close" in css
+    assert ".portal-session-copy { display: none; }" in css
+
+
+def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> None:
+    assert "function matchesRouteFamily(path, root)" in PORTAL
+    assert 'if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");' in PORTAL
+    assert 'if (linkPath === "/video/create") return path === "/video" || matchesRouteFamily(path, "/video");' in PORTAL
+    assert 'if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");' in PORTAL
+    assert 'if (linkPath === "/subtitle") return matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path);' in PORTAL
+    assert 'if (linkPath === "/admin") {' in PORTAL
+    assert '["/admin", "Tất cả module", ICONS.admin]' in PORTAL
+    assert '["/video/create", "Video", ICONS.video]' in PORTAL
+
+
+def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_readiness() -> None:
+    assert 'customerPage("/features", "Tất cả công cụ"' in PORTAL
+    assert 'layout: "feature-catalog"' in PORTAL
+    assert 'case "feature-catalog": return renderFeatureCatalog(page, context);' in PORTAL
+    assert "function renderFeatureCatalog(page, context)" in PORTAL
+    assert "function customerCatalog(context)" in PORTAL
+    assert 'entry.kind !== "admin"' in PORTAL
+    assert "Object.values(manifest)" in PORTAL
+    assert "function fallbackCatalogGroup(path)" in PORTAL
+    assert "catalog: Array.isArray(source.catalog) ? source.catalog.slice() : []" in PORTAL
+    assert "source.catalog.slice(0, 24)" not in PORTAL
+    assert "Một số workspace tiêu biểu" in PORTAL
+    assert 'href="/features">Xem tất cả công cụ' in PORTAL
+    assert "Core Bridge chưa cấp metadata route" in PORTAL
+    assert "function catalogEntryState(module, page, context)" in PORTAL
+    assert "context.readiness.features[key]" in PORTAL
+    assert '"/music/sfx-library": "sfx_library"' in INTEGRATION
+    assert 'readOnlyPage("/music/sfx-library", "Thư viện SFX"' in PORTAL
+    assert 'page.path === "/music/sfx-library" ? "sfx"' in PORTAL
+    assert 'href: "/music/sfx-library", label: "Mở thư viện SFX"' in PORTAL
+    assert 'class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ"' in PORTAL
+    assert 'href="#feature-group-${safeText(group.key)}"' in PORTAL
+    assert ".portal-feature-jumps" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+
+
+def test_resolved_portal_page_title_beats_the_generic_server_placeholder_for_aliases() -> None:
+    assert "function displayPageTitle(page, context)" in PORTAL
+    assert 'serverTitle !== "TOAN AAS"' in PORTAL
+    assert "displayPageTitle(page, context)" in PORTAL
+    assert "document.title = `${displayPageTitle(page, context)} · TOAN AAS`;" in PORTAL
 
 
 def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:
@@ -207,6 +260,11 @@ def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_onl
     assert "Không dùng catalog combo/gói tháng để giả làm mệnh giá nạp Xu." in PORTAL
     assert "function paymentWebCatalogReady(context)" in PORTAL
     assert "payos.topup_catalog_available === true" in PORTAL
+    assert "Web không suy đoán QR luôn sẵn sàng." in PORTAL
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert "def _payment_topup_packages()" in api
+    assert '"topup_packages": topup_packages' in api
+    assert "PAYMENT_PACKAGE_NOT_IN_CATALOG" in api
     assert 'optionsFrom: "topupPackages"' in PORTAL
     assert 'field.optionsFrom === "topupPackages"' in PORTAL
     assert "Không nhập ảnh bill, số tài khoản, OTP, TXID hay thông tin thẻ vào Web App." in PORTAL
@@ -234,6 +292,9 @@ def test_manual_topup_guide_is_an_honest_bot_handoff_not_a_second_receipt_system
     assert "wallet_history_signal_available" in PORTAL
     assert "history_in_web === false" in PORTAL
     assert "Lịch sử nạp thủ công" in PORTAL
+    assert 'Sao chép ${safeText(historyCommand)}' in PORTAL
+    assert '>Mở Bot</a>' in PORTAL
+    assert "Mở Bot để xem lịch sử" not in PORTAL
     assert "const manualActions = manualAvailable" in PORTAL
     assert "Chưa có URL Bot hợp lệ để bắt đầu nạp thủ công." in PORTAL
     assert "Kiểm tra đơn PayOS" in PORTAL
@@ -255,7 +316,7 @@ def test_job_and_payment_statuses_are_not_conflated() -> None:
 def test_readiness_maps_all_feature_route_aliases_not_only_catalog_routes() -> None:
     assert "Object.entries(FEATURE_BY_PATH).forEach" in INTEGRATION
     assert 'api("/features/status")' in INTEGRATION
-    assert "pageStates: featurePageStates(base().catalog || [], readiness.data || {})" in INTEGRATION
+    assert "featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable))" in INTEGRATION
     assert 'path === "/tts" || path.startsWith("/voice")' in INTEGRATION
     assert 'context.pageStates[normalizePath(context.path)]' in PORTAL
 
@@ -305,16 +366,43 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert '"/admin/jobs/failed": "/admin/modules/failed-jobs"' in INTEGRATION
     assert '"/admin/providers": "/admin/modules/providers"' in INTEGRATION
     assert '"Worker jobs"' in PORTAL
+    assert 'adminPage("/admin/provider-cost"' in PORTAL
+    assert 'adminPage("/admin/freezes"' in PORTAL
+    assert 'adminPage("/admin/backups"' in PORTAL
+    assert "const ADMIN_DIRECTORY_GROUPS" in PORTAL
+    assert "function adminDirectoryEntries()" in PORTAL
+    assert 'if (context.isAdmin !== true) return "";' in PORTAL
+    assert "renderAdminDirectory(context)" in PORTAL
+    assert "Danh mục Admin ERP" in PORTAL
 
 
 def test_registration_copy_does_not_claim_unimplemented_email_verification() -> None:
     assert "email verification được Core Bridge thực thi" not in PORTAL
-    assert "xác minh email chưa được bật trong phase này" in PORTAL
+    assert "response đăng ký không tiết lộ email đã có tài khoản hay chưa" in PORTAL
+    assert "Chỉ Đăng nhập mới cấp signed session và CSRF" in PORTAL
+
+
+def test_login_methods_are_explicit_about_telegram_gmail_and_guarded_github_oauth() -> None:
+    assert 'label: "Email hoặc Gmail"' in PORTAL
+    assert "function renderTelegramLoginMethod(context)" in PORTAL
+    assert "Không nhập Telegram ID vào Web" in PORTAL
+    assert 'data-portal-action="start-telegram-login"' in PORTAL
+    assert 'data-portal-action="refresh-telegram-login"' in PORTAL
+    assert "GitHub OAuth chưa được bật" in PORTAL
+    assert "không giả lập đăng nhập" in PORTAL
+    assert 'window.location.assign("/login?registered=1");' in INTEGRATION
+    assert 'api("/auth/telegram/login/start"' in INTEGRATION
+    assert 'api("/auth/telegram/login/complete"' in INTEGRATION
+    assert "_telegram_login_cookie_value" in (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
 
 
 def test_feature_planning_state_is_distinguished_from_provider_engine_readiness() -> None:
     assert "const planningAvailable = page.type === \"feature\" && page.action !== \"none\"" in PORTAL
     assert "Planning draft sẵn sàng; engine vẫn được bảo vệ" in PORTAL
+    assert "Web App đang chờ adapter tạo job canonical" in PORTAL
+    assert "context.bridge.featureExecutionAvailable === true" in PORTAL
+    assert "state.public_ready && executionAvailable === true" in INTEGRATION
+    assert '"feature-confirm": webFeatureExecutionAvailable' in INTEGRATION
 
 
 def test_support_form_does_not_silently_drop_a_file_attachment() -> None:

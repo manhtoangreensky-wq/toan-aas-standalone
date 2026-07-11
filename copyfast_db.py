@@ -74,6 +74,22 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Minimal Web-owned profile defaults. This is presentation/session
+        # metadata only; it never mirrors Telegram identity, Xu, PayOS, jobs
+        # or provider state from the Bot.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_account_profiles (
+                account_id TEXT PRIMARY KEY,
+                locale TEXT NOT NULL DEFAULT 'vi',
+                timezone TEXT NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
+                avatar_style TEXT NOT NULL DEFAULT 'gradient',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS telegram_link_codes (
@@ -95,6 +111,22 @@ def ensure_copyfast_schema() -> None:
         link_columns = {row[1] for row in conn.execute("PRAGMA table_info(telegram_link_codes)").fetchall()}
         if "initiating_session_id" not in link_columns:
             conn.execute("ALTER TABLE telegram_link_codes ADD COLUMN initiating_session_id TEXT")
+        # Telegram passwordless sign-in uses a separate, browser-bound
+        # challenge.  It never stores a raw Telegram ID in a cookie or allows
+        # a browser to submit one.  The bot callback is still the authority
+        # that proves the Telegram identity.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS telegram_login_codes (
+                code_hash TEXT PRIMARY KEY,
+                browser_token_hash TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                consumed_at TEXT,
+                canonical_user_id TEXT,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_bridge_callback_nonces (
@@ -138,6 +170,9 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_telegram_login_browser ON telegram_login_codes(browser_token_hash, expires_at)"
         )
 
 
