@@ -18,8 +18,12 @@ def test_portal_never_offers_download_for_reported_output_metadata() -> None:
     assert "Chờ delivery canonical" in PORTAL
     assert "Có metadata output · chưa đủ delivery" in PORTAL
     assert "Metadata output đã bị giữ" in PORTAL
-    assert "function assetDeliveryState(item)" in PORTAL
+    assert "function assetDeliveryState(item, surface)" in PORTAL
     assert "Output hợp lệ · chờ URL ký" in PORTAL
+    assert "function assetDownloadPath(item)" in PORTAL
+    assert 'surface === "asset" && item.delivery_ready === true' in PORTAL
+    assert '`/api/v1/assets/${encodeURIComponent(assetId)}/download`' in PORTAL
+    assert "Tải tệp đã xác thực" in PORTAL
     assert "data-portal-action=\"asset-download\"" not in PORTAL
     assert "window.location.assign(`/assets/" not in PORTAL
     assert "asset-download" not in INTEGRATION

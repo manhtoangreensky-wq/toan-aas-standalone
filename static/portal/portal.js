@@ -1168,7 +1168,7 @@
       ? `<section class="portal-admin-grid"><div class="portal-metric"><span>Xu canonical</span><strong>${safeText(String(wallet.balance_xu || 0))}</strong><em>Không tính lại ở browser</em></div><div class="portal-metric"><span>Đã dùng</span><strong>${safeText(String(wallet.total_spent_xu || 0))}</strong><em>Đọc từ ledger canonical</em></div><div class="portal-metric"><span>Job gần đây</span><strong>${safeText(String(jobs.length))}</strong><em>Trong cửa sổ hiện tại</em></div><div class="portal-metric"><span>Asset metadata</span><strong>${safeText(String(assets.length))}</strong><em>Không đồng nghĩa delivery</em></div></section>`
       : "";
     const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item)}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}${renderStudioLaunchpad(context)}${renderModuleCards(context)}${activity}</article>`;
   }
 
@@ -1406,10 +1406,21 @@
     return `<span class="portal-delivery-state" data-delivery="pending">Chờ delivery canonical</span>`;
   }
 
-  function assetDeliveryState(item) {
+  function assetDownloadPath(item) {
+    const assetId = String(item && item.id || "").trim();
+    if (!/^[A-Za-z0-9._:-]{1,160}$/.test(assetId)) return "";
+    return `/api/v1/assets/${encodeURIComponent(assetId)}/download`;
+  }
+
+  function assetDeliveryState(item, surface) {
     if (item && item.download_ready === true) {
-      // `download_ready` from the canonical bot means the output metadata was
-      // validated. It is deliberately not a browser download permission.
+      const deliveryPath = surface === "asset" && item.delivery_ready === true ? assetDownloadPath(item) : "";
+      if (deliveryPath) {
+        // This remains a same-origin signed-session request. The API checks
+        // asset ownership and only then redirects once to a configured,
+        // short-lived Bot-issued URL; no provider URL lives in portal state.
+        return `<a class="portal-delivery-state portal-delivery-link" data-delivery="validated" href="${safeText(deliveryPath)}" rel="noreferrer">Tải tệp đã xác thực</a>`;
+      }
       return `<span class="portal-delivery-state" data-delivery="validated">Output hợp lệ · chờ URL ký</span>`;
     }
     const status = jobStatus(item);
@@ -1492,7 +1503,7 @@
     const filters = filterBar(ASSET_FILTERS, selected, "filter-assets", "data-asset-filter", "Lọc tài sản", counts);
     const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${filters}${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item)}</td>`, selected === "all" ? "Chưa có tài sản có thể mở" : "Không có tài sản ở bộ lọc này", selected === "all" ? "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge." : "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery.")}</section></article>`;
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${filters}${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item, "asset")}</td>`, selected === "all" ? "Chưa có tài sản có thể mở" : "Không có tài sản ở bộ lọc này", selected === "all" ? "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge." : "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery.")}</section></article>`;
   }
 
   function renderTickets(page, context) {
@@ -1755,7 +1766,7 @@
       const emptyTitle = isSfxLibrary ? "Chưa có SFX được xác minh" : "Chưa có tài sản được xác minh";
       const emptyText = isSfxLibrary ? "Core Bridge chỉ trả metadata SFX thuộc signed session; không phát hoặc tải output chưa có delivery ký." : "Khi output hợp lệ, Core Bridge mới trả metadata và signed delivery theo ownership.";
       const siblingLibrary = isSfxLibrary ? { href: "/music/library", label: "Mở thư viện nhạc" } : isMusicLibrary ? { href: "/music/sfx-library", label: "Mở thư viện SFX" } : null;
-      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${assetTitle}</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div>${siblingLibrary ? `<a class="portal-button portal-button--quiet" href="${siblingLibrary.href}">${siblingLibrary.label} →</a>` : ""}</div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item)}</td>`, emptyTitle, emptyText)}</section>`;
+      content = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${assetTitle}</h2><p class="portal-card-subtitle">Không hiển thị URL provider, file path hoặc preview không được ký.</p></div>${siblingLibrary ? `<a class="portal-button portal-button--quiet" href="${siblingLibrary.href}">${siblingLibrary.label} →</a>` : ""}</div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], scopedAssets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, emptyTitle, emptyText)}</section>`;
     }
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${content}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Quy tắc dữ liệu</h2><p class="portal-card-subtitle">Trang chỉ đọc không tạo request engine rỗng.</p></div></div>${renderNotes(page)}</section></article>`;
   }

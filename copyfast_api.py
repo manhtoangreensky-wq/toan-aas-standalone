@@ -12,12 +12,15 @@ import re
 import uuid
 from io import BytesIO
 from typing import Any
+from urllib.parse import urlparse
 from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi.responses import RedirectResponse
 from pydantic import BaseModel, Field
 
 from copyfast_auth import (
+    _record_audit,
     envelope,
     require_account,
     require_canonical_admin,
@@ -26,7 +29,7 @@ from copyfast_auth import (
     require_csrf,
 )
 from copyfast_bridge import bridge_configured, bridge_request
-from copyfast_db import transaction, utc_now
+from copyfast_db import ensure_copyfast_schema, transaction, utc_now
 from copyfast_registry import FEATURE_BY_KEY, catalog
 
 
@@ -77,6 +80,8 @@ UPLOAD_ACCEPTED_MIME_BY_EXTENSION = {
 TEXT_UPLOAD_EXTENSIONS = frozenset({".txt", ".srt", ".vtt"})
 MAX_DOCX_ARCHIVE_MEMBERS = 2_000
 MAX_DOCX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
+ASSET_DELIVERY_MAX_URL_LENGTH = 2_048
+ASSET_DELIVERY_MAX_TTL_SECONDS = 60 * 60
 
 # Browser forms must never be able to attach a value that looks like a bot
 # authority decision.  Identity, provider settings, wallet/payment fields,
@@ -405,13 +410,91 @@ def _project_readiness(value: Any) -> dict[str, dict[str, Any]]:
 def _safe_payos_checkout(value: Any) -> str:
     if not isinstance(value, str) or not value:
         return ""
-    from urllib.parse import urlparse
-
     parsed = urlparse(value)
     hostname = (parsed.hostname or "").lower()
     if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in {None, 443} or (hostname != "pay.payos.vn" and not hostname.endswith(".payos.vn")):
         return ""
     return value[:1_000]
+
+
+def _asset_delivery_allowed_hosts() -> frozenset[str]:
+    """Read an explicit allowlist for signed-file delivery origins.
+
+    A signed URL is intentionally not a generic bridge field. Operations must
+    nominate its CDN/object-store hostname through Railway before the Web App
+    will redirect a customer. Wildcards, schemes and paths are rejected so a
+    future adapter cannot turn a broad configuration string into an open
+    redirect.
+    """
+    raw = os.environ.get("WEBAPP_ASSET_DELIVERY_ALLOWED_HOSTS", "")
+    hosts: set[str] = set()
+    for item in raw.split(","):
+        host = item.strip().lower().rstrip(".")
+        if not host or "/" in host or ":" in host or "@" in host:
+            continue
+        if not re.fullmatch(r"(?=.{1,253}\Z)(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z0-9][a-z0-9-]{0,62}", host):
+            continue
+        hosts.add(host)
+    return frozenset(hosts)
+
+
+def _valid_asset_delivery_expiry(value: Any) -> bool:
+    if not isinstance(value, str) or len(value) > 80:
+        return False
+    try:
+        expiry = datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    if expiry.tzinfo is None:
+        return False
+    remaining = (expiry.astimezone(timezone.utc) - datetime.now(timezone.utc)).total_seconds()
+    return 0 < remaining <= ASSET_DELIVERY_MAX_TTL_SECONDS
+
+
+def _safe_asset_delivery_url(value: Any, expires_at: Any) -> str:
+    """Accept only a configured, still-valid temporary HTTPS delivery URL."""
+    if not isinstance(value, str) or not value or len(value) > ASSET_DELIVERY_MAX_URL_LENGTH:
+        return ""
+    if not _valid_asset_delivery_expiry(expires_at):
+        return ""
+    parsed = urlparse(value)
+    hostname = (parsed.hostname or "").lower().rstrip(".")
+    if (
+        parsed.scheme != "https"
+        or not hostname
+        or parsed.username
+        or parsed.password
+        or parsed.port not in {None, 443}
+        or parsed.fragment
+        or hostname not in _asset_delivery_allowed_hosts()
+    ):
+        return ""
+    return value
+
+
+def _asset_delivery_guarded(error_code: str) -> dict:
+    return envelope(
+        False,
+        "Tệp đang chờ delivery URL ký hợp lệ từ Core Bridge. Web không tự dựng link tải.",
+        status_name="guarded",
+        error_code=error_code,
+    )
+
+
+def _record_asset_delivery_audit(account: dict, request: Request, asset_id: str, *, outcome: str, detail: str) -> None:
+    """Audit an asset-delivery decision without persisting a signed URL."""
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        _record_audit(
+            conn,
+            account_id=str(account.get("id") or "") or None,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="asset.delivery",
+            request_id=_request_id(request) or str(uuid.uuid4()),
+            target=asset_id,
+            outcome=outcome,
+            detail=detail,
+        )
 
 
 def _project_feature_document(value: Any, *, depth: int = 0) -> Any:
@@ -523,7 +606,11 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
             return {"items": _project_items(value.get("items"), fields)}
         return _project_record(value, fields)
     if surface == "asset":
-        fields = ("id", "feature", "status", "created_at", "output_available", "download_ready")
+        # `delivery_ready` is an explicit Bot signal that the asset may ask
+        # the private delivery endpoint for a fresh URL. `download_ready`
+        # alone only proves output validation and must not create a browser
+        # link by itself.
+        fields = ("id", "feature", "status", "created_at", "output_available", "download_ready", "delivery_ready")
         return {"items": _project_items(value.get("items"), fields)} if isinstance(value.get("items"), list) else _project_record(value, fields)
     if surface == "voice":
         fields = ("id", "display_name", "status", "is_default", "consent_status", "tts_ready", "preview_ready", "created_at", "updated_at")
@@ -1129,6 +1216,50 @@ async def _bridge(
     )
 
 
+async def _asset_delivery_redirect(asset_id: str, request: Request, account: dict) -> RedirectResponse | dict:
+    """Mint one ownership-checked redirect from an explicit Bot contract.
+
+    The browser never receives the raw bridge envelope as JSON on success. It
+    only follows a same-origin, signed-session request that the Bot binds to
+    the canonical Telegram identity. This endpoint intentionally has no
+    fallback URL, local file path, provider lookup, or generated delivery
+    token: the Bot remains the delivery and ownership authority.
+    """
+    if not _flags()["copyfast_enabled"]:
+        return _asset_delivery_guarded("WEBAPP_COPYFAST_DISABLED")
+    user_id = _linked(account)
+    raw = await bridge_request(
+        "GET",
+        f"/internal/v1/assets/{asset_id}/download",
+        params={"user_id": user_id},
+        request_id=_request_id(request),
+        actor_id=user_id,
+    )
+    if not isinstance(raw, dict) or not raw.get("ok"):
+        _record_asset_delivery_audit(account, request, asset_id, outcome="denied", detail="canonical bridge rejected delivery")
+        return _browser_safe_bridge_response(raw if isinstance(raw, dict) else {}, surface="delivery")
+    data = raw.get("data") if isinstance(raw.get("data"), dict) else {}
+    delivery = data.get("delivery") if isinstance(data.get("delivery"), dict) else {}
+    if (
+        str(raw.get("status") or "") != "completed"
+        or data.get("asset_id") != asset_id
+        or data.get("download_ready") is not True
+        or data.get("delivery_ready") is not True
+    ):
+        _record_asset_delivery_audit(account, request, asset_id, outcome="denied", detail="canonical delivery contract not ready")
+        return _asset_delivery_guarded("ASSET_DELIVERY_NOT_READY")
+    delivery_url = _safe_asset_delivery_url(delivery.get("url"), delivery.get("expires_at"))
+    if not delivery_url:
+        _record_asset_delivery_audit(account, request, asset_id, outcome="denied", detail="delivery URL failed local contract validation")
+        return _asset_delivery_guarded("ASSET_DELIVERY_CONTRACT_INVALID")
+    _record_asset_delivery_audit(account, request, asset_id, outcome="ok", detail="issued temporary canonical delivery redirect")
+    response = RedirectResponse(delivery_url, status_code=307)
+    response.headers["Cache-Control"] = "no-store"
+    response.headers["Referrer-Policy"] = "no-referrer"
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    return response
+
+
 @router.get("/catalog")
 async def feature_catalog():
     return envelope(True, "Danh mục tính năng Web App", data={"features": catalog(), "flags": _flags(), "bridge_configured": bridge_configured()})
@@ -1292,10 +1423,11 @@ async def assets(request: Request, account: dict = Depends(require_account)):
 
 @router.get("/assets/{asset_id}/download")
 async def asset_download(asset_id: str, request: Request, account: dict = Depends(require_account)):
-    # The core either returns a short-lived, ownership-checked delivery URL or
-    # stays guarded. The Web App must never reconstruct provider URLs itself.
+    # The core either returns an explicit short-lived, ownership-checked
+    # delivery contract or stays guarded. The Web App never reconstructs a
+    # provider URL from asset/job metadata.
     asset_id = _canonical_route_identifier(asset_id, "Mã tài sản")
-    return await _bridge("GET", f"/internal/v1/assets/{asset_id}/download", account=account, request=request)
+    return await _asset_delivery_redirect(asset_id, request, account)
 
 
 @router.get("/voice/profiles")

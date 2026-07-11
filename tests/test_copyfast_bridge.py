@@ -1,8 +1,10 @@
 import asyncio
+from datetime import datetime, timedelta, timezone
 
 import httpx
 import pytest
 from fastapi import HTTPException
+from starlette.responses import RedirectResponse
 from starlette.requests import Request
 
 from copyfast_bridge import CoreBridgeClient
@@ -337,6 +339,111 @@ async def test_untrusted_route_identifiers_and_admin_modules_fail_before_the_bri
     with pytest.raises(HTTPException, match="ID bản ghi không hợp lệ"):
         await admin_module("users", record_request, account)
     assert bridge_calls == []
+
+
+@pytest.mark.anyio
+async def test_asset_delivery_redirect_requires_an_explicit_temporary_canonical_contract(tmp_path, monkeypatch):
+    """Asset metadata cannot become a provider URL or an open redirect."""
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "asset-delivery.db"))
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_ASSET_DELIVERY_ALLOWED_HOSTS", "downloads.toanaas.vn")
+    captured = {}
+    expiry = (datetime.now(timezone.utc) + timedelta(minutes=5)).isoformat()
+
+    async def approved_bridge(method, path, *, payload=None, params=None, request_id=None, actor_id=""):
+        captured.update({"method": method, "path": path, "payload": payload, "params": params, "actor_id": actor_id})
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "internal only",
+            "data": {
+                "asset_id": "asset-001",
+                "download_ready": True,
+                "delivery_ready": True,
+                "delivery": {"url": "https://downloads.toanaas.vn/private/file?signature=opaque", "expires_at": expiry},
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(asset_download.__globals__, "bridge_request", approved_bridge)
+    request = Request({"type": "http", "method": "GET", "path": "/api/v1/assets/asset-001/download", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    response = await asset_download("asset-001", request, account)
+    assert isinstance(response, RedirectResponse)
+    assert response.status_code == 307
+    assert response.headers["location"] == "https://downloads.toanaas.vn/private/file?signature=opaque"
+    assert response.headers["cache-control"] == "no-store"
+    assert response.headers["referrer-policy"] == "no-referrer"
+    assert captured == {
+        "method": "GET",
+        "path": "/internal/v1/assets/asset-001/download",
+        "payload": None,
+        "params": {"user_id": "telegram-1"},
+        "actor_id": "telegram-1",
+    }
+
+    async def rejected_bridge(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "internal only",
+            "data": {
+                "asset_id": "asset-001",
+                "download_ready": True,
+                "delivery_ready": True,
+                "delivery": {"url": "https://evil.invalid/private?token=must-not-leak", "expires_at": expiry},
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(asset_download.__globals__, "bridge_request", rejected_bridge)
+    rejected = await asset_download("asset-001", request, account)
+    assert isinstance(rejected, dict)
+    assert rejected["status"] == "guarded"
+    assert rejected["error_code"] == "ASSET_DELIVERY_CONTRACT_INVALID"
+    assert "evil.invalid" not in str(rejected)
+    assert "must-not-leak" not in str(rejected)
+
+    async def wrong_asset_bridge(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "internal only",
+            "data": {
+                "asset_id": "another-users-asset",
+                "download_ready": True,
+                "delivery_ready": True,
+                "delivery": {"url": "https://downloads.toanaas.vn/private/file?signature=opaque", "expires_at": expiry},
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(asset_download.__globals__, "bridge_request", wrong_asset_bridge)
+    wrong_asset = await asset_download("asset-001", request, account)
+    assert isinstance(wrong_asset, dict)
+    assert wrong_asset["error_code"] == "ASSET_DELIVERY_NOT_READY"
+
+    async def expired_bridge(*_args, **_kwargs):
+        return {
+            "ok": True,
+            "status": "completed",
+            "message": "internal only",
+            "data": {
+                "asset_id": "asset-001",
+                "download_ready": True,
+                "delivery_ready": True,
+                "delivery": {
+                    "url": "https://downloads.toanaas.vn/private/file?signature=expired",
+                    "expires_at": (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat(),
+                },
+            },
+            "error_code": None,
+        }
+
+    monkeypatch.setitem(asset_download.__globals__, "bridge_request", expired_bridge)
+    expired = await asset_download("asset-001", request, account)
+    assert isinstance(expired, dict)
+    assert expired["error_code"] == "ASSET_DELIVERY_CONTRACT_INVALID"
 
 
 @pytest.mark.anyio

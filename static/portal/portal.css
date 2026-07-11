@@ -412,6 +412,9 @@ a { color: inherit; text-decoration: none; }
 .portal-delivery-state[data-delivery="reported"] { border-color: rgba(99, 225, 208, .25); color: #a7e8df; }
 .portal-delivery-state[data-delivery="pending"] { border-color: rgba(255, 211, 122, .22); color: #efcf83; }
 .portal-delivery-state[data-delivery="validated"] { border-color: rgba(99, 225, 208, .4); background: rgba(99, 225, 208, .08); color: #b9fff4; }
+.portal-delivery-link { text-decoration: none; transition: border-color .16s ease, background .16s ease, color .16s ease; }
+.portal-delivery-link:hover { border-color: rgba(145, 243, 229, .78); background: rgba(99, 225, 208, .16); color: #fff; }
+.portal-delivery-link:focus-visible { outline: 2px solid #8ef6e7; outline-offset: 2px; }
 .portal-delivery-state[data-delivery="unavailable"] { border-color: rgba(226, 126, 126, .22); color: #e5a2a2; }
 .portal-job-cost { display: grid; gap: 3px; min-width: 118px; }
 .portal-job-cost strong { color: #d6edf4; font-size: 10px; font-weight: 760; white-space: nowrap; }
