@@ -26,10 +26,13 @@ Server-side admin checks must protect any write or sensitive read endpoint.
 
 ## CORS
 
-Default allowed origins:
+Default allowed origin:
 
 - `https://app.toanaas.vn`
-- `https://toanaas.vn`
+
+The root/marketing origin is not credentialed by default. Add it through
+`CORS_ALLOW_ORIGINS` only after it is operated and audited as the same trust
+boundary as the signed Web App.
 
 Override with `CORS_ALLOW_ORIGINS`.
 

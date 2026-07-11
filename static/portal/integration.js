@@ -410,16 +410,29 @@
     return states;
   }
 
+  function safeOAuthStartPath(value) {
+    if (typeof value !== "string" || !value) return "";
+    try {
+      const url = new URL(value, window.location.origin);
+      if (url.origin !== window.location.origin) return "";
+      return /^\/api\/v1\/auth\/oauth\/(google|github|apple)\/start$/.test(url.pathname) && url.searchParams.get("link") === "1" ? `${url.pathname}?link=1` : "";
+    } catch (_) {
+      return "";
+    }
+  }
+
   async function hydrate() {
     const context = base();
-    const [catalogResponse, statusResponse, meResponse] = await Promise.all([
+    const [catalogResponse, statusResponse, meResponse, providerResponse] = await Promise.all([
       fetch(`${API}/catalog`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({})),
       fetch(`${API}/core/status`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({})),
-      fetch(`${API}/auth/me`, { credentials: "same-origin" }).then(async (r) => r.ok ? r.json() : ({})).catch(() => ({}))
+      fetch(`${API}/auth/me`, { credentials: "same-origin" }).then(async (r) => r.ok ? r.json() : ({})).catch(() => ({})),
+      fetch(`${API}/auth/providers`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({}))
     ]);
     const catalog = catalogResponse && catalogResponse.data && Array.isArray(catalogResponse.data.features) ? catalogResponse.data.features : [];
     const status = statusResponse && statusResponse.data ? statusResponse.data : {};
     const me = meResponse && meResponse.data ? meResponse.data : {};
+    const oauthProviders = providerResponse && providerResponse.data && providerResponse.data.providers && typeof providerResponse.data.providers === "object" ? providerResponse.data.providers : {};
     const account = me.account || null;
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
     const telegramLinked = Boolean(account && account.telegram_linked);
@@ -434,6 +447,13 @@
       "auth-register": true,
       "start-telegram-login": true,
       "refresh-telegram-login": true,
+      "start-oauth-google": Boolean(oauthProviders.google && oauthProviders.google.enabled === true),
+      "start-oauth-github": Boolean(oauthProviders.github && oauthProviders.github.enabled === true),
+      "start-oauth-apple": Boolean(oauthProviders.apple && oauthProviders.apple.enabled === true),
+      "link-oauth-google": Boolean(account && me.csrf_token && oauthProviders.google && oauthProviders.google.enabled === true),
+      "link-oauth-github": Boolean(account && me.csrf_token && oauthProviders.github && oauthProviders.github.enabled === true),
+      "link-oauth-apple": Boolean(account && me.csrf_token && oauthProviders.apple && oauthProviders.apple.enabled === true),
+      "update-profile": Boolean(account && me.csrf_token),
       "auth-logout": Boolean(account && me.csrf_token),
       "start-telegram-link": Boolean(account),
       "refresh-link-status": Boolean(account),
@@ -451,6 +471,7 @@
     merge({
       ...context,
       catalog,
+      oauthProviders,
       isAdmin: Boolean(account && account.role === "admin"),
       profile: account ? {
         displayName: account.display_name || account.email,
@@ -652,14 +673,26 @@
       }
       if (action === "start-telegram-login") {
         const result = await api("/auth/telegram/login/start", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
-        merge({ telegramLoginFlow: { status: result.status || "awaiting_confirm", message: result.message, data: result.data || {} } });
+        merge({ telegramLoginFlow: { status: result.status || "awaiting_confirm", message: result.message, errorCode: result.error_code || "", data: result.data || {} } });
         toast(result.message);
         return;
       }
       if (action === "refresh-telegram-login") {
-        const status = await api("/auth/telegram/login/status");
+        let status;
+        try {
+          status = await api("/auth/telegram/login/status");
+        } catch (error) {
+          const failure = error && error.payload && typeof error.payload === "object" ? error.payload : {};
+          if (failure.error_code === "TELEGRAM_LOGIN_ACCOUNT_REQUIRED") {
+            const previous = base().telegramLoginFlow && typeof base().telegramLoginFlow === "object" ? base().telegramLoginFlow : {};
+            merge({ telegramLoginFlow: { ...previous, status: failure.status || "guarded", message: failure.message || "Telegram chưa liên kết với tài khoản Web.", errorCode: failure.error_code, data: { ...(previous.data || {}), ...(failure.data || {}) } } });
+            toast(failure.message || "Telegram chưa liên kết với tài khoản Web.");
+            return;
+          }
+          throw error;
+        }
         const previous = base().telegramLoginFlow && typeof base().telegramLoginFlow === "object" ? base().telegramLoginFlow : {};
-        merge({ telegramLoginFlow: { ...previous, status: status.status || "awaiting_confirm", message: status.message, data: { ...(previous.data || {}), ...(status.data || {}) } } });
+        merge({ telegramLoginFlow: { ...previous, status: status.status || "awaiting_confirm", message: status.message, errorCode: status.error_code || "", data: { ...(previous.data || {}), ...(status.data || {}) } } });
         if (!(status.data && status.data.ready === true)) {
           toast(status.message);
           return;
@@ -670,6 +703,28 @@
         const account = completed.data && completed.data.account ? completed.data.account : {};
         const requested = safeReturnPath(new URLSearchParams(window.location.search).get("next") || "");
         window.location.assign(account.telegram_linked ? (requested || "/dashboard") : "/onboarding");
+        return;
+      }
+      if (["link-oauth-google", "link-oauth-github", "link-oauth-apple"].includes(action)) {
+        const provider = action.replace("link-oauth-", "");
+        const result = await api(`/auth/oauth/${provider}/link/start`, { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
+        const startPath = safeOAuthStartPath(result.data && result.data.start_path);
+        if (!startPath) throw new Error("Máy chủ chưa cấp đường dẫn OAuth hợp lệ.");
+        window.location.assign(startPath);
+        return;
+      }
+      if (action === "update-profile") {
+        const result = await api("/auth/profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            display_name: fields.display_name || "",
+            locale: fields.locale || "vi",
+            timezone: fields.timezone || "Asia/Ho_Chi_Minh"
+          })
+        });
+        toast(result.message);
+        await hydrate();
         return;
       }
       if (action === "auth-logout") {

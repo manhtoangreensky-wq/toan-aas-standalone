@@ -1,4 +1,6 @@
 import importlib
+import base64
+import asyncio
 import hashlib
 import hmac
 from io import BytesIO
@@ -8,6 +10,7 @@ import sys
 import time
 import uuid
 from zipfile import ZipFile
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from fastapi.testclient import TestClient
@@ -19,7 +22,7 @@ MODULES = [
 ]
 
 
-def make_client(tmp_path, monkeypatch):
+def make_client(tmp_path, monkeypatch, *, base_url="http://testserver"):
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-session-secret")
     monkeypatch.setenv("CORE_BRIDGE_CALLBACK_TOKEN", "bridge-test-token")
@@ -32,7 +35,7 @@ def make_client(tmp_path, monkeypatch):
     for name in MODULES:
         sys.modules.pop(name, None)
     application = importlib.import_module("app").app
-    return TestClient(application)
+    return TestClient(application, base_url=base_url)
 
 
 def link_callback_headers(body, *, request_id=None, timestamp=None):
@@ -50,9 +53,9 @@ def link_callback_headers(body, *, request_id=None, timestamp=None):
     }
 
 
-def confirm_link(client, code, *, role="user", request_id=None):
+def confirm_link(client, code, *, role="user", canonical_user_id="telegram-123", request_id=None):
     body = json.dumps(
-        {"code": code, "canonical_user_id": "telegram-123", "role": role},
+        {"code": code, "canonical_user_id": canonical_user_id, "role": role},
         ensure_ascii=False,
         separators=(",", ":"),
     ).encode("utf-8")
@@ -78,6 +81,42 @@ def register_and_link(client, *, role="user"):
     confirmed = confirm_link(client, code, role=role)
     assert confirmed.json()["ok"] is True
     return csrf
+
+
+def enable_oauth_provider(monkeypatch, provider):
+    monkeypatch.setenv(f"WEBAPP_{provider.upper()}_OAUTH_ENABLED", "true")
+    monkeypatch.setenv(f"{provider.upper()}_OAUTH_CLIENT_ID", f"{provider}-client-id")
+    monkeypatch.setenv(f"{provider.upper()}_OAUTH_CLIENT_SECRET", f"{provider}-client-secret")
+    monkeypatch.setenv("WEBAPP_PUBLIC_BASE_URL", "http://localhost")
+    monkeypatch.setenv("WEB_OAUTH_IDENTITY_HMAC_SECRET", "oauth-test-hmac-secret")
+
+
+def enable_apple_oauth(monkeypatch):
+    from cryptography.hazmat.primitives import serialization
+    from cryptography.hazmat.primitives.asymmetric import ec
+
+    private_key = ec.generate_private_key(ec.SECP256R1())
+    pem = private_key.private_bytes(
+        serialization.Encoding.PEM,
+        serialization.PrivateFormat.PKCS8,
+        serialization.NoEncryption(),
+    )
+    monkeypatch.setenv("WEBAPP_APPLE_OAUTH_ENABLED", "true")
+    monkeypatch.setenv("APPLE_OAUTH_CLIENT_ID", "com.toanaas.web")
+    monkeypatch.setenv("APPLE_OAUTH_TEAM_ID", "APPLETEAM1")
+    monkeypatch.setenv("APPLE_OAUTH_KEY_ID", "APPLEKEY01")
+    monkeypatch.setenv("APPLE_OAUTH_PRIVATE_KEY_BASE64", base64.b64encode(pem).decode("ascii"))
+    monkeypatch.setenv("WEBAPP_PUBLIC_BASE_URL", "https://app.toanaas.vn")
+    monkeypatch.setenv("WEB_OAUTH_IDENTITY_HMAC_SECRET", "oauth-test-hmac-secret")
+    monkeypatch.setenv("WEB_COOKIE_SECURE", "true")
+
+
+def oauth_state_from_redirect(response):
+    assert response.status_code == 303
+    query = parse_qs(urlparse(response.headers["location"]).query)
+    state = query.get("state", [""])[0]
+    assert state
+    return state, query
 
 
 def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
@@ -117,6 +156,364 @@ def test_signed_session_csrf_and_telegram_link(tmp_path, monkeypatch):
         )
         assert still_guarded.status_code == 200
         assert still_guarded.json()["error_code"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+
+
+def test_web_owned_profile_defaults_are_csrf_protected_and_cannot_change_canonical_authority(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        initial = client.get("/api/v1/auth/me").json()["data"]["account"]
+        assert initial["profile"] == {"locale": "vi", "timezone": "Asia/Ho_Chi_Minh", "avatar_style": "gradient"}
+
+        updated = client.post(
+            "/api/v1/auth/profile",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "display_name": "Hồ sơ Web",
+                "locale": "en",
+                "timezone": "UTC",
+                "role": "admin",
+                "canonical_user_id": "browser-forged",
+            },
+        )
+        assert updated.status_code == 200
+        payload = updated.json()
+        assert payload["ok"] is True
+        assert payload["data"]["account"]["display_name"] == "Hồ sơ Web"
+        assert payload["data"]["account"]["profile"] == {"locale": "en", "timezone": "UTC", "avatar_style": "gradient"}
+        assert payload["data"]["account"]["role"] == "user"
+        assert "canonical_user_id" not in updated.text
+
+        persisted = client.get("/api/v1/auth/me").json()["data"]["account"]
+        assert persisted["display_name"] == "Hồ sơ Web"
+        assert persisted["profile"]["timezone"] == "UTC"
+        invalid_timezone = client.post(
+            "/api/v1/auth/profile",
+            headers={"X-CSRF-Token": csrf},
+            json={"display_name": "Hồ sơ Web", "locale": "vi", "timezone": "Browser/forged"},
+        )
+        assert invalid_timezone.json()["error_code"] == "PROFILE_TIMEZONE_INVALID"
+        forbidden = client.post(
+            "/api/v1/auth/profile",
+            headers={"X-CSRF-Token": "invalid"},
+            json={"display_name": "Không được lưu"},
+        )
+        assert forbidden.status_code == 403
+
+
+def test_login_runs_password_verification_for_missing_and_existing_accounts(tmp_path, monkeypatch):
+    """Avoid an account-enumeration timing oracle on the login endpoint."""
+    with make_client(tmp_path, monkeypatch) as client:
+        registration = client.post(
+            "/api/v1/auth/register",
+            json={"email": "timing@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registration.json()["ok"] is True
+
+        import copyfast_auth
+
+        original_verify = copyfast_auth._verify_password
+        hashes_checked = []
+
+        def observing_verify(password, encoded):
+            hashes_checked.append(encoded)
+            return original_verify(password, encoded)
+
+        monkeypatch.setattr(copyfast_auth, "_verify_password", observing_verify)
+        missing = client.post(
+            "/api/v1/auth/login",
+            json={"email": "missing@example.com", "password": "wrong-password"},
+        )
+        wrong = client.post(
+            "/api/v1/auth/login",
+            json={"email": "timing@example.com", "password": "wrong-password"},
+        )
+        assert missing.json()["error_code"] == wrong.json()["error_code"] == "LOGIN_DENIED"
+        assert len(hashes_checked) == 2
+        assert hashes_checked[0] == copyfast_auth._DUMMY_PASSWORD_HASH
+        assert hashes_checked[1] != copyfast_auth._DUMMY_PASSWORD_HASH
+
+
+def test_oauth_disabled_by_default_exposes_no_live_provider_path(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        providers = client.get("/api/v1/auth/providers")
+        assert providers.status_code == 200
+        assert providers.json()["data"]["providers"] == {"apple": {"enabled": False}, "github": {"enabled": False}, "google": {"enabled": False}}
+        start = client.get("/api/v1/auth/oauth/google/start", follow_redirects=False)
+        assert start.status_code == 303
+        assert start.headers["location"] == "/login?oauth=unavailable"
+
+
+def test_google_oauth_uses_signed_state_pkce_and_creates_an_oauth_only_account(tmp_path, monkeypatch):
+    enable_oauth_provider(monkeypatch, "google")
+    with make_client(tmp_path, monkeypatch) as client:
+        import copyfast_auth
+
+        seen = []
+
+        async def fake_identity(provider, code, state_value):
+            seen.append((provider, code, state_value))
+            return {
+                "provider": "google",
+                "subject": "google-immutable-subject-001",
+                "email": "new-google@example.com",
+                "display_name": "Google User",
+            }
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_oauth_identity", fake_identity)
+        started = client.get("/api/v1/auth/oauth/google/start", follow_redirects=False)
+        state_value, query = oauth_state_from_redirect(started)
+        assert started.headers["location"].startswith("https://accounts.google.com/o/oauth2/v2/auth?")
+        assert query["response_type"] == ["code"]
+        assert query["code_challenge_method"] == ["S256"]
+        assert query["nonce"]
+        assert "google-client-secret" not in started.headers["location"]
+        assert "toan_aas_oauth_state" in started.headers["set-cookie"]
+
+        callback = client.get(f"/api/v1/auth/oauth/google/callback?code=opaque-code&state={state_value}", follow_redirects=False)
+        assert callback.status_code == 303
+        assert callback.headers["location"] == "/onboarding"
+        assert seen == [("google", "opaque-code", state_value)]
+        me = client.get("/api/v1/auth/me")
+        account = me.json()["data"]["account"]
+        assert account["email"] == "new-google@example.com"
+        assert account["login_methods"] == {"email": False, "telegram": False, "google": True, "github": False, "apple": False}
+        assert "google-immutable-subject-001" not in me.text
+
+        from copyfast_db import transaction
+
+        with transaction() as conn:
+            stored_subject = conn.execute("SELECT subject_hash FROM web_external_identities WHERE provider='google'").fetchone()[0]
+            assert stored_subject != "google-immutable-subject-001"
+            assert len(stored_subject) == 64
+        replay = client.get(f"/api/v1/auth/oauth/google/callback?code=opaque-code&state={state_value}", follow_redirects=False)
+        assert replay.status_code == 303
+        assert replay.headers["location"] == "/login?oauth=state"
+
+
+def test_oauth_never_auto_links_a_matching_email_and_explicit_github_link_needs_csrf(tmp_path, monkeypatch):
+    enable_oauth_provider(monkeypatch, "github")
+    with make_client(tmp_path, monkeypatch) as client:
+        import copyfast_auth
+
+        async def matching_email_identity(provider, code, state_value):
+            return {
+                "provider": provider,
+                "subject": "github-immutable-subject-001",
+                "email": "existing@example.com",
+                "display_name": "GitHub User",
+            }
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_oauth_identity", matching_email_identity)
+        registration = client.post(
+            "/api/v1/auth/register",
+            json={"email": "existing@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registration.json()["ok"] is True
+        login = client.post("/api/v1/auth/login", json={"email": "existing@example.com", "password": "correct-horse-battery-staple"})
+        csrf = login.json()["data"]["csrf_token"]
+        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
+
+        started = client.get("/api/v1/auth/oauth/github/start", follow_redirects=False)
+        state_value, query = oauth_state_from_redirect(started)
+        assert query["scope"] == ["read:user user:email"]
+        collision = client.get(f"/api/v1/auth/oauth/github/callback?code=opaque-code&state={state_value}", follow_redirects=False)
+        assert collision.headers["location"] == "/login?oauth=link-required"
+        assert client.get("/api/v1/auth/me").status_code == 401
+
+        relogin = client.post("/api/v1/auth/login", json={"email": "existing@example.com", "password": "correct-horse-battery-staple"})
+        csrf = relogin.json()["data"]["csrf_token"]
+        rejected = client.post("/api/v1/auth/oauth/github/link/start", headers={"X-CSRF-Token": "wrong"}, json={})
+        assert rejected.status_code == 403
+        link_start = client.post("/api/v1/auth/oauth/github/link/start", headers={"X-CSRF-Token": csrf}, json={})
+        assert link_start.status_code == 200
+        assert link_start.json()["data"]["start_path"] == "/api/v1/auth/oauth/github/start?link=1"
+        provider_redirect = client.get(link_start.json()["data"]["start_path"], follow_redirects=False)
+        link_state, _query = oauth_state_from_redirect(provider_redirect)
+        completed_link = client.get(f"/api/v1/auth/oauth/github/callback?code=opaque-link-code&state={link_state}", follow_redirects=False)
+        assert completed_link.status_code == 303
+        assert completed_link.headers["location"] == "/account?oauth=linked"
+        account = client.get("/api/v1/auth/me").json()["data"]["account"]
+        assert account["login_methods"] == {"email": True, "telegram": False, "google": False, "github": True, "apple": False}
+
+
+def test_apple_oauth_uses_form_post_and_can_link_without_relaxing_session_cookie(tmp_path, monkeypatch):
+    enable_apple_oauth(monkeypatch)
+    with make_client(tmp_path, monkeypatch, base_url="https://testserver") as client:
+        import copyfast_auth
+        import jwt
+
+        seen = []
+
+        async def fake_apple_identity(code, state_value, *, display_name=""):
+            seen.append((code, state_value, display_name))
+            return {
+                "provider": "apple",
+                "subject": "apple-immutable-subject-001",
+                "email": "apple-user@example.com",
+                "display_name": display_name,
+            }
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_apple_identity", fake_apple_identity)
+        config = copyfast_auth._oauth_client_configuration("apple")
+        client_secret = copyfast_auth._apple_client_secret(config)
+        claims = jwt.decode(client_secret, options={"verify_signature": False})
+        assert claims["iss"] == "APPLETEAM1"
+        assert claims["aud"] == "https://appleid.apple.com"
+        assert claims["sub"] == "com.toanaas.web"
+
+        started = client.get("/api/v1/auth/oauth/apple/start", follow_redirects=False)
+        state_value, query = oauth_state_from_redirect(started)
+        assert started.headers["location"].startswith("https://appleid.apple.com/auth/authorize?")
+        assert query["response_mode"] == ["form_post"]
+        assert query["response_type"] == ["code id_token"]
+        assert query["scope"] == ["name email"]
+        assert "code_challenge" not in query
+        assert "SameSite=none" in started.headers["set-cookie"]
+        signed_in = client.post(
+            "/api/v1/auth/oauth/apple/callback",
+            data={"code": "apple-code", "state": state_value, "user": json.dumps({"name": {"firstName": "Apple", "lastName": "User"}, "email": "untrusted@example.com"})},
+            follow_redirects=False,
+        )
+        assert signed_in.status_code == 303
+        assert signed_in.headers["location"] == "/onboarding"
+        assert seen == [("apple-code", state_value, "Apple User")]
+        account = client.get("/api/v1/auth/me").json()["data"]["account"]
+        assert account["login_methods"] == {"email": False, "telegram": False, "google": False, "github": False, "apple": True}
+        assert "apple-immutable-subject-001" not in client.get("/api/v1/auth/me").text
+
+    # Apple link callback is cross-site form POST: transfer only its temporary
+    # state cookie to a separate HTTPS client, deliberately omitting the Lax
+    # signed-session cookie. The active session binding in the DB still
+    # protects and completes the explicit link.
+    with make_client(tmp_path, monkeypatch, base_url="https://testserver") as client:
+        import copyfast_auth
+
+        async def fake_link_identity(code, state_value, *, display_name=""):
+            return {"provider": "apple", "subject": "apple-immutable-subject-002", "email": "", "display_name": display_name}
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_apple_identity", fake_link_identity)
+        registration = client.post("/api/v1/auth/register", json={"email": "apple-link@example.com", "password": "correct-horse-battery-staple"})
+        assert registration.json()["ok"] is True
+        login = client.post("/api/v1/auth/login", json={"email": "apple-link@example.com", "password": "correct-horse-battery-staple"})
+        csrf = login.json()["data"]["csrf_token"]
+        link_start = client.post("/api/v1/auth/oauth/apple/link/start", headers={"X-CSRF-Token": csrf}, json={})
+        provider_redirect = client.get(link_start.json()["data"]["start_path"], follow_redirects=False)
+        link_state, _ = oauth_state_from_redirect(provider_redirect)
+        state_cookie_name = copyfast_auth._cookie_name(copyfast_auth.OAUTH_STATE_COOKIE)
+        state_cookie = client.cookies.get(state_cookie_name)
+        assert state_cookie
+        with TestClient(client.app, base_url="https://testserver") as form_post_client:
+            form_post_client.cookies.set(state_cookie_name, state_cookie)
+            linked = form_post_client.post(
+                "/api/v1/auth/oauth/apple/callback",
+                data={"code": "apple-link-code", "state": link_state},
+                follow_redirects=False,
+            )
+        assert linked.status_code == 303
+        assert linked.headers["location"] == "/account?oauth=linked"
+        linked_methods = client.get("/api/v1/auth/me").json()["data"]["account"]["login_methods"]
+        assert linked_methods["email"] is True
+        assert linked_methods["apple"] is True
+
+
+def test_secure_deployments_use_host_prefixed_cookie_names_and_reject_legacy_session_cookie(tmp_path, monkeypatch):
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("WEB_COOKIE_SECURE", "true")
+    with make_client(tmp_path, monkeypatch, base_url="https://testserver") as client:
+        import copyfast_auth
+
+        registration = client.post("/api/v1/auth/register", json={"email": "host-cookie@example.com", "password": "correct-horse-battery-staple"})
+        assert registration.json()["ok"] is True
+        login = client.post("/api/v1/auth/login", json={"email": "host-cookie@example.com", "password": "correct-horse-battery-staple"})
+        host_cookie_name = copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE)
+        assert host_cookie_name == "__Host-toan_aas_session"
+        assert f"{host_cookie_name}=" in login.headers["set-cookie"]
+        assert client.get("/api/v1/auth/me").status_code == 200
+
+        # A copied signed value under the legacy parent-domain-capable name
+        # must not authenticate a production request.
+        host_cookie_value = client.cookies.get(host_cookie_name)
+        with TestClient(client.app, base_url="https://testserver") as legacy_client:
+            legacy_client.cookies.set("toan_aas_session", host_cookie_value)
+            assert legacy_client.get("/api/v1/auth/me").status_code == 401
+
+
+def test_apple_new_identity_without_a_verified_email_fails_closed(tmp_path, monkeypatch):
+    enable_apple_oauth(monkeypatch)
+    with make_client(tmp_path, monkeypatch, base_url="https://testserver") as client:
+        import copyfast_auth
+
+        calls = []
+
+        async def no_email_identity(code, state_value, *, display_name=""):
+            calls.append((code, state_value))
+            return {"provider": "apple", "subject": "apple-no-email-subject", "email": "", "display_name": display_name}
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_apple_identity", no_email_identity)
+        started = client.get("/api/v1/auth/oauth/apple/start", follow_redirects=False)
+        state_value, _ = oauth_state_from_redirect(started)
+        failed = client.post("/api/v1/auth/oauth/apple/callback", data={"code": "apple-no-email-code", "state": state_value}, follow_redirects=False)
+        assert failed.headers["location"] == "/login?oauth=failed"
+        assert calls == [("apple-no-email-code", state_value)]
+        from copyfast_db import transaction
+
+        with transaction() as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_external_identities WHERE provider='apple'").fetchone()[0] == 0
+
+
+def test_apple_id_token_verification_uses_apple_rsa_jwks_not_the_es256_client_secret(tmp_path, monkeypatch):
+    enable_apple_oauth(monkeypatch)
+    with make_client(tmp_path, monkeypatch, base_url="https://testserver"):
+        import copyfast_auth
+        import jwt
+        from cryptography.hazmat.primitives import serialization
+        from cryptography.hazmat.primitives.asymmetric import ec, rsa
+
+        config = copyfast_auth._oauth_client_configuration("apple")
+        state_value = "apple-rsa-verification-state"
+        nonce = copyfast_auth._oauth_derived_token("nonce", state_value)
+        rsa_key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+        private_pem = rsa_key.private_bytes(serialization.Encoding.PEM, serialization.PrivateFormat.PKCS8, serialization.NoEncryption())
+        public_numbers = rsa_key.public_key().public_numbers()
+
+        def jwk_number(value):
+            return base64.urlsafe_b64encode(value.to_bytes((value.bit_length() + 7) // 8, "big")).rstrip(b"=").decode("ascii")
+
+        jwks = {"keys": [{"kty": "RSA", "kid": "apple-rsa-kid", "use": "sig", "alg": "RS256", "n": jwk_number(public_numbers.n), "e": jwk_number(public_numbers.e)}]}
+
+        async def fake_jwks(method, url, **_kwargs):
+            assert method == "GET"
+            assert url == copyfast_auth.APPLE_JWKS_URL
+            return jwks
+
+        monkeypatch.setattr(copyfast_auth, "_oauth_json_request", fake_jwks)
+        payload = {
+            "iss": "https://appleid.apple.com",
+            "aud": config["client_id"],
+            "sub": "apple-rsa-subject",
+            "nonce": nonce,
+            "iat": int(time.time()) - 1,
+            "exp": int(time.time()) + 60,
+            "email": "apple-rsa@example.com",
+            "email_verified": True,
+        }
+        token = jwt.encode(payload, private_pem, algorithm="RS256", headers={"kid": "apple-rsa-kid"})
+        identity = asyncio.run(copyfast_auth._verify_apple_id_token(token, client_id=config["client_id"], expected_nonce=nonce))
+        assert identity == {"provider": "apple", "subject": "apple-rsa-subject", "email": "apple-rsa@example.com"}
+
+        ec_key = ec.generate_private_key(ec.SECP256R1())
+        es256_token = jwt.encode(payload, ec_key, algorithm="ES256", headers={"kid": "apple-es256-kid"})
+        with pytest.raises(copyfast_auth.OAuthIdentityError):
+            asyncio.run(copyfast_auth._verify_apple_id_token(es256_token, client_id=config["client_id"], expected_nonce=nonce))
+
+
+def test_https_oauth_configuration_requires_secure_cookies(tmp_path, monkeypatch):
+    enable_oauth_provider(monkeypatch, "google")
+    monkeypatch.setenv("WEBAPP_PUBLIC_BASE_URL", "https://app.toanaas.vn")
+    monkeypatch.delenv("WEB_COOKIE_SECURE", raising=False)
+    with pytest.raises(RuntimeError, match="WEB_COOKIE_SECURE"):
+        with make_client(tmp_path, monkeypatch):
+            pass
 
 
 def test_support_ticket_refuses_sensitive_data_before_it_can_reach_the_bridge(tmp_path, monkeypatch):
@@ -211,7 +608,9 @@ def test_payment_entry_options_are_linked_session_only_and_do_not_expose_manual_
         assert invalid_name["telegram_url"] == ""
         invalid_deep_link = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
         assert invalid_deep_link.status_code == 200
-        assert invalid_deep_link.json()["data"]["deep_link"] == ""
+        # A linked account cannot mint another code just to probe a deep link:
+        # canonical Telegram identity is intentionally non-replaceable here.
+        assert invalid_deep_link.json()["error_code"] == "TELEGRAM_RELINK_NOT_ALLOWED"
 
 
 def test_legacy_billing_router_is_not_mounted_as_a_second_payos_or_wallet_writer(tmp_path, monkeypatch):
@@ -256,10 +655,36 @@ def test_telegram_link_callback_requires_hmac_timestamp_and_one_time_nonce(tmp_p
         assert replay.json()["error_code"] == "REQUEST_DENIED"
 
 
+def test_telegram_callback_rejects_invalid_codes_and_unlinked_login_with_non_success_http(tmp_path, monkeypatch):
+    """The Bot treats 2xx as completion, so rejected callbacks must not use it."""
+    with make_client(tmp_path, monkeypatch) as client:
+        missing = confirm_link(client, "missing-telegram-link-code")
+        assert missing.status_code == 410
+        assert missing.json()["error_code"] == "LINK_CODE_INVALID"
+
+        started = client.post("/api/v1/auth/telegram/login/start")
+        login_code = started.json()["data"]["code"]
+        no_account = confirm_link(client, login_code, canonical_user_id="telegram-without-web-account")
+        assert no_account.status_code == 409
+        assert no_account.json()["error_code"] == "TELEGRAM_LOGIN_ACCOUNT_REQUIRED"
+        status = client.get("/api/v1/auth/telegram/login/status")
+        assert status.json()["status"] == "guarded"
+        assert status.json()["error_code"] == "TELEGRAM_LOGIN_ACCOUNT_REQUIRED"
+        assert status.json()["data"] == {"ready": False, "restart_required": True}
+        completed = client.post("/api/v1/auth/telegram/login/complete", json={})
+        assert completed.json()["error_code"] == "TELEGRAM_LOGIN_ACCOUNT_REQUIRED"
+
+
 def test_telegram_passwordless_login_is_browser_bound_and_never_accepts_a_raw_id(tmp_path, monkeypatch):
     monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
     with make_client(tmp_path, monkeypatch) as client:
         csrf = register_and_link(client)
+        profile_update = client.post(
+            "/api/v1/auth/profile",
+            headers={"X-CSRF-Token": csrf},
+            json={"display_name": "Telegram profile", "locale": "en", "timezone": "UTC"},
+        )
+        assert profile_update.json()["ok"] is True
         assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
         assert client.get("/api/v1/auth/me").status_code == 401
 
@@ -285,8 +710,8 @@ def test_telegram_passwordless_login_is_browser_bound_and_never_accepts_a_raw_id
         account = completed.json()["data"]["account"]
         assert account["telegram_linked"] is True
         assert "canonical_user_id" not in completed.text
-        assert account["profile"] == {"locale": "vi", "timezone": "Asia/Ho_Chi_Minh", "avatar_style": "gradient"}
-        assert account["login_methods"] == {"email": True, "telegram": True, "github": False}
+        assert account["profile"] == {"locale": "en", "timezone": "UTC", "avatar_style": "gradient"}
+        assert account["login_methods"] == {"email": True, "telegram": True, "google": False, "github": False, "apple": False}
         assert client.get("/api/v1/auth/me").status_code == 200
         replay = client.post("/api/v1/auth/telegram/login/complete", json={})
         assert replay.json()["error_code"] == "TELEGRAM_LOGIN_CHALLENGE_REQUIRED"
@@ -602,9 +1027,40 @@ def test_a_canonical_telegram_identity_cannot_link_two_web_accounts(tmp_path, mo
                 headers={"X-CSRF-Token": second_login.json()["data"]["csrf_token"]},
             ).json()["data"]["code"]
             collision = confirm_link(other_client, second_code)
-            assert collision.status_code == 200
+            assert collision.status_code == 409
             assert collision.json()["ok"] is False
             assert collision.json()["error_code"] == "TELEGRAM_ALREADY_LINKED"
+
+
+def test_linked_account_cannot_issue_or_use_a_code_to_replace_telegram_identity(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+        blocked_start = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf})
+        assert blocked_start.status_code == 200
+        assert blocked_start.json()["error_code"] == "TELEGRAM_RELINK_NOT_ALLOWED"
+
+        import copyfast_auth
+        from copyfast_db import transaction
+
+        forged_code = "defensive-relink-code-0001"
+        with transaction() as conn:
+            account_id = conn.execute("SELECT id FROM web_accounts WHERE email=?", ("user@example.com",)).fetchone()[0]
+            conn.execute(
+                """INSERT INTO telegram_link_codes (code_hash, account_id, expires_at, initiating_session_id, created_at)
+                VALUES (?, ?, ?, ?, ?)""",
+                (
+                    hashlib.sha256(forged_code.encode("utf-8")).hexdigest(),
+                    account_id,
+                    copyfast_auth._link_expiry(),
+                    "test-defensive-relink-session",
+                    copyfast_auth.utc_now(),
+                ),
+            )
+        blocked_callback = confirm_link(client, forged_code, canonical_user_id="telegram-456")
+        assert blocked_callback.status_code == 409
+        assert blocked_callback.json()["error_code"] == "TELEGRAM_RELINK_NOT_ALLOWED"
+        me = client.get("/api/v1/auth/me")
+        assert "telegram-456" not in me.text
 
 
 def test_production_environment_requires_a_real_secret_and_sets_secure_session_cookie(tmp_path, monkeypatch):
@@ -629,6 +1085,8 @@ def test_production_environment_requires_a_real_secret_and_sets_secure_session_c
 
 def test_credentialed_cors_rejects_wildcards_and_non_https_remote_origins(monkeypatch):
     application = importlib.import_module("app")
+    monkeypatch.delenv("CORS_ALLOW_ORIGINS", raising=False)
+    assert application._origins() == ["https://app.toanaas.vn"]
     monkeypatch.setenv("CORS_ALLOW_ORIGINS", "*")
     with pytest.raises(RuntimeError, match="tường minh"):
         application._origins()

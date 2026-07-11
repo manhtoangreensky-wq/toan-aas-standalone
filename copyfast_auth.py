@@ -6,12 +6,16 @@ from datetime import datetime, timedelta, timezone
 import base64
 import hashlib
 import hmac
+import json
 import os
 import re
 import secrets
 import uuid
+from urllib.parse import urlencode, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
+from fastapi.responses import JSONResponse, RedirectResponse
+import httpx
 from pydantic import BaseModel, Field
 
 from copyfast_db import ensure_copyfast_schema, transaction, utc_now
@@ -21,12 +25,27 @@ router = APIRouter(tags=["COPYFAST Auth"])
 
 SESSION_COOKIE = "toan_aas_session"
 TELEGRAM_LOGIN_COOKIE = "toan_aas_telegram_login"
+OAUTH_STATE_COOKIE = "toan_aas_oauth_state"
+OAUTH_LINK_COOKIE = "toan_aas_oauth_link"
 SESSION_TTL_HOURS = max(1, int(os.environ.get("WEB_SESSION_TTL_HOURS", "24")))
 LINK_TTL_MINUTES = max(1, int(os.environ.get("TELEGRAM_LINK_TTL_MINUTES", "10")))
+OAUTH_STATE_TTL_MINUTES = max(1, int(os.environ.get("WEB_OAUTH_STATE_TTL_MINUTES", "10")))
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
 BRIDGE_CALLBACK_MAX_AGE_SECONDS = 300
 BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
+OAUTH_PROVIDER_NAMES = frozenset({"google", "github", "apple"})
+GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
+GITHUB_AUTHORIZE_URL = "https://github.com/login/oauth/authorize"
+GITHUB_TOKEN_URL = "https://github.com/login/oauth/access_token"
+GITHUB_USER_URL = "https://api.github.com/user"
+GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
+APPLE_AUTHORIZE_URL = "https://appleid.apple.com/auth/authorize"
+APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token"
+APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys"
+OAUTH_HTTP_TIMEOUT_SECONDS = 8.0
 
 
 def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: str = "completed", error_code: str | None = None) -> dict:
@@ -37,6 +56,26 @@ def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: s
         "data": data or {},
         "error_code": error_code,
     }
+
+
+def _bridge_callback_failure(
+    message: str,
+    *,
+    error_code: str,
+    http_status: int,
+    status_name: str = "failed",
+) -> JSONResponse:
+    """Make a rejected Bot callback unambiguously non-successful.
+
+    The frozen Bot bridge treats every HTTP 2xx callback response as a
+    completed link. Browser-facing endpoints may safely use ``ok: false``
+    envelopes with 200 for expected form states, but the private Bot callback
+    must use a non-2xx status whenever the Web App rejects the proof.
+    """
+    return JSONResponse(
+        envelope(False, message, status_name=status_name, error_code=error_code),
+        status_code=http_status,
+    )
 
 
 def _is_production() -> bool:
@@ -58,6 +97,110 @@ def _secret() -> bytes:
 
 def _cookie_secure() -> bool:
     return os.environ.get("WEB_COOKIE_SECURE", "").lower() in {"1", "true", "yes"} or _is_production()
+
+
+def _cookie_name(name: str) -> str:
+    """Return a host-only cookie name whenever HTTPS protection is active.
+
+    A ``__Host-`` cookie must be Secure, host-only and Path=/ according to
+    browser enforcement rules. That prevents a sibling subdomain from planting
+    a competing parent-domain session/state cookie (cookie tossing). Local HTTP
+    development deliberately retains the unprefixed name; a production
+    deployment never reads that legacy name as a fallback.
+    """
+    return f"__Host-{name}" if _cookie_secure() else name
+
+
+def _env_flag(name: str, default: bool = False) -> bool:
+    value = os.environ.get(name, "").strip().lower()
+    if not value:
+        return default
+    return value in {"1", "true", "yes", "on"}
+
+
+def _oauth_enabled(provider: str) -> bool:
+    return provider in OAUTH_PROVIDER_NAMES and _env_flag(f"WEBAPP_{provider.upper()}_OAUTH_ENABLED")
+
+
+def _oauth_hmac_secret() -> bytes:
+    value = os.environ.get("WEB_OAUTH_IDENTITY_HMAC_SECRET", "").strip()
+    if not value:
+        raise RuntimeError("WEB_OAUTH_IDENTITY_HMAC_SECRET chưa được cấu hình cho OAuth")
+    return value.encode("utf-8")
+
+
+def _oauth_public_base_url() -> str:
+    raw = os.environ.get("WEBAPP_PUBLIC_BASE_URL", "").strip().rstrip("/")
+    if not raw:
+        raise RuntimeError("WEBAPP_PUBLIC_BASE_URL chưa được cấu hình cho OAuth")
+    parsed = urlparse(raw)
+    local_http = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+    if not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment or parsed.path not in {"", "/"}:
+        raise RuntimeError("WEBAPP_PUBLIC_BASE_URL không hợp lệ cho OAuth")
+    if parsed.scheme != "https" and not (local_http and not _is_production()):
+        raise RuntimeError("WEBAPP_PUBLIC_BASE_URL phải dùng HTTPS ngoài môi trường local")
+    return raw
+
+
+def _oauth_client_configuration(provider: str) -> dict:
+    if provider not in OAUTH_PROVIDER_NAMES:
+        raise ValueError("OAuth provider không hợp lệ")
+    client_id = os.environ.get(f"{provider.upper()}_OAUTH_CLIENT_ID", "").strip()
+    base_url = _oauth_public_base_url()
+    if provider == "apple":
+        team_id = os.environ.get("APPLE_OAUTH_TEAM_ID", "").strip()
+        key_id = os.environ.get("APPLE_OAUTH_KEY_ID", "").strip()
+        private_key = os.environ.get("APPLE_OAUTH_PRIVATE_KEY_BASE64", "").strip()
+        if not client_id or not team_id or not key_id or not private_key:
+            raise RuntimeError("OAuth apple chưa có Services ID/Team ID/Key ID/private key")
+        if urlparse(base_url).scheme != "https" or not _cookie_secure():
+            raise RuntimeError("OAuth apple yêu cầu HTTPS và WEB_COOKIE_SECURE=true")
+        return {
+            "provider": provider,
+            "client_id": client_id,
+            "team_id": team_id,
+            "key_id": key_id,
+            "private_key_base64": private_key,
+            "redirect_uri": f"{base_url}/api/v1/auth/oauth/{provider}/callback",
+        }
+    client_secret = os.environ.get(f"{provider.upper()}_OAUTH_CLIENT_SECRET", "").strip()
+    if not client_id or not client_secret:
+        raise RuntimeError(f"OAuth {provider} chưa có client ID/secret")
+    if urlparse(base_url).scheme == "https" and not _cookie_secure():
+        raise RuntimeError(f"OAuth {provider} yêu cầu WEB_COOKIE_SECURE=true khi dùng HTTPS")
+    return {
+        "provider": provider,
+        "client_id": client_id,
+        "client_secret": client_secret,
+        "redirect_uri": f"{base_url}/api/v1/auth/oauth/{provider}/callback",
+    }
+
+
+def ensure_oauth_configuration() -> None:
+    """Fail closed if a production OAuth flag is enabled incompletely."""
+    for provider in OAUTH_PROVIDER_NAMES:
+        if not _oauth_enabled(provider):
+            continue
+        _oauth_hmac_secret()
+        config = _oauth_client_configuration(provider)
+        if provider in {"google", "apple"}:
+            try:
+                import jwt  # type: ignore[import-not-found]  # noqa: F401
+            except ImportError as exc:  # pragma: no cover - exercised by deployment configuration
+                raise RuntimeError(f"OAuth {provider} cần dependency PyJWT[crypto]") from exc
+        if provider == "apple":
+            # Validate the Railway-only base64 .p8 key before the application
+            # accepts traffic; a malformed key must not surface only after a
+            # user completes a live Apple consent screen.
+            _apple_client_secret(config)
+
+
+def oauth_provider_status() -> dict:
+    """Browser-safe availability only; never expose client IDs or secrets."""
+    return {
+        provider: {"enabled": _oauth_enabled(provider)}
+        for provider in sorted(OAUTH_PROVIDER_NAMES)
+    }
 
 
 def ensure_auth_configuration() -> None:
@@ -108,6 +251,12 @@ def _verify_password(password: str, encoded: str) -> bool:
         return False
 
 
+# A valid, process-local scrypt record makes rejected login attempts spend the
+# same password-verification work whether the email exists, is inactive, or
+# has a wrong password.  It deliberately never represents an account.
+_DUMMY_PASSWORD_HASH = _password_hash("copyfast-dummy-password")
+
+
 def _sign_session(session_id: str) -> str:
     return hmac.new(_secret(), session_id.encode("utf-8"), hashlib.sha256).hexdigest()
 
@@ -144,6 +293,86 @@ def _parse_telegram_login_cookie(value: str | None) -> str | None:
     return browser_token
 
 
+def _oauth_expiry() -> str:
+    return (_now() + timedelta(minutes=OAUTH_STATE_TTL_MINUTES)).isoformat(timespec="seconds")
+
+
+def _oauth_state_hash(state_value: str) -> str:
+    return hashlib.sha256(state_value.encode("utf-8")).hexdigest()
+
+
+def _oauth_hmac(label: str, *parts: str) -> str:
+    material = ".".join((label, *parts)).encode("utf-8")
+    return hmac.new(_oauth_hmac_secret(), material, hashlib.sha256).hexdigest()
+
+
+def _oauth_state_cookie_value(provider: str, state_value: str) -> str:
+    return f"{provider}.{state_value}.{_oauth_hmac('state', provider, state_value)}"
+
+
+def _parse_oauth_state_cookie(value: str | None) -> tuple[str, str] | None:
+    if not value:
+        return None
+    parts = value.split(".", 2)
+    if len(parts) != 3:
+        return None
+    provider, state_value, supplied = parts
+    if provider not in OAUTH_PROVIDER_NAMES or not state_value:
+        return None
+    expected = _oauth_hmac("state", provider, state_value)
+    if not hmac.compare_digest(supplied, expected):
+        return None
+    return provider, state_value
+
+
+def _oauth_link_cookie_value(provider: str, session_id: str, ticket: str) -> str:
+    return f"{provider}.{session_id}.{ticket}.{_oauth_hmac('link', provider, session_id, ticket)}"
+
+
+def _parse_oauth_link_cookie(value: str | None) -> tuple[str, str, str] | None:
+    if not value:
+        return None
+    parts = value.split(".", 3)
+    if len(parts) != 4:
+        return None
+    provider, session_id, ticket, supplied = parts
+    if provider not in OAUTH_PROVIDER_NAMES or not session_id or not ticket:
+        return None
+    expected = _oauth_hmac("link", provider, session_id, ticket)
+    if not hmac.compare_digest(supplied, expected):
+        return None
+    return provider, session_id, ticket
+
+
+def _oauth_derived_token(label: str, state_value: str) -> str:
+    """Generate server-only PKCE verifier / OIDC nonce from opaque state."""
+    digest = hmac.new(_oauth_hmac_secret(), f"{label}.{state_value}".encode("utf-8"), hashlib.sha256).digest()
+    return base64.urlsafe_b64encode(digest).rstrip(b"=").decode("ascii")
+
+
+def _oauth_code_challenge(state_value: str) -> str:
+    verifier = _oauth_derived_token("pkce", state_value)
+    return base64.urlsafe_b64encode(hashlib.sha256(verifier.encode("ascii")).digest()).rstrip(b"=").decode("ascii")
+
+
+def _external_subject_hash(provider: str, subject: str) -> str:
+    return _oauth_hmac("identity", provider, subject)
+
+
+def _safe_oauth_return_path(value: str | None) -> str:
+    candidate = str(value or "").strip()
+    if not candidate or not candidate.startswith("/") or candidate.startswith("//") or "\\" in candidate:
+        return "/dashboard"
+    parsed = urlparse(candidate)
+    if parsed.scheme or parsed.netloc or parsed.params or parsed.fragment:
+        return "/dashboard"
+    # The shell resolves route access itself; do not put a provider callback,
+    # private API or untrusted URL into the post-login redirect.
+    if candidate.startswith("/api/") or candidate.startswith("/internal/"):
+        return "/dashboard"
+    return candidate.split("?", 1)[0] or "/dashboard"
+
+
 def _new_telegram_code() -> str:
     # Match the existing bot `/start web_<code>` and `/linkweb <code>` shape.
     return secrets.token_urlsafe(18).replace("-", "A").replace("_", "B")
@@ -166,6 +395,18 @@ def _account_payload(row: tuple) -> dict:
     }
 
 
+def _linked_oauth_providers(account_id: str | None) -> set[str]:
+    if not account_id:
+        return set()
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            "SELECT provider FROM web_external_identities WHERE account_id=?",
+            (account_id,),
+        ).fetchall()
+    return {str(row[0]) for row in rows if str(row[0]) in OAUTH_PROVIDER_NAMES}
+
+
 def browser_account_payload(account: dict) -> dict:
     """Return the minimum account metadata the browser needs to render safely.
 
@@ -173,6 +414,7 @@ def browser_account_payload(account: dict) -> dict:
     bridge calls.  It is intentionally absent from every browser-facing auth
     response; the UI only needs to know whether a link exists.
     """
+    linked_providers = _linked_oauth_providers(str(account.get("id") or ""))
     return {
         "email": str(account.get("email") or ""),
         "display_name": str(account.get("display_name") or ""),
@@ -184,11 +426,11 @@ def browser_account_payload(account: dict) -> dict:
             "avatar_style": str(account.get("avatar_style") or "gradient"),
         },
         "login_methods": {
-            "email": True,
+            "email": bool(account.get("password_login_enabled", True)),
             "telegram": bool(account.get("canonical_user_id")),
-            # OAuth credentials are intentionally not inferred from browser
-            # state. GitHub is advertised only as a setup-required option.
-            "github": False,
+            "google": "google" in linked_providers,
+            "github": "github" in linked_providers,
+            "apple": "apple" in linked_providers,
         },
     }
 
@@ -208,13 +450,13 @@ def _request_id(request: Request) -> str:
 
 def current_session(request: Request) -> dict:
     ensure_copyfast_schema()
-    session_id = _parse_session_cookie(request.cookies.get(SESSION_COOKIE))
+    session_id = _parse_session_cookie(request.cookies.get(_cookie_name(SESSION_COOKIE)))
     if not session_id:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Vui lòng đăng nhập để tiếp tục")
     with transaction() as conn:
         row = conn.execute(
             """SELECT s.id, s.csrf_token, s.expires_at, a.id, a.email, a.display_name,
-                      a.canonical_user_id, a.role_cache, a.is_active,
+                      a.canonical_user_id, a.role_cache, a.is_active, a.password_login_enabled,
                       p.locale, p.timezone, p.avatar_style
                FROM web_sessions s JOIN web_accounts a ON a.id=s.account_id
                LEFT JOIN web_account_profiles p ON p.account_id=a.id
@@ -234,9 +476,10 @@ def current_session(request: Request) -> dict:
             "display_name": row[5] or "",
             "canonical_user_id": row[6],
             "role": row[7] or "user",
-            "locale": row[9] or "vi",
-            "timezone": row[10] or "Asia/Ho_Chi_Minh",
-            "avatar_style": row[11] or "gradient",
+            "password_login_enabled": bool(row[9]),
+            "locale": row[10] or "vi",
+            "timezone": row[11] or "Asia/Ho_Chi_Minh",
+            "avatar_style": row[12] or "gradient",
         },
     }
 
@@ -325,7 +568,7 @@ def _create_session(response: Response, account_id: str) -> dict:
             (session_id, account_id, csrf_token, expires_at, now, now),
         )
     response.set_cookie(
-        SESSION_COOKIE,
+        _cookie_name(SESSION_COOKIE),
         _session_cookie_value(session_id),
         httponly=True,
         secure=_cookie_secure(),
@@ -347,11 +590,559 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=256)
 
 
+class ProfileUpdateRequest(BaseModel):
+    display_name: str = Field(default="", max_length=120)
+    locale: str = Field(default="vi", max_length=16)
+    timezone: str = Field(default="Asia/Ho_Chi_Minh", max_length=64)
+
+
 class LinkConfirmation(BaseModel):
     code: str = Field(min_length=8, max_length=128)
     canonical_user_id: str = Field(min_length=1, max_length=128)
     role: str = Field(default="user", max_length=32)
     display_name: str = Field(default="", max_length=120)
+
+
+class OAuthIdentityError(RuntimeError):
+    """A provider failure that is safe to expose only as a generic handoff."""
+
+
+def _oauth_account_from_row(row: tuple) -> dict:
+    return {
+        "id": row[0],
+        "email": row[1],
+        "display_name": row[2] or "",
+        "canonical_user_id": row[3],
+        "role": row[4] or "user",
+        "is_active": bool(row[5]),
+        "password_login_enabled": bool(row[6]),
+        "locale": row[7] or "vi",
+        "timezone": row[8] or "Asia/Ho_Chi_Minh",
+        "avatar_style": row[9] or "gradient",
+    }
+
+
+def _set_oauth_state_cookie(response: Response, provider: str, state_value: str) -> None:
+    response.set_cookie(
+        _cookie_name(OAUTH_STATE_COOKIE),
+        _oauth_state_cookie_value(provider, state_value),
+        httponly=True,
+        secure=_cookie_secure(),
+        # Apple posts its authorization response cross-site. Its short-lived
+        # state cookie must therefore be None+Secure, while the main session
+        # cookie deliberately remains Lax and is never weakened for OAuth.
+        samesite="none" if provider == "apple" else "lax",
+        max_age=OAUTH_STATE_TTL_MINUTES * 60,
+        path="/",
+    )
+
+
+def _clear_oauth_state_cookie(response: Response) -> None:
+    response.delete_cookie(_cookie_name(OAUTH_STATE_COOKIE), path="/", secure=_cookie_secure(), httponly=True, samesite="lax")
+
+
+def _set_oauth_link_cookie(response: Response, provider: str, session_id: str, ticket: str) -> None:
+    response.set_cookie(
+        _cookie_name(OAUTH_LINK_COOKIE),
+        _oauth_link_cookie_value(provider, session_id, ticket),
+        httponly=True,
+        secure=_cookie_secure(),
+        samesite="none" if provider == "apple" else "lax",
+        max_age=OAUTH_STATE_TTL_MINUTES * 60,
+        path="/",
+    )
+
+
+def _clear_oauth_link_cookie(response: Response) -> None:
+    response.delete_cookie(_cookie_name(OAUTH_LINK_COOKIE), path="/", secure=_cookie_secure(), httponly=True, samesite="lax")
+
+
+def _create_oauth_state(
+    provider: str,
+    *,
+    purpose: str,
+    account_id: str | None,
+    initiating_session_id: str | None,
+    return_path: str,
+) -> str:
+    if provider not in OAUTH_PROVIDER_NAMES or purpose not in {"signin", "link"}:
+        raise ValueError("OAuth state không hợp lệ")
+    state_value = secrets.token_urlsafe(32)
+    with transaction() as conn:
+        now = utc_now()
+        conn.execute("DELETE FROM web_oauth_states WHERE expires_at<=? OR consumed_at IS NOT NULL", (now,))
+        conn.execute(
+            """INSERT INTO web_oauth_states
+            (state_hash, provider, purpose, account_id, initiating_session_id, return_path, expires_at, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                _oauth_state_hash(state_value),
+                provider,
+                purpose,
+                account_id,
+                initiating_session_id,
+                _safe_oauth_return_path(return_path),
+                _oauth_expiry(),
+                now,
+            ),
+        )
+    return state_value
+
+
+def _oauth_authorization_url(provider: str, state_value: str) -> str:
+    config = _oauth_client_configuration(provider)
+    params = {
+        "client_id": config["client_id"],
+        "redirect_uri": config["redirect_uri"],
+        "response_type": "code",
+        "state": state_value,
+        "code_challenge": _oauth_code_challenge(state_value),
+        "code_challenge_method": "S256",
+    }
+    if provider == "google":
+        params.update({"scope": "openid email profile", "nonce": _oauth_derived_token("nonce", state_value), "prompt": "select_account"})
+        return f"{GOOGLE_AUTHORIZE_URL}?{urlencode(params)}"
+    if provider == "apple":
+        # Apple uses a form POST callback for name/email scopes. Its token
+        # exchange authenticates the client with a short-lived ES256 JWT,
+        # rather than the generic PKCE code verifier used above.
+        apple_params = {
+            "client_id": config["client_id"],
+            "redirect_uri": config["redirect_uri"],
+            "response_type": "code id_token",
+            "response_mode": "form_post",
+            "scope": "name email",
+            "state": state_value,
+            "nonce": _oauth_derived_token("nonce", state_value),
+        }
+        return f"{APPLE_AUTHORIZE_URL}?{urlencode(apple_params)}"
+    params.update({"scope": "read:user user:email", "allow_signup": "true"})
+    return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
+
+
+def _oauth_redirect(reason: str, *, path: str = "/login") -> RedirectResponse:
+    # Reasons are internal fixed slugs only. Never pass a provider response,
+    # access token, email address or unvalidated `next` URL to the browser.
+    allowed = {"unavailable", "cancelled", "failed", "state", "session", "link-required", "linked", "already-linked"}
+    safe_reason = reason if reason in allowed else "failed"
+    separator = "&" if "?" in path else "?"
+    return RedirectResponse(f"{path}{separator}oauth={safe_reason}", status_code=status.HTTP_303_SEE_OTHER)
+
+
+def _consume_oauth_state(request: Request, provider: str, state_value: str) -> dict | None:
+    cookie = _parse_oauth_state_cookie(request.cookies.get(_cookie_name(OAUTH_STATE_COOKIE)))
+    if not cookie or cookie[0] != provider or not hmac.compare_digest(cookie[1], state_value):
+        return None
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT provider, purpose, account_id, initiating_session_id, return_path, expires_at, consumed_at
+               FROM web_oauth_states WHERE state_hash=?""",
+            (_oauth_state_hash(state_value),),
+        ).fetchone()
+        if not row or row[0] != provider or row[6] or _as_time(row[5]) <= _now():
+            return None
+        conn.execute("UPDATE web_oauth_states SET consumed_at=? WHERE state_hash=?", (utc_now(), _oauth_state_hash(state_value)))
+    return {
+        "provider": row[0],
+        "purpose": row[1],
+        "account_id": row[2],
+        "initiating_session_id": row[3],
+        "return_path": row[4],
+    }
+
+
+async def _oauth_json_request(method: str, url: str, **kwargs) -> dict:
+    try:
+        async with httpx.AsyncClient(timeout=OAUTH_HTTP_TIMEOUT_SECONDS, follow_redirects=False) as client:
+            response = await client.request(method, url, **kwargs)
+    except httpx.HTTPError as exc:
+        raise OAuthIdentityError("OAuth provider không phản hồi") from exc
+    if response.status_code < 200 or response.status_code >= 300:
+        raise OAuthIdentityError("OAuth provider từ chối yêu cầu")
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise OAuthIdentityError("OAuth provider trả dữ liệu không hợp lệ") from exc
+    if not isinstance(payload, dict):
+        raise OAuthIdentityError("OAuth provider trả dữ liệu không hợp lệ")
+    return payload
+
+
+async def _verify_google_id_token(id_token: str, *, client_id: str, expected_nonce: str) -> dict:
+    """Verify a Google OIDC ID token using fixed Google JWKS endpoints."""
+    try:
+        import jwt  # type: ignore[import-not-found]
+
+        header = jwt.get_unverified_header(id_token)
+        if header.get("alg") != "RS256" or not isinstance(header.get("kid"), str):
+            raise OAuthIdentityError("Google ID token không hợp lệ")
+        jwks = await _oauth_json_request("GET", GOOGLE_JWKS_URL, headers={"Accept": "application/json"})
+        keys = jwks.get("keys")
+        if not isinstance(keys, list):
+            raise OAuthIdentityError("Google JWKS không hợp lệ")
+        matching = next((item for item in keys if isinstance(item, dict) and item.get("kid") == header["kid"] and item.get("kty") == "RSA"), None)
+        if not matching:
+            raise OAuthIdentityError("Google signing key không hợp lệ")
+        key = jwt.PyJWK.from_dict(matching).key
+        claims = jwt.decode(
+            id_token,
+            key,
+            algorithms=["RS256"],
+            audience=client_id,
+            issuer=["https://accounts.google.com", "accounts.google.com"],
+            options={"require": ["exp", "iat", "sub", "nonce"]},
+        )
+    except OAuthIdentityError:
+        raise
+    except Exception as exc:  # PyJWT errors intentionally stay generic.
+        raise OAuthIdentityError("Google ID token không được xác minh") from exc
+    if not hmac.compare_digest(str(claims.get("nonce") or ""), expected_nonce):
+        raise OAuthIdentityError("Google nonce không hợp lệ")
+    verified = claims.get("email_verified")
+    if verified not in {True, "true", "True"}:
+        raise OAuthIdentityError("Google email chưa được xác minh")
+    email = str(claims.get("email") or "").strip().lower()
+    subject = str(claims.get("sub") or "").strip()
+    if not EMAIL_PATTERN.fullmatch(email) or not subject:
+        raise OAuthIdentityError("Google identity không hợp lệ")
+    return {"provider": "google", "subject": subject, "email": email, "display_name": str(claims.get("name") or "").strip()[:120]}
+
+
+async def _fetch_google_identity(code: str, state_value: str) -> dict:
+    config = _oauth_client_configuration("google")
+    tokens = await _oauth_json_request(
+        "POST",
+        GOOGLE_TOKEN_URL,
+        data={
+            "code": code,
+            "client_id": config["client_id"],
+            "client_secret": config["client_secret"],
+            "redirect_uri": config["redirect_uri"],
+            "grant_type": "authorization_code",
+            "code_verifier": _oauth_derived_token("pkce", state_value),
+        },
+        headers={"Accept": "application/json"},
+    )
+    id_token = str(tokens.get("id_token") or "")
+    if not id_token:
+        raise OAuthIdentityError("Google không trả identity token")
+    return await _verify_google_id_token(
+        id_token,
+        client_id=config["client_id"],
+        expected_nonce=_oauth_derived_token("nonce", state_value),
+    )
+
+
+async def _fetch_github_identity(code: str, state_value: str) -> dict:
+    config = _oauth_client_configuration("github")
+    tokens = await _oauth_json_request(
+        "POST",
+        GITHUB_TOKEN_URL,
+        data={
+            "client_id": config["client_id"],
+            "client_secret": config["client_secret"],
+            "code": code,
+            "redirect_uri": config["redirect_uri"],
+            "code_verifier": _oauth_derived_token("pkce", state_value),
+        },
+        headers={"Accept": "application/json"},
+    )
+    access_token = str(tokens.get("access_token") or "")
+    if not access_token:
+        raise OAuthIdentityError("GitHub không trả access token")
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "Authorization": f"Bearer {access_token}",
+        "X-GitHub-Api-Version": "2022-11-28",
+    }
+    profile = await _oauth_json_request("GET", GITHUB_USER_URL, headers=headers)
+    # `/user/emails` returns a JSON list; use a separate request here so the
+    # generic JSON helper remains strict for token/profile objects.
+    try:
+        async with httpx.AsyncClient(timeout=OAUTH_HTTP_TIMEOUT_SECONDS, follow_redirects=False) as client:
+            emails_response = await client.get(GITHUB_EMAILS_URL, headers=headers)
+        if emails_response.status_code < 200 or emails_response.status_code >= 300:
+            raise OAuthIdentityError("GitHub email không khả dụng")
+        emails = emails_response.json()
+    except OAuthIdentityError:
+        raise
+    except (httpx.HTTPError, ValueError) as exc:
+        raise OAuthIdentityError("GitHub email không khả dụng") from exc
+    if not isinstance(emails, list):
+        raise OAuthIdentityError("GitHub email không hợp lệ")
+    email_entry = next((item for item in emails if isinstance(item, dict) and item.get("primary") is True and item.get("verified") is True), None)
+    if not email_entry:
+        email_entry = next((item for item in emails if isinstance(item, dict) and item.get("verified") is True), None)
+    email = str((email_entry or {}).get("email") or "").strip().lower()
+    subject = str(profile.get("id") or "").strip()
+    if not EMAIL_PATTERN.fullmatch(email) or not subject:
+        raise OAuthIdentityError("GitHub identity không hợp lệ")
+    display_name = str(profile.get("name") or profile.get("login") or "").strip()[:120]
+    return {"provider": "github", "subject": subject, "email": email, "display_name": display_name}
+
+
+def _apple_private_key(config: dict) -> str:
+    encoded = "".join(str(config.get("private_key_base64") or "").split())
+    try:
+        raw = base64.b64decode(encoded + "=" * (-len(encoded) % 4), validate=True)
+        key = raw.decode("utf-8")
+    except (ValueError, UnicodeDecodeError) as exc:
+        raise OAuthIdentityError("Apple private key không hợp lệ") from exc
+    if "BEGIN PRIVATE KEY" not in key or "END PRIVATE KEY" not in key:
+        raise OAuthIdentityError("Apple private key không hợp lệ")
+    return key
+
+
+def _apple_client_secret(config: dict) -> str:
+    """Create a short-lived ES256 Apple client secret; never persist it."""
+    try:
+        import jwt  # type: ignore[import-not-found]
+
+        now = int(_now().timestamp())
+        return str(
+            jwt.encode(
+                {
+                    "iss": config["team_id"],
+                    "iat": now,
+                    "exp": now + 300,
+                    "aud": "https://appleid.apple.com",
+                    "sub": config["client_id"],
+                },
+                _apple_private_key(config),
+                algorithm="ES256",
+                headers={"kid": config["key_id"]},
+            )
+        )
+    except OAuthIdentityError:
+        raise
+    except Exception as exc:
+        raise OAuthIdentityError("Không thể tạo Apple client secret") from exc
+
+
+async def _verify_apple_id_token(id_token: str, *, client_id: str, expected_nonce: str) -> dict:
+    try:
+        import jwt  # type: ignore[import-not-found]
+
+        header = jwt.get_unverified_header(id_token)
+        # Apple client *secrets* are ES256, but Apple-issued ID tokens are
+        # signed with Apple's RSA JWKS and must be verified as RS256.
+        if header.get("alg") != "RS256" or not isinstance(header.get("kid"), str):
+            raise OAuthIdentityError("Apple ID token không hợp lệ")
+        jwks = await _oauth_json_request("GET", APPLE_JWKS_URL, headers={"Accept": "application/json"})
+        keys = jwks.get("keys")
+        if not isinstance(keys, list):
+            raise OAuthIdentityError("Apple JWKS không hợp lệ")
+        matching = next(
+            (
+                item for item in keys
+                if isinstance(item, dict)
+                and item.get("kid") == header["kid"]
+                and item.get("kty") == "RSA"
+                and item.get("use", "sig") == "sig"
+                and item.get("alg", "RS256") == "RS256"
+            ),
+            None,
+        )
+        if not matching:
+            raise OAuthIdentityError("Apple signing key không hợp lệ")
+        key = jwt.PyJWK.from_dict(matching).key
+        claims = jwt.decode(
+            id_token,
+            key,
+            algorithms=["RS256"],
+            audience=client_id,
+            issuer="https://appleid.apple.com",
+            options={"require": ["exp", "iat", "sub", "nonce"]},
+        )
+    except OAuthIdentityError:
+        raise
+    except Exception as exc:
+        raise OAuthIdentityError("Apple ID token không được xác minh") from exc
+    if not hmac.compare_digest(str(claims.get("nonce") or ""), expected_nonce):
+        raise OAuthIdentityError("Apple nonce không hợp lệ")
+    subject = str(claims.get("sub") or "").strip()
+    if not subject:
+        raise OAuthIdentityError("Apple identity không hợp lệ")
+    verified = claims.get("email_verified")
+    email = str(claims.get("email") or "").strip().lower()
+    if email and verified not in {True, "true", "True"}:
+        raise OAuthIdentityError("Apple email chưa được xác minh")
+    if email and not EMAIL_PATTERN.fullmatch(email):
+        raise OAuthIdentityError("Apple email không hợp lệ")
+    return {"provider": "apple", "subject": subject, "email": email}
+
+
+def _apple_display_name(value: str | None) -> str:
+    """Use the optional first-authorization name for display only, never ID."""
+    raw = str(value or "")
+    if not raw or len(raw) > 4096:
+        return ""
+    try:
+        data = json.loads(raw)
+    except (TypeError, ValueError):
+        return ""
+    name = data.get("name") if isinstance(data, dict) else None
+    if not isinstance(name, dict):
+        return ""
+    pieces = [str(name.get(key) or "").strip() for key in ("firstName", "lastName")]
+    display_name = " ".join(item for item in pieces if item)
+    return "".join(character for character in display_name if ord(character) >= 32).strip()[:120]
+
+
+async def _fetch_apple_identity(code: str, state_value: str, *, display_name: str = "") -> dict:
+    config = _oauth_client_configuration("apple")
+    tokens = await _oauth_json_request(
+        "POST",
+        APPLE_TOKEN_URL,
+        data={
+            "client_id": config["client_id"],
+            "client_secret": _apple_client_secret(config),
+            "code": code,
+            "grant_type": "authorization_code",
+            "redirect_uri": config["redirect_uri"],
+        },
+        headers={"Accept": "application/json"},
+    )
+    id_token = str(tokens.get("id_token") or "")
+    if not id_token:
+        raise OAuthIdentityError("Apple không trả identity token")
+    identity = await _verify_apple_id_token(
+        id_token,
+        client_id=config["client_id"],
+        expected_nonce=_oauth_derived_token("nonce", state_value),
+    )
+    identity["display_name"] = display_name
+    return identity
+
+
+async def _fetch_oauth_identity(provider: str, code: str, state_value: str) -> dict:
+    if provider == "google":
+        return await _fetch_google_identity(code, state_value)
+    if provider == "github":
+        return await _fetch_github_identity(code, state_value)
+    raise OAuthIdentityError("OAuth provider không hợp lệ")
+
+
+def _oauth_signin_account(identity: dict, request: Request) -> tuple[dict | None, str]:
+    provider = str(identity.get("provider") or "")
+    subject = str(identity.get("subject") or "")
+    email = str(identity.get("email") or "").strip().lower()
+    display_name = str(identity.get("display_name") or "").strip()[:120]
+    if provider not in OAUTH_PROVIDER_NAMES or not subject:
+        return None, "failed"
+    subject_hash = _external_subject_hash(provider, subject)
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT a.id, a.email, a.display_name, a.canonical_user_id, a.role_cache, a.is_active,
+                      a.password_login_enabled, p.locale, p.timezone, p.avatar_style
+               FROM web_external_identities i JOIN web_accounts a ON a.id=i.account_id
+               LEFT JOIN web_account_profiles p ON p.account_id=a.id
+               WHERE i.provider=? AND i.subject_hash=?""",
+            (provider, subject_hash),
+        ).fetchone()
+        if row:
+            account = _oauth_account_from_row(row)
+            if not account["is_active"]:
+                _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="inactive account")
+                return None, "failed"
+            conn.execute("UPDATE web_external_identities SET last_login_at=? WHERE provider=? AND subject_hash=?", (utc_now(), provider, subject_hash))
+            _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider)
+            return account, "ok"
+        # A first Apple authorization may not include an email. Existing
+        # identities are already handled above, but a new account must never
+        # be fabricated without a verified, contactable address.
+        if not EMAIL_PATTERN.fullmatch(email):
+            _record_audit(conn, account_id=None, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="new provider identity has no verified email")
+            return None, "failed"
+        existing_email = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email,)).fetchone()
+        if existing_email:
+            _record_audit(conn, account_id=existing_email[0], canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="email belongs to an existing account; explicit linking required")
+            return None, "link-required"
+        account_id = str(uuid.uuid4())
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_accounts
+            (id, email, password_hash, display_name, password_login_enabled, created_at, updated_at)
+            VALUES (?, ?, ?, ?, 0, ?, ?)""",
+            (account_id, email, _password_hash(secrets.token_urlsafe(48)), display_name, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_account_profiles
+            (account_id, locale, timezone, avatar_style, created_at, updated_at)
+            VALUES (?, 'vi', 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)""",
+            (account_id, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_external_identities (provider, subject_hash, account_id, created_at, last_login_at)
+            VALUES (?, ?, ?, ?, ?)""",
+            (provider, subject_hash, account_id, now, now),
+        )
+        account = {
+            "id": account_id, "email": email, "display_name": display_name, "canonical_user_id": None,
+            "role": "user", "is_active": True, "password_login_enabled": False,
+            "locale": "vi", "timezone": "Asia/Ho_Chi_Minh", "avatar_style": "gradient",
+        }
+        _record_audit(conn, account_id=account_id, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, detail="created oauth-only web account")
+    return account, "ok"
+
+
+def _link_oauth_identity(identity: dict, account: dict, request: Request) -> str:
+    provider = str(identity.get("provider") or "")
+    subject = str(identity.get("subject") or "")
+    if provider not in OAUTH_PROVIDER_NAMES or not subject:
+        return "failed"
+    subject_hash = _external_subject_hash(provider, subject)
+    with transaction() as conn:
+        same_provider = conn.execute(
+            "SELECT subject_hash FROM web_external_identities WHERE account_id=? AND provider=?",
+            (account["id"], provider),
+        ).fetchone()
+        if same_provider:
+            outcome = "already-linked" if hmac.compare_digest(str(same_provider[0]), subject_hash) else "failed"
+            _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider, outcome="denied" if outcome == "failed" else "ok", detail="provider already linked" if outcome == "already-linked" else "different provider identity already linked")
+            return outcome
+        existing = conn.execute(
+            "SELECT account_id FROM web_external_identities WHERE provider=? AND subject_hash=?",
+            (provider, subject_hash),
+        ).fetchone()
+        if existing:
+            _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider, outcome="denied", detail="identity linked to another account")
+            return "failed"
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_external_identities (provider, subject_hash, account_id, created_at, last_login_at)
+            VALUES (?, ?, ?, ?, ?)""",
+            (provider, subject_hash, account["id"], now, now),
+        )
+        _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider)
+    return "linked"
+
+
+def _oauth_bound_link_account(state_data: dict) -> dict | None:
+    """Validate the session that minted a cross-site OAuth link state.
+
+    Apple returns to the callback by cross-site form POST, where the normal
+    Lax session cookie is intentionally absent.  The dedicated short-lived
+    state/link cookies plus this live-session lookup preserve the same account
+    binding without weakening the main session cookie policy.
+    """
+    account_id = str(state_data.get("account_id") or "")
+    session_id = str(state_data.get("initiating_session_id") or "")
+    if not account_id or not session_id:
+        return None
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT a.id, a.email, a.display_name, a.canonical_user_id, a.role_cache, a.is_active,
+                      a.password_login_enabled, p.locale, p.timezone, p.avatar_style, s.expires_at
+               FROM web_sessions s JOIN web_accounts a ON a.id=s.account_id
+               LEFT JOIN web_account_profiles p ON p.account_id=a.id
+               WHERE s.id=? AND s.account_id=? AND s.revoked_at IS NULL""",
+            (session_id, account_id),
+        ).fetchone()
+        if not row or not row[5] or _as_time(row[10]) <= _now():
+            return None
+        conn.execute("UPDATE web_sessions SET last_seen_at=? WHERE id=?", (utc_now(), session_id))
+    return _oauth_account_from_row(row[:10])
 
 
 @router.post("/register")
@@ -403,19 +1194,22 @@ async def login(payload: LoginRequest, request: Request, response: Response):
     email = payload.email.strip().lower()
     with transaction() as conn:
         row = conn.execute(
-            """SELECT a.id, a.email, a.password_hash, a.display_name, a.canonical_user_id, a.role_cache, a.is_active,
+            """SELECT a.id, a.email, a.password_hash, a.display_name, a.canonical_user_id, a.role_cache, a.is_active, a.password_login_enabled,
                       p.locale, p.timezone, p.avatar_style
                FROM web_accounts a LEFT JOIN web_account_profiles p ON p.account_id=a.id
                WHERE a.email=?""",
             (email,),
         ).fetchone()
-        if not row or not row[6] or not _verify_password(payload.password, row[2]):
+        password_hash = row[2] if row and row[6] and row[7] else _DUMMY_PASSWORD_HASH
+        password_valid = _verify_password(payload.password, password_hash)
+        if not row or not row[6] or not row[7] or not password_valid:
             _record_audit(conn, account_id=row[0] if row else None, canonical_user_id=None, action="auth.login", request_id=_request_id(request), outcome="denied")
             return envelope(False, "Email hoặc mật khẩu không đúng", status_name="failed", error_code="LOGIN_DENIED")
         account = {
             "id": row[0], "email": row[1], "display_name": row[3] or "",
             "canonical_user_id": row[4], "role": row[5] or "user",
-            "locale": row[7] or "vi", "timezone": row[8] or "Asia/Ho_Chi_Minh", "avatar_style": row[9] or "gradient",
+            "password_login_enabled": bool(row[7]),
+            "locale": row[8] or "vi", "timezone": row[9] or "Asia/Ho_Chi_Minh", "avatar_style": row[10] or "gradient",
         }
         _record_audit(conn, account_id=row[0], canonical_user_id=row[4], action="auth.login", request_id=_request_id(request))
     session = _create_session(response, account["id"])
@@ -424,11 +1218,11 @@ async def login(payload: LoginRequest, request: Request, response: Response):
 
 @router.post("/logout")
 async def logout(request: Request, response: Response, account: dict = Depends(require_csrf)):
-    session_id = _parse_session_cookie(request.cookies.get(SESSION_COOKIE))
+    session_id = _parse_session_cookie(request.cookies.get(_cookie_name(SESSION_COOKIE)))
     with transaction() as conn:
         conn.execute("UPDATE web_sessions SET revoked_at=? WHERE id=?", (utc_now(), session_id))
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.logout", request_id=_request_id(request))
-    response.delete_cookie(SESSION_COOKIE, path="/")
+    response.delete_cookie(_cookie_name(SESSION_COOKIE), path="/", secure=_cookie_secure(), httponly=True, samesite="lax")
     return envelope(True, "Đã đăng xuất")
 
 
@@ -444,6 +1238,222 @@ async def me(request: Request, account: dict = Depends(require_account)):
             "expires_at": session["expires_at"],
         },
     )
+
+
+@router.post("/profile")
+async def update_profile(payload: ProfileUpdateRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Update only Web-owned presentation defaults for the signed account."""
+    display_name = payload.display_name.strip()
+    locale = payload.locale.strip().lower()
+    timezone_name = payload.timezone.strip()
+    if any(ord(character) < 32 for character in display_name):
+        return envelope(False, "Tên hiển thị có ký tự không hợp lệ.", status_name="failed", error_code="PROFILE_DISPLAY_NAME_INVALID")
+    if locale not in {"vi", "en"}:
+        return envelope(False, "Ngôn ngữ hồ sơ chưa được hỗ trợ.", status_name="failed", error_code="PROFILE_LOCALE_INVALID")
+    if timezone_name not in {"Asia/Ho_Chi_Minh", "UTC"}:
+        return envelope(False, "Múi giờ hồ sơ chưa được hỗ trợ.", status_name="failed", error_code="PROFILE_TIMEZONE_INVALID")
+    with transaction() as conn:
+        now = utc_now()
+        conn.execute(
+            "UPDATE web_accounts SET display_name=?, updated_at=? WHERE id=?",
+            (display_name, now, account["id"]),
+        )
+        conn.execute(
+            """INSERT INTO web_account_profiles
+            (account_id, locale, timezone, avatar_style, created_at, updated_at)
+            VALUES (?, ?, ?, 'gradient', ?, ?)
+            ON CONFLICT(account_id) DO UPDATE SET locale=excluded.locale, timezone=excluded.timezone, updated_at=excluded.updated_at""",
+            (account["id"], locale, timezone_name, now, now),
+        )
+        _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.profile_update", request_id=_request_id(request))
+    updated = {
+        **account,
+        "display_name": display_name,
+        "locale": locale,
+        "timezone": timezone_name,
+        "avatar_style": "gradient",
+    }
+    return envelope(True, "Đã cập nhật hồ sơ Web.", data={"account": browser_account_payload(updated)}, status_name="completed")
+
+
+@router.get("/providers")
+async def oauth_providers():
+    """Expose only provider availability, never OAuth client configuration."""
+    return envelope(True, "Trạng thái phương thức đăng nhập", data={"providers": oauth_provider_status()})
+
+
+@router.post("/oauth/{provider}/link/start")
+async def start_oauth_link(provider: str, request: Request, response: Response, account: dict = Depends(require_csrf)):
+    provider = provider.strip().lower()
+    if not _oauth_enabled(provider):
+        return envelope(False, "Phương thức đăng nhập này chưa được cấu hình.", status_name="guarded", error_code="OAUTH_PROVIDER_DISABLED")
+    session = current_session(request)
+    ticket = secrets.token_urlsafe(24)
+    _set_oauth_link_cookie(response, provider, session["session_id"], ticket)
+    with transaction() as conn:
+        _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link_start", request_id=_request_id(request), target=provider)
+    return envelope(
+        True,
+        "Sắp chuyển sang nhà cung cấp để liên kết đăng nhập.",
+        data={"start_path": f"/api/v1/auth/oauth/{provider}/start?link=1"},
+        status_name="awaiting_confirm",
+    )
+
+
+@router.get("/oauth/{provider}/start")
+async def start_oauth(provider: str, request: Request):
+    provider = provider.strip().lower()
+    if not _oauth_enabled(provider):
+        return _oauth_redirect("unavailable")
+    try:
+        purpose = "signin"
+        account_id: str | None = None
+        initiating_session_id: str | None = None
+        if request.query_params.get("link") == "1":
+            session = current_session(request)
+            link_cookie = _parse_oauth_link_cookie(request.cookies.get(_cookie_name(OAUTH_LINK_COOKIE)))
+            if not link_cookie or link_cookie[0] != provider or link_cookie[1] != session["session_id"]:
+                response = _oauth_redirect("session", path="/account")
+                _clear_oauth_link_cookie(response)
+                return response
+            purpose = "link"
+            account_id = session["account"]["id"]
+            initiating_session_id = session["session_id"]
+        state_value = _create_oauth_state(
+            provider,
+            purpose=purpose,
+            account_id=account_id,
+            initiating_session_id=initiating_session_id,
+            return_path=_safe_oauth_return_path(request.query_params.get("next")),
+        )
+        authorization_url = _oauth_authorization_url(provider, state_value)
+    except (HTTPException, RuntimeError, ValueError):
+        response = _oauth_redirect("unavailable" if purpose == "signin" else "session", path="/account" if purpose == "link" else "/login")
+        if request.query_params.get("link") == "1":
+            _clear_oauth_link_cookie(response)
+        return response
+    response = RedirectResponse(authorization_url, status_code=status.HTTP_303_SEE_OTHER)
+    _set_oauth_state_cookie(response, provider, state_value)
+    if purpose == "link":
+        _clear_oauth_link_cookie(response)
+    with transaction() as conn:
+        _record_audit(conn, account_id=account_id, canonical_user_id=None, action="oauth.start", request_id=_request_id(request), target=provider, detail=purpose)
+    return response
+
+
+async def _oauth_callback_impl(provider: str, request: Request, values: dict[str, str], *, apple_display_name: str = "") -> RedirectResponse:
+    """Consume one OAuth state and complete either sign-in or explicit link."""
+    if not _oauth_enabled(provider):
+        response = _oauth_redirect("unavailable")
+        _clear_oauth_state_cookie(response)
+        return response
+    state_value = str(values.get("state") or "")
+    if not state_value or len(state_value) > 256:
+        response = _oauth_redirect("state")
+        _clear_oauth_state_cookie(response)
+        return response
+    state_data = _consume_oauth_state(request, provider, state_value)
+    if not state_data:
+        response = _oauth_redirect("state")
+        _clear_oauth_state_cookie(response)
+        return response
+    provider_error = str(values.get("error") or "")
+    code = str(values.get("code") or "")
+    if provider_error or not code:
+        with transaction() as conn:
+            _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider cancelled or omitted authorization code")
+        response = _oauth_redirect("cancelled" if provider_error == "access_denied" else "failed", path="/account" if state_data["purpose"] == "link" else "/login")
+        _clear_oauth_state_cookie(response)
+        return response
+    try:
+        identity = await _fetch_apple_identity(code, state_value, display_name=apple_display_name) if provider == "apple" else await _fetch_oauth_identity(provider, code, state_value)
+        if identity.get("provider") != provider:
+            raise OAuthIdentityError("provider identity mismatch")
+    except OAuthIdentityError:
+        with transaction() as conn:
+            _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider identity verification failed")
+        response = _oauth_redirect("failed", path="/account" if state_data["purpose"] == "link" else "/login")
+        _clear_oauth_state_cookie(response)
+        return response
+    except Exception:
+        # Treat unexpected provider client failures exactly like a failed
+        # verification.  Do not leak third-party details to browser/audit.
+        with transaction() as conn:
+            _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider callback failed")
+        response = _oauth_redirect("failed", path="/account" if state_data["purpose"] == "link" else "/login")
+        _clear_oauth_state_cookie(response)
+        return response
+    if state_data["purpose"] == "link":
+        if provider == "apple":
+            account = _oauth_bound_link_account(state_data)
+            if not account:
+                response = _oauth_redirect("session", path="/account")
+                _clear_oauth_state_cookie(response)
+                return response
+        else:
+            try:
+                session = current_session(request)
+            except HTTPException:
+                response = _oauth_redirect("session", path="/account")
+                _clear_oauth_state_cookie(response)
+                return response
+            if session["session_id"] != state_data["initiating_session_id"] or session["account"]["id"] != state_data["account_id"]:
+                response = _oauth_redirect("session", path="/account")
+                _clear_oauth_state_cookie(response)
+                return response
+            account = session["account"]
+        outcome = _link_oauth_identity(identity, account, request)
+        response = _oauth_redirect(outcome, path="/account")
+        _clear_oauth_state_cookie(response)
+        return response
+    account, outcome = _oauth_signin_account(identity, request)
+    if not account:
+        response = _oauth_redirect(outcome)
+        _clear_oauth_state_cookie(response)
+        return response
+    target = state_data["return_path"] if account.get("canonical_user_id") else "/onboarding"
+    response = RedirectResponse(_safe_oauth_return_path(target), status_code=status.HTTP_303_SEE_OTHER)
+    _create_session(response, account["id"])
+    _clear_oauth_state_cookie(response)
+    return response
+
+
+@router.get("/oauth/{provider}/callback")
+async def oauth_callback(provider: str, request: Request):
+    provider = provider.strip().lower()
+    if provider == "apple":
+        response = _oauth_redirect("failed")
+        _clear_oauth_state_cookie(response)
+        return response
+    return await _oauth_callback_impl(
+        provider,
+        request,
+        {
+            "state": str(request.query_params.get("state") or ""),
+            "error": str(request.query_params.get("error") or ""),
+            "code": str(request.query_params.get("code") or ""),
+        },
+    )
+
+
+@router.post("/oauth/apple/callback")
+async def apple_oauth_callback(request: Request):
+    # Apple returns the `code`/`state` as a cross-site form POST. Bound its
+    # body before parsing to keep this public callback from becoming an upload
+    # sink. The submitted `id_token`/email/name are never trusted as identity.
+    body = await request.body()
+    if len(body) > 16_384:
+        response = _oauth_redirect("failed")
+        _clear_oauth_state_cookie(response)
+        return response
+    try:
+        form = await request.form()
+    except Exception:
+        response = _oauth_redirect("failed")
+        _clear_oauth_state_cookie(response)
+        return response
+    values = {key: str(form.get(key) or "") for key in ("state", "error", "code", "user")}
+    return await _oauth_callback_impl("apple", request, values, apple_display_name=_apple_display_name(values["user"]))
 
 
 @router.post("/telegram/login/start")
@@ -470,7 +1480,7 @@ async def start_telegram_login(request: Request, response: Response):
         )
         _record_audit(conn, account_id=None, canonical_user_id=None, action="auth.telegram_login_start", request_id=_request_id(request))
     response.set_cookie(
-        TELEGRAM_LOGIN_COOKIE,
+        _cookie_name(TELEGRAM_LOGIN_COOKIE),
         _telegram_login_cookie_value(browser_token),
         httponly=True,
         secure=_cookie_secure(),
@@ -492,7 +1502,7 @@ async def start_telegram_login(request: Request, response: Response):
 
 
 def _telegram_login_challenge(request: Request) -> tuple[str, str] | None:
-    browser_token = _parse_telegram_login_cookie(request.cookies.get(TELEGRAM_LOGIN_COOKIE))
+    browser_token = _parse_telegram_login_cookie(request.cookies.get(_cookie_name(TELEGRAM_LOGIN_COOKIE)))
     if not browser_token:
         return None
     return browser_token, hashlib.sha256(browser_token.encode("utf-8")).hexdigest()
@@ -500,7 +1510,7 @@ def _telegram_login_challenge(request: Request) -> tuple[str, str] | None:
 
 def _clear_telegram_login_cookie(response: Response) -> None:
     response.delete_cookie(
-        TELEGRAM_LOGIN_COOKIE,
+        _cookie_name(TELEGRAM_LOGIN_COOKIE),
         path="/",
         secure=_cookie_secure(),
         httponly=True,
@@ -517,13 +1527,21 @@ async def telegram_login_status(request: Request, response: Response):
     _browser_token, token_hash = challenge
     with transaction() as conn:
         row = conn.execute(
-            "SELECT expires_at, consumed_at, canonical_user_id FROM telegram_login_codes WHERE browser_token_hash=?",
+            "SELECT expires_at, consumed_at, canonical_user_id, failure_code FROM telegram_login_codes WHERE browser_token_hash=?",
             (token_hash,),
         ).fetchone()
         if not row or _as_time(row[0]) <= _now():
             conn.execute("DELETE FROM telegram_login_codes WHERE browser_token_hash=?", (token_hash,))
             _clear_telegram_login_cookie(response)
             return envelope(False, "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới.", data={"ready": False}, status_name="failed", error_code="TELEGRAM_LOGIN_EXPIRED")
+        if row[3] == "TELEGRAM_LOGIN_ACCOUNT_REQUIRED":
+            return envelope(
+                False,
+                "Telegram này chưa liên kết với tài khoản Web. Hãy đăng ký/đăng nhập email, liên kết Telegram trong Thiết lập tài khoản, rồi tạo mã đăng nhập mới.",
+                data={"ready": False, "restart_required": True},
+                status_name="guarded",
+                error_code="TELEGRAM_LOGIN_ACCOUNT_REQUIRED",
+            )
         if not row[1] or not row[2]:
             return envelope(True, "Đang chờ bot xác minh Telegram.", data={"ready": False}, status_name="awaiting_confirm")
     return envelope(True, "Telegram đã được xác minh. Bạn có thể hoàn tất đăng nhập an toàn.", data={"ready": True}, status_name="awaiting_confirm")
@@ -539,17 +1557,27 @@ async def complete_telegram_login(request: Request, response: Response):
     account: dict | None = None
     with transaction() as conn:
         row = conn.execute(
-            "SELECT code_hash, expires_at, consumed_at, canonical_user_id FROM telegram_login_codes WHERE browser_token_hash=?",
+            "SELECT code_hash, expires_at, consumed_at, canonical_user_id, failure_code FROM telegram_login_codes WHERE browser_token_hash=?",
             (token_hash,),
         ).fetchone()
         if not row or _as_time(row[1]) <= _now():
             conn.execute("DELETE FROM telegram_login_codes WHERE browser_token_hash=?", (token_hash,))
             _clear_telegram_login_cookie(response)
             return envelope(False, "Mã đăng nhập Telegram đã hết hạn. Hãy tạo mã mới.", status_name="failed", error_code="TELEGRAM_LOGIN_EXPIRED")
+        if row[4] == "TELEGRAM_LOGIN_ACCOUNT_REQUIRED":
+            return envelope(
+                False,
+                "Telegram này chưa liên kết với tài khoản Web. Hãy đăng ký/đăng nhập email và liên kết Telegram trước khi dùng đăng nhập Telegram.",
+                status_name="guarded",
+                error_code="TELEGRAM_LOGIN_ACCOUNT_REQUIRED",
+            )
         if not row[2] or not row[3]:
             return envelope(False, "Bot chưa xác minh Telegram cho mã này.", status_name="awaiting_confirm", error_code="TELEGRAM_LOGIN_PENDING")
         account_row = conn.execute(
-            "SELECT id, email, display_name, canonical_user_id, role_cache, is_active FROM web_accounts WHERE canonical_user_id=?",
+            """SELECT a.id, a.email, a.display_name, a.canonical_user_id, a.role_cache, a.is_active, a.password_login_enabled,
+                      p.locale, p.timezone, p.avatar_style
+               FROM web_accounts a LEFT JOIN web_account_profiles p ON p.account_id=a.id
+               WHERE a.canonical_user_id=?""",
             (row[3],),
         ).fetchone()
         if not account_row or not account_row[5]:
@@ -560,6 +1588,9 @@ async def complete_telegram_login(request: Request, response: Response):
         account = {
             "id": account_row[0], "email": account_row[1], "display_name": account_row[2] or "",
             "canonical_user_id": account_row[3], "role": account_row[4] or "user",
+            "password_login_enabled": bool(account_row[6]),
+            "locale": account_row[7] or "vi", "timezone": account_row[8] or "Asia/Ho_Chi_Minh",
+            "avatar_style": account_row[9] or "gradient",
         }
         conn.execute("DELETE FROM telegram_login_codes WHERE code_hash=?", (row[0],))
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="auth.telegram_login_complete", request_id=_request_id(request))
@@ -570,6 +1601,13 @@ async def complete_telegram_login(request: Request, response: Response):
 
 @router.post("/telegram/link/start")
 async def start_telegram_link(request: Request, account: dict = Depends(require_csrf)):
+    if account["canonical_user_id"]:
+        return envelope(
+            False,
+            "Tài khoản này đã liên kết Telegram. Để bảo vệ dữ liệu canonical, Web không cho thay Telegram identity bằng mã mới.",
+            status_name="guarded",
+            error_code="TELEGRAM_RELINK_NOT_ALLOWED",
+        )
     code = _new_telegram_code()
     code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
     initiating_session_id = current_session(request)["session_id"]
@@ -637,7 +1675,11 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
     code_hash = hashlib.sha256(payload.code.encode("utf-8")).hexdigest()
     canonical_user_id = payload.canonical_user_id.strip()
     if not canonical_user_id:
-        return envelope(False, "Telegram identity không hợp lệ", status_name="failed", error_code="LINK_IDENTITY_INVALID")
+        return _bridge_callback_failure(
+            "Telegram identity không hợp lệ",
+            error_code="LINK_IDENTITY_INVALID",
+            http_status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
     with transaction() as conn:
         row = conn.execute(
             "SELECT account_id, expires_at, consumed_at, initiating_session_id FROM telegram_link_codes WHERE code_hash=?",
@@ -653,16 +1695,84 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                 (code_hash,),
             ).fetchone()
             if not login_row or login_row[1] or _as_time(login_row[0]) <= _now():
-                return envelope(False, "Mã liên kết không hợp lệ hoặc đã hết hạn", status_name="failed", error_code="LINK_CODE_INVALID")
+                return _bridge_callback_failure(
+                    "Mã liên kết không hợp lệ hoặc đã hết hạn",
+                    error_code="LINK_CODE_INVALID",
+                    http_status=status.HTTP_410_GONE,
+                )
+            linked_account = conn.execute(
+                "SELECT id FROM web_accounts WHERE canonical_user_id=? AND is_active=1",
+                (canonical_user_id,),
+            ).fetchone()
+            if not linked_account:
+                _record_audit(
+                    conn,
+                    account_id=None,
+                    canonical_user_id=canonical_user_id,
+                    action="auth.telegram_login_confirm",
+                    request_id=_request_id(request),
+                    outcome="denied",
+                    detail="no active linked web account",
+                )
+                conn.execute(
+                    "UPDATE telegram_login_codes SET consumed_at=?, failure_code=? WHERE code_hash=?",
+                    (utc_now(), "TELEGRAM_LOGIN_ACCOUNT_REQUIRED", code_hash),
+                )
+                return _bridge_callback_failure(
+                    "Telegram chưa liên kết với tài khoản Web đang hoạt động. Hãy đăng ký/đăng nhập email một lần rồi liên kết Telegram.",
+                    error_code="TELEGRAM_LOGIN_ACCOUNT_REQUIRED",
+                    http_status=status.HTTP_409_CONFLICT,
+                    status_name="guarded",
+                )
             conn.execute(
-                "UPDATE telegram_login_codes SET consumed_at=?, canonical_user_id=? WHERE code_hash=?",
+                "UPDATE telegram_login_codes SET consumed_at=?, canonical_user_id=?, failure_code=NULL WHERE code_hash=?",
                 (utc_now(), canonical_user_id, code_hash),
             )
-            _record_audit(conn, account_id=None, canonical_user_id=None, action="auth.telegram_login_confirm", request_id=_request_id(request))
+            _record_audit(conn, account_id=linked_account[0], canonical_user_id=canonical_user_id, action="auth.telegram_login_confirm", request_id=_request_id(request))
             return envelope(True, "Đã xác minh Telegram cho phiên đăng nhập Web", data={"mode": "login"})
         if row[2] or _as_time(row[1]) <= _now():
-            return envelope(False, "Mã liên kết không hợp lệ hoặc đã hết hạn", status_name="failed", error_code="LINK_CODE_INVALID")
+            return _bridge_callback_failure(
+                "Mã liên kết không hợp lệ hoặc đã hết hạn",
+                error_code="LINK_CODE_INVALID",
+                http_status=status.HTTP_410_GONE,
+            )
         account_id, _expires_at, _consumed_at, initiating_session_id = row
+        account_row = conn.execute(
+            "SELECT canonical_user_id, is_active FROM web_accounts WHERE id=?",
+            (account_id,),
+        ).fetchone()
+        if not account_row or not account_row[1]:
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="auth.telegram_link_confirm",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="target web account is missing or inactive",
+            )
+            return _bridge_callback_failure(
+                "Tài khoản Web của mã liên kết không còn hoạt động.",
+                error_code="LINK_ACCOUNT_REQUIRED",
+                http_status=status.HTTP_404_NOT_FOUND,
+            )
+        existing_canonical_user_id = str(account_row[0] or "")
+        if existing_canonical_user_id:
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=existing_canonical_user_id,
+                action="auth.telegram_link_confirm",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="attempted to replace an existing canonical Telegram identity",
+            )
+            return _bridge_callback_failure(
+                "Tài khoản Web này đã liên kết Telegram; Web không cho thay identity canonical bằng mã liên kết.",
+                error_code="TELEGRAM_RELINK_NOT_ALLOWED",
+                http_status=status.HTTP_409_CONFLICT,
+                status_name="guarded",
+            )
         existing = conn.execute(
             "SELECT id FROM web_accounts WHERE canonical_user_id=? AND id<>?",
             (canonical_user_id, account_id),
@@ -677,7 +1787,11 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                 outcome="denied",
                 detail="canonical identity already linked to another account",
             )
-            return envelope(False, "Tài khoản Telegram này đã liên kết với một tài khoản Web khác", status_name="failed", error_code="TELEGRAM_ALREADY_LINKED")
+            return _bridge_callback_failure(
+                "Tài khoản Telegram này đã liên kết với một tài khoản Web khác",
+                error_code="TELEGRAM_ALREADY_LINKED",
+                http_status=status.HTTP_409_CONFLICT,
+            )
         role = "admin" if payload.role == "admin" else "user"
         conn.execute(
             """UPDATE web_accounts SET canonical_user_id=?, role_cache=?, display_name=COALESCE(NULLIF(?, ''), display_name), updated_at=? WHERE id=?""",

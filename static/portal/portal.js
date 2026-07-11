@@ -76,12 +76,12 @@
 
   const FIELD_SETS = Object.freeze({
     authLogin: [
-      { name: "email", label: "Email hoặc Gmail", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Dùng email đã tạo tài khoản, bao gồm địa chỉ Gmail. Google OAuth chỉ được bật khi server có cấu hình OAuth riêng." },
+      { name: "email", label: "Email (có thể dùng Gmail)", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Dùng Email + mật khẩu đã tạo tài khoản. Google (OAuth) là một phương thức riêng và chỉ được bật khi server có cấu hình OAuth." },
       { name: "password", label: "Mật khẩu", type: "password", placeholder: "Nhập mật khẩu", autocomplete: "current-password", required: true, maxLength: 256 }
     ],
     authRegister: [
       { name: "name", label: "Tên hiển thị", placeholder: "Tên bạn muốn dùng", autocomplete: "name", maxLength: 120, help: "Có thể để trống; khi liên kết Telegram, bot chỉ cập nhật tên hiển thị đã được xác minh." },
-      { name: "email", label: "Email hoặc Gmail", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức đăng nhập email/mật khẩu hiện có; địa chỉ Gmail được hỗ trợ như một email bình thường." },
+      { name: "email", label: "Email (có thể dùng Gmail)", type: "email", placeholder: "you@example.com", autocomplete: "email", required: true, maxLength: 254, help: "Đây là phương thức Email + mật khẩu; địa chỉ Gmail được hỗ trợ như một email bình thường. Google (OAuth) là một phương thức riêng." },
       { name: "password", label: "Mật khẩu", type: "password", placeholder: "Tối thiểu 12 ký tự", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 },
       { name: "confirm_password", label: "Xác nhận mật khẩu", type: "password", placeholder: "Nhập lại mật khẩu", autocomplete: "new-password", required: true, minLength: 12, maxLength: 256 }
     ],
@@ -243,9 +243,9 @@
       { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Web server sẽ chặn secret, OTP/CVV và số thẻ trước khi ticket được gửi. Tệp đính kèm chỉ xuất hiện khi adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file.", required: true, minLength: 3, maxLength: 4000 }
     ],
     profile: [
-      { name: "display_name", label: "Tên hiển thị", placeholder: "Chờ dữ liệu phiên" },
-      { name: "timezone", label: "Múi giờ", control: "select", options: ["Asia/Ho_Chi_Minh", "UTC", "Theo hồ sơ"] },
-      { name: "telegram_link", label: "Liên kết Telegram", placeholder: "Mã dùng một lần do Web server tạo", help: "Không dùng raw Telegram ID từ form hoặc localStorage." }
+      { name: "display_name", label: "Tên hiển thị", placeholder: "Tên bạn muốn hiển thị", maxLength: 120, help: "Đây là metadata Web; Telegram identity, role và Xu không thể sửa ở form này." },
+      { name: "locale", label: "Ngôn ngữ hồ sơ", control: "select", options: [{ value: "vi", label: "Tiếng Việt" }, { value: "en", label: "English" }], help: "Lưu preference hồ sơ; nội dung workflow vẫn theo contract canonical." },
+      { name: "timezone", label: "Múi giờ", control: "select", options: ["Asia/Ho_Chi_Minh", "UTC"], help: "Dùng cho preference hiển thị Web, không thay đổi timezone runtime Bot." }
     ],
     adminFilter: [
       { name: "query", label: "Tìm kiếm", placeholder: "ID, email hoặc mã job…" },
@@ -372,23 +372,23 @@
   // Public account and portal routes.
   definePage({
     path: "/login", title: "Đăng nhập an toàn", icon: ICONS.account, section: "Tài khoản",
-    description: "Đăng nhập bằng email/Gmail và mật khẩu hoặc xác minh Telegram một lần trong bot; signed session chỉ do máy chủ tạo sau xác thực.",
+    description: "Đăng nhập bằng Email + mật khẩu (có thể dùng Gmail), Google/GitHub/Apple OAuth, hoặc xác minh Telegram một lần trong bot; signed session chỉ do máy chủ tạo sau xác thực.",
     access: "public", layout: "auth", status: "ready", action: "auth-login", actionLabel: "Đăng nhập", fields: copyFields(FIELD_SETS.authLogin),
-    notes: ["Không nhập raw Telegram ID vào browser; Bot xác minh ownership qua mã dùng một lần, hết hạn và chống replay.", "GitHub OAuth chỉ xuất hiện ở trạng thái chờ cho đến khi server được cấp OAuth client/callback riêng."]
+    notes: ["Không nhập raw Telegram ID vào browser. Đăng nhập Telegram dùng mã một lần trong bot, hết hạn và chống replay.", "Email + mật khẩu (có thể dùng Gmail), Google OAuth, GitHub OAuth và Sign in with Apple là các phương thức riêng. OAuth chỉ hiện khi server đã có client, secret và callback hợp lệ."]
   });
   definePage({
     path: "/register", title: "Tạo tài khoản", icon: ICONS.account, section: "Tài khoản",
-    description: "Gửi yêu cầu tạo hồ sơ với mật khẩu được băm phía máy chủ, sau đó đăng nhập để nhận signed session.",
+    description: "Tạo hồ sơ bằng Email + mật khẩu (có thể dùng Gmail), hoặc bằng Google/GitHub/Apple OAuth khi server đã cấu hình thật. Mật khẩu chỉ được băm ở máy chủ.",
     access: "public", layout: "auth", status: "ready", action: "auth-register", actionLabel: "Tạo tài khoản", fields: copyFields(FIELD_SETS.authRegister),
-    notes: ["Hồ sơ mới được tạo với locale vi, múi giờ Asia/Ho_Chi_Minh và avatar gradient; Web không tự lưu Telegram ID hay dữ liệu bot.", "Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; response đăng ký không tiết lộ email đã có tài khoản hay chưa.", "Chỉ Đăng nhập mới cấp signed session và CSRF; shell không giả lập token hoặc session."]
+    notes: ["Hồ sơ mới có sẵn locale vi, múi giờ Asia/Ho_Chi_Minh và avatar gradient. Browser không nhận hoặc lưu Telegram ID; server chỉ giữ identity canonical sau khi bot xác minh.", "Email + mật khẩu là phương thức đang bật; địa chỉ Gmail hoạt động như email bình thường. Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình OAuth thật.", "Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; response đăng ký không tiết lộ email đã có tài khoản hay chưa.", "Chỉ đăng nhập Email + mật khẩu hoặc OAuth đã xác thực mới cấp signed session và CSRF; shell không giả lập token hoặc session."]
   });
   customerPage("/onboarding", "Thiết lập tài khoản", "Hoàn thiện hồ sơ và liên kết Telegram bằng mã dùng một lần do Web server tạo, bot xác nhận.", ICONS.account, {
     layout: "onboarding", fields: [], action: "start-telegram-link", actionLabel: "Tạo mã liên kết", status: "guarded",
     notes: ["Mã phải là one-time, hết hạn và được Core Bridge đánh dấu đã dùng.", "Không nhận Telegram ID thô từ URL hay localStorage."]
   });
   customerPage("/account", "Tài khoản & bảo mật", "Quản lý thông tin hồ sơ và trạng thái liên kết theo dữ liệu server-side.", ICONS.account, {
-    layout: "account", fields: [], action: "none", status: "read_only",
-    notes: ["Hồ sơ đang là dữ liệu canonical chỉ đọc; cập nhật profile cần adapter có audit riêng.", "Đăng xuất thu hồi signed session ở server, không chỉ xóa state tại browser."]
+    layout: "account", fields: [], action: "none", status: "ready",
+    notes: ["Tên hiển thị, ngôn ngữ và múi giờ là metadata Web có thể cập nhật bằng signed session, CSRF và audit event.", "Telegram identity, role, Xu, PayOS, job và provider vẫn là dữ liệu canonical chỉ đọc từ bot/Core Bridge.", "Đăng xuất thu hồi signed session ở server, không chỉ xóa state tại browser."]
   });
   customerPage("/dashboard", "Không gian làm việc", "Điểm xuất phát cho các bản nháp, job và tài sản do Core Bridge sở hữu.", ICONS.dashboard, {
     layout: "dashboard", action: "none", status: "guarded"
@@ -570,6 +570,13 @@
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
       pricingCatalog: source.pricingCatalog && typeof source.pricingCatalog === "object" ? source.pricingCatalog : {},
       packageCatalog: source.packageCatalog && typeof source.packageCatalog === "object" ? source.packageCatalog : {},
+      // These are hydrated asynchronously by integration.js.  Preserve their
+      // redacted, browser-safe values across render cycles so a real OAuth
+      // configuration or a pending Telegram challenge is reflected in the UI
+      // instead of falling back to a disabled/default card.
+      oauthProviders: source.oauthProviders && typeof source.oauthProviders === "object" ? source.oauthProviders : {},
+      telegramLoginFlow: source.telegramLoginFlow && typeof source.telegramLoginFlow === "object" ? source.telegramLoginFlow : {},
+      paymentOptions: source.paymentOptions && typeof source.paymentOptions === "object" ? source.paymentOptions : {},
       paymentFlow: source.paymentFlow && typeof source.paymentFlow === "object" ? source.paymentFlow : {},
       linkFlow: source.linkFlow && typeof source.linkFlow === "object" ? source.linkFlow : {},
       linkStatus: source.linkStatus && typeof source.linkStatus === "object" ? source.linkStatus : {},
@@ -1098,9 +1105,43 @@
     const jumps = grouped.length
       ? `<nav class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ">${grouped.map((group) => `<a class="portal-feature-jump" href="#feature-group-${safeText(group.key)}">${safeText(group.title)}</a>`).join("")}</nav>`
       : "";
-    const groups = grouped.map((group) => `<section class="portal-feature-group" aria-labelledby="feature-group-${safeText(group.key)}"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(group.title)}</span><h2 id="feature-group-${safeText(group.key)}">${safeText(group.title)}</h2><p>${safeText(group.description)}</p></div><span class="portal-feature-count">${safeText(String(group.entries.length))} workflow</span></div><div class="portal-module-grid">${group.entries.map((entry) => moduleCard(entry, context, "Mở workflow")).join("")}</div></section>`).join("");
+    const groups = grouped.map((group) => `<section class="portal-feature-group" data-catalog-group aria-labelledby="feature-group-${safeText(group.key)}"><div class="portal-feature-group-head"><div><span class="portal-section-kicker">${safeText(group.title)}</span><h2 id="feature-group-${safeText(group.key)}">${safeText(group.title)}</h2><p>${safeText(group.description)}</p></div><span class="portal-feature-count">${safeText(String(group.entries.length))} workflow</span></div><div class="portal-module-grid">${group.entries.map((entry) => {
+      const searchText = [group.title, entry.title, entry.description, entry.input_hint, entry.key, entry.route].filter((part) => typeof part === "string").join(" ");
+      return `<div class="portal-catalog-item" data-catalog-item data-catalog-text="${safeText(searchText)}">${moduleCard(entry, context, "Mở workflow")}</div>`;
+    }).join("")}</div></section>`).join("");
     const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web App catalogue</span><h2>Tất cả workflow đã định tuyến</h2><p>${safeText(String(entries.length))} route customer từ registry hoặc manifest fallback. Trạng thái engine/output luôn do Core Bridge cấp sau signed session.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${jumps}${body}</section></article>`;
+    const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">Tìm công cụ</label><div class="portal-catalog-search-control"><span aria-hidden="true">⌕</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="Ví dụ: OCR, TTS, video sản phẩm, dịch…" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>Xóa</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(String(entries.length))} workflow đang hiển thị.</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">⌕</span><h3>Không tìm thấy workflow</h3><p>Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên.</p></div></div>` : "";
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web App catalogue</span><h2>Tất cả workflow đã định tuyến</h2><p>${safeText(String(entries.length))} route customer từ registry hoặc manifest fallback. Trạng thái engine/output luôn do Core Bridge cấp sau signed session.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${search}${jumps}${body}</section></article>`;
+  }
+
+  function normalizeCatalogSearch(value) {
+    const source = String(value || "").trim().toLocaleLowerCase("vi-VN");
+    try {
+      return source.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/đ/g, "d");
+    } catch (_) {
+      return source;
+    }
+  }
+
+  function filterFeatureCatalog(value) {
+    const needle = normalizeCatalogSearch(value);
+    const items = Array.from(document.querySelectorAll("[data-catalog-item]"));
+    const groups = Array.from(document.querySelectorAll("[data-catalog-group]"));
+    let matches = 0;
+    items.forEach((item) => {
+      const visible = !needle || normalizeCatalogSearch(item.getAttribute("data-catalog-text") || "").includes(needle);
+      item.hidden = !visible;
+      if (visible) matches += 1;
+    });
+    groups.forEach((group) => {
+      group.hidden = !Array.from(group.querySelectorAll("[data-catalog-item]")).some((item) => !item.hidden);
+    });
+    const result = document.querySelector("[data-portal-catalog-result]");
+    if (result) result.textContent = needle ? `${matches} workflow phù hợp.` : `${items.length} workflow đang hiển thị.`;
+    const empty = document.querySelector("[data-portal-catalog-empty]");
+    if (empty) empty.hidden = matches > 0;
+    const clear = document.querySelector("[data-portal-catalog-clear]");
+    if (clear) clear.hidden = !needle;
   }
 
   function renderEmpty(title, text, iconText) {
@@ -1470,21 +1511,49 @@
     const linked = context.bridge.available === true || (context.linkStatus && context.linkStatus.linked === true);
     const logoutEnabled = context.capabilities && context.capabilities["auth-logout"] === true;
     const loginMethods = profile.loginMethods && typeof profile.loginMethods === "object" ? profile.loginMethods : {};
+    const oauthProviders = context.oauthProviders && typeof context.oauthProviders === "object" ? context.oauthProviders : {};
     const methodSummary = [
-      loginMethods.email !== false ? "Email/Gmail" : "",
+      loginMethods.email !== false ? "Email + mật khẩu (có thể dùng Gmail)" : "",
       loginMethods.telegram === true ? "Telegram đã liên kết" : "",
-      loginMethods.github === true ? "GitHub OAuth" : "GitHub OAuth chờ cấu hình server"
+      loginMethods.google === true ? "Google OAuth" : (oauthProviders.google && oauthProviders.google.enabled === true ? "Google OAuth sẵn sàng liên kết" : "Google OAuth chờ cấu hình server"),
+      loginMethods.github === true ? "GitHub OAuth" : (oauthProviders.github && oauthProviders.github.enabled === true ? "GitHub OAuth sẵn sàng liên kết" : "GitHub OAuth chờ cấu hình server"),
+      loginMethods.apple === true ? "Sign in with Apple" : (oauthProviders.apple && oauthProviders.apple.enabled === true ? "Apple OAuth sẵn sàng liên kết" : "Apple OAuth chờ cấu hình server")
     ].filter(Boolean).join(" · ");
-    const accountRows = `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tên hiển thị</span><span class="portal-summary-value">${safeText(profile.displayName || profile.name || session.displayName || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Email</span><span class="portal-summary-value">${safeText(profile.email || session.email || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mặc định hồ sơ</span><span class="portal-summary-value">${safeText(profile.locale || "vi")} · ${safeText(profile.timezone || "Asia/Ho_Chi_Minh")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đăng nhập</span><span class="portal-summary-value">${safeText(methodSummary || "Email/Gmail")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Telegram</span><span class="portal-summary-value">${linked ? "Đã liên kết canonical" : "Chưa liên kết"}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Phiên</span><span class="portal-summary-value">${session.authenticated ? "Signed session hợp lệ" : "Đang chờ xác minh"}</span></div></div>`;
+    const accountRows = `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tên hiển thị</span><span class="portal-summary-value">${safeText(profile.displayName || profile.name || session.displayName || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Email</span><span class="portal-summary-value">${safeText(profile.email || session.email || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mặc định hồ sơ</span><span class="portal-summary-value">${safeText(profile.locale || "vi")} · ${safeText(profile.timezone || "Asia/Ho_Chi_Minh")} · ${safeText(profile.avatarStyle || "gradient")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đăng nhập</span><span class="portal-summary-value">${safeText(methodSummary || "Email + mật khẩu (có thể dùng Gmail)")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Telegram</span><span class="portal-summary-value">${linked ? "Đã liên kết canonical" : "Chưa liên kết"}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Phiên</span><span class="portal-summary-value">${session.authenticated ? "Signed session hợp lệ" : "Đang chờ xác minh"}</span></div></div>`;
+    const profileEnabled = context.capabilities && context.capabilities["update-profile"] === true;
+    const profileValues = {
+      display_name: profile.displayName || profile.name || session.displayName || "",
+      locale: profile.locale || "vi",
+      timezone: profile.timezone || "Asia/Ho_Chi_Minh",
+      ...transientFormValues("/account")
+    };
+    const oauthMethodCard = (provider, label) => {
+      const linkedProvider = loginMethods[provider] === true;
+      const action = `link-oauth-${provider}`;
+      const enabled = context.capabilities && context.capabilities[action] === true;
+      const state = linkedProvider ? "Đã liên kết" : (enabled ? "Sẵn sàng liên kết" : "Chưa cấu hình");
+      const button = linkedProvider
+        ? `<span class="portal-form-note">Identity ${safeText(label)} đã được server xác minh; token không lưu trong browser.</span>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="${safeText(action)}" data-portal-confirm="Bạn muốn liên kết ${safeText(label)} với signed session hiện tại?"${enabled ? "" : " disabled title=\"OAuth chưa được cấu hình trên server.\""}>Liên kết ${safeText(label)}</button>`;
+      return `<div class="portal-oauth-method"><div><strong>${safeText(label)}</strong><span>${safeText(state)}</span></div>${button}</div>`;
+    };
+    const oauthResult = new URLSearchParams(window.location.search).get("oauth") || "";
+    const oauthNotice = oauthResult === "linked" || oauthResult === "already-linked"
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">✓</span><div><strong>OAuth</strong><p>${oauthResult === "linked" ? "Đã liên kết phương thức OAuth với signed session hiện tại." : "Phương thức OAuth này đã liên kết với tài khoản hiện tại."}</p></div></div>`
+      : oauthResult
+        ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>OAuth chưa hoàn tất</strong><p>Không thể hoàn tất liên kết. Hãy bắt đầu lại từ nút liên kết bên dưới; không chia sẻ mã hoặc token OAuth với bất kỳ ai.</p></div></div>`
+        : "";
+    const oauthMethods = `${oauthNotice}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Phương thức đăng nhập</h2><p class="portal-card-subtitle">Liên kết OAuth luôn cần signed session, CSRF và xác minh trực tiếp tại provider. Web không tự ghép account chỉ vì trùng email.</p></div>${badge((oauthProviders.google && oauthProviders.google.enabled) || (oauthProviders.github && oauthProviders.github.enabled) || (oauthProviders.apple && oauthProviders.apple.enabled) ? "ready" : "guarded")}</div><div class="portal-summary-list">${oauthMethodCard("google", "Google (OAuth)")}${oauthMethodCard("github", "GitHub")}${oauthMethodCard("apple", "Sign in with Apple")}</div></section>`;
+    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tuỳ chỉnh hồ sơ Web</h2><p class="portal-card-subtitle">Chỉ cập nhật metadata Web thuộc signed session này. Telegram identity, role, Xu, PayOS và provider luôn do canonical Bot kiểm soát.</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">Các thay đổi được audit và yêu cầu CSRF hợp lệ.</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : " disabled title=\"Cần signed session và CSRF hợp lệ.\""}>Lưu hồ sơ</button></div></form></section>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hồ sơ canonical</h2><p class="portal-card-subtitle">Thông tin được lấy từ signed session; browser không lưu Telegram ID, password hay token.</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><span class="portal-form-note">${linked ? "Liên kết Telegram đã được xác minh qua bot." : "Hoàn tất liên kết Telegram để dùng dữ liệu wallet, jobs và assets canonical."}</span>${linked ? "" : `<a class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>`}</div></section>
-      <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bảo mật phiên</h2><p class="portal-card-subtitle">Logout luôn đi qua server để thu hồi session hiện tại.</p></div></div>${renderNotes(page)}<div class="portal-form-footer" style="margin-top:16px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?"${logoutEnabled ? "" : " disabled"}>Đăng xuất</button></div></aside></div></article>`;
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hồ sơ & liên kết</h2><p class="portal-card-subtitle">Thông tin lấy từ signed session; browser không lưu Telegram ID, password hay token.</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><span class="portal-form-note">${linked ? "Liên kết Telegram đã được xác minh qua bot." : "Hoàn tất liên kết Telegram để dùng dữ liệu wallet, jobs và assets canonical."}</span>${linked ? "" : `<a class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>`}</div></section>
+      <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bảo mật phiên</h2><p class="portal-card-subtitle">Logout luôn đi qua server để thu hồi session hiện tại.</p></div></div>${renderNotes(page)}<div class="portal-form-footer" style="margin-top:16px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?"${logoutEnabled ? "" : " disabled"}>Đăng xuất</button></div></aside></div>${oauthMethods}${profileEditor}</article>`;
   }
 
   function renderLegal(page, context) {
     const privacy = page.path === "/privacy";
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Khung nội dung phiên bản hóa</strong><p>${privacy ? "Chính sách chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực." : "Điều khoản chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực."}</p></div></div>
-      <div class="portal-panel-list" style="margin-top:16px"><div class="portal-panel-row"><span class="portal-panel-row-icon">1</span><div><strong>${privacy ? "Thu thập tối thiểu" : "Sử dụng có trách nhiệm"}</strong><span>${privacy ? "Portal không tự lưu raw Telegram ID, token, password, wallet ledger hoặc file output." : "Provider, payment, job và Xu được điều phối bởi Core Bridge canonical."}</span></div></div>
+      <div class="portal-panel-list" style="margin-top:16px"><div class="portal-panel-row"><span class="portal-panel-row-icon">1</span><div><strong>${privacy ? "Thu thập tối thiểu" : "Sử dụng có trách nhiệm"}</strong><span>${privacy ? "Browser không nhận hoặc lưu Telegram ID, OAuth token, password, wallet ledger hay file output. Server chỉ giữ Telegram identity canonical sau xác minh Bot và HMAC-hash identity OAuth để bảo vệ signed session/Core Bridge; OAuth token bị hủy sau xác minh." : "Provider, payment, job và Xu được điều phối bởi Core Bridge canonical."}</span></div></div>
         <div class="portal-panel-row"><span class="portal-panel-row-icon">2</span><div><strong>${privacy ? "Quyền truy cập" : "Xác nhận rõ ràng"}</strong><span>${privacy ? "Dữ liệu riêng tư cần ownership và role check server-side trước khi render hoặc tải xuống." : "Flow feature sử dụng draft → estimate → confirm → queued/processing → completed/failed/guarded."}</span></div></div>
         <div class="portal-panel-row"><span class="portal-panel-row-icon">3</span><div><strong>Thông báo cập nhật</strong><span>Văn bản pháp lý đầy đủ sẽ thay thế khung này khi module content được đưa vào production.</span></div></div></div>
     </section></article>`;
@@ -1521,16 +1590,45 @@
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách hoạt động</h2><p class="portal-card-subtitle">Luồng liên kết không lặp lại webhook hoặc PayOS.</p></div></div><div class="portal-panel-list"><div class="portal-panel-row"><span class="portal-panel-row-icon">1</span><div><strong>Tạo mã một lần</strong><span>Web server tạo, băm và đặt hạn dùng cho mã liên kết.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon">2</span><div><strong>Xác nhận trong bot</strong><span>Bot xác minh Telegram identity và gọi callback nội bộ đã ký.</span></div></div><div class="portal-panel-row"><span class="portal-panel-row-icon">3</span><div><strong>Quay lại portal</strong><span>Portal kiểm tra trạng thái signed session; không tự nhận quyền từ dữ liệu browser.</span></div></div></div></section></article>`;
   }
 
+  function renderPublicOAuthCard(provider, label, enabled, icon, purpose) {
+    const registration = purpose === "register";
+    const isApple = provider === "apple";
+    const actionLabel = isApple
+      ? "Sign in with Apple"
+      : `${registration ? "Tạo hoặc tiếp tục với" : "Tiếp tục với"} ${label}`;
+    const description = enabled
+      ? (registration
+        ? "Sau khi xác nhận tại provider, Web sẽ tạo tài khoản lần đầu hoặc mở đúng tài khoản OAuth hiện có. Token không được trả về browser."
+        : "OAuth server đã được cấu hình. Sau khi xác nhận tại provider, Web tạo signed session; token không được trả về browser.")
+      : "OAuth chưa được cấu hình trên server nên nút được giữ khóa; không có đăng nhập giả.";
+    return `<div class="portal-notice${enabled ? " portal-notice--info" : ""}" style="margin-top:10px">${icon ? `<span class="portal-notice-icon" aria-hidden="true">${icon}</span>` : ""}<div><strong>${safeText(label)}</strong><p>${description}</p><div class="portal-form-footer" style="margin-top:10px">${enabled ? `<a class="portal-button portal-button--quiet" href="/api/v1/auth/oauth/${safeText(provider)}/start">${safeText(actionLabel)}</a>` : `<button class="portal-button portal-button--quiet" type="button" disabled title="Cần OAuth client, secret và callback URL trên server">${safeText(actionLabel)}</button>`}</div></div></div>`;
+  }
+
   function renderTelegramLoginMethod(context) {
     const flow = context.telegramLoginFlow && typeof context.telegramLoginFlow === "object" ? context.telegramLoginFlow : {};
     const data = flow.data && typeof flow.data === "object" ? flow.data : {};
     const code = typeof data.code === "string" ? data.code : "";
     const deepLink = safeTelegramLink(data.deep_link);
     const ready = data.ready === true;
-    const pending = code
+    const oauthProviders = context.oauthProviders && typeof context.oauthProviders === "object" ? context.oauthProviders : {};
+    const googleEnabled = oauthProviders.google && oauthProviders.google.enabled === true;
+    const githubEnabled = oauthProviders.github && oauthProviders.github.enabled === true;
+    const appleEnabled = oauthProviders.apple && oauthProviders.apple.enabled === true;
+    const accountRequired = flow.errorCode === "TELEGRAM_LOGIN_ACCOUNT_REQUIRED" || data.restart_required === true;
+    const pending = accountRequired
+      ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Telegram chưa liên kết với Web App</strong><p>${safeText(flow.message || "Hãy đăng ký/đăng nhập bằng email, liên kết Telegram trong Thiết lập tài khoản, rồi tạo mã đăng nhập mới.")}</p><div class="portal-form-footer" style="margin-top:10px"><a class="portal-button portal-button--quiet" href="/register">Tạo tài khoản</a><a class="portal-button portal-button--quiet" href="/login">Đăng nhập email</a></div></div></div>`
+      : code
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Xác minh Telegram</strong><p>Không nhập Telegram ID vào Web. Mở bot, dùng deep link hoặc gửi <code>/linkweb &lt;mã&gt;</code>; sau đó quay lại kiểm tra cùng trình duyệt này.</p><div class="portal-form-footer" style="margin-top:10px"><code class="portal-link-code">${safeText(code)}</code>${deepLink ? `<a class="portal-button portal-button--quiet" href="${safeText(deepLink)}" target="_blank" rel="noopener noreferrer">Mở Telegram</a>` : ""}<button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-telegram-login" data-portal-route="/login">${ready ? "Hoàn tất đăng nhập" : "Kiểm tra Telegram"}</button></div></div></div>`
       : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Telegram</strong><p>Dùng tài khoản Telegram đã từng liên kết với Web App. Bot chứng minh ownership; Web không nhận Telegram ID thô.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="start-telegram-login" data-portal-route="/login">Đăng nhập với Telegram</button></div></div></div>`;
-    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">Cách đăng nhập khác</h3><p class="portal-card-subtitle">Email/Gmail dùng form ở trên. Telegram dùng challenge riêng; GitHub OAuth chờ server credentials.</p></div></div>${pending}<div class="portal-notice" style="margin-top:10px"><span class="portal-notice-icon" aria-hidden="true">◎</span><div><strong>GitHub</strong><p>GitHub OAuth chưa được bật vì server chưa có client ID, secret và callback URL đã đăng ký. Nút được giữ khóa để không giả lập đăng nhập.</p><div class="portal-form-footer" style="margin-top:10px"><button class="portal-button portal-button--quiet" type="button" disabled title="Cần GitHub OAuth server configuration">Tiếp tục với GitHub</button></div></div></div></section>`;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">Cách đăng nhập khác</h3><p class="portal-card-subtitle">Email + mật khẩu (có thể dùng Gmail) dùng form ở trên. Telegram dùng xác minh một lần qua Bot; Google, GitHub và Apple dùng OAuth cấu hình thật.</p></div></div>${pending}${renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "signin")}${renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "signin")}${renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "signin")}</section>`;
+  }
+
+  function renderOAuthRegistrationMethods(context) {
+    const providers = context.oauthProviders && typeof context.oauthProviders === "object" ? context.oauthProviders : {};
+    const googleEnabled = providers.google && providers.google.enabled === true;
+    const githubEnabled = providers.github && providers.github.enabled === true;
+    const appleEnabled = providers.apple && providers.apple.enabled === true;
+    return `<section class="portal-auth-provider"><div class="portal-card-header"><div><h3 class="portal-card-title">Tạo hoặc tiếp tục với OAuth</h3><p class="portal-card-subtitle">Lần đầu xác thực bằng provider hợp lệ sẽ tạo hồ sơ Web OAuth-only và signed session, sau đó bạn liên kết Telegram trong onboarding. Không có auto-link khi trùng email.</p></div></div>${renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register")}${renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register")}${renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register")}</section>`;
   }
 
   function renderAuth(page, context) {
@@ -1540,11 +1638,28 @@
     const registrationHandoff = page.path === "/login" && new URLSearchParams(window.location.search).get("registered") === "1"
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiếp tục bằng đăng nhập</strong><p>Nếu email vừa gửi chưa có tài khoản, hồ sơ đã được tạo. Đăng nhập để khởi tạo signed session và liên kết Telegram.</p></div></div>`
       : "";
+    const oauthReason = page.path === "/login" || page.path === "/account" ? new URLSearchParams(window.location.search).get("oauth") || "" : "";
+    const oauthMessages = {
+      unavailable: "OAuth chưa được cấu hình trên server.",
+      cancelled: "Bạn đã hủy xác minh tại nhà cung cấp.",
+      failed: "Không thể xác minh OAuth. Hãy thử lại mà không chia sẻ mã hay token với bất kỳ ai.",
+      state: "Phiên OAuth không hợp lệ hoặc đã hết hạn. Hãy bắt đầu lại từ Web App.",
+      session: "Signed session đã thay đổi trong khi liên kết OAuth. Hãy đăng nhập lại rồi thử lại.",
+      "link-required": "Email này đã có tài khoản Web. Hãy đăng nhập bằng phương thức hiện có, sau đó liên kết OAuth trong trang Tài khoản.",
+      linked: "Đã liên kết OAuth với signed session hiện tại.",
+      "already-linked": "OAuth này đã liên kết với tài khoản hiện tại."
+    };
+    const oauthHandoff = oauthMessages[oauthReason]
+      ? `<div class="portal-notice${["linked", "already-linked"].includes(oauthReason) ? " portal-notice--info" : ""}"><span class="portal-notice-icon" aria-hidden="true">${["linked", "already-linked"].includes(oauthReason) ? "✓" : "i"}</span><div><strong>OAuth</strong><p>${safeText(oauthMessages[oauthReason])}</p></div></div>`
+      : "";
+    const registerSetup = page.path === "/register"
+      ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Hồ sơ mặc định sau khi tạo</strong><p>Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Telegram dùng xác minh một lần qua bot, không nhập ID Telegram thô. Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật.</p></div></div>`
+      : "";
     return `<article class="portal-auth-page"><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p>
       <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
-      ${registrationHandoff}<form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
-      ${page.path === "/login" ? renderTelegramLoginMethod(context) : ""}
+      ${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-notes">${renderNotes(page)}</div><form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
+      ${page.path === "/login" ? renderTelegramLoginMethod(context) : renderOAuthRegistrationMethods(context)}
       <div class="portal-notice" style="margin-top:16px"><span class="portal-notice-icon" aria-hidden="true">⌁</span><div><strong>Không có đăng nhập giả</strong><p>Giao diện không tạo session, không lưu mật khẩu và không tự đăng nhập người dùng.</p></div></div>
     </section></article>`;
   }
@@ -1933,6 +2048,15 @@
       if (menu) { toggleSidebar(); return; }
       if (event.target.closest("[data-portal-close-menu]")) { closeSidebar(); return; }
       if (event.target.closest("[data-portal-backdrop]")) { closeSidebar(); return; }
+      if (event.target.closest("[data-portal-catalog-clear]")) {
+        const search = document.querySelector("[data-portal-catalog-search]");
+        if (search) {
+          search.value = "";
+          filterFeatureCatalog("");
+          search.focus({ preventScroll: true });
+        }
+        return;
+      }
       const action = event.target.closest("[data-portal-action]");
       if (action && !action.disabled) {
         if (action.tagName === "BUTTON" && action.type === "submit") return;
@@ -1951,6 +2075,7 @@
     document.addEventListener("input", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
+      if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
     });
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");

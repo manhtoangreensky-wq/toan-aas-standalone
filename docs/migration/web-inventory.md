@@ -83,6 +83,10 @@
 | /me/{user_id} | GET | get_my_profile |
 | /me/{user_id} | GET | me |
 | /media-app | GET | legacy_media_redirect |
+| /oauth/apple/callback | POST | apple_oauth_callback |
+| /oauth/{provider}/callback | GET | oauth_callback |
+| /oauth/{provider}/link/start | POST | start_oauth_link |
+| /oauth/{provider}/start | GET | start_oauth |
 | /okrs | POST | add_okr |
 | /okrs | GET | get_okrs |
 | /packages | GET | packages |
@@ -96,10 +100,12 @@
 | /pricing | GET | pricing |
 | /production | POST | add_production |
 | /production | GET | get_production |
+| /profile | POST | update_profile |
 | /projects | POST | create_project |
 | /projects | GET | get_projects |
 | /projects | POST | add_project |
 | /projects | GET | get_projects |
+| /providers | GET | oauth_providers |
 | /purchases | POST | add_purchase |
 | /purchases | GET | get_purchases |
 | /register | POST | register |

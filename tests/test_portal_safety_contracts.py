@@ -197,6 +197,14 @@ def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_
     assert 'class="portal-feature-jumps" aria-label="Đi tới nhóm công cụ"' in PORTAL
     assert 'href="#feature-group-${safeText(group.key)}"' in PORTAL
     assert ".portal-feature-jumps" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    assert 'data-portal-catalog-search' in PORTAL
+    assert "function normalizeCatalogSearch(value)" in PORTAL
+    assert "function filterFeatureCatalog(value)" in PORTAL
+    assert 'data-catalog-item' in PORTAL
+    assert 'data-catalog-group' in PORTAL
+    assert 'data-portal-catalog-clear' in PORTAL
+    assert "filterFeatureCatalog(event.target.value)" in PORTAL
+    assert ".portal-catalog-search" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
 
 def test_resolved_portal_page_title_beats_the_generic_server_placeholder_for_aliases() -> None:
@@ -219,12 +227,33 @@ def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation
     assert "if (confirmation && !window.confirm(confirmation)) return;" in PORTAL
 
 
-def test_account_uses_read_only_session_data_and_server_side_logout() -> None:
-    assert 'layout: "account", fields: [], action: "none"' in PORTAL
-    assert "Hồ sơ canonical" in PORTAL
+def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
+    assert 'layout: "account", fields: [], action: "none", status: "ready"' in PORTAL
+    assert "Hồ sơ & liên kết" in PORTAL
+    assert 'data-portal-action="update-profile"' in PORTAL
+    assert 'badge(profileEnabled ? "ready" : "guarded")' in PORTAL
+    assert "Telegram identity, role, Xu, PayOS và provider" in PORTAL
     assert 'data-portal-action="auth-logout"' in PORTAL
     assert '"auth-logout": Boolean(account && me.csrf_token)' in INTEGRATION
     assert 'api("/auth/logout"' in INTEGRATION
+
+
+def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
+    assert "Hồ sơ mặc định sau khi tạo" in PORTAL
+    assert "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient" in PORTAL
+    assert "không nhập ID Telegram thô" in PORTAL
+    assert "Email + mật khẩu (có thể dùng Gmail) đang hoạt động" in PORTAL
+    assert "Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật" in PORTAL
+    assert "function renderOAuthRegistrationMethods(context)" in PORTAL
+    assert "Tạo hoặc tiếp tục với OAuth" in PORTAL
+    assert 'renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register")' in PORTAL
+    assert 'renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register")' in PORTAL
+    assert 'renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register")' in PORTAL
+    assert "portal-auth-notes" in PORTAL
+    assert "Browser không nhận hoặc lưu Telegram ID" in PORTAL
+    css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    assert ".portal-auth-notes" in css
+    assert "overflow-wrap: anywhere" in css
 
 
 def test_initial_hydration_is_deduplicated_and_bfcache_refresh_is_explicit() -> None:
@@ -379,21 +408,48 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
 def test_registration_copy_does_not_claim_unimplemented_email_verification() -> None:
     assert "email verification được Core Bridge thực thi" not in PORTAL
     assert "response đăng ký không tiết lộ email đã có tài khoản hay chưa" in PORTAL
-    assert "Chỉ Đăng nhập mới cấp signed session và CSRF" in PORTAL
+    assert "Chỉ đăng nhập Email + mật khẩu hoặc OAuth đã xác thực mới cấp signed session và CSRF" in PORTAL
 
 
-def test_login_methods_are_explicit_about_telegram_gmail_and_guarded_github_oauth() -> None:
-    assert 'label: "Email hoặc Gmail"' in PORTAL
+def test_login_methods_are_explicit_about_telegram_gmail_and_configuration_gated_oauth() -> None:
+    assert 'label: "Email (có thể dùng Gmail)"' in PORTAL
     assert "function renderTelegramLoginMethod(context)" in PORTAL
     assert "Không nhập Telegram ID vào Web" in PORTAL
     assert 'data-portal-action="start-telegram-login"' in PORTAL
     assert 'data-portal-action="refresh-telegram-login"' in PORTAL
-    assert "GitHub OAuth chưa được bật" in PORTAL
-    assert "không giả lập đăng nhập" in PORTAL
+    assert "Google (OAuth)" in PORTAL
+    assert "GitHub" in PORTAL
+    assert "Sign in with Apple" in PORTAL
+    assert "OAuth chưa được cấu hình trên server" in PORTAL
+    assert "không có đăng nhập giả" in PORTAL
     assert 'window.location.assign("/login?registered=1");' in INTEGRATION
     assert 'api("/auth/telegram/login/start"' in INTEGRATION
     assert 'api("/auth/telegram/login/complete"' in INTEGRATION
+    assert 'fetch(`${API}/auth/providers`' in INTEGRATION
+    assert "function safeOAuthStartPath(value)" in INTEGRATION
+    assert "google|github|apple" in INTEGRATION
+    assert 'api(`/auth/oauth/${provider}/link/start`' in INTEGRATION
     assert "_telegram_login_cookie_value" in (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
+
+
+def test_normalized_portal_context_keeps_hydrated_oauth_telegram_and_payment_state() -> None:
+    """Async integration state must survive the next render, not just merge()."""
+    assert 'oauthProviders: source.oauthProviders && typeof source.oauthProviders === "object" ? source.oauthProviders : {}' in PORTAL
+    assert 'telegramLoginFlow: source.telegramLoginFlow && typeof source.telegramLoginFlow === "object" ? source.telegramLoginFlow : {}' in PORTAL
+    assert 'paymentOptions: source.paymentOptions && typeof source.paymentOptions === "object" ? source.paymentOptions : {}' in PORTAL
+
+
+def test_account_profile_editor_only_targets_web_owned_defaults() -> None:
+    assert 'data-portal-action="update-profile"' in PORTAL
+    assert "Tuỳ chỉnh hồ sơ Web" in PORTAL
+    assert "Telegram identity, role, Xu, PayOS và provider" in PORTAL
+    assert '"update-profile": Boolean(account && me.csrf_token)' in INTEGRATION
+    assert 'api("/auth/profile"' in INTEGRATION
+    auth = (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
+    assert "class ProfileUpdateRequest(BaseModel):" in auth
+    assert "def update_profile" in auth
+    assert "PROFILE_TIMEZONE_INVALID" in auth
+    assert "web_account_profiles" in (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
 
 
 def test_feature_planning_state_is_distinguished_from_provider_engine_readiness() -> None:

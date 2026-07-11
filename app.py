@@ -22,13 +22,16 @@ from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
 import copyfast_auth
-from copyfast_auth import current_session, ensure_auth_configuration, envelope, require_canonical_admin
+from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
 from copyfast_db import ensure_copyfast_schema
 from copyfast_pages import ROOT, render_portal
 
 
 def _origins() -> list[str]:
-    raw = os.environ.get("CORS_ALLOW_ORIGINS", "https://app.toanaas.vn,https://toanaas.vn")
+    # Credentialed Web APIs expose signed-session/CSRF metadata.  Keep the
+    # default to the dedicated application origin; a marketing/root site may
+    # opt in explicitly only after it is audited as the same trust boundary.
+    raw = os.environ.get("CORS_ALLOW_ORIGINS", "https://app.toanaas.vn")
     origins = [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
     if not origins or "*" in origins:
         raise RuntimeError("CORS_ALLOW_ORIGINS phải là danh sách origin tường minh khi dùng cookie")
@@ -47,6 +50,7 @@ def _origins() -> list[str]:
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     ensure_auth_configuration()
+    ensure_oauth_configuration()
     ensure_copyfast_schema()
     yield
 
@@ -75,12 +79,18 @@ async def security_headers(request: Request, call_next):
         "/api/v1/auth/telegram/login/start": 5,
         "/api/v1/auth/telegram/login/complete": 8,
     }
-    if request.url.path in auth_limits and request.method == "POST":
+    oauth_start = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/auth/oauth/")
+        and request.url.path.endswith("/start")
+    )
+    rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
+    if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
         rate_key = f"{request.url.path}:{client_ip}"
         window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < 60]
-        if len(window) >= auth_limits[request.url.path]:
+        if len(window) >= rate_limit:
             response = JSONResponse(envelope(False, "Vui lòng thử lại sau ít phút.", status_name="guarded", error_code="AUTH_RATE_LIMITED"), status_code=429)
             response.headers["X-Request-ID"] = request_id
             return response
