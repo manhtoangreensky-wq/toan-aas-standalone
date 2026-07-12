@@ -12,6 +12,7 @@
   const ACTION_EVENT = "toanaas:portal-action";
   let interactionsBound = false;
   const transientFormDrafts = new Map();
+  const transientWorkspaceDraftIds = new Map();
   let sidebarReturnFocus = null;
   let commandPaletteReturnFocus = null;
   try {
@@ -533,6 +534,10 @@
     layout: "media-studio", type: "media-studio", fields: [], action: "none", status: "read_only",
     notes: ["Media Studio chỉ điều hướng giữa các workflow canonical; không tự tạo project, job, output hay delivery giả.", "Mỗi bước vẫn cần estimate, confirm và adapter Bot riêng trước khi engine được phép chạy."]
   });
+  customerPage("/workspace", "Bản nháp của tôi", "Lưu và tiếp tục brief Web an toàn giữa các workflow mà không gửi Bot, tạo quote, job hoặc Xu.", ICONS.prompt, {
+    layout: "workspace-drafts", type: "workspace-drafts", fields: [], action: "none", status: "read_only",
+    notes: ["Chỉ lưu brief và lựa chọn scalar do bạn nhập. Tệp, upload ID, voice profile, quote receipt, job, Xu, PayOS và provider không được lưu hoặc khôi phục.", "Bản nháp thuộc signed Web account hiện tại; tiếp tục một bản nháp vẫn cần đi qua toàn bộ kiểm tra form, upload, estimate và Bot canonical riêng."]
+  });
   botCompanionPage("/notes", "Ghi chú & Memory", "Mở nhanh các ghi chú, memory và plan cá nhân trong Bot canonical; Web không tạo một kho dữ liệu thứ hai.", ICONS.prompt, [
     { command: "/notes", title: "Danh sách ghi chú", text: "Xem ghi chú do Bot quản lý trong đúng cuộc hội thoại Telegram của bạn." },
     { command: "/note", title: "Tạo ghi chú", text: "Bắt đầu luồng tạo hoặc cập nhật note trong Bot; không gửi nội dung note qua Web." },
@@ -750,6 +755,9 @@
     const capabilities = source.capabilities && typeof source.capabilities === "object" ? source.capabilities : {};
     const pageStates = source.pageStates && typeof source.pageStates === "object" ? source.pageStates : {};
     const featureFlows = source.featureFlows && typeof source.featureFlows === "object" ? source.featureFlows : {};
+    const workspaceDraftFeatures = Array.isArray(source.workspaceDraftFeatures)
+      ? [...new Set(source.workspaceDraftFeatures.filter((item) => typeof item === "string" && /^[a-z][a-z0-9_]{1,120}$/.test(item)))].slice(0, 200)
+      : [];
     return {
       path: normalizePath(source.path),
       title: typeof source.title === "string" ? source.title : "",
@@ -757,6 +765,7 @@
       // The registry is static, redacted route metadata. Do not truncate it:
       // `/features` must be able to disclose every mapped customer workflow.
       catalog: Array.isArray(source.catalog) ? source.catalog.slice() : [],
+      workspaceDraftFeatures,
       apiBase: typeof source.apiBase === "string" ? source.apiBase : "",
       session,
       bridge: {
@@ -957,7 +966,7 @@
       {
         label: "AI Studio",
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/tools", "Tools & models", ICONS.prompt], ["/studio", "Media Studio", ICONS.video], ["/chat", "AI Chat", ICONS.chat], ["/prompt-studio", "Prompt Studio", ICONS.prompt], ["/image/create", "Image", ICONS.image],
+          ["/features", "Tất cả công cụ", ICONS.prompt], ["/workspace", "Bản nháp của tôi", ICONS.prompt], ["/tools", "Tools & models", ICONS.prompt], ["/studio", "Media Studio", ICONS.video], ["/chat", "AI Chat", ICONS.chat], ["/prompt-studio", "Prompt Studio", ICONS.prompt], ["/image/create", "Image", ICONS.image],
           ["/video/create", "Video", ICONS.video], ["/voice/tts", "Voice", ICONS.voice], ["/music", "Music", ICONS.music],
           ["/subtitle", "Ngôn ngữ", ICONS.subtitle], ["/documents", "Documents", ICONS.document]
         ]
@@ -1349,6 +1358,22 @@
       page.action === "feature-estimate" || page.estimateDirect === true || flowStatus === "draft" || quoteNeedsSelection
     );
     const formId = `portal-form-${safeText(route).replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+    const feature = featureKeyForPage(page, context);
+    const workspaceDraftSupported = Array.isArray(context.workspaceDraftFeatures) && context.workspaceDraftFeatures.includes(feature);
+    const workspaceDraftId = workspaceDraftIdForRoute(route);
+    // A signed Web account may compose and save a local brief before the
+    // Telegram/Core Bridge execution gates are available. This does not
+    // unlock feature submit, upload, estimate, quote, job or payment.
+    const workspaceDraftEnabled = Boolean(
+      page.type === "feature" && feature && workspaceDraftSupported && context.session && context.session.authenticated === true &&
+      context.session.csrfReady === true && context.capabilities && context.capabilities["workspace-draft-save"] === true
+    );
+    const formFieldsEnabled = enabled || workspaceDraftEnabled;
+    const workspaceDraftControl = workspaceDraftEnabled
+      ? (workspaceDraftId
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-update" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}" data-workspace-draft-id="${safeText(workspaceDraftId)}">Cập nhật bản nháp Web</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Lưu thành bản mới</button>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-save" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Lưu bản nháp Web</button>`)
+      : "";
     const estimateControl = canEstimate && page.action !== "feature-estimate"
       ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="feature-estimate" data-portal-route="${safeText(route)}" data-portal-form-id="${safeText(formId)}">Ước tính Xu</button>`
       : "";
@@ -1360,10 +1385,10 @@
       : "";
     const flowControls = estimateControl || confirmControl ? `<div class="portal-flow-actions">${estimateControl}${confirmControl}</div>` : "";
     const fieldValues = { ...(flow && flow.input && typeof flow.input === "object" ? flow.input : {}), ...transientFormValues(route) };
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : safeText(reason)}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
-      <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}" novalidate>${renderFields(page.fields, enabled, context, fieldValues)}
-        <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết."}</span>
-          <button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel || "Tiếp tục")}</button>
+    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${page.layout === "auth" ? "Thông tin xác thực" : "Chuẩn bị yêu cầu"}</h2><p class="portal-card-subtitle">${enabled ? "Yêu cầu sẽ được chuyển tới lớp tích hợp thông qua custom event, không gọi trực tiếp từ UI." : (workspaceDraftEnabled ? "Bạn có thể soạn và lưu brief Web; gửi Bot/estimate/job vẫn chờ các gate canonical." : safeText(reason))}</p></div>${badge(flowStatus || stateFor(page, context))}</div>
+      <form class="portal-form" id="${safeText(formId)}" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}" novalidate>${renderFields(page.fields, formFieldsEnabled, context, fieldValues)}
+        <div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Máy chủ vẫn phải xác minh phiên, CSRF, schema, ownership và idempotency." : (workspaceDraftEnabled ? "Bản nháp chỉ giữ brief scalar trên Web; không lưu file, upload ID, quote, job, Xu hoặc provider." : "Các trường bị khóa cho tới khi máy chủ cấp khả năng cần thiết.")}</span>
+          ${workspaceDraftControl}<button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel || "Tiếp tục")}</button>
         </div>
       </form>${flowControls}</section>`;
   }
@@ -1535,6 +1560,46 @@
     const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">Tìm công cụ</label><div class="portal-catalog-search-control"><span aria-hidden="true">⌕</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="Ví dụ: OCR, TTS, video sản phẩm, dịch…" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>Xóa</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(String(entries.length))} workflow đang hiển thị.</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">⌕</span><h3>Không tìm thấy workflow</h3><p>Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên.</p></div></div>` : "";
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web App catalogue</span><h2>Tất cả workflow đã định tuyến</h2><p>${safeText(String(entries.length))} route customer từ registry hoặc manifest fallback. Trạng thái engine/output luôn do Core Bridge cấp sau signed session.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${search}${jumps}${body}</section></article>`;
+  }
+
+  function validWorkspaceDraftId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function workspaceDraftItems(context) {
+    return (Array.isArray(context.workspaceDrafts) ? context.workspaceDrafts : [])
+      .filter((item) => item && typeof item === "object" && validWorkspaceDraftId(item.id))
+      .slice(0, 100);
+  }
+
+  function workspaceDraftStatus(item) {
+    return String(item && item.state || "") === "archived" ? "archived" : "draft";
+  }
+
+  function renderWorkspaceDrafts(page, context) {
+    const drafts = workspaceDraftItems(context);
+    const activeCount = drafts.filter((item) => workspaceDraftStatus(item) === "draft").length;
+    const archivedCount = drafts.length - activeCount;
+    const canArchive = Boolean(context.capabilities && context.capabilities["workspace-draft-archive"] === true);
+    const canResume = Boolean(context.capabilities && context.capabilities["workspace-draft-resume"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["workspace-drafts-refresh"] === true);
+    const cards = drafts.length
+      ? `<div class="portal-module-grid portal-workspace-draft-grid">${drafts.map((item) => {
+          const id = String(item.id || "");
+          const active = workspaceDraftStatus(item) === "draft";
+          const route = String(item.route || "");
+          const resumeDisabled = canResume && route.startsWith("/") ? "" : " disabled";
+          const archiveControl = active
+            ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-draft-archive" data-portal-route="/workspace" data-workspace-draft-id="${safeText(id)}" data-portal-confirm="Lưu trữ bản nháp Web này? Nó sẽ không gửi Bot, thay đổi job, Xu hay tệp."${canArchive ? "" : " disabled"}>${canArchive ? "Lưu trữ" : "Lưu trữ đang khóa"}</button>`
+            : `<span class="portal-form-note">Đã lưu trữ; có thể tiếp tục thành bản mới.</span>`;
+          return `<article class="portal-card portal-card-pad portal-workspace-draft" data-workspace-draft="${safeText(id)}"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(String(item.feature_title || "Workflow Web"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Bản nháp"))}</h3><p class="portal-card-subtitle">Cập nhật ${safeText(String(item.updated_at || item.created_at || "—"))}</p></div>${badge(workspaceDraftStatus(item))}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Workflow</span><span class="portal-summary-value">${safeText(String(item.feature_key || "—"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Dữ liệu đã lưu</span><span class="portal-summary-value">Brief scalar Web-only</span></div></div><div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="workspace-draft-resume" data-portal-route="/workspace" data-workspace-draft-id="${safeText(id)}"${resumeDisabled}>Tiếp tục brief</button>${archiveControl}</div></article>`;
+        }).join("")}</div>`
+      : renderEmpty("Chưa có bản nháp Web", "Mở một workflow rồi chọn “Lưu bản nháp Web”. Bạn có thể lưu brief trước khi Telegram/Core Bridge sẵn sàng; không có request nào được gửi sang Bot.", "✦");
+    return `<article class="portal-page portal-workspace-drafts">${renderHero(page, context)}
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Bản nháp Web, không phải job</h2><p>Thư viện này chỉ lưu brief và lựa chọn scalar thuộc signed account. Nó không lưu file, upload ID, Voice Vault profile, quote receipt, provider, payment, Xu, job hay output.</p><div class="portal-state-meta"><span>${safeText(String(activeCount))} đang hoạt động</span><span>${safeText(String(archivedCount))} đã lưu trữ</span><span>Tối đa 100 bản active</span></div></div></div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bản nháp gần đây</h2><p class="portal-card-subtitle">Resume chỉ đưa brief hợp lệ trở lại đúng form. Tệp và các lựa chọn canonical nhạy cảm luôn phải được chọn/kiểm tra lại trong workflow.</p></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-drafts-refresh" data-portal-route="/workspace"${canRefresh ? "" : " disabled"}>Làm mới</button><a class="portal-button portal-button--primary" href="/features">Mở workflow</a></div></div>${cards}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Ranh giới an toàn</strong><p>Mỗi lần tiếp tục vẫn phải qua validation form, staging upload, estimate, confirmation và Bot canonical. Bản nháp không chứng minh quyền sở hữu file, không giữ giá/Xu và không tạo kết quả.</p></div></div></section>
+    </article>`;
   }
 
   function renderFeatureFamily(page, context) {
@@ -3178,6 +3243,7 @@
       case "campaign-calendar": return renderCampaignCalendar(page, context);
       case "campaign-approvals": return renderCampaignApprovals(page, context);
       case "feature-catalog": return renderFeatureCatalog(page, context);
+      case "workspace-drafts": return renderWorkspaceDrafts(page, context);
       case "feature-family": return renderFeatureFamily(page, context);
       case "wallet": return renderWallet(page, context);
       case "catalog": return renderCatalog(page, context);
@@ -3277,6 +3343,35 @@
     showToast("Đã đưa nội dung planning canonical vào form. Bạn vẫn có thể chỉnh sửa trước khi tạo draft/estimate.");
   }
 
+  function validWorkspaceDraftId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function workspaceDraftIdForRoute(route) {
+    const value = transientWorkspaceDraftIds.get(normalizePath(route || ""));
+    return validWorkspaceDraftId(value) ? value : "";
+  }
+
+  function restoreWorkspaceDraft(route, input, draftId) {
+    const targetRoute = normalizePath(route || "");
+    const page = manifest[targetRoute] || null;
+    if (!page || page.type !== "feature" || !input || typeof input !== "object" || Array.isArray(input)) return false;
+    const forbidden = new Set(["upload_ids", "upload_id", "source", "sample", "audio", "document", "documents", "file", "files", "attachment", "voice_profile_id", "web_quote_receipt", "quote_receipt", "idempotency_key", "consent"]);
+    const allowed = new Set((Array.isArray(page.fields) ? page.fields : [])
+      .filter((field) => field && field.type !== "file" && field.name && !forbidden.has(field.name))
+      .map((field) => field.name));
+    const values = {};
+    Object.entries(input).forEach(([name, value]) => {
+      if (!allowed.has(name) || typeof value !== "string" || !value.trim() || value.length > 4000) return;
+      values[name] = value;
+    });
+    if (!Object.keys(values).length) return false;
+    transientFormDrafts.set(targetRoute, values);
+    if (validWorkspaceDraftId(draftId)) transientWorkspaceDraftIds.set(targetRoute, String(draftId).trim());
+    else transientWorkspaceDraftIds.delete(targetRoute);
+    return true;
+  }
+
   function dispatchAction(source, context) {
     const action = source.getAttribute("data-portal-action") || "";
     if (action === "copy-canonical-draft") {
@@ -3297,7 +3392,10 @@
     const route = source.getAttribute("data-portal-route") || context.path;
     const formId = source.getAttribute("data-portal-form-id") || "";
     const form = source.matches("form") ? source : (source.closest("form") || (formId ? document.getElementById(formId) : null));
-    if (form && !form.reportValidity()) {
+    // A local Workspace draft may be intentionally incomplete. It is still
+    // checked server-side for safe scalar fields, while later feature submit
+    // re-runs the form's required/upload/canonical validation.
+    if (form && !["workspace-draft-save", "workspace-draft-update"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -3309,7 +3407,7 @@
     if (form) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });
@@ -3612,6 +3710,7 @@
     pageManifest: Object.freeze({ ...manifest }),
     resolvePage,
     mount: mountPortal,
+    restoreWorkspaceDraft,
     states: Object.freeze({ ...STATE_LABELS })
   });
 

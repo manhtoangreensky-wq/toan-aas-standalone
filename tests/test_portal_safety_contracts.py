@@ -442,6 +442,60 @@ def test_account_activity_is_a_sanitized_web_owned_owner_history() -> None:
     assert "idx_web_audit_account_created" in db
 
 
+def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> None:
+    assert 'customerPage("/workspace", "Bản nháp của tôi"' in PORTAL
+    assert 'layout: "workspace-drafts", type: "workspace-drafts", fields: [], action: "none", status: "read_only"' in PORTAL
+    assert 'case "workspace-drafts": return renderWorkspaceDrafts(page, context);' in PORTAL
+    assert "function renderWorkspaceDrafts(page, context)" in PORTAL
+    assert "function restoreWorkspaceDraft(route, input, draftId)" in PORTAL
+    assert 'data-portal-action="workspace-draft-save"' in PORTAL
+    form = PORTAL[PORTAL.index("function renderFormCard(page, context)"):PORTAL.index("function renderHero")]
+    assert "workspaceDraftEnabled" in form
+    assert "workspaceDraftSupported" in form
+    assert "context.workspaceDraftFeatures.includes(feature)" in form
+    assert "workspaceDraftIdForRoute(route)" in form
+    assert "workspace-draft-update" in form
+    assert "Lưu thành bản mới" in form
+    assert "formFieldsEnabled" in form
+    assert "Bản nháp chỉ giữ brief scalar trên Web" in form
+    restore = PORTAL[PORTAL.index("function restoreWorkspaceDraft(route, input, draftId)"):PORTAL.index("function dispatchAction")]
+    assert "voice_profile_id" in restore
+    assert "upload_ids" in restore
+    assert "field.type !== \"file\"" in restore
+    assert "localStorage" not in restore
+    assert "transientWorkspaceDraftIds" in restore
+    assert "validWorkspaceDraftId(draftId)" in restore
+    assert '"workspace-draft-update"' in PORTAL
+    assert "workspaceDraftId:" in PORTAL
+    assert '"workspace-draft-save": Boolean(account && me.csrf_token)' in INTEGRATION
+    assert "item.web_workspace_draft_supported === true" in INTEGRATION
+    assert "webWorkspaceDraftFeatures" in INTEGRATION
+    assert "function workspaceDraftInput(fields)" in INTEGRATION
+    assert "async function hydrateWorkspaceDrafts()" in INTEGRATION
+    assert 'api("/workspace/drafts?include_archived=true")' in INTEGRATION
+    assert 'api(`/workspace/drafts/${encodeURIComponent(draftId)}`)' in INTEGRATION
+    assert "workspace-draft-resume" in INTEGRATION
+    assert "workspace-draft-archive" in INTEGRATION
+    assert 'action === "workspace-draft-save" || action === "workspace-draft-update"' in INTEGRATION
+    assert 'method: updating ? "PATCH" : "POST"' in INTEGRATION
+    assert "restoreWorkspaceDraft(item.route, item.input, item.id)" in INTEGRATION
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    start = api.index('@router.get("/workspace/drafts")')
+    end = api.index('@router.get("/core/me")')
+    workspace_api = api[start:end]
+    assert '@router.get("/workspace/drafts/{draft_id}")' in workspace_api
+    assert '@router.post("/workspace/drafts")' in workspace_api
+    assert '@router.patch("/workspace/drafts/{draft_id}")' in workspace_api
+    assert '@router.post("/workspace/drafts/{draft_id}/archive")' in workspace_api
+    assert "_bridge(" not in workspace_api
+    assert "upload_ids" in api
+    assert "voice_profile_id" in api
+    assert 'item["web_workspace_draft_supported"]' in api
+    db = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert "web_workspace_drafts" in db
+    assert "idx_web_workspace_drafts_account_state_updated" in db
+
+
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
     assert "Hồ sơ mặc định sau khi tạo" in PORTAL
     assert "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient" in PORTAL

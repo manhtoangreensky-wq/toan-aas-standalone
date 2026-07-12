@@ -26,6 +26,7 @@ class WebFeature:
 CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("dashboard", "Tổng quan", "account", "/dashboard", description="Tài khoản, Xu, job và trạng thái gần đây."),
     WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá các workflow Web đã được định tuyến và trạng thái canonical của chúng."),
+    WebFeature("workspace_drafts", "Bản nháp của tôi", "content", "/workspace", description="Lưu và tiếp tục brief Web an toàn, không lưu file, quote hoặc trạng thái Bot."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
     # Bot-companion surfaces keep fast Telegram conversations discoverable in

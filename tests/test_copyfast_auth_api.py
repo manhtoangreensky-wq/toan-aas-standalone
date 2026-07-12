@@ -287,6 +287,131 @@ def test_account_activity_is_web_owned_owner_scoped_and_sanitized(tmp_path, monk
             assert "activity-owner@example.com" not in other.text
 
 
+def test_workspace_drafts_are_safe_idempotent_and_owner_scoped(tmp_path, monkeypatch):
+    """Web drafts persist only safe scalar brief fields, never Bot state."""
+    with make_client(tmp_path, monkeypatch) as first:
+        assert first.post(
+            "/api/v1/auth/register",
+            json={"email": "draft-owner@example.com", "password": "correct-horse-battery-staple"},
+        ).json()["ok"] is True
+        login = first.post("/api/v1/auth/login", json={"email": "draft-owner@example.com", "password": "correct-horse-battery-staple"})
+        csrf = login.json()["data"]["csrf_token"]
+        # A draft library is Web-owned and intentionally usable before the
+        # one-time Telegram link has been completed.
+        assert first.get("/workspace").status_code == 200
+        payload = {
+            "feature_key": "video_product",
+            "title": "Video ra mắt an toàn",
+            "input": {"brief": "Video giới thiệu sản phẩm mới", "platform": "TikTok", "format": "9:16", "tier": "video-standard"},
+            "idempotency_key": "workspace-draft-create-0001",
+        }
+        assert first.post("/api/v1/workspace/drafts", json=payload).status_code == 403
+        created = first.post("/api/v1/workspace/drafts", headers={"X-CSRF-Token": csrf}, json=payload)
+        assert created.status_code == 200
+        body = created.json()
+        assert body["ok"] is True
+        assert body["status"] == "draft"
+        item = body["data"]["item"]
+        assert item["feature_key"] == "video_product"
+        assert item["route"] == "/video/product"
+        assert "input" not in item
+        replay = first.post("/api/v1/workspace/drafts", headers={"X-CSRF-Token": csrf}, json=payload)
+        assert replay.json()["data"]["item"]["id"] == item["id"]
+
+        listing = first.get("/api/v1/workspace/drafts")
+        assert listing.json()["data"]["items"][0]["id"] == item["id"]
+        assert "brief" not in listing.text
+        detail = first.get(f"/api/v1/workspace/drafts/{item['id']}")
+        assert detail.status_code == 200
+        detail_item = detail.json()["data"]["item"]
+        assert detail_item["input"] == payload["input"]
+        for forbidden in ("canonical_user_id", "telegram_id", "upload_ids", "voice_profile_id", "web_quote_receipt", "provider", "payment", "output"):
+            assert forbidden not in detail.text.lower()
+
+        edited = first.patch(
+            f"/api/v1/workspace/drafts/{item['id']}",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "title": "Video ra mắt đã cập nhật",
+                "input": {"brief": "Brief đã rà soát", "scene_count": "3", "duration_seconds": "20"},
+                "idempotency_key": "workspace-draft-update-0001",
+            },
+        )
+        assert edited.json()["ok"] is True
+        assert edited.json()["data"]["item"]["title"] == "Video ra mắt đã cập nhật"
+        assert first.get(f"/api/v1/workspace/drafts/{item['id']}").json()["data"]["item"]["input"] == {"brief": "Brief đã rà soát", "scene_count": "3", "duration_seconds": "20"}
+
+        for unsafe in (
+            {"upload_ids": "forged-upload"},
+            {"voice_profile_id": "forged-profile"},
+            {"brief": {"nested": "not-scalar"}},
+            {"brief": "api_key=secretvalue123456"},
+            {"brief": "TXID 1234 for manual payment"},
+        ):
+            rejected = first.post(
+                "/api/v1/workspace/drafts",
+                headers={"X-CSRF-Token": csrf},
+                json={"feature_key": "video_product", "title": "Unsafe draft", "input": unsafe, "idempotency_key": f"workspace-draft-reject-{uuid.uuid4()}"},
+            )
+            assert rejected.status_code == 422
+        wrong_feature = first.post(
+            "/api/v1/workspace/drafts",
+            headers={"X-CSRF-Token": csrf},
+            json={"feature_key": "account", "title": "Wrong feature", "input": {"brief": "No"}, "idempotency_key": "workspace-draft-wrong-feature"},
+        )
+        assert wrong_feature.status_code == 422
+
+        archived = first.post(
+            f"/api/v1/workspace/drafts/{item['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "workspace-draft-archive-0001"},
+        )
+        assert archived.json()["status"] == "archived"
+        assert first.get("/api/v1/workspace/drafts").json()["data"]["items"] == []
+        all_drafts = first.get("/api/v1/workspace/drafts?include_archived=true").json()["data"]["items"]
+        assert all_drafts[0]["state"] == "archived"
+        archived_update = first.patch(
+            f"/api/v1/workspace/drafts/{item['id']}",
+            headers={"X-CSRF-Token": csrf},
+            json={"title": "Không sửa archived", "input": {"brief": "No"}, "idempotency_key": "workspace-draft-update-archived"},
+        )
+        assert archived_update.json()["error_code"] == "WORKSPACE_DRAFT_ARCHIVED"
+
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            audits = conn.execute(
+                "SELECT target, detail FROM web_audit_events WHERE action LIKE 'workspace.draft.%' ORDER BY rowid"
+            ).fetchall()
+        assert audits
+        assert all(row[0] == item["id"] for row in audits)
+        assert all("Video ra mắt" not in row[1] and "Brief đã rà soát" not in row[1] for row in audits)
+
+        application = importlib.import_module("app").app
+        with TestClient(application) as second:
+            assert second.post(
+                "/api/v1/auth/register",
+                json={"email": "draft-other@example.com", "password": "correct-horse-battery-staple"},
+            ).json()["ok"] is True
+            assert second.post("/api/v1/auth/login", json={"email": "draft-other@example.com", "password": "correct-horse-battery-staple"}).json()["ok"] is True
+            hidden = second.get(f"/api/v1/workspace/drafts/{item['id']}")
+            assert hidden.status_code == 200
+            assert hidden.json()["error_code"] == "WORKSPACE_DRAFT_NOT_FOUND"
+            assert "Video ra mắt" not in hidden.text
+
+
+def test_catalog_declares_exact_web_workspace_draft_support(tmp_path, monkeypatch):
+    """The UI must not offer a local draft on a read-only/history surface."""
+    with make_client(tmp_path, monkeypatch) as client:
+        response = client.get("/api/v1/catalog")
+        assert response.status_code == 200
+        features = response.json()["data"]["features"]
+        support = {item["key"]: item["web_workspace_draft_supported"] for item in features}
+        assert all(isinstance(item["web_workspace_draft_supported"], bool) for item in features)
+        assert support["video_product"] is True
+        assert support["voice_tts"] is True
+        assert support["image_history"] is False
+        assert support["workspace_drafts"] is False
+
+
 def test_login_runs_password_verification_for_missing_and_existing_accounts(tmp_path, monkeypatch):
     """Avoid an account-enumeration timing oracle on the login endpoint."""
     with make_client(tmp_path, monkeypatch) as client:
@@ -1823,6 +1948,7 @@ def test_production_requires_persistent_session_database_configuration(tmp_path,
 
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.delenv("WEBAPP_SESSION_DB_PATH", raising=False)
+    monkeypatch.delenv("RAILWAY_VOLUME_MOUNT_PATH", raising=False)
     monkeypatch.setattr(copyfast_db.os.path, "isdir", lambda _value: False)
     with pytest.raises(RuntimeError, match="WEBAPP_SESSION_DB_PATH"):
         copyfast_db.ensure_copyfast_persistence()
@@ -1835,6 +1961,51 @@ def test_production_requires_persistent_session_database_configuration(tmp_path,
     # guard on both Railway's Linux image and Windows development worktrees.
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "toanaas-session.db"))
     copyfast_db.ensure_copyfast_persistence()
+
+
+def test_production_accepts_only_an_existing_absolute_railway_volume_mount(tmp_path, monkeypatch):
+    import copyfast_db
+
+    mount = tmp_path / "railway-volume"
+    mount.mkdir()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("WEBAPP_SESSION_DB_PATH", raising=False)
+    monkeypatch.setenv("RAILWAY_VOLUME_MOUNT_PATH", str(mount))
+    monkeypatch.setattr(
+        copyfast_db.os.path,
+        "isdir",
+        lambda value: Path(value).resolve() == mount.resolve(),
+    )
+
+    assert copyfast_db.session_database_path() == str(mount / "toanaas_webapp_session.db")
+    copyfast_db.ensure_copyfast_persistence()
+
+    monkeypatch.setenv("RAILWAY_VOLUME_MOUNT_PATH", "relative-volume")
+    with pytest.raises(RuntimeError, match="RAILWAY_VOLUME_MOUNT_PATH"):
+        copyfast_db.ensure_copyfast_persistence()
+
+
+def test_production_app_starts_on_an_existing_railway_volume_mount(tmp_path, monkeypatch):
+    """Exercise the real lifespan path that otherwise becomes a Railway 502."""
+    mount = tmp_path / "railway-web-volume"
+    mount.mkdir()
+    monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.delenv("ENVIRONMENT", raising=False)
+    monkeypatch.delenv("RAILWAY_ENVIRONMENT", raising=False)
+    monkeypatch.delenv("WEBAPP_SESSION_DB_PATH", raising=False)
+    monkeypatch.setenv("RAILWAY_VOLUME_MOUNT_PATH", str(mount))
+    monkeypatch.setenv("WEB_SESSION_SECRET", "production-test-session-secret")
+    for provider in ("TELEGRAM", "GOOGLE", "GITHUB", "APPLE"):
+        monkeypatch.delenv(f"WEBAPP_{provider}_OAUTH_ENABLED", raising=False)
+    for name in MODULES:
+        sys.modules.pop(name, None)
+
+    application = importlib.import_module("app").app
+    with TestClient(application) as client:
+        response = client.get("/api/v1/catalog")
+        assert response.status_code == 200
+        assert response.json()["ok"] is True
+    assert (mount / "toanaas_webapp_session.db").is_file()
 
 
 def test_credentialed_cors_rejects_wildcards_and_non_https_remote_origins(monkeypatch):

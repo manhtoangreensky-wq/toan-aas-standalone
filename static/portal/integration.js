@@ -717,6 +717,34 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function validWorkspaceDraftId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function workspaceDraftFeatureForRoute(route) {
+    const normalized = String(route || "").split("?")[0].replace(/\/+$/, "") || "/";
+    const catalog = Array.isArray(base().catalog) ? base().catalog : [];
+    const item = catalog.find((candidate) => candidate && typeof candidate.key === "string" && String(candidate.route || "").split("?")[0].replace(/\/+$/, "") === normalized);
+    return item && item.web_workspace_draft_supported === true && /^[a-z][a-z0-9_]{1,120}$/.test(String(item.key || "")) ? item : null;
+  }
+
+  function workspaceDraftInput(fields) {
+    const forbidden = new Set(["upload_ids", "upload_id", "source", "sample", "audio", "document", "documents", "file", "files", "attachment", "voice_profile_id", "web_quote_receipt", "quote_receipt", "idempotency_key", "consent"]);
+    const result = {};
+    Object.entries(fields && typeof fields === "object" ? fields : {}).forEach(([name, value]) => {
+      if (!/^[a-z][a-z0-9_]{0,63}$/.test(name) || forbidden.has(name) || typeof value !== "string") return;
+      const text = value.trim();
+      if (text && text.length <= 4000) result[name] = text;
+    });
+    return result;
+  }
+
+  function mergeWorkspaceDraft(item) {
+    if (!item || typeof item !== "object" || !validWorkspaceDraftId(item.id)) return;
+    const current = Array.isArray(base().workspaceDrafts) ? base().workspaceDrafts : [];
+    merge({ workspaceDrafts: [item, ...current.filter((candidate) => !candidate || String(candidate.id || "") !== String(item.id))].slice(0, 100) });
+  }
+
   function campaignPlanIdFromPath(path) {
     const match = /^\/campaigns\/([^/]+)$/.exec(String(path || "").split("?")[0]);
     const id = match ? String(match[1] || "") : "";
@@ -883,6 +911,9 @@
       fetch(`${API}/auth/telegram/connection/status`, { credentials: "same-origin" }).then((r) => r.json()).catch(() => ({}))
     ]);
     const catalog = catalogResponse && catalogResponse.data && Array.isArray(catalogResponse.data.features) ? catalogResponse.data.features : [];
+    const webWorkspaceDraftFeatures = [...new Set(catalog
+      .filter((item) => item && item.web_workspace_draft_supported === true && /^[a-z][a-z0-9_]{1,120}$/.test(String(item.key || "")))
+      .map((item) => String(item.key)))].slice(0, 200);
     const status = statusResponse && statusResponse.data ? statusResponse.data : {};
     const me = meResponse && meResponse.data ? meResponse.data : {};
     const oauthProviders = providerResponse && providerResponse.data && providerResponse.data.providers && typeof providerResponse.data.providers === "object" ? providerResponse.data.providers : {};
@@ -934,6 +965,10 @@
       // Account Activity is a Web-owned, signed-session read. It has no
       // Core Bridge dependency and never exposes the raw audit record.
       "refresh-account-activity": Boolean(account),
+      "workspace-draft-save": Boolean(account && me.csrf_token),
+      "workspace-draft-archive": Boolean(account && me.csrf_token),
+      "workspace-draft-resume": Boolean(account),
+      "workspace-drafts-refresh": Boolean(account),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -970,6 +1005,7 @@
         displayName: accountDisplayName, email: account ? account.email : ""
       },
       bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled, featureExecutionAvailable: webFeatureExecutionAvailable, featureExecutionFeatures: webFeatureExecutionFeatures },
+      workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
       pageStates: featurePageStates(catalog, {}, webFeatureExecutionFeatures)
@@ -981,6 +1017,7 @@
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
+    if (account && currentPath === "/workspace") await hydrateWorkspaceDrafts();
     if (account && linkChallengeRoute()) {
       const linkStatus = await hydrateLinkStatus();
       if (!telegramLinked) await resumeTelegramLinkChallenge(linkStatus);
@@ -1062,6 +1099,21 @@
       // Do not retain another account's activity or invent browser history.
       // An empty history is the only safe fallback for a failed signed read.
       merge({ accountActivity: [], pageStates: { ...(base().pageStates || {}), "/account/activity": "guarded" } });
+    }
+  }
+
+  async function hydrateWorkspaceDrafts() {
+    try {
+      const result = await api("/workspace/drafts?include_archived=true");
+      const items = result.data && Array.isArray(result.data.items) ? result.data.items.filter((item) => item && validWorkspaceDraftId(item.id)).slice(0, 100) : [];
+      merge({
+        workspaceDrafts: items,
+        pageStates: { ...(base().pageStates || {}), "/workspace": result.status || "read_only" }
+      });
+    } catch (_) {
+      // Do not retain stale data from a different signed account or invent a
+      // browser-owned library after a failed owner-scoped read.
+      merge({ workspaceDrafts: [], pageStates: { ...(base().pageStates || {}), "/workspace": "guarded" } });
     }
   }
 
@@ -1489,6 +1541,87 @@
           releaseSubmission(submission);
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "workspace-draft-save" || action === "workspace-draft-update") {
+        const feature = workspaceDraftFeatureForRoute(route);
+        if (!feature) throw new Error("Workflow này chưa có mapping an toàn để lưu bản nháp Web.");
+        const input = workspaceDraftInput(fields);
+        if (!Object.keys(input).length) throw new Error("Hãy nhập ít nhất một giá trị brief an toàn trước khi lưu bản nháp.");
+        const updating = action === "workspace-draft-update";
+        const draftId = String(detail.workspaceDraftId || "").trim();
+        if (updating && !validWorkspaceDraftId(draftId)) throw new Error("Mã bản nháp cần cập nhật không hợp lệ.");
+        const title = `Bản nháp · ${String(feature.title || feature.key || "Workflow").trim()}`.slice(0, 120);
+        const scope = updating ? `workspace-draft:${draftId}:update` : `workspace-draft:${feature.key}:${route}:create`;
+        const submission = acquireSubmission(scope, JSON.stringify(input));
+        if (!submission) {
+          toast(updating ? "Bản nháp đang được cập nhật. Vui lòng chờ phản hồi từ máy chủ." : "Bản nháp đang được lưu. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(updating ? `/workspace/drafts/${encodeURIComponent(draftId)}` : "/workspace/drafts", {
+            method: updating ? "PATCH" : "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updating
+              ? { title, input, idempotency_key: submission.key }
+              : { feature_key: feature.key, title, input, idempotency_key: submission.key })
+          });
+          mergeWorkspaceDraft(result.data && result.data.item);
+          toast(result.message || (updating ? "Đã cập nhật bản nháp Web." : "Đã lưu bản nháp Web."));
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "workspace-draft-resume") {
+        const draftId = String(detail.workspaceDraftId || "").trim();
+        if (!validWorkspaceDraftId(draftId)) throw new Error("Mã bản nháp không hợp lệ.");
+        const result = await api(`/workspace/drafts/${encodeURIComponent(draftId)}`);
+        const item = result.data && result.data.item && typeof result.data.item === "object" ? result.data.item : null;
+        const feature = item && workspaceDraftFeatureForRoute(item.route);
+        if (!item || !feature || String(feature.key || "") !== String(item.feature_key || "")) throw new Error("Bản nháp không còn khớp workflow Web đã đăng ký.");
+        const restored = window.TOANAASPortal && typeof window.TOANAASPortal.restoreWorkspaceDraft === "function"
+          ? window.TOANAASPortal.restoreWorkspaceDraft(item.route, item.input, item.id)
+          : false;
+        if (!restored) throw new Error("Bản nháp không có trường an toàn để đưa trở lại form.");
+        const summary = { ...item };
+        delete summary.input;
+        mergeWorkspaceDraft(summary);
+        window.history.pushState({}, "", item.route);
+        merge({ path: item.route, title: "TOAN AAS" });
+        await hydrate();
+        toast("Đã đưa brief Web trở lại form. Tệp, upload, quote và lựa chọn canonical cần được chọn/kiểm tra lại.");
+        return;
+      }
+      if (action === "workspace-draft-archive") {
+        const draftId = String(detail.workspaceDraftId || "").trim();
+        if (!validWorkspaceDraftId(draftId)) throw new Error("Mã bản nháp không hợp lệ.");
+        const scope = `workspace-draft:${draftId}:archive`;
+        const submission = acquireSubmission(scope, "archive");
+        if (!submission) {
+          toast("Bản nháp đang được lưu trữ. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/workspace/drafts/${encodeURIComponent(draftId)}/archive`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idempotency_key: submission.key })
+          });
+          mergeWorkspaceDraft(result.data && result.data.item);
+          toast(result.message || "Đã lưu trữ bản nháp Web.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "workspace-drafts-refresh") {
+        await hydrateWorkspaceDrafts();
+        toast("Đã làm mới thư viện bản nháp Web.");
         return;
       }
       if (action === "auth-register") {
