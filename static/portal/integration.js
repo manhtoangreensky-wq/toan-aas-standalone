@@ -717,6 +717,12 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function campaignPlanIdFromPath(path) {
+    const match = /^\/campaigns\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validCampaignPlanId(id) ? id : "";
+  }
+
   function normalizeCampaignSchedule(value) {
     const raw = String(value || "").trim();
     if (!raw) return "";
@@ -757,7 +763,10 @@
     if (!item || typeof item !== "object" || !validCampaignPlanId(item.id)) return;
     const current = Array.isArray(base().campaignPlans) ? base().campaignPlans : [];
     const next = [item, ...current.filter((candidate) => !candidate || String(candidate.id || "") !== String(item.id))].slice(0, 100);
-    merge({ campaignPlans: next });
+    const activePlanId = campaignPlanIdFromPath((base().path || window.location.pathname).split("?")[0]);
+    const update = { campaignPlans: next };
+    if (activePlanId && activePlanId === String(item.id)) update.campaignPlanDetail = item;
+    merge(update);
   }
 
   function estimateCanAdvanceToConfirm(estimate) {
@@ -922,6 +931,9 @@
       "upgrade-telegram-account": Boolean(account && me.csrf_token && account.account_type === "telegram" && account.login_methods && account.login_methods.email !== true),
       "start-telegram-link": Boolean(account && telegramReady),
       "refresh-link-status": Boolean(account),
+      // Account Activity is a Web-owned, signed-session read. It has no
+      // Core Bridge dependency and never exposes the raw audit record.
+      "refresh-account-activity": Boolean(account),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -967,6 +979,8 @@
     }
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
+    else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
+    if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     if (account && linkChallengeRoute()) {
       const linkStatus = await hydrateLinkStatus();
       if (!telegramLinked) await resumeTelegramLinkChallenge(linkStatus);
@@ -1014,6 +1028,40 @@
     } catch (_) {
       // A failed read must not make a browser-side plan, calendar, approval
       // or publication state appear. The existing empty board remains honest.
+    }
+  }
+
+  async function hydrateCampaignPlanDetail(path) {
+    const planId = campaignPlanIdFromPath(path);
+    if (!planId) return;
+    try {
+      const result = await api(`/campaigns/${encodeURIComponent(planId)}`);
+      const item = result.data && result.data.item && typeof result.data.item === "object" ? result.data.item : null;
+      if (!item || String(item.id || "") !== planId || !validCampaignPlanId(item.id)) throw new Error("campaign detail unavailable");
+      merge({
+        campaignPlanDetail: item,
+        pageStates: { ...(base().pageStates || {}), [path]: result.status || "read_only" }
+      });
+    } catch (_) {
+      // A missing or cross-account plan remains an honest empty detail page.
+      // Do not fall back to the Bot campaign system or retain a different
+      // plan from an earlier hydration in browser state.
+      merge({ campaignPlanDetail: {}, pageStates: { ...(base().pageStates || {}), [path]: "guarded" } });
+    }
+  }
+
+  async function hydrateAccountActivity() {
+    try {
+      const result = await api("/account/activity");
+      const items = result.data && Array.isArray(result.data.items) ? result.data.items.slice(0, 50) : [];
+      merge({
+        accountActivity: items,
+        pageStates: { ...(base().pageStates || {}), "/account/activity": result.status || "read_only" }
+      });
+    } catch (_) {
+      // Do not retain another account's activity or invent browser history.
+      // An empty history is the only safe fallback for a failed signed read.
+      merge({ accountActivity: [], pageStates: { ...(base().pageStates || {}), "/account/activity": "guarded" } });
     }
   }
 
@@ -1560,6 +1608,11 @@
       }
       if (action === "refresh-link-status") {
         await refreshTelegramLinkChallenge();
+        return;
+      }
+      if (action === "refresh-account-activity") {
+        await hydrateAccountActivity();
+        toast("Đã làm mới nhật ký hoạt động Web.");
         return;
       }
       if (action === "copy-payment-command") {

@@ -22,6 +22,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`FEATURE_FAMILY_NAVIGATION.md`](FEATURE_FAMILY_NAVIGATION.md) — navigation-only feature families.
 - [`JOB_SUPPORT_RECOVERY.md`](JOB_SUPPORT_RECOVERY.md) — safe job-to-ticket recovery handoff.
 - [`CONTENT_OPERATIONS_ADMIN.md`](CONTENT_OPERATIONS_ADMIN.md) — guarded Campaign/Calendar/Publishing/Admin navigation.
+- [`ACCOUNT_ACTIVITY_BOUNDARY.md`](ACCOUNT_ACTIVITY_BOUNDARY.md) — signed, owner-scoped Web activity history with no Bot/audit-detail disclosure.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — Bot-first notes, reminders, referral/rewards, community and help handoffs.

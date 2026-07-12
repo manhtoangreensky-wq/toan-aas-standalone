@@ -118,6 +118,66 @@ CAMPAIGN_PLAN_STATUS_LABELS = {
     "archived": "đã lưu trữ",
 }
 
+# ``web_audit_events`` is intentionally an internal, append-only audit trail.
+# Customers may inspect a bounded history of their *own Web activity*, but the
+# browser must never receive its raw action name, request ID, target, detail,
+# canonical Telegram identity, or a cross-account event.  Keep this projection
+# separate from the Admin audit surface and from the Bot's canonical ledger,
+# job, payment and provider histories.
+ACCOUNT_ACTIVITY_LABELS = {
+    "auth.register": ("Tạo hồ sơ Web", "Tài khoản"),
+    "auth.login": ("Đăng nhập Web", "Bảo mật"),
+    "auth.logout": ("Đăng xuất Web", "Bảo mật"),
+    "auth.profile_update": ("Cập nhật hồ sơ Web", "Hồ sơ"),
+    "auth.telegram_link_start": ("Bắt đầu liên kết Telegram", "Bảo mật"),
+    "auth.telegram_link_confirm": ("Bot đã xác minh liên kết Telegram", "Bảo mật"),
+    "auth.telegram_link_complete": ("Hoàn tất liên kết Telegram", "Bảo mật"),
+    "auth.telegram_login_start": ("Bắt đầu đăng nhập Telegram", "Bảo mật"),
+    "auth.telegram_login_confirm": ("Bot đã xác minh đăng nhập Telegram", "Bảo mật"),
+    "auth.telegram_login_complete": ("Hoàn tất đăng nhập Telegram", "Bảo mật"),
+    "auth.telegram_account_upgrade": ("Thêm phương thức Email", "Bảo mật"),
+    "oauth.signin": ("Đăng nhập OAuth", "Bảo mật"),
+    "oauth.link": ("Liên kết phương thức OAuth", "Bảo mật"),
+    "oauth.link_start": ("Bắt đầu liên kết OAuth", "Bảo mật"),
+    "oauth.start": ("Chuyển sang xác minh OAuth", "Bảo mật"),
+    "oauth.callback": ("Hoàn tất xác minh OAuth", "Bảo mật"),
+    "campaign.plan.create": ("Tạo kế hoạch Web", "Campaign Planner"),
+    "campaign.plan.update": ("Cập nhật kế hoạch Web", "Campaign Planner"),
+    "campaign.plan.review": ("Tự rà soát kế hoạch Web", "Campaign Planner"),
+    "campaign.plan.status": ("Cập nhật trạng thái kế hoạch Web", "Campaign Planner"),
+    "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
+}
+
+
+def _public_account_activity_item(row: tuple[Any, ...]) -> dict[str, str]:
+    """Project one audit row into non-sensitive, owner-facing activity.
+
+    The stored target/detail fields can reference opaque internal resources or
+    security decisions.  They are deliberately never selected here, even for
+    the owner, so this route cannot turn audit storage into an account-data or
+    Bot-data disclosure API.
+    """
+    action = str(row[0] or "")
+    outcome = str(row[1] or "").lower()
+    created_at = str(row[2] or "")[:80]
+    if action in ACCOUNT_ACTIVITY_LABELS:
+        label, category = ACCOUNT_ACTIVITY_LABELS[action]
+    elif action.startswith("admin."):
+        label, category = "Thao tác quản trị Web", "Quản trị"
+    elif action.startswith("feature."):
+        label, category = "Cập nhật workflow Web", "AI Studio"
+    elif action.startswith("support."):
+        label, category = "Cập nhật hỗ trợ Web", "Hỗ trợ"
+    else:
+        label, category = "Hoạt động Web", "Tài khoản"
+    status_name = "completed" if outcome == "ok" else "guarded" if outcome in {"denied", "failed"} else "read_only"
+    return {
+        "label": label,
+        "category": category,
+        "status": status_name,
+        "created_at": created_at,
+    }
+
 # Browser forms must never be able to attach a value that looks like a bot
 # authority decision.  Identity, provider settings, wallet/payment fields,
 # job lifecycle and output/delivery metadata belong to the canonical Bot only.
@@ -1882,6 +1942,42 @@ async def list_campaign_plans(account: dict = Depends(require_account)):
     )
 
 
+@router.get("/campaigns/{plan_id}")
+async def get_campaign_plan(plan_id: str, account: dict = Depends(require_account)):
+    """Return one Web-owned plan only when it belongs to the signed account.
+
+    This deliberately does not turn a local plan ID into a Bot campaign ID or
+    a cross-account lookup. The projection is the same bounded Web planning
+    metadata used by the list, with no provider, wallet, PayOS or publishing
+    state.
+    """
+    plan_id = _campaign_plan_id(plan_id)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT id, title, destination_url, platform, objective, scheduled_for,
+                      approval_status, review_note, created_at, updated_at
+               FROM web_campaign_plans
+               WHERE id=? AND account_id=?""",
+            (plan_id, str(account["id"])),
+        ).fetchone()
+    if not row:
+        return envelope(
+            False,
+            "Không tìm thấy kế hoạch thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="CAMPAIGN_PLAN_NOT_FOUND",
+        )
+    item = _campaign_plan_public(tuple(row))
+    status_name = str(item["approval_status"])
+    return envelope(
+        True,
+        "Chi tiết kế hoạch Web của bạn.",
+        data={"item": item},
+        status_name=status_name if status_name in CAMPAIGN_PLAN_STATUSES else "guarded",
+    )
+
+
 @router.post("/campaigns")
 async def create_campaign_plan(payload: CampaignPlanCreateRequest, request: Request, account: dict = Depends(require_csrf)):
     """Create an account-owned plan without publishing or calling a provider."""
@@ -2097,6 +2193,33 @@ async def core_me(request: Request, account: dict = Depends(require_account)):
         data={"telegram_linked": True},
         status_name="guarded",
         error_code="BROWSER_IDENTITY_NOT_EXPOSED",
+    )
+
+
+@router.get("/account/activity")
+async def account_activity(account: dict = Depends(require_account)):
+    """Return a bounded, sanitized history of Web-owned account activity.
+
+    This endpoint intentionally remains available before Telegram linking. It
+    reads only the signed account's rows from the standalone Web audit table;
+    it neither calls the private bridge nor acts as a Bot wallet/job/payment
+    history or an Admin audit export.
+    """
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            """SELECT action, outcome, created_at
+               FROM web_audit_events
+               WHERE account_id=?
+               ORDER BY created_at DESC, id DESC
+               LIMIT 50""",
+            (str(account["id"]),),
+        ).fetchall()
+    return envelope(
+        True,
+        "Nhật ký hoạt động Web riêng tư của bạn.",
+        data={"items": [_public_account_activity_item(tuple(row)) for row in rows]},
+        status_name="read_only",
     )
 
 

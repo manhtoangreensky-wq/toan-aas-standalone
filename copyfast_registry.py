@@ -27,6 +27,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("dashboard", "Tổng quan", "account", "/dashboard", description="Tài khoản, Xu, job và trạng thái gần đây."),
     WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá các workflow Web đã được định tuyến và trạng thái canonical của chúng."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
+    WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
     # Bot-companion surfaces keep fast Telegram conversations discoverable in
     # the Web portal without copying Bot-owned memory/reward/community tables
     # into the standalone app. They are read-only handoffs, not engine APIs.

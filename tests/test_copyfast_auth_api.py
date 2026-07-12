@@ -229,6 +229,64 @@ def test_web_owned_profile_defaults_are_csrf_protected_and_cannot_change_canonic
         assert forbidden.status_code == 403
 
 
+def test_account_activity_is_web_owned_owner_scoped_and_sanitized(tmp_path, monkeypatch):
+    """Account history must not become a browser view of the raw audit table."""
+    with make_client(tmp_path, monkeypatch) as first:
+        registration = first.post(
+            "/api/v1/auth/register",
+            json={"email": "activity-owner@example.com", "password": "correct-horse-battery-staple", "display_name": "Activity owner"},
+        )
+        assert registration.json()["ok"] is True
+        login = first.post("/api/v1/auth/login", json={"email": "activity-owner@example.com", "password": "correct-horse-battery-staple"})
+        assert login.json()["ok"] is True
+        # This is a Web-only account history, so signed-but-unlinked users may
+        # use it without opening any canonical Bot/bridge data.
+        assert first.get("/account/activity").status_code == 200
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            account_id = conn.execute(
+                "SELECT id FROM web_accounts WHERE email=?",
+                ("activity-owner@example.com",),
+            ).fetchone()[0]
+            conn.execute(
+                """INSERT INTO web_audit_events
+                   (id, account_id, canonical_user_id, action, request_id, target, outcome, detail, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    str(uuid.uuid4()), account_id, "telegram-hidden-owner", "campaign.plan.create",
+                    "request-id-must-not-reach-browser", "opaque-plan-target", "ok",
+                    "https://private.example/brief password=must-not-reach-browser", "2026-07-12T08:00:00+00:00",
+                ),
+            )
+            conn.commit()
+
+        activity = first.get("/api/v1/account/activity")
+        assert activity.status_code == 200
+        body = activity.json()
+        assert body["ok"] is True
+        assert body["status"] == "read_only"
+        items = body["data"]["items"]
+        assert any(item["label"] == "Tạo kế hoạch Web" for item in items)
+        assert all(set(item) == {"label", "category", "status", "created_at"} for item in items)
+        assert all(item["status"] in {"completed", "guarded", "read_only"} for item in items)
+        for forbidden in ("telegram-hidden-owner", "request-id-must-not-reach-browser", "opaque-plan-target", "private.example", "must-not-reach-browser", "detail"):
+            assert forbidden not in activity.text
+
+        application = importlib.import_module("app").app
+        with TestClient(application) as second:
+            assert second.post(
+                "/api/v1/auth/register",
+                json={"email": "activity-other@example.com", "password": "correct-horse-battery-staple"},
+            ).json()["ok"] is True
+            assert second.post(
+                "/api/v1/auth/login",
+                json={"email": "activity-other@example.com", "password": "correct-horse-battery-staple"},
+            ).json()["ok"] is True
+            other = second.get("/api/v1/account/activity")
+            assert other.status_code == 200
+            assert "Tạo kế hoạch Web" not in other.text
+            assert "activity-owner@example.com" not in other.text
+
+
 def test_login_runs_password_verification_for_missing_and_existing_accounts(tmp_path, monkeypatch):
     """Avoid an account-enumeration timing oracle on the login endpoint."""
     with make_client(tmp_path, monkeypatch) as client:
@@ -1836,6 +1894,16 @@ def test_web_campaign_planner_is_csrf_owned_idempotent_and_never_calls_canonical
         assert repeated.status_code == 200
         assert repeated.json()["data"]["item"]["id"] == item["id"]
         assert len(client.get("/api/v1/campaigns").json()["data"]["items"]) == 1
+        detail = client.get(f"/api/v1/campaigns/{item['id']}")
+        assert detail.status_code == 200
+        assert detail.json()["ok"] is True
+        assert detail.json()["status"] == "draft"
+        assert detail.json()["data"]["item"]["id"] == item["id"]
+        assert detail.json()["data"]["item"]["destination_url"] == payload["destination_url"]
+        assert "account_id" not in detail.text
+        invalid_detail = client.get("/api/v1/campaigns/not-a-plan-id")
+        assert invalid_detail.status_code == 422
+        assert invalid_detail.json()["error_code"] == "REQUEST_INVALID"
 
         edited = client.patch(
             f"/api/v1/campaigns/{item['id']}",
@@ -1943,6 +2011,9 @@ def test_web_campaign_planner_enforces_account_ownership_and_portal_route_gate(t
             },
         ).json()["data"]["item"]
         assert first.get("/campaigns").status_code == 200
+        detail_page = first.get(f"/campaigns/{created['id']}")
+        assert detail_page.status_code == 200
+        assert "Chi tiết kế hoạch" in detail_page.text
         for path, title in {"/calendar": "Content Calendar", "/approvals": "Self-review Queue"}.items():
             response = first.get(path)
             assert response.status_code == 200
@@ -1961,6 +2032,12 @@ def test_web_campaign_planner_enforces_account_ownership_and_portal_route_gate(t
             code = link.json()["data"]["code"]
             assert confirm_link(second, code, canonical_user_id="telegram-campaign-second").json()["ok"] is True
             assert complete_link(second, csrf_second).json()["ok"] is True
+            detail_denied = second.get(f"/api/v1/campaigns/{created['id']}")
+            assert detail_denied.status_code == 200
+            assert detail_denied.json()["ok"] is False
+            assert detail_denied.json()["status"] == "guarded"
+            assert detail_denied.json()["error_code"] == "CAMPAIGN_PLAN_NOT_FOUND"
+            assert "Kế hoạch riêng tư" not in detail_denied.text
             denied = second.post(
                 f"/api/v1/campaigns/{created['id']}/status",
                 headers={"X-CSRF-Token": csrf_second},

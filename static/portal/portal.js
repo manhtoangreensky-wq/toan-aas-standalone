@@ -513,6 +513,10 @@
     layout: "account", fields: [], action: "none", status: "ready",
     notes: ["Tên hiển thị, ngôn ngữ và múi giờ là metadata Web có thể cập nhật bằng signed session, CSRF và audit event.", "Telegram identity, role, Xu, PayOS, job và provider vẫn là dữ liệu canonical chỉ đọc từ bot/Core Bridge.", "Đăng xuất thu hồi signed session ở server, không chỉ xóa state tại browser."]
   });
+  customerPage("/account/activity", "Hoạt động tài khoản", "Xem nhật ký đã sanitize của hoạt động Web thuộc signed account hiện tại.", ICONS.account, {
+    layout: "account-activity", fields: [], action: "none", status: "read_only",
+    notes: ["Chỉ hiển thị hoạt động Web của signed account; không phải Bot audit, wallet ledger, lịch sử PayOS hay provider.", "Response không chứa Telegram ID, request ID, target, detail audit, password, token hoặc dữ liệu của tài khoản khác."]
+  });
   customerPage("/membership", "Gói thành viên", "Xem tier, trial, quyền lợi và catalog gói từ Bot canonical; Web không tự cấp VIP hoặc thay đổi Xu.", ICONS.pricing, {
     layout: "membership", type: "membership", fields: [], action: "none", status: "read_only",
     notes: ["Tier, trial, grant, rank và package entitlement vẫn do Bot canonical quyết định.", "Trang này chỉ hiển thị metadata bridge đã redaction; không tự áp ưu đãi, grant quyền lợi hoặc sửa ledger Xu."]
@@ -810,6 +814,16 @@
   function resolvePage(path) {
     const normalized = normalizePath(path);
     if (manifest[normalized]) return manifest[normalized];
+    if (/^\/campaigns\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const planId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/campaigns/:id", routePath: normalized, title: "Chi tiết kế hoạch", icon: ICONS.prompt, section: "Campaign Planner",
+        description: "Xem, chỉnh brief và tự rà soát một kế hoạch Web-owned thuộc signed session hiện tại.",
+        status: "read_only", access: "member", layout: "campaign-detail", action: "none", actionLabel: "", fields: [],
+        recordId: planId,
+        notes: ["Kế hoạch này chỉ là metadata Web-owned, không phải campaign canonical của Bot.", "Không publish, tạo analytics/revenue, job, Xu hoặc PayOS từ trang chi tiết."]
+      });
+    }
     if (/^\/jobs\/[^/]+$/.test(normalized)) {
       const jobId = normalized.split("/").pop();
       return Object.freeze({
@@ -958,7 +972,7 @@
         label: "Tài khoản",
         links: [
           ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/notes", "Ghi chú", ICONS.prompt],
-          ["/reminders", "Nhắc việc", ICONS.jobs], ["/rewards", "Ưu đãi", ICONS.pricing], ["/guides", "Bot & hướng dẫn", ICONS.legal], ["/status", "Trạng thái dịch vụ", ICONS.system], ["/account", "Tài khoản", ICONS.account]
+          ["/reminders", "Nhắc việc", ICONS.jobs], ["/rewards", "Ưu đãi", ICONS.pricing], ["/guides", "Bot & hướng dẫn", ICONS.legal], ["/status", "Trạng thái dịch vụ", ICONS.system], ["/account", "Tài khoản", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account]
         ]
       }
     ];
@@ -995,7 +1009,7 @@
     if (linkPath === "/wallet") return path === "/wallet";
     if (linkPath === "/wallet/topup") return matchesRouteFamily(path, "/wallet/topup");
     if (linkPath === "/membership") return path === "/membership";
-    if (linkPath === "/account") return path === "/account" || path === "/onboarding";
+    if (linkPath === "/account") return path === "/account" || path === "/account/activity" || path === "/onboarding";
     if (linkPath === "/admin/users") return matchesRouteFamily(path, "/admin/users");
     if (linkPath === "/admin/jobs") return matchesRouteFamily(path, "/admin/jobs");
     if (linkPath === "/admin/payments") return matchesRouteFamily(path, "/admin/payments");
@@ -1026,7 +1040,7 @@
     if (key === "jobs") return matchesRouteFamily(path, "/jobs");
     if (key === "assets") return matchesRouteFamily(path, "/assets");
     if (key === "account") {
-      return isNavCurrent("/account", page) || ["/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/tickets", "/support", "/notes", "/reminders", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
+      return isNavCurrent("/account", page) || ["/account/activity", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/tickets", "/support", "/notes", "/reminders", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
     }
     return false;
   }
@@ -2188,8 +2202,30 @@
       ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm Email + mật khẩu</h2><p class="portal-card-subtitle">Tài khoản này được tạo sau khi Telegram được xác minh trên server. Bạn có thể thêm một phương thức Email + mật khẩu vào chính tài khoản đó để đăng nhập linh hoạt hơn.</p></div>${badge(upgradeEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="upgrade-telegram-account" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.telegramAccountUpgrade, upgradeEnabled, context, upgradeValues)}<div class="portal-form-footer"><span class="portal-form-note">Không tự ghép với tài khoản email/OAuth đã tồn tại. Email phải chưa được dùng và thao tác được audit.</span><button class="portal-button portal-button--primary" type="submit"${upgradeEnabled ? "" : " disabled title=\"Cần signed session Telegram và CSRF hợp lệ.\""}>Thêm phương thức Email</button></div></form></section>`
       : "";
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hồ sơ & liên kết</h2><p class="portal-card-subtitle">Thông tin lấy từ signed session; browser không lưu Telegram ID, password hay token.</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><span class="portal-form-note">${linked ? "Liên kết Telegram đã được xác minh qua bot." : "Hoàn tất liên kết Telegram để dùng dữ liệu wallet, jobs và assets canonical."}</span>${linked ? "" : `<a class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>`}</div></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hồ sơ & liên kết</h2><p class="portal-card-subtitle">Thông tin lấy từ signed session; browser không lưu Telegram ID, password hay token.</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">Nhật ký hoạt động →</a><span class="portal-form-note">${linked ? "Liên kết Telegram đã được xác minh qua bot." : "Hoàn tất liên kết Telegram để dùng dữ liệu wallet, jobs và assets canonical."}</span>${linked ? "" : `<a class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>`}</div></section>
       <aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Bảo mật phiên</h2><p class="portal-card-subtitle">Logout luôn đi qua server để thu hồi session hiện tại.</p></div></div>${renderNotes(page)}<div class="portal-form-footer" style="margin-top:16px"><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?"${logoutEnabled ? "" : " disabled"}>Đăng xuất</button></div></aside></div>${botPreferenceHandoff}${oauthMethods}${telegramAccountUpgrade}${profileEditor}</article>`;
+  }
+
+  function accountActivityStatus(item) {
+    const status = String(item && item.status || "").trim();
+    return ["completed", "guarded", "read_only"].includes(status) ? status : "read_only";
+  }
+
+  function renderAccountActivity(page, context) {
+    const items = Array.isArray(context.accountActivity) ? context.accountActivity.slice(0, 50) : [];
+    const refreshEnabled = Boolean(context.capabilities && context.capabilities["refresh-account-activity"] === true);
+    const rows = renderRowsTable(
+      ["Thời gian", "Nhóm hoạt động", "Hoạt động", "Trạng thái"],
+      items,
+      (item) => `<td>${safeText(String(item && item.created_at || "—"))}</td><td>${safeText(String(item && item.category || "Tài khoản"))}</td><td>${safeText(String(item && item.label || "Hoạt động Web"))}</td><td>${badge(accountActivityStatus(item))}</td>`,
+      "Chưa có hoạt động Web để hiển thị",
+      "Nhật ký sẽ ghi các hoạt động Portal đã được server xác nhận. Không có dữ liệu Bot, Xu, PayOS, provider, ticket hoặc output nào được suy diễn ở đây."
+    );
+    return `<article class="portal-page portal-account-activity">${renderHero(page, context)}
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Nhật ký Web riêng tư</h2><p>Đây là lịch sử đã được server sanitize của signed account hiện tại. Nó không phải audit export, Bot history, wallet ledger, lịch sử PayOS hay provider log.</p><div class="portal-state-meta"><span>Owner-scoped read</span><span>Tối đa 50 hoạt động gần nhất</span><span>Không target/detail/request ID</span></div></div></div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ nhãn, nhóm, trạng thái đã chuẩn hóa và thời gian được hiển thị. Browser không nhận Telegram ID, credential hay nội dung audit gốc.</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/account">Tài khoản</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-account-activity" data-portal-route="/account/activity"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div></div>${rows}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Ranh giới dữ liệu</strong><p>Nếu bạn cần lịch sử giao dịch, job, delivery hoặc ticket canonical, mở đúng Ví Xu, Job Center, Tài sản hoặc Hỗ trợ khi Core Bridge công bố dữ liệu owner-scoped tương ứng. Trang này không sao chép hoặc hợp nhất các nguồn đó.</p></div></div></section>
+    </article>`;
   }
 
   function renderLegal(page, context) {
@@ -2915,14 +2951,22 @@
     return context.campaignPlans.filter((plan) => plan && typeof plan === "object" && typeof plan.id === "string" && /^[0-9a-f-]{36}$/i.test(plan.id)).slice(0, 100);
   }
 
-  function campaignStatusControls(plan, enabled) {
+  function campaignPlanHref(plan) {
+    const id = String(plan && plan.id || "").trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id)
+      ? `/campaigns/${encodeURIComponent(id)}`
+      : "/campaigns";
+  }
+
+  function campaignStatusControls(plan, enabled, route) {
     const id = String(plan.id);
     const current = campaignPlanStatus(plan);
     const transitions = CAMPAIGN_PLAN_TRANSITIONS[current] || [];
     const choices = [current, ...transitions];
     const options = choices.map((value) => `<option value="${safeText(value)}">${safeText(CAMPAIGN_PLAN_STATUS_LABELS[value] || value)}</option>`).join("");
     const disabled = enabled ? "" : " disabled";
-    return `<form class="portal-campaign-review" data-portal-form data-portal-action="campaign-update-status" data-portal-route="/campaigns" data-portal-confirm="Cập nhật trạng thái kế hoạch cục bộ? Thao tác này không publish, không tạo job và không thay đổi Xu." novalidate>
+    const actionRoute = typeof route === "string" && route.startsWith("/campaigns/") ? route : "/campaigns";
+    return `<form class="portal-campaign-review" data-portal-form data-portal-action="campaign-update-status" data-portal-route="${safeText(actionRoute)}" data-portal-confirm="Cập nhật trạng thái kế hoạch cục bộ? Thao tác này không publish, không tạo job và không thay đổi Xu." novalidate>
       <input type="hidden" name="plan_id" value="${safeText(id)}">
       <label class="portal-field"><span class="portal-label">Trạng thái kế hoạch</span><select class="portal-select" name="approval_status"${disabled}>${options}</select></label>
       <label class="portal-field"><span class="portal-label">Ghi chú tự rà soát</span><textarea class="portal-textarea" name="review_note" maxlength="1000" placeholder="Điều cần hoàn thiện trước bước tiếp theo…"${disabled}>${safeText(String(plan.review_note || ""))}</textarea></label>
@@ -2930,14 +2974,15 @@
     </form>`;
   }
 
-  function campaignEditControls(plan, enabled) {
+  function campaignEditControls(plan, enabled, route) {
     const id = String(plan.id);
     const disabled = enabled ? "" : " disabled";
     const optionsFor = (source, selected) => Object.entries(source).map(([value, label]) => `<option value="${safeText(value)}"${value === selected ? " selected" : ""}>${safeText(label)}</option>`).join("");
     const platform = String(plan.platform || "").toLowerCase();
     const objective = String(plan.objective || "").toLowerCase();
     const scheduledFor = typeof plan.scheduled_for === "string" ? plan.scheduled_for.slice(0, 16) : "";
-    return `<details class="portal-campaign-edit"><summary>Chỉnh sửa brief &amp; mốc lịch</summary><form class="portal-form" data-portal-form data-portal-action="campaign-update" data-portal-route="/campaigns" data-portal-confirm="Lưu thay đổi kế hoạch cục bộ? Thao tác này không publish, không tạo job và không thay đổi Xu." novalidate>
+    const actionRoute = typeof route === "string" && route.startsWith("/campaigns/") ? route : "/campaigns";
+    return `<details class="portal-campaign-edit"><summary>Chỉnh sửa brief &amp; mốc lịch</summary><form class="portal-form" data-portal-form data-portal-action="campaign-update" data-portal-route="${safeText(actionRoute)}" data-portal-confirm="Lưu thay đổi kế hoạch cục bộ? Thao tác này không publish, không tạo job và không thay đổi Xu." novalidate>
       <input type="hidden" name="plan_id" value="${safeText(id)}">
       <div class="portal-fields"><label class="portal-field"><span class="portal-label">Tên kế hoạch</span><input class="portal-input" name="title" value="${safeText(String(plan.title || ""))}" minlength="3" maxlength="180" required${disabled}></label><label class="portal-field"><span class="portal-label">Liên kết đích HTTPS</span><input class="portal-input" name="destination_url" type="url" value="${safeText(String(plan.destination_url || ""))}" maxlength="1024" required${disabled}></label><label class="portal-field"><span class="portal-label">Nền tảng</span><select class="portal-select" name="platform" required${disabled}>${optionsFor(CAMPAIGN_PLATFORM_LABELS, platform)}</select></label><label class="portal-field"><span class="portal-label">Mục tiêu</span><select class="portal-select" name="objective" required${disabled}>${optionsFor(CAMPAIGN_OBJECTIVE_LABELS, objective)}</select></label><label class="portal-field"><span class="portal-label">Mốc lịch nội bộ</span><input class="portal-input" name="scheduled_for" type="datetime-local" value="${safeText(scheduledFor)}"${disabled}></label></div>
       <div class="portal-form-footer"><span class="portal-form-note">Chỉ cập nhật metadata Web-owned; Bot/provider/PayOS/Xu không nhận thay đổi này.</span><button class="portal-button portal-button--quiet" type="submit"${disabled}>Lưu thay đổi</button></div>
@@ -2958,11 +3003,11 @@
         const status = campaignPlanStatus(plan);
         const platform = CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác";
         const objective = CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu chưa rõ";
-        return `<article class="portal-campaign-card" id="campaign-${safeText(plan.id)}" data-campaign-plan="${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</div><h3>${safeText(String(plan.title || "Kế hoạch chưa đặt tên"))}</h3></div>${badge(status)}</div><dl class="portal-campaign-facts"><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>Mốc lịch</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl>${campaignEditControls(plan, editEnabled)}${campaignStatusControls(plan, reviewEnabled)}</article>`;
+        return `<article class="portal-campaign-card" id="campaign-${safeText(plan.id)}" data-campaign-plan="${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</div><h3><a href="${safeText(campaignPlanHref(plan))}">${safeText(String(plan.title || "Kế hoạch chưa đặt tên"))}</a></h3></div>${badge(status)}</div><dl class="portal-campaign-facts"><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>Mốc lịch</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">Mở chi tiết →</a></div>${campaignEditControls(plan, editEnabled)}${campaignStatusControls(plan, reviewEnabled)}</article>`;
       }).join("")
       : renderEmpty("Chưa có kế hoạch", "Tạo kế hoạch đầu tiên để có bảng lịch và luồng tự rà soát rõ ràng. Không có campaign hoặc nội dung nào được tự động xuất bản.", "✦");
     const scheduleStrip = scheduled.length
-      ? `<div class="portal-campaign-timeline">${scheduled.map((plan) => `<a class="portal-campaign-timeline-item" href="#campaign-${safeText(plan.id)}"><span>${safeText(campaignScheduleLabel(plan.scheduled_for))}</span><strong>${safeText(String(plan.title || "Kế hoạch"))}</strong><em>${safeText(CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác")}</em></a>`).join("")}</div>`
+      ? `<div class="portal-campaign-timeline">${scheduled.map((plan) => `<a class="portal-campaign-timeline-item" href="${safeText(campaignPlanHref(plan))}"><span>${safeText(campaignScheduleLabel(plan.scheduled_for))}</span><strong>${safeText(String(plan.title || "Kế hoạch"))}</strong><em>${safeText(CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác")}</em></a>`).join("")}</div>`
       : `<div class="portal-campaign-timeline-empty">Chưa có mốc lịch. Bạn vẫn có thể tạo bản nháp trước, rồi xếp lịch khi đã sẵn sàng.</div>`;
     const formValues = transientFormValues("/campaigns");
     return `<article class="portal-page portal-campaign-planner">${renderHero(page, context)}
@@ -2972,6 +3017,31 @@
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch dự kiến</h2><p class="portal-card-subtitle">Các mốc dưới đây chỉ là lịch quản lý cá nhân; không phát sinh queue xuất bản, reminder hay chạy tự động.</p></div>${badge("read_only")}</div>${scheduleStrip}</section>
       <section class="portal-campaign-board" aria-label="Danh sách kế hoạch">${planCards}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới với Bot canonical</h2><p class="portal-card-subtitle">Khi cần report, analytics, publish queue hoặc campaign automation, tiếp tục dùng adapter Bot đã được phê duyệt.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/growth/ai">Growth AI trong Bot</a><a class="portal-button portal-button--quiet" href="/campaign/report">Báo cáo campaign trong Bot</a><a class="portal-button portal-button--quiet" href="/support">Cần hỗ trợ</a></div></section>
+    </article>`;
+  }
+
+  function renderCampaignDetail(page, context) {
+    const expectedId = String(page.recordId || "").trim();
+    const source = context.campaignPlanDetail && typeof context.campaignPlanDetail === "object" ? context.campaignPlanDetail : null;
+    const plan = source && String(source.id || "") === expectedId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(expectedId) ? source : null;
+    const reviewEnabled = Boolean(context.session.authenticated && context.session.csrfReady && context.capabilities && context.capabilities["campaign-update-status"] === true);
+    const editEnabled = Boolean(context.session.authenticated && context.session.csrfReady && context.capabilities && context.capabilities["campaign-update"] === true);
+    if (!plan) {
+      return `<article class="portal-page portal-campaign-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy kế hoạch Web", "Kế hoạch có thể không thuộc signed account hiện tại, đã bị xoá hoặc chưa tải xong. Web không thử tra cứu campaign Bot thay thế.", "⌁")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/campaigns">Về Campaign Planner</a></div></section></article>`;
+    }
+    const status = campaignPlanStatus(plan);
+    const platform = CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác";
+    const objective = CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu chưa rõ";
+    const reviewNote = String(plan.review_note || "").trim();
+    const actionRoute = String(page.routePath || campaignPlanHref(plan));
+    const facts = `<dl class="portal-campaign-facts"><div><dt>Trạng thái kế hoạch</dt><dd>${badge(status)}</dd></div><div><dt>Nền tảng</dt><dd>${safeText(platform)}</dd></div><div><dt>Mục tiêu</dt><dd>${safeText(objective)}</dd></div><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div><div><dt>Mốc lịch nội bộ</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Tạo lúc</dt><dd>${safeText(campaignScheduleLabel(plan.created_at))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(campaignScheduleLabel(plan.updated_at))}</dd></div></dl>`;
+    const reviewCard = reviewNote
+      ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ghi chú tự rà soát</h2><p class="portal-card-subtitle">Ghi chú này chỉ thuộc kế hoạch cá nhân trên Web.</p></div>${badge("read_only")}</div><div class="portal-result-text">${safeText(reviewNote)}</div></section>`
+      : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ghi chú tự rà soát</h2><p class="portal-card-subtitle">Chưa có ghi chú. Bạn có thể thêm nó khi chuyển trạng thái kế hoạch.</p></div>${badge("empty")}</div></section>`;
+    return `<article class="portal-page portal-campaign-detail">${renderHero(page, context)}
+      <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Chi tiết planning Web-owned</h2><p>Trang này chỉ quản lý brief, CTA, lịch nội bộ và tự rà soát của một kế hoạch thuộc signed account hiện tại. Nó không tạo campaign canonical, publish queue, analytics/revenue, job, Xu hoặc PayOS.</p><div class="portal-state-meta"><span>Owner-scoped read</span><span>CSRF + idempotency cho write</span><span>Không gọi Bot/provider</span></div></div></div></section>
+      <div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-eyebrow">${safeText(platform)} · ${safeText(objective)}</span><h2 class="portal-card-title">${safeText(String(plan.title || "Kế hoạch"))}</h2><p class="portal-card-subtitle">ID Web local: <code>${safeText(expectedId)}</code>. ID này không phải ID campaign Bot và không cho phép đọc chéo tài khoản.</p></div>${badge(status)}</div>${facts}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/campaigns">Tất cả kế hoạch</a><a class="portal-button portal-button--quiet" href="/calendar">Mở Calendar</a><a class="portal-button portal-button--quiet" href="/approvals">Self-review Queue</a></div></section><aside class="portal-stack">${reviewCard}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới canonical</h2><p class="portal-card-subtitle">Nếu cần analytics, báo cáo hay publish thật, tiếp tục qua Bot đã được phê duyệt.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/growth/ai">Growth AI</a><a class="portal-button portal-button--quiet" href="/campaign/report">Báo cáo campaign</a></div></section></aside></div>
+      <section class="portal-campaign-board" aria-label="Chỉnh sửa kế hoạch"><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>Brief &amp; mốc lịch</h2><p>Chỉ cập nhật metadata Web-owned của kế hoạch này.</p></div>${badge(editEnabled ? "ready" : "guarded")}</div>${campaignEditControls(plan, editEnabled, actionRoute)}</article><article class="portal-campaign-card"><div class="portal-campaign-card-head"><div><h2>Tự rà soát</h2><p>Lifecycle tại đây không phải duyệt staff hoặc publish canonical.</p></div>${badge(reviewEnabled ? status : "guarded")}</div>${campaignStatusControls(plan, reviewEnabled, actionRoute)}</article></section>
     </article>`;
   }
 
@@ -3014,7 +3084,7 @@
       const cards = entries.slice(0, 3).map(({ plan, parts }) => {
         const status = campaignPlanStatus(plan);
         const time = `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
-        return `<a class="portal-calendar-event" data-status="${safeText(status)}" href="/campaigns#campaign-${safeText(plan.id)}"><time>${safeText(time)}</time><strong>${safeText(String(plan.title || "Kế hoạch"))}</strong></a>`;
+        return `<a class="portal-calendar-event" data-status="${safeText(status)}" href="${safeText(campaignPlanHref(plan))}"><time>${safeText(time)}</time><strong>${safeText(String(plan.title || "Kế hoạch"))}</strong></a>`;
       }).join("");
       const overflow = entries.length > 3 ? `<span class="portal-calendar-overflow">+${entries.length - 3} kế hoạch</span>` : "";
       cells.push(`<div class="portal-calendar-cell${today ? " is-today" : ""}"><span class="portal-calendar-day">${safeText(String(day))}</span><div class="portal-calendar-events">${cards}${overflow}</div></div>`);
@@ -3023,7 +3093,7 @@
     return `<article class="portal-page portal-campaign-calendar">${renderHero(page, context)}
       <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Calendar không tạo publish queue</h2><p>Lịch này chỉ đọc các mốc Web-owned của bạn. Mỗi card dẫn lại Campaign Planner; không gửi lịch sang Bot, kênh social hay provider.</p><div class="portal-state-meta"><span>${safeText(String(scheduledCount))} mốc đã lên lịch</span><span>Không reminder tự động</span><span>Không channel automation</span></div></div></div></section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(localeMonth)}</h2><p class="portal-card-subtitle">Các mốc trong tháng hiện tại theo giờ cục bộ bạn đã nhập. Có thể mở kế hoạch để tự rà soát hoặc đổi trạng thái.</p></div>${badge("read_only")}</div><div class="portal-calendar" role="grid" aria-label="Content Calendar ${safeText(localeMonth)}"><div class="portal-calendar-weekdays" role="row">${weekdayLabels.map((label) => `<span role="columnheader">${safeText(label)}</span>`).join("")}</div><div class="portal-calendar-grid">${cells.join("")}</div></div></section>
-      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kế hoạch chưa có mốc lịch</h2><p class="portal-card-subtitle">Đặt ngày giờ trong Campaign Planner khi bạn muốn theo dõi một mốc nội bộ. Không có tác vụ nào tự chạy khi thêm mốc.</p></div>${badge("read_only")}</div>${plans.filter((plan) => !campaignScheduleParts(plan.scheduled_for)).length ? `<div class="portal-feature-jumps">${plans.filter((plan) => !campaignScheduleParts(plan.scheduled_for)).slice(0, 12).map((plan) => `<a class="portal-feature-jump" href="/campaigns#campaign-${safeText(plan.id)}">${safeText(String(plan.title || "Kế hoạch"))}</a>`).join("")}</div>` : renderEmpty("Đã có mốc lịch", "Tất cả kế hoạch đang hiển thị đều có một mốc nội bộ hoặc danh sách hiện tại đang trống.", "✓")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Kế hoạch chưa có mốc lịch</h2><p class="portal-card-subtitle">Đặt ngày giờ trong Campaign Planner khi bạn muốn theo dõi một mốc nội bộ. Không có tác vụ nào tự chạy khi thêm mốc.</p></div>${badge("read_only")}</div>${plans.filter((plan) => !campaignScheduleParts(plan.scheduled_for)).length ? `<div class="portal-feature-jumps">${plans.filter((plan) => !campaignScheduleParts(plan.scheduled_for)).slice(0, 12).map((plan) => `<a class="portal-feature-jump" href="${safeText(campaignPlanHref(plan))}">${safeText(String(plan.title || "Kế hoạch"))}</a>`).join("")}</div>` : renderEmpty("Đã có mốc lịch", "Tất cả kế hoạch đang hiển thị đều có một mốc nội bộ hoặc danh sách hiện tại đang trống.", "✓")}</section>
     </article>`;
   }
 
@@ -3034,7 +3104,7 @@
     const readyCount = plans.filter((plan) => ["approved", "scheduled"].includes(campaignPlanStatus(plan))).length;
     const reviewEnabled = Boolean(context.session.authenticated && context.session.csrfReady && context.capabilities && context.capabilities["campaign-update-status"] === true);
     const cards = reviewPlans.length
-      ? reviewPlans.map((plan) => `<article class="portal-campaign-card" id="approval-${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác")} · ${safeText(CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu")}</div><h3>${safeText(String(plan.title || "Kế hoạch"))}</h3></div>${badge("review")}</div><dl class="portal-campaign-facts"><div><dt>Mốc lịch</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div></dl>${campaignStatusControls(plan, reviewEnabled)}</article>`).join("")
+      ? reviewPlans.map((plan) => `<article class="portal-campaign-card" id="approval-${safeText(plan.id)}"><div class="portal-campaign-card-head"><div><div class="portal-eyebrow">${safeText(CAMPAIGN_PLATFORM_LABELS[String(plan.platform || "").toLowerCase()] || "Khác")} · ${safeText(CAMPAIGN_OBJECTIVE_LABELS[String(plan.objective || "").toLowerCase()] || "Mục tiêu")}</div><h3><a href="${safeText(campaignPlanHref(plan))}">${safeText(String(plan.title || "Kế hoạch"))}</a></h3></div>${badge("review")}</div><dl class="portal-campaign-facts"><div><dt>Mốc lịch</dt><dd>${safeText(campaignScheduleLabel(plan.scheduled_for))}</dd></div><div><dt>Liên kết đích</dt><dd>${campaignDestinationLink(plan.destination_url)}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(campaignPlanHref(plan))}">Mở chi tiết →</a></div>${campaignStatusControls(plan, reviewEnabled)}</article>`).join("")
       : renderEmpty("Không có kế hoạch cần tự rà soát", "Khi một bản nháp chuyển sang “Tự rà soát”, nó sẽ xuất hiện tại đây. Đây không phải hàng duyệt Admin/Bot.", "✓");
     return `<article class="portal-page portal-campaign-approvals">${renderHero(page, context)}
       <section class="portal-card portal-card-pad portal-campaign-boundary"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌁</span><div><h2>Self-review Queue của riêng bạn</h2><p>Chỉ bạn thay đổi lifecycle của kế hoạch Web-owned. “Approved” tại đây không cấp quyền cho channel, publish queue, job, Xu hoặc provider.</p><div class="portal-state-meta"><span>Không có admin approval giả</span><span>Không có publish giả</span><span>Server audit mọi write</span></div></div></div></section>
@@ -3104,6 +3174,7 @@
       case "auth": return renderAuth(page, context);
       case "dashboard": return renderDashboard(page, context);
       case "campaign-planner": return renderCampaignPlanner(page, context);
+      case "campaign-detail": return renderCampaignDetail(page, context);
       case "campaign-calendar": return renderCampaignCalendar(page, context);
       case "campaign-approvals": return renderCampaignApprovals(page, context);
       case "feature-catalog": return renderFeatureCatalog(page, context);
@@ -3115,6 +3186,7 @@
       case "assets": return renderAssets(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
+      case "account-activity": return renderAccountActivity(page, context);
       case "membership": return renderMembership(page, context);
       case "service-status": return renderServiceStatus(page, context);
       case "media-studio": return renderMediaStudio(page, context);

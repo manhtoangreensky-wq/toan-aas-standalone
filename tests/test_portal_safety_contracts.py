@@ -418,6 +418,30 @@ def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
     assert 'api("/auth/logout"' in INTEGRATION
 
 
+def test_account_activity_is_a_sanitized_web_owned_owner_history() -> None:
+    assert 'customerPage("/account/activity", "Hoạt động tài khoản"' in PORTAL
+    assert 'layout: "account-activity", fields: [], action: "none", status: "read_only"' in PORTAL
+    assert 'case "account-activity": return renderAccountActivity(page, context);' in PORTAL
+    assert "function renderAccountActivity(page, context)" in PORTAL
+    assert 'data-portal-action="refresh-account-activity"' in PORTAL
+    activity = PORTAL[PORTAL.index("function accountActivityStatus"):PORTAL.index("function renderLegal")]
+    assert "Nhật ký Web riêng tư" in activity
+    assert "Không target/detail/request ID" in activity
+    assert "canonical_user_id" not in activity
+    assert "telegram_id" not in activity
+    assert '"refresh-account-activity": Boolean(account)' in INTEGRATION
+    assert "async function hydrateAccountActivity()" in INTEGRATION
+    assert 'api("/account/activity")' in INTEGRATION
+    assert 'if (account && currentPath === "/account/activity") await hydrateAccountActivity();' in INTEGRATION
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert '@router.get("/account/activity")' in api
+    assert "SELECT action, outcome, created_at" in api
+    assert "WHERE account_id=?" in api
+    assert "target, detail" not in api[api.index("async def account_activity"):api.index("@router.get(\"/wallet\")")]
+    db = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert "idx_web_audit_account_created" in db
+
+
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
     assert "Hồ sơ mặc định sau khi tạo" in PORTAL
     assert "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient" in PORTAL
@@ -1181,8 +1205,11 @@ def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_a
     assert 'customerPage("/campaigns", "Campaign Planner"' in PORTAL
     assert 'layout: "campaign-planner", action: "campaign-create"' in PORTAL
     assert 'case "campaign-planner": return renderCampaignPlanner(page, context);' in PORTAL
+    assert 'case "campaign-detail": return renderCampaignDetail(page, context);' in PORTAL
     assert "const WEB_LOCAL_ACTIONS = new Set([\"campaign-create\", \"campaign-update\", \"campaign-update-status\"]);" in PORTAL
     assert "function renderCampaignPlanner(page, context)" in PORTAL
+    assert "function renderCampaignDetail(page, context)" in PORTAL
+    assert "function campaignPlanHref(plan)" in PORTAL
     assert "function campaignDestinationLink(value)" in PORTAL
     assert "target=\"_blank\" rel=\"noopener noreferrer\"" in PORTAL
     planner = PORTAL[
@@ -1203,6 +1230,9 @@ def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_a
     assert 'if (action === "campaign-update-status")' in INTEGRATION
     assert "function campaignCreatePayload(fields)" in INTEGRATION
     assert "function campaignStatusPayload(fields)" in INTEGRATION
+    assert "function campaignPlanIdFromPath(path)" in INTEGRATION
+    assert "async function hydrateCampaignPlanDetail(path)" in INTEGRATION
+    assert 'api(`/campaigns/${encodeURIComponent(planId)}`)' in INTEGRATION
     campaign_integration = INTEGRATION[
         INTEGRATION.index("function campaignCreatePayload(fields)"):
         INTEGRATION.index("function estimateCanAdvanceToConfirm")
@@ -1216,6 +1246,7 @@ def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_a
     db = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
     assert 'CREATE TABLE IF NOT EXISTS web_campaign_plans' in db
     assert '@router.get("/campaigns")' in api
+    assert '@router.get("/campaigns/{plan_id}")' in api
     assert '@router.post("/campaigns")' in api
     assert '@router.patch("/campaigns/{plan_id}")' in api
     assert '@router.post("/campaigns/{plan_id}/status")' in api

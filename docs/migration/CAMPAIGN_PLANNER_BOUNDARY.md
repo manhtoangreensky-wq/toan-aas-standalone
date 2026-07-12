@@ -20,6 +20,7 @@ tables and the Bot campaign system:
 The Web API is intentionally small:
 
 - `GET /api/v1/campaigns`
+- `GET /api/v1/campaigns/{id}`
 - `POST /api/v1/campaigns`
 - `PATCH /api/v1/campaigns/{id}`
 - `POST /api/v1/campaigns/{id}/status`
@@ -39,3 +40,8 @@ idempotency and audit review.
 
 Legacy `/campaign.html` and `/campaign-app` bookmarks redirect to
 `/campaigns`; old raw-`user_id` pages are not mounted.
+
+`/campaigns/{id}` is a signed, owner-scoped Web detail view. It reads the
+same local planning projection and can reuse the existing CSRF/idempotent
+brief/self-review forms. It never falls back to a Bot campaign lookup when a
+plan is absent or belongs to another Web account.

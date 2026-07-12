@@ -300,6 +300,12 @@ def ensure_copyfast_schema() -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audit_created ON web_audit_events(created_at)"
         )
+        # Customer activity reads are owner-scoped and newest-first. This
+        # additive index avoids a full audit-table scan without changing the
+        # append-only audit contract or reusing the Bot audit database.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audit_account_created ON web_audit_events(account_id, created_at DESC, id DESC)"
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
         )
