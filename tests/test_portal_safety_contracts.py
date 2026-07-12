@@ -292,6 +292,29 @@ def test_mobile_workspace_dock_is_signed_session_only_and_navigation_only() -> N
     assert "bottom: calc(84px + var(--portal-safe-bottom));" in PORTAL_CSS
 
 
+def test_command_palette_is_session_scoped_navigation_without_data_actions() -> None:
+    shell = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
+    assert 'data-portal-command-palette' in shell
+    assert 'id="portal-command-palette"' in shell
+    assert "function commandPaletteItems(context, page)" in PORTAL
+    assert "function renderCommandPalette(page, context)" in PORTAL
+    palette = PORTAL[PORTAL.index("function commandPaletteItems(context, page)"):PORTAL.index("function renderSidebar(page, context)")]
+    assert 'candidate.access === "public"' in palette
+    assert 'candidate.access === "admin" && !(context && context.isAdmin === true)' in palette
+    assert "fetch(" not in palette
+    assert "dispatchAction(" not in palette
+    assert 'role="dialog" aria-modal="true"' in palette
+    assert 'data-portal-command-search' in palette
+    assert "function openCommandPalette(trigger)" in PORTAL
+    assert "function closeCommandPalette(options)" in PORTAL
+    assert "function setCommandPaletteBackgroundInert(opened)" in PORTAL
+    assert 'String(event.key || "").toLowerCase() === "k"' in PORTAL
+    assert 'event.key === "Escape" && paletteOpen' in PORTAL
+    assert ".portal-command-palette" in PORTAL_CSS
+    assert ".portal-command-dialog" in PORTAL_CSS
+    assert ".portal-body--command-palette" in PORTAL_CSS
+
+
 def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> None:
     assert "function matchesRouteFamily(path, root)" in PORTAL
     assert 'if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");' in PORTAL

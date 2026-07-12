@@ -13,6 +13,7 @@
   let interactionsBound = false;
   const transientFormDrafts = new Map();
   let sidebarReturnFocus = null;
+  let commandPaletteReturnFocus = null;
   try {
     const bootstrap = document.getElementById("portal-bootstrap");
     const parsed = bootstrap && JSON.parse(bootstrap.textContent || "{}");
@@ -1047,6 +1048,57 @@
     }).join("");
   }
 
+  function normalizeCommandSearch(value) {
+    const raw = String(value === undefined || value === null ? "" : value).trim().toLowerCase();
+    return typeof raw.normalize === "function"
+      ? raw.normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      : raw;
+  }
+
+  function commandPaletteItems(context, page) {
+    const activePath = normalizePath(page && (page.routePath || page.path));
+    const items = [];
+    const seen = new Set();
+    Object.values(manifest).forEach((candidate) => {
+      const path = candidate && typeof candidate.path === "string" ? candidate.path : "";
+      if (!path || seen.has(path) || candidate.access === "public") return;
+      if (candidate.access === "admin" && !(context && context.isAdmin === true)) return;
+      seen.add(path);
+      items.push({
+        path,
+        title: String(candidate.title || "TOAN AAS"),
+        section: String(candidate.section || "Workspace"),
+        icon: candidate.icon || ICONS.default,
+        current: normalizePath(path) === activePath
+      });
+    });
+    return items.sort((left, right) => {
+      if (left.current !== right.current) return left.current ? -1 : 1;
+      return `${left.section} ${left.title}`.localeCompare(`${right.section} ${right.title}`, "vi");
+    });
+  }
+
+  function renderCommandPalette(page, context) {
+    const items = commandPaletteItems(context, page);
+    const markup = items.map((item) => {
+      const search = normalizeCommandSearch(`${item.title} ${item.section} ${item.path}`);
+      return `<a class="portal-command-item" href="${safeText(item.path)}" data-portal-command-item data-command-search="${safeText(search)}"${item.current ? ' aria-current="page"' : ""}>
+        <span class="portal-command-item-icon" aria-hidden="true">${safeText(item.icon)}</span>
+        <span class="portal-command-item-copy"><strong>${safeText(item.title)}</strong><small>${safeText(item.section)} · ${safeText(item.path)}</small></span>
+        <span class="portal-command-item-arrow" aria-hidden="true">→</span>
+      </a>`;
+    }).join("");
+    return `<div class="portal-command-palette-backdrop" data-portal-command-close></div>
+      <section class="portal-command-dialog" role="dialog" aria-modal="true" aria-labelledby="portal-command-title">
+        <header class="portal-command-header"><div><span class="portal-command-kicker">TOAN AAS workspace</span><h2 id="portal-command-title">Chuyển nhanh</h2></div><button class="portal-command-close" type="button" aria-label="Đóng chuyển nhanh" data-portal-command-close>×</button></header>
+        <label class="portal-command-search"><span class="portal-sr-only">Tìm workspace</span><span aria-hidden="true">⌕</span><input type="search" placeholder="Tìm công cụ, jobs, tài sản, tài khoản…" autocomplete="off" data-portal-command-search></label>
+        <p class="portal-command-hint"><span><kbd>Ctrl</kbd> <kbd>K</kbd> để mở</span><span><kbd>Esc</kbd> để đóng</span></p>
+        <div class="portal-command-results" aria-label="Kết quả chuyển nhanh" data-portal-command-results>${markup}</div>
+        <p class="portal-command-empty" data-portal-command-empty hidden>Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.</p>
+        <p class="portal-command-count" aria-live="polite" data-portal-command-count>${safeText(String(items.length))} workspace có thể mở trong phiên này.</p>
+      </section>`;
+  }
+
   function renderSidebar(page, context) {
     const bridgeReady = context.bridge.available === true;
     const groups = navGroups(context, page).map((group) => {
@@ -1080,6 +1132,7 @@
     return `<button class="portal-menu-button" type="button" aria-label="Mở điều hướng" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu>☰</button>
       <div class="portal-crumbs" aria-label="Vị trí hiện tại">${crumbs}</div>
       <div class="portal-header-actions">
+        <button class="portal-command-trigger" type="button" aria-label="Mở chuyển nhanh" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">⌕</span><span class="portal-command-trigger-label">Chuyển nhanh</span><kbd>Ctrl K</kbd></button>
         ${badge(stateFor(page, context))}
         <a class="portal-session-chip" href="${accountHref}" aria-label="Mở tài khoản">
           <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>
@@ -3259,6 +3312,79 @@
     if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
   }
 
+  function commandPaletteFocusables(palette) {
+    if (!palette) return [];
+    return Array.from(palette.querySelectorAll("a[href], button:not([disabled]), input:not([disabled])"))
+      .filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
+  }
+
+  function setCommandPaletteBackgroundInert(opened) {
+    const targets = [
+      document.querySelector("[data-portal-sidebar]"),
+      document.querySelector(".portal-workspace"),
+      document.querySelector("[data-portal-mobile-nav]")
+    ].filter(Boolean);
+    targets.forEach((target) => {
+      if ("inert" in target) target.inert = opened;
+      if (opened) target.setAttribute("aria-hidden", "true");
+      else target.removeAttribute("aria-hidden");
+    });
+    document.body.classList.toggle("portal-body--command-palette", Boolean(opened));
+  }
+
+  function isCommandPaletteOpen() {
+    const palette = document.querySelector("[data-portal-command-palette]");
+    return Boolean(palette && !palette.hidden);
+  }
+
+  function filterCommandPalette(value) {
+    const palette = document.querySelector("[data-portal-command-palette]");
+    if (!palette || palette.hidden) return;
+    const query = normalizeCommandSearch(value);
+    const items = Array.from(palette.querySelectorAll("[data-portal-command-item]"));
+    let visible = 0;
+    items.forEach((item) => {
+      const matches = !query || String(item.getAttribute("data-command-search") || "").includes(query);
+      item.hidden = !matches;
+      if (matches) visible += 1;
+    });
+    const empty = palette.querySelector("[data-portal-command-empty]");
+    const count = palette.querySelector("[data-portal-command-count]");
+    if (empty) empty.hidden = visible > 0;
+    if (count) count.textContent = visible ? `${visible} workspace phù hợp.` : "Không có workspace phù hợp.";
+  }
+
+  function closeCommandPalette(options) {
+    const settings = options && typeof options === "object" ? options : {};
+    const palette = document.querySelector("[data-portal-command-palette]");
+    const wasOpen = Boolean(palette && !palette.hidden);
+    if (palette) {
+      palette.hidden = true;
+      palette.innerHTML = "";
+    }
+    setCommandPaletteBackgroundInert(false);
+    if (wasOpen && settings.restoreFocus !== false && commandPaletteReturnFocus && typeof commandPaletteReturnFocus.focus === "function") {
+      commandPaletteReturnFocus.focus({ preventScroll: true });
+    }
+    commandPaletteReturnFocus = null;
+  }
+
+  function openCommandPalette(trigger) {
+    const context = getBootstrap();
+    if (!(context.session && context.session.authenticated === true)) return;
+    const palette = document.querySelector("[data-portal-command-palette]");
+    if (!palette) return;
+    closeSidebar({ restoreFocus: false });
+    commandPaletteReturnFocus = trigger || document.activeElement;
+    palette.innerHTML = renderCommandPalette(resolvePage(context.path), context);
+    palette.hidden = false;
+    setCommandPaletteBackgroundInert(true);
+    window.requestAnimationFrame(() => {
+      const input = palette.querySelector("[data-portal-command-search]");
+      if (input && typeof input.focus === "function") input.focus({ preventScroll: true });
+    });
+  }
+
   function focusSnapshot() {
     const active = document.activeElement;
     if (!active || !active.matches || !active.matches("input, textarea, select")) return null;
@@ -3288,6 +3414,10 @@
     if (interactionsBound) return;
     interactionsBound = true;
     document.addEventListener("click", (event) => {
+      const paletteTrigger = event.target.closest("[data-portal-open-command-palette]");
+      if (paletteTrigger) { openCommandPalette(paletteTrigger); return; }
+      if (event.target.closest("[data-portal-command-close]")) { closeCommandPalette(); return; }
+      if (event.target.closest("[data-portal-command-item]")) { closeCommandPalette({ restoreFocus: false }); return; }
       const menu = event.target.closest("[data-portal-menu]");
       if (menu) { toggleSidebar(); return; }
       if (event.target.closest("[data-portal-close-menu]")) { closeSidebar(); return; }
@@ -3320,12 +3450,31 @@
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
+      if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
     });
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) rememberTransientFormDraft(form);
     });
     window.addEventListener("keydown", (event) => {
+      const paletteOpen = isCommandPaletteOpen();
+      if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "k") {
+        event.preventDefault();
+        if (paletteOpen) closeCommandPalette();
+        else openCommandPalette(document.querySelector("[data-portal-open-command-palette]"));
+        return;
+      }
+      if (event.key === "Escape" && paletteOpen) { event.preventDefault(); closeCommandPalette(); return; }
+      if (event.key === "Tab" && paletteOpen) {
+        const palette = document.querySelector("[data-portal-command-palette]");
+        const focusables = commandPaletteFocusables(palette);
+        if (!focusables.length) return;
+        const first = focusables[0];
+        const last = focusables[focusables.length - 1];
+        if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+        else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+        return;
+      }
       const sidebar = document.querySelector("[data-portal-sidebar]");
       const opened = Boolean(sidebar && sidebar.classList.contains("is-open"));
       if (event.key === "Escape" && opened) { event.preventDefault(); closeSidebar(); return; }
@@ -3350,10 +3499,12 @@
     const main = document.querySelector("[data-portal-main]");
     const shell = document.querySelector("[data-portal-shell]");
     const mobileNav = document.querySelector("[data-portal-mobile-nav]");
+    const commandPalette = document.querySelector("[data-portal-command-palette]");
     if (!sidebar || !header || !main || !shell) return;
     // A hydration remount must not leave the responsive navigation in an
     // inert/modal state with a replaced header button behind it.
     if (sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
+    if (commandPalette && !commandPalette.hidden) closeCommandPalette({ restoreFocus: false });
     const isLanding = page.layout === "landing";
     const isAuth = page.layout === "auth";
     // The public landing and unauthenticated access screens intentionally
@@ -3371,6 +3522,10 @@
     if (mobileNav) {
       mobileNav.hidden = !showMobileNav;
       mobileNav.innerHTML = showMobileNav ? renderMobileNav(page) : "";
+    }
+    if (commandPalette && !showMobileNav) {
+      commandPalette.hidden = true;
+      commandPalette.innerHTML = "";
     }
     document.title = `${displayPageTitle(page, context)} · TOAN AAS`;
     sidebar.innerHTML = renderSidebar(page, context);
