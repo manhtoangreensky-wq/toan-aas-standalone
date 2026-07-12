@@ -24,7 +24,7 @@
   }
   const ALLOWED_STATES = new Set([
     "ready", "draft", "awaiting_confirm", "queued", "processing",
-    "completed", "failed", "failed_no_charge", "cancelled", "refunded", "review", "approved", "scheduled", "archived", "guarded", "disabled", "read_only", "error", "empty"
+    "completed", "failed", "failed_no_charge", "cancelled", "refunded", "review", "approved", "scheduled", "archived", "unavailable", "guarded", "disabled", "read_only", "error", "empty"
   ]);
 
   const STATE_LABELS = Object.freeze({
@@ -34,6 +34,7 @@
     queued: "Đã xếp hàng",
     processing: "Đang xử lý",
     completed: "Hoàn tất",
+    unavailable: "Không khả dụng",
     review: "Tự rà soát",
     approved: "Đã sẵn sàng",
     scheduled: "Đã xếp lịch",
@@ -63,7 +64,7 @@
   });
 
   const ICONS = Object.freeze({
-    dashboard: "⌂", account: "◉", wallet: "◌", jobs: "⌛", assets: "▣",
+    dashboard: "⌂", account: "◉", wallet: "◌", jobs: "⌛", assets: "▣", package: "▤",
     chat: "◒", prompt: "✦", image: "◩", video: "▶", voice: "◖", music: "♫",
     subtitle: "≡", document: "▤", support: "?", pricing: "◇", legal: "§",
     admin: "⌘", users: "◎", payments: "◈", providers: "◫", system: "⚙",
@@ -545,6 +546,10 @@
     layout: "project-center", type: "project-center", fields: [], action: "none", status: "ready",
     notes: ["Project và Studio Document thuộc Web account hiện tại, hoạt động ngay cả khi không liên kết Telegram.", "Đây là dữ liệu authoring do bạn tạo; không gọi Bot, provider, PayOS, ví Xu hoặc tự gắn nhãn output media."]
   });
+  customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
+    layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
+    notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
+  });
   customerPage("/asset-vault", "Asset Vault", "Lưu tệp riêng trong Web Workspace, tùy chọn gắn với Project và luôn tải qua signed session.", ICONS.assets, {
     layout: "asset-vault", type: "asset-vault", fields: [], action: "none", status: "ready",
     notes: ["Asset Vault là storage Web-owned, tách biệt hoàn toàn với Tài sản Bot và output job canonical.", "Tệp không có URL công khai, không nằm trong static/PWA cache và chỉ tải dạng attachment sau owner check."]
@@ -816,6 +821,12 @@
       projectDetail: source.projectDetail && typeof source.projectDetail === "object" ? source.projectDetail : {},
       projectDocuments: Array.isArray(source.projectDocuments) ? source.projectDocuments.slice(0, 100) : [],
       studioDocumentDetail: source.studioDocumentDetail && typeof source.studioDocumentDetail === "object" ? source.studioDocumentDetail : {},
+      // Project Packages are a separate Web-native private export surface.
+      // Keep their owner-scoped metadata through every render without mixing
+      // them into Bot jobs/assets or customer-uploaded Asset Vault files.
+      projectPackages: Array.isArray(source.projectPackages) ? source.projectPackages.slice(0, 100) : [],
+      projectPackageEvents: source.projectPackageEvents && typeof source.projectPackageEvents === "object" ? source.projectPackageEvents : {},
+      projectPackageEnabled: source.projectPackageEnabled === true,
       // Account activity is already a redacted, owner-scoped projection from
       // the Web API. Retain the bounded list during each presentation pass so
       // a successful signed read cannot be rendered as an empty history.
@@ -1005,7 +1016,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1327,7 +1338,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -1735,6 +1746,64 @@
     return `<section class="portal-card portal-card-pad portal-project-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(document.kind || "document"))}</span><h2 class="portal-card-title">${safeText(String(document.title || "Studio Document"))}</h2><p class="portal-card-subtitle">Phiên bản v${safeText(String(document.revision))} · chỉ Web account hiện tại có quyền đọc/sửa.</p></div>${badge(projectState(document.state))}</div><form id="${formId}" class="portal-form" data-portal-form data-portal-action="studio-document-update" data-portal-route="${safeText(page.routePath || page.path)}" data-studio-document-id="${safeText(String(document.id))}" data-studio-document-revision="${safeText(String(document.revision))}" novalidate><label class="portal-field"><span>Tên tài liệu</span><input class="portal-input" name="title" value="${safeText(String(document.title || ""))}" minlength="3" maxlength="160" required${canEdit ? "" : " disabled"}></label><label class="portal-field"><span>Nội dung</span><textarea class="portal-input portal-textarea" name="content" minlength="1" maxlength="12000" required${canEdit ? "" : " disabled"}>${safeText(String(document.content || ""))}</textarea><small>Mỗi lần lưu sẽ tạo revision mới; không lưu secret, token, mật khẩu hoặc số thẻ.</small></label><div class="portal-form-footer"><span class="portal-form-note">Optimistic versioning bảo vệ thay đổi đang mở khỏi ghi đè im lặng.</span><button class="portal-button portal-button--primary" type="submit"${canEdit ? "" : " disabled"}>Lưu phiên bản mới</button></div></form><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">Version history</span><h3>Lịch sử phiên bản</h3><p>Khôi phục luôn tạo revision mới; không xoá lịch sử cũ.</p></div></div>${versionList}</section></section>`;
   }
 
+  function validProjectPackageId(value) {
+    return validProjectId(value);
+  }
+
+  function projectPackageItems(context, projectId) {
+    return (Array.isArray(context.projectPackages) ? context.projectPackages : [])
+      .filter((item) => item && typeof item === "object" && validProjectPackageId(item.id)
+        && (!projectId || String(item.project_id || "") === String(projectId)))
+      .slice(0, 100);
+  }
+
+  function projectPackageDownloadPath(item) {
+    const packageId = String(item && item.id || "").trim();
+    return validProjectPackageId(packageId) && item && item.download_ready === true
+      ? `/api/v1/project-packages/${encodeURIComponent(packageId)}/download`
+      : "";
+  }
+
+  function renderProjectPackageCards(items, context) {
+    if (!items.length) return renderEmpty("Chưa có Project Package", "Khi bạn xuất package, Web App sẽ tạo một snapshot ZIP bất biến sau khi kiểm tra file private. Không tạo Job Bot hoặc delivery giả.", "▤");
+    return `<div class="portal-project-package-grid">${items.map((item) => {
+      const state = String(item.state || "guarded");
+      const downloadPath = projectPackageDownloadPath(item);
+      const events = context.projectPackageEvents && context.projectPackageEvents[String(item.id)];
+      const latestEvent = Array.isArray(events) && events.length ? events[events.length - 1] : null;
+      const filename = String(item.original_filename || "Project Package riêng tư");
+      return `<article class="portal-card portal-card-pad portal-project-package-card"><div class="portal-card-header"><div class="portal-project-package-title"><span class="portal-project-package-icon" aria-hidden="true">ZIP</span><div><h3 class="portal-card-title">${safeText(filename)}</h3><p class="portal-card-subtitle">${safeText(String(item.document_count || 0))} Studio Document · ${safeText(String(item.asset_reference_count || 0))} tham chiếu Asset Vault</p></div></div>${badge(state)}</div><dl class="portal-project-package-meta"><div><dt>Artifact</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : "Đang kiểm tra")}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div><div><dt>Luồng</dt><dd>${safeText(latestEvent && latestEvent.state ? String(latestEvent.state) : state)}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải ZIP <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">ZIP chỉ mở tải sau khi server xác minh byte size và integrity.</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderProjectPackagePanel(page, context, project) {
+    const canView = Boolean(context.capabilities && context.capabilities["project-package-view"] === true);
+    const canExport = Boolean(context.capabilities && context.capabilities["project-package-export"] === true && String(project.state || "active") === "active");
+    const canRefresh = Boolean(context.capabilities && context.capabilities["project-package-refresh"] === true);
+    if (!canView) {
+      return `<section class="portal-card portal-card-pad portal-project-package-panel"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.package)}</span><div><h2>Project Package đang ở chế độ an toàn</h2><p>Xuất ZIP chỉ bật khi môi trường có persistent storage riêng. Không có fallback sang static, browser storage, Asset Vault hoặc Job Bot.</p><div class="portal-state-meta"><span>Snapshot Web-owned</span><span>Không có provider call</span><span>Không có output giả</span></div></div></div></section>`;
+    }
+    const route = page.routePath || page.path;
+    const items = projectPackageItems(context, project.id);
+    return `<section class="portal-card portal-card-pad portal-project-package-panel"><div class="portal-card-header"><div><span class="portal-section-kicker">Immutable export</span><h2 class="portal-card-title">Project Package</h2><p class="portal-card-subtitle">Đóng gói snapshot hiện tại của Project và Studio Document thành ZIP riêng tư. Asset Vault chỉ hiện metadata tham chiếu, không sao chép source blob.</p></div>${badge(canExport ? "ready" : "guarded")}</div><div class="portal-project-package-actions"><div><strong>Snapshot → verify → attachment</strong><span>Package/Web export không tạo Job Bot, charge Xu, PayOS hay provider request.</span></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-refresh" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}"${canRefresh ? "" : " disabled"}>Làm mới</button><button class="portal-button portal-button--primary" type="button" data-portal-action="project-package-export" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" data-portal-confirm="Xuất Project Package sẽ tạo một snapshot ZIP bất biến của Studio Document hiện tại. Bạn có muốn tiếp tục?"${canExport ? "" : " disabled"}>Xuất Project Package</button></div></div><div class="portal-project-package-list">${renderProjectPackageCards(items, context)}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/project-packages">Xem tất cả Project Packages →</a></div></section>`;
+  }
+
+  function renderProjectPackages(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["project-package-view"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["project-package-refresh"] === true);
+    if (!canView) return `<article class="portal-page portal-project-packages">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.package)}</span><div><h2>Project Packages chưa được bật</h2><p>Capability này chỉ xuất hiện khi server có storage riêng, bền vững và không thuộc static/PWA cache.</p></div></div></section></article>`;
+    const items = projectPackageItems(context);
+    const projectNames = new Map((Array.isArray(context.projects) ? context.projects : [])
+      .filter((project) => project && validProjectId(project.id))
+      .map((project) => [String(project.id), String(project.title || "Project Web")]));
+    const cards = items.length ? `<div class="portal-project-package-grid">${items.map((item) => {
+      const downloadPath = projectPackageDownloadPath(item);
+      const projectName = projectNames.get(String(item.project_id || "")) || "Project riêng tư";
+      return `<article class="portal-card portal-card-pad portal-project-package-card"><div class="portal-card-header"><div class="portal-project-package-title"><span class="portal-project-package-icon" aria-hidden="true">ZIP</span><div><h2 class="portal-card-title">${safeText(projectName)}</h2><p class="portal-card-subtitle">${safeText(String(item.original_filename || "Project Package"))}</p></div></div>${badge(String(item.state || "guarded"))}</div><dl class="portal-project-package-meta"><div><dt>Documents</dt><dd>${safeText(String(item.document_count || 0))}</dd></div><div><dt>Artifact</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : "Đang kiểm tra")}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải ZIP <span aria-hidden="true">↓</span></a>` : `<a class="portal-button portal-button--quiet" href="/projects/${encodeURIComponent(String(item.project_id || ""))}">Mở Project</a>`}</div></article>`;
+    }).join("")}</div>` : renderEmpty("Chưa có Project Package", "Mở một Project để xuất snapshot ZIP đầu tiên. Tính năng này độc lập với Bot và không tạo charge hay provider request.", "▤");
+    return `<article class="portal-page portal-project-packages">${renderHero(page, context)}<section class="portal-project-package-intro"><div><span class="portal-section-kicker">Private Web exports</span><h2>Snapshot có thể giao, không trộn với Job Bot</h2><p>Mỗi Package là artifact ZIP bất biến tạo từ Project Web. File chỉ xuất hiện sau khi server kiểm tra storage riêng, byte size và integrity.</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>Package thuộc account</dd></div><div><dt>ZIP</dt><dd>Attachment riêng tư</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử Project Packages</h2><p class="portal-card-subtitle">Không phải Gói dịch vụ, Tài sản Bot hay output provider. Chỉ snapshot Web-owned được kiểm tra.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="project-package-refresh" data-portal-route="/project-packages"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${cards}</section></article>`;
+  }
+
   function renderProjectDetail(page, context) {
     const detail = context.projectDetail && typeof context.projectDetail === "object" ? context.projectDetail : {};
     const project = detail && validProjectId(detail.id) ? detail : null;
@@ -1743,7 +1812,7 @@
     const canCreate = Boolean(context.capabilities && context.capabilities["studio-document-create"] === true && String(project.state || "active") === "active");
     const route = page.routePath || page.path;
     const documentCards = documents.length ? `<div class="portal-project-document-list">${documents.map((document) => `<button type="button" class="portal-project-document" data-portal-action="studio-document-open" data-portal-route="${safeText(route)}" data-studio-document-id="${safeText(String(document.id))}"><span class="portal-project-document-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><span><strong>${safeText(String(document.title || "Studio Document"))}</strong><small>${safeText(String(document.kind || "document"))} · v${safeText(String(document.revision || 1))} · ${safeText(String(document.updated_at || "—"))}</small></span>${badge(projectState(document.state))}<b aria-hidden="true">→</b></button>`).join("")}</div>` : renderEmpty("Chưa có Studio Document", "Tạo brief, prompt, caption, kịch bản hoặc storyboard đầu tiên cho Project này.", "✦");
-    return `<article class="portal-page portal-project-detail">${renderHero(page, context)}<section class="portal-project-summary"><div><span class="portal-section-kicker">Independent Web Project</span><h2>${safeText(String(project.title || "Project"))}</h2><p>${safeText(String(project.summary || "Chưa có tóm tắt"))}</p></div><dl><div><dt>Mục tiêu</dt><dd>${safeText(String(project.objective || "Chưa đặt"))}</dd></div><div><dt>Trạng thái</dt><dd>${badge(projectState(project.state))}</dd></div><div><dt>Documents</dt><dd>${safeText(String(documents.length))}</dd></div></dl></section><div class="portal-project-detail-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Studio Documents</h2><p class="portal-card-subtitle">Tài liệu authoring được lưu/version trên Web, không cần Telegram hoặc Bot bridge.</p></div><a class="portal-button portal-button--quiet" href="/projects">Tất cả Project</a></div>${documentCards}<section class="portal-project-new-document"><div class="portal-section-heading"><div><span class="portal-section-kicker">Add document</span><h3>Thêm Studio Document</h3><p>Mỗi tài liệu mới bắt đầu ở v1 và có history riêng.</p></div></div><form class="portal-form" data-portal-form data-portal-action="studio-document-create" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" novalidate>${renderFields(projectDocumentFormFields(), canCreate, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">Không gọi provider hoặc tạo media output; đây là authoring workspace độc lập.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Thêm Studio Document</button></div></form></section></section>${renderStudioDocumentEditor(page, context, project)}</div></article>`;
+    return `<article class="portal-page portal-project-detail">${renderHero(page, context)}<section class="portal-project-summary"><div><span class="portal-section-kicker">Independent Web Project</span><h2>${safeText(String(project.title || "Project"))}</h2><p>${safeText(String(project.summary || "Chưa có tóm tắt"))}</p></div><dl><div><dt>Mục tiêu</dt><dd>${safeText(String(project.objective || "Chưa đặt"))}</dd></div><div><dt>Trạng thái</dt><dd>${badge(projectState(project.state))}</dd></div><div><dt>Documents</dt><dd>${safeText(String(documents.length))}</dd></div></dl></section><div class="portal-project-detail-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Studio Documents</h2><p class="portal-card-subtitle">Tài liệu authoring được lưu/version trên Web, không cần Telegram hoặc Bot bridge.</p></div><a class="portal-button portal-button--quiet" href="/projects">Tất cả Project</a></div>${documentCards}<section class="portal-project-new-document"><div class="portal-section-heading"><div><span class="portal-section-kicker">Add document</span><h3>Thêm Studio Document</h3><p>Mỗi tài liệu mới bắt đầu ở v1 và có history riêng.</p></div></div><form class="portal-form" data-portal-form data-portal-action="studio-document-create" data-portal-route="${safeText(route)}" data-project-id="${safeText(String(project.id))}" novalidate>${renderFields(projectDocumentFormFields(), canCreate, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">Không gọi provider hoặc tạo media output; đây là authoring workspace độc lập.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Thêm Studio Document</button></div></form></section></section>${renderStudioDocumentEditor(page, context, project)}</div>${renderProjectPackagePanel(page, context, project)}</article>`;
   }
 
   function renderFeatureFamily(page, context) {
@@ -3484,6 +3553,7 @@
       case "workspace-drafts": return renderWorkspaceDrafts(page, context);
       case "project-center": return renderProjectCenter(page, context);
       case "project-detail": return renderProjectDetail(page, context);
+      case "project-packages": return renderProjectPackages(page, context);
       case "feature-family": return renderFeatureFamily(page, context);
       case "wallet": return renderWallet(page, context);
       case "catalog": return renderCatalog(page, context);

@@ -155,6 +155,8 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.studio_document.restore": ("Khôi phục Studio Document", "Project Center"),
     "web.asset_vault.upload": ("Lưu tệp vào Asset Vault", "Web Workspace"),
     "web.asset_vault.archive": ("Lưu trữ tệp Asset Vault", "Web Workspace"),
+    "web.project_package.export": ("Xuất Project Package", "Web Workspace"),
+    "web.project_package.export_failed": ("Project Package chưa hoàn tất", "Web Workspace"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -354,6 +356,10 @@ def _flags() -> dict[str, bool]:
         # Asset Vault is a Web-owned private file surface. It is disabled by
         # default until a dedicated persistent volume is configured.
         "asset_vault_enabled": enabled("WEBAPP_ASSET_VAULT_ENABLED", False),
+        # Project Package creates a separate, immutable ZIP artifact from
+        # Web-owned Project data. It has its own persistent storage boundary
+        # and is never a Bot job, provider request, wallet or PayOS action.
+        "project_package_enabled": enabled("WEBAPP_PROJECT_PACKAGE_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 

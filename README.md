@@ -7,7 +7,7 @@ Production Web App for `app.toanaas.vn`.
 - Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
-- Customer portal: `/dashboard`, `/projects`, `/asset-vault`, `/wallet`, `/jobs`, `/assets`
+- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
 ## Required Railway production configuration
@@ -26,6 +26,12 @@ Production Web App for `app.toanaas.vn`.
   an absolute child directory of that volume in production (for example
   `/data/toanaas_webapp_assets`); the application refuses static, relative or
   out-of-volume storage. The vault never serves blobs from `/static`.
+- `WEBAPP_PROJECT_PACKAGE_ENABLED` defaults to `false`. Enable it only after
+  this **Web service** has a persistent volume. Its
+  `WEBAPP_PROJECT_PACKAGE_ROOT` must be a separate absolute child directory
+  of that volume (for example `/data/toanaas_webapp_project_packages`), never
+  `/static`, Asset Vault or its parent. See
+  [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 
 ## Authority boundary
 
@@ -64,6 +70,10 @@ private Bot bridge.
   Bot output library, provider staging area, wallet/PayOS surface, or proof
   that an engine generated an artifact. See
   [`ASSET_VAULT_CONTRACT.md`](docs/migration/ASSET_VAULT_CONTRACT.md).
+- `/project-packages` is a distinct Web-native private ZIP export of a
+  Project snapshot. It does not create a Bot job, copy Asset Vault source
+  blobs, change Xu, invoke PayOS or call a provider. See
+  [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially
 `PAYOS_WALLET_JOB_MAP.md`, `FEATURE_CONFIRM_CONTRACT.md`, and

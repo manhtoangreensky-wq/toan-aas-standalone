@@ -23,9 +23,15 @@ from fastapi.staticfiles import StaticFiles
 import copyfast_api
 import copyfast_assets
 import copyfast_auth
+import copyfast_project_packages
 import copyfast_projects
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
-from copyfast_db import ensure_asset_vault_persistence, ensure_copyfast_persistence, ensure_copyfast_schema
+from copyfast_db import (
+    ensure_asset_vault_persistence,
+    ensure_copyfast_persistence,
+    ensure_copyfast_schema,
+    ensure_project_package_persistence,
+)
 from copyfast_pages import ROOT, render_portal
 
 
@@ -56,7 +62,9 @@ async def lifespan(_: FastAPI):
     ensure_copyfast_persistence()
     ensure_copyfast_schema()
     ensure_asset_vault_persistence()
+    ensure_project_package_persistence()
     copyfast_assets.reconcile_asset_vault_storage()
+    copyfast_project_packages.reconcile_project_package_storage()
     yield
 
 
@@ -142,9 +150,19 @@ async def security_headers(request: Request, call_next):
         and request.url.path.endswith("/start")
     )
     asset_archive = request.method == "POST" and request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/archive")
+    project_package_export = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/projects/")
+        and request.url.path.endswith("/packages")
+    )
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
     if asset_archive:
         rate_limit = 30
+    if project_package_export:
+        # A package compiles a bounded ZIP from private authoring data. This
+        # separate gate prevents repeated browser clicks from becoming a disk
+        # amplification path even before the idempotency record is reached.
+        rate_limit = 20
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -163,9 +181,11 @@ async def security_headers(request: Request, call_next):
     # than the portal shell.  Do not overwrite it after the endpoint chose
     # no-referrer / sandbox delivery headers.
     private_asset_download = request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/download")
-    response.headers["Referrer-Policy"] = "no-referrer" if private_asset_download else "same-origin"
+    private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
+    private_download = private_asset_download or private_package_download
+    response.headers["Referrer-Policy"] = "no-referrer" if private_download else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = "sandbox" if private_asset_download else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
+    response.headers["Content-Security-Policy"] = "sandbox" if private_download else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     if request.url.path.startswith("/api/v1/") or request.url.path.startswith("/internal/"):
         response.headers["Cache-Control"] = "no-store, private"
     return response
@@ -197,6 +217,7 @@ app.include_router(copyfast_auth.router, prefix="/api/v1/auth")
 app.include_router(copyfast_api.router)
 app.include_router(copyfast_projects.router)
 app.include_router(copyfast_assets.router)
+app.include_router(copyfast_project_packages.router)
 
 
 @app.get("/health")
