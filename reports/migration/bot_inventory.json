@@ -2224,21 +2224,6 @@
       "token": "back_main"
     },
     {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 303,
-      "token": "btn_code"
-    },
-    {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 304,
-      "token": "btn_trend"
-    },
-    {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 303,
-      "token": "btn_voice"
-    },
-    {
       "file": "bot.py",
       "line": 91521,
       "token": "create_media|cancel"
@@ -11168,4726 +11153,5422 @@
       "handler": "handle_operator_menu_callback",
       "line": 129200,
       "pattern": "<catch-all>"
-    },
-    {
-      "file": "code hoàn chỉnh của claude.py",
-      "handler": "handle_callback",
-      "line": 316,
-      "pattern": "<catch-all>"
     }
   ],
   "commands": [
     {
+      "admin_guarded": true,
       "command": "add",
       "file": "bot.py",
       "handler": "cmd_admin_add",
       "line": 129093
     },
     {
-      "command": "add",
-      "file": "nháp 2.py",
-      "handler": "cmd_admin_add",
-      "line": 451
-    },
-    {
+      "admin_guarded": true,
       "command": "add_music",
       "file": "bot.py",
       "handler": "cmd_add_music",
       "line": 128712
     },
     {
+      "admin_guarded": true,
       "command": "add_music_status",
       "file": "bot.py",
       "handler": "cmd_add_music_status",
       "line": 128715
     },
     {
+      "admin_guarded": true,
       "command": "add_voice_to_video",
       "file": "bot.py",
       "handler": "cmd_add_voice_to_video",
       "line": 128713
     },
     {
+      "admin_guarded": true,
       "command": "addcal",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128866
     },
     {
+      "admin_guarded": true,
       "command": "addlink",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128854
     },
     {
+      "admin_guarded": true,
       "command": "addon_pricing_status",
       "file": "bot.py",
       "handler": "cmd_addon_pricing_status",
       "line": 128462
     },
     {
+      "admin_guarded": true,
       "command": "adjust_package",
       "file": "bot.py",
       "handler": "cmd_adjust_package",
       "line": 129129
     },
     {
+      "admin_guarded": true,
       "command": "admin",
       "file": "bot.py",
       "handler": "cmd_admin_center",
       "line": 129116
     },
     {
+      "admin_guarded": true,
       "command": "admin_api_roadmap",
       "file": "bot.py",
       "handler": "cmd_admin_api_roadmap",
       "line": 128513
     },
     {
+      "admin_guarded": true,
       "command": "admin_dashboard",
       "file": "bot.py",
       "handler": "cmd_admin_dashboard",
       "line": 128738
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_b2b",
       "file": "bot.py",
       "handler": "cmd_admin_doc_b2b",
       "line": 128414
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_b2c",
       "file": "bot.py",
       "handler": "cmd_admin_doc_b2c",
       "line": 128413
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_checklist",
       "file": "bot.py",
       "handler": "cmd_admin_doc_checklist",
       "line": 128412
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_converter",
       "file": "bot.py",
       "handler": "cmd_admin_doc_converter",
       "line": 128417
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_ip",
       "file": "bot.py",
       "handler": "cmd_admin_doc_ip",
       "line": 128410
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_nda",
       "file": "bot.py",
       "handler": "cmd_admin_doc_nda",
       "line": 128415
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_risk",
       "file": "bot.py",
       "handler": "cmd_admin_doc_risk",
       "line": 128411
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_sources",
       "file": "bot.py",
       "handler": "cmd_admin_doc_sources",
       "line": 128418
     },
     {
+      "admin_guarded": false,
       "command": "admin_doc_tax",
       "file": "bot.py",
       "handler": "cmd_admin_doc_tax",
       "line": 128416
     },
     {
+      "admin_guarded": true,
       "command": "admin_docs",
       "file": "bot.py",
       "handler": "cmd_admin_docs",
       "line": 128409
     },
     {
+      "admin_guarded": true,
       "command": "admin_gopy",
       "file": "bot.py",
       "handler": "cmd_admin_gopy",
       "line": 129094
     },
     {
-      "command": "admin_gopy",
-      "file": "nháp 2.py",
-      "handler": "cmd_admin_gopy",
-      "line": 452
-    },
-    {
+      "admin_guarded": true,
       "command": "admin_grant_plan",
       "file": "bot.py",
       "handler": "cmd_admin_grant_plan",
       "line": 128796
     },
     {
+      "admin_guarded": true,
       "command": "admin_help",
       "file": "bot.py",
       "handler": "cmd_admin_help",
       "line": 129117
     },
     {
+      "admin_guarded": true,
       "command": "admin_import_affiliate_inventory",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128859
     },
     {
+      "admin_guarded": true,
       "command": "admin_import_reference_video",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129020
     },
     {
+      "admin_guarded": true,
       "command": "admin_member_help",
       "file": "bot.py",
       "handler": "cmd_admin_member_help",
       "line": 129118
     },
     {
+      "admin_guarded": true,
       "command": "admin_payment_help",
       "file": "bot.py",
       "handler": "cmd_admin_payment_help",
       "line": 129119
     },
     {
+      "admin_guarded": true,
       "command": "admin_plan_status",
       "file": "bot.py",
       "handler": "cmd_admin_plan_status",
       "line": 128798
     },
     {
+      "admin_guarded": true,
       "command": "admin_report_month",
       "file": "bot.py",
       "handler": "cmd_admin_report_month",
       "line": 128744
     },
     {
+      "admin_guarded": true,
       "command": "admin_report_year",
       "file": "bot.py",
       "handler": "cmd_admin_report_year",
       "line": 128745
     },
     {
+      "admin_guarded": true,
       "command": "admin_revoke_plan",
       "file": "bot.py",
       "handler": "cmd_admin_revoke_plan",
       "line": 128797
     },
     {
+      "admin_guarded": true,
       "command": "admin_tools_help",
       "file": "bot.py",
       "handler": "cmd_admin_tools_help",
       "line": 129120
     },
     {
+      "admin_guarded": true,
       "command": "admin_trend_video",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129007
     },
     {
+      "admin_guarded": true,
       "command": "admin_whoami",
       "file": "bot.py",
       "handler": "cmd_admin_whoami",
       "line": 128428
     },
     {
+      "admin_guarded": false,
       "command": "ads_policy",
       "file": "bot.py",
       "handler": "cmd_ads_policy",
       "line": 128401
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_add",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128856
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_bundle",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128865
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_cockpit",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129077
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_decisions",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129085
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_ideas",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128863
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_import",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128858
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_match",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128862
     },
     {
+      "admin_guarded": false,
       "command": "affiliate_policy",
       "file": "bot.py",
       "handler": "cmd_affiliate_policy",
       "line": 128400
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_profile",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128861
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_related",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128864
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_report",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129084
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_scale",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129086
     },
     {
+      "admin_guarded": true,
       "command": "affiliate_seed",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128857
     },
     {
+      "admin_guarded": true,
       "command": "affiliates",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128860
     },
     {
+      "admin_guarded": true,
       "command": "ai_image",
       "file": "bot.py",
       "handler": "cmd_ai_image",
       "line": 128959
     },
     {
+      "admin_guarded": true,
       "command": "ai_image_edit",
       "file": "bot.py",
       "handler": "cmd_ai_image_edit",
       "line": 128960
     },
     {
+      "admin_guarded": false,
       "command": "ai_models",
       "file": "bot.py",
       "handler": "cmd_models",
       "line": 128811
     },
     {
+      "admin_guarded": false,
       "command": "ai_status",
       "file": "bot.py",
       "handler": "cmd_ai_status",
       "line": 128446
     },
     {
+      "admin_guarded": true,
       "command": "api_debug_status",
       "file": "bot.py",
       "handler": "cmd_api_debug_status",
       "line": 128516
     },
     {
+      "admin_guarded": true,
       "command": "api_recommend",
       "file": "bot.py",
       "handler": "cmd_api_recommend",
       "line": 128447
     },
     {
+      "admin_guarded": true,
       "command": "approve_job",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129009
     },
     {
+      "admin_guarded": true,
       "command": "approve_publish",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129051
     },
     {
+      "admin_guarded": true,
       "command": "approve_ready",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129052
     },
     {
+      "admin_guarded": true,
       "command": "asset_add",
       "file": "bot.py",
       "handler": "cmd_asset_add",
       "line": 129060
     },
     {
+      "admin_guarded": true,
       "command": "asset_send",
       "file": "bot.py",
       "handler": "cmd_asset_send",
       "line": 129062
     },
     {
+      "admin_guarded": true,
       "command": "assets",
       "file": "bot.py",
       "handler": "cmd_assets",
       "line": 129061
     },
     {
+      "admin_guarded": false,
       "command": "audio_enhance",
       "file": "bot.py",
       "handler": "cmd_audio_enhance",
       "line": 128690
     },
     {
+      "admin_guarded": true,
       "command": "audio_provider_curl",
       "file": "bot.py",
       "handler": "cmd_audio_provider_curl",
       "line": 128575
     },
     {
+      "admin_guarded": true,
       "command": "audio_provider_status",
       "file": "bot.py",
       "handler": "cmd_provider_status",
       "line": 128574
     },
     {
+      "admin_guarded": true,
       "command": "audio_public_open_safe",
       "file": "bot.py",
       "handler": "cmd_audio_public_open_safe",
       "line": 128573
     },
     {
+      "admin_guarded": true,
       "command": "audio_public_status",
       "file": "bot.py",
       "handler": "cmd_audio_public_status",
       "line": 128572
     },
     {
+      "admin_guarded": true,
       "command": "autopilot",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128915
     },
     {
+      "admin_guarded": false,
       "command": "avatar_video",
       "file": "bot.py",
       "handler": "cmd_avatar_video",
       "line": 128692
     },
     {
+      "admin_guarded": true,
       "command": "backup_db",
       "file": "bot.py",
       "handler": "cmd_backup_db",
       "line": 128431
     },
     {
+      "admin_guarded": false,
       "command": "banggia",
       "file": "bot.py",
       "handler": "cmd_pricing",
       "line": 128789
     },
     {
+      "admin_guarded": false,
       "command": "baogia",
       "file": "bot.py",
       "handler": "cmd_pricing",
       "line": 128790
     },
     {
+      "admin_guarded": false,
       "command": "beta_offer",
       "file": "bot.py",
       "handler": "cmd_beta_offer",
       "line": 128812
     },
     {
+      "admin_guarded": true,
       "command": "billing_bridge_status",
       "file": "bot.py",
       "handler": "cmd_billing_bridge_status",
       "line": 129106
     },
     {
+      "admin_guarded": true,
       "command": "billing_bridge_test",
       "file": "bot.py",
       "handler": "cmd_billing_bridge_test",
       "line": 129107
     },
     {
+      "admin_guarded": true,
       "command": "billing_report",
       "file": "bot.py",
       "handler": "cmd_billing_report",
       "line": 128748
     },
     {
+      "admin_guarded": true,
       "command": "billing_retry_apply",
       "file": "bot.py",
       "handler": "cmd_billing_retry_apply",
       "line": 129108
     },
     {
+      "admin_guarded": false,
       "command": "birthday",
       "file": "bot.py",
       "handler": "cmd_birthday",
       "line": 128779
     },
     {
+      "admin_guarded": true,
       "command": "birthday_approve",
       "file": "bot.py",
       "handler": "cmd_birthday_approve",
       "line": 128782
     },
     {
+      "admin_guarded": true,
       "command": "birthday_gift_check",
       "file": "bot.py",
       "handler": "cmd_birthday_gift_check",
       "line": 129139
     },
     {
+      "admin_guarded": true,
       "command": "birthday_gift_grant",
       "file": "bot.py",
       "handler": "cmd_birthday_gift_grant",
       "line": 129140
     },
     {
+      "admin_guarded": true,
       "command": "birthday_pending",
       "file": "bot.py",
       "handler": "cmd_birthday_pending",
       "line": 128781
     },
     {
+      "admin_guarded": true,
       "command": "birthday_reject",
       "file": "bot.py",
       "handler": "cmd_birthday_reject",
       "line": 128783
     },
     {
+      "admin_guarded": true,
       "command": "boss_video",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128895
     },
     {
+      "admin_guarded": true,
       "command": "brain",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128914
     },
     {
+      "admin_guarded": true,
       "command": "buy_plan",
       "file": "bot.py",
       "handler": "cmd_buy_plan",
       "line": 128795
     },
     {
+      "admin_guarded": true,
       "command": "calendar",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128868
     },
     {
+      "admin_guarded": true,
       "command": "calendar_plan",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128867
     },
     {
+      "admin_guarded": true,
       "command": "campaign",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128839
     },
     {
+      "admin_guarded": true,
       "command": "campaign_new",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128840
     },
     {
+      "admin_guarded": true,
       "command": "campaign_preset",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128842
     },
     {
+      "admin_guarded": false,
       "command": "campaign_report",
       "file": "bot.py",
       "handler": "cmd_campaign_report",
       "line": 129072
     },
     {
+      "admin_guarded": true,
       "command": "campaign_stats",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128845
     },
     {
+      "admin_guarded": true,
       "command": "campaigns",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128841
     },
     {
+      "admin_guarded": false,
       "command": "cancel",
       "file": "bot.py",
       "handler": "cmd_cancel",
       "line": 128936
     },
     {
+      "admin_guarded": true,
       "command": "channel_add",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128846
     },
     {
+      "admin_guarded": true,
       "command": "channel_publish_set",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128849
     },
     {
+      "admin_guarded": true,
       "command": "channel_router",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128848
     },
     {
+      "admin_guarded": true,
       "command": "channels",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128847
     },
     {
+      "admin_guarded": true,
       "command": "chat_ai_status",
       "file": "bot.py",
       "handler": "cmd_chat_ai_status",
       "line": 128990
     },
     {
+      "admin_guarded": false,
       "command": "chat_deep",
       "file": "bot.py",
       "handler": "cmd_chat_deep",
       "line": 128809
     },
     {
+      "admin_guarded": false,
       "command": "chat_deep_off",
       "file": "bot.py",
       "handler": "cmd_chat_deep_off",
       "line": 128807
     },
     {
+      "admin_guarded": false,
       "command": "chat_deep_on",
       "file": "bot.py",
       "handler": "cmd_chat_deep_on",
       "line": 128806
     },
     {
+      "admin_guarded": false,
       "command": "chat_pro",
       "file": "bot.py",
       "handler": "cmd_chat_pro",
       "line": 128808
     },
     {
+      "admin_guarded": false,
       "command": "chat_pro_off",
       "file": "bot.py",
       "handler": "cmd_chat_pro_off",
       "line": 128805
     },
     {
+      "admin_guarded": false,
       "command": "chat_pro_on",
       "file": "bot.py",
       "handler": "cmd_chat_pro_on",
       "line": 128804
     },
     {
+      "admin_guarded": true,
       "command": "checkpayos",
       "file": "bot.py",
       "handler": "cmd_checkpayos",
       "line": 129102
     },
     {
+      "admin_guarded": true,
       "command": "cleanup_temp_files",
       "file": "bot.py",
       "handler": "cmd_cleanup_temp_files",
       "line": 128649
     },
     {
-      "command": "clear",
-      "file": "code hoàn chỉnh của claude.py",
-      "handler": "cmd_clear",
-      "line": 315
-    },
-    {
+      "admin_guarded": true,
       "command": "clear_frame_video_error",
       "file": "bot.py",
       "handler": "cmd_clear_frame_video_error",
       "line": 128943
     },
     {
+      "admin_guarded": true,
       "command": "clear_job_lock",
       "file": "bot.py",
       "handler": "cmd_clear_job_lock",
       "line": 128511
     },
     {
+      "admin_guarded": true,
       "command": "clear_vip",
       "file": "bot.py",
       "handler": "cmd_clear_vip",
       "line": 129136
     },
     {
+      "admin_guarded": false,
       "command": "commands",
       "file": "bot.py",
       "handler": "cmd_help",
       "line": 128386
     },
     {
+      "admin_guarded": true,
       "command": "comment_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129048
     },
     {
+      "admin_guarded": false,
       "command": "community",
       "file": "bot.py",
       "handler": "cmd_hub",
       "line": 128405
     },
     {
+      "admin_guarded": true,
       "command": "compose_video",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129044
     },
     {
+      "admin_guarded": false,
       "command": "compress_pdf",
       "file": "bot.py",
       "handler": "cmd_compress_pdf",
       "line": 128682
     },
     {
+      "admin_guarded": false,
       "command": "content_policy",
       "file": "bot.py",
       "handler": "cmd_content_policy",
       "line": 128399
     },
     {
+      "admin_guarded": true,
       "command": "costs",
       "file": "bot.py",
       "handler": "cmd_costs",
       "line": 128736
     },
     {
+      "admin_guarded": false,
       "command": "create_media",
       "file": "bot.py",
       "handler": "cmd_create_media",
       "line": 128937
     },
     {
+      "admin_guarded": false,
       "command": "creative_flow",
       "file": "bot.py",
       "handler": "cmd_creative_flow",
       "line": 128956
     },
     {
+      "admin_guarded": true,
       "command": "creative_report",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128926
     },
     {
+      "admin_guarded": true,
       "command": "creative_select",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128925
     },
     {
+      "admin_guarded": true,
       "command": "creative_test",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128923
     },
     {
+      "admin_guarded": true,
       "command": "creative_variants",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128924
     },
     {
+      "admin_guarded": true,
       "command": "customer_surface",
       "file": "bot.py",
       "handler": "cmd_customer_surface",
       "line": 128426
     },
     {
+      "admin_guarded": true,
       "command": "dashboard",
       "file": "bot.py",
       "handler": "cmd_dashboard",
       "line": 129115
     },
     {
+      "admin_guarded": false,
       "command": "data_delete",
       "file": "bot.py",
       "handler": "cmd_data_delete",
       "line": 128407
     },
     {
+      "admin_guarded": true,
       "command": "data_status",
       "file": "bot.py",
       "handler": "cmd_data_status",
       "line": 128420
     },
     {
+      "admin_guarded": true,
       "command": "deduct",
       "file": "bot.py",
       "handler": "cmd_admin_deduct",
       "line": 129131
     },
     {
+      "admin_guarded": false,
       "command": "dieukhoan",
       "file": "bot.py",
       "handler": "cmd_legal",
       "line": 128392
     },
     {
+      "admin_guarded": false,
       "command": "dieukhoan_xu",
       "file": "bot.py",
       "handler": "cmd_dieukhoan_xu",
       "line": 128395
     },
     {
+      "admin_guarded": true,
       "command": "distribution_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129047
     },
     {
+      "admin_guarded": false,
       "command": "doc_tools",
       "file": "bot.py",
       "handler": "cmd_doc_tools",
       "line": 128678
     },
     {
+      "admin_guarded": true,
       "command": "dub_public_close",
       "file": "bot.py",
       "handler": "cmd_video_dub_public_close",
       "line": 128598
     },
     {
+      "admin_guarded": true,
       "command": "dub_public_open",
       "file": "bot.py",
       "handler": "cmd_video_dub_public_open",
       "line": 128597
     },
     {
+      "admin_guarded": true,
       "command": "dub_quote_test",
       "file": "bot.py",
       "handler": "cmd_dub_quote_test",
       "line": 128458
     },
     {
+      "admin_guarded": true,
       "command": "dub_status",
       "file": "bot.py",
       "handler": "cmd_subtitle_dub_status",
       "line": 128564
     },
     {
+      "admin_guarded": false,
       "command": "dubbing_help",
       "file": "bot.py",
       "handler": "cmd_dubbing_help",
       "line": 129004
     },
     {
+      "admin_guarded": true,
       "command": "duyet",
       "file": "bot.py",
       "handler": "cmd_duyet",
       "line": 129101
     },
     {
-      "command": "duyet",
-      "file": "nháp 2.py",
-      "handler": "cmd_duyet",
-      "line": 453
-    },
-    {
+      "admin_guarded": true,
       "command": "emergency_lock",
       "file": "bot.py",
       "handler": "cmd_emergency_lock",
       "line": 128432
     },
     {
+      "admin_guarded": true,
       "command": "emergency_status",
       "file": "bot.py",
       "handler": "cmd_emergency_status",
       "line": 128434
     },
     {
+      "admin_guarded": true,
       "command": "emergency_unlock",
       "file": "bot.py",
       "handler": "cmd_emergency_unlock",
       "line": 128433
     },
     {
+      "admin_guarded": false,
       "command": "en_vi",
       "file": "bot.py",
       "handler": "cmd_en_vi",
       "line": 128727
     },
     {
+      "admin_guarded": true,
       "command": "expense_add",
       "file": "bot.py",
       "handler": "cmd_expense_add",
       "line": 128754
     },
     {
+      "admin_guarded": true,
       "command": "expense_add_pre",
       "file": "bot.py",
       "handler": "cmd_expense_add_pre",
       "line": 128755
     },
     {
+      "admin_guarded": true,
       "command": "expense_delete",
       "file": "bot.py",
       "handler": "cmd_expense_delete",
       "line": 128757
     },
     {
+      "admin_guarded": true,
       "command": "expense_edit",
       "file": "bot.py",
       "handler": "cmd_expense_edit",
       "line": 128756
     },
     {
+      "admin_guarded": true,
       "command": "expense_report",
       "file": "bot.py",
       "handler": "cmd_expense_report",
       "line": 128752
     },
     {
+      "admin_guarded": true,
       "command": "export_accounting_month",
       "file": "bot.py",
       "handler": "cmd_export_accounting_month",
       "line": 128746
     },
     {
+      "admin_guarded": true,
       "command": "export_accounting_year",
       "file": "bot.py",
       "handler": "cmd_export_accounting_year",
       "line": 128747
     },
     {
+      "admin_guarded": false,
       "command": "export_report",
       "file": "bot.py",
       "handler": "cmd_campaign_report",
       "line": 129073
     },
     {
+      "admin_guarded": true,
       "command": "feature_set",
       "file": "bot.py",
       "handler": "cmd_feature_set",
       "line": 128449
     },
     {
+      "admin_guarded": true,
       "command": "feature_status",
       "file": "bot.py",
       "handler": "cmd_feature_status",
       "line": 128448
     },
     {
+      "admin_guarded": true,
       "command": "feedback",
       "file": "bot.py",
       "handler": "cmd_admin_gopy",
       "line": 129095
     },
     {
+      "admin_guarded": true,
       "command": "film",
       "file": "bot.py",
       "handler": "cmd_film",
       "line": 128928
     },
     {
+      "admin_guarded": true,
       "command": "film_approve",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129016
     },
     {
+      "admin_guarded": true,
       "command": "film_blueprint",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129011
     },
     {
+      "admin_guarded": true,
       "command": "film_project_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129012
     },
     {
+      "admin_guarded": true,
       "command": "film_review",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129014
     },
     {
+      "admin_guarded": true,
       "command": "film_rewrite",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129015
     },
     {
+      "admin_guarded": true,
       "command": "film_series",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129013
     },
     {
+      "admin_guarded": true,
       "command": "finance_dashboard",
       "file": "bot.py",
       "handler": "cmd_finance_dashboard",
       "line": 128750
     },
     {
+      "admin_guarded": true,
       "command": "finance_export",
       "file": "bot.py",
       "handler": "cmd_finance_export",
       "line": 128758
     },
     {
+      "admin_guarded": true,
       "command": "frame_video_status",
       "file": "bot.py",
       "handler": "cmd_frame_video_status",
       "line": 128942
     },
     {
+      "admin_guarded": true,
       "command": "free_hub_prompt_test",
       "file": "bot.py",
       "handler": "cmd_free_hub_prompt_test",
       "line": 128444
     },
     {
+      "admin_guarded": true,
       "command": "free_hub_status",
       "file": "bot.py",
       "handler": "cmd_free_hub_status",
       "line": 128443
     },
     {
+      "admin_guarded": true,
       "command": "free_provider_status",
       "file": "bot.py",
       "handler": "cmd_free_provider_status",
       "line": 128445
     },
     {
+      "admin_guarded": false,
       "command": "freeze_payments",
       "file": "bot.py",
       "handler": "cmd_freeze_payments",
       "line": 128437
     },
     {
+      "admin_guarded": true,
       "command": "freeze_status",
       "file": "bot.py",
       "handler": "cmd_freeze_status",
       "line": 128505
     },
     {
+      "admin_guarded": false,
       "command": "freeze_tools",
       "file": "bot.py",
       "handler": "cmd_freeze_tools",
       "line": 128439
     },
     {
+      "admin_guarded": true,
       "command": "freeze_video",
       "file": "bot.py",
       "handler": "cmd_freeze_video",
       "line": 128506
     },
     {
+      "admin_guarded": true,
       "command": "fx_price_test",
       "file": "bot.py",
       "handler": "cmd_fx_price_test",
       "line": 129100
     },
     {
+      "admin_guarded": false,
       "command": "gift",
       "file": "bot.py",
       "handler": "cmd_gift",
       "line": 128825
     },
     {
+      "admin_guarded": true,
       "command": "gift_create",
       "file": "bot.py",
       "handler": "cmd_gift_create",
       "line": 128827
     },
     {
+      "admin_guarded": true,
       "command": "gift_disable",
       "file": "bot.py",
       "handler": "cmd_gift_disable",
       "line": 128831
     },
     {
+      "admin_guarded": true,
       "command": "gift_list",
       "file": "bot.py",
       "handler": "cmd_gift_list",
       "line": 128829
     },
     {
+      "admin_guarded": true,
       "command": "gift_request_list",
       "file": "bot.py",
       "handler": "cmd_gift_request_list",
       "line": 128830
     },
     {
+      "admin_guarded": true,
       "command": "gift_seed_beta",
       "file": "bot.py",
       "handler": "cmd_gift_seed_beta",
       "line": 128828
     },
     {
+      "admin_guarded": true,
       "command": "goal_audit",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128881
     },
     {
+      "admin_guarded": false,
       "command": "goi_beta",
       "file": "bot.py",
       "handler": "cmd_beta_offer",
       "line": 128813
     },
     {
+      "admin_guarded": false,
       "command": "goi_thang",
       "file": "bot.py",
       "handler": "cmd_pricing_plans",
       "line": 128794
     },
     {
+      "admin_guarded": false,
       "command": "gopy",
       "file": "bot.py",
       "handler": "cmd_gopy",
       "line": 129092
     },
     {
-      "command": "gopy",
-      "file": "nháp 2.py",
-      "handler": "cmd_gopy",
-      "line": 450
-    },
-    {
+      "admin_guarded": true,
       "command": "grant_combo",
       "file": "bot.py",
       "handler": "cmd_grant_combo",
       "line": 129125
     },
     {
+      "admin_guarded": true,
       "command": "grant_monthly",
       "file": "bot.py",
       "handler": "cmd_grant_monthly",
       "line": 129126
     },
     {
+      "admin_guarded": true,
       "command": "grant_storage",
       "file": "bot.py",
       "handler": "cmd_grant_storage",
       "line": 129127
     },
     {
+      "admin_guarded": true,
       "command": "grant_tier_promo",
       "file": "bot.py",
       "handler": "cmd_grant_tier_promo",
       "line": 129137
     },
     {
+      "admin_guarded": true,
       "command": "growth",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129087
     },
     {
+      "admin_guarded": false,
       "command": "growth_ai",
       "file": "bot.py",
       "handler": "cmd_growth_ai",
       "line": 129071
     },
     {
+      "admin_guarded": true,
       "command": "growth_loop",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129083
     },
     {
+      "admin_guarded": false,
       "command": "guide",
       "file": "bot.py",
       "handler": "cmd_huongdan",
       "line": 128388
     },
     {
+      "admin_guarded": true,
       "command": "guide_debug",
       "file": "bot.py",
       "handler": "cmd_guide_debug",
       "line": 128425
     },
     {
+      "admin_guarded": true,
       "command": "handoff",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128920
     },
     {
+      "admin_guarded": false,
       "command": "hdsd",
       "file": "bot.py",
       "handler": "cmd_huongdan",
       "line": 128389
     },
     {
+      "admin_guarded": true,
       "command": "head_brain",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128892
     },
     {
+      "admin_guarded": true,
       "command": "head_run",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128893
     },
     {
+      "admin_guarded": false,
       "command": "help",
       "file": "bot.py",
       "handler": "cmd_help",
       "line": 128385
     },
     {
+      "admin_guarded": false,
       "command": "hub",
       "file": "bot.py",
       "handler": "cmd_hub",
       "line": 128404
     },
     {
+      "admin_guarded": false,
       "command": "huongdan",
       "file": "bot.py",
       "handler": "cmd_huongdan",
       "line": 128387
     },
     {
+      "admin_guarded": true,
       "command": "image_edit_public_close",
       "file": "bot.py",
       "handler": "cmd_image_edit_public_close",
       "line": 128608
     },
     {
+      "admin_guarded": true,
       "command": "image_edit_public_open",
       "file": "bot.py",
       "handler": "cmd_image_edit_public_open",
       "line": 128607
     },
     {
+      "admin_guarded": true,
       "command": "image_edit_status",
       "file": "bot.py",
       "handler": "cmd_image_edit_status",
       "line": 128989
     },
     {
+      "admin_guarded": false,
       "command": "image_enhance",
       "file": "bot.py",
       "handler": "cmd_image_enhance",
       "line": 128689
     },
     {
+      "admin_guarded": true,
       "command": "image_pack",
       "file": "bot.py",
       "handler": "cmd_image_pack",
       "line": 128948
     },
     {
+      "admin_guarded": true,
       "command": "image_pricing_status",
       "file": "bot.py",
       "handler": "cmd_image_pricing_status",
       "line": 128463
     },
     {
+      "admin_guarded": false,
       "command": "image_prompt",
       "file": "bot.py",
       "handler": "cmd_image_prompt",
       "line": 128947
     },
     {
+      "admin_guarded": true,
       "command": "image_provider_status",
       "file": "bot.py",
       "handler": "cmd_image_provider_status",
       "line": 128497
     },
     {
+      "admin_guarded": false,
       "command": "image_story",
       "file": "bot.py",
       "handler": "cmd_image_story",
       "line": 128949
     },
     {
+      "admin_guarded": false,
       "command": "image_story_prompt",
       "file": "bot.py",
       "handler": "cmd_image_story",
       "line": 128950
     },
     {
+      "admin_guarded": true,
       "command": "image_story_render",
       "file": "bot.py",
       "handler": "cmd_image_story_render",
       "line": 128955
     },
     {
+      "admin_guarded": false,
       "command": "image_studio",
       "file": "bot.py",
       "handler": "cmd_image_studio",
       "line": 128946
     },
     {
+      "admin_guarded": true,
       "command": "image_to_music_video",
       "file": "bot.py",
       "handler": "cmd_image_to_music_video",
       "line": 128714
     },
     {
+      "admin_guarded": false,
       "command": "image_to_pdf",
       "file": "bot.py",
       "handler": "cmd_image_to_pdf",
       "line": 128680
     },
     {
+      "admin_guarded": false,
       "command": "image_to_story_pack",
       "file": "bot.py",
       "handler": "cmd_image_story",
       "line": 128953
     },
     {
+      "admin_guarded": true,
       "command": "image_to_video_pack",
       "file": "bot.py",
       "handler": "cmd_image_to_video_pack",
       "line": 128958
     },
     {
+      "admin_guarded": false,
       "command": "image_tools",
       "file": "bot.py",
       "handler": "cmd_image_tools",
       "line": 128945
     },
     {
+      "admin_guarded": false,
       "command": "image_upscale",
       "file": "bot.py",
       "handler": "cmd_upscale_image",
       "line": 128688
     },
     {
+      "admin_guarded": false,
       "command": "image_variations",
       "file": "bot.py",
       "handler": "cmd_image_studio",
       "line": 128954
     },
     {
+      "admin_guarded": true,
       "command": "internal_docs",
       "file": "bot.py",
       "handler": "cmd_internal_docs",
       "line": 128650
     },
     {
+      "admin_guarded": false,
       "command": "invite",
       "file": "bot.py",
       "handler": "cmd_invite",
       "line": 128833
     },
     {
+      "admin_guarded": true,
       "command": "ip_notice",
       "file": "bot.py",
       "handler": "cmd_ip_notice",
       "line": 128423
     },
     {
+      "admin_guarded": false,
       "command": "ja_vi",
       "file": "bot.py",
       "handler": "cmd_ja_vi",
       "line": 128729
     },
     {
+      "admin_guarded": true,
       "command": "job_context",
       "file": "bot.py",
       "handler": "cmd_job_context",
       "line": 129065
     },
     {
+      "admin_guarded": true,
       "command": "job_ready",
       "file": "bot.py",
       "handler": "cmd_job_ready",
       "line": 129066
     },
     {
+      "admin_guarded": true,
       "command": "job_report",
       "file": "bot.py",
       "handler": "cmd_job_report",
       "line": 129064
     },
     {
+      "admin_guarded": true,
       "command": "job_status",
       "file": "bot.py",
       "handler": "cmd_job_status",
       "line": 128509
     },
     {
+      "admin_guarded": false,
       "command": "kenh_chinh_thuc",
       "file": "bot.py",
       "handler": "cmd_official_channels",
       "line": 128403
     },
     {
+      "admin_guarded": true,
       "command": "key4u_set_manual_balance",
       "file": "bot.py",
       "handler": "cmd_key4u_set_manual_balance",
       "line": 128501
     },
     {
+      "admin_guarded": true,
       "command": "key4u_status",
       "file": "bot.py",
       "handler": "cmd_key4u_status",
       "line": 128454
     },
     {
+      "admin_guarded": true,
       "command": "key4u_suno_job",
       "file": "bot.py",
       "handler": "cmd_key4u_suno_job",
       "line": 128547
     },
     {
+      "admin_guarded": true,
       "command": "key4u_usage",
       "file": "bot.py",
       "handler": "cmd_key4u_usage",
       "line": 128500
     },
     {
+      "admin_guarded": true,
       "command": "key4u_video_job",
       "file": "bot.py",
       "handler": "cmd_key4u_video_job",
       "line": 128540
     },
     {
+      "admin_guarded": false,
       "command": "khuyenmai",
       "file": "bot.py",
       "handler": "cmd_promo_guide",
       "line": 128816
     },
     {
+      "admin_guarded": false,
       "command": "ko_vi",
       "file": "bot.py",
       "handler": "cmd_ko_vi",
       "line": 128730
     },
     {
+      "admin_guarded": false,
       "command": "lang",
       "file": "bot.py",
       "handler": "cmd_language",
       "line": 128381
     },
     {
+      "admin_guarded": false,
       "command": "language",
       "file": "bot.py",
       "handler": "cmd_language",
       "line": 128380
     },
     {
+      "admin_guarded": true,
       "command": "ledger_user",
       "file": "bot.py",
       "handler": "cmd_ledger_user",
       "line": 129123
     },
     {
+      "admin_guarded": false,
       "command": "legal",
       "file": "bot.py",
       "handler": "cmd_legal",
       "line": 128390
     },
     {
+      "admin_guarded": true,
       "command": "legal_export",
       "file": "bot.py",
       "handler": "cmd_legal_export",
       "line": 128424
     },
     {
+      "admin_guarded": true,
       "command": "links",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128855
     },
     {
+      "admin_guarded": false,
       "command": "linkweb",
       "file": "bot.py",
       "handler": "cmd_linkweb",
       "line": 128378
     },
     {
+      "admin_guarded": true,
       "command": "local_job",
       "file": "bot.py",
       "handler": "cmd_local_job",
       "line": 128640
     },
     {
+      "admin_guarded": true,
       "command": "local_jobs",
       "file": "bot.py",
       "handler": "cmd_local_jobs",
       "line": 128639
     },
     {
+      "admin_guarded": true,
       "command": "local_status",
       "file": "bot.py",
       "handler": "cmd_local_status",
       "line": 128634
     },
     {
+      "admin_guarded": true,
       "command": "local_worker_ping",
       "file": "bot.py",
       "handler": "cmd_local_worker_ping",
       "line": 128636
     },
     {
+      "admin_guarded": true,
       "command": "local_worker_status",
       "file": "bot.py",
       "handler": "cmd_local_status",
       "line": 128635
     },
     {
+      "admin_guarded": false,
       "command": "long_video_status",
       "file": "bot.py",
       "handler": "cmd_long_video_status",
       "line": 128941
     },
     {
+      "admin_guarded": false,
       "command": "magiamgia",
       "file": "bot.py",
       "handler": "cmd_promo",
       "line": 128815
     },
     {
+      "admin_guarded": false,
       "command": "maintenance_off",
       "file": "bot.py",
       "handler": "cmd_maintenance_off",
       "line": 128436
     },
     {
+      "admin_guarded": false,
       "command": "maintenance_on",
       "file": "bot.py",
       "handler": "cmd_maintenance_on",
       "line": 128435
     },
     {
+      "admin_guarded": true,
       "command": "maintenance_status",
       "file": "bot.py",
       "handler": "cmd_maintenance_status",
       "line": 128502
     },
     {
+      "admin_guarded": true,
       "command": "make_video",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128917
     },
     {
+      "admin_guarded": true,
       "command": "manifest",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129026
     },
     {
+      "admin_guarded": true,
       "command": "manifest_handoff",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129028
     },
     {
+      "admin_guarded": true,
       "command": "manifests",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129027
     },
     {
+      "admin_guarded": true,
       "command": "mark_payos_test",
       "file": "bot.py",
       "handler": "cmd_mark_payos_test",
       "line": 128770
     },
     {
+      "admin_guarded": true,
       "command": "mark_published",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129067
     },
     {
+      "admin_guarded": true,
       "command": "media_factory",
       "file": "bot.py",
       "handler": "cmd_media_factory",
       "line": 128962
     },
     {
+      "admin_guarded": false,
       "command": "media_library",
       "file": "bot.py",
       "handler": "cmd_media_library",
       "line": 128706
     },
     {
+      "admin_guarded": false,
       "command": "member",
       "file": "bot.py",
       "handler": "cmd_member",
       "line": 128774
     },
     {
+      "admin_guarded": false,
       "command": "member_policy",
       "file": "bot.py",
       "handler": "cmd_member_policy",
       "line": 128800
     },
     {
+      "admin_guarded": true,
       "command": "member_user",
       "file": "bot.py",
       "handler": "cmd_member_user",
       "line": 129122
     },
     {
+      "admin_guarded": false,
       "command": "memory",
       "file": "bot.py",
       "handler": "cmd_memory",
       "line": 128644
     },
     {
+      "admin_guarded": true,
       "command": "memory_admin",
       "file": "bot.py",
       "handler": "cmd_memory_admin",
       "line": 128676
     },
     {
+      "admin_guarded": false,
       "command": "memory_plan",
       "file": "bot.py",
       "handler": "cmd_memory_plan",
       "line": 128645
     },
     {
+      "admin_guarded": true,
       "command": "memory_reminder_admin",
       "file": "bot.py",
       "handler": "cmd_memory_reminder_admin",
       "line": 128677
     },
     {
+      "admin_guarded": true,
       "command": "memory_set_plan",
       "file": "bot.py",
       "handler": "cmd_memory_set_plan",
       "line": 128675
     },
     {
+      "admin_guarded": false,
       "command": "memory_status",
       "file": "bot.py",
       "handler": "cmd_memory_status",
       "line": 128646
     },
     {
+      "admin_guarded": false,
       "command": "menu",
       "file": "bot.py",
       "handler": "cmd_menu",
       "line": 128379
     },
     {
+      "admin_guarded": false,
       "command": "merge_pdf",
       "file": "bot.py",
       "handler": "cmd_merge_pdf",
       "line": 128684
     },
     {
+      "admin_guarded": true,
       "command": "minimax_status",
       "file": "bot.py",
       "handler": "cmd_minimax_status",
       "line": 128582
     },
     {
+      "admin_guarded": true,
       "command": "minimax_voice_job",
       "file": "bot.py",
       "handler": "cmd_minimax_voice_job",
       "line": 128587
     },
     {
+      "admin_guarded": true,
       "command": "mission_add",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128896
     },
     {
+      "admin_guarded": true,
       "command": "mission_claim",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128898
     },
     {
+      "admin_guarded": true,
       "command": "mission_complete",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128902
     },
     {
+      "admin_guarded": true,
       "command": "mission_prompt",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128899
     },
     {
+      "admin_guarded": true,
       "command": "mission_run",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128900
     },
     {
+      "admin_guarded": true,
       "command": "mission_workorders",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128901
     },
     {
+      "admin_guarded": true,
       "command": "missions",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128897
     },
     {
+      "admin_guarded": true,
       "command": "mmo",
       "file": "bot.py",
       "handler": "cmd_mmo",
       "line": 128838
     },
     {
+      "admin_guarded": false,
       "command": "mode",
       "file": "bot.py",
       "handler": "cmd_mode",
       "line": 128803
     },
     {
+      "admin_guarded": false,
       "command": "models",
       "file": "bot.py",
       "handler": "cmd_models",
       "line": 128810
     },
     {
+      "admin_guarded": true,
       "command": "money_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129076
     },
     {
+      "admin_guarded": false,
       "command": "music",
       "file": "bot.py",
       "handler": "cmd_music_tools",
       "line": 128693
     },
     {
+      "admin_guarded": true,
       "command": "music_bg",
       "file": "bot.py",
       "handler": "cmd_music_bg",
       "line": 128710
     },
     {
+      "admin_guarded": true,
       "command": "music_engine_status",
       "file": "bot.py",
       "handler": "cmd_music_engine_status",
       "line": 128571
     },
     {
+      "admin_guarded": false,
       "command": "music_library",
       "file": "bot.py",
       "handler": "cmd_music_library",
       "line": 128696
     },
     {
+      "admin_guarded": false,
       "command": "music_policy",
       "file": "bot.py",
       "handler": "cmd_music_policy",
       "line": 128709
     },
     {
+      "admin_guarded": false,
       "command": "music_prompt",
       "file": "bot.py",
       "handler": "cmd_music_prompt",
       "line": 128695
     },
     {
+      "admin_guarded": true,
       "command": "music_provider_status",
       "file": "bot.py",
       "handler": "cmd_music_provider_status",
       "line": 128999
     },
     {
+      "admin_guarded": true,
       "command": "music_public_close",
       "file": "bot.py",
       "handler": "cmd_suno_public_close",
       "line": 128581
     },
     {
+      "admin_guarded": true,
       "command": "music_public_open_safe",
       "file": "bot.py",
       "handler": "cmd_music_public_open_safe",
       "line": 128580
     },
     {
+      "admin_guarded": true,
       "command": "music_public_status",
       "file": "bot.py",
       "handler": "cmd_music_provider_status",
       "line": 128570
     },
     {
+      "admin_guarded": true,
       "command": "music_quote_test",
       "file": "bot.py",
       "handler": "cmd_music_quote_test",
       "line": 128459
     },
     {
+      "admin_guarded": true,
       "command": "music_song",
       "file": "bot.py",
       "handler": "cmd_music_song",
       "line": 128711
     },
     {
+      "admin_guarded": true,
       "command": "music_status",
       "file": "bot.py",
       "handler": "cmd_music_status",
       "line": 128569
     },
     {
+      "admin_guarded": false,
       "command": "music_tools",
       "file": "bot.py",
       "handler": "cmd_music_tools",
       "line": 128694
     },
     {
+      "admin_guarded": false,
       "command": "my_promos",
       "file": "bot.py",
       "handler": "cmd_my_promos",
       "line": 128778
     },
     {
+      "admin_guarded": false,
       "command": "mydata",
       "file": "bot.py",
       "handler": "cmd_mydata",
       "line": 128408
     },
     {
+      "admin_guarded": false,
       "command": "myid",
       "file": "bot.py",
       "handler": "cmd_myid",
       "line": 128784
     },
     {
+      "admin_guarded": false,
       "command": "naptien",
       "file": "bot.py",
       "handler": "cmd_naptien",
       "line": 128787
     },
     {
-      "command": "naptien",
-      "file": "nháp 2.py",
-      "handler": "cmd_naptien",
-      "line": 449
-    },
-    {
+      "admin_guarded": true,
       "command": "next_task",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129031
     },
     {
+      "admin_guarded": false,
       "command": "nhanqua",
       "file": "bot.py",
       "handler": "cmd_gift",
       "line": 128826
     },
     {
+      "admin_guarded": false,
       "command": "note",
       "file": "bot.py",
       "handler": "cmd_note",
       "line": 128652
     },
     {
+      "admin_guarded": true,
       "command": "note_ai",
       "file": "bot.py",
       "handler": "cmd_note_ai",
       "line": 128653
     },
     {
+      "admin_guarded": false,
       "command": "note_archive",
       "file": "bot.py",
       "handler": "cmd_note_archive",
       "line": 128659
     },
     {
+      "admin_guarded": false,
       "command": "note_category",
       "file": "bot.py",
       "handler": "cmd_note_category",
       "line": 128661
     },
     {
+      "admin_guarded": false,
       "command": "note_delete",
       "file": "bot.py",
       "handler": "cmd_note_delete",
       "line": 128658
     },
     {
+      "admin_guarded": false,
       "command": "note_priority",
       "file": "bot.py",
       "handler": "cmd_note_priority",
       "line": 128660
     },
     {
+      "admin_guarded": false,
       "command": "note_remind",
       "file": "bot.py",
       "handler": "cmd_note_remind",
       "line": 128674
     },
     {
+      "admin_guarded": false,
       "command": "note_tags",
       "file": "bot.py",
       "handler": "cmd_note_tags",
       "line": 128657
     },
     {
+      "admin_guarded": false,
       "command": "note_view",
       "file": "bot.py",
       "handler": "cmd_note_view",
       "line": 128655
     },
     {
+      "admin_guarded": false,
       "command": "notes",
       "file": "bot.py",
       "handler": "cmd_notes",
       "line": 128654
     },
     {
+      "admin_guarded": false,
       "command": "notes_category",
       "file": "bot.py",
       "handler": "cmd_notes_category",
       "line": 128663
     },
     {
+      "admin_guarded": false,
       "command": "notes_important",
       "file": "bot.py",
       "handler": "cmd_notes_important",
       "line": 128662
     },
     {
+      "admin_guarded": false,
       "command": "ocr_image",
       "file": "bot.py",
       "handler": "cmd_ocr_image",
       "line": 128685
     },
     {
+      "admin_guarded": false,
       "command": "ocr_pdf",
       "file": "bot.py",
       "handler": "cmd_ocr_pdf",
       "line": 128686
     },
     {
+      "admin_guarded": false,
       "command": "official_channels",
       "file": "bot.py",
       "handler": "cmd_official_channels",
       "line": 128402
     },
     {
+      "admin_guarded": true,
       "command": "operator",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128869
     },
     {
+      "admin_guarded": true,
       "command": "operator_api",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128904
     },
     {
+      "admin_guarded": true,
       "command": "operator_audit",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128880
     },
     {
+      "admin_guarded": true,
       "command": "operator_auto",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128871
     },
     {
+      "admin_guarded": true,
       "command": "operator_bootstrap",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128879
     },
     {
+      "admin_guarded": true,
       "command": "operator_build",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128870
     },
     {
+      "admin_guarded": true,
       "command": "operator_command",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128890
     },
     {
+      "admin_guarded": true,
       "command": "operator_commander_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128906
     },
     {
+      "admin_guarded": true,
       "command": "operator_contract",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128907
     },
     {
+      "admin_guarded": true,
       "command": "operator_cycle",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128889
     },
     {
+      "admin_guarded": true,
       "command": "operator_daily",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128874
     },
     {
+      "admin_guarded": true,
       "command": "operator_daily_cycle",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128877
     },
     {
+      "admin_guarded": true,
       "command": "operator_daily_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128875
     },
     {
+      "admin_guarded": true,
       "command": "operator_daily_run",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128876
     },
     {
+      "admin_guarded": true,
       "command": "operator_dashboard",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128873
     },
     {
+      "admin_guarded": true,
       "command": "operator_director",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128884
     },
     {
+      "admin_guarded": true,
       "command": "operator_dispatch",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128888
     },
     {
+      "admin_guarded": true,
       "command": "operator_execute",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128885
     },
     {
+      "admin_guarded": true,
       "command": "operator_launch",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128916
     },
     {
+      "admin_guarded": true,
       "command": "operator_loop",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128913
     },
     {
+      "admin_guarded": true,
       "command": "operator_menu",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128903
     },
     {
+      "admin_guarded": true,
       "command": "operator_mission",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128891
     },
     {
+      "admin_guarded": true,
       "command": "operator_n8n_template",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128911
     },
     {
+      "admin_guarded": true,
       "command": "operator_n8n_workflow",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128912
     },
     {
+      "admin_guarded": true,
       "command": "operator_next",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128872
     },
     {
+      "admin_guarded": true,
       "command": "operator_next_run",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128887
     },
     {
+      "admin_guarded": true,
       "command": "operator_playbook",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128883
     },
     {
+      "admin_guarded": true,
       "command": "operator_smoke",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128882
     },
     {
+      "admin_guarded": true,
       "command": "operator_status",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128878
     },
     {
+      "admin_guarded": true,
       "command": "operator_today",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128886
     },
     {
+      "admin_guarded": true,
       "command": "operator_tool_events",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128910
     },
     {
+      "admin_guarded": true,
       "command": "operator_tool_readiness",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128909
     },
     {
+      "admin_guarded": true,
       "command": "operator_toolchain",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128908
     },
     {
+      "admin_guarded": true,
       "command": "operator_worker_spec",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128905
     },
     {
+      "admin_guarded": true,
       "command": "ops_plan",
       "file": "bot.py",
       "handler": "cmd_ops_plan",
       "line": 128441
     },
     {
+      "admin_guarded": true,
       "command": "orchestrator_status",
       "file": "bot.py",
       "handler": "cmd_orchestrator_status",
       "line": 128450
     },
     {
+      "admin_guarded": true,
       "command": "output_acceptance",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129041
     },
     {
+      "admin_guarded": true,
       "command": "package_catalog",
       "file": "bot.py",
       "handler": "cmd_package_catalog",
       "line": 129124
     },
     {
+      "admin_guarded": true,
       "command": "payos_confirm_webhook",
       "file": "bot.py",
       "handler": "cmd_payos_confirm_webhook",
       "line": 129109
     },
     {
+      "admin_guarded": true,
       "command": "payos_debug_create",
       "file": "bot.py",
       "handler": "cmd_payos_debug_create",
       "line": 129105
     },
     {
+      "admin_guarded": true,
       "command": "payos_env_check",
       "file": "bot.py",
       "handler": "cmd_payos_env_check",
       "line": 129110
     },
     {
+      "admin_guarded": true,
       "command": "payos_key_fingerprint",
       "file": "bot.py",
       "handler": "cmd_payos_key_fingerprint",
       "line": 129111
     },
     {
+      "admin_guarded": true,
       "command": "payos_official_debug",
       "file": "bot.py",
       "handler": "cmd_payos_official_debug",
       "line": 128772
     },
     {
+      "admin_guarded": true,
       "command": "payos_signature_debug",
       "file": "bot.py",
       "handler": "cmd_payos_signature_debug",
       "line": 128771
     },
     {
+      "admin_guarded": true,
       "command": "payos_status",
       "file": "bot.py",
       "handler": "cmd_checkpayos",
       "line": 129103
     },
     {
+      "admin_guarded": true,
       "command": "payos_test_plan",
       "file": "bot.py",
       "handler": "cmd_payos_test_plan",
       "line": 128769
     },
     {
+      "admin_guarded": true,
       "command": "payos_verify",
       "file": "bot.py",
       "handler": "cmd_checkpayos",
       "line": 129104
     },
     {
+      "admin_guarded": false,
       "command": "pdf_to_images",
       "file": "bot.py",
       "handler": "cmd_pdf_to_images",
       "line": 128681
     },
     {
+      "admin_guarded": false,
       "command": "pdf_to_word",
       "file": "bot.py",
       "handler": "cmd_pdf_to_word",
       "line": 128679
     },
     {
+      "admin_guarded": true,
       "command": "pending",
       "file": "bot.py",
       "handler": "cmd_pending",
       "line": 129113
     },
     {
-      "command": "pending",
-      "file": "nháp 2.py",
-      "handler": "cmd_pending",
-      "line": 455
-    },
-    {
+      "admin_guarded": true,
       "command": "performance",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129075
     },
     {
+      "admin_guarded": true,
       "command": "performance_add",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129069
     },
     {
+      "admin_guarded": true,
       "command": "performance_report",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129070
     },
     {
+      "admin_guarded": false,
       "command": "phaply",
       "file": "bot.py",
       "handler": "cmd_legal",
       "line": 128391
     },
     {
+      "admin_guarded": false,
       "command": "ping",
       "file": "bot.py",
       "handler": "cmd_ping",
       "line": 128368
     },
     {
+      "admin_guarded": true,
       "command": "pipeline",
       "file": "bot.py",
       "handler": "cmd_pipeline",
       "line": 129089
     },
     {
+      "admin_guarded": true,
       "command": "pipeline_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129049
     },
     {
+      "admin_guarded": true,
       "command": "pipeline_set",
       "file": "bot.py",
       "handler": "cmd_pipeline_set",
       "line": 129090
     },
     {
+      "admin_guarded": false,
       "command": "plans",
       "file": "bot.py",
       "handler": "cmd_pricing_plans",
       "line": 128793
     },
     {
+      "admin_guarded": true,
       "command": "platform_adapters",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128853
     },
     {
+      "admin_guarded": false,
       "command": "play_link_audio",
       "file": "bot.py",
       "handler": "cmd_play_link_audio",
       "line": 128700
     },
     {
+      "admin_guarded": false,
       "command": "play_media",
       "file": "bot.py",
       "handler": "cmd_play_media",
       "line": 128707
     },
     {
+      "admin_guarded": false,
       "command": "play_music",
       "file": "bot.py",
       "handler": "cmd_play_music",
       "line": 128699
     },
     {
+      "admin_guarded": false,
       "command": "play_sfx",
       "file": "bot.py",
       "handler": "cmd_play_sfx",
       "line": 128698
     },
     {
+      "admin_guarded": true,
       "command": "post_publish",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129046
     },
     {
+      "admin_guarded": true,
       "command": "postback_setup",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129080
     },
     {
+      "admin_guarded": true,
       "command": "posts",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129074
     },
     {
+      "admin_guarded": false,
       "command": "pricing",
       "file": "bot.py",
       "handler": "cmd_pricing",
       "line": 128788
     },
     {
+      "admin_guarded": true,
       "command": "pricing_admin",
       "file": "bot.py",
       "handler": "cmd_pricing_admin",
       "line": 128801
     },
     {
+      "admin_guarded": true,
       "command": "pricing_audit",
       "file": "bot.py",
       "handler": "cmd_pricing_audit",
       "line": 128802
     },
     {
+      "admin_guarded": false,
       "command": "pricing_plans",
       "file": "bot.py",
       "handler": "cmd_pricing_plans",
       "line": 128792
     },
     {
+      "admin_guarded": true,
       "command": "pricing_preview",
       "file": "bot.py",
       "handler": "cmd_pricing_preview",
       "line": 128464
     },
     {
+      "admin_guarded": true,
       "command": "pricing_status",
       "file": "bot.py",
       "handler": "cmd_pricing_status",
       "line": 128460
     },
     {
+      "admin_guarded": true,
       "command": "pricing_validate",
       "file": "bot.py",
       "handler": "cmd_pricing_validate",
       "line": 128465
     },
     {
+      "admin_guarded": false,
       "command": "pricing_xu",
       "file": "bot.py",
       "handler": "cmd_pricing_xu",
       "line": 128791
     },
     {
+      "admin_guarded": false,
       "command": "privacy",
       "file": "bot.py",
       "handler": "cmd_privacy",
       "line": 128394
     },
     {
+      "admin_guarded": true,
       "command": "produce",
       "file": "bot.py",
       "handler": "cmd_produce",
       "line": 129088
     },
     {
+      "admin_guarded": false,
       "command": "profile",
       "file": "bot.py",
       "handler": "cmd_profile",
       "line": 128773
     },
     {
-      "command": "profile",
-      "file": "nháp 2.py",
-      "handler": "cmd_profile",
-      "line": 448
-    },
-    {
+      "admin_guarded": true,
       "command": "profile_user",
       "file": "bot.py",
       "handler": "cmd_profile_user",
       "line": 129121
     },
     {
+      "admin_guarded": true,
       "command": "profit_report",
       "file": "bot.py",
       "handler": "cmd_profit_report",
       "line": 128753
     },
     {
+      "admin_guarded": false,
       "command": "promo",
       "file": "bot.py",
       "handler": "cmd_promo",
       "line": 128814
     },
     {
+      "admin_guarded": true,
       "command": "promo_create",
       "file": "bot.py",
       "handler": "cmd_promo_create",
       "line": 128823
     },
     {
+      "admin_guarded": true,
       "command": "promo_debug",
       "file": "bot.py",
       "handler": "cmd_promo_debug",
       "line": 128822
     },
     {
+      "admin_guarded": true,
       "command": "promo_disable",
       "file": "bot.py",
       "handler": "cmd_promo_disable",
       "line": 128824
     },
     {
+      "admin_guarded": true,
       "command": "promo_list",
       "file": "bot.py",
       "handler": "cmd_promo_list",
       "line": 128821
     },
     {
+      "admin_guarded": true,
       "command": "promo_seed_beta",
       "file": "bot.py",
       "handler": "cmd_promo_seed_beta",
       "line": 128820
     },
     {
+      "admin_guarded": true,
       "command": "promo_seed_policy",
       "file": "bot.py",
       "handler": "cmd_promo_seed_policy",
       "line": 128819
     },
     {
+      "admin_guarded": false,
       "command": "promos",
       "file": "bot.py",
       "handler": "cmd_promo_guide",
       "line": 128818
     },
     {
+      "admin_guarded": true,
       "command": "prompt_vault_add",
       "file": "bot.py",
       "handler": "cmd_prompt_vault_add",
       "line": 128969
     },
     {
+      "admin_guarded": true,
       "command": "prompt_vault_export",
       "file": "bot.py",
       "handler": "cmd_prompt_vault_export",
       "line": 128971
     },
     {
+      "admin_guarded": true,
       "command": "prompt_vault_import",
       "file": "bot.py",
       "handler": "cmd_prompt_vault_add",
       "line": 128970
     },
     {
+      "admin_guarded": true,
       "command": "prompt_vault_refresh",
       "file": "bot.py",
       "handler": "cmd_prompt_vault_refresh",
       "line": 128967
     },
     {
+      "admin_guarded": true,
       "command": "prompt_vault_search",
       "file": "bot.py",
       "handler": "cmd_prompt_vault_search",
       "line": 128968
     },
     {
+      "admin_guarded": true,
       "command": "prompt_vault_status",
       "file": "bot.py",
       "handler": "cmd_prompt_vault_status",
       "line": 128966
     },
     {
+      "admin_guarded": true,
       "command": "provider_freeze",
       "file": "bot.py",
       "handler": "cmd_provider_freeze",
       "line": 128503
     },
     {
+      "admin_guarded": true,
       "command": "provider_matrix",
       "file": "bot.py",
       "handler": "cmd_provider_matrix",
       "line": 128451
     },
     {
+      "admin_guarded": true,
       "command": "provider_spend_audit",
       "file": "bot.py",
       "handler": "cmd_provider_spend_audit",
       "line": 128499
     },
     {
+      "admin_guarded": true,
       "command": "provider_status",
       "file": "bot.py",
       "handler": "cmd_provider_status",
       "line": 129000
     },
     {
+      "admin_guarded": true,
       "command": "provider_unfreeze",
       "file": "bot.py",
       "handler": "cmd_provider_unfreeze",
       "line": 128504
     },
     {
+      "admin_guarded": true,
       "command": "providers",
       "file": "bot.py",
       "handler": "cmd_providers",
       "line": 128442
     },
     {
+      "admin_guarded": true,
       "command": "public_product_guard_status",
       "file": "bot.py",
       "handler": "cmd_public_product_guard_status",
       "line": 128492
     },
     {
+      "admin_guarded": true,
       "command": "publish_cockpit",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129054
     },
     {
+      "admin_guarded": true,
       "command": "publish_done",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129068
     },
     {
+      "admin_guarded": true,
       "command": "publish_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128921
     },
     {
+      "admin_guarded": true,
       "command": "publish_queue",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129053
     },
     {
+      "admin_guarded": true,
       "command": "publish_queue_set",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129059
     },
     {
+      "admin_guarded": true,
       "command": "publish_readiness",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128850
     },
     {
+      "admin_guarded": true,
       "command": "publisher_auto",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129058
     },
     {
+      "admin_guarded": true,
       "command": "publisher_auto_check",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129057
     },
     {
+      "admin_guarded": true,
       "command": "publisher_capabilities",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128852
     },
     {
+      "admin_guarded": true,
       "command": "publisher_handoff",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129055
     },
     {
+      "admin_guarded": true,
       "command": "publisher_run",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129056
     },
     {
+      "admin_guarded": true,
       "command": "publisher_status",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128851
     },
     {
+      "admin_guarded": true,
       "command": "queue_publish",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129050
     },
     {
+      "admin_guarded": true,
       "command": "queue_status",
       "file": "bot.py",
       "handler": "cmd_queue_status",
       "line": 128508
     },
     {
+      "admin_guarded": false,
       "command": "quick",
       "file": "bot.py",
       "handler": "cmd_quick",
       "line": 128382
     },
     {
+      "admin_guarded": false,
       "command": "quick_image_test",
       "file": "bot.py",
       "handler": "cmd_quick_image_test",
       "line": 128938
     },
     {
+      "admin_guarded": false,
       "command": "quick_video_test",
       "file": "bot.py",
       "handler": "cmd_quick_video_test",
       "line": 128939
     },
     {
+      "admin_guarded": false,
       "command": "quickstart",
       "file": "bot.py",
       "handler": "cmd_quick",
       "line": 128383
     },
     {
+      "admin_guarded": false,
       "command": "rank",
       "file": "bot.py",
       "handler": "cmd_member",
       "line": 128776
     },
     {
+      "admin_guarded": false,
       "command": "real_video",
       "file": "bot.py",
       "handler": "cmd_real_video",
       "line": 128691
     },
     {
+      "admin_guarded": false,
       "command": "ref",
       "file": "bot.py",
       "handler": "cmd_ref",
       "line": 129091
     },
     {
+      "admin_guarded": true,
       "command": "ref_admin",
       "file": "bot.py",
       "handler": "cmd_ref_admin",
       "line": 129141
     },
     {
+      "admin_guarded": false,
       "command": "ref_link",
       "file": "bot.py",
       "handler": "cmd_ref_link",
       "line": 128835
     },
     {
+      "admin_guarded": false,
       "command": "ref_stats",
       "file": "bot.py",
       "handler": "cmd_ref_stats",
       "line": 128836
     },
     {
+      "admin_guarded": true,
       "command": "reference_add",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129019
     },
     {
+      "admin_guarded": true,
       "command": "reference_analyze",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129023
     },
     {
+      "admin_guarded": true,
       "command": "reference_build",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129024
     },
     {
+      "admin_guarded": true,
       "command": "reference_catalog_status",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129021
     },
     {
+      "admin_guarded": true,
       "command": "reference_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129017
     },
     {
+      "admin_guarded": true,
       "command": "reference_scan",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129025
     },
     {
+      "admin_guarded": true,
       "command": "reference_videos",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129018
     },
     {
+      "admin_guarded": false,
       "command": "referral",
       "file": "bot.py",
       "handler": "cmd_ref",
       "line": 128834
     },
     {
+      "admin_guarded": true,
       "command": "refund_job",
       "file": "bot.py",
       "handler": "cmd_refund_job",
       "line": 128510
     },
     {
+      "admin_guarded": false,
       "command": "refund_policy",
       "file": "bot.py",
       "handler": "cmd_refund_policy",
       "line": 128398
     },
     {
+      "admin_guarded": true,
       "command": "reject_job",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129010
     },
     {
+      "admin_guarded": false,
       "command": "remind",
       "file": "bot.py",
       "handler": "cmd_remind",
       "line": 128664
     },
     {
+      "admin_guarded": false,
       "command": "reminder_cancel",
       "file": "bot.py",
       "handler": "cmd_reminder_cancel",
       "line": 128671
     },
     {
+      "admin_guarded": false,
       "command": "reminder_done",
       "file": "bot.py",
       "handler": "cmd_reminder_done",
       "line": 128670
     },
     {
+      "admin_guarded": false,
       "command": "reminder_pause",
       "file": "bot.py",
       "handler": "cmd_reminder_pause",
       "line": 128672
     },
     {
+      "admin_guarded": false,
       "command": "reminder_resume",
       "file": "bot.py",
       "handler": "cmd_reminder_resume",
       "line": 128673
     },
     {
+      "admin_guarded": false,
       "command": "reminders",
       "file": "bot.py",
       "handler": "cmd_reminders",
       "line": 128669
     },
     {
+      "admin_guarded": false,
       "command": "remove_bg",
       "file": "bot.py",
       "handler": "cmd_remove_bg_help",
       "line": 128961
     },
     {
+      "admin_guarded": true,
       "command": "render_center",
       "file": "bot.py",
       "handler": "cmd_render_center",
       "line": 128641
     },
     {
+      "admin_guarded": false,
       "command": "repeat_daily",
       "file": "bot.py",
       "handler": "cmd_repeat_daily",
       "line": 128665
     },
     {
+      "admin_guarded": false,
       "command": "repeat_monthly",
       "file": "bot.py",
       "handler": "cmd_repeat_monthly",
       "line": 128667
     },
     {
+      "admin_guarded": false,
       "command": "repeat_weekly",
       "file": "bot.py",
       "handler": "cmd_repeat_weekly",
       "line": 128666
     },
     {
+      "admin_guarded": false,
       "command": "repeat_yearly",
       "file": "bot.py",
       "handler": "cmd_repeat_yearly",
       "line": 128668
     },
     {
+      "admin_guarded": true,
       "command": "report_ai_month",
       "file": "bot.py",
       "handler": "cmd_report_ai_month",
       "line": 128765
     },
     {
+      "admin_guarded": true,
       "command": "report_ai_today",
       "file": "bot.py",
       "handler": "cmd_report_ai_today",
       "line": 128763
     },
     {
+      "admin_guarded": true,
       "command": "report_ai_week",
       "file": "bot.py",
       "handler": "cmd_report_ai_week",
       "line": 128764
     },
     {
+      "admin_guarded": true,
       "command": "report_chart_month",
       "file": "bot.py",
       "handler": "cmd_report_chart_month",
       "line": 128768
     },
     {
+      "admin_guarded": true,
       "command": "report_chart_today",
       "file": "bot.py",
       "handler": "cmd_report_chart_today",
       "line": 128766
     },
     {
+      "admin_guarded": true,
       "command": "report_chart_week",
       "file": "bot.py",
       "handler": "cmd_report_chart_week",
       "line": 128767
     },
     {
+      "admin_guarded": true,
       "command": "report_month",
       "file": "bot.py",
       "handler": "cmd_report_month",
       "line": 128741
     },
     {
+      "admin_guarded": true,
       "command": "report_range",
       "file": "bot.py",
       "handler": "cmd_report_range",
       "line": 128743
     },
     {
+      "admin_guarded": true,
       "command": "report_today",
       "file": "bot.py",
       "handler": "cmd_report_today",
       "line": 128739
     },
     {
+      "admin_guarded": true,
       "command": "report_week",
       "file": "bot.py",
       "handler": "cmd_report_week",
       "line": 128740
     },
     {
+      "admin_guarded": true,
       "command": "report_year",
       "file": "bot.py",
       "handler": "cmd_report_year",
       "line": 128742
     },
     {
+      "admin_guarded": true,
       "command": "revenue_destinations",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129078
     },
     {
+      "admin_guarded": true,
       "command": "revenue_report",
       "file": "bot.py",
       "handler": "cmd_revenue_report",
       "line": 128751
     },
     {
+      "admin_guarded": true,
       "command": "review_gate",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128922
     },
     {
+      "admin_guarded": true,
       "command": "review_job",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129008
     },
     {
+      "admin_guarded": true,
       "command": "review_video",
       "file": "bot.py",
       "handler": "cmd_review_video",
       "line": 129063
     },
     {
+      "admin_guarded": true,
       "command": "revoke_package",
       "file": "bot.py",
       "handler": "cmd_revoke_package",
       "line": 129130
     },
     {
+      "admin_guarded": true,
       "command": "risk_checklist",
       "file": "bot.py",
       "handler": "cmd_risk_checklist",
       "line": 128422
     },
     {
+      "admin_guarded": true,
       "command": "runtime",
       "file": "bot.py",
       "handler": "cmd_runtime",
       "line": 128427
     },
     {
+      "admin_guarded": true,
       "command": "sales_ready",
       "file": "bot.py",
       "handler": "cmd_sales_ready",
       "line": 128737
     },
     {
+      "admin_guarded": true,
       "command": "scale_execute",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129082
     },
     {
+      "admin_guarded": true,
       "command": "scale_plan",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129081
     },
     {
+      "admin_guarded": true,
       "command": "scene_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129033
     },
     {
+      "admin_guarded": true,
       "command": "search_internal_doc",
       "file": "bot.py",
       "handler": "cmd_search_internal_doc",
       "line": 128651
     },
     {
+      "admin_guarded": false,
       "command": "search_note",
       "file": "bot.py",
       "handler": "cmd_search_note",
       "line": 128656
     },
     {
+      "admin_guarded": true,
       "command": "security_checklist",
       "file": "bot.py",
       "handler": "cmd_security_checklist",
       "line": 128421
     },
     {
+      "admin_guarded": true,
       "command": "security_status",
       "file": "bot.py",
       "handler": "cmd_security_status",
       "line": 128419
     },
     {
+      "admin_guarded": false,
       "command": "select_link_audio",
       "file": "bot.py",
       "handler": "cmd_select_link_audio",
       "line": 128703
     },
     {
+      "admin_guarded": false,
       "command": "select_media",
       "file": "bot.py",
       "handler": "cmd_select_media",
       "line": 128708
     },
     {
+      "admin_guarded": false,
       "command": "select_music",
       "file": "bot.py",
       "handler": "cmd_select_music",
       "line": 128702
     },
     {
+      "admin_guarded": false,
       "command": "select_sfx",
       "file": "bot.py",
       "handler": "cmd_select_sfx",
       "line": 128701
     },
     {
+      "admin_guarded": false,
       "command": "select_uploaded_audio",
       "file": "bot.py",
       "handler": "cmd_select_uploaded_audio",
       "line": 128704
     },
     {
+      "admin_guarded": false,
       "command": "set_birthday",
       "file": "bot.py",
       "handler": "cmd_set_birthday",
       "line": 128780
     },
     {
+      "admin_guarded": true,
       "command": "set_birthday_admin",
       "file": "bot.py",
       "handler": "cmd_set_birthday_admin",
       "line": 129138
     },
     {
+      "admin_guarded": true,
       "command": "set_member_tier",
       "file": "bot.py",
       "handler": "cmd_set_vip",
       "line": 129135
     },
     {
+      "admin_guarded": true,
       "command": "set_vip",
       "file": "bot.py",
       "handler": "cmd_set_vip",
       "line": 129133
     },
     {
+      "admin_guarded": true,
       "command": "settier",
       "file": "bot.py",
       "handler": "cmd_set_vip",
       "line": 129134
     },
     {
+      "admin_guarded": true,
       "command": "setvip",
       "file": "bot.py",
       "handler": "cmd_setvip",
       "line": 129132
     },
     {
+      "admin_guarded": false,
       "command": "sfx_library",
       "file": "bot.py",
       "handler": "cmd_sfx_library",
       "line": 128697
     },
     {
+      "admin_guarded": false,
       "command": "shopaikey_image",
       "file": "bot.py",
       "handler": "cmd_shopaikey_image_public",
       "line": 128550
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_music_job",
       "file": "bot.py",
       "handler": "cmd_shopaikey_music_job",
       "line": 128524
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_music_test",
       "file": "bot.py",
       "handler": "cmd_shopaikey_music_test",
       "line": 128523
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_status",
       "file": "bot.py",
       "handler": "cmd_shopaikey_status",
       "line": 128452
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_status_debug",
       "file": "bot.py",
       "handler": "cmd_shopaikey_status_debug",
       "line": 128453
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_tts_test",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_tts",
       "line": 128522
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_usage",
       "file": "bot.py",
       "handler": "cmd_shopaikey_usage",
       "line": 128498
     },
     {
+      "admin_guarded": false,
       "command": "shopaikey_video",
       "file": "bot.py",
       "handler": "cmd_shopaikey_video_public",
       "line": 128551
     },
     {
+      "admin_guarded": false,
       "command": "shopaikey_video_from_image",
       "file": "bot.py",
       "handler": "cmd_shopaikey_video_from_image_public",
       "line": 128552
     },
     {
+      "admin_guarded": true,
       "command": "shopaikey_video_job",
       "file": "bot.py",
       "handler": "cmd_shopaikey_video_job",
       "line": 128529
     },
     {
+      "admin_guarded": false,
       "command": "shot_variations",
       "file": "bot.py",
       "handler": "cmd_image_story",
       "line": 128952
     },
     {
+      "admin_guarded": false,
       "command": "source_help",
       "file": "bot.py",
       "handler": "cmd_source_help",
       "line": 129003
     },
     {
+      "admin_guarded": false,
       "command": "split_pdf",
       "file": "bot.py",
       "handler": "cmd_split_pdf",
       "line": 128683
     },
     {
+      "admin_guarded": false,
       "command": "start",
       "file": "bot.py",
       "handler": "cmd_start",
       "line": 128377
     },
     {
-      "command": "start",
-      "file": "code hoàn chỉnh của claude.py",
-      "handler": "cmd_start",
-      "line": 313
-    },
-    {
-      "command": "start",
-      "file": "nháp 2.py",
-      "handler": "cmd_start",
-      "line": 447
-    },
-    {
+      "admin_guarded": true,
       "command": "stats",
       "file": "bot.py",
       "handler": "cmd_stats",
       "line": 129114
     },
     {
+      "admin_guarded": false,
       "command": "status",
       "file": "bot.py",
       "handler": "cmd_status",
       "line": 128369
     },
     {
-      "command": "status",
-      "file": "code hoàn chỉnh của claude.py",
-      "handler": "cmd_status",
-      "line": 314
-    },
-    {
+      "admin_guarded": false,
       "command": "stop_translate",
       "file": "bot.py",
       "handler": "cmd_stop_translate",
       "line": 128734
     },
     {
+      "admin_guarded": true,
       "command": "storage_status",
       "file": "bot.py",
       "handler": "cmd_storage_status",
       "line": 128647
     },
     {
+      "admin_guarded": true,
       "command": "storage_user",
       "file": "bot.py",
       "handler": "cmd_storage_user",
       "line": 128648
     },
     {
+      "admin_guarded": false,
       "command": "story_motion_prompt",
       "file": "bot.py",
       "handler": "cmd_story_motion_prompt",
       "line": 129006
     },
     {
+      "admin_guarded": false,
       "command": "story_video",
       "file": "bot.py",
       "handler": "cmd_image_story",
       "line": 128951
     },
     {
+      "admin_guarded": false,
       "command": "story_video_factory",
       "file": "bot.py",
       "handler": "cmd_story_video_factory",
       "line": 129005
     },
     {
+      "admin_guarded": true,
       "command": "storyboard_crop",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129042
     },
     {
+      "admin_guarded": true,
       "command": "storyboard_upload_help",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129043
     },
     {
+      "admin_guarded": false,
       "command": "storyboard_video",
       "file": "bot.py",
       "handler": "cmd_storyboard_video",
       "line": 128940
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_dub_public_open",
       "file": "bot.py",
       "handler": "cmd_subtitle_dub_public_open",
       "line": 128596
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_dub_status",
       "file": "bot.py",
       "handler": "cmd_subtitle_dub_status",
       "line": 128993
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_engine_status",
       "file": "bot.py",
       "handler": "cmd_subtitle_engine_status",
       "line": 128994
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_public_close",
       "file": "bot.py",
       "handler": "cmd_video_dub_public_close",
       "line": 128594
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_public_open",
       "file": "bot.py",
       "handler": "cmd_video_dub_public_open",
       "line": 128593
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_quote_test",
       "file": "bot.py",
       "handler": "cmd_subtitle_quote_test",
       "line": 128457
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_status",
       "file": "bot.py",
       "handler": "cmd_subtitle_dub_status",
       "line": 128563
     },
     {
+      "admin_guarded": true,
       "command": "subtitle_translate_public_open",
       "file": "bot.py",
       "handler": "cmd_subtitle_translate_public_open",
       "line": 128595
     },
     {
+      "admin_guarded": false,
       "command": "suggest_music",
       "file": "bot.py",
       "handler": "cmd_suggest_music",
       "line": 128705
     },
     {
+      "admin_guarded": true,
       "command": "suno_job",
       "file": "bot.py",
       "handler": "cmd_key4u_suno_job",
       "line": 128548
     },
     {
+      "admin_guarded": true,
       "command": "suno_public_close",
       "file": "bot.py",
       "handler": "cmd_suno_public_close",
       "line": 128579
     },
     {
+      "admin_guarded": true,
       "command": "suno_public_open",
       "file": "bot.py",
       "handler": "cmd_suno_public_open",
       "line": 128578
     },
     {
+      "admin_guarded": true,
       "command": "suno_status",
       "file": "bot.py",
       "handler": "cmd_suno_status",
       "line": 128577
     },
     {
+      "admin_guarded": false,
       "command": "support",
       "file": "bot.py",
       "handler": "cmd_support",
       "line": 128370
     },
     {
+      "admin_guarded": true,
       "command": "support_auto_test",
       "file": "bot.py",
       "handler": "cmd_support_auto_test",
       "line": 129099
     },
     {
+      "admin_guarded": true,
       "command": "support_close",
       "file": "bot.py",
       "handler": "cmd_support_close",
       "line": 128376
     },
     {
+      "admin_guarded": true,
       "command": "support_persona_test",
       "file": "bot.py",
       "handler": "cmd_support_persona_test",
       "line": 129098
     },
     {
+      "admin_guarded": true,
       "command": "support_status",
       "file": "bot.py",
       "handler": "cmd_support_status",
       "line": 128373
     },
     {
+      "admin_guarded": true,
       "command": "support_ticket",
       "file": "bot.py",
       "handler": "cmd_support_ticket",
       "line": 128375
     },
     {
+      "admin_guarded": true,
       "command": "support_tickets",
       "file": "bot.py",
       "handler": "cmd_support_tickets",
       "line": 128374
     },
     {
+      "admin_guarded": true,
       "command": "system_public_status",
       "file": "bot.py",
       "handler": "cmd_system_public_status",
       "line": 129001
     },
     {
+      "admin_guarded": true,
       "command": "tao_video",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128894
     },
     {
+      "admin_guarded": true,
       "command": "task_handoff",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129040
     },
     {
+      "admin_guarded": true,
       "command": "task_plan",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129029
     },
     {
+      "admin_guarded": true,
       "command": "task_prompt",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129039
     },
     {
+      "admin_guarded": true,
       "command": "task_set",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129045
     },
     {
+      "admin_guarded": true,
       "command": "tasks",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129030
     },
     {
+      "admin_guarded": true,
       "command": "tax_config",
       "file": "bot.py",
       "handler": "cmd_tax_config",
       "line": 128762
     },
     {
+      "admin_guarded": true,
       "command": "tax_export",
       "file": "bot.py",
       "handler": "cmd_tax_export",
       "line": 128761
     },
     {
+      "admin_guarded": true,
       "command": "tax_report",
       "file": "bot.py",
       "handler": "cmd_tax_report",
       "line": 128760
     },
     {
+      "admin_guarded": true,
       "command": "tax_status",
       "file": "bot.py",
       "handler": "cmd_tax_status",
       "line": 128759
     },
     {
+      "admin_guarded": true,
       "command": "telegram_status",
       "file": "bot.py",
       "handler": "cmd_telegram_status",
       "line": 128429
     },
     {
+      "admin_guarded": true,
       "command": "telegram_takeover",
       "file": "bot.py",
       "handler": "cmd_telegram_takeover",
       "line": 128430
     },
     {
+      "admin_guarded": false,
       "command": "terms",
       "file": "bot.py",
       "handler": "cmd_terms",
       "line": 128393
     },
     {
+      "admin_guarded": false,
       "command": "terms_xu",
       "file": "bot.py",
       "handler": "cmd_dieukhoan_xu",
       "line": 128396
     },
     {
+      "admin_guarded": true,
       "command": "test_all_provider",
       "file": "bot.py",
       "handler": "cmd_test_all_provider",
       "line": 128495
     },
     {
+      "admin_guarded": true,
       "command": "test_all_safe",
       "file": "bot.py",
       "handler": "cmd_test_all_safe",
       "line": 128493
     },
     {
+      "admin_guarded": true,
       "command": "test_all_system",
       "file": "bot.py",
       "handler": "cmd_test_all_system",
       "line": 128496
     },
     {
+      "admin_guarded": true,
       "command": "test_all_video",
       "file": "bot.py",
       "handler": "cmd_test_all_video",
       "line": 128494
     },
     {
+      "admin_guarded": false,
       "command": "thucong",
       "file": "bot.py",
       "handler": "cmd_thanhtoan_thucong",
       "line": 128832
     },
     {
+      "admin_guarded": true,
       "command": "ticket_admin",
       "file": "bot.py",
       "handler": "cmd_ticket_admin",
       "line": 129096
     },
     {
+      "admin_guarded": true,
       "command": "ticket_overdue",
       "file": "bot.py",
       "handler": "cmd_ticket_overdue",
       "line": 129097
     },
     {
+      "admin_guarded": false,
       "command": "ticket_status",
       "file": "bot.py",
       "handler": "cmd_tickets",
       "line": 128372
     },
     {
+      "admin_guarded": false,
       "command": "tickets",
       "file": "bot.py",
       "handler": "cmd_tickets",
       "line": 128371
     },
     {
+      "admin_guarded": true,
       "command": "toanaas_ai_status",
       "file": "bot.py",
       "handler": "cmd_toanaas_ai_status",
       "line": 128991
     },
     {
+      "admin_guarded": false,
       "command": "toanaas_hub",
       "file": "bot.py",
       "handler": "cmd_hub",
       "line": 128406
     },
     {
+      "admin_guarded": true,
       "command": "tool_audit",
       "file": "bot.py",
       "handler": "cmd_tool_audit",
       "line": 128514
     },
     {
+      "admin_guarded": false,
       "command": "tool_catalog",
       "file": "bot.py",
       "handler": "cmd_tool_catalog",
       "line": 128512
     },
     {
+      "admin_guarded": true,
       "command": "tool_public_status",
       "file": "bot.py",
       "handler": "cmd_tool_public_status",
       "line": 129002
     },
     {
+      "admin_guarded": true,
       "command": "tool_status",
       "file": "bot.py",
       "handler": "cmd_tool_status",
       "line": 128515
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_ai",
       "file": "bot.py",
       "handler": "cmd_tool_test_ai",
       "line": 128517
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_ai_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_ai_image",
       "line": 128601
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_ai_image_edit",
       "file": "bot.py",
       "handler": "cmd_tool_test_ai_image_edit",
       "line": 128602
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_asr",
       "file": "bot.py",
       "handler": "cmd_tool_test_asr",
       "line": 128554
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_audio_enhance",
       "file": "bot.py",
       "handler": "cmd_tool_test_audio_enhance",
       "line": 128613
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_comfy_local",
       "file": "bot.py",
       "handler": "cmd_tool_test_comfy_local",
       "line": 128638
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_compress_pdf",
       "file": "bot.py",
       "handler": "cmd_tool_test_compress_pdf",
       "line": 128630
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_deepgram_status",
       "file": "bot.py",
       "handler": "cmd_tool_test_deepgram_status",
       "line": 128625
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_doc_tools",
       "file": "bot.py",
       "handler": "cmd_tool_test_doc_tools",
       "line": 128626
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_downloader",
       "file": "bot.py",
       "handler": "cmd_tool_test_downloader",
       "line": 128633
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_elevenlabs_status",
       "file": "bot.py",
       "handler": "cmd_tool_test_elevenlabs_status",
       "line": 128624
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_ffmpeg_local",
       "file": "bot.py",
       "handler": "cmd_tool_test_ffmpeg_local",
       "line": 128637
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_frame_video",
       "file": "bot.py",
       "handler": "cmd_tool_test_frame_video",
       "line": 128944
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_gemini_image_edit",
       "file": "bot.py",
       "handler": "cmd_tool_test_gemini_image_edit",
       "line": 128605
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_heygen_avatar",
       "file": "bot.py",
       "handler": "cmd_tool_test_heygen_avatar",
       "line": 128617
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_image",
       "line": 128599
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_image_debug",
       "file": "bot.py",
       "handler": "cmd_tool_test_image_debug",
       "line": 128600
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_image_edit",
       "file": "bot.py",
       "handler": "cmd_tool_test_ai_image_edit",
       "line": 128603
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_image_to_pdf",
       "file": "bot.py",
       "handler": "cmd_tool_test_image_to_pdf",
       "line": 128628
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_chat",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_chat",
       "line": 128533
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_image",
       "line": 128535
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_image_edit",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_image_edit",
       "line": 128536
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_rerank",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_rerank",
       "line": 128549
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_stt",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_stt",
       "line": 128542
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_suno",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_suno",
       "line": 128543
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_tts",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_tts",
       "line": 128541
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_video",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_video",
       "line": 128537
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_video_all",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_video_all",
       "line": 128539
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_video_model",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_video_model",
       "line": 128538
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_key4u_vision",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_vision",
       "line": 128534
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_kling_status",
       "file": "bot.py",
       "handler": "cmd_tool_test_kling_status",
       "line": 128615
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_kling_video",
       "file": "bot.py",
       "handler": "cmd_tool_test_kling_video",
       "line": 128614
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_media_library",
       "file": "bot.py",
       "handler": "cmd_tool_test_media_library",
       "line": 128620
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_minimax_dub",
       "file": "bot.py",
       "handler": "cmd_tool_test_minimax_dub",
       "line": 128561
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_minimax_tts",
       "file": "bot.py",
       "handler": "cmd_tool_test_minimax_tts",
       "line": 128583
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_minimax_voice_clone",
       "file": "bot.py",
       "handler": "cmd_tool_test_minimax_voice_clone",
       "line": 128585
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_music_ai",
       "file": "bot.py",
       "handler": "cmd_tool_test_music_ai",
       "line": 128621
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_music_library",
       "file": "bot.py",
       "handler": "cmd_tool_test_music_library",
       "line": 128618
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_music_suno",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_suno",
       "line": 128546
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_openai_image_edit",
       "file": "bot.py",
       "handler": "cmd_tool_test_ai_image_edit",
       "line": 128604
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_openrouter",
       "file": "bot.py",
       "handler": "cmd_tool_test_openrouter",
       "line": 128518
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_pdf_to_images",
       "file": "bot.py",
       "handler": "cmd_tool_test_pdf_to_images",
       "line": 128629
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_pdf_to_word",
       "file": "bot.py",
       "handler": "cmd_tool_test_pdf_to_word",
       "line": 128627
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_replicate_media",
       "file": "bot.py",
       "handler": "cmd_tool_test_replicate_media",
       "line": 128622
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_replicate_status",
       "file": "bot.py",
       "handler": "cmd_tool_test_replicate_status",
       "line": 128623
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_runway_video",
       "file": "bot.py",
       "handler": "cmd_tool_test_runway_video",
       "line": 128616
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_sfx_library",
       "file": "bot.py",
       "handler": "cmd_tool_test_sfx_library",
       "line": 128619
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_shopaikey",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey",
       "line": 128519
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_shopaikey_chat",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_chat",
       "line": 128520
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_shopaikey_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_image",
       "line": 128525
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_shopaikey_image_edit",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_image_edit",
       "line": 128606
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_shopaikey_tts",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_tts",
       "line": 128521
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_shopaikey_video",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_video",
       "line": 128528
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_stability_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_stability_image",
       "line": 128611
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_stt",
       "file": "bot.py",
       "handler": "cmd_tool_test_stt",
       "line": 128631
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_stt_debug",
       "file": "bot.py",
       "handler": "cmd_tool_test_stt_debug",
       "line": 128632
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_subtitle_auto",
       "file": "bot.py",
       "handler": "cmd_tool_test_subtitle_generate",
       "line": 128557
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_subtitle_generate",
       "file": "bot.py",
       "handler": "cmd_tool_test_subtitle_generate",
       "line": 128558
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_subtitle_plus_dub",
       "file": "bot.py",
       "handler": "cmd_tool_test_subtitle_plus_dub",
       "line": 128562
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_subtitle_translate",
       "file": "bot.py",
       "handler": "cmd_tool_test_subtitle_translate",
       "line": 128559
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_suno_music",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_suno",
       "line": 128544
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_suno_song",
       "file": "bot.py",
       "handler": "cmd_tool_test_key4u_suno",
       "line": 128545
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_translate",
       "file": "bot.py",
       "handler": "cmd_tool_test_translate",
       "line": 128553
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_translation_factory",
       "file": "bot.py",
       "handler": "cmd_tool_test_translation_factory",
       "line": 128998
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_trend_live",
       "file": "bot.py",
       "handler": "cmd_tool_test_trend_live",
       "line": 128610
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_tts",
       "file": "bot.py",
       "handler": "cmd_tool_test_tts",
       "line": 128609
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_tts_for_dub",
       "file": "bot.py",
       "handler": "cmd_tool_test_tts",
       "line": 128555
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_upscale_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_upscale_image",
       "line": 128612
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_video_200",
       "file": "bot.py",
       "handler": "cmd_tool_test_video_200",
       "line": 128532
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_video_dub",
       "file": "bot.py",
       "handler": "cmd_tool_test_video_dub",
       "line": 128560
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_video_fetch",
       "file": "bot.py",
       "handler": "cmd_shopaikey_video_job",
       "line": 128531
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_video_multiscene",
       "file": "bot.py",
       "handler": "cmd_tool_test_video_multiscene",
       "line": 128491
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_video_submit",
       "file": "bot.py",
       "handler": "cmd_tool_test_shopaikey_video",
       "line": 128530
     },
     {
+      "admin_guarded": false,
       "command": "tool_test_video_subtitle",
       "file": "bot.py",
       "handler": "cmd_tool_test_video_subtitle",
       "line": 128556
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_voice_clone",
       "file": "bot.py",
       "handler": "cmd_tool_test_minimax_voice_clone",
       "line": 128586
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_voice_tts",
       "file": "bot.py",
       "handler": "cmd_tool_test_minimax_tts",
       "line": 128584
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_wf_i2v",
       "file": "bot.py",
       "handler": "cmd_tool_test_workflow_image_to_video",
       "line": 128527
     },
     {
+      "admin_guarded": true,
       "command": "tool_test_workflow_image",
       "file": "bot.py",
       "handler": "cmd_tool_test_workflow_image",
       "line": 128526
     },
     {
+      "admin_guarded": true,
       "command": "tools",
       "file": "bot.py",
       "handler": "cmd_tools",
       "line": 128837
     },
     {
+      "admin_guarded": true,
       "command": "tracking_report",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129079
     },
     {
+      "admin_guarded": true,
       "command": "transcribe",
       "file": "bot.py",
       "handler": "cmd_transcribe",
       "line": 128725
     },
     {
+      "admin_guarded": false,
       "command": "translate",
       "file": "bot.py",
       "handler": "cmd_translate",
       "line": 128719
     },
     {
+      "admin_guarded": false,
       "command": "translate_audio",
       "file": "bot.py",
       "handler": "cmd_translate_voice",
       "line": 128724
     },
     {
+      "admin_guarded": false,
       "command": "translate_file",
       "file": "bot.py",
       "handler": "cmd_translate_file",
       "line": 128722
     },
     {
+      "admin_guarded": false,
       "command": "translate_mode",
       "file": "bot.py",
       "handler": "cmd_translate_mode",
       "line": 128731
     },
     {
+      "admin_guarded": false,
       "command": "translate_mode_off",
       "file": "bot.py",
       "handler": "cmd_translate_mode_off",
       "line": 128733
     },
     {
+      "admin_guarded": false,
       "command": "translate_mode_on",
       "file": "bot.py",
       "handler": "cmd_translate_mode",
       "line": 128732
     },
     {
+      "admin_guarded": false,
       "command": "translate_status",
       "file": "bot.py",
       "handler": "cmd_translate_status",
       "line": 128735
     },
     {
+      "admin_guarded": false,
       "command": "translate_text",
       "file": "bot.py",
       "handler": "cmd_translate_text",
       "line": 128720
     },
     {
+      "admin_guarded": false,
       "command": "translate_tools",
       "file": "bot.py",
       "handler": "cmd_translate_tools",
       "line": 128721
     },
     {
+      "admin_guarded": false,
       "command": "translate_voice",
       "file": "bot.py",
       "handler": "cmd_translate_voice",
       "line": 128723
     },
     {
+      "admin_guarded": false,
       "command": "translation_provider_curl",
       "file": "bot.py",
       "handler": "cmd_translation_provider_curl",
       "line": 128997
     },
     {
+      "admin_guarded": false,
       "command": "translation_provider_status",
       "file": "bot.py",
       "handler": "cmd_translation_provider_status",
       "line": 128996
     },
     {
+      "admin_guarded": true,
       "command": "trend",
       "file": "bot.py",
       "handler": "cmd_trend_ai",
       "line": 128931
     },
     {
+      "admin_guarded": true,
       "command": "trend_ai",
       "file": "bot.py",
       "handler": "cmd_trend_ai",
       "line": 128930
     },
     {
+      "admin_guarded": true,
       "command": "trend_live",
       "file": "bot.py",
       "handler": "cmd_trend_live",
       "line": 128932
     },
     {
+      "admin_guarded": true,
       "command": "trend_rank",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128919
     },
     {
+      "admin_guarded": false,
       "command": "trend_research",
       "file": "bot.py",
       "handler": "cmd_trend_research",
       "line": 128933
     },
     {
+      "admin_guarded": true,
       "command": "trend_search",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128918
     },
     {
+      "admin_guarded": true,
       "command": "trend_source_add",
       "file": "bot.py",
       "handler": "cmd_trend_source_add",
       "line": 128974
     },
     {
+      "admin_guarded": true,
       "command": "trend_source_list",
       "file": "bot.py",
       "handler": "cmd_trend_source_list",
       "line": 128975
     },
     {
+      "admin_guarded": true,
       "command": "trend_source_refresh",
       "file": "bot.py",
       "handler": "cmd_trend_source_refresh",
       "line": 128973
     },
     {
+      "admin_guarded": true,
       "command": "trend_source_status",
       "file": "bot.py",
       "handler": "cmd_trend_source_status",
       "line": 128972
     },
     {
+      "admin_guarded": true,
       "command": "trend_status",
       "file": "bot.py",
       "handler": "cmd_trend_status",
       "line": 128934
     },
     {
+      "admin_guarded": false,
       "command": "trend_video_flow",
       "file": "bot.py",
       "handler": "cmd_trend_video_flow",
       "line": 128935
     },
     {
+      "admin_guarded": true,
       "command": "trial_bonus_status",
       "file": "bot.py",
       "handler": "cmd_trial_bonus_status",
       "line": 128786
     },
     {
+      "admin_guarded": false,
       "command": "trial_status",
       "file": "bot.py",
       "handler": "cmd_trial_status",
       "line": 128785
     },
     {
+      "admin_guarded": false,
       "command": "truycapnhanh",
       "file": "bot.py",
       "handler": "cmd_quick",
       "line": 128384
     },
     {
+      "admin_guarded": true,
       "command": "tts",
       "file": "bot.py",
       "handler": "cmd_voiceover",
       "line": 128643
     },
     {
+      "admin_guarded": true,
       "command": "tuchoi",
       "file": "bot.py",
       "handler": "cmd_tuchoi",
       "line": 129112
     },
     {
-      "command": "tuchoi",
-      "file": "nháp 2.py",
-      "handler": "cmd_tuchoi",
-      "line": 454
-    },
-    {
+      "admin_guarded": false,
       "command": "unfreeze_payments",
       "file": "bot.py",
       "handler": "cmd_unfreeze_payments",
       "line": 128438
     },
     {
+      "admin_guarded": false,
       "command": "unfreeze_tools",
       "file": "bot.py",
       "handler": "cmd_unfreeze_tools",
       "line": 128440
     },
     {
+      "admin_guarded": true,
       "command": "unfreeze_video",
       "file": "bot.py",
       "handler": "cmd_unfreeze_video",
       "line": 128507
     },
     {
+      "admin_guarded": false,
       "command": "upscale_image",
       "file": "bot.py",
       "handler": "cmd_upscale_image",
       "line": 128687
     },
     {
+      "admin_guarded": true,
       "command": "user_packages",
       "file": "bot.py",
       "handler": "cmd_user_packages",
       "line": 129128
     },
     {
+      "admin_guarded": false,
       "command": "uudai",
       "file": "bot.py",
       "handler": "cmd_promo_guide",
       "line": 128817
     },
     {
+      "admin_guarded": false,
       "command": "vi_en",
       "file": "bot.py",
       "handler": "cmd_vi_en",
       "line": 128726
     },
     {
+      "admin_guarded": true,
       "command": "video_addon_status",
       "file": "bot.py",
       "handler": "cmd_video_addon_status",
       "line": 128486
     },
     {
+      "admin_guarded": true,
       "command": "video_beta_close",
       "file": "bot.py",
       "handler": "cmd_video_beta_close",
       "line": 128980
     },
     {
+      "admin_guarded": true,
       "command": "video_beta_limits",
       "file": "bot.py",
       "handler": "cmd_video_beta_limits",
       "line": 128981
     },
     {
+      "admin_guarded": true,
       "command": "video_beta_open",
       "file": "bot.py",
       "handler": "cmd_video_beta_open",
       "line": 128979
     },
     {
+      "admin_guarded": true,
       "command": "video_brief",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129037
     },
     {
+      "admin_guarded": true,
       "command": "video_close_high_tiers",
       "file": "bot.py",
       "handler": "cmd_video_close_high_tiers",
       "line": 128984
     },
     {
+      "admin_guarded": true,
       "command": "video_cost_status",
       "file": "bot.py",
       "handler": "cmd_video_cost_status",
       "line": 128988
     },
     {
+      "admin_guarded": true,
       "command": "video_debug_tier_payload",
       "file": "bot.py",
       "handler": "cmd_video_debug_tier_payload",
       "line": 128468
     },
     {
+      "admin_guarded": true,
       "command": "video_dub_public_close",
       "file": "bot.py",
       "handler": "cmd_video_dub_public_close",
       "line": 128592
     },
     {
+      "admin_guarded": true,
       "command": "video_dub_public_open",
       "file": "bot.py",
       "handler": "cmd_video_dub_public_open",
       "line": 128591
     },
     {
+      "admin_guarded": true,
       "command": "video_engine_status",
       "file": "bot.py",
       "handler": "cmd_video_engine_status",
       "line": 128995
     },
     {
+      "admin_guarded": false,
       "command": "video_enhance",
       "file": "bot.py",
       "handler": "cmd_video_enhance",
       "line": 128718
     },
     {
+      "admin_guarded": true,
       "command": "video_error_report",
       "file": "bot.py",
       "handler": "cmd_video_error_report",
       "line": 128482
     },
     {
+      "admin_guarded": false,
       "command": "video_factory_flow",
       "file": "bot.py",
       "handler": "cmd_video_factory_flow",
       "line": 128963
     },
     {
+      "admin_guarded": true,
       "command": "video_failed_jobs",
       "file": "bot.py",
       "handler": "cmd_video_failed_jobs",
       "line": 128481
     },
     {
+      "admin_guarded": true,
       "command": "video_from_image",
       "file": "bot.py",
       "handler": "cmd_video_from_image",
       "line": 128957
     },
     {
+      "admin_guarded": true,
       "command": "video_gate_status",
       "file": "bot.py",
       "handler": "cmd_video_gate_status",
       "line": 128977
     },
     {
+      "admin_guarded": true,
       "command": "video_job",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128844
     },
     {
+      "admin_guarded": true,
       "command": "video_job_dedupe_status",
       "file": "bot.py",
       "handler": "cmd_video_job_dedupe_status",
       "line": 128484
     },
     {
+      "admin_guarded": true,
       "command": "video_kling_status",
       "file": "bot.py",
       "handler": "cmd_video_kling_status",
       "line": 128466
     },
     {
+      "admin_guarded": true,
       "command": "video_last_export_error",
       "file": "bot.py",
       "handler": "cmd_video_last_export_error",
       "line": 128483
     },
     {
+      "admin_guarded": true,
       "command": "video_last_result_status",
       "file": "bot.py",
       "handler": "cmd_video_last_result_status",
       "line": 128485
     },
     {
+      "admin_guarded": true,
       "command": "video_multiscene_status",
       "file": "bot.py",
       "handler": "cmd_video_multiscene_status",
       "line": 128490
     },
     {
+      "admin_guarded": false,
       "command": "video_music",
       "file": "bot.py",
       "handler": "cmd_video_music",
       "line": 128716
     },
     {
+      "admin_guarded": true,
       "command": "video_open_all_current_tiers",
       "file": "bot.py",
       "handler": "cmd_video_open_all_current_tiers",
       "line": 128982
     },
     {
+      "admin_guarded": true,
       "command": "video_open_high_tiers",
       "file": "bot.py",
       "handler": "cmd_video_open_high_tiers",
       "line": 128983
     },
     {
+      "admin_guarded": true,
       "command": "video_patterns",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128927
     },
     {
+      "admin_guarded": true,
       "command": "video_plan",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 128843
     },
     {
+      "admin_guarded": true,
       "command": "video_price_test",
       "file": "bot.py",
       "handler": "cmd_video_price_test",
       "line": 128455
     },
     {
+      "admin_guarded": true,
       "command": "video_pricing_status",
       "file": "bot.py",
       "handler": "cmd_video_pricing_status",
       "line": 128461
     },
     {
+      "admin_guarded": true,
       "command": "video_prompt_context_debug",
       "file": "bot.py",
       "handler": "cmd_video_prompt_context_debug",
       "line": 128487
     },
     {
+      "admin_guarded": true,
       "command": "video_prompt_plan_preview",
       "file": "bot.py",
       "handler": "cmd_video_prompt_plan_preview",
       "line": 128489
     },
     {
+      "admin_guarded": true,
       "command": "video_prompt_vault_status",
       "file": "bot.py",
       "handler": "cmd_video_prompt_vault_status",
       "line": 128488
     },
     {
+      "admin_guarded": true,
       "command": "video_provider_curl",
       "file": "bot.py",
       "handler": "cmd_video_provider_curl",
       "line": 128965
     },
     {
+      "admin_guarded": true,
       "command": "video_provider_status",
       "file": "bot.py",
       "handler": "cmd_video_provider_status",
       "line": 128964
     },
     {
+      "admin_guarded": true,
       "command": "video_public_open_safe",
       "file": "bot.py",
       "handler": "cmd_video_public_open_safe",
       "line": 128978
     },
     {
+      "admin_guarded": true,
       "command": "video_public_status",
       "file": "bot.py",
       "handler": "cmd_video_public_status",
       "line": 128976
     },
     {
+      "admin_guarded": true,
       "command": "video_quote_test",
       "file": "bot.py",
       "handler": "cmd_video_quote_test",
       "line": 128456
     },
     {
+      "admin_guarded": true,
       "command": "video_recent_jobs",
       "file": "bot.py",
       "handler": "cmd_video_recent_jobs",
       "line": 128480
     },
     {
+      "admin_guarded": true,
       "command": "video_script",
       "file": "bot.py",
       "handler": "cmd_film",
       "line": 128929
     },
     {
+      "admin_guarded": false,
       "command": "video_smoke_tier_500",
       "file": "bot.py",
       "handler": "cmd_video_smoke_tier_500",
       "line": 128985
     },
     {
+      "admin_guarded": false,
       "command": "video_smoke_tier_600",
       "file": "bot.py",
       "handler": "cmd_video_smoke_tier_600",
       "line": 128986
     },
     {
+      "admin_guarded": false,
       "command": "video_smoke_tier_800",
       "file": "bot.py",
       "handler": "cmd_video_smoke_tier_800",
       "line": 128987
     },
     {
+      "admin_guarded": true,
       "command": "video_test_all_tiers",
       "file": "bot.py",
       "handler": "cmd_video_test_all_tiers",
       "line": 128479
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_1000",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_1000",
       "line": 128476
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_1200",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_1200",
       "line": 128477
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_1500",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_1500",
       "line": 128478
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_200",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_200",
       "line": 128470
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_300",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_300",
       "line": 128471
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_400",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_400",
       "line": 128472
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_500",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_500",
       "line": 128473
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_600",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_600",
       "line": 128474
     },
     {
+      "admin_guarded": false,
       "command": "video_test_tier_800",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_800",
       "line": 128475
     },
     {
+      "admin_guarded": true,
       "command": "video_test_tier_duration",
       "file": "bot.py",
       "handler": "cmd_video_test_tier_duration",
       "line": 128469
     },
     {
+      "admin_guarded": true,
       "command": "video_tier_matrix",
       "file": "bot.py",
       "handler": "cmd_video_tier_matrix",
       "line": 128467
     },
     {
+      "admin_guarded": true,
       "command": "video_tier_status",
       "file": "bot.py",
       "handler": "cmd_video_tier_status",
       "line": 128992
     },
     {
+      "admin_guarded": true,
       "command": "video_upscale",
       "file": "bot.py",
       "handler": "cmd_video_upscale",
       "line": 128717
     },
     {
+      "admin_guarded": true,
       "command": "video_work_orders",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129038
     },
     {
+      "admin_guarded": false,
       "command": "vip",
       "file": "bot.py",
       "handler": "cmd_member",
       "line": 128775
     },
     {
+      "admin_guarded": false,
       "command": "vip_policy",
       "file": "bot.py",
       "handler": "cmd_vip_policy",
       "line": 128777
     },
     {
+      "admin_guarded": false,
       "command": "vip_services",
       "file": "bot.py",
       "handler": "cmd_vip_services",
       "line": 128799
     },
     {
+      "admin_guarded": true,
       "command": "viral_remix",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129022
     },
     {
+      "admin_guarded": true,
       "command": "voice_curl_audit",
       "file": "bot.py",
       "handler": "cmd_voice_curl_audit",
       "line": 128576
     },
     {
+      "admin_guarded": true,
       "command": "voice_engine_status",
       "file": "bot.py",
       "handler": "cmd_voice_engine_status",
       "line": 128567
     },
     {
+      "admin_guarded": true,
       "command": "voice_provider_status",
       "file": "bot.py",
       "handler": "cmd_voice_status",
       "line": 128566
     },
     {
+      "admin_guarded": true,
       "command": "voice_public_close",
       "file": "bot.py",
       "handler": "cmd_voice_public_close",
       "line": 128590
     },
     {
+      "admin_guarded": true,
       "command": "voice_public_open",
       "file": "bot.py",
       "handler": "cmd_voice_public_open",
       "line": 128588
     },
     {
+      "admin_guarded": true,
       "command": "voice_public_open_safe",
       "file": "bot.py",
       "handler": "cmd_voice_public_open_safe",
       "line": 128589
     },
     {
+      "admin_guarded": true,
       "command": "voice_public_status",
       "file": "bot.py",
       "handler": "cmd_voice_status",
       "line": 128568
     },
     {
+      "admin_guarded": true,
       "command": "voice_status",
       "file": "bot.py",
       "handler": "cmd_voice_status",
       "line": 128565
     },
     {
+      "admin_guarded": true,
       "command": "voiceover",
       "file": "bot.py",
       "handler": "cmd_voiceover",
       "line": 128642
     },
     {
+      "admin_guarded": true,
       "command": "worker_autorun",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129035
     },
     {
+      "admin_guarded": true,
       "command": "worker_intake",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129034
     },
     {
+      "admin_guarded": true,
       "command": "worker_next",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129032
     },
     {
+      "admin_guarded": true,
       "command": "worker_pack",
       "file": "bot.py",
       "handler": "admin_internal_command",
       "line": 129036
     },
     {
+      "admin_guarded": true,
       "command": "xu_ledger_export",
       "file": "bot.py",
       "handler": "cmd_xu_ledger_export",
       "line": 128749
     },
     {
+      "admin_guarded": false,
       "command": "xu_terms",
       "file": "bot.py",
       "handler": "cmd_dieukhoan_xu",
       "line": 128397
     },
     {
+      "admin_guarded": false,
       "command": "zh_vi",
       "file": "bot.py",
       "handler": "cmd_zh_vi",
@@ -15897,12 +16578,12 @@
   "conversations": [],
   "counts": {
     "background_jobs": 200,
-    "callback_data": 1928,
-    "callback_handlers": 55,
-    "commands": 786,
+    "callback_data": 1925,
+    "callback_handlers": 54,
+    "commands": 774,
     "conversations": 0,
     "database_tables": 97,
-    "env_references": 381,
+    "env_references": 371,
     "providers": 15,
     "routes": 169
   },
@@ -16127,18 +16808,6 @@
       "file": "bot.py",
       "line": 120437,
       "operation": "UPDATE",
-      "table": "feedback"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 45,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "feedback"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 158,
-      "operation": "INSERT INTO",
       "table": "feedback"
     },
     {
@@ -16708,30 +17377,6 @@
     {
       "file": "bot.py",
       "line": 121343,
-      "operation": "UPDATE",
-      "table": "pending_deposits"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 47,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "pending_deposits"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 287,
-      "operation": "INSERT INTO",
-      "table": "pending_deposits"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 347,
-      "operation": "UPDATE",
-      "table": "pending_deposits"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 373,
       "operation": "UPDATE",
       "table": "pending_deposits"
     },
@@ -17978,30 +18623,6 @@
       "table": "users"
     },
     {
-      "file": "nháp 2.py",
-      "line": 44,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "users"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 66,
-      "operation": "INSERT INTO",
-      "table": "users"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 98,
-      "operation": "UPDATE",
-      "table": "users"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 107,
-      "operation": "UPDATE",
-      "table": "users"
-    },
-    {
       "file": "bot.py",
       "line": 3287,
       "operation": "CREATE TABLE IF NOT EXISTS",
@@ -18204,18 +18825,8 @@
       "name": "ADMIN_ID"
     },
     {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 33,
-      "name": "ADMIN_ID"
-    },
-    {
       "file": "config.py",
       "line": 14,
-      "name": "ADMIN_ID"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 27,
       "name": "ADMIN_ID"
     },
     {
@@ -18274,11 +18885,6 @@
       "name": "BOT_TOKEN"
     },
     {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 30,
-      "name": "BOT_TOKEN"
-    },
-    {
       "file": "config.py",
       "line": 10,
       "name": "BOT_TOKEN"
@@ -18286,11 +18892,6 @@
     {
       "file": "local_worker.py",
       "line": 73,
-      "name": "BOT_TOKEN"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 26,
       "name": "BOT_TOKEN"
     },
     {
@@ -18311,11 +18912,6 @@
     {
       "file": "bot.py",
       "line": 1710,
-      "name": "CLAUDE_API_KEY"
-    },
-    {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 32,
       "name": "CLAUDE_API_KEY"
     },
     {
@@ -18394,11 +18990,6 @@
       "name": "DB_PATH"
     },
     {
-      "file": "nháp 2.py",
-      "line": 32,
-      "name": "DEEPGRAM_API_KEY"
-    },
-    {
       "file": "bot.py",
       "line": 561,
       "name": "DEFAULT_TTS_FEMALE_VOICE"
@@ -18439,11 +19030,6 @@
       "name": "FISH_AUDIO_KEY"
     },
     {
-      "file": "nháp 2.py",
-      "line": 30,
-      "name": "FISH_AUDIO_KEY"
-    },
-    {
       "file": "bot.py",
       "line": 1136,
       "name": "FOREIGN_XU_ROUNDING_MODE"
@@ -18471,16 +19057,6 @@
     {
       "file": "bot.py",
       "line": 445,
-      "name": "GEMINI_API_KEY"
-    },
-    {
-      "file": "code hoàn chỉnh của claude.py",
-      "line": 31,
-      "name": "GEMINI_API_KEY"
-    },
-    {
-      "file": "nháp 2.py",
-      "line": 31,
       "name": "GEMINI_API_KEY"
     },
     {
@@ -19554,11 +20130,6 @@
       "name": "REMOVEBG_API_KEY"
     },
     {
-      "file": "nháp 2.py",
-      "line": 29,
-      "name": "REMOVEBG_API_KEY"
-    },
-    {
       "file": "bot.py",
       "line": 389,
       "name": "RENDER_SERVICE_ID"
@@ -20104,6 +20675,12 @@
       "name": "WOKU_REASON"
     }
   ],
+  "excluded_noncanonical_source_files": [
+    "code hoàn chỉnh của claude.py",
+    "config/pricing_matrix_draft.json",
+    "docs/BACKUP_AND_RECOVERY.md",
+    "nháp 2.py"
+  ],
   "feature_presence": {
     "admin_erp": [
       "admin",
@@ -20202,12 +20779,10 @@
         "ARCHITECTURE.md",
         "bot.py",
         "CODEX_NEXT_TASK.md",
-        "config/pricing_matrix_draft.json",
         "docs/ADMIN_REPORTING_AND_MODES.md",
         "docs/API_KEYS_SETUP.md",
         "docs/architecture/TOAN_AAS_GATE_CALLBACK_STATE_MAP_20260616.md",
         "docs/AUDIT_LOG_PLAN.md",
-        "docs/BACKUP_AND_RECOVERY.md",
         "docs/BETA_LAUNCH_CHECKLIST.md",
         "docs/COMMAND_REGISTRY.md",
         "docs/COST_CONTROL.md",
@@ -20237,9 +20812,11 @@
         "docs/PROMO_REAL_PAYMENT_TEST.md",
         "docs/PROMOTION_POLICY_V2.md",
         "docs/PROMOTION_SYSTEM.md",
-        "docs/PROVIDER_SECURITY_AUDIT.md"
+        "docs/PROVIDER_SECURITY_AUDIT.md",
+        "docs/public/TOAN_AAS_DIEU_KHOAN_CHINH_SACH_DICH_VU_V2.md",
+        "docs/public/TOAN_AAS_HUONG_DAN_SU_DUNG_CHO_KHACH_V2.md"
       ],
-      "occurrences": 686,
+      "occurrences": 684,
       "provider": "PayOS"
     },
     {
@@ -20352,12 +20929,11 @@
         "docs/REVENUE_BOT_CHECKLIST.md",
         "docs/RISK_REGISTER.md",
         "docs/STABLE_REVENUE_BOT_STATUS.md",
-        "nháp 2.py",
         "providers/asr_provider.py",
         "providers/subtitle_dub_pipeline.py",
         "support_v1b.py"
       ],
-      "occurrences": 100,
+      "occurrences": 94,
       "provider": "Deepgram"
     },
     {
@@ -20373,7 +20949,6 @@
       "files": [
         "ARCHITECTURE.md",
         "bot.py",
-        "code hoàn chỉnh của claude.py",
         "CODEX_NEXT_TASK.md",
         "docs/AI_PROVIDER_ROUTER.md",
         "docs/API_KEYS_SETUP.md",
@@ -20403,12 +20978,11 @@
         "docs/toan_aas_product_workflow.md",
         "handlers/tools_handler.py",
         "loadtests/README.md",
-        "nháp 2.py",
         "providers/key4u_provider.py",
         "README.md",
         "ROADMAP.md"
       ],
-      "occurrences": 207,
+      "occurrences": 198,
       "provider": "Gemini"
     },
     {
@@ -20474,10 +21048,9 @@
         "docs/REVENUE_BOT_CHECKLIST.md",
         "docs/STABLE_REVENUE_BOT_STATUS.md",
         "docs/TOAN_AAS_MASTER_GOAL_PLAN_V4_4000_WORDS_CODEX_READY.md",
-        "nháp 2.py",
         "README.md"
       ],
-      "occurrences": 128,
+      "occurrences": 127,
       "provider": "Fish Audio"
     },
     {
@@ -20509,7 +21082,6 @@
     {
       "files": [
         "bot.py",
-        "config/pricing_matrix_draft.json",
         "docs/COMMAND_REGISTRY.md",
         "docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md",
         "docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md",
@@ -20523,7 +21095,7 @@
         "docs/STABLE_REVENUE_BOT_STATUS.md",
         "README.md"
       ],
-      "occurrences": 107,
+      "occurrences": 106,
       "provider": "Kling"
     },
     {
@@ -20548,11 +21120,9 @@
         "AGENTS.md",
         "ARCHITECTURE.md",
         "bot.py",
-        "code hoàn chỉnh của claude.py",
         "CODEX_NEXT_TASK.md",
         "docs/ADMIN_REPORTING_AND_MODES.md",
         "docs/API_KEYS_SETUP.md",
-        "docs/BACKUP_AND_RECOVERY.md",
         "docs/BETA_SALES_PACKAGE.md",
         "docs/COMMAND_REGISTRY.md",
         "docs/CREDIT_REFUND_AUDIT.md",
@@ -20584,9 +21154,11 @@
         "docs/reports/TOAN_AAS_TELEGRAM_COMMAND_REGISTRY_HOTFIX_20260617.md",
         "docs/reports/TOAN_AAS_UX_LANGUAGE_FLOW_TOOL_AUDIT_20260616.md",
         "docs/SALES_READINESS_CHECKLIST.md",
-        "docs/SALES_SCRIPT.md"
+        "docs/SALES_SCRIPT.md",
+        "docs/STABLE_REVENUE_BOT_STATUS.md",
+        "docs/support_ticket_v1b.md"
       ],
-      "occurrences": 620,
+      "occurrences": 608,
       "provider": "Telegram"
     }
   ],
@@ -22114,7 +22686,8 @@
     }
   ],
   "schema_version": "1.0",
-  "source_files_scanned": 177,
-  "source_fingerprint_sha256": "a4ee03dea135d0fdb96491a5ff544972919e6e4a00b94a8e236f0f674674dd2d",
+  "source_files_discovered": 177,
+  "source_files_scanned": 173,
+  "source_fingerprint_sha256": "936e5271e3956d50d3bac8f0fb8aefbb2595332e6a2a67cce2f8fa1f9d03cf42",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-bot-copyfast1-bridge"
 }

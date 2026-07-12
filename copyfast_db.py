@@ -18,15 +18,47 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-@contextmanager
-def transaction():
+def _is_production() -> bool:
+    values = (
+        os.environ.get("APP_ENV", ""),
+        os.environ.get("ENVIRONMENT", ""),
+        os.environ.get("RAILWAY_ENVIRONMENT", ""),
+    )
+    return any(value.strip().lower() in {"production", "prod"} for value in values if value)
+
+
+def session_database_path() -> str:
+    """Resolve the Web-owned auth/session database without using a Bot store."""
     configured = os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
     if configured:
-        path = configured
-    elif os.path.isdir("/data"):
-        path = "/data/toanaas_webapp_session.db"
-    else:
-        path = "toanaas_webapp_session.db"
+        return configured
+    if os.path.isdir("/data"):
+        return "/data/toanaas_webapp_session.db"
+    return "toanaas_webapp_session.db"
+
+
+def ensure_copyfast_persistence() -> None:
+    """Fail closed when production auth data would disappear on restart.
+
+    Telegram link codes, signed sessions and callback nonces must survive a
+    normal Railway restart. A local relative SQLite file is fine for tests and
+    local development, but is never a production persistence plan.
+    """
+    if not _is_production():
+        return
+    configured = os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
+    if configured:
+        if not Path(configured).expanduser().is_absolute():
+            raise RuntimeError("WEBAPP_SESSION_DB_PATH phải là đường dẫn tuyệt đối khi production")
+        return
+    if os.path.isdir("/data"):
+        return
+    raise RuntimeError("Production cần WEBAPP_SESSION_DB_PATH trên persistent volume hoặc mount /data cho signed session và Telegram link")
+
+
+@contextmanager
+def transaction():
+    path = session_database_path()
     parent = Path(path).expanduser().resolve().parent
     parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path, timeout=30)
@@ -102,6 +134,9 @@ def ensure_copyfast_schema() -> None:
                 expires_at TEXT NOT NULL,
                 consumed_at TEXT,
                 canonical_user_id TEXT,
+                bot_confirmed_at TEXT,
+                confirmed_role TEXT,
+                confirmed_display_name TEXT,
                 initiating_session_id TEXT,
                 created_at TEXT NOT NULL,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
@@ -115,6 +150,16 @@ def ensure_copyfast_schema() -> None:
         link_columns = {row[1] for row in conn.execute("PRAGMA table_info(telegram_link_codes)").fetchall()}
         if "initiating_session_id" not in link_columns:
             conn.execute("ALTER TABLE telegram_link_codes ADD COLUMN initiating_session_id TEXT")
+        # A Bot callback proves the Telegram identity, but a CSRF-protected
+        # browser completion by the same initiating session commits it to the
+        # Web account.  Keep the pending callback metadata on the one-time
+        # row, never in a browser cookie or local storage.
+        if "bot_confirmed_at" not in link_columns:
+            conn.execute("ALTER TABLE telegram_link_codes ADD COLUMN bot_confirmed_at TEXT")
+        if "confirmed_role" not in link_columns:
+            conn.execute("ALTER TABLE telegram_link_codes ADD COLUMN confirmed_role TEXT")
+        if "confirmed_display_name" not in link_columns:
+            conn.execute("ALTER TABLE telegram_link_codes ADD COLUMN confirmed_display_name TEXT")
         # Telegram passwordless sign-in uses a separate, browser-bound
         # challenge.  It never stores a raw Telegram ID in a cookie or allows
         # a browser to submit one.  The bot callback is still the authority
@@ -189,6 +234,28 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # A short-lived receipt binds a Web feature confirm to an estimate
+        # observed by this signed session.  It deliberately stores only
+        # one-way hashes and timing/binding metadata: never prompt text,
+        # quote price, provider data, job state, output, wallet or PayOS data.
+        # The Telegram Bot remains the canonical quote/charge/job authority.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_feature_quote_receipts (
+                token_hash TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                session_id TEXT NOT NULL,
+                canonical_user_id TEXT NOT NULL,
+                feature_key TEXT NOT NULL,
+                input_digest TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                claimed_key_hash TEXT,
+                claimed_at TEXT,
+                consumed_at TEXT,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_audit_events (
@@ -201,6 +268,29 @@ def ensure_copyfast_schema() -> None:
                 outcome TEXT NOT NULL,
                 detail TEXT,
                 created_at TEXT NOT NULL
+            )
+            """
+        )
+        # Campaign Planner deliberately owns only Web planning metadata.  It
+        # is not a mirror of the Bot's campaign, publishing, analytics,
+        # wallet, PayOS or provider state.  Keeping a distinct table name
+        # prevents older experimental `campaigns` schemas from being reused
+        # with a different ownership/security contract.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_campaign_plans (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                destination_url TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                objective TEXT NOT NULL,
+                scheduled_for TEXT,
+                approval_status TEXT NOT NULL DEFAULT 'draft',
+                review_note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
         )
@@ -217,10 +307,25 @@ def ensure_copyfast_schema() -> None:
             "CREATE INDEX IF NOT EXISTS idx_telegram_login_browser ON telegram_login_codes(browser_token_hash, expires_at)"
         )
         conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_telegram_link_session ON telegram_link_codes(account_id, initiating_session_id, expires_at)"
+        )
+        conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_oauth_state_expiry ON web_oauth_states(expires_at)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_external_identity_account ON web_external_identities(account_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_feature_quote_receipts_expiry ON web_feature_quote_receipts(expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_feature_quote_receipts_session ON web_feature_quote_receipts(account_id, session_id, expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_campaign_plans_account_status_schedule ON web_campaign_plans(account_id, approval_status, scheduled_for)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_campaign_plans_account_updated ON web_campaign_plans(account_id, updated_at DESC)"
         )
 
 

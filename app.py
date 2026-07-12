@@ -23,7 +23,7 @@ from fastapi.staticfiles import StaticFiles
 import copyfast_api
 import copyfast_auth
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
-from copyfast_db import ensure_copyfast_schema
+from copyfast_db import ensure_copyfast_persistence, ensure_copyfast_schema
 from copyfast_pages import ROOT, render_portal
 
 
@@ -51,6 +51,7 @@ def _origins() -> list[str]:
 async def lifespan(_: FastAPI):
     ensure_auth_configuration()
     ensure_oauth_configuration()
+    ensure_copyfast_persistence()
     ensure_copyfast_schema()
     yield
 
@@ -68,6 +69,47 @@ app.add_middleware(
 _auth_rate_windows: dict[str, list[float]] = {}
 
 
+# These files belonged to the first static prototype.  The production
+# entrypoint does not mount that prototype, but old bookmarks must never lead
+# a future static mount back to a localStorage/raw-ID flow.  Redirect every
+# known root HTML shell to its signed-session Portal counterpart instead.
+_legacy_html_redirects = {
+    "/admin.html": "/admin",
+    "/affiliate.html": "/admin/leads",
+    "/auth.html": "/login",
+    "/b2b.html": "/admin/users",
+    "/campaign.html": "/campaigns",
+    "/coach.html": "/chat",
+    "/customer_app.html": "/dashboard",
+    "/index.html": "/",
+    "/login.html": "/login",
+    "/media.html": "/assets",
+    "/mobile_app.html": "/dashboard",
+    "/mobile_chat.html": "/chat",
+    "/video.html": "/video",
+    "/wallet.html": "/wallet",
+}
+
+
+def _safe_onboarding_next(value: str | None) -> str:
+    """Accept a route continuation only when it is a plain local Portal path.
+
+    The path is created by our own route gate, but it may later be supplied in
+    a query string by a browser.  Do not let a post-Telegram-link redirect
+    become an open redirect or send a user back into an auth/onboarding loop.
+    """
+    candidate = str(value or "").strip()
+    if not candidate or not candidate.startswith("/") or candidate.startswith("//") or "\\" in candidate or "\x00" in candidate:
+        return ""
+    parsed = urlparse(candidate)
+    if parsed.scheme or parsed.netloc or parsed.params or parsed.query or parsed.fragment:
+        return ""
+    path = parsed.path.rstrip("/") or "/"
+    if path in {"/login", "/register", "/onboarding"}:
+        return ""
+    return path
+
+
 @app.middleware("http")
 async def security_headers(request: Request, call_next):
     request_id = request.headers.get("X-Request-ID", "")[:80] or str(uuid.uuid4())
@@ -78,6 +120,14 @@ async def security_headers(request: Request, call_next):
         "/api/v1/auth/register": 4,
         "/api/v1/auth/telegram/login/start": 5,
         "/api/v1/auth/telegram/login/complete": 8,
+        "/api/v1/auth/telegram/link/start": 5,
+        "/api/v1/auth/telegram/link/complete": 8,
+        # Private Bot callback is independently authenticated by bearer/HMAC,
+        # but keeping a narrow in-process gate prevents unauthenticated JSON
+        # floods from reaching deeper request processing. Production keeps an
+        # additional edge rate limit in front of Railway.
+        "/api/v1/auth/internal/telegram-link/confirm": 60,
+        "/api/v1/auth/internal/telegram-link/confirm/": 60,
     }
     oauth_start = (
         request.method == "GET"
@@ -156,7 +206,7 @@ async def legacy_video_redirect():
 
 @app.get("/campaign-app", include_in_schema=False)
 async def legacy_campaign_redirect():
-    return RedirectResponse("/admin/campaigns", status_code=307)
+    return RedirectResponse("/campaigns", status_code=307)
 
 
 @app.get("/affiliate-app", include_in_schema=False)
@@ -184,6 +234,9 @@ async def legacy_b2b_redirect():
 async def page(page_path: str, request: Request):
     normalized = ("/" + page_path.lstrip("/")) if page_path else "/"
     normalized = normalized.rstrip("/") or "/"
+    legacy_target = _legacy_html_redirects.get(normalized)
+    if legacy_target:
+        return RedirectResponse(legacy_target, status_code=307)
     # Earlier registry builds pointed SFX Library to a query variant of the
     # Music Library. Keep that existing bookmark usable while routing it to
     # its own Web surface so it can have independent readiness and filtering.
@@ -195,7 +248,17 @@ async def page(page_path: str, request: Request):
     # admin role; browser-supplied IDs never influence this decision.
     if normalized == "/admin" or normalized.startswith("/admin/"):
         await require_canonical_admin(request)
-    public_pages = {"/legal", "/privacy"}
+    # The public home is a product entry surface, not an unauthenticated
+    # workspace.  A signed customer still lands directly in their Portal so
+    # returning users never need to navigate past marketing copy.
+    if normalized == "/":
+        try:
+            account = current_session(request)["account"]
+        except HTTPException:
+            return render_portal(page_path)
+        return RedirectResponse("/dashboard" if account.get("canonical_user_id") else "/onboarding", status_code=307)
+
+    public_pages = {"/", "/legal", "/privacy"}
     if normalized in {"/login", "/register"}:
         try:
             existing = current_session(request)["account"]
@@ -211,10 +274,10 @@ async def page(page_path: str, request: Request):
             return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
         account = session["account"]
         linked = bool(account.get("canonical_user_id"))
-        if normalized == "/":
-            return RedirectResponse("/dashboard" if linked else "/onboarding", status_code=307)
         if not linked and normalized not in {"/onboarding", "/account"}:
-            return RedirectResponse("/onboarding", status_code=307)
+            # Preserve the intended local workflow through the Telegram link.
+            # The continuation is validated again before it is ever used.
+            return RedirectResponse(f"/onboarding?next={quote(normalized, safe='/')}", status_code=307)
         if linked and normalized == "/onboarding":
-            return RedirectResponse("/dashboard", status_code=307)
+            return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
     return render_portal(page_path)

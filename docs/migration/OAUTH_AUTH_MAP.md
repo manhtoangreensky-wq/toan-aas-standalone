@@ -9,7 +9,8 @@ webhooks.
 | Method | Current behaviour | Browser trust boundary |
 | --- | --- | --- |
 | Email + password | Enabled by default; an address ending in `@gmail.com` is treated as a normal email address. | Password is submitted to the same-origin Web API and is scrypt-hashed server-side. |
-| Telegram | Passwordless sign-in only after the account was linked through the Bot. | Browser never submits a raw Telegram ID. A one-time Bot proof is bound to an HttpOnly browser challenge. |
+| Telegram Login (OIDC) | Disabled until BotFather Web Login credentials are configured. A signed Telegram profile creates a Telegram-first Web session without a bot.py edit. | State, PKCE, nonce, token exchange and fixed-JWKS RS256 verification remain server-side; browser never submits an ID or receives a token. |
+| Telegram Bot link | Passwordless sign-in via the Bot. The first valid Bot proof creates a minimal Telegram-first Web profile by default; set `WEBAPP_TELEGRAM_AUTO_REGISTER_ENABLED=false` to require a previously linked account instead. | Browser never submits a raw Telegram ID. A one-time Bot proof is bound to an HttpOnly browser challenge. An OIDC-created account must link the same Telegram user before canonical Bot data unlocks. |
 | Google OAuth | Disabled unless all Google configuration is present. | OAuth state/PKCE/nonce are server-owned; Google ID token is verified against fixed Google JWKS. |
 | GitHub OAuth | Disabled unless all GitHub configuration is present. | OAuth state/PKCE are server-owned; identity comes from fixed GitHub `/user` and verified-email endpoints. |
 | Sign in with Apple | Disabled unless Apple Services ID, team/key details and `.p8` private key are present. | Apple form-POST callback uses a dedicated short-lived `SameSite=None; Secure` state cookie; the main signed session remains `Lax`. |
@@ -17,6 +18,19 @@ webhooks.
 Google/GitHub are deliberately not advertised as active merely because the
 page renders a button. The public `GET /api/v1/auth/providers` capability
 response controls the UI.
+
+## Telegram Login OIDC
+
+Telegram Login is a Web-only, standards-based sign-in path. It uses
+authorization-code OIDC with PKCE, a server-owned state and nonce, fixed
+Telegram JWKS, and RS256 token verification. It does not require a Bot API
+token or any change to bot.py.
+
+The signed Telegram profile ID is immediately HMAC-hashed for the Web
+external-identity record and is never returned to browser JavaScript. A later
+Bot deep-link can unlock canonical wallet/job data only if its signed Bot
+identity is the same Telegram user. This deliberately rejects a Telegram
+Login/Telegram Bot mismatch instead of connecting two people to one account.
 
 ## OAuth configuration (Railway only)
 
@@ -28,6 +42,10 @@ JavaScript, Git, logs or docs.
 WEBAPP_PUBLIC_BASE_URL=https://app.toanaas.vn
 WEB_OAUTH_IDENTITY_HMAC_SECRET=<long independent random secret>
 WEB_COOKIE_SECURE=true
+
+WEBAPP_TELEGRAM_OAUTH_ENABLED=true
+TELEGRAM_OAUTH_CLIENT_ID=<BotFather Web Login client id>
+TELEGRAM_OAUTH_CLIENT_SECRET=<BotFather Web Login client secret>
 
 WEBAPP_GOOGLE_OAUTH_ENABLED=true
 GOOGLE_OAUTH_CLIENT_ID=<Google web client id>
@@ -51,6 +69,7 @@ flag on:
 https://app.toanaas.vn/api/v1/auth/oauth/google/callback
 https://app.toanaas.vn/api/v1/auth/oauth/github/callback
 https://app.toanaas.vn/api/v1/auth/oauth/apple/callback
+https://app.toanaas.vn/api/v1/auth/oauth/telegram/callback
 ```
 
 The server fails closed at startup if an enabled provider has an invalid base
@@ -60,6 +79,11 @@ dependency.
 
 ## Security contract
 
+- Telegram Login requests only openid and profile. The server requires the
+  issuer, audience, expiry, iat, nonce, sub and signed profile id claims,
+  accepts only Telegram RS256 keys from the fixed JWKS URL, and retains only
+  an HMAC of the Bot-compatible profile ID. The OIDC client secret, access
+  token, ID token and raw Telegram ID never enter browser storage.
 - `state` is high-entropy, stored as a SHA-256 hash, browser-bound by a signed
   HttpOnly cookie, expires in ten minutes, and is consumed before a token
   exchange. Google/GitHub state stays `SameSite=Lax`; Apple uses a dedicated
@@ -71,9 +95,9 @@ dependency.
   names in that mode, preventing a sibling subdomain from tossing a competing
   parent-domain cookie. Local HTTP development uses unprefixed cookie names
   only for local testing.
-- PKCE is mandatory for Google/GitHub. The verifier and Google nonce are
-  derived server-side from the opaque state and an independent HMAC secret;
-  neither goes into localStorage.
+- PKCE is mandatory for Google/GitHub/Telegram Login. The verifier and OIDC
+  nonce are derived server-side from the opaque state and an independent HMAC
+  secret; neither goes into localStorage.
 - Google accepts only RS256 ID tokens with the correct issuer, audience,
   expiry, nonce and verified email. Its immutable `sub`, not email, identifies
   the account.

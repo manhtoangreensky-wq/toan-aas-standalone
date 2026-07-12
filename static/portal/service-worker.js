@@ -1,6 +1,6 @@
 /* Only public portal shell assets are cached.  API, wallet, payment, admin,
    uploads and private delivery URLs are intentionally never cached. */
-const CACHE_NAME = "toan-aas-portal-shell-v2";
+const CACHE_NAME = "toan-aas-portal-shell-v3";
 const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal.js",
@@ -25,5 +25,8 @@ self.addEventListener("fetch", (event) => {
   // signed file URLs and any future private/static asset fall through to the
   // browser's normal network path without being persisted by this worker.
   if (request.method !== "GET" || url.origin !== self.location.origin || !SHELL_PATHS.has(url.pathname)) return;
-  event.respondWith(caches.match(url.pathname).then((cached) => cached || fetch(request)));
+  // Network-first is intentional for the portal shell. A PWA must not keep a
+  // stale login/link UI after a deploy (especially when auth recovery fixes
+  // land). The pre-cached shell remains a public offline fallback only.
+  event.respondWith(fetch(request).catch(() => caches.match(url.pathname).then((cached) => cached || Response.error())));
 });

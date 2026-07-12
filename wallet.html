@@ -1,83 +1,16 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TOAN AAS - Quản lý Ví & Nạp Xu</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="0; url=/wallet">
+  <title>TOAN AAS — Ví Xu</title>
+  <style>body{font-family:system-ui,sans-serif;max-width:42rem;margin:12vh auto;padding:0 1.5rem;color:#172033;background:#f8fafc}a{color:#075cc8}</style>
 </head>
-<body class="bg-gray-100 text-gray-800 font-sans min-h-screen">
-    <nav class="bg-emerald-800 text-white p-4 shadow-lg">
-        <div class="container mx-auto flex justify-between items-center">
-            <h1 class="text-xl font-bold"><i class="fas fa-wallet mr-2"></i>TOAN AAS Wallet</h1>
-            <a href="/" class="bg-white/20 hover:bg-white/30 px-3 py-1 rounded transition text-sm"><i class="fas fa-home"></i> Về Dashboard</a>
-        </div>
-    </nav>
-
-    <div class="container mx-auto mt-8 p-4 max-w-5xl flex flex-col md:flex-row gap-6">
-        <div class="w-full md:w-1/2 bg-gradient-to-br from-emerald-600 to-teal-900 p-8 rounded-2xl shadow-xl text-white relative">
-            <h2 class="text-lg font-semibold mb-2 opacity-80 uppercase tracking-wider">Số dư khả dụng</h2>
-            <div class="flex items-baseline gap-2 mb-8">
-                <span class="text-5xl font-bold tracking-tight" id="balance-xu">Đang tải...</span>
-                <span class="text-xl font-semibold opacity-90">Xu</span>
-            </div>
-            <div class="bg-black/20 p-4 rounded-xl backdrop-blur-sm">
-                <p class="text-sm opacity-90"><i class="fas fa-info-circle mr-1"></i> Xu dùng để chi trả dịch vụ AI.</p>
-            </div>
-        </div>
-
-        <div class="w-full md:w-1/2 bg-white p-6 rounded-2xl shadow-md border-t-4 border-emerald-500">
-            <h2 class="text-xl font-bold mb-4 text-gray-700"><i class="fas fa-qrcode text-emerald-600 mr-2"></i>Nạp Xu Tự Động</h2>
-            <div class="mb-4">
-                <label class="block text-sm font-semibold text-gray-600 mb-2">Nhập số tiền muốn nạp (VNĐ)</label>
-                <input type="number" id="topup-amount" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:border-emerald-500 outline-none text-lg font-bold" value="50000">
-            </div>
-            <button onclick="createPayment()" id="btn-pay" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-lg transition">
-                <i class="fas fa-bolt"></i> Tạo Mã QR Thanh Toán
-            </button>
-            <div id="msg" class="text-center text-sm font-semibold mt-4 hidden"></div>
-        </div>
-    </div>
-
-    <script>
-        const USER_ID = localStorage.getItem('user_id'); 
-        if(!USER_ID) { window.location.href = '/login'; }
-
-        async function loadBalance() {
-            try {
-                const res = await fetch(`/api/v1/auth/me/${USER_ID}`);
-                const data = await res.json();
-                document.getElementById('balance-xu').innerText = data.success ? data.credits.toLocaleString('vi-VN') : "0";
-            } catch (e) {
-                document.getElementById('balance-xu').innerText = "0";
-            }
-        }
-
-        async function createPayment() {
-            const amount = parseInt(document.getElementById('topup-amount').value);
-            if(!amount || amount < 10000) return alert("Số tiền tối thiểu 10.000 VNĐ");
-
-            const btn = document.getElementById('btn-pay');
-            btn.innerHTML = 'Đang kết nối ngân hàng...'; btn.disabled = true;
-
-            try {
-                const res = await fetch('/api/v1/billing/create-payment-link', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: USER_ID, payment_type: "topup_xu", amount: amount, package_id: "CUSTOM" })
-                });
-                const data = await res.json();
-                if(data.success && data.checkoutUrl) window.location.href = data.checkoutUrl;
-                else alert("Lỗi: " + (data.message || "Không thể tạo QR"));
-            } catch (e) { 
-                alert("Lỗi kết nối máy chủ"); 
-            } finally {
-                btn.innerHTML = '<i class="fas fa-bolt"></i> Tạo Mã QR Thanh Toán'; btn.disabled = false;
-            }
-        }
-        
-        document.addEventListener('DOMContentLoaded', loadBalance);
-    </script>
+<body>
+  <h1>Đang mở Ví Xu an toàn…</h1>
+  <p>Ví, PayOS và nạp thủ công dùng signed session cùng Bot canonical. Trang cũ không còn dùng dữ liệu định danh lưu ở browser hoặc tạo PayOS trực tiếp.</p>
+  <p><a href="/wallet">Mở Ví Xu</a></p>
+  <script>window.location.replace('/wallet');</script>
 </body>
 </html>

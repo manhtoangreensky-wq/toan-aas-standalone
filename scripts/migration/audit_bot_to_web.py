@@ -20,6 +20,7 @@ import ast
 import hashlib
 import json
 import re
+import subprocess
 import sys
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
@@ -43,6 +44,13 @@ EXCLUDED_DIRS = {
     "venv",
     ".venv",
 }
+NON_CANONICAL_BOT_SOURCE_MARKERS = (
+    "nháp",
+    "draft",
+    "backup",
+    "code hoàn chỉnh",
+    "code cao nhất",
+)
 MAX_AST_PARSE_BYTES = 1_000_000
 HTTP_VERBS = {"get", "post", "put", "patch", "delete", "options", "head"}
 ADMIN_TERMS = (
@@ -118,19 +126,136 @@ COMMAND_ROUTE_OVERRIDES = {
     "truycapnhanh": "/dashboard",
     "profile": "/account",
     "account": "/account",
+    "myid": "/account",
+    "profile_user": "/account",
+    "lang": "/account",
+    "language": "/account",
+    "en_vi": "/account",
+    "vi_en": "/account",
+    "ja_vi": "/account",
+    "ko_vi": "/account",
+    "zh_vi": "/account",
+    "adjust_package": "/membership",
+    "buy_plan": "/membership",
+    "goi_beta": "/membership",
+    "grant_combo": "/membership",
+    "grant_monthly": "/membership",
+    "grant_storage": "/membership",
+    "member": "/membership",
+    "member_policy": "/membership",
+    "member_user": "/membership",
+    "package_catalog": "/membership",
+    "rank": "/membership",
+    "trial_bonus_status": "/membership",
+    "trial_status": "/membership",
+    "user_packages": "/membership",
+    "vip": "/membership",
+    "vip_policy": "/membership",
+    "vip_services": "/membership",
+    "tools": "/tools",
+    "tool_catalog": "/tools",
+    "models": "/tools",
+    "ai_models": "/tools",
+    "api_recommend": "/tools",
+    "feature_set": "/tools",
+    "status": "/status",
+    "ai_status": "/status",
+    "data_status": "/status",
+    "feature_status": "/status",
+    "free_hub_status": "/status",
+    "key4u_status": "/status",
+    "local_status": "/status",
+    "minimax_status": "/status",
+    "orchestrator_status": "/status",
+    "queue_status": "/status",
+    "shopaikey_status": "/status",
+    "storage_status": "/status",
+    "system_public_status": "/status",
+    "telegram_status": "/status",
+    "toanaas_ai_status": "/status",
+    "tool_public_status": "/status",
+    "tool_status": "/status",
+    "create_media": "/studio",
+    "creative_flow": "/studio",
+    "film": "/studio",
+    "media_factory": "/studio",
+    "pipeline": "/studio",
+    "produce": "/studio",
+    "quick": "/studio",
+    "quickstart": "/studio",
+    "render_center": "/studio",
+    "shot_variations": "/studio",
+    "truycapnhanh": "/studio",
+    "media_library": "/assets",
+    "play_media": "/assets",
+    "select_media": "/assets",
+    "memory": "/notes",
+    "memory_plan": "/notes",
+    "memory_set_plan": "/notes",
+    "memory_status": "/notes",
+    "note": "/notes",
+    "notes": "/notes",
+    "notes_category": "/notes",
+    "notes_important": "/notes",
+    "note_ai": "/notes",
+    "note_archive": "/notes",
+    "note_category": "/notes",
+    "note_delete": "/notes",
+    "note_priority": "/notes",
+    "note_remind": "/notes",
+    "note_tags": "/notes",
+    "note_view": "/notes",
+    "remind": "/reminders",
+    "reminders": "/reminders",
+    "reminder_cancel": "/reminders",
+    "reminder_done": "/reminders",
+    "reminder_pause": "/reminders",
+    "reminder_resume": "/reminders",
+    "repeat_daily": "/reminders",
+    "repeat_weekly": "/reminders",
+    "repeat_monthly": "/reminders",
+    "repeat_yearly": "/reminders",
+    "ref": "/referrals",
+    "referral": "/referrals",
+    "ref_link": "/referrals",
+    "ref_stats": "/referrals",
+    "invite": "/referrals",
+    "gift": "/rewards",
+    "nhanqua": "/rewards",
+    "birthday": "/rewards",
+    "birthday_gift_check": "/rewards",
+    "my_promos": "/rewards",
+    "promo": "/rewards",
+    "promos": "/rewards",
+    "magiamgia": "/rewards",
+    "khuyenmai": "/rewards",
+    "community": "/community",
+    "hub": "/community",
+    "toanaas_hub": "/community",
+    "official_channels": "/community",
+    "kenh_chinh_thuc": "/community",
     "wallet": "/wallet",
     "naptien": "/wallet/topup",
     "topup": "/wallet/topup",
+    "thucong": "/wallet/topup",
     "support": "/support",
+    "gopy": "/support",
     "tickets": "/tickets",
     "ticket_status": "/tickets",
     "support_status": "/tickets",
     "legal": "/legal",
     "terms": "/legal",
+    "ads_policy": "/legal",
+    "affiliate_policy": "/legal",
+    "content_policy": "/legal",
+    "dieukhoan": "/legal",
+    "dieukhoan_xu": "/legal",
+    "phaply": "/legal",
+    "terms_xu": "/legal",
+    "xu_terms": "/legal",
     "privacy": "/privacy",
     "data_delete": "/account",
     "mydata": "/account",
-    "status": "/dashboard",
     "assets": "/assets",
     "asset_add": "/assets",
     "asset_send": "/assets",
@@ -146,16 +271,26 @@ COMMAND_ROUTE_OVERRIDES = {
     "ocr_pdf": "/documents/ocr",
     "add_voice_to_video": "/video/add-ons",
     "video_music": "/video/add-ons",
-    "help": "/dashboard",
-    "commands": "/dashboard",
-    "huongdan": "/dashboard",
-    "guide": "/dashboard",
-    "hdsd": "/dashboard",
+    "help": "/guides",
+    "source_help": "/guides",
+    "commands": "/guides",
+    "huongdan": "/guides",
+    "guide": "/guides",
+    "hdsd": "/guides",
     "affiliate": "/affiliate-app",
     "campaign": "/campaign-app",
     "video": "/video-app",
     "media": "/media-app",
     "assistant": "/assistant-app",
+    "linkweb": "/onboarding",
+    "growth_ai": "/growth/ai",
+    "campaign_report": "/campaign/report",
+    "export_report": "/campaign/report",
+    "mode": "/account",
+    "beta_offer": "/membership",
+    "goi_beta": "/membership",
+    "uudai": "/rewards",
+    "cancel": "/jobs",
 }
 SECRET_VALUE_PATTERNS = (
     re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{20,}\b"),  # Telegram-style token
@@ -198,6 +333,107 @@ JOB_FUNCTION_RE = re.compile(
     r"^(?:async\s+)?def\s+(?P<target>[A-Za-z_]\w*(?:worker|job|queue|background|scheduler)\w*)\s*\(",
     re.IGNORECASE | re.MULTILINE,
 )
+CORE_BRIDGE_FILE = "webapp_core_bridge.py"
+CORE_BRIDGE_DEFAULT_PREFIX = "/internal/v1"
+CORE_BRIDGE_CALL_NAMES = frozenset({"_bridge", "bridge_request"})
+TELEGRAM_LINK_CALLBACK_HEADERS = (
+    "X-TOAN-AAS-BRIDGE-TOKEN",
+    "X-TOAN-AAS-Timestamp",
+    "X-TOAN-AAS-Request-ID",
+    "X-TOAN-AAS-Signature",
+)
+TELEGRAM_LINK_CALLBACK_ENV = (
+    "WEBAPP_LINK_CALLBACK_URL",
+    "WEBAPP_LINK_CALLBACK_TOKEN",
+    "WEBAPP_LINK_CALLBACK_HMAC_SECRET",
+)
+
+
+def _callback_signature_shape_observed(text: str, *, side: str) -> bool:
+    """Check the static body/timestamp/request-id/path HMAC shape.
+
+    This remains a text-only release guard: it does not execute either
+    service, read a secret, or make a network request.  It catches the most
+    dangerous integration drift where both sides still mention the same
+    headers but no longer sign the same canonical material.
+    """
+    compact = re.sub(r"\s+", "", text or "")
+    shared = "hashlib.sha256(body).hexdigest()" in compact
+    if side == "bot":
+        return all(
+            (
+                shared,
+                'f"{timestamp}.{request_id}.POST.{callback_path}.{digest}".encode("utf-8")' in compact,
+                'hmac.new(callback_secret.encode("utf-8"),material,hashlib.sha256).hexdigest()' in compact,
+            )
+        )
+    if side == "web":
+        return all(
+            (
+                shared,
+                'f"{timestamp}.{request_id}.{request.method.upper()}.{request.url.path}.{digest}".encode("utf-8")' in compact,
+                'hmac.new(secret.encode("utf-8"),material,hashlib.sha256).hexdigest()' in compact,
+            )
+        )
+    raise ValueError("callback signature side must be bot or web")
+
+
+def _literal_template(node: ast.AST | None) -> str | None:
+    """Return a static route template without evaluating source code.
+
+    The Web compatibility layer deliberately builds a few route values with
+    f-strings (for example ``/jobs/{job_id}``).  A generic source inventory
+    cannot execute those expressions, but it can still keep their path shape
+    and compare it to the Bot router.  A ``{*}`` segment means "dynamic
+    source value", never a value observed at runtime.
+    """
+
+    if isinstance(node, ast.Constant) and isinstance(node.value, str):
+        return _redact_text(node.value)
+    if isinstance(node, ast.JoinedStr):
+        values: list[str] = []
+        for value in node.values:
+            if isinstance(value, ast.Constant) and isinstance(value.value, str):
+                values.append(value.value)
+            elif isinstance(value, ast.FormattedValue):
+                values.append("{*}")
+            else:
+                return None
+        return _redact_text("".join(values))
+    return None
+
+
+def _normalise_route_template(value: str) -> str:
+    """Normalise a route only for static method/path comparison."""
+
+    route = "/" + str(value or "").strip().lstrip("/")
+    route = re.sub(r"/{2,}", "/", route)
+    if route != "/" and route.endswith("/"):
+        route = route.rstrip("/")
+    return route
+
+
+def _route_segment_is_dynamic(value: str) -> bool:
+    return value == "{*}" or bool(re.fullmatch(r"\{[^/{}]+\}", value))
+
+
+def _route_template_matches(web_path: str, bot_path: str) -> bool:
+    """Compare route shapes while respecting dynamic path segments.
+
+    This is intentionally a narrow static assertion: the method must still
+    match and literal segments must still agree.  It does *not* prove that a
+    dynamic feature/action allowlist is safe at runtime; the API tests remain
+    responsible for that validation.
+    """
+
+    web_segments = [segment for segment in _normalise_route_template(web_path).split("/") if segment]
+    bot_segments = [segment for segment in _normalise_route_template(bot_path).split("/") if segment]
+    if len(web_segments) != len(bot_segments):
+        return False
+    return all(
+        left == right or _route_segment_is_dynamic(left) or _route_segment_is_dynamic(right)
+        for left, right in zip(web_segments, bot_segments)
+    )
 
 
 def _redact_text(value: str) -> str:
@@ -236,6 +472,29 @@ def _source_files(root: Path) -> list[Path]:
             continue
         files.append(path)
     return sorted(files)
+
+
+def _active_inventory_files(project_kind: str, root: Path, files: list[Path]) -> tuple[list[Path], list[str]]:
+    """Exclude clearly named Bot drafts from the source-of-truth inventory.
+
+    The local bot worktree keeps several human-named historical snippets next
+    to ``bot.py``. They are useful reference material but are not imported by
+    the deployed entrypoint, so counting their duplicate command registrations
+    would overstate parity and can contradict the canonical Bot implementation.
+    Web App files are never filtered by this rule.
+    """
+
+    if project_kind != "telegram_bot":
+        return files, []
+    active: list[Path] = []
+    excluded: list[str] = []
+    for path in files:
+        candidate = _relative(path, root).casefold()
+        if any(marker in candidate for marker in NON_CANONICAL_BOT_SOURCE_MARKERS):
+            excluded.append(_relative(path, root))
+            continue
+        active.append(path)
+    return active, excluded
 
 
 def _read_source(path: Path) -> str:
@@ -281,6 +540,58 @@ def _handler_name(node: ast.AST | None) -> str:
         return "<missing>"
     name = _call_name(node)
     return name or "<dynamic>"
+
+
+FUNCTION_DEFINITION_RE = re.compile(
+    r"(?m)^(?:async\s+)?def\s+(?P<name>[A-Za-z_]\w*)\s*\(",
+)
+ADMIN_GUARD_RE = re.compile(
+    r"\bif\s+not\s+(?:is_admin_user|is_admin_or_owner|is_owner_user)\s*\("
+    r"|\b(?:await\s+)?(?:require_admin|require_canonical_admin)\s*\("
+    r"|\bif\s+str\([^\n]{0,200}?\)\s*!=\s*ADMIN_ID\b",
+)
+ADMIN_HANDLER_DELEGATE_RE = re.compile(
+    r"\breturn\s+await\s+((?:cmd_[A-Za-z_]\w*|send_admin_[A-Za-z_]\w*|send_ai_admin_report|send_report_chart))\s*\(",
+)
+
+
+def _static_admin_guarded_handlers(text: str) -> set[str]:
+    """Find handlers whose own function body has a static admin guard.
+
+    The frozen Bot has many command names that do not contain ``admin`` but
+    immediately reject callers through ``is_admin_user``.  This scans source
+    text only (including the large monolithic ``bot.py`` path that is not AST
+    parsed) so the parity matrix does not advertise a sensitive operation as a
+    customer surface merely because its command name is neutral.
+    """
+
+    definitions = list(FUNCTION_DEFINITION_RE.finditer(text))
+    guarded: set[str] = set()
+    body_heads: dict[str, str] = {}
+    for index, match in enumerate(definitions):
+        body_end = definitions[index + 1].start() if index + 1 < len(definitions) else len(text)
+        # Admin checks in this Bot occur near the top of a command handler.
+        # Bound the scan to keep the static audit predictable for monolithic
+        # generated source while avoiding a cross-function false positive.
+        body_head = text[match.end():min(body_end, match.end() + 8_000)]
+        body_heads[match.group("name")] = body_head
+        if ADMIN_GUARD_RE.search(body_head):
+            guarded.add(match.group("name"))
+    # A few Bot compatibility commands are thin aliases which delegate to a
+    # separately guarded handler. Propagate only direct aliases to a command
+    # handler or explicitly named admin-report helper; this stays static,
+    # bounded and avoids treating ordinary shared UI helpers as an
+    # authorization guarantee.
+    changed = True
+    while changed:
+        changed = False
+        for name, body_head in body_heads.items():
+            if name in guarded:
+                continue
+            if any(target in guarded for target in ADMIN_HANDLER_DELEGATE_RE.findall(body_head)):
+                guarded.add(name)
+                changed = True
+    return guarded
 
 
 def _record_location(root: Path, path: Path, node: ast.AST) -> dict[str, Any]:
@@ -346,10 +657,13 @@ def _extract_large_python_file(
     def location(match: re.Match[str]) -> dict[str, Any]:
         return {"file": _relative(path, root), "line": _line_for_offset(text, match.start())}
 
+    admin_guarded_handlers = _static_admin_guarded_handlers(text)
     for match in COMMAND_HANDLER_RE.finditer(text):
+        handler = match.group("handler")
         record = {
             "command": _redact_text(match.group("command")).lstrip("/"),
-            "handler": match.group("handler"),
+            "handler": handler,
+            "admin_guarded": handler.rsplit(".", 1)[-1] in admin_guarded_handlers,
             **location(match),
         }
         _append_unique(commands, seen["command"], record, ("command", "handler", "file", "line"))
@@ -432,6 +746,7 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
             parse_errors.append({"file": _relative(path, root), "error": _redact_text(str(exc))})
             continue
 
+        admin_guarded_handlers = _static_admin_guarded_handlers(text)
         for record in _extract_env_from_ast(tree, root, path):
             _append_unique(env_references, seen["env"], record, ("name", "file", "line"))
 
@@ -444,7 +759,12 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
                 if simple_name == "CommandHandler":
                     command = _literal_string(node.args[0] if node.args else None) or "<dynamic-command>"
                     handler = _handler_name(node.args[1] if len(node.args) > 1 else _kwarg(node, "callback"))
-                    record = {"command": command.lstrip("/"), "handler": handler, **location}
+                    record = {
+                        "command": command.lstrip("/"),
+                        "handler": handler,
+                        "admin_guarded": handler.rsplit(".", 1)[-1] in admin_guarded_handlers,
+                        **location,
+                    }
                     _append_unique(commands, seen["command"], record, ("command", "handler", "file", "line"))
 
                 if simple_name == "CallbackQueryHandler":
@@ -590,7 +910,8 @@ def _fingerprint(files: list[Path], root: Path) -> str:
 
 
 def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
-    files = _source_files(root)
+    discovered_files = _source_files(root)
+    files, excluded_noncanonical_source_files = _active_inventory_files(project_kind, root, discovered_files)
     python_inventory = _extract_python_inventory(root, files)
     tables = _extract_database_references(root, files)
     providers = _extract_provider_references(root, files)
@@ -599,7 +920,9 @@ def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
         "project_kind": project_kind,
         "audit_mode": "static-only",
         "source_root": str(root),
+        "source_files_discovered": len(discovered_files),
         "source_files_scanned": len(files),
+        "excluded_noncanonical_source_files": excluded_noncanonical_source_files,
         "source_fingerprint_sha256": _fingerprint(files, root),
         **python_inventory,
         "database_references": tables,
@@ -626,7 +949,267 @@ def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
     return _sanitize(inventory)
 
 
-def _is_admin_command(command: str, handler: str) -> bool:
+def _core_bridge_prefix(tree: ast.AST) -> str:
+    """Read the private router prefix from AST, never by importing the Bot."""
+
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.Assign, ast.AnnAssign)) or not isinstance(node.value, ast.Call):
+            continue
+        if _call_name(node.value.func).rsplit(".", 1)[-1] != "APIRouter":
+            continue
+        candidate = _literal_string(_kwarg(node.value, "prefix"))
+        if candidate and candidate.startswith("/"):
+            return _normalise_route_template(candidate)
+    return CORE_BRIDGE_DEFAULT_PREFIX
+
+
+def _extract_bot_core_bridge_routes(bot_root: Path) -> tuple[list[dict[str, Any]], bool]:
+    """Statically collect mounted-contract candidates from the Bot bridge file."""
+
+    bridge_file = bot_root / CORE_BRIDGE_FILE
+    if not bridge_file.is_file():
+        return [], False
+    try:
+        source = _read_source(bridge_file)
+        tree = ast.parse(source, filename=str(bridge_file))
+    except (OSError, SyntaxError, ValueError):
+        return [], False
+    prefix = _core_bridge_prefix(tree)
+    routes: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, int]] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
+            continue
+        for decorator in node.decorator_list:
+            if not isinstance(decorator, ast.Call) or not isinstance(decorator.func, ast.Attribute):
+                continue
+            if not isinstance(decorator.func.value, ast.Name) or decorator.func.value.id != "router":
+                continue
+            method = decorator.func.attr.lower()
+            if method not in HTTP_VERBS:
+                continue
+            suffix = _literal_template(decorator.args[0] if decorator.args else None)
+            if not suffix or not suffix.startswith("/"):
+                continue
+            route = _normalise_route_template(f"{prefix}/{suffix.lstrip('/')}")
+            signature = (method.upper(), route, int(getattr(node, "lineno", 0) or 0))
+            if signature in seen:
+                continue
+            seen.add(signature)
+            routes.append(
+                {
+                    "method": method.upper(),
+                    "path": route,
+                    "endpoint": node.name,
+                    "file": CORE_BRIDGE_FILE,
+                    "line": int(getattr(node, "lineno", 0) or 0),
+                }
+            )
+    entrypoint = bot_root / "bot.py"
+    mounted = False
+    if entrypoint.is_file():
+        try:
+            entrypoint_source = _read_source(entrypoint)
+            mounted = bool(
+                re.search(r"\binclude_router\s*\(\s*build_core_bridge_router\s*\(", entrypoint_source)
+            )
+        except OSError:
+            mounted = False
+    return sorted(routes, key=lambda item: (item["path"], item["method"], item["line"])), mounted
+
+
+def _call_argument(call: ast.Call, index: int, keyword: str) -> ast.AST | None:
+    if len(call.args) > index:
+        return call.args[index]
+    return _kwarg(call, keyword)
+
+
+def _extract_web_bridge_requests(web_root: Path) -> list[dict[str, Any]]:
+    """Collect only static Web-to-Bot bridge calls, preserving f-string shape."""
+
+    requests: list[dict[str, Any]] = []
+    seen: set[tuple[str, str, str, int]] = set()
+    for path in _source_files(web_root):
+        if path.suffix.lower() != ".py":
+            continue
+        try:
+            source = _read_source(path)
+            if len(source.encode("utf-8", errors="replace")) > MAX_AST_PARSE_BYTES:
+                continue
+            tree = ast.parse(source, filename=str(path))
+        except (OSError, SyntaxError, ValueError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            name = _call_name(node.func).rsplit(".", 1)[-1]
+            if name not in CORE_BRIDGE_CALL_NAMES:
+                continue
+            raw_method = _literal_string(_call_argument(node, 0, "method"))
+            raw_path = _literal_template(_call_argument(node, 1, "path"))
+            # The public application can have other helper functions with a
+            # similar name. Only private-core paths belong in this contract.
+            if not raw_path or not raw_path.startswith(CORE_BRIDGE_DEFAULT_PREFIX):
+                continue
+            method = (
+                raw_method.upper()
+                if raw_method and not raw_method.startswith("<dynamic")
+                else "<dynamic-method>"
+            )
+            route = _normalise_route_template(raw_path)
+            line = int(getattr(node, "lineno", 0) or 0)
+            signature = (method, route, _relative(path, web_root), line)
+            if signature in seen:
+                continue
+            seen.add(signature)
+            requests.append(
+                {
+                    "method": method,
+                    "path": route,
+                    "file": _relative(path, web_root),
+                    "line": line,
+                    "call": name,
+                    "static": raw_method is not None,
+                }
+            )
+    return sorted(requests, key=lambda item: (item["path"], item["method"], item["file"], item["line"]))
+
+
+def _bridge_contract_inventory(bot_root: Path, web_root: Path) -> dict[str, Any]:
+    """Compare Web outbound private-core calls against Bot bridge routes.
+
+    This is a source-level compatibility check, not a network health check.
+    It intentionally cannot claim that a separate Bot deployment is running,
+    configured, or reachable from Railway.
+    """
+
+    bot_routes, router_mount_observed = _extract_bot_core_bridge_routes(bot_root)
+    web_requests = _extract_web_bridge_requests(web_root)
+    matches: list[dict[str, Any]] = []
+    unmatched: list[dict[str, Any]] = []
+    unresolved: list[dict[str, Any]] = []
+    for request in web_requests:
+        if request["method"] == "<DYNAMIC-METHOD>":
+            unresolved.append(request)
+            continue
+        candidates = [
+            route
+            for route in bot_routes
+            if route["method"] == request["method"] and _route_template_matches(request["path"], route["path"])
+        ]
+        if not candidates:
+            unmatched.append(request)
+            continue
+        matches.append(
+            {
+                "request": request,
+                "bot_routes": [
+                    {"method": route["method"], "path": route["path"], "endpoint": route["endpoint"], "file": route["file"], "line": route["line"]}
+                    for route in candidates
+                ],
+            }
+        )
+    if not bot_routes:
+        status_name = "BOT_BRIDGE_SOURCE_MISSING"
+    elif not router_mount_observed:
+        status_name = "BOT_BRIDGE_ROUTER_NOT_MOUNTED"
+    elif unmatched or unresolved:
+        status_name = "CONTRACT_GAPS_FOUND"
+    else:
+        status_name = "STATIC_CONTRACT_MATCHED"
+    return _sanitize(
+        {
+            "audit_mode": "static-only",
+            "status": status_name,
+            "bot_bridge_source_present": bool(bot_routes),
+            "bot_router_mount_observed": router_mount_observed,
+            "bot_route_count": len(bot_routes),
+            "web_request_count": len(web_requests),
+            "matched_request_count": len(matches),
+            "unmatched_request_count": len(unmatched),
+            "unresolved_request_count": len(unresolved),
+            "bot_routes": bot_routes,
+            "matched_requests": matches,
+            "unmatched_requests": unmatched,
+            "unresolved_requests": unresolved,
+            "note": "Method/path shapes only. This does not prove Bot deployment, ENV, bearer/HMAC credentials, runtime authorization, schema, payment, provider, job, or delivery readiness.",
+        }
+    )
+
+
+def _telegram_link_callback_contract(bot_root: Path, web_root: Path) -> dict[str, Any]:
+    """Inspect the direction-specific Bot→Web identity callback statically.
+
+    The private-core route comparison deliberately excludes this callback: it
+    travels in the opposite direction and uses its own bearer/HMAC pair. Keep
+    a separate inventory so raw Telegram-ID UI can never be mistaken for a
+    real Bot identity proof.
+    """
+
+    def read(path: Path) -> str:
+        try:
+            return _read_source(path)
+        except OSError:
+            return ""
+
+    bot_bridge = read(bot_root / CORE_BRIDGE_FILE)
+    bot_entrypoint = read(bot_root / "bot.py")
+    web_auth = read(web_root / "copyfast_auth.py")
+    web_entrypoint = read(web_root / "app.py")
+    bot_headers = {header: header in bot_bridge for header in TELEGRAM_LINK_CALLBACK_HEADERS}
+    web_headers = {header: header in web_auth for header in TELEGRAM_LINK_CALLBACK_HEADERS}
+    bot_env = {name: name in bot_bridge for name in TELEGRAM_LINK_CALLBACK_ENV}
+    bot = {
+        "bridge_source_present": bool(bot_bridge),
+        "callback_sender_observed": "confirm_web_link_from_telegram" in bot_bridge,
+        "deep_link_handler_observed": bool(re.search(r"startswith\(\s*['\"]web_['\"]\s*\)", bot_entrypoint)),
+        "fallback_link_command_observed": bool(re.search(r"CommandHandler\s*\(\s*['\"]linkweb['\"]", bot_entrypoint)),
+        "callback_environment_names_observed": bot_env,
+        "callback_headers_observed": bot_headers,
+        "callback_signature_shape_observed": _callback_signature_shape_observed(bot_bridge, side="bot"),
+    }
+    web = {
+        "receiver_route_observed": "@router.post(\"/internal/telegram-link/confirm\")" in web_auth or "@router.post('/internal/telegram-link/confirm')" in web_auth,
+        "receiver_hmac_authorizer_observed": "def _bridge_callback_authorized" in web_auth,
+        "callback_headers_observed": web_headers,
+        "mounted_under_auth_prefix_observed": bool(re.search(r"include_router\s*\(\s*copyfast_auth\.router\s*,\s*prefix\s*=\s*['\"]/api/v1/auth['\"]", web_entrypoint)),
+        "raw_browser_id_rejection_observed": "TELEGRAM_BROWSER_INPUT_NOT_ACCEPTED" in web_auth,
+        "callback_signature_shape_observed": _callback_signature_shape_observed(web_auth, side="web"),
+    }
+    bot_complete = (
+        bot["bridge_source_present"]
+        and bot["callback_sender_observed"]
+        and bot["deep_link_handler_observed"]
+        and bot["fallback_link_command_observed"]
+        and all(bot_env.values())
+        and all(bot_headers.values())
+        and bot["callback_signature_shape_observed"]
+    )
+    web_complete = (
+        web["receiver_route_observed"]
+        and web["receiver_hmac_authorizer_observed"]
+        and web["mounted_under_auth_prefix_observed"]
+        and web["raw_browser_id_rejection_observed"]
+        and all(web_headers.values())
+        and web["callback_signature_shape_observed"]
+    )
+    status_name = "STATIC_CALLBACK_CONTRACT_PRESENT" if bot_complete and web_complete else "CALLBACK_CONTRACT_GAPS_FOUND"
+    return _sanitize(
+        {
+            "audit_mode": "static-only",
+            "status": status_name,
+            "bot": bot,
+            "web": web,
+            "expected_web_callback_path": "/api/v1/auth/internal/telegram-link/confirm",
+            "operator_configuration_required": True,
+            "note": "This verifies source markers and a static callback HMAC material shape only. It does not prove Bot deployment, Railway environment equality, actual secret equality, DNS/TLS reachability, Telegram delivery, or a successful customer callback.",
+        }
+    )
+
+
+def _is_admin_command(command: str, handler: str, *, admin_guarded: bool = False) -> bool:
+    if admin_guarded:
+        return True
     haystack = f"{command} {handler}".casefold()
     return any(term in haystack for term in ADMIN_TERMS)
 
@@ -638,6 +1221,38 @@ def _is_telegram_only(identifier: str) -> bool:
 
 def _feature_route(identifier: str) -> str:
     lowered = identifier.casefold().replace("-", "_")
+    if any(term in lowered for term in ("growth_ai", "growth_report", "campaign_report", "export_report")):
+        return "/growth/ai" if "growth" in lowered else "/campaign/report"
+    if any(term in lowered for term in ("member", "vip", "trial", "package", "tier", "rank")):
+        return "/membership"
+    if any(term in lowered for term in ("manual", "thucong", "topup", "naptien", "payment")):
+        return "/wallet/topup"
+    if any(term in lowered for term in ("policy", "terms", "legal", "phaply", "dieukhoan")):
+        return "/legal"
+    if any(term in lowered for term in ("support", "ticket", "feedback", "gopy")):
+        return "/tickets"
+    if any(term in lowered for term in ("community", "official_channel", "kenh_chinh_thuc", "toanaas_hub")):
+        return "/community"
+    if any(term in lowered for term in ("linkweb", "telegram_link")):
+        return "/onboarding"
+    if any(term in lowered for term in ("mode", "language", "locale")):
+        return "/account"
+    if any(term in lowered for term in ("tool_status", "system_public_status", "telegram_status", "ai_status", "feature_status", "queue_status", "runtime_status")):
+        return "/status"
+    if any(term in lowered for term in ("tool", "model", "api_recommend")):
+        return "/tools"
+    if any(term in lowered for term in ("media_factory", "creative_flow", "film", "pipeline", "produce", "render_center", "shot_variation")):
+        return "/studio"
+    if any(term in lowered for term in ("remind", "repeat_")):
+        return "/reminders"
+    if any(term in lowered for term in ("memory", "note")):
+        return "/notes"
+    if any(term in lowered for term in ("referral", "ref_link", "ref_stats", "invite")):
+        return "/referrals"
+    if any(term in lowered for term in ("birthday", "gift", "promo", "magiamgia", "khuyenmai")):
+        return "/rewards"
+    if any(term in lowered for term in ("guide", "huongdan", "hdsd", "commands")):
+        return "/guides"
     if any(term in lowered for term in ("image", "upscale", "background")):
         return "/features/image"
     if any(term in lowered for term in ("video", "multiscene", "trend", "storyboard")):
@@ -670,7 +1285,9 @@ def _compatibility_surface_exists(candidate: str, routes: set[str]) -> bool:
         return False
     normalized = candidate.rstrip("/") or "/"
     prefixes = (
-        "/dashboard", "/account", "/wallet", "/packages", "/jobs", "/assets", "/support", "/tickets",
+        "/dashboard", "/account", "/onboarding", "/wallet", "/packages", "/jobs", "/assets", "/support", "/tickets",
+        "/membership", "/status", "/studio",
+        "/notes", "/reminders", "/referrals", "/rewards", "/community", "/guides", "/growth", "/campaign",
         "/pricing", "/legal", "/privacy", "/content", "/image", "/video", "/voice", "/music", "/subtitle",
         "/translate", "/dubbing", "/asr", "/documents", "/features", "/admin", "/tools", "/prompts",
         "/caption", "/hashtag", "/hook", "/script", "/storyboard",
@@ -690,7 +1307,7 @@ def _mapping_status(target: str, existing_routes: set[str], telegram_only: bool)
 
 def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     name = command["command"].casefold()
-    admin = _is_admin_command(name, command["handler"])
+    admin = _is_admin_command(name, command["handler"], admin_guarded=bool(command.get("admin_guarded")))
     telegram_only = _is_telegram_only(name)
     if admin and not telegram_only:
         target = f"/admin/{name}"
@@ -727,8 +1344,37 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     }
 
 
-def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any]) -> dict[str, Any]:
-    existing_routes = {str(route["path"]) for route in web["routes"] if not str(route["path"]).startswith("<")}
+def _runtime_web_route_paths(web: dict[str, Any], web_root: Path) -> set[str]:
+    """Return only routes reachable from the deployed Web entrypoint.
+
+    The Web repository intentionally retains legacy prototype modules for
+    reference.  Static inventory must still record them, but a decorator in an
+    unmounted module is not proof that the signed ``app.py`` entrypoint exposes
+    that endpoint.  Follow direct ``include_router(module.router)`` references
+    from ``app.py`` without importing any code, then fall back to the full
+    inventory only when there is no identifiable app entrypoint.
+    """
+
+    records = [route for route in web.get("routes", []) if not str(route.get("path") or "").startswith("<")]
+    entrypoint = web_root / "app.py"
+    if not entrypoint.is_file():
+        return {str(route["path"]) for route in records}
+    try:
+        source = _read_source(entrypoint)
+    except OSError:
+        return {str(route["path"]) for route in records}
+    route_files = {"app.py"}
+    for module in re.findall(r"\binclude_router\s*\(\s*([A-Za-z_]\w*)\.router\b", source):
+        candidate = f"{module}.py"
+        if (web_root / candidate).is_file():
+            route_files.add(candidate)
+    return {str(route["path"]) for route in records if str(route.get("file") or "") in route_files}
+
+
+def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, web_root: Path) -> dict[str, Any]:
+    existing_routes = _runtime_web_route_paths(web, web_root)
+    bridge_contract = _bridge_contract_inventory(bot_root, web_root)
+    telegram_link_contract = _telegram_link_callback_contract(bot_root, web_root)
     command_mappings = [_map_command(command, existing_routes) for command in bot["commands"]]
     callback_mappings = [
         _map_callback(record["pattern"], "callback_handler", {"file": record["file"], "line": record["line"]}, existing_routes)
@@ -755,6 +1401,15 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any]) -> dict[str, Any
     source_total = len(mappings)
     bot_tables = set(bot["database_tables"])
     web_tables = set(web["database_tables"])
+    observed_private_route = bool(bot.get("private_core_bridge_present")) or any(
+        str(route["path"]).startswith("/internal/v1/") for route in bot["routes"]
+    )
+    bridge_contract_count = (
+        int(bridge_contract["unmatched_request_count"])
+        + int(bridge_contract["unresolved_request_count"])
+        if bridge_contract.get("bot_bridge_source_present")
+        else (0 if observed_private_route else 1)
+    )
     gaps = [
         {
             "area": "customer_and_admin_routes",
@@ -765,8 +1420,14 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any]) -> dict[str, Any
         {
             "area": "private_core_bridge",
             "severity": "high",
-            "detail": "Private bridge routes are owned by the separate bot bridge branch, never the browser-facing Web App.",
-            "count": 0 if bot.get("private_core_bridge_present") or any(str(route["path"]).startswith("/internal/v1/") for route in bot["routes"]) else 1,
+            "detail": "Private bridge routes are owned by the separate bot bridge branch, never the browser-facing Web App. Current checkout contract status: " + str(bridge_contract["status"]),
+            "count": bridge_contract_count,
+        },
+        {
+            "area": "telegram_bot_to_web_identity_callback",
+            "severity": "high",
+            "detail": "Direction-specific one-time Telegram callback contract. Current checkout status: " + str(telegram_link_contract["status"]),
+            "count": 0 if telegram_link_contract.get("status") == "STATIC_CALLBACK_CONTRACT_PRESENT" else 1,
         },
         {
             "area": "database_authority",
@@ -797,6 +1458,8 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any]) -> dict[str, Any
             "implemented_coverage_percent": round((mapped / source_total * 100), 2) if source_total else 0.0,
             "guarded_surface_coverage_percent": round(((mapped + status_counts["TELEGRAM_ONLY"]) / source_total * 100), 2) if source_total else 100.0,
             "mapping_coverage_percent": 100.0 if source_total == len(mappings) else 0.0,
+            "bridge_contract": bridge_contract,
+            "telegram_link_callback_contract": telegram_link_contract,
             "command_mappings": command_mappings,
             "callback_mappings": callback_mappings,
             "conversation_mappings": conversation_mappings,
@@ -826,6 +1489,23 @@ def _write_text(path: Path, content: str) -> None:
 def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any], web: dict[str, Any], gap: dict[str, Any]) -> list[Path]:
     docs_dir.mkdir(parents=True, exist_ok=True)
     generated: list[Path] = []
+    revision = preflight.get("bot", {}).get("revision", {})
+    checkout_sha = str(revision.get("checkout_sha") or "unavailable")
+    relation = str(revision.get("baseline_relation") or "comparison_unavailable")
+    ahead = revision.get("ahead_commits")
+    behind = revision.get("behind_commits")
+    baseline_bridge = preflight.get("bot", {}).get("baseline_bridge_source", {})
+    baseline_bridge_state = str(baseline_bridge.get("state") or "not_checked")
+    baseline_bridge_present = baseline_bridge.get("present")
+    bridge_contract = gap.get("bridge_contract") if isinstance(gap.get("bridge_contract"), dict) else {}
+    telegram_callback_contract = gap.get("telegram_link_callback_contract") if isinstance(gap.get("telegram_link_callback_contract"), dict) else {}
+    telegram_callback_status = str(telegram_callback_contract.get("status") or "NOT_AUDITED")
+    bridge_status = str(bridge_contract.get("status") or "NOT_AUDITED")
+    bridge_matched = int(bridge_contract.get("matched_request_count") or 0)
+    bridge_requests = int(bridge_contract.get("web_request_count") or 0)
+    revision_summary = f"- Bot checkout audited: `{checkout_sha}` (`{relation}`)\n"
+    if ahead is not None or behind is not None:
+        revision_summary += f"- Bot drift versus requested baseline: ahead `{ahead if ahead is not None else 'unknown'}`, behind `{behind if behind is not None else 'unknown'}` commits\n"
 
     def write(name: str, content: str) -> None:
         path = docs_dir / name
@@ -837,10 +1517,25 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# P0 WebApp CopyFast1 migration inventory\n\n"
         "This directory is generated by `scripts/migration/audit_bot_to_web.py`. The audit parses source files only; it does not import or run the Telegram bot, FastAPI app, database, providers, payment service, or environment files.\n\n"
         f"- Bot baseline requested: `{preflight['bot']['baseline_sha_requested']}`\n"
-        f"- Bot source fingerprint: `{bot['source_fingerprint_sha256']}`\n"
-        f"- Web source fingerprint: `{web['source_fingerprint_sha256']}`\n"
-        "- Canonical authority remains the bot for Telegram identity, Xu ledger, PayOS, jobs, and provider state.\n\n"
-        "The generated parity matrix is an implementation backlog, not a claim that surfaces are live or safe to enable.\n",
+        + revision_summary
+        + f"- Bot source fingerprint: `{bot['source_fingerprint_sha256']}`\n"
+        + f"- Web source fingerprint: `{web['source_fingerprint_sha256']}`\n"
+        + f"- Noncanonical Bot draft files excluded from inventory: `{len(bot.get('excluded_noncanonical_source_files', []))}`\n"
+        + "- Canonical authority remains the bot for Telegram identity, Xu ledger, PayOS, jobs, and provider state.\n\n"
+        + f"- Requested baseline private bridge source (`{CORE_BRIDGE_FILE}`): `{baseline_bridge_state}` (`present={baseline_bridge_present}`).\n"
+        + f"- Static Web-to-Bot bridge contract: `{bridge_status}` (`{bridge_matched}/{bridge_requests}` outbound calls have a current-checkout route match). This is not a deployment/reachability claim.\n\n"
+        + f"- Static Bot-to-Web Telegram identity callback: `{telegram_callback_status}`. This is not a Railway/Telegram live-flow claim.\n\n"
+        + "The generated parity matrix is an implementation backlog, not a claim that surfaces are live or safe to enable.\n\n"
+        + "## Web implementation contracts\n\n"
+        + "- [`FEATURE_FAMILY_NAVIGATION.md`](FEATURE_FAMILY_NAVIGATION.md) — navigation-only feature families.\n"
+        + "- [`JOB_SUPPORT_RECOVERY.md`](JOB_SUPPORT_RECOVERY.md) — safe job-to-ticket recovery handoff.\n"
+        + "- [`CONTENT_OPERATIONS_ADMIN.md`](CONTENT_OPERATIONS_ADMIN.md) — guarded Campaign/Calendar/Publishing/Admin navigation.\n"
+        + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"
+        + "- [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.\n"
+        + "- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — Bot-first notes, reminders, referral/rewards, community and help handoffs.\n"
+        + "- [`FEATURE_CONFIRM_CONTRACT.md`](FEATURE_CONFIRM_CONTRACT.md) — explicit job tracking/confirm contract.\n"
+        + "- [`ENGINE_DELIVERY_ADAPTER_BACKLOG.md`](ENGINE_DELIVERY_ADAPTER_BACKLOG.md) — canonical job/output/delivery prerequisites.\n"
+        + "- [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.\n",
     )
     write(
         "inventory.md",
@@ -849,6 +1544,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Area", "Bot", "Web App"],
             [
                 ["Source files scanned", str(bot["source_files_scanned"]), str(web["source_files_scanned"])],
+                ["Noncanonical Bot drafts excluded", str(len(bot.get("excluded_noncanonical_source_files", []))), "n/a"],
                 ["Commands", str(bot["counts"]["commands"]), "n/a"],
                 ["Callback handlers", str(bot["counts"]["callback_handlers"]), "n/a"],
                 ["Callback-data values", str(bot["counts"]["callback_data"]), "n/a"],
@@ -867,6 +1563,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "bot-inventory.md",
         "# Telegram bot inventory\n\n"
         f"Discovered `{bot['counts']['commands']}` registered commands, `{bot['counts']['callback_handlers']}` callback handlers, and `{bot['counts']['callback_data']}` callback-data values from static source.\n\n"
+        + ("Excluded clearly named Bot drafts: `" + "`, `".join(bot.get("excluded_noncanonical_source_files", [])) + "`.\n\n" if bot.get("excluded_noncanonical_source_files") else "")
         + _markdown_table(["Command", "Handler", "Source"], sampled_commands or [["None discovered", "", ""]])
         + "\n\nThe full command/callback inventory is in `reports/migration/bot_inventory.json`.\n",
     )
@@ -878,6 +1575,50 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             [[item["path"], ", ".join(item["methods"]), item["endpoint"]] for item in web["routes"][:160]] or [["None discovered", "", ""]],
         )
         + "\n\nStatic route presence is not proof of session protection, ownership checks, or functional feature parity.\n",
+    )
+    bridge_rows = [
+        [
+            str(item.get("request", {}).get("method") or ""),
+            str(item.get("request", {}).get("path") or ""),
+            ", ".join(str(route.get("path") or "") for route in item.get("bot_routes", [])[:3]),
+            str(item.get("request", {}).get("file") or ""),
+        ]
+        for item in bridge_contract.get("matched_requests", [])[:200]
+        if isinstance(item, dict)
+    ]
+    missing_bridge_rows = [
+        [str(item.get("method") or ""), str(item.get("path") or ""), str(item.get("file") or ""), str(item.get("line") or "")]
+        for item in (bridge_contract.get("unmatched_requests", []) + bridge_contract.get("unresolved_requests", []))[:200]
+        if isinstance(item, dict)
+    ]
+    write(
+        "BRIDGE_CONTRACT_INVENTORY.md",
+        "# Private Core Bridge static contract\n\n"
+        + f"Status: **{bridge_status}**. Web outbound calls matched: `{bridge_matched}/{bridge_requests}`. "
+        + "The comparison parses source only; it does not contact the Bot, Railway, Telegram, PayOS, a provider, or read an environment value.\n\n"
+        + f"- Bot bridge source present: `{bool(bridge_contract.get('bot_bridge_source_present'))}`\n"
+        + f"- Bot router mount observed in current checkout: `{bool(bridge_contract.get('bot_router_mount_observed'))}`\n"
+        + f"- Requested baseline bridge source: `{baseline_bridge_state}` (`present={baseline_bridge_present}`)\n"
+        + f"- Unmatched Web calls: `{int(bridge_contract.get('unmatched_request_count') or 0)}`\n"
+        + f"- Unresolved dynamic Web calls: `{int(bridge_contract.get('unresolved_request_count') or 0)}`\n\n"
+        + "## Matched method/path shapes\n\n"
+        + _markdown_table(["Method", "Web request", "Bot route candidate", "Web source"], bridge_rows or [["None", "", "", ""]])
+        + "\n\n## Gaps requiring a contract change\n\n"
+        + _markdown_table(["Method", "Web request", "Web source", "Line"], missing_bridge_rows or [["None", "", "", ""]])
+        + "\n\n## Telegram one-time identity callback\n\n"
+        + f"Static status: **{telegram_callback_status}**. Expected Web receiver: `{telegram_callback_contract.get('expected_web_callback_path') or 'unavailable'}`. "
+        + "The Bot→Web callback uses separate bearer/HMAC credentials and is not part of the Web→Bot core bridge credential.\n\n"
+        + _markdown_table(
+            ["Check", "Bot", "Web"],
+            [
+                ["Deep link / fallback", str(telegram_callback_contract.get("bot", {}).get("deep_link_handler_observed")), str(telegram_callback_contract.get("bot", {}).get("fallback_link_command_observed"))],
+                ["Callback sender / receiver", str(telegram_callback_contract.get("bot", {}).get("callback_sender_observed")), str(telegram_callback_contract.get("web", {}).get("receiver_route_observed"))],
+                ["HMAC authorization", str(all(telegram_callback_contract.get("bot", {}).get("callback_headers_observed", {}).values())), str(telegram_callback_contract.get("web", {}).get("receiver_hmac_authorizer_observed"))],
+                ["HMAC material shape", str(telegram_callback_contract.get("bot", {}).get("callback_signature_shape_observed")), str(telegram_callback_contract.get("web", {}).get("callback_signature_shape_observed"))],
+                ["Raw browser ID rejected", "n/a", str(telegram_callback_contract.get("web", {}).get("raw_browser_id_rejection_observed"))],
+            ],
+        )
+        + "\n\nA matched path does not authorize a feature. Bearer/HMAC, session ownership, schema, idempotency, provider readiness, payment policy, job validation and delivery safety must pass independently.\n",
     )
     parity_rows = [
         [item["source_kind"], item["source"], item["target"], item["status"]]
@@ -895,7 +1636,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "route-map.md",
         "# Route and action map\n\n"
-        "This maps Telegram entry points to the intended Web route family. Existing-route status is determined by static FastAPI route extraction.\n\n"
+        "This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes.\n\n"
         + _markdown_table(["Telegram command", "Web route/action", "Status"], route_rows or [["None discovered", "", ""]]),
     )
     bot_tables = set(bot["database_tables"])
@@ -926,7 +1667,10 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + ("\n".join(f"- `{table}`" for table in wallet_tables) or "- None detected")
         + "\n\nCompletion must remain conditional on validated output, not a pending/provider acknowledgement.\n",
     )
-    admin_commands = [item for item in bot["commands"] if _is_admin_command(item["command"], item["handler"])]
+    admin_commands = [
+        item for item in bot["commands"]
+        if _is_admin_command(item["command"], item["handler"], admin_guarded=bool(item.get("admin_guarded")))
+    ]
     write(
         "admin-map.md",
         "# Admin ERP map\n\n"
@@ -1052,6 +1796,92 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(_sanitize(payload), ensure_ascii=False, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _git_read(root: Path, *args: str) -> tuple[int, str]:
+    """Read local Git metadata without touching remotes or source runtime.
+
+    The migration task locks an expected Bot SHA.  A source fingerprint alone
+    cannot tell a reviewer whether the audited worktree is that baseline or a
+    separate bridge branch.  This helper invokes only local, read-only Git
+    revision commands; it never fetches, checks out, changes config, imports
+    Python, or starts any application/provider.
+    """
+    try:
+        completed = subprocess.run(
+            ["git", "-C", str(root), *args],
+            check=False,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            encoding="utf-8",
+            errors="replace",
+            timeout=3,
+        )
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired):
+        return 1, ""
+    return completed.returncode, completed.stdout.strip()
+
+
+def _git_revision_context(root: Path, baseline_sha: str) -> dict[str, Any]:
+    """Return a small, secret-free local revision comparison for preflight."""
+    requested = str(baseline_sha or "").strip()
+    context: dict[str, Any] = {
+        "checkout_sha": "",
+        "baseline_relation": "not_a_git_worktree",
+        "ahead_commits": None,
+        "behind_commits": None,
+    }
+    head_status, head = _git_read(root, "rev-parse", "--verify", "HEAD")
+    if head_status != 0 or not re.fullmatch(r"[0-9a-f]{40}", head):
+        return context
+    context["checkout_sha"] = head
+    if not re.fullmatch(r"[0-9a-f]{7,64}", requested):
+        context["baseline_relation"] = "baseline_sha_invalid"
+        return context
+    baseline_status, baseline = _git_read(root, "rev-parse", "--verify", f"{requested}^{{commit}}")
+    if baseline_status != 0 or not re.fullmatch(r"[0-9a-f]{40}", baseline):
+        context["baseline_relation"] = "requested_baseline_unavailable"
+        return context
+    if head == baseline:
+        context.update({"baseline_relation": "exact", "ahead_commits": 0, "behind_commits": 0})
+        return context
+    ahead_status, ahead = _git_read(root, "rev-list", "--count", f"{baseline}..{head}")
+    behind_status, behind = _git_read(root, "rev-list", "--count", f"{head}..{baseline}")
+    context["ahead_commits"] = int(ahead) if ahead_status == 0 and ahead.isdigit() else None
+    context["behind_commits"] = int(behind) if behind_status == 0 and behind.isdigit() else None
+    if context["ahead_commits"] is not None and context["behind_commits"] is not None:
+        if context["ahead_commits"] > 0 and context["behind_commits"] == 0:
+            context["baseline_relation"] = "ahead_of_requested_baseline"
+        elif context["ahead_commits"] == 0 and context["behind_commits"] > 0:
+            context["baseline_relation"] = "behind_requested_baseline"
+        else:
+            context["baseline_relation"] = "diverged_from_requested_baseline"
+    else:
+        context["baseline_relation"] = "comparison_unavailable"
+    return context
+
+
+def _baseline_bridge_source_context(root: Path, baseline_sha: str) -> dict[str, Any]:
+    """Report whether the requested Bot baseline contains bridge source.
+
+    This is a local Git object check, not a checkout, merge or runtime import.
+    A method/path match against a newer bridge branch must never be mistaken
+    for proof that the frozen requested baseline can serve the Web App bridge.
+    """
+
+    requested = str(baseline_sha or "").strip()
+    context: dict[str, Any] = {"path": CORE_BRIDGE_FILE, "state": "baseline_sha_invalid", "present": None}
+    if not re.fullmatch(r"[0-9a-f]{7,64}", requested):
+        return context
+    revision_status, _revision = _git_read(root, "rev-parse", "--verify", f"{requested}^{{commit}}")
+    if revision_status != 0:
+        context.update({"state": "baseline_unavailable", "present": None})
+        return context
+    file_status, _ = _git_read(root, "cat-file", "-e", f"{requested}:{CORE_BRIDGE_FILE}")
+    context.update({"state": "present" if file_status == 0 else "missing", "present": file_status == 0})
+    return context
+
+
 def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir: Path, docs_dir: Path) -> dict[str, Any]:
     """Run the static audit and write reports/docs.  Safe to call from tests."""
 
@@ -1068,19 +1898,21 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
         "audit_mode": "static-only",
         "guarantees": [
             "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
-            "Only source text and Python AST are read.",
+            "Only source text, Python AST, and local read-only Git revision metadata are read.",
             "Report/document text is sanitized for secret-shaped literals.",
         ],
         "bot": {
             "root": str(bot_root),
             "entrypoint_present": bot_entrypoint.is_file(),
             "baseline_sha_requested": bot_baseline_sha,
+            "revision": _git_revision_context(bot_root, bot_baseline_sha),
+            "baseline_bridge_source": _baseline_bridge_source_context(bot_root, bot_baseline_sha),
         },
         "webapp": {"root": str(web_root), "entrypoint_present": (web_root / "app.py").is_file()},
     }
     bot = _summarize_inventory("telegram_bot", bot_root)
     web = _summarize_inventory("webapp", web_root)
-    gap = _build_parity_gap(bot, web)
+    gap = _build_parity_gap(bot, web, bot_root, web_root)
     report_dir = report_dir.resolve()
     docs_dir = docs_dir.resolve()
     _write_json(report_dir / "preflight.json", preflight)

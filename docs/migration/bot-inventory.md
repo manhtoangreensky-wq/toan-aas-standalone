@@ -1,11 +1,12 @@
 # Telegram bot inventory
 
-Discovered `786` registered commands, `55` callback handlers, and `1928` callback-data values from static source.
+Discovered `774` registered commands, `54` callback handlers, and `1925` callback-data values from static source.
+
+Excluded clearly named Bot drafts: `code hoàn chỉnh của claude.py`, `config/pricing_matrix_draft.json`, `docs/BACKUP_AND_RECOVERY.md`, `nháp 2.py`.
 
 | Command | Handler | Source |
 | --- | --- | --- |
 | /add | cmd_admin_add | bot.py |
-| /add | cmd_admin_add | nháp 2.py |
 | /add_music | cmd_add_music | bot.py |
 | /add_music_status | cmd_add_music_status | bot.py |
 | /add_voice_to_video | cmd_add_voice_to_video | bot.py |
@@ -27,7 +28,6 @@ Discovered `786` registered commands, `55` callback handlers, and `1928` callbac
 | /admin_doc_tax | cmd_admin_doc_tax | bot.py |
 | /admin_docs | cmd_admin_docs | bot.py |
 | /admin_gopy | cmd_admin_gopy | bot.py |
-| /admin_gopy | cmd_admin_gopy | nháp 2.py |
 | /admin_grant_plan | cmd_admin_grant_plan | bot.py |
 | /admin_help | cmd_admin_help | bot.py |
 | /admin_import_affiliate_inventory | admin_internal_command | bot.py |
@@ -104,5 +104,7 @@ Discovered `786` registered commands, `55` callback handlers, and `1928` callbac
 | /channel_add | admin_internal_command | bot.py |
 | /channel_publish_set | admin_internal_command | bot.py |
 | /channel_router | admin_internal_command | bot.py |
+| /channels | admin_internal_command | bot.py |
+| /chat_ai_status | cmd_chat_ai_status | bot.py |
 
 The full command/callback inventory is in `reports/migration/bot_inventory.json`.

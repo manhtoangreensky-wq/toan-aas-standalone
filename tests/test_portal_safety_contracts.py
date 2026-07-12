@@ -12,6 +12,7 @@ ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
+PORTAL_CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
 
 def test_portal_never_offers_download_for_reported_output_metadata() -> None:
@@ -37,7 +38,65 @@ def test_job_polling_uses_only_the_signed_web_api() -> None:
     assert "jobPollFailures += 1;" in INTEGRATION
     assert "retryDelay" in INTEGRATION
     assert 'api("/jobs")' in INTEGRATION
+    assert "function jobIdFromPath(path)" in INTEGRATION
+    assert "decodeURIComponent(raw.slice(\"/jobs/\".length))" in INTEGRATION
+    assert "function exactJobRecord(value, expectedId)" in INTEGRATION
+    assert "function ownedAssetsForJob(job, items)" in INTEGRATION
+    assert 'api("/assets").catch(() => ({ data: { items: [] } }))' in INTEGRATION
     assert "provider" not in INTEGRATION[INTEGRATION.index("function scheduleJobPolling"):INTEGRATION.index("function featurePageStates")]
+
+
+def test_job_detail_matches_only_owner_scoped_asset_metadata_before_delivery() -> None:
+    assert "function exactJobAssets(job, source)" in PORTAL
+    assert "function assetJobLink(item)" in PORTAL
+    assert 'href="/jobs/${encodeURIComponent(assetId)}"' in PORTAL
+    assert "data-job-output-assets" in PORTAL
+    assert "Tài sản của job" in PORTAL
+    assert 'assetDeliveryState(item, "asset")' in PORTAL
+    assert "deliveryAsset || job" in PORTAL
+    output_panel = PORTAL[PORTAL.index("function renderJobOutputAssets"):PORTAL.index("function canonicalXu")]
+    assert "provider" not in output_panel
+    assert "download_url" not in output_panel
+
+
+def test_completed_output_without_delivery_offers_only_safe_ticket_recovery() -> None:
+    assert "function jobNeedsDeliverySupport(job, source)" in PORTAL
+    delivery = PORTAL[PORTAL.index("function jobNeedsDeliverySupport(job, source)"):PORTAL.index("function renderJobs(page, context)")]
+    assert 'jobStatus(job) !== "completed"' in delivery
+    assert "outputReported" in delivery
+    assert "deliveryReady" in delivery
+    assert "data-delivery-pending" in delivery
+    assert "Ticket chỉ báo thiếu delivery" in delivery
+    assert "Web không tạo URL, retry, refund hay thay đổi Xu" in delivery
+    assert "download_url" not in delivery
+    assert "provider" not in delivery.lower()
+    contract = (ROOT / "docs" / "migration" / "JOB_SUPPORT_RECOVERY.md").read_text(encoding="utf-8")
+    assert "delivery-pending" in contract
+    assert "does not mint a URL" in contract
+
+
+def test_problem_job_detail_can_create_only_a_safe_text_support_ticket() -> None:
+    assert "function jobNeedsDeliverySupport(job, source)" in PORTAL
+    assert "function renderJobRecoverySupport(job, context, source)" in PORTAL
+    recovery = PORTAL[PORTAL.index("function renderJobRecoverySupport(job, context, source)"):PORTAL.index("function renderJobs(page, context)")]
+    assert 'new Set(["failed", "failed_no_charge", "cancelled", "guarded"])' in recovery
+    assert "Output đã xong nhưng delivery đang chờ" in recovery
+    assert "Ticket chỉ báo thiếu delivery" in recovery
+    assert "data-job-recovery-support" in recovery
+    assert 'data-portal-action="create-ticket"' in recovery
+    assert 'name="subject"' in recovery
+    assert 'name="detail"' in recovery
+    assert "readonly" in recovery
+    assert "Mã job nằm trong chủ đề để đối chiếu thủ công" in recovery
+    assert "không retry, refund hay thay đổi Xu" in recovery
+    assert 'name="job_id"' not in recovery
+    assert "related_job_id" not in recovery
+    assert "download_url" not in recovery
+    assert "/api/v1/" not in recovery
+    assert "payos" not in recovery.lower()
+    assert "provider" not in recovery.lower()
+    job_detail = PORTAL[PORTAL.index("function renderJobDetail(page, context)"):PORTAL.index("function renderAssets(page, context)")]
+    assert "${renderJobRecoverySupport(job, context, context.jobAssets)}" in job_detail
 
 
 def test_dashboard_hydrates_only_canonical_metadata() -> None:
@@ -74,8 +133,19 @@ def test_quote_capable_workflows_can_estimate_directly_and_confirm_only_a_fresh_
     assert 'featurePage("/voice/tts"' in PORTAL
     assert "function flowHasFreshEstimate(flow)" in PORTAL
     assert "flow.estimateFingerprint" in PORTAL
+    assert "flow.webQuoteReceipt" in PORTAL
     assert "const estimateAvailable = featurePhase === \"estimate\"" in INTEGRATION
+    assert "function validWebQuoteReceipt(value)" in INTEGRATION
+    assert "web_quote_receipt: priorReceipt" in INTEGRATION
+    assert "webQuoteReceipt" in INTEGRATION
     assert "Thông tin đã thay đổi hoặc chưa có estimate canonical hợp lệ" in INTEGRATION
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert "def _issue_feature_quote_receipt" in api
+    assert "def _claim_feature_quote_receipt" in api
+    assert "FEATURE_ESTIMATE_REQUIRED" in api
+    database = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert "web_feature_quote_receipts" in database
+    assert "token_hash TEXT PRIMARY KEY" in database
 
 
 def test_feature_submissions_are_single_flight_and_reuse_an_idempotency_key_for_a_matching_input() -> None:
@@ -95,7 +165,7 @@ def test_workflow_forms_follow_the_supported_bot_contracts_before_staging() -> N
     assert "requiredUpload: true" in PORTAL
     assert '"image_to_pdf"' in PORTAL
     assert "LANGUAGE_OPTIONS" in PORTAL
-    assert "function validateFeatureIntake(feature, route, fields)" in INTEGRATION
+    assert "function validateFeatureIntake(feature, route, fields, phase)" in INTEGRATION
     assert "Voice Clone cần một mẫu audio" in INTEGRATION
     assert "Gộp PDF cần ít nhất hai tệp" in INTEGRATION
     assert "Image-to-Video chỉ nhận JPG, PNG hoặc WebP" in INTEGRATION
@@ -124,8 +194,17 @@ def test_video_music_and_dubbing_forms_forward_the_bot_planning_controls() -> No
     dubbing = PORTAL[PORTAL.index("dubbing: ["):PORTAL.index("documentPdf:")]
     assert 'name: "voice_profile_id"' in dubbing
     assert 'optionsFrom: "voiceProfiles"' in dubbing
+    assert 'path === "/tts" || path === "/dubbing" || path.startsWith("/voice")' in INTEGRATION
+    assert 'api("/voice/profiles")' in INTEGRATION
     assert "if (feature === \"music_song\")" in INTEGRATION
     assert "Khi chọn Theo số giây" in INTEGRATION
+
+
+def test_read_only_subtitle_asset_scope_uses_explicit_feature_keys() -> None:
+    assert "const SUBTITLE_ASSET_FEATURES" in PORTAL
+    assert '"subtitle_asr", "subtitle_create", "subtitle_translate", "video_dub", "asr"' in PORTAL
+    assert "function assetMatchesReadOnlyScope(item, scope)" in PORTAL
+    assert "if (scope === \"subtitle\") return SUBTITLE_ASSET_FEATURES.has(feature);" in PORTAL
 
 
 def test_translation_upload_and_image_create_forms_match_the_frozen_bot_contract() -> None:
@@ -165,6 +244,11 @@ def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert 'window.matchMedia("(min-width: 981px)")' in PORTAL
     assert ".portal-sidebar-close" in css
     assert ".portal-session-copy { display: none; }" in css
+    assert "100dvh" in css
+    assert "safe-area-inset-bottom" in css
+    assert ".portal-toast-region" in css
+    shell = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
+    assert "viewport-fit=cover" in shell
 
 
 def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> None:
@@ -211,6 +295,34 @@ def test_feature_catalog_discloses_all_mapped_customer_workflows_without_faking_
     assert ".portal-catalog-search" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
 
+def test_feature_family_navigators_only_link_registered_workflows_and_keep_guarded_state() -> None:
+    assert 'const FEATURE_FAMILY_KEYS = Object.freeze(["content", "image", "video", "voice", "music", "subtitle", "documents"])' in PORTAL
+    assert "function featureFamilyForPath(path)" in PORTAL
+    assert "function registeredFeatureFamilyEntries(context, familyKey)" in PORTAL
+    assert "manifest[normalizePath(route)]" in PORTAL
+    assert "Never turn an inventory-only route into a clickable module card" in PORTAL
+    assert "function renderFeatureFamily(page, context)" in PORTAL
+    assert 'case "feature-family": return renderFeatureFamily(page, context);' in PORTAL
+    assert 'const featureFamily = featureFamilyForPath(normalized);' in PORTAL
+    assert 'layout: "feature-family"' in PORTAL
+    assert 'href="/features/${safeText(group.key)}"' in PORTAL
+    assert "Card guarded giữ nguyên trạng thái" in PORTAL
+    family_renderer = PORTAL[PORTAL.index("function renderFeatureFamily(page, context)"):PORTAL.index("function normalizeCatalogSearch(value)")]
+    assert "/api/v1/" not in family_renderer
+    assert "payos" not in family_renderer.lower()
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    for path, title in {
+        "/features/content": "Content & Chat",
+        "/features/image": "Image Studio",
+        "/features/video": "Video Studio",
+        "/features/voice": "Voice Studio",
+        "/features/music": "Music & SFX",
+        "/features/subtitle": "Phụ đề & ngôn ngữ",
+        "/features/documents": "Documents & PDF",
+    }.items():
+        assert f'"{path}": "{title}"' in pages
+
+
 def test_resolved_portal_page_title_beats_the_generic_server_placeholder_for_aliases() -> None:
     assert "function displayPageTitle(page, context)" in PORTAL
     assert 'serverTitle !== "TOAN AAS"' in PORTAL
@@ -245,11 +357,12 @@ def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
     assert "Hồ sơ mặc định sau khi tạo" in PORTAL
     assert "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient" in PORTAL
-    assert "không nhập ID Telegram thô" in PORTAL
+    assert "Không nhập ID Telegram thô" in PORTAL
     assert "Email + mật khẩu (có thể dùng Gmail) đang hoạt động" in PORTAL
-    assert "Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật" in PORTAL
+    assert "Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật" in PORTAL
     assert "function renderOAuthRegistrationMethods(context)" in PORTAL
     assert "Tạo hoặc tiếp tục với OAuth" in PORTAL
+    assert 'renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "register")' in PORTAL
     assert 'renderPublicOAuthCard("google", "Google (OAuth)", googleEnabled, "G", "register")' in PORTAL
     assert 'renderPublicOAuthCard("github", "GitHub", githubEnabled, "◎", "register")' in PORTAL
     assert 'renderPublicOAuthCard("apple", "Sign in with Apple", appleEnabled, "", "register")' in PORTAL
@@ -263,19 +376,23 @@ def test_registration_explains_real_login_methods_and_profile_defaults() -> None
 def test_initial_hydration_is_deduplicated_and_bfcache_refresh_is_explicit() -> None:
     assert "function startInitialHydration()" in INTEGRATION
     assert "if (!initialHydration) initialHydration = hydrate().catch(() => {});" in INTEGRATION
-    assert "if (event.persisted) hydrate().catch(() => {});" in INTEGRATION
+    assert 'window.addEventListener("pageshow", (event) => {' in INTEGRATION
+    assert "if (event.persisted) {" in INTEGRATION
+    assert "hydrate().then(() => {" in INTEGRATION
 
 
 def test_login_return_path_is_internal_and_unlinked_accounts_go_to_onboarding() -> None:
     assert "function safeReturnPath(value)" in INTEGRATION
-    assert 'value.startsWith("//")' in INTEGRATION
-    assert 'window.location.assign(account.telegram_linked ? (requested || "/dashboard") : "/onboarding");' in INTEGRATION
+    assert 'route.startsWith("//")' in INTEGRATION
+    assert 'route.includes("?") || route.includes("#")' in INTEGRATION
+    assert 'window.location.assign(account.telegram_linked ? (requested || "/dashboard") : (requested ? `/onboarding?next=${encodeURIComponent(requested)}` : "/onboarding"));' in INTEGRATION
     assert "account.canonical_user_id" not in INTEGRATION
 
 
 def test_payment_ui_only_renders_vetted_canonical_checkout_data() -> None:
     assert "function safePayosCheckout(value)" in PORTAL
     assert 'url.hostname === "pay.payos.vn"' in PORTAL
+    assert "!url.username && !url.password && !url.port && !url.hash" in PORTAL
     assert "Yêu cầu thanh toán canonical" in PORTAL
     assert 'data-portal-action="refresh-payment"' in PORTAL
     assert 'api(`/payments/${encodeURIComponent(paymentId)}`)' in INTEGRATION
@@ -307,6 +424,13 @@ def test_payment_entry_ux_keeps_manual_topup_inside_the_linked_bot_and_polls_onl
     assert "function schedulePaymentPolling" in INTEGRATION
     assert "function copyPaymentBotCommand(value)" in INTEGRATION
     assert '["/naptien", "/thucong"].includes(command)' in INTEGRATION
+    assert 'data-portal-action="refresh-wallet-after-bot"' in PORTAL
+    assert '"refresh-wallet-after-bot": Boolean(bridgeAvailable)' in INTEGRATION
+    assert 'if (action === "refresh-wallet-after-bot")' in INTEGRATION
+    assert "Chỉ đơn PayOS canonical" in PORTAL
+    assert "Nạp thủ công không xuất hiện ở Web" in PORTAL
+    assert "TICKET_MANUAL_PAYMENT_PROOF_PATTERN" in (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert "SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN" in INTEGRATION
     assert 'api("/payments/options")' in INTEGRATION
     assert 'if (account && telegramLinked && currentPath === "/wallet/topup") await hydratePaymentOptions();' in INTEGRATION
     assert "/api/v1/billing/create-payment-link" not in PORTAL
@@ -318,6 +442,10 @@ def test_manual_topup_guide_is_an_honest_bot_handoff_not_a_second_receipt_system
     assert "Nạp thủ công: tiếp tục trong Telegram" in PORTAL
     assert "Nạp VND: gửi ảnh bill trong Bot." in PORTAL
     assert "Nạp quốc tế/USDT: gửi TXID đầy đủ hoặc ảnh bill trong Bot." in PORTAL
+    assert "const routeGuide =" in PORTAL
+    assert "Không có QR tĩnh" in PORTAL
+    assert "Không dán TXID vào Web" in PORTAL
+    assert "const stateGuide =" in PORTAL
     assert "pending</code> hoặc <code>pending_admin_review" in PORTAL
     assert "pending_admin_review" in PORTAL
     assert "approved" in PORTAL
@@ -335,6 +463,12 @@ def test_manual_topup_guide_is_an_honest_bot_handoff_not_a_second_receipt_system
     assert "pending_deposits" not in PORTAL
     assert "pending_deposits" not in INTEGRATION
     assert "manual-topup" not in INTEGRATION
+    guide = PORTAL[PORTAL.index("function renderManualTopupGuide(context)"):PORTAL.index("function renderPaymentRequestForm(page, context)")]
+    assert "<input" not in guide
+    assert "<textarea" not in guide
+    assert "data-portal-action=\"payment-create\"" not in guide
+    assert ".portal-manual-topup-routes" in PORTAL_CSS
+    assert ".portal-manual-topup-status" in PORTAL_CSS
 
 
 def test_job_and_payment_statuses_are_not_conflated() -> None:
@@ -349,8 +483,9 @@ def test_job_and_payment_statuses_are_not_conflated() -> None:
 def test_readiness_maps_all_feature_route_aliases_not_only_catalog_routes() -> None:
     assert "Object.entries(FEATURE_BY_PATH).forEach" in INTEGRATION
     assert 'api("/features/status")' in INTEGRATION
-    assert "featurePageStates(base().catalog || [], readiness.data || {}, Boolean(base().bridge && base().bridge.featureExecutionAvailable))" in INTEGRATION
-    assert 'path === "/tts" || path.startsWith("/voice")' in INTEGRATION
+    assert "function safeFeatureExecutionFeatures(value)" in INTEGRATION
+    assert "featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)" in INTEGRATION
+    assert 'path === "/tts" || path === "/dubbing" || path.startsWith("/voice")' in INTEGRATION
     assert 'context.pageStates[normalizePath(context.path)]' in PORTAL
 
 
@@ -367,6 +502,19 @@ def test_pwa_caches_only_the_fixed_public_shell() -> None:
     assert 'cache.put(' not in SERVICE_WORKER
     assert '"/api/' not in SERVICE_WORKER
     assert 'wallet, payment, admin' in SERVICE_WORKER
+    assert 'fetch(request).catch(() => caches.match(url.pathname).then((cached) => cached || Response.error()))' in SERVICE_WORKER
+    assert 'portal-shell-v3' in SERVICE_WORKER
+
+
+def test_public_landing_hides_authenticated_shell_without_leaving_a_layout_slot() -> None:
+    assert "const minimalShell = isLanding || isAuth" in PORTAL
+    assert "sidebar.hidden = minimalShell" in PORTAL
+    assert "header.hidden = minimalShell" in PORTAL
+    assert 'shell.classList.toggle("portal-shell--auth", isAuth)' in PORTAL
+    assert 'document.body.classList.toggle("portal-body--auth", isAuth)' in PORTAL
+    assert "portal-auth-brand" in PORTAL
+    assert ".portal-shell--auth" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    assert "[hidden] { display: none !important; }" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 
 
 def test_ticket_and_payment_submissions_are_single_flight_and_idempotent_in_memory() -> None:
@@ -394,10 +542,17 @@ def test_job_asset_and_ticket_views_only_filter_redacted_canonical_metadata() ->
 def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert "const ADMIN_MODULE_ALIASES" in INTEGRATION
     assert 'backup: "backups", export: "reports"' in INTEGRATION
-    assert "function adminEndpointForPath(path)" in INTEGRATION
-    assert "await api(adminEndpointForPath(path))" in INTEGRATION
+    assert "const ADMIN_CANONICAL_READ_MODULES" in INTEGRATION
+    assert "function adminBridgeTargetForPath(path)" in INTEGRATION
+    assert "function localAdminCompatibilityGuard(target)" in INTEGRATION
+    assert "async function readAdminPath(path)" in INTEGRATION
+    assert "return target.supported ? api(target.endpoint) : localAdminCompatibilityGuard(target);" in INTEGRATION
+    assert "const admin = await readAdminPath(path);" in INTEGRATION
+    assert "ADMIN_MODULE_ADAPTER_NOT_PUBLISHED" in INTEGRATION
     assert '"/admin/jobs/failed": "/admin/modules/failed-jobs"' in INTEGRATION
     assert '"/admin/providers": "/admin/modules/providers"' in INTEGRATION
+    assert "compatibility_guarded" in PORTAL
+    assert "Web không gọi một module Bot chưa công bố" in PORTAL
     assert '"Worker jobs"' in PORTAL
     assert 'adminPage("/admin/provider-cost"' in PORTAL
     assert 'adminPage("/admin/freezes"' in PORTAL
@@ -407,6 +562,131 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert 'if (context.isAdmin !== true) return "";' in PORTAL
     assert "renderAdminDirectory(context)" in PORTAL
     assert "Danh mục Admin ERP" in PORTAL
+
+
+def test_failed_job_incidents_are_read_only_and_show_only_redacted_canonical_triage_fields() -> None:
+    assert 'if (module === "failed-jobs")' in PORTAL
+    assert "Incident queue chỉ đọc" in PORTAL
+    assert "error_category" in PORTAL
+    assert "Chi phí / hoàn Xu" in PORTAL
+    assert "retry, refund, charge và provider operation tiếp tục do Bot canonical quyết định" in PORTAL
+    incident = PORTAL[PORTAL.index('if (module === "failed-jobs")'):PORTAL.index('if (["jobs", "failed-jobs", "workers", "runtime"].includes(module))')]
+    assert "adminJobActions" not in incident
+    assert "download_url" not in incident
+    assert "provider_task" not in incident
+    assert "const incidentReadOnly = module === \"failed-jobs\";" in PORTAL
+    assert "Bot giữ retry/refund/charge" in PORTAL
+
+
+def test_content_operations_admin_modules_are_explicit_navigation_not_browser_automation() -> None:
+    for route, title in {
+        "/admin/campaigns": "Campaign Center",
+        "/admin/calendar": "Content Calendar",
+        "/admin/approvals": "Approval Queue",
+        "/admin/publishing": "Publishing & Channels",
+        "/admin/analytics": "Analytics",
+    }.items():
+        assert f'adminPage("{route}", "{title}"' in PORTAL
+        assert f'WebFeature("admin_{route.rsplit("/", 1)[-1]}", "{title}", "admin", "{route}", "admin")' in (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    assert 'key: "content-ops", title: "Content & Publishing"' in PORTAL
+    assert 'return "content-ops";' in PORTAL
+    section = PORTAL[PORTAL.index('adminPage("/admin/campaigns"'):PORTAL.index('adminPage("/admin/audit"')]
+    assert 'action: "none"' not in section  # adminPage enforces this centrally rather than each declaration
+    assert "không tự gửi bài" in section
+    assert "không tạo hoặc publish lịch giả" in section
+    assert "data-portal-action" not in section
+    assert "payos" not in section.lower()
+    assert "provider" not in section.lower()
+
+
+def test_bot_companion_preserves_telegram_first_personal_workflows_without_mirroring_state() -> None:
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    for route, key, title in (
+        ("/notes", "notes", "Ghi chú & Memory"),
+        ("/reminders", "reminders", "Nhắc việc"),
+        ("/referrals", "referrals", "Giới thiệu"),
+        ("/rewards", "rewards", "Ưu đãi & quà"),
+        ("/community", "community", "Cộng đồng"),
+        ("/guides", "guides", "Hướng dẫn Bot"),
+    ):
+        assert f'botCompanionPage("{route}", "{title}"' in PORTAL
+        assert f'WebFeature("{key}", "{title}", "account", "{route}"' in registry
+    companion = PORTAL[PORTAL.index("function renderBotCompanion(page, context)"):PORTAL.index("function renderLanding(page, context)")]
+    assert 'data-portal-action="copy-bot-companion-command"' in companion
+    assert "Portal chỉ mở Bot hoặc sao chép một lệnh an toàn" in PORTAL
+    assert "không nhân bản state" in companion
+    assert "fetch(" not in companion
+    assert "BOT_COMPANION_COMMANDS" in INTEGRATION
+    assert "function copyBotCompanionCommand(value)" in INTEGRATION
+    assert ".portal-bot-companion-grid" in PORTAL_CSS
+
+
+def test_guarded_feature_handoffs_use_only_reviewed_zero_argument_bot_entry_commands() -> None:
+    handoff = PORTAL[
+        PORTAL.index("const FEATURE_BOT_HANDOFFS = Object.freeze({"):
+        PORTAL.index("function copyFields(fields)")
+    ]
+    for feature, command in {
+        "prompt_studio": "/film",
+        "image_create": "/image_tools",
+        "video_single": "/create_media",
+        "music_background": "/music",
+        "subtitle_create": "/translate",
+        "documents": "/doc_tools",
+    }.items():
+        assert f'{feature}: Object.freeze({{ command: "{command}"' in handoff
+        assert f'"{command}"' in INTEGRATION
+    feature_handoff = PORTAL[
+        PORTAL.index("function renderFeatureBotHandoff(page, context, flow)"):
+        PORTAL.index("function renderWorkspace(page, context)")
+    ]
+    assert "const handoff = FEATURE_BOT_HANDOFFS[feature] || null;" in feature_handoff
+    assert 'data-copy-text="${safeText(handoffCommand)}"' in feature_handoff
+    assert "Không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token." in feature_handoff
+    assert "fetch(" not in feature_handoff
+    assert "/voiceover" not in handoff
+    assert "Voice hiện còn guarded/admin-only" in feature_handoff
+    contract = (ROOT / "docs" / "migration" / "BOT_COMPANION_HANDOFF.md").read_text(encoding="utf-8")
+    assert "Feature-family handoff review (frozen Bot baseline)" in contract
+    assert "that need a topic, file, transaction, job ID" in contract
+    assert "not offered as Web copy controls" in contract
+
+
+def test_customer_parity_hubs_split_membership_status_tools_and_media_navigation_from_dashboard() -> None:
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    expected = {
+        "/membership": ("membership", "Gói thành viên"),
+        "/status": ("service_status", "Trạng thái dịch vụ"),
+        "/tools": ("tool_directory", "Công cụ & models"),
+        "/studio": ("media_studio", "Media Studio"),
+    }
+    for route, (key, title) in expected.items():
+        assert f'WebFeature("{key}", "{title}"' in registry
+        assert f'customerPage("{route}", "{title}"' in PORTAL
+    membership = PORTAL[PORTAL.index("function renderMembership(page, context)"):PORTAL.index("function renderServiceStatus(page, context)")]
+    assert "Bot canonical" in membership
+    assert "không tự cấp VIP" in membership
+    assert "fetch(" not in membership
+    assert "/api/v1/" not in membership
+    service_status = PORTAL[PORTAL.index("function renderServiceStatus(page, context)"):PORTAL.index("function renderMediaStudio(page, context)")]
+    assert "Telegram ID, code, callback token, HMAC secret" in service_status
+    assert "bot_callback_observed" in service_status
+    assert "fetch(" not in service_status
+    media_studio = PORTAL[PORTAL.index("function renderMediaStudio(page, context)"):PORTAL.index("function safePayosCheckout(value)")]
+    assert "Điều phối workflow, không giả project" in media_studio
+    assert "Không tạo job tại browser" in media_studio
+    assert "fetch(" not in media_studio
+    assert 'case "membership": return renderMembership(page, context);' in PORTAL
+    assert 'case "service-status": return renderServiceStatus(page, context);' in PORTAL
+    assert 'case "media-studio": return renderMediaStudio(page, context);' in PORTAL
+    assert 'path === "/membership"' in INTEGRATION
+    assert 'api("/wallet"), api("/packages"), api("/features/status")' in INTEGRATION
+    contract = (ROOT / "docs" / "migration" / "FEATURE_FAMILY_NAVIGATION.md").read_text(encoding="utf-8")
+    assert "Customer parity hubs" in contract
+    assert "`/membership`" in contract
+    assert "`/status`" in contract
+    assert "`/tools`" in contract
+    assert "`/studio`" in contract
 
 
 def test_registration_copy_does_not_claim_unimplemented_email_verification() -> None:
@@ -419,6 +699,8 @@ def test_login_methods_are_explicit_about_telegram_gmail_and_configuration_gated
     assert 'label: "Email (có thể dùng Gmail)"' in PORTAL
     assert "function renderTelegramLoginMethod(context)" in PORTAL
     assert "Không nhập Telegram ID vào Web" in PORTAL
+    assert "Telegram Login xác thực Web bằng OIDC" in PORTAL
+    assert 'renderPublicOAuthCard("telegram", "Telegram Login", telegramOidcEnabled, "✈", "signin")' in PORTAL
     assert 'data-portal-action="start-telegram-login"' in PORTAL
     assert 'data-portal-action="refresh-telegram-login"' in PORTAL
     assert "Google (OAuth)" in PORTAL
@@ -429,11 +711,142 @@ def test_login_methods_are_explicit_about_telegram_gmail_and_configuration_gated
     assert 'window.location.assign("/login?registered=1");' in INTEGRATION
     assert 'api("/auth/telegram/login/start"' in INTEGRATION
     assert 'api("/auth/telegram/login/complete"' in INTEGRATION
+    assert 'fetch(`${API}/auth/telegram/connection/status`' in INTEGRATION
+    assert "function telegramConnectionReady(connection)" in INTEGRATION
+    assert "connection.ready === true" in INTEGRATION
+    assert "connection.bot_callback_adapter_enabled" in PORTAL
+    assert "Web sẽ không tạo mã chết" in PORTAL
+    assert "bot_callback_observed" in PORTAL
+    assert "Telegram ID không đi qua browser" in PORTAL
+    assert '"start-telegram-login": telegramReady' in INTEGRATION
+    assert '"start-telegram-link": Boolean(account && telegramReady)' in INTEGRATION
     assert 'fetch(`${API}/auth/providers`' in INTEGRATION
     assert "function safeOAuthStartPath(value)" in INTEGRATION
-    assert "google|github|apple" in INTEGRATION
+    assert "telegram|google|github|apple" in INTEGRATION
     assert 'api(`/auth/oauth/${provider}/link/start`' in INTEGRATION
     assert "_telegram_login_cookie_value" in (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
+
+
+def test_telegram_onboarding_can_start_from_a_fresh_signed_web_account() -> None:
+    """The no-code onboarding state must not trap a new email/OAuth account."""
+    onboarding = PORTAL[PORTAL.index("function renderOnboarding(page, context)"):PORTAL.index("function renderPublicOAuthCard(provider")]
+    assert 'renderEmpty("Chưa có mã liên kết"' in onboarding
+    assert 'data-portal-action="start-telegram-link"' in onboarding
+    assert "Tạo mã liên kết Telegram" in onboarding
+    assert 'data-portal-action="copy-telegram-link-command"' in onboarding
+    assert "function copyTelegramLinkCommand(value)" in INTEGRATION
+    assert 'action === "copy-telegram-link-command"' in INTEGRATION
+
+
+def test_account_exposes_bot_preferences_only_as_safe_handoffs() -> None:
+    account = PORTAL[PORTAL.index("function renderAccount(page, context)"):PORTAL.index("function renderLegal(page, context)")]
+    assert "Tuỳ chọn do Bot quản lý" in account
+    assert 'command: "/language"' in account
+    assert 'command: "/mode"' in account
+    assert 'command: "/profile"' in account
+    assert 'command: "/mydata"' in account
+    assert 'command: "/data_delete"' in account
+    assert 'data-portal-action="copy-bot-companion-command"' in account
+    assert "Web không giả đồng bộ" in account
+    assert "Xóa dữ liệu, đổi quyền hay thay Telegram identity" in account
+    assert "fetch(" not in account
+    assert '"/language", "/mode", "/profile", "/mydata"' in INTEGRATION
+    assert '"/tickets", "/ticket_status", "/data_delete"' in INTEGRATION
+    handoff = (ROOT / "docs" / "migration" / "BOT_COMPANION_HANDOFF.md").read_text(encoding="utf-8")
+    assert "`/language`, `/mode`, `/profile`, `/mydata`" in handoff
+    assert "`/data_delete`" in handoff
+
+
+def test_ticket_bot_handoff_never_moves_a_ticket_thread_or_identifier_to_telegram() -> None:
+    tickets = PORTAL[PORTAL.index("function renderTickets(page, context)"):PORTAL.index("function renderAccount(page, context)")]
+    assert "Theo dõi sâu trong Bot" in tickets
+    assert 'data-copy-text="/tickets"' in tickets
+    assert 'data-copy-text="/ticket_status"' in tickets
+    handoff = tickets[tickets.index("const ticketBotHandoff"):tickets.index("return `<article", tickets.index("const ticketBotHandoff"))]
+    assert "không gửi mã ticket, identity" in handoff
+    assert "item.id" not in handoff
+    assert "fetch(" not in handoff
+
+
+def test_growth_and_campaign_reports_use_the_real_bot_handoff_until_a_report_adapter_exists() -> None:
+    assert 'analyticsBotCompanionPage("/growth/ai", "Growth AI"' in PORTAL
+    assert 'analyticsBotCompanionPage("/campaign/report", "Báo cáo campaign"' in PORTAL
+    assert 'layout: "analytics-bot-companion"' in PORTAL
+    analytics = PORTAL[PORTAL.index("function renderAnalyticsBotCompanion(page, context)"):PORTAL.index("function renderLanding(page, context)")]
+    assert 'data-portal-action="copy-analytics-bot-command"' in analytics
+    assert 'name="campaign_id"' in analytics
+    assert 'name="goal"' in analytics
+    assert 'name="format"' in analytics
+    assert "Không có request analytics, Xu hay file nào gửi từ browser." in analytics
+    assert "fetch(" not in analytics
+    assert 'const ANALYTICS_BOT_COMMANDS = new Set(["/growth_ai", "/campaign_report"])' in INTEGRATION
+    assert "function buildAnalyticsBotCommand(fields)" in INTEGRATION
+    assert "function copyAnalyticsBotCommand(fields)" in INTEGRATION
+    assert 'action === "copy-analytics-bot-command"' in INTEGRATION
+    assert "ANALYTICS_BOT_PLATFORMS" in INTEGRATION
+    assert "ANALYTICS_BOT_GOALS" in INTEGRATION
+    assert "ANALYTICS_BOT_FORMATS" in INTEGRATION
+    assert "không tự tính doanh thu, performance hay tạo file xuất giả" in PORTAL
+    contract = (ROOT / "docs" / "migration" / "FEATURE_FAMILY_NAVIGATION.md").read_text(encoding="utf-8")
+    assert "/growth/ai" in contract
+    assert "/campaign/report" in contract
+    assert "tightly allowlisted Bot command" in contract
+    handoff = (ROOT / "docs" / "migration" / "BOT_COMPANION_HANDOFF.md").read_text(encoding="utf-8")
+    assert "separate closed schema" in handoff
+    assert "The Portal does not read performance data" in handoff
+
+
+def test_telegram_onboarding_preserves_only_a_safe_local_workflow_continuation() -> None:
+    app = (ROOT / "app.py").read_text(encoding="utf-8")
+    assert "def _safe_onboarding_next(value: str | None)" in app
+    assert 'candidate.startswith("//")' in app
+    assert "parsed.scheme or parsed.netloc or parsed.params or parsed.query or parsed.fragment" in app
+    assert 'f"/onboarding?next={quote(normalized, safe=\'/\')}"' in app
+    assert "_safe_onboarding_next(request.query_params.get(\"next\")) or \"/dashboard\"" in app
+    assert "function safeReturnPath(value)" in INTEGRATION
+    assert "function requestedPortalRoute()" in INTEGRATION
+    assert "`/onboarding?next=${encodeURIComponent(requested)}`" in INTEGRATION
+    assert "function safeOnboardingContinuation(value)" in PORTAL
+    assert "function onboardingContinuationRoute()" in PORTAL
+    assert "Workflow đang chờ" in PORTAL
+    assert "Mở lại workflow" in PORTAL
+    continuation = PORTAL[PORTAL.index("function safeOnboardingContinuation(value)"):PORTAL.index("function renderPublicOAuthCard(provider")]
+    assert "/api/v1/" not in continuation
+    assert 'href="/payments' not in continuation
+    assert "localStorage." not in continuation
+    assert "telegram_id" not in continuation
+    oauth_card = PORTAL[PORTAL.index("function renderPublicOAuthCard(provider"):PORTAL.index("function renderTelegramLoginMethod(context)")]
+    assert "const continuation = onboardingContinuationRoute();" in oauth_card
+    assert "?next=${encodeURIComponent(continuation)}" in oauth_card
+    assert "const startPath" in oauth_card
+    auth = (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
+    assert "return_path = _safe_oauth_return_path(state_data[\"return_path\"])" in auth
+    assert 'f"/onboarding?next={quote(return_path, safe=\'/\')}"' in auth
+    assert "response = RedirectResponse(target" in auth
+
+
+def test_legacy_raw_telegram_login_shells_are_redirected_to_the_signed_portal() -> None:
+    legacy_login = (ROOT / "login.html").read_text(encoding="utf-8")
+    assert 'url=/login' in legacy_login
+    assert "telegram-id" not in legacy_login
+    assert "localStorage" not in legacy_login
+    assert "user_id" not in legacy_login
+    legacy_wallet = (ROOT / "wallet.html").read_text(encoding="utf-8")
+    legacy_wallet_script = (ROOT / "wallet.js").read_text(encoding="utf-8")
+    assert 'url=/wallet' in legacy_wallet
+    assert "localStorage" not in legacy_wallet
+    assert "create-payment-link" not in legacy_wallet
+    assert "localStorage" not in legacy_wallet_script
+    assert "create-payment-link" not in legacy_wallet_script
+    app = (ROOT / "app.py").read_text(encoding="utf-8")
+    assert '"/login.html": "/login"' in app
+    assert '"/auth.html": "/login"' in app
+    assert "_legacy_html_redirects" in app
+    assert "function renderTelegramConnectionNotice(context)" in PORTAL
+    assert "connectionDisabled" in PORTAL
+    compatibility_main = (ROOT / "main.py").read_text(encoding="utf-8")
+    assert "from app import app" in compatibility_main
+    assert "include_router" not in compatibility_main
 
 
 def test_normalized_portal_context_keeps_hydrated_oauth_telegram_and_payment_state() -> None:
@@ -460,9 +873,27 @@ def test_feature_planning_state_is_distinguished_from_provider_engine_readiness(
     assert "const planningAvailable = page.type === \"feature\" && page.action !== \"none\"" in PORTAL
     assert "Planning draft sẵn sàng; engine vẫn được bảo vệ" in PORTAL
     assert "Web App đang chờ adapter tạo job canonical" in PORTAL
-    assert "context.bridge.featureExecutionAvailable === true" in PORTAL
-    assert "state.public_ready && executionAvailable === true" in INTEGRATION
+    assert "function featureConfirmExecutionReady(page, context)" in PORTAL
+    assert "featureExecutionFeatures" in PORTAL
+    assert "state.public_ready && allowed.has(key)" in INTEGRATION
+    assert "featureExecutionAllowed(feature)" in INTEGRATION
     assert '"feature-confirm": webFeatureExecutionAvailable' in INTEGRATION
+
+
+def test_guarded_feature_execution_offers_only_a_no_data_bot_menu_continuation() -> None:
+    assert "function renderFeatureBotHandoff(page, context, flow)" in PORTAL
+    handoff = PORTAL[PORTAL.index("function renderFeatureBotHandoff(page, context, flow)"):PORTAL.index("function renderWorkspace(page, context)")]
+    assert "Tiếp tục trong Telegram" in handoff
+    assert 'const handoffCommand = handoff ? handoff.command : "/menu";' in handoff
+    assert 'data-copy-text="${safeText(handoffCommand)}"' in handoff
+    assert "Không có" in handoff
+    assert "không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token" in handoff
+    assert "fetch(" not in handoff
+    assert "/api/v1/" not in handoff
+    assert "${renderFeatureBotHandoff(page, context, flow)}" in PORTAL
+    contract = (ROOT / "docs" / "migration" / "FEATURE_CONFIRM_CONTRACT.md").read_text(encoding="utf-8")
+    assert "Guarded Bot-menu continuation" in contract
+    assert "no feature\ninput, prompt, upload ID" in contract
 
 
 def test_support_form_does_not_silently_drop_a_file_attachment() -> None:
@@ -472,16 +903,37 @@ def test_support_form_does_not_silently_drop_a_file_attachment() -> None:
     assert "Ticket không nhận API key, token" in INTEGRATION
 
 
-def test_admin_surfaces_are_explicitly_read_only_without_a_write_adapter() -> None:
+def test_admin_writes_are_explicitly_flag_gated_confirmed_and_idempotent() -> None:
     assert 'action: "none"' in PORTAL
     assert "Chế độ chỉ đọc" in PORTAL
-    assert "data-portal-action=\"admin-review\"" not in PORTAL
-    assert "admin-retry" not in PORTAL
-    assert "admin-refund" not in PORTAL
-    assert "admin-freeze" not in PORTAL
-    assert "admin-retry" not in INTEGRATION
-    assert "admin-refund" not in INTEGRATION
-    assert "admin-freeze" not in INTEGRATION
+    assert "function adminJobActions(item, context, route)" in PORTAL
+    assert 'data-portal-action="admin-retry"' in PORTAL
+    assert 'data-portal-action="admin-refund"' in PORTAL
+    assert 'data-portal-action="admin-freeze"' in PORTAL
+    assert "data-portal-confirm=\"Retry job" in PORTAL
+    assert "Yêu cầu hoàn Xu cho job" in PORTAL
+    assert "Maintenance feature canonical" in PORTAL
+    assert "WEBAPP_ADMIN_WRITES_ENABLED" in PORTAL
+    assert '"admin-retry": adminWriteEnabled' in INTEGRATION
+    assert '"admin-refund": adminWriteEnabled' in INTEGRATION
+    assert '"admin-freeze": adminWriteEnabled' in INTEGRATION
+    assert "function validAdminJobId(value)" in INTEGRATION
+    assert "function validAdminFeatureKey(value)" in INTEGRATION
+    assert "const scope = `admin:${operation}:${jobId}`;" in INTEGRATION
+    assert "const scope = `admin:freeze:${feature}`;" in INTEGRATION
+    assert "acquireSubmission(scope," in INTEGRATION
+    assert "function discardSubmission(scope, entry)" in INTEGRATION
+    assert "if (acknowledged) discardSubmission(scope, submission);" in INTEGRATION
+    assert "status.flags.admin_erp_enabled === true" in INTEGRATION
+    assert "`/admin/jobs/${encodeURIComponent(jobId)}/${operation}`" in INTEGRATION
+    assert "`/admin/features/${encodeURIComponent(feature)}/freeze`" in INTEGRATION
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert "require_admin_csrf(request)" in api
+    assert "await require_canonical_admin_csrf(request)" in api
+    assert '"WEBAPP_ADMIN_WRITES_ENABLED", False' in api
+    assert '"WEBAPP_ADMIN_ERP_ENABLED"' in api
+    assert "def require_operation_note" in api
+    assert '"failed_no_charge"' in PORTAL
 
 
 def test_admin_erp_can_render_canonical_user_references_only_after_server_role_check() -> None:
@@ -517,3 +969,230 @@ def test_telegram_deep_links_and_session_metadata_stay_browser_safe() -> None:
     assert "url.hostname.endsWith" not in telegram_link_slice
     assert "telegram_linked" in INTEGRATION
     assert "account.canonical_user_id" not in INTEGRATION
+
+
+def test_telegram_one_time_challenges_auto_resume_only_in_the_same_visible_browser_session() -> None:
+    assert "const TELEGRAM_CHALLENGE_POLL_INTERVAL_MS = 2500;" in INTEGRATION
+    assert "function telegramChallengePending(flow)" in INTEGRATION
+    assert "function portalIsVisible()" in INTEGRATION
+    assert "function stopTelegramLoginPolling()" in INTEGRATION
+    assert "function stopTelegramLinkPolling()" in INTEGRATION
+    assert "async function refreshTelegramLoginChallenge" in INTEGRATION
+    assert "async function refreshTelegramLinkChallenge" in INTEGRATION
+    assert "function scheduleTelegramLoginPolling(delayMs)" in INTEGRATION
+    assert "function scheduleTelegramLinkPolling(delayMs)" in INTEGRATION
+    assert "scheduleTelegramLoginPolling();" in INTEGRATION
+    assert "scheduleTelegramLinkPolling();" in INTEGRATION
+    assert 'window.addEventListener("visibilitychange"' in INTEGRATION
+    challenge_slice = INTEGRATION[INTEGRATION.index("function telegramChallengePending(flow)"):INTEGRATION.index("function looksLikePaymentCard(candidate)")]
+    assert "localStorage" not in challenge_slice
+    assert "telegram_id" not in challenge_slice
+    assert 'api("/auth/telegram/login/complete"' in INTEGRATION
+    assert 'api("/auth/telegram/link/status")' in INTEGRATION
+
+
+def test_telegram_link_recovery_never_restores_a_code_and_requires_browser_completion() -> None:
+    assert "async function resumeTelegramLinkChallenge" in INTEGRATION
+    assert "async function completeTelegramLinkChallenge" in INTEGRATION
+    assert 'api("/auth/telegram/link/complete"' in INTEGRATION
+    assert "ready_to_complete" in INTEGRATION
+    assert "recoverTelegramLinkFlow" in INTEGRATION
+    assert "telegramLinkResumeProbeInFlight" in INTEGRATION
+    assert "renderRecoveredTelegramLinkChallenge" in PORTAL
+    assert "Mã liên kết đã hết hạn" in PORTAL
+    assert "renderExpiredTelegramLoginChallenge" in PORTAL
+    assert "TELEGRAM_LOGIN_EXPIRED" in INTEGRATION
+    assert "telegramConnectionBlockReason" in PORTAL
+    assert "Web không tạo mã chết" in PORTAL
+    recovery_slice = INTEGRATION[INTEGRATION.index("async function resumeTelegramLinkChallenge"):INTEGRATION.index("function scheduleTelegramLoginPolling")]
+    assert "localStorage" not in recovery_slice
+    assert "canonical_user_id" not in recovery_slice
+    assert "data.code =" not in recovery_slice
+
+
+def test_feature_workspace_uses_only_explicit_tracking_references_and_never_infers_jobs() -> None:
+    assert "const FEATURE_TRACKING_JOB_STATES" in PORTAL
+    assert "function safeFeatureTracking(flow)" in PORTAL
+    assert "function renderFeatureTracking(flow)" in PORTAL
+    assert "feature !== expectedFeature" in PORTAL
+    assert "flowStatus !== status" in PORTAL
+    assert 'href="/jobs"' in PORTAL
+    assert 'const href = `/jobs/${encodeURIComponent(tracking.id)}`;' in PORTAL
+    assert "Không ghép job theo thời gian hoặc tên feature" in PORTAL
+    assert "${renderFeatureTracking(flow)}" in PORTAL
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert "def _project_feature_tracking" in api
+    assert "feature != expected" in api
+    assert "status not in FEATURE_CONFIRM_ACCEPTED_STATUSES" in api
+    assert 'result["tracking"] = tracking' in api
+
+
+def test_canonical_planning_can_be_reused_only_as_ephemeral_safe_form_text() -> None:
+    """Bot planning can speed up intake without turning into a provider action.
+
+    These browser-only actions deliberately accept bounded text, copy it or
+    place it into an existing declared text field.  They must never persist a
+    Bot response in local storage or target uploads, amounts or select
+    controls where an inferred value could alter a canonical workflow.
+    """
+    assert "function canonicalDraftText(value)" in PORTAL
+    assert "function featureDraftTarget(flow, route)" in PORTAL
+    assert "function canonicalDraftActions(text, route, field, label)" in PORTAL
+    assert "function renderCanonicalSuggestions(value, route, field)" in PORTAL
+    assert 'data-portal-action="copy-canonical-draft"' in PORTAL
+    assert 'data-portal-action="apply-canonical-draft"' in PORTAL
+    assert "function copyCanonicalDraftText(value)" in PORTAL
+    assert "function applyCanonicalDraftToForm(route, field, value)" in PORTAL
+    assert "Chưa gọi provider · Chưa trừ Xu." in PORTAL
+    assert ".portal-suggestion-grid" in PORTAL_CSS
+    assert ".portal-canonical-actions" in PORTAL_CSS
+
+    apply_action = PORTAL[
+        PORTAL.index("function applyCanonicalDraftToForm(route, field, value)"):
+        PORTAL.index("function dispatchAction(source, context)")
+    ]
+    assert "transientFormDrafts.set" in apply_action
+    assert "localStorage" not in apply_action
+    assert '["file", "checkbox", "number"]' in apply_action
+    assert 'definition.control === "select"' in apply_action
+    assert "data-canonical-route" in PORTAL
+    assert "data-canonical-field" in PORTAL
+    assert "data-canonical-text" in PORTAL
+
+
+def test_public_landing_is_a_responsive_product_entry_not_an_unauthenticated_workspace() -> None:
+    assert 'customerPage("/", "TOAN AAS"' in PORTAL
+    assert 'access: "public", layout: "landing", action: "none", status: "ready"' in PORTAL
+    assert "function renderLanding(page, context)" in PORTAL
+    assert 'case "landing": return renderLanding(page, context);' in PORTAL
+    assert "Không tạo output giả" in PORTAL
+    assert "Xu và PayOS do Bot canonical" in PORTAL
+    assert "Telegram xác minh một lần" in PORTAL
+    landing = PORTAL[
+        PORTAL.index("function renderLanding(page, context)"):
+        PORTAL.index("function renderNotFound(page, context)")
+    ]
+    assert "/api/v1/" not in landing
+    assert "fetch(" not in landing
+    assert "localStorage" not in landing
+    assert 'href: "/login?next=/video/create"' in landing
+    assert 'id="studios"' in landing
+    assert 'id="workflow"' in landing
+    assert 'id="trust"' in landing
+    assert "portal-shell--landing" in PORTAL
+    assert "sidebar.hidden = minimalShell;" in PORTAL
+    assert "header.hidden = minimalShell;" in PORTAL
+    assert ".portal-shell--landing" in PORTAL_CSS
+    assert ".portal-landing-studios" in PORTAL_CSS
+    assert ".portal-landing-preview" in PORTAL_CSS
+    assert "scroll-snap-type: x mandatory" in PORTAL_CSS
+    app = (ROOT / "app.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/":' in app
+    assert 'return RedirectResponse("/dashboard" if account.get("canonical_user_id") else "/onboarding", status_code=307)' in app
+    assert 'public_pages = {"/", "/legal", "/privacy"}' in app
+
+
+def test_video_finalization_maps_bot_navigation_without_faking_mux_or_delivery() -> None:
+    assert "function guidedFeaturePage(path, title, description, icon, layout, aliases, notes)" in PORTAL
+    assert 'guidedFeaturePage("/video/add-ons", "Video finalization"' in PORTAL
+    assert 'guidedFeaturePage("/video/mux", "Mux audio & video"' in PORTAL
+    assert "function renderVideoFinalization(page, context)" in PORTAL
+    assert 'case "video-finalization": return renderVideoFinalization(page, context);' in PORTAL
+    finalization = PORTAL[
+        PORTAL.index("function renderVideoFinalization(page, context)"):
+        PORTAL.index("function renderNotFound(page, context)")
+    ]
+    for href in ("/voice/tts", "/music/create", "/dubbing", "/subtitle", "/jobs", "/assets", "/video/preview"):
+        assert f'href: "{href}"' in finalization
+    assert "Không tự gọi FFmpeg/provider" in finalization
+    assert "Không trừ Xu ở browser" in finalization
+    assert "Không tạo delivery giả" in finalization
+    assert "data-portal-action" not in finalization
+    assert "fetch(" not in finalization
+    assert ".portal-finalization-grid" in PORTAL_CSS
+    assert ".portal-finalization-card.is-guarded" in PORTAL_CSS
+
+
+def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_automation() -> None:
+    assert 'customerPage("/campaigns", "Campaign Planner"' in PORTAL
+    assert 'layout: "campaign-planner", action: "campaign-create"' in PORTAL
+    assert 'case "campaign-planner": return renderCampaignPlanner(page, context);' in PORTAL
+    assert "const WEB_LOCAL_ACTIONS = new Set([\"campaign-create\", \"campaign-update\", \"campaign-update-status\"]);" in PORTAL
+    assert "function renderCampaignPlanner(page, context)" in PORTAL
+    assert "function campaignDestinationLink(value)" in PORTAL
+    assert "target=\"_blank\" rel=\"noopener noreferrer\"" in PORTAL
+    planner = PORTAL[
+        PORTAL.index("function renderCampaignPlanner(page, context)"):
+        PORTAL.index("function renderLanding(page, context)")
+    ]
+    assert "Campaign Planner chỉ lưu metadata" in PORTAL
+    assert "không tự publish" in planner
+    assert "không tạo analytics/revenue" in planner
+    assert "Không gọi Bot, PayOS, Xu hay provider" in planner
+    assert "fetch(" not in planner
+    assert "localStorage" not in planner
+    assert "/api/v1/" not in planner
+
+    assert 'api("/campaigns")' in INTEGRATION
+    assert 'if (action === "campaign-create")' in INTEGRATION
+    assert 'if (action === "campaign-update")' in INTEGRATION
+    assert 'if (action === "campaign-update-status")' in INTEGRATION
+    assert "function campaignCreatePayload(fields)" in INTEGRATION
+    assert "function campaignStatusPayload(fields)" in INTEGRATION
+    campaign_integration = INTEGRATION[
+        INTEGRATION.index("function campaignCreatePayload(fields)"):
+        INTEGRATION.index("function estimateCanAdvanceToConfirm")
+    ]
+    assert "https:" in campaign_integration
+    assert "canonical_user_id" not in campaign_integration
+    assert "provider" not in campaign_integration.lower()
+    assert "payos" not in campaign_integration.lower()
+
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    db = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert 'CREATE TABLE IF NOT EXISTS web_campaign_plans' in db
+    assert '@router.get("/campaigns")' in api
+    assert '@router.post("/campaigns")' in api
+    assert '@router.patch("/campaigns/{plan_id}")' in api
+    assert '@router.post("/campaigns/{plan_id}/status")' in api
+    assert "WHERE account_id=?" in api
+    assert "WHERE id=? AND account_id=?" in api
+    assert "campaign.plan.create" in api
+    assert "campaign.plan.update" in api
+    assert "campaign.plan.status" in api
+    assert "web-local planning record created" in api
+    assert "CAMPAIGN_PLAN_TRANSITIONS" in api
+
+    app = (ROOT / "app.py").read_text(encoding="utf-8")
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    assert '"/campaign.html": "/campaigns"' in app
+    assert 'RedirectResponse("/campaigns", status_code=307)' in app
+    assert '"/campaigns": "Campaign Planner"' in pages
+    assert ".portal-campaign-board" in PORTAL_CSS
+    assert ".portal-campaign-timeline" in PORTAL_CSS
+    assert ".portal-campaign-edit" in PORTAL_CSS
+    assert 'customerPage("/calendar", "Content Calendar"' in PORTAL
+    assert 'customerPage("/approvals", "Self-review Queue"' in PORTAL
+    assert 'case "campaign-calendar": return renderCampaignCalendar(page, context);' in PORTAL
+    assert 'case "campaign-approvals": return renderCampaignApprovals(page, context);' in PORTAL
+    assert "function renderCampaignCalendar(page, context)" in PORTAL
+    assert "function renderCampaignApprovals(page, context)" in PORTAL
+    calendar = PORTAL[
+        PORTAL.index("function renderCampaignCalendar(page, context)"):
+        PORTAL.index("function renderCampaignApprovals(page, context)")
+    ]
+    approvals = PORTAL[
+        PORTAL.index("function renderCampaignApprovals(page, context)"):
+        PORTAL.index("function renderLanding(page, context)")
+    ]
+    assert "Calendar không tạo publish queue" in calendar
+    assert "Không reminder tự động" in calendar
+    assert "Self-review Queue của riêng bạn" in approvals
+    assert "Không có admin approval giả" in approvals
+    assert "fetch(" not in calendar + approvals
+    assert "localStorage" not in calendar + approvals
+    assert '"/calendar": "Content Calendar"' in pages
+    assert '"/approvals": "Self-review Queue"' in pages
+    assert '["/campaigns", "/calendar", "/approvals"].includes(currentPath)' in INTEGRATION
+    assert ".portal-calendar-grid" in PORTAL_CSS
+    assert ".portal-calendar-event" in PORTAL_CSS

@@ -2,7 +2,6 @@
 
 | Route | Methods | Endpoint |
 | --- | --- | --- |
-| / | GET | root |
 | /add | POST | add_performance |
 | /add-xu | POST | admin_add_xu |
 | /admin-app | GET | legacy_admin_redirect |
@@ -39,6 +38,10 @@
 | /banners | POST | add_banner |
 | /banners | GET | get_banners |
 | /campaign-app | GET | legacy_campaign_redirect |
+| /campaigns | GET | list_campaign_plans |
+| /campaigns | POST | create_campaign_plan |
+| /campaigns/{plan_id} | PATCH | update_campaign_plan |
+| /campaigns/{plan_id}/status | POST | update_campaign_plan_status |
 | /catalog | GET | feature_catalog |
 | /catalog | GET | workflow_catalog |
 | /chat | POST | add_chat |
@@ -68,6 +71,7 @@
 | /goals | GET | get_goals |
 | /health | GET | health |
 | /internal/telegram-link/confirm | POST | confirm_telegram_link |
+| /internal/telegram-link/confirm/ | POST | confirm_telegram_link |
 | /inventory | POST | add_inventory |
 | /inventory | GET | get_inventory |
 | /jobs | GET | list_jobs |
@@ -124,6 +128,9 @@
 | /support/tickets | GET | support_tickets |
 | /support/tickets | POST | create_support_ticket |
 | /sync | POST | sync_user |
+| /telegram-account/upgrade | POST | upgrade_telegram_account |
+| /telegram/connection/status | GET | telegram_connection_status |
+| /telegram/link/complete | POST | complete_telegram_link |
 | /telegram/link/start | POST | start_telegram_link |
 | /telegram/link/status | GET | telegram_link_status |
 | /telegram/login/complete | POST | complete_telegram_login |

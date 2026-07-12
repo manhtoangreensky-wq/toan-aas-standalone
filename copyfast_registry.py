@@ -27,9 +27,19 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("dashboard", "Tổng quan", "account", "/dashboard", description="Tài khoản, Xu, job và trạng thái gần đây."),
     WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá các workflow Web đã được định tuyến và trạng thái canonical của chúng."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
+    # Bot-companion surfaces keep fast Telegram conversations discoverable in
+    # the Web portal without copying Bot-owned memory/reward/community tables
+    # into the standalone app. They are read-only handoffs, not engine APIs.
+    WebFeature("notes", "Ghi chú & Memory", "account", "/notes", description="Ghi chú và memory do Bot canonical quản lý."),
+    WebFeature("reminders", "Nhắc việc", "account", "/reminders", description="Nhắc việc, lặp lại và trạng thái do Bot canonical quản lý."),
+    WebFeature("referrals", "Giới thiệu", "account", "/referrals", description="Referral/link thống kê cần Bot canonical xác minh."),
+    WebFeature("rewards", "Ưu đãi & quà", "account", "/rewards", description="Gift, birthday và promo chỉ được Bot canonical xử lý."),
+    WebFeature("community", "Cộng đồng", "account", "/community", description="Kênh chính thức và community handoff qua Bot."),
+    WebFeature("guides", "Hướng dẫn Bot", "account", "/guides", description="Trợ giúp và menu Bot cho các workflow chưa có adapter Web."),
     WebFeature("wallet", "Ví Xu", "wallet", "/wallet", description="Số dư và lịch sử canonical từ bot."),
     WebFeature("wallet_topup", "Nạp Xu", "wallet", "/wallet/topup", description="Tạo thanh toán qua core PayOS canonical."),
     WebFeature("packages", "Gói dịch vụ", "wallet", "/packages"),
+    WebFeature("membership", "Gói thành viên", "wallet", "/membership", description="Tier, trial và quyền lợi chỉ đọc từ bot canonical."),
     WebFeature("jobs", "Công việc", "jobs", "/jobs", description="Theo dõi trạng thái và kết quả đã xác thực."),
     WebFeature("assets", "Tài sản", "jobs", "/assets", description="Tệp đầu ra thuộc quyền sở hữu của bạn."),
     WebFeature("chat", "Chat AI", "content", "/chat", input_hint="Nhập yêu cầu hoặc bối cảnh."),
@@ -40,6 +50,8 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("script", "Kịch bản", "content", "/content/script"),
     WebFeature("storyboard", "Storyboard", "content", "/content/storyboard"),
     WebFeature("content_pack", "Content Pack", "content", "/content/pack"),
+    WebFeature("growth_ai", "Growth AI", "content", "/growth/ai", description="Phân tích hiệu suất và khuyến nghị vẫn chạy trong Bot canonical cho đến khi có adapter report riêng."),
+    WebFeature("campaign_report", "Báo cáo campaign", "content", "/campaign/report", description="Báo cáo campaign/text/CSV tiếp tục được Bot canonical tạo và gửi trong Telegram."),
     WebFeature("image_create", "Tạo ảnh", "image", "/image/create", input_hint="Prompt ảnh và tỉ lệ khung hình."),
     WebFeature("image_edit", "Chỉnh sửa ảnh", "image", "/image/edit", input_hint="Tải ảnh và mô tả chỉnh sửa."),
     WebFeature("image_upscale", "Nâng cấp ảnh", "image", "/image/upscale", input_hint="Tải ảnh cần upscale."),
@@ -87,6 +99,9 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("support", "Hỗ trợ", "support", "/support"),
     WebFeature("tickets", "Phiếu hỗ trợ", "support", "/tickets"),
     WebFeature("pricing", "Bảng giá", "support", "/pricing"),
+    WebFeature("service_status", "Trạng thái dịch vụ", "support", "/status", description="Trạng thái Web, Telegram và Core Bridge đã được server kiểm tra."),
+    WebFeature("tool_directory", "Công cụ & models", "content", "/tools", description="Danh mục workflow và models đã được định tuyến, không suy đoán readiness."),
+    WebFeature("media_studio", "Media Studio", "video", "/studio", description="Luồng lập kế hoạch media qua các workflow Web đã đăng ký."),
     WebFeature("legal", "Điều khoản", "support", "/legal"),
     WebFeature("privacy", "Quyền riêng tư", "support", "/privacy"),
 )
@@ -109,6 +124,11 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_promos", "Khuyến mãi", "admin", "/admin/promos", "admin"),
     WebFeature("admin_leads", "Leads", "admin", "/admin/leads", "admin"),
     WebFeature("admin_tickets", "CSKH", "admin", "/admin/tickets", "admin"),
+    WebFeature("admin_campaigns", "Campaign Center", "admin", "/admin/campaigns", "admin"),
+    WebFeature("admin_calendar", "Content Calendar", "admin", "/admin/calendar", "admin"),
+    WebFeature("admin_approvals", "Approval Queue", "admin", "/admin/approvals", "admin"),
+    WebFeature("admin_publishing", "Publishing & Channels", "admin", "/admin/publishing", "admin"),
+    WebFeature("admin_analytics", "Analytics", "admin", "/admin/analytics", "admin"),
     WebFeature("admin_audit", "Nhật ký audit", "admin", "/admin/audit", "admin"),
     WebFeature("admin_reports", "Báo cáo", "admin", "/admin/reports", "admin"),
     WebFeature("admin_system", "Hệ thống", "admin", "/admin/system", "admin"),
@@ -125,7 +145,9 @@ def catalog() -> list[dict[str, str]]:
 
 
 def allowed_paths() -> set[str]:
-    result = {"/", "/login", "/register", "/onboarding"}
+    # These are Web-owned portal surfaces, not Bot feature adapters.  Keep
+    # them explicit instead of smuggling them into the canonical Bot catalog.
+    result = {"/", "/login", "/register", "/onboarding", "/campaigns", "/calendar", "/approvals"}
     for item in ALL_FEATURES:
         result.add(item.route.split("?", 1)[0])
     return result

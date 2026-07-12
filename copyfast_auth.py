@@ -11,12 +11,12 @@ import os
 import re
 import secrets
 import uuid
-from urllib.parse import urlencode, urlparse
+from urllib.parse import quote, urlencode, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 from copyfast_db import ensure_copyfast_schema, transaction, utc_now
 
@@ -32,9 +32,12 @@ LINK_TTL_MINUTES = max(1, int(os.environ.get("TELEGRAM_LINK_TTL_MINUTES", "10"))
 OAUTH_STATE_TTL_MINUTES = max(1, int(os.environ.get("WEB_OAUTH_STATE_TTL_MINUTES", "10")))
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
+TELEGRAM_ONLY_EMAIL_DOMAIN = "telegram.toanaas.invalid"
 BRIDGE_CALLBACK_MAX_AGE_SECONDS = 300
+BRIDGE_CALLBACK_MAX_FUTURE_SKEW_SECONDS = 30
+BRIDGE_CALLBACK_MAX_BODY_BYTES = 2_048
 BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
-OAUTH_PROVIDER_NAMES = frozenset({"google", "github", "apple"})
+OAUTH_PROVIDER_NAMES = frozenset({"google", "github", "apple", "telegram"})
 GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
@@ -45,6 +48,17 @@ GITHUB_EMAILS_URL = "https://api.github.com/user/emails"
 APPLE_AUTHORIZE_URL = "https://appleid.apple.com/auth/authorize"
 APPLE_TOKEN_URL = "https://appleid.apple.com/auth/token"
 APPLE_JWKS_URL = "https://appleid.apple.com/auth/keys"
+TELEGRAM_OAUTH_AUTHORIZE_URL = "https://oauth.telegram.org/auth"
+TELEGRAM_OAUTH_TOKEN_URL = "https://oauth.telegram.org/token"
+TELEGRAM_OAUTH_JWKS_URL = "https://oauth.telegram.org/.well-known/jwks.json"
+# Literal-only inventory for the static migration audit. These are names, not
+# values; keeping the set explicit makes the production handoff discoverable
+# even though the generic OAuth helpers construct provider-specific names.
+TELEGRAM_OIDC_ENVIRONMENT_NAMES = (
+    "WEBAPP_TELEGRAM_OAUTH_ENABLED",
+    "TELEGRAM_OAUTH_CLIENT_ID",
+    "TELEGRAM_OAUTH_CLIENT_SECRET",
+)
 OAUTH_HTTP_TIMEOUT_SECONDS = 8.0
 
 
@@ -183,7 +197,7 @@ def ensure_oauth_configuration() -> None:
             continue
         _oauth_hmac_secret()
         config = _oauth_client_configuration(provider)
-        if provider in {"google", "apple"}:
+        if provider in {"google", "apple", "telegram"}:
             try:
                 import jwt  # type: ignore[import-not-found]  # noqa: F401
             except ImportError as exc:  # pragma: no cover - exercised by deployment configuration
@@ -220,8 +234,15 @@ def _link_expiry() -> str:
     return (_now() + timedelta(minutes=LINK_TTL_MINUTES)).isoformat(timespec="seconds")
 
 
-def _bridge_callback_expiry() -> str:
-    return (_now() + timedelta(seconds=BRIDGE_CALLBACK_MAX_AGE_SECONDS + 5)).isoformat(timespec="seconds")
+def _bridge_callback_expiry(timestamp: int) -> str:
+    """Retain a callback nonce through the full accepted signature lifetime.
+
+    A timestamp can be accepted slightly ahead of the Web clock.  Expiring a
+    nonce from ``now`` would then make a captured signed callback replayable
+    after the nonce is pruned but before the HMAC itself becomes stale.
+    """
+    issued_at = datetime.fromtimestamp(timestamp, timezone.utc)
+    return (issued_at + timedelta(seconds=BRIDGE_CALLBACK_MAX_AGE_SECONDS + 5)).isoformat(timespec="seconds")
 
 
 def _as_time(value: str) -> datetime:
@@ -378,9 +399,162 @@ def _new_telegram_code() -> str:
     return secrets.token_urlsafe(18).replace("-", "A").replace("_", "B")
 
 
+def _telegram_bot_username() -> str:
+    username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
+    return username if TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(username) else ""
+
+
+def _telegram_callback_receiver_configured() -> bool:
+    # The Bot bridge already uses this directional pair.  Do not silently
+    # reuse a core-bridge credential here: a callback that can establish a
+    # browser identity needs an independent, deliberately configured secret.
+    token = os.environ.get("WEBAPP_LINK_CALLBACK_TOKEN", "").strip()
+    secret = os.environ.get("WEBAPP_LINK_CALLBACK_HMAC_SECRET", "").strip()
+    return bool(token and secret)
+
+
+def _telegram_bot_link_adapter_enabled() -> bool:
+    """Return the explicit operator acknowledgement for the paired Bot adapter.
+
+    The Web process can verify its own receiver credential but cannot inspect
+    the Bot service's deployed revision or Railway variables.  Do not mint a
+    customer-facing code merely because this process has secrets: the
+    matching Bot `/start web_<code>` / `/linkweb` adapter must first have been
+    deployed and deliberately enabled by the operator.  A later valid signed
+    callback remains the only end-to-end proof.
+    """
+    return _env_flag("WEBAPP_TELEGRAM_BOT_LINK_ENABLED", False)
+
+
+def _telegram_auto_register_enabled() -> bool:
+    # Bot-proven Telegram identity plus a browser-bound one-time challenge is
+    # sufficient to create a Web-only account. This never creates a Bot user,
+    # wallet, PayOS order, provider call or grant.
+    return _env_flag("WEBAPP_TELEGRAM_AUTO_REGISTER_ENABLED", True)
+
+
+def _telegram_callback_observation() -> dict:
+    """Return anonymous evidence that the Bot callback has worked at least once.
+
+    A Web deployment can prove that it has a public Bot username and a local
+    callback receiver, but it cannot read another Railway service's runtime
+    configuration.  The only honest end-to-end signal is a callback that has
+    passed the dedicated bearer/HMAC verification.  The audit table already
+    records that event, so expose only its safe type and timestamp — never a
+    code, account, Telegram identity, request ID, or credential.
+    """
+    try:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            row = conn.execute(
+                """SELECT action, created_at
+                FROM web_audit_events
+                WHERE action IN ('auth.telegram_login_confirm', 'auth.telegram_link_confirm')
+                  AND outcome='ok'
+                ORDER BY created_at DESC
+                LIMIT 1"""
+            ).fetchone()
+    except Exception:
+        # Setup/status must never leak a database error or make a public
+        # authentication page unavailable.  A missing observation simply
+        # means the operator still needs an end-to-end confirmation.
+        row = None
+    if not row:
+        return {
+            "bot_callback_observed": False,
+            "last_valid_callback_at": "",
+            "last_valid_callback_kind": "",
+        }
+    action, created_at = row
+    return {
+        "bot_callback_observed": True,
+        "last_valid_callback_at": str(created_at or "")[:80],
+        "last_valid_callback_kind": "login" if action == "auth.telegram_login_confirm" else "account_link",
+    }
+
+
+def _telegram_connection_configuration(*, include_observation: bool = False) -> dict:
+    """Return safe, browser-displayable readiness for the Bot handoff only."""
+    bot_ready = bool(_telegram_bot_username())
+    callback_ready = _telegram_callback_receiver_configured()
+    bot_adapter_enabled = _telegram_bot_link_adapter_enabled()
+    missing: list[str] = []
+    if not bot_ready:
+        missing.append("BOT_USERNAME")
+    if not callback_ready:
+        missing.extend(["WEBAPP_LINK_CALLBACK_TOKEN", "WEBAPP_LINK_CALLBACK_HMAC_SECRET"])
+    if not bot_adapter_enabled:
+        # This is intentionally a non-secret, explicit release gate.  It
+        # prevents a Web-only deploy from exposing a one-time flow before the
+        # separately reviewed Bot adapter is actually live.
+        missing.append("WEBAPP_TELEGRAM_BOT_LINK_ENABLED")
+    connection = {
+        "mode": "bot_one_time_callback",
+        # Telegram Login OIDC has a separate, Web-only setup path. Expose
+        # only its feature flag here so customers can distinguish it from the
+        # Bot callback handoff without learning a client ID or any secret.
+        "oidc_web_login_enabled": _oauth_enabled("telegram"),
+        # The username/chat URL is public Bot metadata. It lets signed Web
+        # companion pages hand a customer back to the canonical Telegram flow
+        # without exposing a Telegram ID, Bot token or bridge credential.
+        "bot_username": _telegram_bot_username(),
+        "bot_chat_url": f"https://t.me/{_telegram_bot_username()}" if bot_ready else "",
+        "bot_deep_link_ready": bot_ready,
+        "web_callback_ready": callback_ready,
+        "bot_callback_adapter_enabled": bot_adapter_enabled,
+        # This Web service cannot read or prove the remote Bot's environment.
+        # Keep the readiness wording honest: a successful one-time callback is
+        # the end-to-end proof, not this local configuration response.
+        "bot_callback_configuration_unverified": True,
+        "telegram_auto_register_enabled": _telegram_auto_register_enabled(),
+        "missing_configuration": missing,
+        "ready": bot_ready and callback_ready and bot_adapter_enabled,
+    }
+    if include_observation:
+        observation = _telegram_callback_observation()
+        connection.update(observation)
+        # This means exactly what it says: configuration on the remote Bot is
+        # not claimed as verified until its signed callback has reached Web.
+        connection["bot_callback_configuration_unverified"] = not observation["bot_callback_observed"]
+    return connection
+
+
+def _telegram_connection_required_response() -> dict:
+    """Fail closed before minting a code that no configured Bot can finish."""
+    connection = _telegram_connection_configuration()
+    adapter_pending = not connection["bot_callback_adapter_enabled"]
+    return envelope(
+        False,
+        (
+            "Bot chưa được xác nhận đã phát hành adapter liên kết Telegram. Web chưa tạo mã để tránh một mã không thể hoàn tất."
+            if adapter_pending
+            else "Cầu nối Telegram chưa được cấu hình đầy đủ. Web chưa tạo mã xác minh để tránh một mã không thể hoàn tất."
+        ),
+        data={
+            "raw_telegram_id_accepted": False,
+            "missing_configuration": connection["missing_configuration"],
+            "reason": "bot_adapter_not_enabled" if adapter_pending else "configuration_missing",
+        },
+        status_name="guarded",
+        error_code="TELEGRAM_LINK_CONFIGURATION_REQUIRED",
+    )
+
+
+def _telegram_only_email(canonical_user_id: str) -> str:
+    """Return a non-contactable, HMAC-derived internal account placeholder."""
+    subject = str(canonical_user_id or "").strip().encode("utf-8")
+    digest = hmac.new(_secret(), subject, hashlib.sha256).hexdigest()[:40]
+    return f"telegram-{digest}@{TELEGRAM_ONLY_EMAIL_DOMAIN}"
+
+
+def _is_telegram_only_email(value: str) -> bool:
+    email = str(value or "").strip().lower()
+    return bool(re.fullmatch(rf"telegram-[0-9a-f]{{40}}@{re.escape(TELEGRAM_ONLY_EMAIL_DOMAIN)}", email))
+
+
 def _telegram_deep_link(code: str) -> str:
-    bot_username = os.environ.get("BOT_USERNAME", "").strip().lstrip("@")
-    if not TELEGRAM_BOT_USERNAME_PATTERN.fullmatch(bot_username):
+    bot_username = _telegram_bot_username()
+    if not bot_username:
         return ""
     return f"https://t.me/{bot_username}?start=web_{code}"
 
@@ -415,8 +589,13 @@ def browser_account_payload(account: dict) -> dict:
     response; the UI only needs to know whether a link exists.
     """
     linked_providers = _linked_oauth_providers(str(account.get("id") or ""))
+    email = str(account.get("email") or "")
+    telegram_only = _is_telegram_only_email(email)
     return {
-        "email": str(account.get("email") or ""),
+        # A Telegram-first account has an internal deterministic placeholder
+        # only to satisfy the existing unique email column. Never display it
+        # as an address a customer can use or contact.
+        "email": "" if telegram_only else email,
         "display_name": str(account.get("display_name") or ""),
         "role": "admin" if account.get("role") == "admin" else "user",
         "telegram_linked": bool(account.get("canonical_user_id")),
@@ -426,12 +605,17 @@ def browser_account_payload(account: dict) -> dict:
             "avatar_style": str(account.get("avatar_style") or "gradient"),
         },
         "login_methods": {
-            "email": bool(account.get("password_login_enabled", True)),
+            "email": bool(account.get("password_login_enabled", True)) and not telegram_only,
+            # This is an OIDC Web-login proof. It is deliberately distinct
+            # from `telegram` below: only the signed Bot callback may mark
+            # the canonical Bot identity as linked for Xu, jobs and assets.
+            "telegram_oidc": "telegram" in linked_providers,
             "telegram": bool(account.get("canonical_user_id")),
             "google": "google" in linked_providers,
             "github": "github" in linked_providers,
             "apple": "apple" in linked_providers,
         },
+        "account_type": "telegram" if telegram_only else "standard",
     }
 
 
@@ -590,6 +774,13 @@ class LoginRequest(BaseModel):
     password: str = Field(min_length=1, max_length=256)
 
 
+class TelegramAccountUpgradeRequest(BaseModel):
+    """Add an email/password login method to the same Telegram-first account."""
+
+    email: str = Field(min_length=3, max_length=254)
+    password: str = Field(min_length=12, max_length=256)
+
+
 class ProfileUpdateRequest(BaseModel):
     display_name: str = Field(default="", max_length=120)
     locale: str = Field(default="vi", max_length=16)
@@ -619,6 +810,49 @@ def _oauth_account_from_row(row: tuple) -> dict:
         "locale": row[7] or "vi",
         "timezone": row[8] or "Asia/Ho_Chi_Minh",
         "avatar_style": row[9] or "gradient",
+    }
+
+
+def _create_telegram_only_account(conn, *, canonical_user_id: str, role: str, display_name: str, request: Request) -> dict:
+    """Create a minimal Web account only after signed Bot proof.
+
+    This is deliberately a Web-only identity shell. The Bot remains the
+    identity authority and is not mutated; password login is disabled and the
+    placeholder email is never returned to the browser.
+    """
+    account_id = str(uuid.uuid4())
+    now = utc_now()
+    safe_role = "admin" if role == "admin" else "user"
+    # The Bot can legitimately withhold a display name.  A useful Web-owned
+    # default keeps profile/header rendering stable without fabricating an
+    # email address or exposing the canonical Telegram identity.
+    safe_name = str(display_name or "").strip()[:120] or "Người dùng Telegram"
+    email = _telegram_only_email(canonical_user_id)
+    conn.execute(
+        """INSERT INTO web_accounts
+           (id, email, password_hash, display_name, canonical_user_id, role_cache, password_login_enabled, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, 0, ?, ?)""",
+        (account_id, email, _password_hash(secrets.token_urlsafe(48)), safe_name, canonical_user_id, safe_role, now, now),
+    )
+    conn.execute(
+        """INSERT INTO web_account_profiles
+           (account_id, locale, timezone, avatar_style, created_at, updated_at)
+           VALUES (?, 'vi', 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)""",
+        (account_id, now, now),
+    )
+    _record_audit(
+        conn,
+        account_id=account_id,
+        canonical_user_id=canonical_user_id,
+        action="auth.telegram_auto_register",
+        request_id=_request_id(request),
+        detail="created telegram-only web account after signed bot proof",
+    )
+    return {
+        "id": account_id, "email": email, "display_name": safe_name,
+        "canonical_user_id": canonical_user_id, "role": safe_role,
+        "is_active": True, "password_login_enabled": False,
+        "locale": "vi", "timezone": "Asia/Ho_Chi_Minh", "avatar_style": "gradient",
     }
 
 
@@ -716,6 +950,15 @@ def _oauth_authorization_url(provider: str, state_value: str) -> str:
             "nonce": _oauth_derived_token("nonce", state_value),
         }
         return f"{APPLE_AUTHORIZE_URL}?{urlencode(apple_params)}"
+    if provider == "telegram":
+        # Telegram's current Login product supports standards-based OIDC
+        # authorization-code flow with PKCE. The browser is redirected only
+        # to Telegram; its code and tokens never return to portal JavaScript.
+        params.update({
+            "scope": "openid profile",
+            "nonce": _oauth_derived_token("nonce", state_value),
+        })
+        return f"{TELEGRAM_OAUTH_AUTHORIZE_URL}?{urlencode(params)}"
     params.update({"scope": "read:user user:email", "allow_signup": "true"})
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode(params)}"
 
@@ -827,6 +1070,107 @@ async def _fetch_google_identity(code: str, state_value: str) -> dict:
     if not id_token:
         raise OAuthIdentityError("Google không trả identity token")
     return await _verify_google_id_token(
+        id_token,
+        client_id=config["client_id"],
+        expected_nonce=_oauth_derived_token("nonce", state_value),
+    )
+
+
+async def _verify_telegram_id_token(id_token: str, *, client_id: str, expected_nonce: str) -> dict:
+    """Verify a Telegram OIDC token and extract only the canonical user hint.
+
+    Telegram's OIDC `sub` can be an application-specific stable subject,
+    while the optional `profile` claim `id` is the Telegram user ID that
+    the Bot sees. We validate both cryptographically, store only an HMAC of
+    `id` in the Web identity table, and never return either raw value to the
+    browser. This lets the later Bot deep-link prove that it is the same
+    Telegram account before the portal treats any Bot data as canonical.
+    """
+    try:
+        import jwt  # type: ignore[import-not-found]
+
+        header = jwt.get_unverified_header(id_token)
+        # BotFather's default Telegram Login signing algorithm is RS256. Do
+        # not silently accept a different administrator-selected algorithm:
+        # failing closed avoids broadening the JWT verifier unexpectedly.
+        if header.get("alg") != "RS256" or not isinstance(header.get("kid"), str):
+            raise OAuthIdentityError("Telegram ID token không hợp lệ")
+        jwks = await _oauth_json_request("GET", TELEGRAM_OAUTH_JWKS_URL, headers={"Accept": "application/json"})
+        keys = jwks.get("keys")
+        if not isinstance(keys, list):
+            raise OAuthIdentityError("Telegram JWKS không hợp lệ")
+        matching = next(
+            (
+                item for item in keys
+                if isinstance(item, dict)
+                and item.get("kid") == header["kid"]
+                and item.get("kty") == "RSA"
+                and item.get("use", "sig") == "sig"
+                and item.get("alg", "RS256") == "RS256"
+            ),
+            None,
+        )
+        if not matching:
+            raise OAuthIdentityError("Telegram signing key không hợp lệ")
+        key = jwt.PyJWK.from_dict(matching).key
+        claims = jwt.decode(
+            id_token,
+            key,
+            algorithms=["RS256"],
+            audience=client_id,
+            issuer="https://oauth.telegram.org",
+            options={"require": ["exp", "iat", "sub", "nonce", "id"]},
+        )
+    except OAuthIdentityError:
+        raise
+    except Exception as exc:  # PyJWT/JWKS errors are intentionally generic.
+        raise OAuthIdentityError("Telegram ID token không được xác minh") from exc
+    if not hmac.compare_digest(str(claims.get("nonce") or ""), expected_nonce):
+        raise OAuthIdentityError("Telegram nonce không hợp lệ")
+    raw_id = claims.get("id")
+    if isinstance(raw_id, bool):
+        raise OAuthIdentityError("Telegram identity không hợp lệ")
+    telegram_user_id = str(raw_id or "").strip()
+    if not re.fullmatch(r"[1-9][0-9]{0,19}", telegram_user_id):
+        raise OAuthIdentityError("Telegram identity không hợp lệ")
+    if not str(claims.get("sub") or "").strip():
+        raise OAuthIdentityError("Telegram identity không hợp lệ")
+    display_name = str(claims.get("name") or claims.get("preferred_username") or "").strip()[:120]
+    return {
+        "provider": "telegram",
+        # Use the Bot-compatible numeric ID, not OIDC's app-specific `sub`,
+        # as the HMAC-protected external-identity key.
+        "subject": telegram_user_id,
+        "email": "",
+        "display_name": display_name,
+    }
+
+
+async def _fetch_telegram_identity(code: str, state_value: str) -> dict:
+    config = _oauth_client_configuration("telegram")
+    basic_credentials = base64.b64encode(
+        f"{config['client_id']}:{config['client_secret']}".encode("utf-8")
+    ).decode("ascii")
+    tokens = await _oauth_json_request(
+        "POST",
+        TELEGRAM_OAUTH_TOKEN_URL,
+        data={
+            "grant_type": "authorization_code",
+            "code": code,
+            "redirect_uri": config["redirect_uri"],
+            "client_id": config["client_id"],
+            "code_verifier": _oauth_derived_token("pkce", state_value),
+        },
+        headers={
+            "Accept": "application/json",
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Authorization": f"Basic {basic_credentials}",
+        },
+    )
+    id_token = str(tokens.get("id_token") or "")
+    if not id_token:
+        raise OAuthIdentityError("Telegram không trả identity token")
+    return await _verify_telegram_id_token(
         id_token,
         client_id=config["client_id"],
         expected_nonce=_oauth_derived_token("nonce", state_value),
@@ -1018,6 +1362,8 @@ async def _fetch_apple_identity(code: str, state_value: str, *, display_name: st
 async def _fetch_oauth_identity(provider: str, code: str, state_value: str) -> dict:
     if provider == "google":
         return await _fetch_google_identity(code, state_value)
+    if provider == "telegram":
+        return await _fetch_telegram_identity(code, state_value)
     if provider == "github":
         return await _fetch_github_identity(code, state_value)
     raise OAuthIdentityError("OAuth provider không hợp lệ")
@@ -1048,12 +1394,45 @@ def _oauth_signin_account(identity: dict, request: Request) -> tuple[dict | None
             conn.execute("UPDATE web_external_identities SET last_login_at=? WHERE provider=? AND subject_hash=?", (utc_now(), provider, subject_hash))
             _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider)
             return account, "ok"
+        if provider == "telegram":
+            # A verified Telegram OIDC profile contains the actual Telegram
+            # user ID in its signed `id` claim. If the same ID is already
+            # canonical from the Bot callback, this is the one safe automatic
+            # join: both independent proofs identify the exact same Telegram
+            # principal. It avoids forcing established Bot users to create a
+            # duplicate Web account solely to use Telegram Login.
+            canonical_row = conn.execute(
+                """SELECT a.id, a.email, a.display_name, a.canonical_user_id, a.role_cache, a.is_active,
+                          a.password_login_enabled, p.locale, p.timezone, p.avatar_style
+                   FROM web_accounts a LEFT JOIN web_account_profiles p ON p.account_id=a.id
+                   WHERE a.canonical_user_id=?""",
+                (subject,),
+            ).fetchone()
+            if canonical_row:
+                account = _oauth_account_from_row(canonical_row)
+                if not account["is_active"]:
+                    _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="inactive canonical Telegram account")
+                    return None, "failed"
+                now = utc_now()
+                conn.execute(
+                    """INSERT INTO web_external_identities (provider, subject_hash, account_id, created_at, last_login_at)
+                       VALUES (?, ?, ?, ?, ?)""",
+                    (provider, subject_hash, account["id"], now, now),
+                )
+                _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider, detail="attached verified Telegram OIDC to canonical Bot account")
+                return account, "ok"
         # A first Apple authorization may not include an email. Existing
         # identities are already handled above, but a new account must never
-        # be fabricated without a verified, contactable address.
+        # be fabricated without a verified, contactable address. Telegram is
+        # the explicit exception: its signed profile ID is a login identity,
+        # and the account gets a non-contactable internal placeholder until
+        # the customer optionally adds Email + password.
         if not EMAIL_PATTERN.fullmatch(email):
-            _record_audit(conn, account_id=None, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="new provider identity has no verified email")
-            return None, "failed"
+            if provider == "telegram":
+                email = _telegram_only_email(subject)
+            else:
+                _record_audit(conn, account_id=None, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="new provider identity has no verified email")
+                return None, "failed"
         existing_email = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email,)).fetchone()
         if existing_email:
             _record_audit(conn, account_id=existing_email[0], canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="email belongs to an existing account; explicit linking required")
@@ -1093,6 +1472,13 @@ def _link_oauth_identity(identity: dict, account: dict, request: Request) -> str
         return "failed"
     subject_hash = _external_subject_hash(provider, subject)
     with transaction() as conn:
+        # A customer who already has a canonical Bot identity may only attach
+        # Telegram Login for that same signed Telegram user. This preserves
+        # the one-person, one-canonical-identity boundary across OIDC and the
+        # Bot deep-link without ever exposing either ID to JavaScript.
+        if provider == "telegram" and account.get("canonical_user_id") and not hmac.compare_digest(str(account["canonical_user_id"]), subject):
+            _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider, outcome="denied", detail="Telegram OIDC identity does not match canonical Bot identity")
+            return "failed"
         same_provider = conn.execute(
             "SELECT subject_hash FROM web_external_identities WHERE account_id=? AND provider=?",
             (account["id"], provider),
@@ -1276,10 +1662,110 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
     return envelope(True, "Đã cập nhật hồ sơ Web.", data={"account": browser_account_payload(updated)}, status_name="completed")
 
 
+@router.post("/telegram-account/upgrade")
+async def upgrade_telegram_account(payload: TelegramAccountUpgradeRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Attach email/password to the current Bot-proven Telegram-first account.
+
+    This is an explicit account upgrade, never an automatic merge. The signed
+    session and CSRF check prove control of the existing Web account, while
+    the unique email constraint prevents a Telegram identity from silently
+    taking over a separate email/OAuth account.
+    """
+    email = payload.email.strip().lower()
+    if not EMAIL_PATTERN.fullmatch(email):
+        return envelope(False, "Email không hợp lệ.", status_name="failed", error_code="INVALID_EMAIL")
+    if not _is_telegram_only_email(str(account.get("email") or "")) or bool(account.get("password_login_enabled")):
+        return envelope(
+            False,
+            "Tài khoản hiện tại đã có phương thức đăng nhập Email hoặc không phải hồ sơ Telegram-first cần nâng cấp.",
+            status_name="guarded",
+            error_code="TELEGRAM_ACCOUNT_UPGRADE_NOT_NEEDED",
+        )
+    password_hash = _password_hash(payload.password)
+    with transaction() as conn:
+        existing = conn.execute("SELECT id FROM web_accounts WHERE email=? AND id<>?", (email, account["id"])).fetchone()
+        if existing:
+            # Do not disclose whether an address belongs to a password or an
+            # OAuth account. Account consolidation needs an explicit recovery
+            # process, not an identity transfer from this browser request.
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=account["canonical_user_id"],
+                action="auth.telegram_account_upgrade",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="requested email belongs to another web account",
+            )
+            return envelope(
+                False,
+                "Email này chưa thể dùng để nâng cấp tài khoản. Hãy dùng email khác hoặc liên hệ hỗ trợ để xử lý hai tài khoản riêng biệt.",
+                status_name="guarded",
+                error_code="EMAIL_UPGRADE_UNAVAILABLE",
+            )
+        now = utc_now()
+        result = conn.execute(
+            """UPDATE web_accounts
+               SET email=?, password_hash=?, password_login_enabled=1, updated_at=?
+               WHERE id=? AND password_login_enabled=0""",
+            (email, password_hash, now, account["id"]),
+        )
+        if result.rowcount != 1:
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=account["canonical_user_id"],
+                action="auth.telegram_account_upgrade",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="account changed while upgrade was submitted",
+            )
+            return envelope(False, "Tài khoản vừa thay đổi. Hãy làm mới trang rồi thử lại.", status_name="guarded", error_code="TELEGRAM_ACCOUNT_UPGRADE_CONFLICT")
+        _record_audit(
+            conn,
+            account_id=account["id"],
+            canonical_user_id=account["canonical_user_id"],
+            action="auth.telegram_account_upgrade",
+            request_id=_request_id(request),
+        )
+    updated = {**account, "email": email, "password_login_enabled": True}
+    return envelope(True, "Đã thêm đăng nhập Email + mật khẩu cho tài khoản Telegram hiện tại.", data={"account": browser_account_payload(updated)}, status_name="completed")
+
+
 @router.get("/providers")
 async def oauth_providers():
     """Expose only provider availability, never OAuth client configuration."""
     return envelope(True, "Trạng thái phương thức đăng nhập", data={"providers": oauth_provider_status()})
+
+
+@router.get("/telegram/connection/status")
+async def telegram_connection_status():
+    """Expose safe setup booleans for the Bot→Web identity handoff.
+
+    This deliberately cannot inspect Bot secrets or claim the remote Bot is
+    online. It tells the portal whether this Web deployment can issue a valid
+    deep link and accept the signed callback the existing Bot adapter sends.
+    """
+    connection = _telegram_connection_configuration(include_observation=True)
+    ready = bool(connection["ready"])
+    observed = bool(connection.get("bot_callback_observed"))
+    if not ready:
+        message = "Web đang chờ cấu hình cầu nối Telegram an toàn."
+    elif observed:
+        message = "Web đã xác minh ít nhất một callback Telegram hợp lệ từ Bot."
+    else:
+        message = "Web đã sẵn sàng tạo deep link và nhận callback Telegram; đang chờ Bot xác minh mã lần đầu."
+    return envelope(
+        ready,
+        message,
+        # `ready` is deliberately duplicated inside the safe status payload.
+        # The Portal reads the data object after envelope normalization and
+        # must use this three-part release gate rather than reconstructing it
+        # from only the Web-side credentials.
+        data=connection,
+        status_name="completed" if ready else "guarded",
+        error_code=None if ready else "TELEGRAM_LINK_CONFIGURATION_REQUIRED",
+    )
 
 
 @router.post("/oauth/{provider}/link/start")
@@ -1411,8 +1897,12 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         response = _oauth_redirect(outcome)
         _clear_oauth_state_cookie(response)
         return response
-    target = state_data["return_path"] if account.get("canonical_user_id") else "/onboarding"
-    response = RedirectResponse(_safe_oauth_return_path(target), status_code=status.HTTP_303_SEE_OTHER)
+    return_path = _safe_oauth_return_path(state_data["return_path"])
+    # OAuth may establish a signed Web session before a Telegram identity is
+    # linked. Preserve the same validated local workflow through onboarding,
+    # so Google/GitHub/Apple users return to what they intentionally opened.
+    target = return_path if account.get("canonical_user_id") else f"/onboarding?next={quote(return_path, safe='/')}"
+    response = RedirectResponse(target, status_code=status.HTTP_303_SEE_OTHER)
     _create_session(response, account["id"])
     _clear_oauth_state_cookie(response)
     return response
@@ -1456,6 +1946,39 @@ async def apple_oauth_callback(request: Request):
     return await _oauth_callback_impl("apple", request, values, apple_display_name=_apple_display_name(values["user"]))
 
 
+async def _telegram_challenge_input_rejection(request: Request) -> JSONResponse | None:
+    """Reject a browser-supplied Telegram identity instead of silently ignoring it.
+
+    The old prototype accepted a raw `telegram_id` field but could never
+    safely use it as proof. A clear 422 makes the replacement flow obvious:
+    start the challenge, open the Bot deep link, and let the Bot callback
+    establish identity from its authenticated Telegram user.
+    """
+    body = await request.body()
+    if not body or not body.strip():
+        return None
+    if len(body) > 1_024:
+        return JSONResponse(
+            envelope(False, "Đăng nhập Telegram không nhận dữ liệu từ browser. Hãy dùng nút Đăng nhập với Telegram để Bot xác minh.", status_name="failed", error_code="TELEGRAM_BROWSER_INPUT_NOT_ACCEPTED"),
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    try:
+        value = json.loads(body)
+    except (TypeError, ValueError, UnicodeDecodeError):
+        value = None
+    if value == {}:
+        return None
+    message = (
+        "Không nhập Telegram ID vào Web. Hãy dùng nút Đăng nhập với Telegram để Bot xác minh quyền sở hữu."
+        if isinstance(value, dict) and "telegram_id" in value
+        else "Liên kết Telegram không nhận dữ liệu từ browser. Hãy dùng mã một lần và xác minh trong Bot."
+    )
+    return JSONResponse(
+        envelope(False, message, status_name="failed", error_code="TELEGRAM_BROWSER_INPUT_NOT_ACCEPTED"),
+        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+    )
+
+
 @router.post("/telegram/login/start")
 async def start_telegram_login(request: Request, response: Response):
     """Start passwordless sign-in without accepting a raw Telegram ID.
@@ -1464,6 +1987,11 @@ async def start_telegram_login(request: Request, response: Response):
     bot. A separate HttpOnly browser challenge prevents a copied code from
     issuing a Web session in another browser.
     """
+    rejected_input = await _telegram_challenge_input_rejection(request)
+    if rejected_input is not None:
+        return rejected_input
+    if not bool(_telegram_connection_configuration()["ready"]):
+        return _telegram_connection_required_response()
     ensure_copyfast_schema()
     code = _new_telegram_code()
     browser_token = secrets.token_urlsafe(32)
@@ -1601,6 +2129,9 @@ async def complete_telegram_login(request: Request, response: Response):
 
 @router.post("/telegram/link/start")
 async def start_telegram_link(request: Request, account: dict = Depends(require_csrf)):
+    rejected_input = await _telegram_challenge_input_rejection(request)
+    if rejected_input is not None:
+        return rejected_input
     if account["canonical_user_id"]:
         return envelope(
             False,
@@ -1608,6 +2139,8 @@ async def start_telegram_link(request: Request, account: dict = Depends(require_
             status_name="guarded",
             error_code="TELEGRAM_RELINK_NOT_ALLOWED",
         )
+    if not bool(_telegram_connection_configuration()["ready"]):
+        return _telegram_connection_required_response()
     code = _new_telegram_code()
     code_hash = hashlib.sha256(code.encode("utf-8")).hexdigest()
     initiating_session_id = current_session(request)["session_id"]
@@ -1624,12 +2157,78 @@ async def start_telegram_link(request: Request, account: dict = Depends(require_
 
 
 @router.get("/telegram/link/status")
-async def telegram_link_status(account: dict = Depends(require_account)):
+async def telegram_link_status(request: Request, account: dict = Depends(require_account)):
+    """Return only session-bound progress for a pending Bot link.
+
+    The opaque code and canonical Telegram identity never return to the
+    browser.  A second browser session for the same Web account must not learn
+    that a different tab has a live linking capability, nor may it complete
+    the binding.
+    """
     linked = bool(account["canonical_user_id"])
-    return envelope(True, "Trạng thái liên kết", data={"linked": linked}, status_name="completed" if linked else "awaiting_confirm")
+    if linked:
+        return envelope(True, "Telegram đã liên kết", data={"linked": True}, status_name="completed")
+
+    session_id = current_session(request)["session_id"]
+    now = _now()
+    with transaction() as conn:
+        conn.execute("DELETE FROM telegram_link_codes WHERE account_id=? AND expires_at<=?", (account["id"], now.isoformat(timespec="seconds")))
+        row = conn.execute(
+            """SELECT expires_at, canonical_user_id
+               FROM telegram_link_codes
+               WHERE account_id=? AND initiating_session_id=? AND consumed_at IS NULL AND expires_at>?
+               ORDER BY created_at DESC
+               LIMIT 1""",
+            (account["id"], session_id, now.isoformat(timespec="seconds")),
+        ).fetchone()
+    if not row:
+        return envelope(True, "Chưa có mã liên kết đang chờ trong tab này.", data={"linked": False}, status_name="awaiting_confirm")
+
+    seconds_remaining = max(0, int((_as_time(row[0]) - now).total_seconds()))
+    ready_to_complete = bool(row[1])
+    if ready_to_complete:
+        message = "Bot đã xác minh Telegram. Tab đã tạo mã cần hoàn tất liên kết an toàn."
+    else:
+        message = "Đang chờ Bot xác minh mã liên kết Telegram."
+    return envelope(
+        True,
+        message,
+        data={
+            "linked": False,
+            "pending": not ready_to_complete,
+            "ready_to_complete": ready_to_complete,
+            "expires_in_seconds": seconds_remaining,
+            "expires_in_minutes": max(1, (seconds_remaining + 59) // 60),
+        },
+        status_name="awaiting_confirm",
+    )
 
 
-async def _bridge_callback_authorized(request: Request) -> bool:
+class _BridgeCallbackBodyTooLarge(Exception):
+    """Raised before JSON parsing when an internal callback exceeds its cap."""
+
+
+async def _read_bounded_bridge_callback_body(request: Request) -> bytes:
+    """Read an exact callback body without making the endpoint an upload sink."""
+    declared_length = request.headers.get("Content-Length", "").strip()
+    if declared_length:
+        try:
+            declared_bytes = int(declared_length)
+            if declared_bytes < 0 or declared_bytes > BRIDGE_CALLBACK_MAX_BODY_BYTES:
+                raise _BridgeCallbackBodyTooLarge()
+        except ValueError:
+            raise _BridgeCallbackBodyTooLarge() from None
+    chunks: list[bytes] = []
+    received = 0
+    async for chunk in request.stream():
+        received += len(chunk)
+        if received > BRIDGE_CALLBACK_MAX_BODY_BYTES:
+            raise _BridgeCallbackBodyTooLarge()
+        chunks.append(chunk)
+    return b"".join(chunks)
+
+
+async def _bridge_callback_authorized(request: Request) -> tuple[bytes, str] | None:
     """Authenticate the bot-to-web link callback as a separate private channel.
 
     The callback is intentionally not allowed to reuse the browser-facing core
@@ -1638,47 +2237,83 @@ async def _bridge_callback_authorized(request: Request) -> bool:
     makes a captured request unusable after its first attempt or process
     restart; the one-time link code then provides a second replay boundary.
     """
-    token = os.environ.get("WEBAPP_LINK_CALLBACK_TOKEN", os.environ.get("CORE_BRIDGE_CALLBACK_TOKEN", "")).strip()
-    secret = os.environ.get("WEBAPP_LINK_CALLBACK_HMAC_SECRET", os.environ.get("CORE_BRIDGE_CALLBACK_HMAC_SECRET", "")).strip()
+    # Identity proof has a dedicated directional credential.  Do not fall
+    # back to the general core-bridge callback pair: accepting either pair
+    # would silently widen the authority that can attach a Telegram identity
+    # to a Web account.
+    token = os.environ.get("WEBAPP_LINK_CALLBACK_TOKEN", "").strip()
+    secret = os.environ.get("WEBAPP_LINK_CALLBACK_HMAC_SECRET", "").strip()
     supplied_token = request.headers.get("X-TOAN-AAS-BRIDGE-TOKEN", "")
     timestamp = request.headers.get("X-TOAN-AAS-Timestamp", "")
     request_id = request.headers.get("X-TOAN-AAS-Request-ID", "")
     signature = request.headers.get("X-TOAN-AAS-Signature", "")
     if not token or not secret or not supplied_token or not hmac.compare_digest(token, supplied_token):
-        return False
-    if not timestamp.isdigit() or not BRIDGE_CALLBACK_REQUEST_ID_PATTERN.fullmatch(request_id):
-        return False
-    if abs(int(_now().timestamp()) - int(timestamp)) > BRIDGE_CALLBACK_MAX_AGE_SECONDS:
-        return False
-    body = await request.body()
+        return None
+    if not timestamp.isdigit() or len(timestamp) > 12 or not BRIDGE_CALLBACK_REQUEST_ID_PATTERN.fullmatch(request_id):
+        return None
+    timestamp_value = int(timestamp)
+    age_seconds = int(_now().timestamp()) - timestamp_value
+    if age_seconds > BRIDGE_CALLBACK_MAX_AGE_SECONDS or age_seconds < -BRIDGE_CALLBACK_MAX_FUTURE_SKEW_SECONDS:
+        return None
+    body = await _read_bounded_bridge_callback_body(request)
     digest = hashlib.sha256(body).hexdigest()
     material = f"{timestamp}.{request_id}.{request.method.upper()}.{request.url.path}.{digest}".encode("utf-8")
     expected = hmac.new(secret.encode("utf-8"), material, hashlib.sha256).hexdigest()
     if not signature or not hmac.compare_digest(signature, expected):
-        return False
+        return None
     with transaction() as conn:
         conn.execute("DELETE FROM web_bridge_callback_nonces WHERE expires_at<=?", (_now().isoformat(timespec="seconds"),))
         if conn.execute("SELECT 1 FROM web_bridge_callback_nonces WHERE request_id=?", (request_id,)).fetchone():
-            return False
+            return None
         conn.execute(
             "INSERT INTO web_bridge_callback_nonces (request_id, expires_at, created_at) VALUES (?, ?, ?)",
-            (request_id, _bridge_callback_expiry(), utc_now()),
+            (request_id, _bridge_callback_expiry(timestamp_value), utc_now()),
         )
-    return True
+    return body, request_id
 
 
 @router.post("/internal/telegram-link/confirm")
-async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
+@router.post("/internal/telegram-link/confirm/")
+async def confirm_telegram_link(request: Request):
     """Private callback for the bot after a user proves ownership in Telegram."""
-    if not await _bridge_callback_authorized(request):
+    try:
+        authorized = await _bridge_callback_authorized(request)
+    except _BridgeCallbackBodyTooLarge:
+        return _bridge_callback_failure(
+            "Callback Telegram vượt quá kích thước cho phép.",
+            error_code="BRIDGE_CALLBACK_BODY_TOO_LARGE",
+            http_status=status.HTTP_413_CONTENT_TOO_LARGE,
+        )
+    if not authorized:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bridge authentication failed")
+    body, callback_request_id = authorized
+    try:
+        payload = LinkConfirmation.model_validate_json(body)
+    except ValidationError:
+        return _bridge_callback_failure(
+            "Dữ liệu callback Telegram không hợp lệ.",
+            error_code="LINK_CALLBACK_INVALID",
+            http_status=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        )
+    # The release gate is also an emergency stop, not merely a UI hint.  A
+    # code issued shortly before an operator disables the paired Bot adapter
+    # must not remain capable of attaching a canonical Telegram identity.
+    # Authenticate first so this endpoint never reveals release state to an
+    # unauthenticated caller; do not consume the one-time code on this guard.
+    if not _telegram_bot_link_adapter_enabled():
+        return _bridge_callback_failure(
+            "Cầu nối Telegram đang tạm dừng để bảo trì. Hãy tạo mã mới sau khi Bot adapter được bật lại.",
+            error_code="TELEGRAM_LINK_ADAPTER_DISABLED",
+            http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            status_name="guarded",
+        )
     code_hash = hashlib.sha256(payload.code.encode("utf-8")).hexdigest()
     canonical_user_id = payload.canonical_user_id.strip()
     if not canonical_user_id:
         return _bridge_callback_failure(
             "Telegram identity không hợp lệ",
             error_code="LINK_IDENTITY_INVALID",
-            http_status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            http_status=status.HTTP_422_UNPROCESSABLE_CONTENT,
         )
     with transaction() as conn:
         row = conn.execute(
@@ -1701,34 +2336,63 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                     http_status=status.HTTP_410_GONE,
                 )
             linked_account = conn.execute(
-                "SELECT id FROM web_accounts WHERE canonical_user_id=? AND is_active=1",
+                "SELECT id, is_active FROM web_accounts WHERE canonical_user_id=?",
                 (canonical_user_id,),
             ).fetchone()
-            if not linked_account:
+            if linked_account and not linked_account[1]:
                 _record_audit(
                     conn,
-                    account_id=None,
+                    account_id=linked_account[0],
                     canonical_user_id=canonical_user_id,
                     action="auth.telegram_login_confirm",
-                    request_id=_request_id(request),
+                    request_id=callback_request_id,
                     outcome="denied",
-                    detail="no active linked web account",
+                    detail="canonical identity belongs to inactive web account",
                 )
                 conn.execute(
                     "UPDATE telegram_login_codes SET consumed_at=?, failure_code=? WHERE code_hash=?",
                     (utc_now(), "TELEGRAM_LOGIN_ACCOUNT_REQUIRED", code_hash),
                 )
                 return _bridge_callback_failure(
-                    "Telegram chưa liên kết với tài khoản Web đang hoạt động. Hãy đăng ký/đăng nhập email một lần rồi liên kết Telegram.",
+                    "Telegram này đang gắn với một tài khoản Web không hoạt động.",
                     error_code="TELEGRAM_LOGIN_ACCOUNT_REQUIRED",
                     http_status=status.HTTP_409_CONFLICT,
                     status_name="guarded",
                 )
+            if not linked_account:
+                if not _telegram_auto_register_enabled():
+                    _record_audit(
+                        conn,
+                        account_id=None,
+                        canonical_user_id=canonical_user_id,
+                        action="auth.telegram_login_confirm",
+                        request_id=callback_request_id,
+                        outcome="denied",
+                        detail="no active linked web account and auto register disabled",
+                    )
+                    conn.execute(
+                        "UPDATE telegram_login_codes SET consumed_at=?, failure_code=? WHERE code_hash=?",
+                        (utc_now(), "TELEGRAM_LOGIN_ACCOUNT_REQUIRED", code_hash),
+                    )
+                    return _bridge_callback_failure(
+                        "Telegram chưa liên kết với tài khoản Web đang hoạt động. Hãy đăng ký/đăng nhập email một lần rồi liên kết Telegram.",
+                        error_code="TELEGRAM_LOGIN_ACCOUNT_REQUIRED",
+                        http_status=status.HTTP_409_CONFLICT,
+                        status_name="guarded",
+                    )
+                created = _create_telegram_only_account(
+                    conn,
+                    canonical_user_id=canonical_user_id,
+                    role="admin" if payload.role == "admin" else "user",
+                    display_name=payload.display_name,
+                    request=request,
+                )
+                linked_account = (created["id"],)
             conn.execute(
                 "UPDATE telegram_login_codes SET consumed_at=?, canonical_user_id=?, failure_code=NULL WHERE code_hash=?",
                 (utc_now(), canonical_user_id, code_hash),
             )
-            _record_audit(conn, account_id=linked_account[0], canonical_user_id=canonical_user_id, action="auth.telegram_login_confirm", request_id=_request_id(request))
+            _record_audit(conn, account_id=linked_account[0], canonical_user_id=canonical_user_id, action="auth.telegram_login_confirm", request_id=callback_request_id)
             return envelope(True, "Đã xác minh Telegram cho phiên đăng nhập Web", data={"mode": "login"})
         if row[2] or _as_time(row[1]) <= _now():
             return _bridge_callback_failure(
@@ -1737,6 +2401,32 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                 http_status=status.HTTP_410_GONE,
             )
         account_id, _expires_at, _consumed_at, initiating_session_id = row
+        # The deep-link code is not enough to mutate a Web account.  The
+        # signed Bot proof must still be paired with the live browser session
+        # which created it.  A logout, expiry or session rotation invalidates
+        # the code before it can be confirmed.
+        active_session = conn.execute(
+            """SELECT 1 FROM web_sessions
+               WHERE id=? AND account_id=? AND revoked_at IS NULL AND expires_at>?""",
+            (initiating_session_id, account_id, utc_now()),
+        ).fetchone() if initiating_session_id else None
+        if not active_session:
+            conn.execute("UPDATE telegram_link_codes SET consumed_at=? WHERE code_hash=?", (utc_now(), code_hash))
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="auth.telegram_link_confirm",
+                request_id=callback_request_id,
+                outcome="denied",
+                detail="initiating browser session is missing, revoked, or expired",
+            )
+            return _bridge_callback_failure(
+                "Phiên Web đã tạo mã liên kết không còn hợp lệ. Hãy tạo mã mới trong Web.",
+                error_code="LINK_SESSION_INVALID",
+                http_status=status.HTTP_410_GONE,
+                status_name="guarded",
+            )
         account_row = conn.execute(
             "SELECT canonical_user_id, is_active FROM web_accounts WHERE id=?",
             (account_id,),
@@ -1747,7 +2437,7 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                 account_id=account_id,
                 canonical_user_id=None,
                 action="auth.telegram_link_confirm",
-                request_id=_request_id(request),
+                request_id=callback_request_id,
                 outcome="denied",
                 detail="target web account is missing or inactive",
             )
@@ -1763,7 +2453,7 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                 account_id=account_id,
                 canonical_user_id=existing_canonical_user_id,
                 action="auth.telegram_link_confirm",
-                request_id=_request_id(request),
+                request_id=callback_request_id,
                 outcome="denied",
                 detail="attempted to replace an existing canonical Telegram identity",
             )
@@ -1773,50 +2463,242 @@ async def confirm_telegram_link(payload: LinkConfirmation, request: Request):
                 http_status=status.HTTP_409_CONFLICT,
                 status_name="guarded",
             )
-        existing = conn.execute(
-            "SELECT id FROM web_accounts WHERE canonical_user_id=? AND id<>?",
-            (canonical_user_id, account_id),
+        pending_identity = conn.execute(
+            "SELECT canonical_user_id FROM telegram_link_codes WHERE code_hash=?",
+            (code_hash,),
         ).fetchone()
-        if existing:
+        if pending_identity and pending_identity[0]:
+            if hmac.compare_digest(str(pending_identity[0]), canonical_user_id):
+                return envelope(
+                    True,
+                    "Bot đã xác minh Telegram. Hãy quay lại đúng tab Web đã tạo mã để hoàn tất liên kết.",
+                    data={"mode": "link", "browser_confirmation_required": True},
+                    status_name="awaiting_confirm",
+                )
             _record_audit(
                 conn,
                 account_id=account_id,
                 canonical_user_id=None,
                 action="auth.telegram_link_confirm",
-                request_id=_request_id(request),
+                request_id=callback_request_id,
                 outcome="denied",
-                detail="canonical identity already linked to another account",
+                detail="attempted to replace a pending Bot-confirmed Telegram identity",
             )
             return _bridge_callback_failure(
-                "Tài khoản Telegram này đã liên kết với một tài khoản Web khác",
+                "Mã liên kết này đã được Bot xác minh cho một Telegram khác.",
+                error_code="LINK_CODE_ALREADY_CONFIRMED",
+                http_status=status.HTTP_409_CONFLICT,
+                status_name="guarded",
+            )
+        telegram_oidc = conn.execute(
+            "SELECT subject_hash FROM web_external_identities WHERE account_id=? AND provider='telegram'",
+            (account_id,),
+        ).fetchone()
+        if telegram_oidc:
+            try:
+                expected_telegram_oidc = _external_subject_hash("telegram", canonical_user_id)
+            except RuntimeError:
+                _record_audit(
+                    conn,
+                    account_id=account_id,
+                    canonical_user_id=None,
+                    action="auth.telegram_link_confirm",
+                    request_id=callback_request_id,
+                    outcome="denied",
+                    detail="Telegram OIDC identity HMAC configuration unavailable",
+                )
+                return _bridge_callback_failure(
+                    "Telegram Login đang thiếu cấu hình bảo vệ identity. Hãy liên hệ hỗ trợ để khôi phục cấu hình trước khi liên kết Bot.",
+                    error_code="TELEGRAM_OIDC_CONFIGURATION_REQUIRED",
+                    http_status=status.HTTP_503_SERVICE_UNAVAILABLE,
+                    status_name="guarded",
+                )
+            if not hmac.compare_digest(str(telegram_oidc[0]), expected_telegram_oidc):
+                _record_audit(
+                    conn,
+                    account_id=account_id,
+                    canonical_user_id=None,
+                    action="auth.telegram_link_confirm",
+                    request_id=callback_request_id,
+                    outcome="denied",
+                    detail="Telegram OIDC identity does not match signed Bot identity",
+                )
+                return _bridge_callback_failure(
+                    "Tài khoản Web này đã xác thực bằng một Telegram khác. Hãy xác nhận đúng cùng tài khoản Telegram trong Bot.",
+                    error_code="TELEGRAM_OIDC_MISMATCH",
+                    http_status=status.HTTP_409_CONFLICT,
+                    status_name="guarded",
+                )
+        existing = conn.execute(
+            "SELECT id FROM web_accounts WHERE canonical_user_id=? AND id<>?",
+            (canonical_user_id, account_id),
+        ).fetchone()
+        pending_elsewhere = conn.execute(
+            """SELECT 1 FROM telegram_link_codes c
+               JOIN web_sessions s ON s.id=c.initiating_session_id AND s.account_id=c.account_id
+               WHERE c.canonical_user_id=? AND c.account_id<>? AND c.consumed_at IS NULL AND c.expires_at>?
+                 AND s.revoked_at IS NULL AND s.expires_at>?
+               LIMIT 1""",
+            (canonical_user_id, account_id, utc_now(), utc_now()),
+        ).fetchone()
+        if existing or pending_elsewhere:
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="auth.telegram_link_confirm",
+                request_id=callback_request_id,
+                outcome="denied",
+                detail="canonical identity already linked or pending on another account",
+            )
+            return _bridge_callback_failure(
+                "Tài khoản Telegram này đã liên kết hoặc đang chờ xác nhận ở một tài khoản Web khác",
                 error_code="TELEGRAM_ALREADY_LINKED",
                 http_status=status.HTTP_409_CONFLICT,
             )
         role = "admin" if payload.role == "admin" else "user"
         conn.execute(
-            """UPDATE web_accounts SET canonical_user_id=?, role_cache=?, display_name=COALESCE(NULLIF(?, ''), display_name), updated_at=? WHERE id=?""",
-            (canonical_user_id, role, payload.display_name.strip(), utc_now(), account_id),
+            """UPDATE telegram_link_codes
+               SET canonical_user_id=?, bot_confirmed_at=?, confirmed_role=?, confirmed_display_name=?
+               WHERE code_hash=?""",
+            (canonical_user_id, utc_now(), role, payload.display_name.strip(), code_hash),
+        )
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=canonical_user_id,
+            action="auth.telegram_link_confirm",
+            request_id=callback_request_id,
+            detail="Bot proof recorded; awaiting initiating browser CSRF completion",
+        )
+    return envelope(
+        True,
+        "Bot đã xác minh Telegram. Hãy quay lại đúng tab Web đã tạo mã để hoàn tất liên kết.",
+        data={"mode": "link", "browser_confirmation_required": True},
+        status_name="awaiting_confirm",
+    )
+
+
+@router.post("/telegram/link/complete")
+async def complete_telegram_link(request: Request, account: dict = Depends(require_csrf)):
+    """Commit a Bot-confirmed link only from the initiating CSRF session.
+
+    The Bot callback intentionally never attaches an identity to a Web
+    account by itself.  This final browser request provides a separate
+    session-bound proof of intent and prevents a copied deep-link code from
+    becoming a direct account-takeover primitive.
+    """
+    session_id = current_session(request)["session_id"]
+    now = utc_now()
+    with transaction() as conn:
+        session_row = conn.execute(
+            """SELECT 1 FROM web_sessions
+               WHERE id=? AND account_id=? AND revoked_at IS NULL AND expires_at>?""",
+            (session_id, account["id"], now),
+        ).fetchone()
+        if not session_row:
+            return envelope(
+                False,
+                "Phiên Web đã hết hạn. Hãy đăng nhập lại trước khi liên kết Telegram.",
+                status_name="guarded",
+                error_code="LINK_SESSION_INVALID",
+            )
+        row = conn.execute(
+            """SELECT code_hash, expires_at, canonical_user_id, confirmed_role, confirmed_display_name
+               FROM telegram_link_codes
+               WHERE account_id=? AND initiating_session_id=? AND consumed_at IS NULL AND expires_at>?
+               ORDER BY created_at DESC
+               LIMIT 1""",
+            (account["id"], session_id, now),
+        ).fetchone()
+        if not row:
+            return envelope(
+                False,
+                "Không có mã liên kết đang chờ trong phiên Web này. Hãy tạo mã mới.",
+                status_name="guarded",
+                error_code="LINK_CODE_INVALID",
+            )
+        code_hash, _expires_at, canonical_user_id, confirmed_role, confirmed_display_name = row
+        if not canonical_user_id:
+            return envelope(
+                False,
+                "Bot chưa xác minh Telegram cho mã này.",
+                status_name="awaiting_confirm",
+                error_code="TELEGRAM_LINK_PENDING",
+            )
+        account_row = conn.execute(
+            "SELECT canonical_user_id, is_active FROM web_accounts WHERE id=?",
+            (account["id"],),
+        ).fetchone()
+        if not account_row or not account_row[1]:
+            return envelope(
+                False,
+                "Tài khoản Web không còn hoạt động.",
+                status_name="guarded",
+                error_code="LINK_ACCOUNT_REQUIRED",
+            )
+        if account_row[0]:
+            return envelope(
+                False,
+                "Tài khoản này đã liên kết Telegram; Web không cho thay identity canonical.",
+                status_name="guarded",
+                error_code="TELEGRAM_RELINK_NOT_ALLOWED",
+            )
+        telegram_oidc = conn.execute(
+            "SELECT subject_hash FROM web_external_identities WHERE account_id=? AND provider='telegram'",
+            (account["id"],),
+        ).fetchone()
+        if telegram_oidc:
+            try:
+                expected_telegram_oidc = _external_subject_hash("telegram", str(canonical_user_id))
+            except RuntimeError:
+                return envelope(
+                    False,
+                    "Telegram Login đang thiếu cấu hình bảo vệ identity. Hãy liên hệ hỗ trợ để khôi phục cấu hình trước khi liên kết Bot.",
+                    status_name="guarded",
+                    error_code="TELEGRAM_OIDC_CONFIGURATION_REQUIRED",
+                )
+            if not hmac.compare_digest(str(telegram_oidc[0]), expected_telegram_oidc):
+                return envelope(
+                    False,
+                    "Tài khoản Web này đã xác thực bằng một Telegram khác. Hãy xác nhận đúng cùng tài khoản Telegram trong Bot.",
+                    status_name="guarded",
+                    error_code="TELEGRAM_OIDC_MISMATCH",
+                )
+        existing = conn.execute(
+            "SELECT id FROM web_accounts WHERE canonical_user_id=? AND id<>?",
+            (canonical_user_id, account["id"]),
+        ).fetchone()
+        if existing:
+            return envelope(
+                False,
+                "Tài khoản Telegram này đã liên kết với một tài khoản Web khác.",
+                status_name="guarded",
+                error_code="TELEGRAM_ALREADY_LINKED",
+            )
+        role = "admin" if confirmed_role == "admin" else "user"
+        conn.execute(
+            """UPDATE web_accounts
+               SET canonical_user_id=?, role_cache=?, display_name=COALESCE(NULLIF(?, ''), display_name), updated_at=?
+               WHERE id=?""",
+            (canonical_user_id, role, str(confirmed_display_name or "").strip(), now, account["id"]),
         )
         conn.execute(
-            "UPDATE telegram_link_codes SET consumed_at=?, canonical_user_id=? WHERE code_hash=?",
-            (utc_now(), canonical_user_id, code_hash),
+            "UPDATE telegram_link_codes SET consumed_at=? WHERE code_hash=?",
+            (now, code_hash),
         )
-        # A successful link changes the account's canonical Telegram identity.
-        # Other existing web sessions must not silently inherit that identity.
-        # The session that created this one-time code remains valid so the user
-        # can finish onboarding without an unnecessary login loop.  Legacy
-        # codes without a recorded initiating session fail closed by revoking
-        # every active session for that account.
-        revoked_at = utc_now()
-        if initiating_session_id:
-            conn.execute(
-                "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND id<>? AND revoked_at IS NULL",
-                (revoked_at, account_id, initiating_session_id),
-            )
-        else:
-            conn.execute(
-                "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
-                (revoked_at, account_id),
-            )
-        _record_audit(conn, account_id=account_id, canonical_user_id=canonical_user_id, action="auth.telegram_link_confirm", request_id=_request_id(request))
-    return envelope(True, "Đã xác nhận liên kết Telegram", data={"canonical_user_id": canonical_user_id})
+        # Identity changed only after the initiating browser deliberately
+        # completed the binding.  Other sessions never inherit it silently.
+        conn.execute(
+            "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND id<>? AND revoked_at IS NULL",
+            (now, account["id"], session_id),
+        )
+        _record_audit(
+            conn,
+            account_id=account["id"],
+            canonical_user_id=str(canonical_user_id),
+            action="auth.telegram_link_complete",
+            request_id=_request_id(request),
+            detail="initiating browser completed Bot-confirmed Telegram identity",
+        )
+    return envelope(True, "Telegram đã được liên kết an toàn.", data={"linked": True}, status_name="completed")

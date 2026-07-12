@@ -1,12 +1,15 @@
 # TOAN AAS Web App Production Architecture
 
-Date: 2026-06-16
+Date: 2026-07-11 (superseded prototype notes corrected)
 
 ## Scope
 
 This repository is the standalone web app for `app.toanaas.vn`.
 
-The Telegram bot remains a separate production channel. This web app should not copy every bot screen 1:1. It should provide a clean, clear, easy customer workflow and act as the TOAN AAS Control Center.
+The Telegram bot remains the canonical production authority for identity,
+wallet/Xu, PayOS, jobs, providers and delivery. This Web App provides a clean,
+clear customer workflow using signed sessions and a private bridge; it does
+not reproduce those writers locally.
 
 ## Core Flow
 
@@ -27,11 +30,13 @@ Rules:
 
 1. UI gate: keep screens simple and show the next logical action only.
 2. Auth gate: admin actions require server-side `ADMIN_IDS` / `ADMIN_ID`.
-3. Billing gate: paid actions create an order through billing service only.
+3. Billing gate: only the canonical Bot creates a PayOS order and verifies its
+   webhook; Web can proxy a reviewed request but never signs/finalizes it.
 4. Capability gate: provider, worker, and feature flags decide whether a job can run.
 5. Job gate: job state prevents duplicate or unsafe execution.
 6. Provider gate: service modules submit jobs to tested providers only.
-7. Persistence/audit gate: wallet, payment, entitlement, job, and admin events are stored.
+7. Persistence/audit gate: Bot persists wallet/payment/job authority; Web
+   stores only sessions, CSRF, audit metadata and short-lived safe receipts.
 
 ## Current Production Entrypoint
 
@@ -42,12 +47,15 @@ Rules:
 ## Key Routes
 
 - `/` - customer workspace
-- `/login` - Telegram ID login bridge
+- `/login` - Email/OAuth or one-time Bot-verified Telegram sign-in
 - `/admin-app` - admin control panel
 - `/health` - runtime health
 - `/api/v1/health` - API health
-- `/api/v1/billing/create-payment-link` - single source for PayOS payment link creation
-- `/api/v1/billing/webhook/payos` - single PayOS webhook receiver
+- `/api/v1/payments/create` - guarded signed proxy to a reviewed Bot payment adapter
+- `/api/v1/payments/{id}` - owner-scoped canonical payment read
+
+There is no Web-owned PayOS webhook or direct billing route in the current
+runtime. See `docs/migration/PAYOS_WALLET_JOB_MAP.md` for the active contract.
 
 ## Automation Goal
 

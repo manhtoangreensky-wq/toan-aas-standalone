@@ -5,10 +5,13 @@ from __future__ import annotations
 import base64
 from datetime import datetime, timedelta, timezone
 import hashlib
+import hmac
+import ipaddress
 import json
 import math
 import os
 import re
+import secrets
 import uuid
 from io import BytesIO
 from typing import Any
@@ -17,10 +20,12 @@ from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from copyfast_auth import (
     _record_audit,
+    _request_id,
+    current_session,
     envelope,
     require_account,
     require_canonical_admin,
@@ -51,6 +56,16 @@ TICKET_VERIFICATION_PATTERN = re.compile(
     re.IGNORECASE,
 )
 TICKET_CARD_CANDIDATE_PATTERN = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")
+# Manual payment proof belongs to the Bot conversation.  These labels are
+# intentionally caught even when the following value is not obviously secret:
+# a ticket must never become an alternate bill/TXID/account-number inbox.
+TICKET_MANUAL_PAYMENT_PROOF_PATTERN = re.compile(
+    r"\b(?:txid|transaction(?:\s+(?:hash|id))?|mã\s*(?:giao\s*)?dịch|ma\s*(?:giao\s*)?dich|"
+    r"biên\s*lai|bien\s*lai|chứng\s*từ|chung\s*tu|bill|"
+    r"(?:số|so)\s*tài\s*khoản|bank\s*account|"
+    r"qr\s*(?:thanh\s*toán|payment|code)?)\b",
+    re.IGNORECASE,
+)
 MAX_FEATURE_UPLOADS = 8
 IDEMPOTENCY_PENDING_SECONDS = 90
 _PENDING_IDEMPOTENCY_KEY = "_web_idempotency_pending"
@@ -82,6 +97,26 @@ MAX_DOCX_ARCHIVE_MEMBERS = 2_000
 MAX_DOCX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 ASSET_DELIVERY_MAX_URL_LENGTH = 2_048
 ASSET_DELIVERY_MAX_TTL_SECONDS = 60 * 60
+FEATURE_QUOTE_RECEIPT_TTL_SECONDS = 10 * 60
+FEATURE_QUOTE_RECEIPT_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,160}$")
+FEATURE_CONFIRM_ACCEPTED_STATUSES = frozenset({"queued", "processing", "completed", "failed", "failed_no_charge", "cancelled", "refunded"})
+CAMPAIGN_PLAN_PLATFORMS = frozenset({"facebook", "instagram", "tiktok", "youtube", "website", "other"})
+CAMPAIGN_PLAN_OBJECTIVES = frozenset({"affiliate", "traffic", "conversion", "revenue", "community"})
+CAMPAIGN_PLAN_STATUSES = frozenset({"draft", "review", "approved", "scheduled", "archived"})
+CAMPAIGN_PLAN_TRANSITIONS = {
+    "draft": frozenset({"review", "archived"}),
+    "review": frozenset({"draft", "approved", "archived"}),
+    "approved": frozenset({"draft", "scheduled", "archived"}),
+    "scheduled": frozenset({"approved", "archived"}),
+    "archived": frozenset({"draft"}),
+}
+CAMPAIGN_PLAN_STATUS_LABELS = {
+    "draft": "bản nháp",
+    "review": "đang tự rà soát",
+    "approved": "đã sẵn sàng theo kế hoạch",
+    "scheduled": "đã xếp lịch nội bộ",
+    "archived": "đã lưu trữ",
+}
 
 # Browser forms must never be able to attach a value that looks like a bot
 # authority decision.  Identity, provider settings, wallet/payment fields,
@@ -113,6 +148,22 @@ FEATURE_UPLOAD_REQUIRED = frozenset({
     "documents_compress", "documents_translate",
 })
 FEATURE_TARGET_LANGUAGE_REQUIRED = frozenset({"subtitle_translate", "video_dub", "documents_translate"})
+# A Web confirm is never enabled merely because a key exists in the broad
+# parity registry.  This exact set covers the customer workflows that have a
+# draft/estimate/confirm input contract; account, wallet, admin and read-only
+# parity routes can never be made executable by an environment typo.
+FEATURE_EXECUTION_CANDIDATE_KEYS = frozenset(
+    FEATURE_TEXT_REQUIRED | FEATURE_UPLOAD_REQUIRED | FEATURE_TARGET_LANGUAGE_REQUIRED
+)
+FEATURE_TIER_REQUIRED_ON_CONFIRM = frozenset({
+    "image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background",
+    "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
+    "video_image_to_video", "video_multiscene", "video_long",
+})
+FEATURE_VIDEO_SCENE_REQUIRED_ON_CONFIRM = frozenset({
+    "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
+    "video_image_to_video", "video_multiscene", "video_long",
+})
 CANONICAL_TARGET_LANGUAGE_CODES = frozenset({
     "vi", "en", "zh", "zh_cn", "zh_tw", "ja", "ko", "th", "fr", "de", "es",
     "id", "ms", "pt", "ru", "ar", "hi", "lo", "km", "my", "fil", "auto",
@@ -201,18 +252,54 @@ def _flags() -> dict[str, bool]:
         # write adapter is reviewed.  Keeping this false prevents direct API
         # callers from bypassing the presentation shell's read-only posture.
         "admin_writes_enabled": enabled("WEBAPP_ADMIN_WRITES_ENABLED", False),
+        # Creating a canonical job is a separate capability from rendering a
+        # draft or estimate.  It stays off until the Bot bridge has a reviewed
+        # confirm adapter; provider readiness alone must never unlock it.
+        "feature_job_adapter_enabled": enabled("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
 
-def _web_feature_execution_available() -> bool:
+def _web_feature_job_adapter_keys() -> frozenset[str]:
+    """Return the explicit, reviewed feature confirm adapters only.
+
+    ``WEBAPP_FEATURE_JOB_ADAPTER_ENABLED`` is a global circuit breaker, not a
+    blanket approval for all parity routes.  The companion comma-separated
+    allowlist must name each canonical feature key whose Bot-owned confirm
+    adapter has passed its quote, ledger, idempotency and delivery tests.
+    Unknown/non-executable values fail closed instead of broadening access.
+    """
+    raw = os.environ.get("WEBAPP_FEATURE_JOB_ADAPTERS", "")
+    requested = {item.strip().lower() for item in raw.split(",") if item.strip()}
+    return frozenset(
+        feature
+        for feature in requested
+        if feature in FEATURE_EXECUTION_CANDIDATE_KEYS and feature in FEATURE_BY_KEY
+    )
+
+
+def _web_feature_execution_available(feature: str | None = None) -> bool:
     """Whether a reviewed Web-to-canonical-job adapter exists for confirms.
 
-    Bot/provider readiness is not enough. The frozen P0 bridge deliberately
-    has no Web job-creation adapter, so keep confirm fail-closed even if a
-    future environment accidentally enables provider calls in this Web App.
+    Each condition is deliberately required.  A provider flag only permits a
+    reviewed server-to-server bridge call; it does not prove that this Bot
+    deployment accepts Web confirms.  The adapter flag must therefore remain
+    false until that endpoint independently verifies the canonical quote,
+    owner, idempotency and charge/job lifecycle.
     """
-    return False
+    flags = _flags()
+    common_ready = bool(
+        flags["copyfast_enabled"]
+        and flags["provider_calls_enabled"]
+        and flags["feature_job_adapter_enabled"]
+        and bridge_configured()
+    )
+    if not common_ready:
+        return False
+    adapter_keys = _web_feature_job_adapter_keys()
+    if feature is None:
+        return bool(adapter_keys)
+    return str(feature or "").strip() in adapter_keys
 
 
 def _linked(account: dict) -> str:
@@ -292,6 +379,196 @@ def _safe_input(value: dict[str, Any]) -> dict[str, Any]:
     if len(encoded.encode("utf-8")) > 64_000:
         raise HTTPException(status_code=413, detail="Dữ liệu đầu vào quá lớn")
     return value
+
+
+def _feature_input_digest(values: dict[str, Any]) -> str:
+    """Hash validated feature input without retaining prompt/file metadata.
+
+    A receipt is a Web-session freshness check, not a Bot quote.  HMAC keeps
+    even a low-entropy prompt from being reversible from the Web-only SQLite
+    table while preserving a deterministic binding for the confirm request.
+    """
+    try:
+        encoded = json.dumps(values, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False).encode("utf-8")
+    except (TypeError, ValueError) as exc:
+        raise HTTPException(status_code=422, detail="Dữ liệu feature không thể tạo receipt an toàn") from exc
+    secret = os.environ.get("WEB_FEATURE_QUOTE_HMAC_SECRET", os.environ.get("WEB_SESSION_SECRET", "")).encode("utf-8")
+    if not secret:
+        # App startup already requires a session secret. Keep this explicit
+        # for isolated calls so a missing secret cannot downgrade to SHA-256.
+        raise HTTPException(status_code=503, detail="Web chưa có secret để bảo vệ estimate receipt")
+    return hmac.new(secret, encoded, hashlib.sha256).hexdigest()
+
+
+def _feature_quote_expiry(response: dict) -> str:
+    """Return a short, timezone-aware receipt expiry from a safe estimate.
+
+    A reviewed Bot may include an explicit quote expiry.  The Web receipt can
+    only shorten it, never extend it; absent an explicit value it is capped to
+    a ten-minute browser-session freshness window and still has no pricing
+    authority.
+    """
+    now = datetime.now(timezone.utc)
+    expiry = now + timedelta(seconds=FEATURE_QUOTE_RECEIPT_TTL_SECONDS)
+    data = response.get("data") if isinstance(response, dict) and isinstance(response.get("data"), dict) else {}
+    estimate = data.get("estimate") if isinstance(data.get("estimate"), dict) else {}
+    supplied = [
+        data.get("quote_valid_until"), data.get("quote_expires_at"),
+        estimate.get("quote_valid_until"), estimate.get("quote_expires_at"), estimate.get("expires_at"),
+    ]
+    for value in supplied:
+        if value is None or value == "":
+            continue
+        if not isinstance(value, str) or len(value) > 80:
+            return ""
+        try:
+            candidate = datetime.fromisoformat(value.replace("Z", "+00:00"))
+        except ValueError:
+            return ""
+        if candidate.tzinfo is None:
+            return ""
+        candidate = candidate.astimezone(timezone.utc)
+        if candidate <= now:
+            return ""
+        expiry = min(expiry, candidate)
+    return expiry.isoformat(timespec="seconds")
+
+
+def _estimate_can_issue_feature_receipt(response: dict) -> bool:
+    data = response.get("data") if isinstance(response, dict) and isinstance(response.get("data"), dict) else {}
+    estimate = data.get("estimate") if isinstance(data.get("estimate"), dict) else {}
+    return bool(
+        isinstance(response, dict)
+        and response.get("ok") is True
+        and response.get("status") == "awaiting_confirm"
+        and estimate.get("available") is True
+        # A quote that only lists canonical tiers/scenes is useful planning,
+        # but it is not a confirmable quote. Do not mint a browser receipt
+        # until the customer has selected the Bot-required input and asked for
+        # a fresh estimate.
+        and estimate.get("tier_required") is not True
+        and estimate.get("scene_count_required") is not True
+    )
+
+
+def _issue_feature_quote_receipt(response: dict, *, account: dict, session_id: str, feature: str, values: dict[str, Any]) -> dict:
+    """Attach one opaque, session-bound receipt after a canonical estimate.
+
+    The raw token exists only in this API response and browser memory. SQLite
+    holds its hash plus bindings/expiry; it never holds a prompt, quote, job,
+    provider, payment, asset or output value.
+    """
+    if not _estimate_can_issue_feature_receipt(response):
+        return response
+    account_id = str(account.get("id") or "")
+    canonical_user_id = str(account.get("canonical_user_id") or "")
+    if not account_id or not session_id or not canonical_user_id:
+        return response
+    expiry = _feature_quote_expiry(response)
+    if not expiry:
+        return response
+    token = secrets.token_urlsafe(32)
+    token_hash = hashlib.sha256(token.encode("utf-8")).hexdigest()
+    input_digest = _feature_input_digest(values)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        now = utc_now()
+        conn.execute("DELETE FROM web_feature_quote_receipts WHERE expires_at<=?", (now,))
+        conn.execute(
+            """INSERT INTO web_feature_quote_receipts
+               (token_hash, account_id, session_id, canonical_user_id, feature_key, input_digest, expires_at, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (token_hash, account_id, session_id, canonical_user_id, feature, input_digest, expiry, now),
+        )
+    result = dict(response)
+    data = dict(response.get("data") or {})
+    data["web_quote_receipt"] = token
+    result["data"] = data
+    return result
+
+
+def _claim_feature_quote_receipt(*, receipt: str, account: dict, session_id: str, feature: str, values: dict[str, Any], idempotency_key: str) -> str:
+    """Atomically bind an estimate receipt to exactly one confirm key.
+
+    The same key may retry an ambiguous bridge call; any other key is refused
+    so two browser requests cannot turn one estimate into two Bot jobs.
+    """
+    if not FEATURE_QUOTE_RECEIPT_PATTERN.fullmatch(receipt or ""):
+        return "missing"
+    account_id = str(account.get("id") or "")
+    canonical_user_id = str(account.get("canonical_user_id") or "")
+    if not account_id or not session_id or not canonical_user_id:
+        return "missing"
+    token_hash = hashlib.sha256(receipt.encode("utf-8")).hexdigest()
+    input_digest = _feature_input_digest(values)
+    key_hash = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
+    now = utc_now()
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        conn.execute("DELETE FROM web_feature_quote_receipts WHERE expires_at<=?", (now,))
+        row = conn.execute(
+            """SELECT account_id, session_id, canonical_user_id, feature_key, input_digest,
+                      expires_at, claimed_key_hash, consumed_at
+                 FROM web_feature_quote_receipts WHERE token_hash=?""",
+            (token_hash,),
+        ).fetchone()
+        if not row:
+            return "missing"
+        if (
+            row[0] != account_id or row[1] != session_id or row[2] != canonical_user_id
+            or row[3] != feature or not hmac.compare_digest(str(row[4] or ""), input_digest)
+            or str(row[5] or "") <= now
+        ):
+            return "missing"
+        claimed_key_hash = str(row[6] or "")
+        if claimed_key_hash:
+            return "claimed" if hmac.compare_digest(claimed_key_hash, key_hash) else "used"
+        updated = conn.execute(
+            """UPDATE web_feature_quote_receipts
+               SET claimed_key_hash=?, claimed_at=?
+               WHERE token_hash=? AND claimed_key_hash IS NULL AND consumed_at IS NULL AND expires_at>?""",
+            (key_hash, now, token_hash, now),
+        )
+        return "claimed" if updated.rowcount == 1 else "used"
+
+
+def _settle_feature_quote_receipt(*, receipt: str, idempotency_key: str, accepted: bool) -> None:
+    """Consume an accepted confirm; release only a known rejected attempt."""
+    if not FEATURE_QUOTE_RECEIPT_PATTERN.fullmatch(receipt or ""):
+        return
+    token_hash = hashlib.sha256(receipt.encode("utf-8")).hexdigest()
+    key_hash = hashlib.sha256(idempotency_key.encode("utf-8")).hexdigest()
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        if accepted:
+            conn.execute(
+                """UPDATE web_feature_quote_receipts SET consumed_at=?
+                   WHERE token_hash=? AND claimed_key_hash=? AND consumed_at IS NULL""",
+                (utc_now(), token_hash, key_hash),
+            )
+        else:
+            conn.execute(
+                """UPDATE web_feature_quote_receipts
+                   SET claimed_key_hash=NULL, claimed_at=NULL
+                   WHERE token_hash=? AND claimed_key_hash=? AND consumed_at IS NULL""",
+                (token_hash, key_hash),
+            )
+
+
+def _feature_quote_required_response(state: str) -> dict:
+    if state == "used":
+        return envelope(
+            False,
+            "Estimate này đã được dùng cho một yêu cầu xác nhận khác. Hãy tạo estimate canonical mới.",
+            status_name="guarded",
+            error_code="FEATURE_ESTIMATE_ALREADY_USED",
+        )
+    return envelope(
+        False,
+        "Hãy tạo estimate canonical mới trong phiên hiện tại trước khi xác nhận. Web không chấp nhận xác nhận trực tiếp từ browser.",
+        status_name="guarded",
+        error_code="FEATURE_ESTIMATE_REQUIRED",
+    )
 
 
 def _canonical_route_identifier(value: Any, label: str) -> str:
@@ -410,9 +687,20 @@ def _project_readiness(value: Any) -> dict[str, dict[str, Any]]:
 def _safe_payos_checkout(value: Any) -> str:
     if not isinstance(value, str) or not value:
         return ""
-    parsed = urlparse(value)
-    hostname = (parsed.hostname or "").lower()
-    if parsed.scheme != "https" or parsed.username or parsed.password or parsed.port not in {None, 443} or (hostname != "pay.payos.vn" and not hostname.endswith(".payos.vn")):
+    try:
+        parsed = urlparse(value)
+        hostname = (parsed.hostname or "").lower()
+        port = parsed.port
+    except (TypeError, ValueError):
+        return ""
+    if (
+        parsed.scheme != "https"
+        or parsed.username
+        or parsed.password
+        or port not in {None, 443}
+        or parsed.fragment
+        or (hostname != "pay.payos.vn" and not hostname.endswith(".payos.vn"))
+    ):
         return ""
     return value[:1_000]
 
@@ -497,6 +785,29 @@ def _record_asset_delivery_audit(account: dict, request: Request, asset_id: str,
         )
 
 
+def _record_admin_write_audit(account: dict, request: Request, action: str, target: str, result: dict) -> None:
+    """Record a sanitized Web-side write decision alongside Bot-side audit.
+
+    The target and coarse outcome are enough to correlate a Web intent with
+    the canonical Bot audit trail. Never put bridge/provider responses,
+    payment references, or customer data into this Web event.
+    """
+    status_name = str(result.get("status") or "guarded") if isinstance(result, dict) else "guarded"
+    outcome = "ok" if isinstance(result, dict) and result.get("ok") is True else "denied"
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        _record_audit(
+            conn,
+            account_id=str(account.get("id") or "") or None,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action=action,
+            request_id=_request_id(request) or str(uuid.uuid4()),
+            target=target,
+            outcome=outcome,
+            detail=f"web admin write response: {status_name[:80]}",
+        )
+
+
 def _project_feature_document(value: Any, *, depth: int = 0) -> Any:
     """Project a provider-free planning document for a feature response.
 
@@ -537,8 +848,35 @@ def _project_feature_document(value: Any, *, depth: int = 0) -> Any:
     return _MISSING
 
 
+def _project_feature_tracking(value: Any, *, canonical_feature: Any) -> dict[str, str]:
+    """Allow one future Bot-issued job reference through the feature boundary.
+
+    A successful canonical confirm may eventually return a tiny tracking
+    reference.  It is deliberately *not* inferred from a response ID, draft,
+    output, provider handle, or timestamp: the bridge must explicitly opt in
+    with ``tracking`` and prove that it describes the same feature.  The
+    customer can then navigate to the existing ownership-checked Job Center;
+    no delivery URL or job metadata is exposed from this planning response.
+    """
+    if not isinstance(value, dict):
+        return {}
+    feature = str(value.get("feature") or "").strip()
+    expected = str(canonical_feature or "").strip()
+    tracking_id = str(value.get("id") or "").strip()
+    status = str(value.get("status") or "").strip().lower()
+    if (
+        not feature
+        or feature != expected
+        or feature not in FEATURE_BY_KEY
+        or not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tracking_id)
+        or status not in FEATURE_CONFIRM_ACCEPTED_STATUSES
+    ):
+        return {}
+    return {"id": tracking_id, "status": status, "feature": feature}
+
+
 def _project_feature_response(value: dict[str, Any]) -> dict[str, Any]:
-    """Expose only planning and staging metadata needed by the Portal."""
+    """Expose only planning, staging and explicit safe tracking metadata."""
     result = _project_record(
         value,
         ("feature", "requires_confirm", "quote_expires_at", "quote_valid_until", "status"),
@@ -553,10 +891,18 @@ def _project_feature_response(value: dict[str, Any]) -> dict[str, Any]:
             value.get("uploads"),
             ("id", "upload_id", "stage_id", "file_name", "content_size", "status", "created_at"),
         )
+    tracking = _project_feature_tracking(value.get("tracking"), canonical_feature=value.get("feature"))
+    if tracking:
+        result["tracking"] = tracking
     return result
 
 
 def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: bool = False) -> dict[str, Any]:
+    # A Bot-issued checkout is the sole, narrow exception to generic response
+    # redaction. Keep the original mapping only long enough to validate one
+    # URL against the fixed PayOS allowlist; every other browser field still
+    # comes from the recursively redacted representation below.
+    raw_value = data if isinstance(data, dict) else {}
     value = _redact_browser_identity(data, allow_admin_user_refs=allow_admin_user_refs)
     if not isinstance(value, dict):
         return {}
@@ -596,7 +942,7 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
         return result
     if surface == "payment":
         result = _project_record(value, ("payment_id", "order_code", "id", "status", "amount_vnd", "xu", "created_at", "paid_at"))
-        checkout = _safe_payos_checkout(value.get("checkout_url") or value.get("payment_url") or value.get("url"))
+        checkout = _safe_payos_checkout(raw_value.get("checkout_url") or raw_value.get("payment_url") or raw_value.get("url"))
         if checkout:
             result["checkout_url"] = checkout
         return result
@@ -741,6 +1087,12 @@ def _ticket_contains_sensitive_data(subject: str, detail: str) -> bool:
 
 
 def _assert_safe_ticket_content(subject: str, detail: str) -> None:
+    text = f"{subject}\n{detail}"
+    if TICKET_MANUAL_PAYMENT_PROOF_PATTERN.search(text):
+        raise HTTPException(
+            status_code=422,
+            detail="Nạp thủ công không nhận bill, TXID, số tài khoản hoặc QR trong Web App. Hãy mở Bot đã liên kết và dùng /thucong để đối soát an toàn.",
+        )
     if _ticket_contains_sensitive_data(subject, detail):
         raise HTTPException(
             status_code=422,
@@ -799,7 +1151,7 @@ def _whole_number_in_range(value: Any, minimum: int, maximum: int) -> bool:
     return parsed.is_integer() and minimum <= int(parsed) <= maximum
 
 
-def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
+def _feature_input_contract_error(feature: str, values: dict[str, Any], *, action: str = "draft") -> str:
     """Mirror the safe Web intake promises before the request reaches Bot.
 
     This is not a replacement for Bot ownership/MIME/provider checks.  It
@@ -846,6 +1198,13 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any]) -> str:
         values["target_language"] = target_language
     if feature == "documents_split" and not CONTIGUOUS_PAGE_RANGE_PATTERN.fullmatch(str(values.get("page_range") or "").strip()):
         return "page_range_invalid"
+    if action == "confirm" and feature in FEATURE_TIER_REQUIRED_ON_CONFIRM:
+        tier = str(values.get("tier") or "").strip()
+        if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(tier):
+            return "tier_required"
+    if action == "confirm" and feature in FEATURE_VIDEO_SCENE_REQUIRED_ON_CONFIRM:
+        if not _whole_number_in_range(values.get("scene_count"), 1, 20):
+            return "scene_count_required"
     return ""
 
 
@@ -865,6 +1224,8 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "target_language_required": "Hãy chọn ngôn ngữ đích trước khi tiếp tục workflow canonical.",
         "target_language_invalid": "Ngôn ngữ đích chưa thuộc danh sách canonical Bot P0 hỗ trợ.",
         "page_range_invalid": "Khoảng trang chỉ nhận một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.",
+        "tier_required": "Hãy chọn tier canonical rồi tạo estimate mới trước khi xác nhận job.",
+        "scene_count_required": "Video cần số cảnh nguyên từ 1 đến 20 trước khi xác nhận job canonical.",
     }
     return envelope(
         False,
@@ -1002,6 +1363,10 @@ async def _read_validated_upload(file: UploadFile) -> tuple[str, str, bytes, str
 class FeatureRequest(BaseModel):
     input: dict[str, Any] = Field(default_factory=dict)
     idempotency_key: str = Field(default="", max_length=160)
+    # This opaque, session-bound nonce is generated by the Web server only
+    # after a successful estimate.  It is never forwarded to Bot/provider
+    # code and cannot set price, Xu, job, payment or output state.
+    web_quote_receipt: str = Field(default="", max_length=160)
 
 
 class PaymentRequest(BaseModel):
@@ -1015,11 +1380,171 @@ class FreezeRequest(BaseModel):
     note: str = Field(default="", max_length=300)
     idempotency_key: str = Field(min_length=12, max_length=160)
 
+    @field_validator("note")
+    @classmethod
+    def require_operation_note(cls, value: str) -> str:
+        """Keep an audit-worthy reason on the server, not just in portal JS."""
+        note = str(value or "").strip()
+        if not 5 <= len(note) <= 300:
+            raise ValueError("Ghi chú vận hành cần từ 5 đến 300 ký tự")
+        return note
+
 
 class TicketRequest(BaseModel):
     subject: str = Field(min_length=3, max_length=180)
     detail: str = Field(min_length=3, max_length=4000)
     idempotency_key: str = Field(min_length=12, max_length=160)
+
+
+def _campaign_text(value: Any, *, label: str, minimum: int, maximum: int, allow_empty: bool = False) -> str:
+    """Normalize human planning text without turning it into HTML or an audit payload."""
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    if "\x00" in text or any(ord(character) < 32 for character in text):
+        raise ValueError(f"{label} chứa ký tự không hợp lệ")
+    if allow_empty and not text:
+        return ""
+    if not minimum <= len(text) <= maximum:
+        raise ValueError(f"{label} cần từ {minimum} đến {maximum} ký tự")
+    return text
+
+
+def _campaign_destination_url(value: Any) -> str:
+    raw = str(value or "").strip()
+    if not 8 <= len(raw) <= 1_024:
+        raise ValueError("Liên kết đích cần từ 8 đến 1024 ký tự")
+    try:
+        parsed = urlparse(raw)
+        hostname = (parsed.hostname or "").rstrip(".").lower()
+        port = parsed.port
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Liên kết đích không hợp lệ") from exc
+    if (
+        parsed.scheme != "https"
+        or not parsed.netloc
+        or not hostname
+        or parsed.username
+        or parsed.password
+        or port not in {None, 443}
+    ):
+        raise ValueError("Liên kết đích phải là HTTPS công khai, không kèm thông tin đăng nhập")
+    if hostname == "localhost" or hostname.endswith(".localhost") or hostname.endswith(".local"):
+        raise ValueError("Liên kết đích phải trỏ tới host công khai")
+    try:
+        address = ipaddress.ip_address(hostname)
+    except ValueError:
+        address = None
+    if address is not None and (
+        address.is_private
+        or address.is_loopback
+        or address.is_link_local
+        or address.is_multicast
+        or address.is_reserved
+        or address.is_unspecified
+    ):
+        raise ValueError("Liên kết đích phải trỏ tới host công khai")
+    return raw
+
+
+def _campaign_scheduled_for(value: Any) -> str:
+    """Validate an inert local planning timestamp; it never schedules publishing."""
+    raw = str(value or "").strip()
+    if not raw:
+        return ""
+    if not re.fullmatch(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2}(?:\.\d{1,6})?)?", raw):
+        raise ValueError("Mốc lịch cần ở định dạng ngày giờ cục bộ hợp lệ")
+    try:
+        parsed = datetime.fromisoformat(raw)
+    except ValueError as exc:
+        raise ValueError("Mốc lịch cần ở định dạng ngày giờ cục bộ hợp lệ") from exc
+    if parsed.tzinfo is not None or not 2000 <= parsed.year <= 2100:
+        raise ValueError("Mốc lịch cần ở định dạng ngày giờ cục bộ hợp lệ")
+    return parsed.replace(second=0, microsecond=0).isoformat(timespec="minutes")
+
+
+def _campaign_plan_id(value: str) -> str:
+    try:
+        return str(uuid.UUID(str(value)))
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise HTTPException(status_code=422, detail="Mã kế hoạch không hợp lệ") from exc
+
+
+def _campaign_plan_public(row: tuple[Any, ...]) -> dict[str, str]:
+    """Project only the signed account's Web-owned planning fields to the browser."""
+    return {
+        "id": str(row[0]),
+        "title": str(row[1]),
+        "destination_url": str(row[2]),
+        "platform": str(row[3]),
+        "objective": str(row[4]),
+        "scheduled_for": str(row[5] or ""),
+        "approval_status": str(row[6]),
+        "review_note": str(row[7] or ""),
+        "created_at": str(row[8]),
+        "updated_at": str(row[9]),
+    }
+
+
+class CampaignPlanCreateRequest(BaseModel):
+    title: str = Field(min_length=3, max_length=180)
+    destination_url: str = Field(min_length=8, max_length=1024)
+    platform: str = Field(min_length=2, max_length=32)
+    objective: str = Field(min_length=2, max_length=32)
+    scheduled_for: str = Field(default="", max_length=64)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("title")
+    @classmethod
+    def normalize_title(cls, value: str) -> str:
+        return _campaign_text(value, label="Tên kế hoạch", minimum=3, maximum=180)
+
+    @field_validator("destination_url")
+    @classmethod
+    def validate_destination_url(cls, value: str) -> str:
+        return _campaign_destination_url(value)
+
+    @field_validator("platform")
+    @classmethod
+    def validate_platform(cls, value: str) -> str:
+        platform = str(value or "").strip().lower()
+        if platform not in CAMPAIGN_PLAN_PLATFORMS:
+            raise ValueError("Nền tảng kế hoạch không hợp lệ")
+        return platform
+
+    @field_validator("objective")
+    @classmethod
+    def validate_objective(cls, value: str) -> str:
+        objective = str(value or "").strip().lower()
+        if objective not in CAMPAIGN_PLAN_OBJECTIVES:
+            raise ValueError("Mục tiêu kế hoạch không hợp lệ")
+        return objective
+
+    @field_validator("scheduled_for")
+    @classmethod
+    def validate_scheduled_for(cls, value: str) -> str:
+        return _campaign_scheduled_for(value)
+
+
+class CampaignPlanUpdateRequest(CampaignPlanCreateRequest):
+    """The editable Web-owned planning fields; lifecycle remains a separate action."""
+
+
+class CampaignPlanStatusRequest(BaseModel):
+    approval_status: str = Field(min_length=4, max_length=32)
+    review_note: str = Field(default="", max_length=1000)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("approval_status")
+    @classmethod
+    def validate_approval_status(cls, value: str) -> str:
+        status_name = str(value or "").strip().lower()
+        if status_name not in CAMPAIGN_PLAN_STATUSES:
+            raise ValueError("Trạng thái kế hoạch không hợp lệ")
+        return status_name
+
+    @field_validator("review_note")
+    @classmethod
+    def normalize_review_note(cls, value: str) -> str:
+        return _campaign_text(value, label="Ghi chú rà soát", minimum=0, maximum=1000, allow_empty=True)
 
 
 def _require_key(key: str) -> str:
@@ -1168,6 +1693,52 @@ async def _run_idempotent(scope: str, key: str, operation) -> dict:
     return result
 
 
+def _reserve_transient_idempotency(scope: str, key: str) -> tuple[str, str]:
+    """Reserve a short single-flight marker without retaining a business result.
+
+    Payment order data and checkout URLs belong solely to the canonical Bot.
+    The Web needs to suppress simultaneous duplicate POSTs, but must release
+    its marker as soon as the bridge answers so it never becomes a secondary
+    payment/order cache. A later retry with the same key is handled by the
+    Bot's durable idempotency contract.
+    """
+    marker = _pending_marker()
+    now = utc_now()
+    with transaction() as conn:
+        row = conn.execute(
+            "SELECT response_json, created_at FROM web_idempotency WHERE scope=? AND key=?",
+            (scope, key),
+        ).fetchone()
+        if row:
+            stored, created_at = str(row[0] or ""), str(row[1] or "")
+            if _pending_response(stored) and not _pending_is_stale(created_at):
+                return "pending", ""
+            # Drop any old cached response from a previous Web version rather
+            # than letting it retain an order/payment/checkout payload.
+            conn.execute("DELETE FROM web_idempotency WHERE scope=? AND key=?", (scope, key))
+        conn.execute(
+            "INSERT INTO web_idempotency (scope, key, response_json, created_at) VALUES (?, ?, ?, ?)",
+            (scope, key, marker, now),
+        )
+    return "owner", marker
+
+
+async def _run_transient_idempotent(scope: str, key: str, operation) -> dict:
+    state, marker = _reserve_transient_idempotency(scope, key)
+    if state == "pending":
+        return envelope(
+            False,
+            "Yêu cầu cùng mã idempotency đang được xử lý. Vui lòng chờ phản hồi canonical.",
+            status_name="guarded",
+            error_code="IDEMPOTENCY_IN_PROGRESS",
+        )
+    try:
+        return await operation()
+    finally:
+        # Never serialize a canonical payment response in the Web database.
+        _release_idempotency(scope, key, marker)
+
+
 async def _bridge(
     method: str,
     path: str,
@@ -1267,15 +1838,254 @@ async def feature_catalog():
 
 @router.get("/core/status")
 async def core_status():
+    execution_ready = _web_feature_execution_available()
     return envelope(
         True,
         "Trạng thái kết nối",
         data={
             "bridge_configured": bridge_configured(),
             "flags": _flags(),
-            "web_feature_execution_available": _web_feature_execution_available(),
+            "web_feature_execution_available": execution_ready,
+            # Feature names are public registry metadata, not provider,
+            # identity, ledger or secret data.  Withhold even that narrow
+            # list unless all common server-side execution gates are true.
+            "web_feature_execution_features": sorted(_web_feature_job_adapter_keys()) if execution_ready else [],
         },
     )
+
+
+@router.get("/campaigns")
+async def list_campaign_plans(account: dict = Depends(require_account)):
+    """Return only local planning records owned by the signed Web account.
+
+    These are deliberately not Bot campaigns: no canonical campaign ID,
+    publish state, analytics, revenue, wallet/Xu or provider data can cross
+    this boundary.
+    """
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            """SELECT id, title, destination_url, platform, objective, scheduled_for,
+                      approval_status, review_note, created_at, updated_at
+               FROM web_campaign_plans
+               WHERE account_id=?
+               ORDER BY CASE WHEN scheduled_for IS NULL OR scheduled_for='' THEN 1 ELSE 0 END,
+                        scheduled_for ASC, updated_at DESC
+               LIMIT 100""",
+            (str(account["id"]),),
+        ).fetchall()
+    return envelope(
+        True,
+        "Danh sách kế hoạch Web của bạn.",
+        data={"items": [_campaign_plan_public(tuple(row)) for row in rows]},
+        status_name="read_only",
+    )
+
+
+@router.post("/campaigns")
+async def create_campaign_plan(payload: CampaignPlanCreateRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Create an account-owned plan without publishing or calling a provider."""
+    key = _require_key(payload.idempotency_key)
+    scope = f"campaign-plan:{account['id']}:create"
+
+    async def operation() -> dict:
+        plan_id = str(uuid.uuid4())
+        now = utc_now()
+        plan = {
+            "id": plan_id,
+            "title": payload.title,
+            "destination_url": payload.destination_url,
+            "platform": payload.platform,
+            "objective": payload.objective,
+            "scheduled_for": payload.scheduled_for,
+            "approval_status": "draft",
+            "review_note": "",
+            "created_at": now,
+            "updated_at": now,
+        }
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            conn.execute(
+                """INSERT INTO web_campaign_plans
+                   (id, account_id, title, destination_url, platform, objective, scheduled_for,
+                    approval_status, review_note, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    plan_id,
+                    str(account["id"]),
+                    payload.title,
+                    payload.destination_url,
+                    payload.platform,
+                    payload.objective,
+                    payload.scheduled_for or None,
+                    "draft",
+                    "",
+                    now,
+                    now,
+                ),
+            )
+            # The URL/title can contain affiliate/customer information.  The
+            # audit trail records only the opaque local plan ID and outcome.
+            _record_audit(
+                conn,
+                account_id=str(account["id"]),
+                canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+                action="campaign.plan.create",
+                request_id=_request_id(request),
+                target=plan_id,
+                outcome="ok",
+                detail="web-local planning record created",
+            )
+        return envelope(
+            True,
+            "Đã lưu bản nháp kế hoạch trên Web. Chưa có nội dung nào được xuất bản hoặc gửi sang Bot.",
+            data={"item": plan},
+            status_name="draft",
+        )
+
+    return await _run_idempotent(scope, key, operation)
+
+
+@router.patch("/campaigns/{plan_id}")
+async def update_campaign_plan(
+    plan_id: str,
+    payload: CampaignPlanUpdateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Edit account-owned planning details without changing canonical state."""
+    plan_id = _campaign_plan_id(plan_id)
+    key = _require_key(payload.idempotency_key)
+    scope = f"campaign-plan:{account['id']}:{plan_id}:edit"
+
+    async def operation() -> dict:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            current = conn.execute(
+                """SELECT approval_status FROM web_campaign_plans
+                   WHERE id=? AND account_id=?""",
+                (plan_id, str(account["id"])),
+            ).fetchone()
+            if not current:
+                return envelope(
+                    False,
+                    "Không tìm thấy kế hoạch thuộc tài khoản hiện tại.",
+                    status_name="guarded",
+                    error_code="CAMPAIGN_PLAN_NOT_FOUND",
+                )
+            now = utc_now()
+            conn.execute(
+                """UPDATE web_campaign_plans
+                   SET title=?, destination_url=?, platform=?, objective=?, scheduled_for=?, updated_at=?
+                   WHERE id=? AND account_id=?""",
+                (
+                    payload.title,
+                    payload.destination_url,
+                    payload.platform,
+                    payload.objective,
+                    payload.scheduled_for or None,
+                    now,
+                    plan_id,
+                    str(account["id"]),
+                ),
+            )
+            updated = conn.execute(
+                """SELECT id, title, destination_url, platform, objective, scheduled_for,
+                          approval_status, review_note, created_at, updated_at
+                   FROM web_campaign_plans WHERE id=? AND account_id=?""",
+                (plan_id, str(account["id"])),
+            ).fetchone()
+            _record_audit(
+                conn,
+                account_id=str(account["id"]),
+                canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+                action="campaign.plan.update",
+                request_id=_request_id(request),
+                target=plan_id,
+                outcome="ok",
+                detail="web-local planning fields updated",
+            )
+        item = _campaign_plan_public(tuple(updated))
+        status_name = str(item["approval_status"])
+        return envelope(
+            True,
+            "Đã cập nhật chi tiết kế hoạch trên Web. Không có nội dung nào được publish hoặc gửi sang Bot.",
+            data={"item": item},
+            status_name=status_name if status_name in CAMPAIGN_PLAN_STATUSES else "guarded",
+        )
+
+    return await _run_idempotent(scope, key, operation)
+
+
+@router.post("/campaigns/{plan_id}/status")
+async def update_campaign_plan_status(
+    plan_id: str,
+    payload: CampaignPlanStatusRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Advance only the local review/calendar state of an owned plan."""
+    plan_id = _campaign_plan_id(plan_id)
+    key = _require_key(payload.idempotency_key)
+    scope = f"campaign-plan:{account['id']}:{plan_id}:status"
+
+    async def operation() -> dict:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            row = conn.execute(
+                """SELECT id, title, destination_url, platform, objective, scheduled_for,
+                          approval_status, review_note, created_at, updated_at
+                   FROM web_campaign_plans WHERE id=? AND account_id=?""",
+                (plan_id, str(account["id"])),
+            ).fetchone()
+            if not row:
+                return envelope(
+                    False,
+                    "Không tìm thấy kế hoạch thuộc tài khoản hiện tại.",
+                    status_name="guarded",
+                    error_code="CAMPAIGN_PLAN_NOT_FOUND",
+                )
+            current = str(row[6])
+            target = payload.approval_status
+            if target != current and target not in CAMPAIGN_PLAN_TRANSITIONS.get(current, frozenset()):
+                return envelope(
+                    False,
+                    "Không thể chuyển trạng thái kế hoạch theo luồng rà soát nội bộ này.",
+                    status_name="guarded",
+                    error_code="CAMPAIGN_STATUS_TRANSITION_DENIED",
+                )
+            now = utc_now()
+            conn.execute(
+                """UPDATE web_campaign_plans
+                   SET approval_status=?, review_note=?, updated_at=?
+                   WHERE id=? AND account_id=?""",
+                (target, payload.review_note, now, plan_id, str(account["id"])),
+            )
+            updated = conn.execute(
+                """SELECT id, title, destination_url, platform, objective, scheduled_for,
+                          approval_status, review_note, created_at, updated_at
+                   FROM web_campaign_plans WHERE id=? AND account_id=?""",
+                (plan_id, str(account["id"])),
+            ).fetchone()
+            _record_audit(
+                conn,
+                account_id=str(account["id"]),
+                canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+                action="campaign.plan.review" if current == target else "campaign.plan.status",
+                request_id=_request_id(request),
+                target=plan_id,
+                outcome="ok",
+                detail=f"web-local planning status:{current}->{target}",
+            )
+        item = _campaign_plan_public(tuple(updated))
+        return envelope(
+            True,
+            f"Đã cập nhật kế hoạch thành {CAMPAIGN_PLAN_STATUS_LABELS[target]}. Đây vẫn chỉ là trạng thái nội bộ trên Web.",
+            data={"item": item},
+            status_name=target,
+        )
+
+    return await _run_idempotent(scope, key, operation)
 
 
 @router.get("/core/me")
@@ -1389,7 +2199,7 @@ async def create_payment(payload: PaymentRequest, request: Request, account: dic
         return envelope(False, "Mệnh giá nạp không còn thuộc catalog canonical hiện hành.", status_name="failed", error_code="PAYMENT_PACKAGE_NOT_IN_CATALOG")
     key = _require_key(payload.idempotency_key)
     scope = f"payment:{account['id']}"
-    return await _run_idempotent(
+    return await _run_transient_idempotent(
         scope,
         key,
         lambda: _bridge(
@@ -1501,8 +2311,13 @@ async def feature_status(request: Request, account: dict = Depends(require_accou
     return await _bridge("GET", "/internal/v1/features/status", account=account, request=request)
 
 
-async def _feature_action(action: str, feature: str, payload: FeatureRequest, request: Request, account: dict) -> dict:
-    if feature not in FEATURE_BY_KEY:
+async def _feature_action(action: str, feature: str, payload: FeatureRequest, request: Request, account: dict, *, session_id: str = "") -> dict:
+    # Companion/account parity routes live in the public registry so they can
+    # be discovered and handed back to Bot, but they are never generic engine
+    # feature endpoints. Restrict the dynamic draft/estimate/confirm API to
+    # the explicit intake-contract keys rather than letting a route name turn
+    # notes, referral, wallet or Admin metadata into a Bot feature call.
+    if feature not in FEATURE_BY_KEY or feature not in FEATURE_EXECUTION_CANDIDATE_KEYS:
         raise HTTPException(status_code=404, detail="Tính năng chưa có trong parity registry")
     if not _flags()["copyfast_enabled"]:
         return envelope(False, "Web App đang tạm khóa theo feature flag COPYFAST.", status_name="guarded", error_code="WEBAPP_COPYFAST_DISABLED")
@@ -1515,14 +2330,24 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
     if action == "confirm":
         if not _flags()["provider_calls_enabled"]:
             return envelope(False, "Tính năng đang ở chế độ an toàn và chưa gọi engine từ Web.", status_name="guarded", error_code="WEBAPP_PROVIDER_CALLS_DISABLED")
-        if not _web_feature_execution_available():
+        if not _web_feature_execution_available(feature):
             return envelope(False, "Web App chưa có adapter tạo job canonical đã được phê duyệt; chỉ draft và estimate đang khả dụng.", status_name="guarded", error_code="WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED")
-        contract_error = _feature_input_contract_error(feature, values)
+        contract_error = _feature_input_contract_error(feature, values, action=action)
         if contract_error:
             return _feature_input_contract_response(feature, contract_error)
         key = _require_key(key)
+        quote_state = _claim_feature_quote_receipt(
+            receipt=payload.web_quote_receipt,
+            account=account,
+            session_id=session_id,
+            feature=feature,
+            values=values,
+            idempotency_key=key,
+        )
+        if quote_state != "claimed":
+            return _feature_quote_required_response(quote_state)
         scope = f"feature:{account['id']}:{feature}:confirm"
-        return await _run_idempotent(
+        result = await _run_idempotent(
             scope,
             key,
             lambda: _bridge(
@@ -1533,16 +2358,37 @@ async def _feature_action(action: str, feature: str, payload: FeatureRequest, re
                 payload={"input": values, "idempotency_key": key},
             ),
         )
-    contract_error = _feature_input_contract_error(feature, values)
+        # An ambiguous outage retains the same receipt/key pairing for a safe
+        # retry. A known rejected response releases it; a canonical lifecycle
+        # acceptance permanently consumes it.
+        if not _retryable_bridge_response(result):
+            _settle_feature_quote_receipt(
+                receipt=payload.web_quote_receipt,
+                idempotency_key=key,
+                accepted=bool(result.get("ok")) and str(result.get("status") or "") in FEATURE_CONFIRM_ACCEPTED_STATUSES,
+            )
+        return result
+    contract_error = _feature_input_contract_error(feature, values, action=action)
     if contract_error:
         return _feature_input_contract_response(feature, contract_error)
-    return await _bridge(
+    result = await _bridge(
         "POST",
         f"/internal/v1/features/{feature}/{action}",
         account=account,
         request=request,
         payload={"input": values, "idempotency_key": key if key else None},
     )
+    if action == "estimate":
+        return _issue_feature_quote_receipt(result, account=account, session_id=session_id, feature=feature, values=values)
+    return result
+
+
+def _feature_session_id(request: Request, account: dict) -> str:
+    """Derive receipt binding from the signed cookie, never request input."""
+    session = current_session(request)
+    if str(session["account"].get("id") or "") != str(account.get("id") or ""):
+        raise HTTPException(status_code=403, detail="Phiên feature không khớp với tài khoản đã xác thực")
+    return str(session.get("session_id") or "")
 
 
 @router.post("/features/{feature}/draft")
@@ -1552,12 +2398,12 @@ async def feature_draft(feature: str, payload: FeatureRequest, request: Request,
 
 @router.post("/features/{feature}/estimate")
 async def feature_estimate(feature: str, payload: FeatureRequest, request: Request, account: dict = Depends(require_csrf)):
-    return await _feature_action("estimate", feature, payload, request, account)
+    return await _feature_action("estimate", feature, payload, request, account, session_id=_feature_session_id(request, account))
 
 
 @router.post("/features/{feature}/confirm")
 async def feature_confirm(feature: str, payload: FeatureRequest, request: Request, account: dict = Depends(require_csrf)):
-    return await _feature_action("confirm", feature, payload, request, account)
+    return await _feature_action("confirm", feature, payload, request, account, session_id=_feature_session_id(request, account))
 
 
 @router.get("/admin/summary")
@@ -1614,30 +2460,46 @@ async def admin_retry_job(job_id: str, payload: FeatureRequest, request: Request
     # reviewed write adapter has been explicitly enabled.
     account = require_admin_csrf(request)
     job_id = _canonical_route_identifier(job_id, "Mã job")
+    if not _flags()["admin_erp_enabled"]:
+        result = envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
+        _record_admin_write_audit(account, request, "admin.job.retry", job_id, result)
+        return result
     if not _flags()["admin_writes_enabled"]:
-        return envelope(False, "Admin ERP Web hiện chỉ đọc; retry job chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+        result = envelope(False, "Admin ERP Web hiện chỉ đọc; retry job chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+        _record_admin_write_audit(account, request, "admin.job.retry", job_id, result)
+        return result
     account = await require_canonical_admin_csrf(request)
     key = _require_key(payload.idempotency_key or request.headers.get("Idempotency-Key", ""))
-    return await _run_idempotent(
+    result = await _run_idempotent(
         f"admin:{account['id']}:retry:{job_id}",
         key,
         lambda: _bridge("POST", f"/internal/v1/admin/jobs/{job_id}/retry", account=account, request=request, payload={"idempotency_key": key}),
     )
+    _record_admin_write_audit(account, request, "admin.job.retry", job_id, result)
+    return result
 
 
 @router.post("/admin/jobs/{job_id}/refund")
 async def admin_refund_job(job_id: str, payload: FeatureRequest, request: Request):
     account = require_admin_csrf(request)
     job_id = _canonical_route_identifier(job_id, "Mã job")
+    if not _flags()["admin_erp_enabled"]:
+        result = envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
+        _record_admin_write_audit(account, request, "admin.job.refund", job_id, result)
+        return result
     if not _flags()["admin_writes_enabled"]:
-        return envelope(False, "Admin ERP Web hiện chỉ đọc; refund chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+        result = envelope(False, "Admin ERP Web hiện chỉ đọc; refund chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+        _record_admin_write_audit(account, request, "admin.job.refund", job_id, result)
+        return result
     account = await require_canonical_admin_csrf(request)
     key = _require_key(payload.idempotency_key or request.headers.get("Idempotency-Key", ""))
-    return await _run_idempotent(
+    result = await _run_idempotent(
         f"admin:{account['id']}:refund:{job_id}",
         key,
         lambda: _bridge("POST", f"/internal/v1/admin/jobs/{job_id}/refund", account=account, request=request, payload={"idempotency_key": key}),
     )
+    _record_admin_write_audit(account, request, "admin.job.refund", job_id, result)
+    return result
 
 
 @router.post("/admin/features/{feature}/freeze")
@@ -1645,11 +2507,17 @@ async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Re
     account = require_admin_csrf(request)
     if feature not in FEATURE_BY_KEY:
         raise HTTPException(status_code=404, detail="Tính năng chưa có trong parity registry")
+    if not _flags()["admin_erp_enabled"]:
+        result = envelope(False, "Admin ERP trên Web đang tạm khóa theo feature flag.", status_name="guarded", error_code="WEBAPP_ADMIN_ERP_DISABLED")
+        _record_admin_write_audit(account, request, "admin.feature.freeze", feature, result)
+        return result
     if not _flags()["admin_writes_enabled"]:
-        return envelope(False, "Admin ERP Web hiện chỉ đọc; freeze feature chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+        result = envelope(False, "Admin ERP Web hiện chỉ đọc; freeze feature chưa được bật.", status_name="guarded", error_code="WEBAPP_ADMIN_WRITES_DISABLED")
+        _record_admin_write_audit(account, request, "admin.feature.freeze", feature, result)
+        return result
     account = await require_canonical_admin_csrf(request)
     key = _require_key(payload.idempotency_key)
-    return await _run_idempotent(
+    result = await _run_idempotent(
         f"admin:{account['id']}:freeze:{feature}",
         key,
         lambda: _bridge(
@@ -1660,3 +2528,5 @@ async def admin_freeze_feature(feature: str, payload: FreezeRequest, request: Re
             payload={"frozen": payload.frozen, "note": payload.note, "idempotency_key": key},
         ),
     )
+    _record_admin_write_audit(account, request, "admin.feature.freeze", feature, result)
+    return result

@@ -9,11 +9,12 @@ from starlette.requests import Request
 
 from copyfast_bridge import CoreBridgeClient
 from copyfast_api import (
-    FeatureRequest, PaymentRequest, _bridge, _feature_action, _payment_topup_packages,
-    admin_module, admin_retry_job, asset_download, create_payment, job_detail,
-    payment_status, wallet_history,
+    FeatureRequest, FreezeRequest, PaymentRequest, TicketRequest, _bridge, _feature_action, _payment_topup_packages,
+    _project_surface_data,
+    admin_freeze_feature, admin_module, admin_refund_job, admin_retry_job, asset_download, create_payment, job_detail,
+    create_support_ticket, payment_status, wallet_history,
 )
-from copyfast_db import ensure_copyfast_schema
+from copyfast_db import ensure_copyfast_schema, transaction
 
 
 @pytest.mark.anyio
@@ -73,6 +74,13 @@ async def test_retry_only_uses_safe_or_idempotent_requests():
     calls.clear()
     failed_write = await client.request("POST", "/internal/v1/features/chat/draft", payload={"prompt": "x"}, actor_id="telegram-1")
     assert failed_write["error_code"] == "CORE_BRIDGE_UNAVAILABLE"
+    assert len(calls) == 1
+
+    # A download route can mint a temporary delivery credential. It is a GET
+    # syntactically, but it is intentionally not retried as a safe read.
+    calls.clear()
+    failed_delivery = await client.request("GET", "/internal/v1/assets/asset-1/download", actor_id="telegram-1")
+    assert failed_delivery["error_code"] == "CORE_BRIDGE_UNAVAILABLE"
     assert len(calls) == 1
 
 
@@ -230,6 +238,101 @@ async def test_feature_action_preserves_form_input_inside_the_core_contract(monk
         "input": {"prompt": "Video sản phẩm", "duration": "8"},
         "idempotency_key": None,
     }
+
+
+@pytest.mark.anyio
+async def test_feature_confirm_adapter_is_explicitly_gated_and_idempotent(tmp_path, monkeypatch):
+    """Confirm needs a server receipt and may queue only once per receipt/key."""
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "feature-confirm.db"))
+    monkeypatch.setenv("WEB_SESSION_SECRET", "feature-receipt-test-secret")
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_PROVIDER_CALLS_ENABLED", "true")
+    ensure_copyfast_schema()
+    calls = []
+
+    async def fake_bridge(method, path, *, account, request, payload=None, params=None):
+        calls.append({"method": method, "path": path, "account": account, "payload": payload, "params": params})
+        if path.endswith("/estimate"):
+            return {"ok": True, "status": "awaiting_confirm", "message": "Estimate canonical.", "data": {"estimate": {"available": True}}, "error_code": None}
+        return {"ok": True, "status": "queued", "message": "Đã vào queue canonical.", "data": {}, "error_code": None}
+
+    globals_map = _feature_action.__globals__
+    monkeypatch.setitem(globals_map, "_bridge", fake_bridge)
+    monkeypatch.setitem(globals_map, "bridge_configured", lambda: True)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/features/video_single/confirm", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    values = {"prompt": "Video sản phẩm", "tier": "video-standard", "scene_count": 1}
+    payload = FeatureRequest(input=values, idempotency_key="feature-confirm-adapter-0001")
+
+    disabled = await _feature_action("confirm", "video_single", payload, request, account)
+    assert disabled["status"] == "guarded"
+    assert disabled["error_code"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    assert calls == []
+
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", "true")
+    no_feature_allowlist = await _feature_action("confirm", "video_single", payload, request, account, session_id="feature-session-1")
+    assert no_feature_allowlist["error_code"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    assert calls == []
+
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "image_create,unknown_feature")
+    wrong_feature_allowlist = await _feature_action("confirm", "video_single", payload, request, account, session_id="feature-session-1")
+    assert wrong_feature_allowlist["error_code"] == "WEBAPP_FEATURE_JOB_ADAPTER_REQUIRED"
+    assert calls == []
+
+    monkeypatch.setenv("WEBAPP_FEATURE_JOB_ADAPTERS", "video_single")
+    missing = await _feature_action("confirm", "video_single", payload, request, account, session_id="feature-session-1")
+    assert missing["error_code"] == "FEATURE_ESTIMATE_REQUIRED"
+    assert calls == []
+
+    estimate = await _feature_action("estimate", "video_single", FeatureRequest(input=values), request, account, session_id="feature-session-1")
+    receipt = estimate["data"]["web_quote_receipt"]
+    assert isinstance(receipt, str) and len(receipt) >= 32
+    with transaction() as conn:
+        stored = conn.execute("SELECT token_hash, input_digest, session_id FROM web_feature_quote_receipts").fetchone()
+    assert stored is not None
+    assert receipt not in " ".join(str(value) for value in stored)
+    assert "Video sản phẩm" not in " ".join(str(value) for value in stored)
+    assert stored[2] == "feature-session-1"
+
+    with_wrong_session = await _feature_action(
+        "confirm", "video_single",
+        FeatureRequest(input=values, idempotency_key="feature-confirm-adapter-0001", web_quote_receipt=receipt),
+        request, account, session_id="other-session",
+    )
+    assert with_wrong_session["error_code"] == "FEATURE_ESTIMATE_REQUIRED"
+    first = await _feature_action(
+        "confirm", "video_single",
+        FeatureRequest(input=values, idempotency_key="feature-confirm-adapter-0001", web_quote_receipt=receipt),
+        request, account, session_id="feature-session-1",
+    )
+    duplicate = await _feature_action(
+        "confirm", "video_single",
+        FeatureRequest(input=values, idempotency_key="feature-confirm-adapter-0001", web_quote_receipt=receipt),
+        request, account, session_id="feature-session-1",
+    )
+    assert first == duplicate
+    assert first["status"] == "queued"
+    replay = await _feature_action(
+        "confirm", "video_single",
+        FeatureRequest(input=values, idempotency_key="feature-confirm-adapter-0002", web_quote_receipt=receipt),
+        request, account, session_id="feature-session-1",
+    )
+    assert replay["error_code"] == "FEATURE_ESTIMATE_ALREADY_USED"
+    assert [item["path"] for item in calls] == [
+        "/internal/v1/features/video_single/estimate",
+        "/internal/v1/features/video_single/confirm",
+    ]
+    assert calls[1]["payload"] == {"input": values, "idempotency_key": "feature-confirm-adapter-0001"}
+
+
+@pytest.mark.anyio
+async def test_bot_companion_registry_keys_can_never_call_dynamic_engine_feature_routes():
+    """Navigation-only Bot handoffs must not become a generic bridge API."""
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/features/notes/draft", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    with pytest.raises(HTTPException) as denied:
+        await _feature_action("draft", "notes", FeatureRequest(input={"request": "do not forward"}), request, account)
+    assert denied.value.status_code == 404
 
 
 @pytest.mark.anyio
@@ -534,6 +637,36 @@ async def test_feature_bridge_projection_keeps_planning_but_drops_delivery_and_o
     }
 
 
+def test_feature_tracking_reference_is_explicit_feature_bound_and_has_no_delivery_channel() -> None:
+    valid = _project_surface_data({
+        "feature": "video_single",
+        "status": "queued",
+        "tracking": {
+            "id": "production_jobs:42",
+            "status": "queued",
+            "feature": "video_single",
+            "provider_task_id": "private-provider-task",
+            "download_url": "https://private.example/output",
+            "output_path": "C:/private/output.mp4",
+        },
+        "job_id": "must-not-be-inferred",
+    }, "feature")
+    assert valid == {
+        "feature": "video_single",
+        "status": "queued",
+        "tracking": {"id": "production_jobs:42", "status": "queued", "feature": "video_single"},
+    }
+
+    for tracking in (
+        {"id": "production_jobs:42", "status": "queued", "feature": "image_create"},
+        {"id": "../../private", "status": "queued", "feature": "video_single"},
+        {"id": "production_jobs:42", "status": "guarded", "feature": "video_single"},
+        {"id": "production_jobs:42", "status": "queued", "feature": "unknown_feature"},
+    ):
+        projected = _project_surface_data({"feature": "video_single", "tracking": tracking}, "feature")
+        assert "tracking" not in projected
+
+
 @pytest.mark.anyio
 async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_call(tmp_path, monkeypatch):
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "idempotency.db"))
@@ -544,7 +677,16 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
     async def fake_bridge(method, path, *, account, request, payload=None, params=None):
         calls.append({"method": method, "path": path, "payload": payload})
         await asyncio.sleep(0.03)
-        return {"ok": True, "status": "awaiting_confirm", "message": "ok", "data": {"payment_id": "p-1"}, "error_code": None}
+        return {
+            "ok": True,
+            "status": "awaiting_confirm",
+            "message": "ok",
+            "data": {
+                "payment_id": "p-1", "order_code": "order-1", "amount_vnd": 10000,
+                "xu": 100, "checkout_url": "https://pay.payos.vn/checkout/opaque-one-time",
+            },
+            "error_code": None,
+        }
 
     monkeypatch.setitem(create_payment.__globals__, "_bridge", fake_bridge)
     monkeypatch.setitem(create_payment.__globals__, "_payment_topup_packages", lambda: [{
@@ -559,9 +701,72 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
     )
     assert len(calls) == 1
     assert {first["error_code"], second["error_code"]} == {None, "IDEMPOTENCY_IN_PROGRESS"}
-    cached = await create_payment(payload, request, account)
-    assert cached["data"] == {"payment_id": "p-1"}
-    assert len(calls) == 1
+    # Payment results (including order, Xu and checkout URL) are never cached
+    # in Web SQLite. A later retry goes to Bot-side durable idempotency.
+    with transaction() as conn:
+        stored = conn.execute("SELECT response_json FROM web_idempotency WHERE scope LIKE 'payment:%'").fetchall()
+    assert stored == []
+    replay = await create_payment(payload, request, account)
+    assert replay["data"]["checkout_url"] == "https://pay.payos.vn/checkout/opaque-one-time"
+    assert len(calls) == 2
+
+
+def test_payment_projection_keeps_only_a_strictly_vetted_payos_checkout_url() -> None:
+    raw = {
+        "payment_id": "payment-1",
+        "order_code": "order-1",
+        "amount_vnd": 10000,
+        "xu": 100,
+        "status": "awaiting_confirm",
+        "checkout_url": "https://pay.payos.vn/checkout/opaque?source=bot",
+        "provider": "private-provider",
+        "bank_account": "must-not-reach-browser",
+        "raw_response": {"secret": "must-not-reach-browser"},
+    }
+    projected = _project_surface_data(raw, "payment")
+    assert projected == {
+        "payment_id": "payment-1",
+        "order_code": "order-1",
+        "amount_vnd": 10000,
+        "xu": 100,
+        "status": "awaiting_confirm",
+        "checkout_url": "https://pay.payos.vn/checkout/opaque?source=bot",
+    }
+    for invalid in (
+        "http://pay.payos.vn/checkout/opaque",
+        "https://pay.payos.vn.evil.example/checkout/opaque",
+        "https://user:pass@pay.payos.vn/checkout/opaque",
+        "https://pay.payos.vn:444/checkout/opaque",
+        "https://pay.payos.vn/checkout/opaque#fragment",
+    ):
+        assert "checkout_url" not in _project_surface_data({"checkout_url": invalid}, "payment")
+
+
+@pytest.mark.anyio
+async def test_support_rejects_manual_payment_proof_before_idempotency_or_bridge(monkeypatch):
+    calls = []
+
+    async def fake_bridge(*args, **kwargs):
+        calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
+
+    monkeypatch.setitem(create_support_ticket.__globals__, "_bridge", fake_bridge)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/support/tickets", "headers": []})
+    account = {"id": "web-account", "canonical_user_id": "telegram-1"}
+    for detail in (
+        "TXID: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "Số tài khoản: 12345678901234567890",
+        "Tôi sẽ gửi ảnh bill ở đây",
+    ):
+        with pytest.raises(HTTPException) as error:
+            await create_support_ticket(
+                TicketRequest(subject="Nạp thủ công", detail=detail, idempotency_key="manual-proof-block-0001"),
+                request,
+                account,
+            )
+        assert error.value.status_code == 422
+        assert "/thucong" in str(error.value.detail)
+    assert calls == []
 
 
 @pytest.mark.anyio
@@ -648,7 +853,8 @@ async def test_web_payment_creation_rejects_non_topup_types_before_the_bridge(mo
 
 
 @pytest.mark.anyio
-async def test_admin_write_gate_does_not_contact_canonical_bridge_when_disabled(monkeypatch):
+async def test_admin_write_gate_does_not_contact_canonical_bridge_when_disabled(tmp_path, monkeypatch):
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "admin-write-disabled.db"))
     local_checks = []
     canonical_checks = []
     bridge_calls = []
@@ -675,6 +881,91 @@ async def test_admin_write_gate_does_not_contact_canonical_bridge_when_disabled(
     assert local_checks == [True]
     assert canonical_checks == []
     assert bridge_calls == []
+    with transaction() as conn:
+        audit = conn.execute("SELECT action, target, outcome FROM web_audit_events").fetchall()
+    assert audit == [("admin.job.retry", "job-1", "denied")]
+
+
+@pytest.mark.anyio
+async def test_admin_erp_gate_short_circuits_writes_before_canonical_role_check(tmp_path, monkeypatch):
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "admin-erp-disabled.db"))
+    monkeypatch.setenv("WEBAPP_ADMIN_ERP_ENABLED", "false")
+    monkeypatch.setenv("WEBAPP_ADMIN_WRITES_ENABLED", "true")
+    local_checks = []
+    canonical_checks = []
+    bridge_calls = []
+
+    def fake_local_admin(_request):
+        local_checks.append(True)
+        return {"id": "web-admin", "canonical_user_id": "telegram-admin", "role": "admin"}
+
+    async def fake_canonical_admin(_request):
+        canonical_checks.append(True)
+        return {"id": "web-admin", "canonical_user_id": "telegram-admin", "role": "admin"}
+
+    async def fake_bridge(*args, **kwargs):
+        bridge_calls.append((args, kwargs))
+        return {"ok": True, "status": "completed", "message": "unexpected", "data": {}, "error_code": None}
+
+    globals_map = admin_retry_job.__globals__
+    monkeypatch.setitem(globals_map, "require_admin_csrf", fake_local_admin)
+    monkeypatch.setitem(globals_map, "require_canonical_admin_csrf", fake_canonical_admin)
+    monkeypatch.setitem(globals_map, "_bridge", fake_bridge)
+    request = Request({"type": "http", "method": "POST", "path": "/api/v1/admin/jobs/job-1/retry", "headers": []})
+    result = await admin_retry_job("job-1", FeatureRequest(input={}, idempotency_key="admin-erp-gate-0001"), request)
+    assert result["error_code"] == "WEBAPP_ADMIN_ERP_DISABLED"
+    assert local_checks == [True]
+    assert canonical_checks == []
+    assert bridge_calls == []
+
+
+@pytest.mark.anyio
+async def test_admin_write_adapters_require_local_and_canonical_role_then_preserve_idempotency(tmp_path, monkeypatch):
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "admin-write.db"))
+    monkeypatch.setenv("WEBAPP_ADMIN_WRITES_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_COPYFAST_ENABLED", "true")
+    ensure_copyfast_schema()
+    local_checks = []
+    canonical_checks = []
+    calls = []
+
+    def fake_local_admin(_request):
+        local_checks.append(True)
+        return {"id": "web-admin", "canonical_user_id": "telegram-admin", "role": "admin"}
+
+    async def fake_canonical_admin(_request):
+        canonical_checks.append(True)
+        return {"id": "web-admin", "canonical_user_id": "telegram-admin", "role": "admin"}
+
+    async def fake_bridge(method, path, *, account, request, payload=None, params=None, admin_read=False):
+        calls.append({"method": method, "path": path, "account": account, "payload": payload, "params": params, "admin_read": admin_read})
+        return {"ok": True, "status": "queued", "message": "canonical accepted", "data": {"id": path.rsplit("/", 1)[0]}, "error_code": None}
+
+    globals_map = admin_retry_job.__globals__
+    monkeypatch.setitem(globals_map, "require_admin_csrf", fake_local_admin)
+    monkeypatch.setitem(globals_map, "require_canonical_admin_csrf", fake_canonical_admin)
+    monkeypatch.setitem(globals_map, "_bridge", fake_bridge)
+    retry_request = Request({"type": "http", "method": "POST", "path": "/api/v1/admin/jobs/job-1/retry", "headers": []})
+    retry = await admin_retry_job("job-1", FeatureRequest(input={}, idempotency_key="admin-retry-key-0001"), retry_request)
+    retry_duplicate = await admin_retry_job("job-1", FeatureRequest(input={}, idempotency_key="admin-retry-key-0001"), retry_request)
+    refund = await admin_refund_job("job-1", FeatureRequest(input={}, idempotency_key="admin-refund-key-0001"), retry_request)
+    freeze = await admin_freeze_feature("video_single", FreezeRequest(frozen=True, note="Provider maintenance", idempotency_key="admin-freeze-key-0001"), retry_request)
+    assert retry["ok"] is retry_duplicate["ok"] is refund["ok"] is freeze["ok"] is True
+    assert local_checks == [True, True, True, True]
+    assert canonical_checks == [True, True, True, True]
+    assert [call["path"] for call in calls] == [
+        "/internal/v1/admin/jobs/job-1/retry",
+        "/internal/v1/admin/jobs/job-1/refund",
+        "/internal/v1/admin/features/video_single/freeze",
+    ]
+    assert calls[0]["payload"] == {"idempotency_key": "admin-retry-key-0001"}
+    assert calls[1]["payload"] == {"idempotency_key": "admin-refund-key-0001"}
+    assert calls[2]["payload"] == {"frozen": True, "note": "Provider maintenance", "idempotency_key": "admin-freeze-key-0001"}
+    assert all(call["account"]["canonical_user_id"] == "telegram-admin" for call in calls)
+    with transaction() as conn:
+        audit = conn.execute("SELECT action, target, outcome FROM web_audit_events").fetchall()
+    assert sorted(row[0] for row in audit) == ["admin.feature.freeze", "admin.job.refund", "admin.job.retry", "admin.job.retry"]
+    assert all(row[2] == "ok" for row in audit)
 
 
 @pytest.mark.anyio

@@ -6,8 +6,6 @@ Only environment variable names are recorded. Values are never read and secret-s
 
 - `ADMIN_ID`
 - `ADMIN_ID`
-- `ADMIN_ID`
-- `ADMIN_ID`
 - `ADMIN_IDS`
 - `ADMIN_IDS`
 - `ADMIN_IDS`
@@ -21,12 +19,9 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `BOT_TOKEN`
 - `BOT_TOKEN`
 - `BOT_TOKEN`
-- `BOT_TOKEN`
-- `BOT_TOKEN`
 - `BOT_USERNAME`
 - `BOT_USERNAME`
 - `CHANNEL_LINK`
-- `CLAUDE_API_KEY`
 - `CLAUDE_API_KEY`
 - `CLIPDROP_API_KEY`
 - `COBALT_API_KEY`
@@ -43,7 +38,6 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `DB_FILE`
 - `DB_PATH`
 - `DB_PATH`
-- `DEEPGRAM_API_KEY`
 - `DEFAULT_TTS_FEMALE_VOICE`
 - `DEFAULT_TTS_MALE_VOICE`
 - `DEPLOYMENT_ID`
@@ -52,14 +46,11 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `FFMPEG_PATH`
 - `FINANCE_TRACKING_START_DATE`
 - `FISH_AUDIO_KEY`
-- `FISH_AUDIO_KEY`
 - `FOREIGN_XU_ROUNDING_MODE`
 - `FREESOUND_API_KEY`
 - `FREESOUND_CLIENT_ID`
 - `FREESOUND_CLIENT_SECRET`
 - `FREE_PROVIDER_ORDER`
-- `GEMINI_API_KEY`
-- `GEMINI_API_KEY`
 - `GEMINI_API_KEY`
 - `GEMINI_IMAGE_EDIT_MODEL`
 - `GEMINI_MODEL_FREE`
@@ -275,7 +266,6 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `RAPIDAPI_KEY`
 - `REFERENCE_VIDEO_DIR`
 - `REMOVEBG_API_KEY`
-- `REMOVEBG_API_KEY`
 - `RENDER_SERVICE_ID`
 - `REPLICATE_API_TOKEN`
 - `RUNWAY_API_KEY`
@@ -390,18 +380,18 @@ Only environment variable names are recorded. Values are never read and secret-s
 
 | Provider | Occurrences | Sample files |
 | --- | --- | --- |
-| PayOS | 686 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, config/pricing_matrix_draft.json |
+| PayOS | 684 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
 | Key4U | 319 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_PRICING_KNOWLEDGE.md, docs/provider_backlog_notes.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md |
 | ShopAIKey | 516 | bot.py, docs/COMMAND_REGISTRY.md, docs/data_persistence_plan.md, docs/LIVE_BOT_QA_REPORT.md, docs/provider_backlog_notes.md |
 | MiniMax | 162 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md, docs/reports/TOAN_AAS_BOT_FULL_AUDIT_REPORT_20260614.md |
-| Deepgram | 100 | ARCHITECTURE.md, bot.py, docs/API_KEYS_SETUP.md, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md |
+| Deepgram | 94 | ARCHITECTURE.md, bot.py, docs/API_KEYS_SETUP.md, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md |
 | DeepL | 60 | bot.py, CODEX_NEXT_TASK.md, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Gemini | 207 | ARCHITECTURE.md, bot.py, code hoàn chỉnh của claude.py, CODEX_NEXT_TASK.md, docs/AI_PROVIDER_ROUTER.md |
+| Gemini | 198 | ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/AI_PROVIDER_ROUTER.md, docs/API_KEYS_SETUP.md |
 | OpenAI | 203 | ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/AI_PROVIDER_ROUTER.md, docs/CHAT_AI_AUDIT.md |
 | ElevenLabs | 67 | bot.py, docs/reports/TOAN_AAS_PRODUCT_COST_AND_PRICING_REPORT_20260620.md, docs/STABLE_REVENUE_BOT_STATUS.md, handlers/mxh_handler.py, handlers/tools_handler.py |
-| Fish Audio | 128 | ARCHITECTURE.md, bot.py, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md, docs/CURRENT_STATE.md |
+| Fish Audio | 127 | ARCHITECTURE.md, bot.py, docs/COMMAND_REGISTRY.md, docs/COST_CONTROL.md, docs/CURRENT_STATE.md |
 | Suno | 121 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/provider_backlog_notes.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md |
-| Kling | 107 | bot.py, config/pricing_matrix_draft.json, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md |
+| Kling | 106 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md, docs/reports/TOAN_AAS_ENGINE_ROADMAP_VOICE_MUSIC_SUBTITLE_VIDEO.md |
 | Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Telegram | 620 | AGENTS.md, ARCHITECTURE.md, bot.py, code hoàn chỉnh của claude.py, CODEX_NEXT_TASK.md |
+| Telegram | 608 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |

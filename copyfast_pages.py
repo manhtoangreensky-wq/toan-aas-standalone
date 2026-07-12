@@ -38,7 +38,11 @@ def _title_for(path: str) -> str:
             return item.title
     aliases = {
         "/login": "Đăng nhập", "/register": "Tạo tài khoản", "/onboarding": "Bắt đầu với TOAN AAS",
+        "/campaigns": "Campaign Planner", "/calendar": "Content Calendar", "/approvals": "Self-review Queue",
         "/image": "Studio ảnh", "/video": "Studio video", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
+        "/features/content": "Content & Chat", "/features/image": "Image Studio", "/features/video": "Video Studio",
+        "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & ngôn ngữ",
+        "/features/documents": "Documents & PDF",
     }
     return aliases.get(normalized, "TOAN AAS")
 

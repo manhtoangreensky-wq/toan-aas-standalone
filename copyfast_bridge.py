@@ -12,6 +12,7 @@ import hashlib
 import hmac
 import json
 import os
+import re
 import time
 import uuid
 from typing import Any
@@ -23,6 +24,7 @@ PUBLIC_GUARD = "Hệ thống đang bảo trì/nâng cấp. TOAN AAS chưa xử l
 _MAX_SAFE_DATA_DEPTH = 6
 _MAX_SAFE_DATA_ITEMS = 80
 _MAX_SAFE_STRING_LENGTH = 4_000
+_ASSET_DELIVERY_ROUTE_RE = re.compile(r"^/internal/v1/assets/[^/]+/download$")
 _SENSITIVE_KEY_PARTS = frozenset({
     "token", "secret", "apikey", "authorization", "signature", "traceback", "stack",
     "outputpath", "filesystempath", "providertask", "rawresponse", "privatekey",
@@ -103,9 +105,16 @@ class CoreBridgeClient:
         _ = request_id
         body = json.dumps(payload, separators=(",", ":"), ensure_ascii=False).encode("utf-8") if payload is not None else b""
         # Retrying an unsafe write could create a duplicate payment, credit or
-        # job. GET is safe to retry; POST is retried only when callers supply
-        # the canonical idempotency key enforced by both bridge layers.
-        retry_safe = method.upper() == "GET" or bool((payload or {}).get("idempotency_key"))
+        # job. Most read-only GETs are safe to retry, but an asset download GET
+        # can mint a fresh short-lived signed delivery URL and write an audit
+        # decision in the canonical Bot. Treat that route as a credential
+        # issuance boundary rather than an idempotent read. POST is retried
+        # only when callers supply the canonical idempotency key enforced by
+        # both bridge layers.
+        retry_safe = (
+            (method.upper() == "GET" and not _ASSET_DELIVERY_ROUTE_RE.fullmatch(normalized_path))
+            or bool((payload or {}).get("idempotency_key"))
+        )
         attempts = 2 if retry_safe else 1
         response: httpx.Response | None = None
         for attempt in range(attempts):

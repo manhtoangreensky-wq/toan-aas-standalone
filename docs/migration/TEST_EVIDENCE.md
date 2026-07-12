@@ -7,14 +7,18 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `65 passed` |
+| Web App | `python -m pytest -q` | `167 passed, 1 warning` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
+| Web App | local Node check of Growth AI/Campaign report command builder | passed: fixed command, 1–90 day, platform, campaign-ID, goal and format allowlists accept canonical values and reject tampered input. |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
 | Bot bridge | `python -m py_compile local_worker.py`, `webapp_core_bridge.py` | passed |
 | Bot baseline | `python -m py_compile bot.py` | timed out after 124s in this local runtime; process stopped, no provider/import flow was executed |
-| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 786 commands, 1,928 callback-data values, 133 Web routes; 100% classified; 0 unmapped routes; 0 missing bridge-route gap |
-| Portal visual smoke | local dashboard at desktop and 390px mobile viewport | prior launchpad smoke passed; the current Web-only Job/Onboarding/Admin refresh was not re-run because this session's browser policy refused the local URL. Syntax checks and presentation-contract tests passed instead. |
+| Static audit | `audit_bot_to_web.py` against the local P0 bridge worktree | 774 canonical commands, 1,925 callback-data values, 150 Web routes; 100% mapping coverage; 100% guarded-surface coverage; 0 unmapped routes; 30 static Bot bridge routes match 28 Web request shapes with 0 unmatched requests; the static Telegram callback contract is present with 0 reported gaps and both sides use the same body/timestamp/request-ID/path HMAC material shape. Preflight records requested baseline `b29d…` (where `webapp_core_bridge.py` is missing), audited bridge checkout `32d6…`, and the local-only drift (6 ahead / 0 behind) without fetching, merging or executing Bot code. The audit excludes clearly named noncanonical Bot drafts, reads only routes reachable from the signed `app.py` entrypoint, and propagates direct static admin guards so unmounted legacy decorators and neutral-named admin reports are not mistaken for customer parity. Personal Bot commands, Growth AI/campaign report, and the membership/status/tools/media command groups map to dedicated guarded/read-only Web hubs. |
+| Portal visual smoke | local public landing and login at desktop and 390px mobile viewport | passed: the landing and unauthenticated login both hide the workspace sidebar/header without a layout gap, remain within the mobile viewport, expose no raw Telegram-ID field, and explain the Bot-adapter release gate when Telegram linking is not deployed. No live account, Telegram, provider, payment or Bot call was made. |
+| Campaign Planner visual smoke | local mock account + signed one-time Telegram callback | passed: register/login, browser-bound Telegram completion, `/campaigns`, create plan, timeline/card render and `draft → review` self-review update all completed. The mock used a temporary local database and HMAC test credential only; no live Bot, provider, PayOS or production account was touched. |
+| Content Calendar visual smoke | same local mock at desktop and 390px mobile viewport | passed: the account-owned scheduled plan appears in the month grid, links back to its planner card, and mobile exposes a deliberately horizontally scrollable seven-day grid without clipping the app shell. Calendar and Self-review Queue carry no publish, reminder, provider, admin-approval or payment action. |
+| Manual top-up UX smoke | same local mock, bridge/payment disabled | passed: the portal cleanly separates PayOS QR handoff from manual VND/international guidance, exposes `/thucong` only as a Bot handoff, and renders pending/approval meanings without a Web bill, TXID, QR, bank-account, upload or credit action. |
 
 ## Full bot-suite baseline result
 
@@ -51,9 +55,39 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   raw identity or arbitrary redirect URL is trusted from the browser.
 - Every Admin ERP HTML **and JSON** endpoint requires both a signed session
   and a current canonical bot role; a stale Web role cache is rejected.
+- Telegram Login OIDC is disabled unless BotFather Client ID/Secret and the
+  Railway flag are configured. Its authorization code, PKCE verifier, nonce,
+  ID token and raw profile ID stay server-side; fixed JWKS/RS256 verification
+  produces only an HMAC-protected external identity. When that account later
+  links the Bot, the signed Bot identity must match or the request is
+  rejected. Existing Bot-linked accounts with the same signed Telegram user
+  can use Telegram Login without a duplicate Web account.
 - Telegram link codes are one-time and expiring. The bot-to-Web callback has
   a directional bearer token, HMAC-bound body/timestamp/request ID and a
-  persistent nonce; private bridge requests also reject replays.
+  persistent nonce retained through the accepted clock-skew window; private
+  bridge requests also reject replays. Callback JSON is bounded and parsed
+  only after HMAC verification, and its audit record uses the signed callback
+  request ID. A successful Bot callback records pending proof only: the exact
+  signed browser session that created the code must finish a CSRF-protected
+  completion before a canonical Telegram identity is bound. A different or
+  logged-out browser session cannot inspect or complete the pending link.
+  The Portal distinguishes Web-only setup from an actually observed, accepted
+  signed Bot callback without exposing a Telegram ID, code, account, request
+  ID or secret. The Portal also requires the explicit non-secret
+  `WEBAPP_TELEGRAM_BOT_LINK_ENABLED=true` release gate before issuing a
+  customer code, so a Web-only release cannot advertise a Bot link the
+  deployed Bot does not yet understand. Disabling the gate also rejects a
+  valid in-flight signed callback without consuming its one-time code.
+- The static preflight records the actual local Bot checkout and its
+  ahead/behind relation to the frozen baseline. In the current audit, the
+  callback bridge exists only in a separate checkout six commits ahead of
+  `b29…`; this is evidence of a deployment boundary, not a claim that the
+  production Bot already has the callback. No Bot source or runtime was
+  changed in the Web-only work.
+- Growth AI and Campaign Report now offer professional filter forms in the
+  signed Web portal, but they only copy a closed-schema command for the user
+  to submit to Bot. Web accepts no free command text, does not calculate
+  metrics/revenue, issue a report file, charge Xu or decide refunds.
 - Every private-bridge retry now signs a fresh server-side nonce while keeping
   the canonical idempotency key. Nested runtime/provider credentials, task IDs
   and filesystem paths are recursively redacted before an envelope reaches a
@@ -145,6 +179,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   job/asset/signed-delivery adapter exists.
 - Provider/payment switches are disabled by default. A guarded route never
   fabricates a completed output or credits Xu.
+- A global feature-job flag is only a circuit breaker. Even after it is
+  explicitly enabled, Web confirm requires the exact feature key in
+  `WEBAPP_FEATURE_JOB_ADAPTERS`; unknown, read-only, admin and unrelated
+  feature keys remain guarded in both the server and Portal UI.
 - Payment UI consumes a future canonical response only: checkout links must be
   HTTPS PayOS URLs, and the Web App can poll a canonical payment ID but never
   creates a webhook, finalizes payment or credits Xu. Ticket/payment submits
@@ -177,9 +215,39 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   claiming Web can read a bill/TXID or manual-deposit record. The current P0
   bridge has no owner-scoped, redacted manual-deposit history adapter, so the
   only Web-side signal after approval is the canonical wallet history.
+- Campaign Planner is an explicitly Web-owned planning board, not a Bot
+  campaign mirror. `GET/POST/PATCH /api/v1/campaigns` and the local self-review
+  transition require a signed session, CSRF, per-account ownership and
+  idempotency. The database/audit contract never stores the plan title or
+  destination URL in audit detail; the server does not fetch destination URLs,
+  publish, schedule automation, call a provider, create a job, change Xu or
+  touch PayOS. Its state `approved` means only ready in the personal Web plan,
+  never staff/canonical approval; there is no `published` state.
 - A customer may query an ownership-checked payment order code through the
   signed Web API **for PayOS orders only**. Pending orders use bounded
   signed-GET polling only; polling neither calls PayOS nor changes a
   wallet/ledger state. The legacy billing,
   manual-topup and webhook routes are asserted unmounted so there is no second
   PayOS creator, webhook, order store or Xu writer in `app.py`.
+- The public home is a responsive product entry surface: an anonymous visitor
+  sees only static studio/workflow/security copy and safe local login links;
+  a signed user is redirected to onboarding or Dashboard. It makes no API,
+  provider, wallet or identity action and does not replace the signed Portal.
+- Video finalization and mux now have an explicit navigator matching the Bot
+  `vfinal` branches (voice, music, subtitle/dubbing, logo, preview/export).
+  It only links to registered workflows and Job/Asset views; watermark/mux
+  stays guarded until the Bot exposes a canonical job, validation and private
+  delivery adapter.
+- Personal Bot functions that remain Bot-owned now have protected, explicit
+  companion pages instead of being silently collapsed into Dashboard: Notes &
+  Memory, Reminders, Referrals, Rewards, Community and Bot Guide. They preserve
+  the signed Web-session/onboarding gate and offer only an allowlisted command
+  copy plus an optional `t.me` handoff derived from the public `BOT_USERNAME`.
+  They neither mirror Bot data nor move canonical Telegram identity, wallet or
+  job state into the browser.
+- Guarded feature workspaces now offer only six reviewed, zero-argument Bot
+  entry commands by family: `/film`, `/image_tools`, `/create_media`,
+  `/music`, `/translate` and `/doc_tools`. The Portal never appends a prompt,
+  staged upload ID, Telegram identity, quote, Xu amount, session or token; all
+  other family entrypoints—including Voice—remain on the safe generic Bot menu
+  until a customer-safe command and canonical bridge adapter exist.
