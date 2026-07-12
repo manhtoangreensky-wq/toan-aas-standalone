@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `172 passed, 1 warning` |
+| Web App | `python -m pytest -q` | `177 passed, 1 warning` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Web App CI definition | `.github/workflows/webapp-quality.yml` locally mirrored and GitHub Actions | passed in an isolated clean environment using `requirements-dev.txt`: `194 passed, 1 warning`, covering asyncio and the explicitly compatible Trio backend. GitHub Actions runs `29196146374` and `29196144936` passed for commit `d96273d` after the checkout was changed to retain the parent commit required by the whitespace gate. The workflow installs the pinned test dependencies, compiles Python, checks three Portal JavaScript files, runs pytest and checks whitespace for each `main`/`feature/**` push and PR. |
@@ -22,6 +22,8 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Campaign Planner visual smoke | local mock account + signed one-time Telegram callback | passed: register/login, browser-bound Telegram completion, `/campaigns`, create plan, timeline/card render and `draft → review` self-review update all completed. The mock used a temporary local database and HMAC test credential only; no live Bot, provider, PayOS or production account was touched. |
 | Campaign Planner detail | owner-scope API/route tests + full Web suite | passed: `/campaigns/{uuid}` serves only a strict UUID-shaped Web planning route; `GET /api/v1/campaigns/{id}` returns the same bounded local projection only to its signed owner. Invalid IDs receive `REQUEST_INVALID`; another signed account receives the non-enumerating guarded `CAMPAIGN_PLAN_NOT_FOUND` envelope. Detail edits and self-review reuse the existing CSRF/idempotency flow and do not resolve a Bot campaign. |
 | Account Activity | owner-scope/API/UI contract tests + full Web suite | passed: signed users, including pre-Telegram-link accounts, can open `/account/activity`. `GET /api/v1/account/activity` selects only the owner’s `action`, `outcome` and timestamp, projects a bounded generic label/category/status, and never returns raw audit target/detail/request ID/canonical Telegram ID. Cross-account rows, credentials and payment-like strings remain absent. |
+| Workspace Drafts | CRUD/ownership/safety/API/UI contract tests + full Web suite | passed: signed accounts, including pre-Telegram-link accounts, may save up to 100 active scalar briefs and resume them into the matching registered feature form. Resume preserves only an opaque in-memory draft UUID, so users can update that same owner-scoped draft or deliberately save a new copy. Server-declared catalog metadata prevents history/read-only surfaces from exposing a dead save action. All writes are CSRF/idempotent and owner-scoped; the suite rejects nested data, files/upload IDs, Voice Vault profile IDs, quote receipts, identity/wallet/payment/provider/job/output fields, credentials/card/OTP/manual-payment proof, and cross-account reads. |
+| Railway persistence mount | production guard unit test + full Web suite | passed: an explicit `WEBAPP_SESSION_DB_PATH` remains the priority; otherwise the Web service accepts `RAILWAY_VOLUME_MOUNT_PATH` only when it is absolute and exists locally. A relative, absent or merely inherited mount value cannot bypass the production persistence guard. |
 | Content Calendar visual smoke | same local mock at desktop and 390px mobile viewport | passed: the account-owned scheduled plan appears in the month grid, links back to its planner card, and mobile exposes a deliberately horizontally scrollable seven-day grid without clipping the app shell. Calendar and Self-review Queue carry no publish, reminder, provider, admin-approval or payment action. |
 | Manual top-up UX smoke | same local mock, bridge/payment disabled | passed: the portal cleanly separates PayOS QR handoff from manual VND/international guidance, exposes `/thucong` only as a Bot handoff, and renders pending/approval meanings without a Web bill, TXID, QR, bank-account, upload or credit action. |
 | Dashboard Work Queue smoke | local signed account + HMAC-only Bot-link mock, desktop and 390px mobile viewport | passed: the Dashboard derives processing jobs, delivery-ready assets, failed jobs and `waiting_user` tickets only from owner-scoped canonical responses. Empty data stays an honest zero state; the panel creates no notification, job, ticket, payment, provider or browser-side delivery state. No live Bot, provider, PayOS or Railway request was made. |
@@ -107,8 +109,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   approved.
 - Production session detection is consistent across `APP_ENV`, `ENVIRONMENT`
   and Railway environment markers; startup fails without a real production
-  session secret and always emits Secure cookies. Credentialed CORS rejects
-  wildcards and non-HTTPS remote origins.
+  session secret and always emits Secure cookies. The Web session database can
+  use an existing, absolute Railway volume mount, but never treats an absent,
+  relative or cross-service mount declaration as persistence. Credentialed
+  CORS rejects wildcards and non-HTTPS remote origins.
 - Linking a Telegram identity records the initiating session and revokes every
   other session for that Web account, so stale sessions cannot inherit a newly
   bound canonical identity. A canonical Telegram identity cannot be linked to
@@ -237,6 +241,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   standalone Web audit table. It exposes at most 50 normalized Web activity
   labels and never exposes raw audit action/target/detail/request identifiers,
   canonical Telegram identity, or Bot/ledger/payment/provider history.
+- Workspace Drafts are separate Web-owned brief persistence. They preserve
+  only bounded scalar values and require the exact registered form to resume;
+  file/staging/profile/quote/job/payment/provider state is neither stored nor
+  reconstructed. No Workspace Draft endpoint calls the private Bot bridge.
 - A customer may query an ownership-checked payment order code through the
   signed Web API **for PayOS orders only**. Pending orders use bounded
   signed-GET polling only; polling neither calls PayOS nor changes a

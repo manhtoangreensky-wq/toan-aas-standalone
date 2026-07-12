@@ -10,6 +10,18 @@ Production Web App for `app.toanaas.vn`.
 - Customer portal: `/dashboard`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
+## Required Railway production configuration
+
+- `WEB_SESSION_SECRET` is required: generate one long random value in the
+  Railway **Variables** page. It signs Web sessions and must never be placed
+  in Git, browser JavaScript, tickets or logs. The app intentionally refuses
+  to start without it in production instead of issuing forgeable sessions.
+- Persist the Web-owned session database on the service's Railway volume with
+  an absolute `WEBAPP_SESSION_DB_PATH`, an existing
+  `RAILWAY_VOLUME_MOUNT_PATH`, or the standard persistent `/data` mount. See
+  [`TELEGRAM_WEB_CONNECTION.md`](docs/migration/TELEGRAM_WEB_CONNECTION.md)
+  for the full non-secret configuration contract.
+
 ## Authority boundary
 
 The Telegram Bot is the sole authority for Telegram identity, Xu ledger,

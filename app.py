@@ -274,7 +274,7 @@ async def page(page_path: str, request: Request):
             return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
         account = session["account"]
         linked = bool(account.get("canonical_user_id"))
-        if not linked and normalized not in {"/onboarding", "/account", "/account/activity"}:
+        if not linked and normalized not in {"/onboarding", "/account", "/account/activity", "/workspace"}:
             # Preserve the intended local workflow through the Telegram link.
             # The continuation is validated again before it is ever used.
             return RedirectResponse(f"/onboarding?next={quote(normalized, safe='/')}", status_code=307)

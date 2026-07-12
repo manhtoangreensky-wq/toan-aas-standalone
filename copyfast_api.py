@@ -145,8 +145,35 @@ ACCOUNT_ACTIVITY_LABELS = {
     "campaign.plan.update": ("Cập nhật kế hoạch Web", "Campaign Planner"),
     "campaign.plan.review": ("Tự rà soát kế hoạch Web", "Campaign Planner"),
     "campaign.plan.status": ("Cập nhật trạng thái kế hoạch Web", "Campaign Planner"),
+    "workspace.draft.create": ("Lưu bản nháp Web", "AI Studio"),
+    "workspace.draft.update": ("Cập nhật bản nháp Web", "AI Studio"),
+    "workspace.draft.archive": ("Lưu trữ bản nháp Web", "AI Studio"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
+
+# Workspace drafts deliberately retain only scalar planning choices that the
+# customer typed into a feature form.  File controls, Bot upload/profile IDs,
+# quote receipts, idempotency keys and every authority/provider/payment/job
+# field remain outside this local store and must be selected again through the
+# canonical flow after a draft is resumed.
+WORKSPACE_DRAFT_STATES = frozenset({"active", "archived"})
+# Assigned once the feature execution candidate set has been declared below.
+WORKSPACE_DRAFT_ALLOWED_FEATURES: frozenset[str]
+WORKSPACE_DRAFT_ALLOWED_FIELDS = frozenset({
+    "request", "prompt", "brief", "script", "instructions", "notes",
+    "template", "platform", "format", "duration", "style", "goal",
+    "tier", "scene_count", "duration_seconds", "display_name", "mode",
+    "song_length_mode", "item_count", "output_format", "target_language",
+    "operation", "page_count", "page_range", "speed",
+})
+WORKSPACE_DRAFT_FORBIDDEN_FIELDS = frozenset({
+    "upload_ids", "upload_id", "source", "sample", "audio", "document",
+    "documents", "file", "files", "attachment", "voice_profile_id",
+    "web_quote_receipt", "quote_receipt", "idempotency_key", "consent",
+})
+WORKSPACE_DRAFT_FIELD_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
+WORKSPACE_DRAFT_MAX_ITEMS = 100
+WORKSPACE_DRAFT_MAX_INPUT_BYTES = 16_000
 
 
 def _public_account_activity_item(row: tuple[Any, ...]) -> dict[str, str]:
@@ -215,6 +242,7 @@ FEATURE_TARGET_LANGUAGE_REQUIRED = frozenset({"subtitle_translate", "video_dub",
 FEATURE_EXECUTION_CANDIDATE_KEYS = frozenset(
     FEATURE_TEXT_REQUIRED | FEATURE_UPLOAD_REQUIRED | FEATURE_TARGET_LANGUAGE_REQUIRED
 )
+WORKSPACE_DRAFT_ALLOWED_FEATURES = FEATURE_EXECUTION_CANDIDATE_KEYS
 FEATURE_TIER_REQUIRED_ON_CONFIRM = frozenset({
     "image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background",
     "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
@@ -1544,6 +1572,100 @@ def _campaign_plan_public(row: tuple[Any, ...]) -> dict[str, str]:
     }
 
 
+def _workspace_draft_id(value: str) -> str:
+    try:
+        return str(uuid.UUID(str(value)))
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise HTTPException(status_code=422, detail="Mã bản nháp không hợp lệ") from exc
+
+
+def _workspace_draft_feature(value: Any) -> str:
+    feature = str(value or "").strip()
+    if feature not in WORKSPACE_DRAFT_ALLOWED_FEATURES or feature not in FEATURE_BY_KEY:
+        raise HTTPException(status_code=422, detail="Workflow này không hỗ trợ lưu bản nháp Web")
+    return feature
+
+
+def _workspace_draft_title(value: Any, feature: str) -> str:
+    fallback = f"Bản nháp · {FEATURE_BY_KEY[feature].title}"
+    title = re.sub(r"\s+", " ", str(value or "")).strip() or fallback
+    if "\x00" in title or any(ord(character) < 32 for character in title) or not 3 <= len(title) <= 120:
+        raise HTTPException(status_code=422, detail="Tên bản nháp cần từ 3 đến 120 ký tự hợp lệ")
+    return title
+
+
+def _workspace_draft_input(value: Any) -> dict[str, str]:
+    if not isinstance(value, dict) or not 1 <= len(value) <= 30:
+        raise HTTPException(status_code=422, detail="Bản nháp cần từ 1 đến 30 trường planning an toàn")
+    normalized: dict[str, str] = {}
+    for raw_name, raw_value in value.items():
+        name = str(raw_name or "").strip()
+        if (
+            not WORKSPACE_DRAFT_FIELD_PATTERN.fullmatch(name)
+            or name not in WORKSPACE_DRAFT_ALLOWED_FIELDS
+            or name in WORKSPACE_DRAFT_FORBIDDEN_FIELDS
+            or "".join(character for character in name.lower() if character.isalnum()) in FEATURE_AUTHORITY_FIELDS_NORMALIZED
+        ):
+            raise HTTPException(status_code=422, detail="Bản nháp không nhận trường hệ thống, file, upload, quote, profile hoặc authority")
+        if not isinstance(raw_value, str):
+            raise HTTPException(status_code=422, detail="Bản nháp chỉ lưu giá trị văn bản/planning, không lưu object hoặc tệp")
+        text = raw_value.strip()
+        if not text:
+            continue
+        if "\x00" in text or len(text) > 4_000:
+            raise HTTPException(status_code=422, detail="Một trường bản nháp chứa ký tự hoặc độ dài không hợp lệ")
+        normalized[name] = text
+    if not normalized:
+        raise HTTPException(status_code=422, detail="Hãy nhập ít nhất một giá trị planning trước khi lưu bản nháp")
+    encoded = json.dumps(normalized, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
+    if len(encoded) > WORKSPACE_DRAFT_MAX_INPUT_BYTES:
+        raise HTTPException(status_code=413, detail="Bản nháp vượt quá giới hạn dữ liệu an toàn")
+    return normalized
+
+
+def _assert_safe_workspace_draft_content(title: str, values: dict[str, str]) -> None:
+    content = "\n".join([title, *values.values()])
+    if TICKET_MANUAL_PAYMENT_PROOF_PATTERN.search(content):
+        raise HTTPException(status_code=422, detail="Bản nháp không nhận bill, TXID, số tài khoản hoặc QR thanh toán. Hãy giữ đối soát thủ công trong Bot.")
+    if _ticket_contains_sensitive_data(title, content):
+        raise HTTPException(status_code=422, detail="Bản nháp không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ.")
+
+
+def _workspace_draft_input_from_json(value: Any) -> dict[str, str]:
+    try:
+        decoded = json.loads(str(value or "{}"))
+    except (TypeError, ValueError, json.JSONDecodeError):
+        return {}
+    if not isinstance(decoded, dict):
+        return {}
+    # Defensive re-projection protects an old/corrupted row from becoming a
+    # browser path to a newly forbidden field after this contract evolves.
+    result: dict[str, str] = {}
+    for name, item in decoded.items():
+        if name in WORKSPACE_DRAFT_ALLOWED_FIELDS and isinstance(item, str) and item.strip() and len(item) <= 4_000:
+            result[name] = item
+    return result
+
+
+def _workspace_draft_public(row: tuple[Any, ...], *, include_input: bool = False) -> dict[str, Any]:
+    """Expose only Web-owned scalar draft metadata to its signed owner."""
+    feature = str(row[1])
+    item = FEATURE_BY_KEY.get(feature)
+    result: dict[str, Any] = {
+        "id": str(row[0]),
+        "feature_key": feature,
+        "feature_title": item.title if item else "Workflow Web",
+        "route": item.route.split("?", 1)[0] if item else "",
+        "title": str(row[2]),
+        "state": str(row[4] if include_input else row[3]),
+        "created_at": str(row[5] if include_input else row[4]),
+        "updated_at": str(row[6] if include_input else row[5]),
+    }
+    if include_input:
+        result["input"] = _workspace_draft_input_from_json(row[3])
+    return result
+
+
 class CampaignPlanCreateRequest(BaseModel):
     title: str = Field(min_length=3, max_length=180)
     destination_url: str = Field(min_length=8, max_length=1024)
@@ -1605,6 +1727,23 @@ class CampaignPlanStatusRequest(BaseModel):
     @classmethod
     def normalize_review_note(cls, value: str) -> str:
         return _campaign_text(value, label="Ghi chú rà soát", minimum=0, maximum=1000, allow_empty=True)
+
+
+class WorkspaceDraftCreateRequest(BaseModel):
+    feature_key: str = Field(min_length=2, max_length=120)
+    title: str = Field(default="", max_length=120)
+    input: dict[str, Any] = Field(default_factory=dict)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+
+class WorkspaceDraftUpdateRequest(BaseModel):
+    title: str = Field(default="", max_length=120)
+    input: dict[str, Any] = Field(default_factory=dict)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+
+class WorkspaceDraftArchiveRequest(BaseModel):
+    idempotency_key: str = Field(min_length=12, max_length=160)
 
 
 def _require_key(key: str) -> str:
@@ -1893,7 +2032,16 @@ async def _asset_delivery_redirect(asset_id: str, request: Request, account: dic
 
 @router.get("/catalog")
 async def feature_catalog():
-    return envelope(True, "Danh mục tính năng Web App", data={"features": catalog(), "flags": _flags(), "bridge_configured": bridge_configured()})
+    # The catalog is static, browser-safe route metadata.  Keep the local
+    # Workspace Draft capability declared by this server-side allowlist so a
+    # read-only/history surface never renders a save button which would later
+    # be rejected by the owner-scoped API.
+    features = []
+    for entry in catalog():
+        item = dict(entry)
+        item["web_workspace_draft_supported"] = str(item.get("key") or "") in WORKSPACE_DRAFT_ALLOWED_FEATURES
+        features.append(item)
+    return envelope(True, "Danh mục tính năng Web App", data={"features": features, "flags": _flags(), "bridge_configured": bridge_configured()})
 
 
 @router.get("/core/status")
@@ -2180,6 +2328,230 @@ async def update_campaign_plan_status(
             data={"item": item},
             status_name=target,
         )
+
+    return await _run_idempotent(scope, key, operation)
+
+
+@router.get("/workspace/drafts")
+async def list_workspace_drafts(include_archived: bool = False, account: dict = Depends(require_account)):
+    """List only Web-owned drafts belonging to the signed account.
+
+    This intentionally does not ask the Bot to reconstruct a feature request,
+    quote, upload, job or provider task. Listing keeps input bodies out of the
+    response; a separate owner-scoped detail read is required to resume one.
+    """
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        if include_archived:
+            rows = conn.execute(
+                """SELECT id, feature_key, title, state, created_at, updated_at
+                   FROM web_workspace_drafts
+                   WHERE account_id=?
+                   ORDER BY CASE WHEN state='active' THEN 0 ELSE 1 END, updated_at DESC, id DESC
+                   LIMIT 100""",
+                (str(account["id"]),),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                """SELECT id, feature_key, title, state, created_at, updated_at
+                   FROM web_workspace_drafts
+                   WHERE account_id=? AND state='active'
+                   ORDER BY updated_at DESC, id DESC
+                   LIMIT 100""",
+                (str(account["id"]),),
+            ).fetchall()
+    return envelope(
+        True,
+        "Danh sách bản nháp Web của bạn.",
+        data={"items": [_workspace_draft_public(tuple(row)) for row in rows]},
+        status_name="read_only",
+    )
+
+
+@router.get("/workspace/drafts/{draft_id}")
+async def get_workspace_draft(draft_id: str, account: dict = Depends(require_account)):
+    """Read one safe scalar draft only for its signed Web owner."""
+    draft_id = _workspace_draft_id(draft_id)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT id, feature_key, title, input_json, state, created_at, updated_at
+               FROM web_workspace_drafts WHERE id=? AND account_id=?""",
+            (draft_id, str(account["id"])),
+        ).fetchone()
+    if not row:
+        return envelope(
+            False,
+            "Không tìm thấy bản nháp thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WORKSPACE_DRAFT_NOT_FOUND",
+        )
+    item = _workspace_draft_public(tuple(row), include_input=True)
+    return envelope(
+        True,
+        "Chi tiết bản nháp Web của bạn.",
+        data={"item": item},
+        status_name="draft" if item["state"] == "active" else "archived",
+    )
+
+
+@router.post("/workspace/drafts")
+async def create_workspace_draft(
+    payload: WorkspaceDraftCreateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist a safe Web-only authoring draft without a Bot bridge call."""
+    feature = _workspace_draft_feature(payload.feature_key)
+    title = _workspace_draft_title(payload.title, feature)
+    values = _workspace_draft_input(payload.input)
+    _assert_safe_workspace_draft_content(title, values)
+    key = _require_key(payload.idempotency_key)
+    scope = f"workspace-draft:{account['id']}:create"
+
+    async def operation() -> dict:
+        draft_id = str(uuid.uuid4())
+        now = utc_now()
+        encoded = json.dumps(values, ensure_ascii=False, separators=(",", ":"))
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            active_count = conn.execute(
+                "SELECT COUNT(*) FROM web_workspace_drafts WHERE account_id=? AND state='active'",
+                (str(account["id"]),),
+            ).fetchone()[0]
+            if int(active_count) >= WORKSPACE_DRAFT_MAX_ITEMS:
+                return envelope(
+                    False,
+                    f"Mỗi tài khoản chỉ giữ tối đa {WORKSPACE_DRAFT_MAX_ITEMS} bản nháp đang hoạt động. Hãy lưu trữ một bản cũ trước.",
+                    status_name="guarded",
+                    error_code="WORKSPACE_DRAFT_LIMIT_REACHED",
+                )
+            conn.execute(
+                """INSERT INTO web_workspace_drafts
+                   (id, account_id, feature_key, title, input_json, state, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'active', ?, ?)""",
+                (draft_id, str(account["id"]), feature, title, encoded, now, now),
+            )
+            _record_audit(
+                conn,
+                account_id=str(account["id"]),
+                canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+                action="workspace.draft.create",
+                request_id=_request_id(request),
+                target=draft_id,
+                outcome="ok",
+                detail=f"web-owned safe scalar draft created for feature:{feature}",
+            )
+        item = _workspace_draft_public((draft_id, feature, title, "active", now, now))
+        return envelope(
+            True,
+            "Đã lưu bản nháp trên Web. Chưa gửi Bot, chưa estimate, chưa tạo job và chưa thay đổi Xu.",
+            data={"item": item},
+            status_name="draft",
+        )
+
+    return await _run_idempotent(scope, key, operation)
+
+
+@router.patch("/workspace/drafts/{draft_id}")
+async def update_workspace_draft(
+    draft_id: str,
+    payload: WorkspaceDraftUpdateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Replace only a signed owner's active Web draft with safe scalars."""
+    draft_id = _workspace_draft_id(draft_id)
+    key = _require_key(payload.idempotency_key)
+    scope = f"workspace-draft:{account['id']}:{draft_id}:update"
+
+    async def operation() -> dict:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            current = conn.execute(
+                """SELECT feature_key, state FROM web_workspace_drafts
+                   WHERE id=? AND account_id=?""",
+                (draft_id, str(account["id"])),
+            ).fetchone()
+            if not current:
+                return envelope(False, "Không tìm thấy bản nháp thuộc tài khoản hiện tại.", status_name="guarded", error_code="WORKSPACE_DRAFT_NOT_FOUND")
+            feature = _workspace_draft_feature(current[0])
+            if str(current[1]) != "active":
+                return envelope(False, "Bản nháp đã lưu trữ không thể chỉnh sửa. Hãy tạo bản mới khi cần tiếp tục.", status_name="guarded", error_code="WORKSPACE_DRAFT_ARCHIVED")
+            title = _workspace_draft_title(payload.title, feature)
+            values = _workspace_draft_input(payload.input)
+            _assert_safe_workspace_draft_content(title, values)
+            now = utc_now()
+            conn.execute(
+                """UPDATE web_workspace_drafts SET title=?, input_json=?, updated_at=?
+                   WHERE id=? AND account_id=? AND state='active'""",
+                (title, json.dumps(values, ensure_ascii=False, separators=(",", ":")), now, draft_id, str(account["id"])),
+            )
+            updated = conn.execute(
+                """SELECT id, feature_key, title, state, created_at, updated_at
+                   FROM web_workspace_drafts WHERE id=? AND account_id=?""",
+                (draft_id, str(account["id"])),
+            ).fetchone()
+            _record_audit(
+                conn,
+                account_id=str(account["id"]),
+                canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+                action="workspace.draft.update",
+                request_id=_request_id(request),
+                target=draft_id,
+                outcome="ok",
+                detail=f"web-owned safe scalar draft updated for feature:{feature}",
+            )
+        return envelope(True, "Đã cập nhật bản nháp Web. Chưa gửi Bot hoặc tạo workflow canonical.", data={"item": _workspace_draft_public(tuple(updated))}, status_name="draft")
+
+    return await _run_idempotent(scope, key, operation)
+
+
+@router.post("/workspace/drafts/{draft_id}/archive")
+async def archive_workspace_draft(
+    draft_id: str,
+    payload: WorkspaceDraftArchiveRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Archive an owned Web draft without deleting or changing Bot state."""
+    draft_id = _workspace_draft_id(draft_id)
+    key = _require_key(payload.idempotency_key)
+    scope = f"workspace-draft:{account['id']}:{draft_id}:archive"
+
+    async def operation() -> dict:
+        ensure_copyfast_schema()
+        with transaction() as conn:
+            current = conn.execute(
+                """SELECT id, feature_key, title, state, created_at, updated_at
+                   FROM web_workspace_drafts WHERE id=? AND account_id=?""",
+                (draft_id, str(account["id"])),
+            ).fetchone()
+            if not current:
+                return envelope(False, "Không tìm thấy bản nháp thuộc tài khoản hiện tại.", status_name="guarded", error_code="WORKSPACE_DRAFT_NOT_FOUND")
+            if str(current[3]) == "active":
+                now = utc_now()
+                conn.execute(
+                    """UPDATE web_workspace_drafts SET state='archived', updated_at=?
+                       WHERE id=? AND account_id=? AND state='active'""",
+                    (now, draft_id, str(account["id"])),
+                )
+                current = conn.execute(
+                    """SELECT id, feature_key, title, state, created_at, updated_at
+                       FROM web_workspace_drafts WHERE id=? AND account_id=?""",
+                    (draft_id, str(account["id"])),
+                ).fetchone()
+                _record_audit(
+                    conn,
+                    account_id=str(account["id"]),
+                    canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+                    action="workspace.draft.archive",
+                    request_id=_request_id(request),
+                    target=draft_id,
+                    outcome="ok",
+                    detail="web-owned draft archived",
+                )
+        return envelope(True, "Đã lưu trữ bản nháp Web. Không có Bot, job, Xu hoặc tệp nào bị thay đổi.", data={"item": _workspace_draft_public(tuple(current))}, status_name="archived")
 
     return await _run_idempotent(scope, key, operation)
 

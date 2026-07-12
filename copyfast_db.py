@@ -27,13 +27,41 @@ def _is_production() -> bool:
     return any(value.strip().lower() in {"production", "prod"} for value in values if value)
 
 
+def _railway_volume_directory() -> Path | None:
+    """Return a declared Railway volume only when it exists in this service.
+
+    Railway lets a service choose a custom mount path. The environment name can
+    also be present in configuration shared with another service, so it is not
+    evidence that this Web service has a volume by itself. Require an absolute,
+    existing directory before using it for signed-session data.
+    """
+    configured = os.environ.get("RAILWAY_VOLUME_MOUNT_PATH", "").strip()
+    if not configured:
+        return None
+    candidate = Path(configured).expanduser()
+    if not candidate.is_absolute() or not os.path.isdir(candidate):
+        return None
+    return candidate
+
+
+def _persistent_session_directory() -> Path | None:
+    """Find a known persistent volume directory without creating one."""
+    railway_volume = _railway_volume_directory()
+    if railway_volume is not None:
+        return railway_volume
+    if os.path.isdir("/data"):
+        return Path("/data")
+    return None
+
+
 def session_database_path() -> str:
     """Resolve the Web-owned auth/session database without using a Bot store."""
     configured = os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
     if configured:
         return configured
-    if os.path.isdir("/data"):
-        return "/data/toanaas_webapp_session.db"
+    persistent_directory = _persistent_session_directory()
+    if persistent_directory is not None:
+        return str(persistent_directory / "toanaas_webapp_session.db")
     return "toanaas_webapp_session.db"
 
 
@@ -51,9 +79,12 @@ def ensure_copyfast_persistence() -> None:
         if not Path(configured).expanduser().is_absolute():
             raise RuntimeError("WEBAPP_SESSION_DB_PATH phải là đường dẫn tuyệt đối khi production")
         return
-    if os.path.isdir("/data"):
+    if _persistent_session_directory() is not None:
         return
-    raise RuntimeError("Production cần WEBAPP_SESSION_DB_PATH trên persistent volume hoặc mount /data cho signed session và Telegram link")
+    raise RuntimeError(
+        "Production cần WEBAPP_SESSION_DB_PATH trên persistent volume, "
+        "RAILWAY_VOLUME_MOUNT_PATH hợp lệ, hoặc mount /data cho signed session và Telegram link"
+    )
 
 
 @contextmanager
@@ -294,6 +325,25 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Workspace drafts are Web-owned authoring notes, never a mirror of
+        # Bot feature input, upload staging, quotes, jobs, wallet or provider
+        # state.  Keeping their table separate makes the ownership boundary
+        # explicit and lets a signed customer resume only safe scalar fields.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workspace_drafts (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                feature_key TEXT NOT NULL,
+                title TEXT NOT NULL,
+                input_json TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -305,6 +355,9 @@ def ensure_copyfast_schema() -> None:
         # append-only audit contract or reusing the Bot audit database.
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audit_account_created ON web_audit_events(account_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workspace_drafts_account_state_updated ON web_workspace_drafts(account_id, state, updated_at DESC, id DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"

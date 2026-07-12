@@ -169,7 +169,12 @@ fails closed unless either:
 WEBAPP_SESSION_DB_PATH=/data/toanaas_webapp_session.db
 ```
 
-points to a persistent Railway volume, or a persistent `/data` mount exists.
+points to a persistent Railway volume, a persistent `/data` mount exists, or
+Railway exposes an existing absolute `RAILWAY_VOLUME_MOUNT_PATH` in the **Web
+service itself**. `WEBAPP_SESSION_DB_PATH` always takes precedence. The Web
+App verifies that the Railway mount directory exists before using it; a value
+inherited from another service is not enough.
+
 Use an absolute path for `WEBAPP_SESSION_DB_PATH`; do not rely on the project
 working directory or an ephemeral container filesystem.
 
