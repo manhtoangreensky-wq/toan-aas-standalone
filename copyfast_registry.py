@@ -149,7 +149,10 @@ def catalog() -> list[dict[str, str]]:
 def allowed_paths() -> set[str]:
     # These are Web-owned portal surfaces, not Bot feature adapters.  Keep
     # them explicit instead of smuggling them into the canonical Bot catalog.
-    result = {"/", "/login", "/register", "/onboarding", "/campaigns", "/calendar", "/approvals"}
+    # `/welcome` is intentionally separate from the application root. The
+    # root redirects into secure app access, while this explicit route keeps a
+    # lightweight public product introduction available when needed.
+    result = {"/", "/welcome", "/login", "/register", "/onboarding", "/campaigns", "/calendar", "/approvals"}
     for item in ALL_FEATURES:
         result.add(item.route.split("?", 1)[0])
     return result

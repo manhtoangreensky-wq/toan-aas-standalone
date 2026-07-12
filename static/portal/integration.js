@@ -130,7 +130,15 @@
   function randomKey(prefix) {
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
-    return `${prefix}-${Array.from(bytes, (item) => item.toString(16).padStart(2, "0")).join("")}`;
+    // Every browser-generated write key must satisfy the exact server
+    // contract: `[A-Za-z0-9._:-]{12,160}`. Submission scopes include routes
+    // such as `/content/pack`, so using a scope verbatim leaked `/` into the
+    // key and made otherwise valid Web-only draft saves fail server-side.
+    const safePrefix = String(prefix || "web")
+      .replace(/[^A-Za-z0-9._:-]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 120) || "web";
+    return `${safePrefix}-${Array.from(bytes, (item) => item.toString(16).padStart(2, "0")).join("")}`;
   }
 
   function safeReturnPath(value) {
@@ -1017,7 +1025,10 @@
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
-    if (account && currentPath === "/workspace") await hydrateWorkspaceDrafts();
+    // Dashboard is a real signed workspace now, so it may show the same
+    // owner-scoped, Web-only draft library as `/workspace`. This never calls
+    // the Bot bridge and cannot create a job, quote, payment or provider task.
+    if (account && ["/workspace", "/dashboard"].includes(currentPath)) await hydrateWorkspaceDrafts();
     if (account && linkChallengeRoute()) {
       const linkStatus = await hydrateLinkStatus();
       if (!telegramLinked) await resumeTelegramLinkChallenge(linkStatus);
