@@ -60,6 +60,16 @@ def asset_vault_enabled() -> bool:
     return os.environ.get("WEBAPP_ASSET_VAULT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def project_package_enabled() -> bool:
+    """Whether immutable, Web-owned Project Package exports are enabled.
+
+    Package exports have a separate storage boundary from Asset Vault uploads.
+    They stay opt-in because a completed package is a private downloadable
+    artifact and production must never place it on an ephemeral filesystem.
+    """
+    return os.environ.get("WEBAPP_PROJECT_PACKAGE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -121,6 +131,65 @@ def ensure_asset_vault_persistence() -> Path | None:
     if not asset_vault_enabled():
         return None
     return asset_vault_directory()
+
+
+def project_package_directory() -> Path:
+    """Resolve a private artifact root for immutable Project Packages.
+
+    This root deliberately never shares Asset Vault's directory, is never
+    mounted as static content, and must be a child of the service's persistent
+    volume in production.  Keeping the two roots separate prevents a package
+    export from being mistaken for a customer-uploaded source file.
+    """
+    if not project_package_enabled():
+        raise RuntimeError("WEBAPP_PROJECT_PACKAGE_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_PROJECT_PACKAGE_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_PROJECT_PACKAGE_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_project_packages"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_project_packages"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_PROJECT_PACKAGE_ROOT không được nằm trong static")
+
+    if asset_vault_enabled():
+        vault_directory = asset_vault_directory().resolve()
+        if candidate == vault_directory or _is_within(candidate, vault_directory) or _is_within(vault_directory, candidate):
+            raise RuntimeError("WEBAPP_PROJECT_PACKAGE_ROOT phải tách riêng Asset Vault")
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Project Package production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_PROJECT_PACKAGE_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_PROJECT_PACKAGE_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_project_package_persistence() -> Path | None:
+    """Validate the private Project Package artifact boundary when enabled."""
+    if not project_package_enabled():
+        return None
+    return project_package_directory()
 
 
 def session_database_path() -> str:
@@ -499,6 +568,57 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Project Packages are immutable Web-owned snapshots and private ZIP
+        # artifacts.  They intentionally do not reuse Asset Vault metadata:
+        # Asset Vault holds customer sources/references while this table holds
+        # a server-built export with its own state, integrity data and audit.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_project_packages (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_snapshot_json TEXT NOT NULL,
+                snapshot_digest TEXT NOT NULL,
+                document_count INTEGER NOT NULL DEFAULT 0,
+                asset_reference_count INTEGER NOT NULL DEFAULT 0,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, project_id, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        # State transition history is kept independently so a completed ZIP
+        # can be distinguished from a browser-only success message.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_project_package_events (
+                id TEXT PRIMARY KEY,
+                package_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(package_id) REFERENCES web_project_packages(id)
+            )
+            """
+        )
+        package_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_project_package_events)").fetchall()}
+        if "sequence" not in package_event_columns:
+            conn.execute("ALTER TABLE web_project_package_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -528,6 +648,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_asset_files_project_account_state ON web_asset_files(project_id, account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_project_packages_account_updated ON web_project_packages(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_project_packages_project_account_updated ON web_project_packages(project_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_project_package_events_package_sequence ON web_project_package_events(package_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"

@@ -733,6 +733,10 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function validProjectPackageId(value) {
+    return validProjectId(value);
+  }
+
   function validWorkspaceDraftId(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
@@ -961,6 +965,7 @@
       : "";
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
     const assetVaultEnabled = Boolean(status.flags && status.flags.asset_vault_enabled === true);
+    const projectPackageEnabled = Boolean(status.flags && status.flags.project_package_enabled === true);
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
     const webFeatureExecutionFeatures = safeFeatureExecutionFeatures(status.web_feature_execution_features);
@@ -1016,6 +1021,12 @@
       "studio-document-open": Boolean(account),
       "studio-document-update": Boolean(account && me.csrf_token),
       "studio-document-restore": Boolean(account && me.csrf_token),
+      // Project Packages are a separate Web-native artifact pipeline. They
+      // require signed session + CSRF + a dedicated persistent storage root,
+      // never Telegram, bridge, wallet, PayOS or provider availability.
+      "project-package-view": Boolean(account && projectPackageEnabled),
+      "project-package-export": Boolean(account && me.csrf_token && projectPackageEnabled),
+      "project-package-refresh": Boolean(account && projectPackageEnabled),
       // The private vault is a native Web capability. It never needs a Bot
       // bridge or a Telegram link, but stays disabled until the server has a
       // dedicated persistent storage boundary.
@@ -1060,6 +1071,7 @@
       },
       bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled, featureExecutionAvailable: webFeatureExecutionAvailable, featureExecutionFeatures: webFeatureExecutionFeatures },
       assetVaultEnabled,
+      projectPackageEnabled,
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
@@ -1071,8 +1083,11 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && ["/projects", "/dashboard"].includes(currentPath)) await hydrateProjects();
+    if (account && ["/projects", "/project-packages", "/dashboard"].includes(currentPath)) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
+    if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
+    else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
+    else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
     if (account && assetVaultEnabled && ["/asset-vault", "/dashboard"].includes(currentPath)) await hydrateAssetVault();
     else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
@@ -1203,6 +1218,37 @@
       });
     } catch (_) {
       merge({ projectDetail: {}, projectDocuments: [], studioDocumentDetail: {}, pageStates: { ...(base().pageStates || {}), [path]: "guarded" } });
+    }
+  }
+
+  async function hydrateProjectPackages(projectId) {
+    const selectedProjectId = String(projectId || "").trim();
+    if (selectedProjectId && !validProjectId(selectedProjectId)) return [];
+    const path = selectedProjectId ? `/projects/${encodeURIComponent(selectedProjectId)}/packages` : "/project-packages";
+    try {
+      const result = await api(path);
+      const items = result.data && Array.isArray(result.data.items)
+        ? result.data.items.filter((item) => item && validProjectPackageId(item.id) && (!selectedProjectId || String(item.project_id || "") === selectedProjectId)).slice(0, 100)
+        : [];
+      const current = Array.isArray(base().projectPackages) ? base().projectPackages : [];
+      const remaining = selectedProjectId
+        ? current.filter((item) => !item || String(item.project_id || "") !== selectedProjectId)
+        : [];
+      merge({
+        projectPackages: [...items, ...remaining].slice(0, 100),
+        pageStates: { ...(base().pageStates || {}), [selectedProjectId ? `/projects/${selectedProjectId}` : "/project-packages"]: "ready" }
+      });
+      return items;
+    } catch (_) {
+      // A failed owner-scoped read must clear that projection. Never keep a
+      // previous account's package metadata or fall back to Bot assets/jobs.
+      const current = Array.isArray(base().projectPackages) ? base().projectPackages : [];
+      const remaining = selectedProjectId ? current.filter((item) => !item || String(item.project_id || "") !== selectedProjectId) : [];
+      merge({
+        projectPackages: remaining,
+        pageStates: { ...(base().pageStates || {}), [selectedProjectId ? `/projects/${selectedProjectId}` : "/project-packages"]: "guarded" }
+      });
+      return [];
     }
   }
 
@@ -1668,6 +1714,51 @@
       if (action === "asset-vault-refresh") {
         await hydrateAssetVault();
         toast("Đã làm mới Asset Vault.");
+        return;
+      }
+      if (action === "project-package-export") {
+        const projectId = String(detail.projectId || projectIdFromPath(route) || "").trim();
+        if (!validProjectId(projectId)) throw new Error("Mã Project không hợp lệ.");
+        // The current document revisions are part of the browser-side intent
+        // fingerprint only. The server alone captures actual content and
+        // asset references inside its owner-scoped transaction.
+        const revisions = (Array.isArray(base().projectDocuments) ? base().projectDocuments : [])
+          .filter((item) => item && typeof item === "object" && String(item.project_id || "") === projectId && validProjectId(item.id))
+          .map((item) => `${String(item.id)}:${Number(item.revision || 0)}`)
+          .sort();
+        const scope = `project-package:${projectId}:export`;
+        const submission = acquireSubmission(scope, revisions.join("|"));
+        if (!submission) {
+          toast("Project Package đang được xuất. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/projects/${encodeURIComponent(projectId)}/packages`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ idempotency_key: submission.key })
+          });
+          const item = result.data && result.data.package && typeof result.data.package === "object" ? result.data.package : null;
+          if (!item || !validProjectPackageId(item.id)) throw new Error("Máy chủ chưa trả Project Package hợp lệ.");
+          await hydrateProjectPackages(projectId);
+          toast(result.message || "Đã tạo Project Package riêng tư.");
+        } catch (error) {
+          // The server acknowledged this failed package state, so a later
+          // deliberate export must receive a new idempotency intent instead
+          // of replaying the same failed artifact record forever.
+          discardSubmission(scope, submission);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "project-package-refresh") {
+        const projectId = String(detail.projectId || projectIdFromPath(route) || "").trim();
+        await hydrateProjectPackages(projectId || undefined);
+        toast("Đã làm mới Project Packages.");
         return;
       }
       if (action === "project-create") {
