@@ -273,6 +273,25 @@ def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
     assert "viewport-fit=cover" in shell
 
 
+def test_mobile_workspace_dock_is_signed_session_only_and_navigation_only() -> None:
+    shell = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
+    assert 'data-portal-mobile-nav' in shell
+    assert 'aria-label="Điều hướng nhanh"' in shell
+    assert "function isMobileNavCurrent(key, page)" in PORTAL
+    assert "function renderMobileNav(page)" in PORTAL
+    dock = PORTAL[PORTAL.index("function renderMobileNav(page)"):PORTAL.index("function renderSidebar(page, context)")]
+    for label in ("Tổng quan", "AI Studio", "Jobs", "Tài sản", "Tài khoản"):
+        assert label in dock
+    assert "fetch(" not in dock
+    assert "dispatchAction(" not in dock
+    assert "const showMobileNav = !minimalShell && context.session && context.session.authenticated === true;" in PORTAL
+    assert "mobileNav.hidden = !showMobileNav;" in PORTAL
+    assert ".portal-mobile-nav" in PORTAL_CSS
+    assert "grid-template-columns: repeat(5, minmax(0, 1fr));" in PORTAL_CSS
+    assert "calc(92px + var(--portal-safe-bottom))" in PORTAL_CSS
+    assert "bottom: calc(84px + var(--portal-safe-bottom));" in PORTAL_CSS
+
+
 def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> None:
     assert "function matchesRouteFamily(path, root)" in PORTAL
     assert 'if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");' in PORTAL

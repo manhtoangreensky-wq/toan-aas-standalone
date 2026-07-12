@@ -7,10 +7,11 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `168 passed, 1 warning` |
+| Web App | `python -m pytest -q` | `169 passed, 1 warning` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
-| Web App CI definition | `.github/workflows/webapp-quality.yml` locally mirrored | passed in an isolated clean environment using `requirements-dev.txt`: `194 passed, 1 warning`, covering asyncio and the explicitly compatible Trio backend. The workflow installs the pinned test dependencies, compiles Python, checks three Portal JavaScript files, runs pytest and checks whitespace for each `main`/`feature/**` push and PR. The first remote run exposed dependency compatibility gaps; a replacement run is pending after this correction. |
+| Web App CI definition | `.github/workflows/webapp-quality.yml` locally mirrored and GitHub Actions | passed in an isolated clean environment using `requirements-dev.txt`: `194 passed, 1 warning`, covering asyncio and the explicitly compatible Trio backend. GitHub Actions runs `29196146374` and `29196144936` passed for commit `d96273d` after the checkout was changed to retain the parent commit required by the whitespace gate. The workflow installs the pinned test dependencies, compiles Python, checks three Portal JavaScript files, runs pytest and checks whitespace for each `main`/`feature/**` push and PR. |
+| Mobile workspace dock | portal static contract + Node syntax check | passed: `69` portal safety contracts verify that the five-route dock is signed-session-only, keyboard/focus visible, safe-area aware and navigation-only (no fetch, provider, payment or browser-owned private state). Full Web suite passes with this surface enabled. |
 | Web App | local Node check of Growth AI/Campaign report command builder | passed: fixed command, 1–90 day, platform, campaign-ID, goal and format allowlists accept canonical values and reject tampered input. |
 | Bot bridge | `python -m pytest -q tests/test_webapp_core_bridge.py` | `16 passed` |
 | Bot bridge | `python -m py_compile local_worker.py`, `webapp_core_bridge.py` | passed |

@@ -1007,6 +1007,46 @@
     return matchesRouteFamily(path, linkPath);
   }
 
+  // The compact dock intentionally links only to stable, signed workspace
+  // routes. It does not show balance, job counts, provider readiness or any
+  // other private state, so it remains a navigation aid rather than a second
+  // dashboard with stale or browser-owned data.
+  function isMobileNavCurrent(key, page) {
+    const path = normalizePath(page.routePath || page.path);
+    if (key === "dashboard") {
+      return ["/dashboard", "/campaigns", "/calendar", "/approvals"].includes(path);
+    }
+    if (key === "studio") {
+      return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
+        || isNavCurrent("/chat", page) || isNavCurrent("/prompt-studio", page) || isNavCurrent("/image/create", page)
+        || isNavCurrent("/video/create", page) || isNavCurrent("/voice/tts", page) || isNavCurrent("/music", page)
+        || isNavCurrent("/subtitle", page) || isNavCurrent("/documents", page);
+    }
+    if (key === "jobs") return matchesRouteFamily(path, "/jobs");
+    if (key === "assets") return matchesRouteFamily(path, "/assets");
+    if (key === "account") {
+      return isNavCurrent("/account", page) || ["/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/tickets", "/support", "/notes", "/reminders", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
+    }
+    return false;
+  }
+
+  function renderMobileNav(page) {
+    const items = [
+      ["dashboard", "/dashboard", "Tổng quan", ICONS.dashboard],
+      ["studio", "/features", "AI Studio", ICONS.prompt],
+      ["jobs", "/jobs", "Jobs", ICONS.jobs],
+      ["assets", "/assets", "Tài sản", ICONS.assets],
+      ["account", "/account", "Tài khoản", ICONS.account]
+    ];
+    return items.map(([key, href, label, icon]) => {
+      const current = isMobileNavCurrent(key, page);
+      return `<a class="portal-mobile-nav-link" href="${href}"${current ? ' aria-current="page"' : ""}>
+        <span class="portal-mobile-nav-icon" aria-hidden="true">${safeText(icon)}</span>
+        <span class="portal-mobile-nav-label">${safeText(label)}</span>
+      </a>`;
+    }).join("");
+  }
+
   function renderSidebar(page, context) {
     const bridgeReady = context.bridge.available === true;
     const groups = navGroups(context, page).map((group) => {
@@ -3309,6 +3349,7 @@
     const header = document.querySelector("[data-portal-header]");
     const main = document.querySelector("[data-portal-main]");
     const shell = document.querySelector("[data-portal-shell]");
+    const mobileNav = document.querySelector("[data-portal-mobile-nav]");
     if (!sidebar || !header || !main || !shell) return;
     // A hydration remount must not leave the responsive navigation in an
     // inert/modal state with a replaced header button behind it.
@@ -3320,12 +3361,17 @@
     // visit focused, prevents a misleading "already inside" impression, and
     // leaves the regular navigation intact immediately after a signed login.
     const minimalShell = isLanding || isAuth;
+    const showMobileNav = !minimalShell && context.session && context.session.authenticated === true;
     shell.classList.toggle("portal-shell--landing", isLanding);
     shell.classList.toggle("portal-shell--auth", isAuth);
     document.body.classList.toggle("portal-body--landing", isLanding);
     document.body.classList.toggle("portal-body--auth", isAuth);
     sidebar.hidden = minimalShell;
     header.hidden = minimalShell;
+    if (mobileNav) {
+      mobileNav.hidden = !showMobileNav;
+      mobileNav.innerHTML = showMobileNav ? renderMobileNav(page) : "";
+    }
     document.title = `${displayPageTitle(page, context)} · TOAN AAS`;
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
