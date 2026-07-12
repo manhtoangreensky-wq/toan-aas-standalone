@@ -1,0 +1,7 @@
+# Local Python/test artifacts
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local signed-session store used only for development smoke checks
+toanaas_webapp_session.db

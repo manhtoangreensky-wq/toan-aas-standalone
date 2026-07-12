@@ -1,0 +1,30 @@
+{
+  "audit_mode": "static-only",
+  "bot": {
+    "baseline_bridge_source": {
+      "path": "webapp_core_bridge.py",
+      "present": false,
+      "state": "missing"
+    },
+    "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
+    "entrypoint_present": true,
+    "revision": {
+      "ahead_commits": 6,
+      "baseline_relation": "ahead_of_requested_baseline",
+      "behind_commits": 0,
+      "checkout_sha": "32d6d1bfbc8040b0632a44e6a9326ed568cb1a59"
+    },
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-bot-copyfast1-bridge"
+  },
+  "generated_at_utc": "2026-07-12T12:00:15+00:00",
+  "guarantees": [
+    "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
+    "Only source text, Python AST, and local read-only Git revision metadata are read.",
+    "Report/document text is sanitized for secret-shaped literals."
+  ],
+  "schema_version": "1.0",
+  "webapp": {
+    "entrypoint_present": true,
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast1"
+  }
+}

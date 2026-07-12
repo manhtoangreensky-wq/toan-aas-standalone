@@ -1,0 +1,3355 @@
+{
+  "audit_mode": "static-only",
+  "background_jobs": [
+    {
+      "file": "copyfast_api.py",
+      "kind": "function",
+      "line": 263,
+      "target": "_web_feature_job_adapter_keys"
+    },
+    {
+      "file": "copyfast_api.py",
+      "kind": "function",
+      "line": 2420,
+      "target": "admin_jobs"
+    },
+    {
+      "file": "copyfast_api.py",
+      "kind": "function",
+      "line": 2483,
+      "target": "admin_refund_job"
+    },
+    {
+      "file": "copyfast_api.py",
+      "kind": "function",
+      "line": 2457,
+      "target": "admin_retry_job"
+    },
+    {
+      "file": "copyfast_api.py",
+      "kind": "function",
+      "line": 2224,
+      "target": "job_detail"
+    },
+    {
+      "file": "copyfast_api.py",
+      "kind": "function",
+      "line": 2219,
+      "target": "list_jobs"
+    },
+    {
+      "file": "ai_media.py",
+      "kind": "function",
+      "line": 61,
+      "target": "remove_background"
+    }
+  ],
+  "callback_data": [],
+  "callback_handlers": [],
+  "commands": [],
+  "conversations": [],
+  "counts": {
+    "background_jobs": 7,
+    "callback_data": 0,
+    "callback_handlers": 0,
+    "commands": 0,
+    "conversations": 0,
+    "database_tables": 45,
+    "env_references": 67,
+    "providers": 16,
+    "routes": 150,
+    "ui_path_references": 46
+  },
+  "database_references": [
+    {
+      "file": "affiliate_ops.py",
+      "line": 13,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "affiliate_links"
+    },
+    {
+      "file": "affiliate_ops.py",
+      "line": 39,
+      "operation": "INSERT INTO",
+      "table": "affiliate_links"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 172,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "affiliate_links"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2326,
+      "operation": "UPDATE",
+      "table": "any"
+    },
+    {
+      "file": "device_ops.py",
+      "line": 14,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "b2b_projects"
+    },
+    {
+      "file": "device_ops.py",
+      "line": 41,
+      "operation": "INSERT INTO",
+      "table": "b2b_projects"
+    },
+    {
+      "file": "campaign.py",
+      "line": 21,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "campaigns"
+    },
+    {
+      "file": "campaign.py",
+      "line": 31,
+      "operation": "INSERT INTO",
+      "table": "campaigns"
+    },
+    {
+      "file": "campaign_ops.py",
+      "line": 13,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "campaigns"
+    },
+    {
+      "file": "campaign_ops.py",
+      "line": 37,
+      "operation": "INSERT INTO",
+      "table": "campaigns"
+    },
+    {
+      "file": "ai_assistant.py",
+      "line": 39,
+      "operation": "INSERT INTO",
+      "table": "credit_events"
+    },
+    {
+      "file": "billing.py",
+      "line": 62,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "credit_events"
+    },
+    {
+      "file": "billing.py",
+      "line": 235,
+      "operation": "INSERT INTO",
+      "table": "credit_events"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 106,
+      "operation": "INSERT INTO",
+      "table": "credit_events"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 152,
+      "operation": "INSERT INTO",
+      "table": "credit_events"
+    },
+    {
+      "file": "db.py",
+      "line": 45,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "credit_events"
+    },
+    {
+      "file": "video.py",
+      "line": 78,
+      "operation": "INSERT INTO",
+      "table": "credit_events"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 36,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_approvals"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 129,
+      "operation": "INSERT INTO",
+      "table": "erp_approvals"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 32,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_assets"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 105,
+      "operation": "INSERT INTO",
+      "table": "erp_assets"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 30,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_attendance"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 93,
+      "operation": "INSERT INTO",
+      "table": "erp_attendance"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 40,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_banners"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 153,
+      "operation": "INSERT INTO",
+      "table": "erp_banners"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 43,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_chat"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 162,
+      "operation": "INSERT INTO",
+      "table": "erp_chat"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 25,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_customers"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 63,
+      "operation": "INSERT INTO",
+      "table": "erp_customers"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 29,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_employees"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 87,
+      "operation": "INSERT INTO",
+      "table": "erp_employees"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 39,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_goals"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 147,
+      "operation": "INSERT INTO",
+      "table": "erp_goals"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 27,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_inventory"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 75,
+      "operation": "INSERT INTO",
+      "table": "erp_inventory"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 34,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_okrs"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 117,
+      "operation": "INSERT INTO",
+      "table": "erp_okrs"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 37,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_production"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 135,
+      "operation": "INSERT INTO",
+      "table": "erp_production"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 26,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_projects"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 69,
+      "operation": "INSERT INTO",
+      "table": "erp_projects"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 35,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_purchases"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 123,
+      "operation": "INSERT INTO",
+      "table": "erp_purchases"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 31,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_sales"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 99,
+      "operation": "INSERT INTO",
+      "table": "erp_sales"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 33,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_social"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 111,
+      "operation": "INSERT INTO",
+      "table": "erp_social"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 28,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_transactions"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 81,
+      "operation": "INSERT INTO",
+      "table": "erp_transactions"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 38,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "erp_workloads"
+    },
+    {
+      "file": "erp_core.py",
+      "line": 141,
+      "operation": "INSERT INTO",
+      "table": "erp_workloads"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 33,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "feedback"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 34,
+      "operation": "INSERT INTO",
+      "table": "feedback"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 16,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "manual_orders"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 65,
+      "operation": "INSERT INTO",
+      "table": "manual_orders"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 101,
+      "operation": "UPDATE",
+      "table": "manual_orders"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 110,
+      "operation": "UPDATE",
+      "table": "manual_orders"
+    },
+    {
+      "file": "performance.py",
+      "line": 21,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "manual_performance_events"
+    },
+    {
+      "file": "performance.py",
+      "line": 32,
+      "operation": "INSERT INTO",
+      "table": "manual_performance_events"
+    },
+    {
+      "file": "media_ops.py",
+      "line": 14,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "media_assets"
+    },
+    {
+      "file": "media_ops.py",
+      "line": 44,
+      "operation": "INSERT INTO",
+      "table": "media_assets"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1631,
+      "operation": "UPDATE",
+      "table": "only"
+    },
+    {
+      "file": "billing.py",
+      "line": 50,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "payos_orders"
+    },
+    {
+      "file": "billing.py",
+      "line": 130,
+      "operation": "INSERT INTO",
+      "table": "payos_orders"
+    },
+    {
+      "file": "billing.py",
+      "line": 263,
+      "operation": "UPDATE",
+      "table": "payos_orders"
+    },
+    {
+      "file": "db.py",
+      "line": 30,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "payos_orders"
+    },
+    {
+      "file": "migrate_db.py",
+      "line": 40,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "payos_orders"
+    },
+    {
+      "file": "billing.py",
+      "line": 49,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "payos_processed"
+    },
+    {
+      "file": "billing.py",
+      "line": 264,
+      "operation": "INSERT INTO",
+      "table": "payos_processed"
+    },
+    {
+      "file": "db.py",
+      "line": 40,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "payos_processed"
+    },
+    {
+      "file": "migrate_db.py",
+      "line": 41,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "payos_processed"
+    },
+    {
+      "file": "billing.py",
+      "line": 63,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "storage_entitlements"
+    },
+    {
+      "file": "billing.py",
+      "line": 248,
+      "operation": "INSERT INTO",
+      "table": "storage_entitlements"
+    },
+    {
+      "file": "billing.py",
+      "line": 346,
+      "operation": "INSERT INTO",
+      "table": "storage_entitlements"
+    },
+    {
+      "file": "migrate_db.py",
+      "line": 47,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "storage_entitlements"
+    },
+    {
+      "file": "billing.py",
+      "line": 65,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "storage_events"
+    },
+    {
+      "file": "billing.py",
+      "line": 256,
+      "operation": "INSERT INTO",
+      "table": "storage_events"
+    },
+    {
+      "file": "billing.py",
+      "line": 354,
+      "operation": "INSERT INTO",
+      "table": "storage_events"
+    },
+    {
+      "file": "migrate_db.py",
+      "line": 49,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "storage_events"
+    },
+    {
+      "file": "billing.py",
+      "line": 64,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "storage_usage"
+    },
+    {
+      "file": "migrate_db.py",
+      "line": 48,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "storage_usage"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2148,
+      "operation": "DELETE FROM",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2150,
+      "operation": "INSERT INTO",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2175,
+      "operation": "DELETE FROM",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2414,
+      "operation": "UPDATE",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2561,
+      "operation": "UPDATE",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2687,
+      "operation": "UPDATE",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 131,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "telegram_link_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2002,
+      "operation": "DELETE FROM",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2004,
+      "operation": "INSERT INTO",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2062,
+      "operation": "DELETE FROM",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2092,
+      "operation": "DELETE FROM",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2112,
+      "operation": "DELETE FROM",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2123,
+      "operation": "DELETE FROM",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2353,
+      "operation": "UPDATE",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2374,
+      "operation": "UPDATE",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2392,
+      "operation": "UPDATE",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 169,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "admin_ops.py",
+      "line": 70,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "ai_assistant.py",
+      "line": 38,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "auth_ops.py",
+      "line": 59,
+      "operation": "INSERT INTO",
+      "table": "users"
+    },
+    {
+      "file": "billing.py",
+      "line": 61,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "users"
+    },
+    {
+      "file": "billing.py",
+      "line": 231,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 105,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 151,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "db.py",
+      "line": 22,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "users"
+    },
+    {
+      "file": "migrate_db.py",
+      "line": 22,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "users"
+    },
+    {
+      "file": "user.py",
+      "line": 57,
+      "operation": "INSERT INTO",
+      "table": "users"
+    },
+    {
+      "file": "user.py",
+      "line": 64,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "video.py",
+      "line": 76,
+      "operation": "UPDATE",
+      "table": "users"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 838,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1449,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1555,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1648,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 118,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_account_profiles"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 832,
+      "operation": "INSERT INTO",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1443,
+      "operation": "INSERT INTO",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1549,
+      "operation": "INSERT INTO",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1644,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1708,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2681,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 82,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 624,
+      "operation": "INSERT INTO",
+      "table": "web_audit_events"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 261,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_audit_events"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2265,
+      "operation": "DELETE FROM",
+      "table": "web_bridge_callback_nonces"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2269,
+      "operation": "INSERT INTO",
+      "table": "web_bridge_callback_nonces"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 219,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_bridge_callback_nonces"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1909,
+      "operation": "INSERT INTO",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1978,
+      "operation": "UPDATE",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2059,
+      "operation": "UPDATE",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 281,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1394,
+      "operation": "UPDATE",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1418,
+      "operation": "INSERT INTO",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1455,
+      "operation": "INSERT INTO",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1499,
+      "operation": "INSERT INTO",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 205,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 476,
+      "operation": "DELETE FROM",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 478,
+      "operation": "INSERT INTO",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 508,
+      "operation": "DELETE FROM",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 527,
+      "operation": "UPDATE",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 545,
+      "operation": "UPDATE",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 551,
+      "operation": "UPDATE",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 244,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1600,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1611,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1616,
+      "operation": "INSERT INTO",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1625,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1633,
+      "operation": "DELETE FROM",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1718,
+      "operation": "DELETE FROM",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1720,
+      "operation": "INSERT INTO",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 228,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 907,
+      "operation": "DELETE FROM",
+      "table": "web_oauth_states"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 909,
+      "operation": "INSERT INTO",
+      "table": "web_oauth_states"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 987,
+      "operation": "UPDATE",
+      "table": "web_oauth_states"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 189,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_oauth_states"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 652,
+      "operation": "UPDATE",
+      "table": "web_sessions"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 750,
+      "operation": "INSERT INTO",
+      "table": "web_sessions"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1530,
+      "operation": "UPDATE",
+      "table": "web_sessions"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1609,
+      "operation": "UPDATE",
+      "table": "web_sessions"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2693,
+      "operation": "UPDATE",
+      "table": "web_sessions"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 101,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_sessions"
+    }
+  ],
+  "database_tables": [
+    "affiliate_links",
+    "any",
+    "b2b_projects",
+    "campaigns",
+    "credit_events",
+    "erp_approvals",
+    "erp_assets",
+    "erp_attendance",
+    "erp_banners",
+    "erp_chat",
+    "erp_customers",
+    "erp_employees",
+    "erp_goals",
+    "erp_inventory",
+    "erp_okrs",
+    "erp_production",
+    "erp_projects",
+    "erp_purchases",
+    "erp_sales",
+    "erp_social",
+    "erp_transactions",
+    "erp_workloads",
+    "feedback",
+    "manual_orders",
+    "manual_performance_events",
+    "media_assets",
+    "only",
+    "payos_orders",
+    "payos_processed",
+    "storage_entitlements",
+    "storage_events",
+    "storage_usage",
+    "telegram_link_codes",
+    "telegram_login_codes",
+    "users",
+    "web_account_profiles",
+    "web_accounts",
+    "web_audit_events",
+    "web_bridge_callback_nonces",
+    "web_campaign_plans",
+    "web_external_identities",
+    "web_feature_quote_receipts",
+    "web_idempotency",
+    "web_oauth_states",
+    "web_sessions"
+  ],
+  "env_references": [
+    {
+      "file": "control_status.py",
+      "line": 72,
+      "name": "ADMIN_ID"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 131,
+      "name": "ADMIN_ID"
+    },
+    {
+      "file": "video.py",
+      "line": 46,
+      "name": "ADMIN_ID"
+    },
+    {
+      "file": "control_status.py",
+      "line": 71,
+      "name": "ADMIN_IDS"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 131,
+      "name": "ADMIN_IDS"
+    },
+    {
+      "file": "video.py",
+      "line": 46,
+      "name": "ADMIN_IDS"
+    },
+    {
+      "file": "auth.py",
+      "line": 10,
+      "name": "ADMIN_PASSWORD"
+    },
+    {
+      "file": "control_status.py",
+      "line": 74,
+      "name": "ADMIN_TELEGRAM_IDS"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 166,
+      "name": "APPLE_OAUTH_KEY_ID"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 167,
+      "name": "APPLE_OAUTH_PRIVATE_KEY_BASE64"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 165,
+      "name": "APPLE_OAUTH_TEAM_ID"
+    },
+    {
+      "file": "app.py",
+      "line": 38,
+      "name": "APP_ENV"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 98,
+      "name": "APP_ENV"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 23,
+      "name": "APP_ENV"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 319,
+      "name": "BOT_USERNAME"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 403,
+      "name": "BOT_USERNAME"
+    },
+    {
+      "file": "auth.py",
+      "line": 26,
+      "name": "COOKIE_SECURE"
+    },
+    {
+      "file": "copyfast_bridge.py",
+      "line": 40,
+      "name": "CORE_BRIDGE_BASE_URL"
+    },
+    {
+      "file": "copyfast_bridge.py",
+      "line": 48,
+      "name": "CORE_BRIDGE_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_bridge.py",
+      "line": 44,
+      "name": "CORE_BRIDGE_TOKEN"
+    },
+    {
+      "file": "app.py",
+      "line": 34,
+      "name": "CORS_ALLOW_ORIGINS"
+    },
+    {
+      "file": "ai_media.py",
+      "line": 12,
+      "name": "CUTOUT_API_KEY"
+    },
+    {
+      "file": "config.py",
+      "line": 14,
+      "name": "DB_BACKUP_DIR"
+    },
+    {
+      "file": "config.py",
+      "line": 15,
+      "name": "DB_BACKUP_DIR"
+    },
+    {
+      "file": "config.py",
+      "line": 7,
+      "name": "DB_FILE"
+    },
+    {
+      "file": "config.py",
+      "line": 8,
+      "name": "DB_FILE"
+    },
+    {
+      "file": "config.py",
+      "line": 5,
+      "name": "DB_PATH"
+    },
+    {
+      "file": "config.py",
+      "line": 6,
+      "name": "DB_PATH"
+    },
+    {
+      "file": "config.py",
+      "line": 27,
+      "name": "DB_STARTUP_BACKUP_ENABLED"
+    },
+    {
+      "file": "ai_media.py",
+      "line": 10,
+      "name": "DEEPGRAM_API_KEY"
+    },
+    {
+      "file": "app.py",
+      "line": 38,
+      "name": "ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 99,
+      "name": "ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 24,
+      "name": "ENVIRONMENT"
+    },
+    {
+      "file": "ai_media.py",
+      "line": 11,
+      "name": "FISH_AUDIO_KEY"
+    },
+    {
+      "file": "ai_assistant.py",
+      "line": 12,
+      "name": "GEMINI_API_KEY"
+    },
+    {
+      "file": "coach.py",
+      "line": 11,
+      "name": "GEMINI_API_KEY"
+    },
+    {
+      "file": "video.py",
+      "line": 12,
+      "name": "GEMINI_API_KEY"
+    },
+    {
+      "file": "control_status.py",
+      "line": 73,
+      "name": "OWNER_TELEGRAM_ID"
+    },
+    {
+      "file": "config.py",
+      "line": 32,
+      "name": "PAYOS_API_KEY"
+    },
+    {
+      "file": "config.py",
+      "line": 33,
+      "name": "PAYOS_CHECKSUM_KEY"
+    },
+    {
+      "file": "config.py",
+      "line": 31,
+      "name": "PAYOS_CLIENT_ID"
+    },
+    {
+      "file": "billing.py",
+      "line": 144,
+      "name": "PUBLIC_BASE_URL"
+    },
+    {
+      "file": "control_status.py",
+      "line": 84,
+      "name": "PUBLIC_BASE_URL"
+    },
+    {
+      "file": "app.py",
+      "line": 38,
+      "name": "RAILWAY_ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 100,
+      "name": "RAILWAY_ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 25,
+      "name": "RAILWAY_ENVIRONMENT"
+    },
+    {
+      "file": "config.py",
+      "line": 28,
+      "name": "REQUIRE_PERSISTENT_DB"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 31,
+      "name": "TELEGRAM_LINK_TTL_MINUTES"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 717,
+      "name": "WEBAPP_ASSET_DELIVERY_ALLOWED_HOSTS"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 272,
+      "name": "WEBAPP_FEATURE_JOB_ADAPTERS"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 412,
+      "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2245,
+      "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 411,
+      "name": "WEBAPP_LINK_CALLBACK_TOKEN"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2244,
+      "name": "WEBAPP_LINK_CALLBACK_TOKEN"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 147,
+      "name": "WEBAPP_PUBLIC_BASE_URL"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 32,
+      "name": "WEBAPP_SESSION_DB_PATH"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 49,
+      "name": "WEBAPP_SESSION_DB_PATH"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1240,
+      "name": "WEBAPP_UPLOAD_MAX_BYTES"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1241,
+      "name": "WEBAPP_UPLOAD_MAX_MB"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 113,
+      "name": "WEB_COOKIE_SECURE"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 395,
+      "name": "WEB_FEATURE_QUOTE_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 140,
+      "name": "WEB_OAUTH_IDENTITY_HMAC_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 32,
+      "name": "WEB_OAUTH_STATE_TTL_MINUTES"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 395,
+      "name": "WEB_SESSION_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 106,
+      "name": "WEB_SESSION_SECRET"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 30,
+      "name": "WEB_SESSION_TTL_HOURS"
+    },
+    {
+      "file": "customer_api.py",
+      "line": 123,
+      "name": "WEB_TOOL_PROCESS_ENABLED"
+    }
+  ],
+  "excluded_noncanonical_source_files": [],
+  "feature_presence": {
+    "admin_erp": [
+      "admin",
+      "operator",
+      "finance",
+      "report",
+      "audit"
+    ],
+    "chat_prompt": [
+      "chat",
+      "prompt",
+      "caption",
+      "hashtag",
+      "hook",
+      "script",
+      "storyboard",
+      "content_pack"
+    ],
+    "documents": [
+      "pdf",
+      "ocr",
+      "document",
+      "merge",
+      "compress"
+    ],
+    "image": [
+      "image",
+      "upscale",
+      "remove_background",
+      "background_remove"
+    ],
+    "music": [
+      "music",
+      "song",
+      "sfx",
+      "audio"
+    ],
+    "subtitle_dub": [
+      "subtitle",
+      "translate",
+      "dub",
+      "asr",
+      "srt",
+      "vtt"
+    ],
+    "support": [
+      "support",
+      "ticket",
+      "feedback"
+    ],
+    "video": [
+      "video",
+      "multiscene",
+      "text_to_video",
+      "image_to_video",
+      "trend",
+      "quick_video"
+    ],
+    "voice": [
+      "voice",
+      "tts",
+      "clone"
+    ],
+    "wallet_billing": [
+      "wallet",
+      "credit",
+      "xu",
+      "payment",
+      "payos",
+      "topup"
+    ]
+  },
+  "parse_errors": [],
+  "private_core_bridge_present": false,
+  "project_kind": "webapp",
+  "provider_names": [
+    "PayOS",
+    "Key4U",
+    "ShopAIKey",
+    "MiniMax",
+    "Deepgram",
+    "DeepL",
+    "Gemini",
+    "OpenAI",
+    "ElevenLabs",
+    "Fish Audio",
+    "Suno",
+    "Kling",
+    "Runway",
+    "Replicate",
+    "Cloudinary",
+    "Telegram"
+  ],
+  "providers": [
+    {
+      "files": [
+        "admin.html",
+        "admin_ops.py",
+        "app.py",
+        "billing.py",
+        "config.py",
+        "control_status.py",
+        "copyfast_api.py",
+        "copyfast_auth.py",
+        "copyfast_db.py",
+        "copyfast_registry.py",
+        "customer_api.py",
+        "customer_app.html",
+        "customer_app.js",
+        "docs/migration/ADMIN_FAILED_JOB_INCIDENTS.md",
+        "docs/migration/ADMIN_WRITE_CONTRACT.md",
+        "docs/migration/BRIDGE_CONTRACT_INVENTORY.md",
+        "docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md",
+        "docs/migration/ENGINE_DELIVERY_ADAPTER_BACKLOG.md",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "docs/migration/FEATURE_CONFIRM_CONTRACT.md",
+        "docs/migration/FEATURE_FAMILY_NAVIGATION.md",
+        "docs/migration/JOB_SUPPORT_RECOVERY.md",
+        "docs/migration/known-gaps.md",
+        "docs/migration/KNOWN_GAPS_AND_GUARDS.md",
+        "docs/migration/OAUTH_AUTH_MAP.md",
+        "docs/migration/payos-wallet-jobs.md",
+        "docs/migration/PAYOS_WALLET_JOB_MAP.md",
+        "docs/migration/README.md",
+        "docs/migration/state-database-map.md",
+        "docs/migration/STATE_AND_DATABASE_MAP.md",
+        "docs/migration/TELEGRAM_WEB_CONNECTION.md",
+        "docs/migration/TEST_EVIDENCE.md",
+        "docs/migration/web-inventory.md",
+        "docs/reports/TOAN_AAS_WEB_APP_CONTROL_STATUS_REPORT_20260617.md",
+        "docs/reports/TOAN_AAS_WEB_APP_PRODUCTION_PROMOTION_REPORT_20260616.md",
+        "docs/webapp/TOAN_AAS_WEB_APP_PAYOS_SINGLE_SOURCE.md",
+        "docs/webapp/TOAN_AAS_WEB_APP_PRODUCTION_ARCHITECTURE.md",
+        "docs/webapp/TOAN_AAS_WEB_APP_SECURITY_AUDIT.md",
+        "index.html"
+      ],
+      "occurrences": 195,
+      "provider": "PayOS"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "docs/migration/key4u-map.md",
+        "docs/migration/KEY4U_CURRENT_DOCS_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 18,
+      "provider": "Key4U"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "ShopAIKey"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "MiniMax"
+    },
+    {
+      "files": [
+        "ai_media.py",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 10,
+      "provider": "Deepgram"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "DeepL"
+    },
+    {
+      "files": [
+        "ai_assistant.py",
+        "coach.html",
+        "coach.py",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py",
+        "video.html",
+        "video.py"
+      ],
+      "occurrences": 16,
+      "provider": "Gemini"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "OpenAI"
+    },
+    {
+      "files": [
+        "ai_media.py",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 8,
+      "provider": "ElevenLabs"
+    },
+    {
+      "files": [
+        "ai_media.py",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 10,
+      "provider": "Fish Audio"
+    },
+    {
+      "files": [
+        "customer_app.html",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "docs/migration/TEST_EVIDENCE.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 10,
+      "provider": "Suno"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "Kling"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "Runway"
+    },
+    {
+      "files": [
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 7,
+      "provider": "Replicate"
+    },
+    {
+      "files": [
+        "reports/migration/web_inventory.json",
+        "scripts/migration/audit_bot_to_web.py"
+      ],
+      "occurrences": 3,
+      "provider": "Cloudinary"
+    },
+    {
+      "files": [
+        "app.py",
+        "auth_ops.py",
+        "copyfast_api.py",
+        "copyfast_auth.py",
+        "copyfast_bridge.py",
+        "copyfast_db.py",
+        "copyfast_registry.py",
+        "docs/migration/ADMIN_FAILED_JOB_INCIDENTS.md",
+        "docs/migration/ADMIN_WRITE_CONTRACT.md",
+        "docs/migration/ASSET_DELIVERY_CONTRACT.md",
+        "docs/migration/bot-inventory.md",
+        "docs/migration/BOT_COMPANION_HANDOFF.md",
+        "docs/migration/BRIDGE_CONTRACT_INVENTORY.md",
+        "docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md",
+        "docs/migration/CONTENT_OPERATIONS_ADMIN.md",
+        "docs/migration/env-provider-map.md",
+        "docs/migration/ENV_AND_PROVIDER_MAP.md",
+        "docs/migration/FEATURE_CONFIRM_CONTRACT.md",
+        "docs/migration/FEATURE_FAMILY_NAVIGATION.md",
+        "docs/migration/known-gaps.md",
+        "docs/migration/KNOWN_GAPS_AND_GUARDS.md",
+        "docs/migration/OAUTH_AUTH_MAP.md",
+        "docs/migration/payos-wallet-jobs.md",
+        "docs/migration/PAYOS_WALLET_JOB_MAP.md",
+        "docs/migration/README.md",
+        "docs/migration/route-map.md",
+        "docs/migration/STATE_AND_DATABASE_MAP.md",
+        "docs/migration/TELEGRAM_TO_WEB_ROUTE_MAP.md",
+        "docs/migration/TELEGRAM_WEB_CONNECTION.md",
+        "docs/migration/TEST_EVIDENCE.md",
+        "docs/migration/web-inventory.md",
+        "docs/reports/TOAN_AAS_WEB_APP_CONTROL_STATUS_REPORT_20260617.md",
+        "docs/reports/TOAN_AAS_WEB_APP_PRODUCTION_PROMOTION_REPORT_20260616.md",
+        "docs/webapp/TOAN_AAS_WEB_APP_PAYOS_SINGLE_SOURCE.md",
+        "docs/webapp/TOAN_AAS_WEB_APP_PRODUCTION_ARCHITECTURE.md",
+        "login.html",
+        "README.md",
+        "reports/migration/bot_inventory.json",
+        "reports/migration/parity_gap.json",
+        "reports/migration/web_inventory.json"
+      ],
+      "occurrences": 603,
+      "provider": "Telegram"
+    }
+  ],
+  "routes": [
+    {
+      "endpoint": "add_performance",
+      "file": "performance.py",
+      "line": 17,
+      "methods": [
+        "POST"
+      ],
+      "path": "/add"
+    },
+    {
+      "endpoint": "admin_add_xu",
+      "file": "admin_ops.py",
+      "line": 62,
+      "methods": [
+        "POST"
+      ],
+      "path": "/add-xu"
+    },
+    {
+      "endpoint": "legacy_admin_redirect",
+      "file": "app.py",
+      "line": 193,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin-app"
+    },
+    {
+      "endpoint": "approve_manual_topup",
+      "file": "customer_api.py",
+      "line": 86,
+      "methods": [
+        "POST"
+      ],
+      "path": "/admin/approve-topup"
+    },
+    {
+      "endpoint": "admin_freeze_feature",
+      "file": "copyfast_api.py",
+      "line": 2506,
+      "methods": [
+        "POST"
+      ],
+      "path": "/admin/features/{feature}/freeze"
+    },
+    {
+      "endpoint": "admin_jobs",
+      "file": "copyfast_api.py",
+      "line": 2420,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/jobs"
+    },
+    {
+      "endpoint": "admin_refund_job",
+      "file": "copyfast_api.py",
+      "line": 2483,
+      "methods": [
+        "POST"
+      ],
+      "path": "/admin/jobs/{job_id}/refund"
+    },
+    {
+      "endpoint": "admin_retry_job",
+      "file": "copyfast_api.py",
+      "line": 2457,
+      "methods": [
+        "POST"
+      ],
+      "path": "/admin/jobs/{job_id}/retry"
+    },
+    {
+      "endpoint": "get_manual_orders",
+      "file": "customer_api.py",
+      "line": 74,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/manual-orders"
+    },
+    {
+      "endpoint": "admin_module",
+      "file": "copyfast_api.py",
+      "line": 2440,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/modules/{module}"
+    },
+    {
+      "endpoint": "admin_payments",
+      "file": "copyfast_api.py",
+      "line": 2425,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/payments"
+    },
+    {
+      "endpoint": "admin_providers",
+      "file": "copyfast_api.py",
+      "line": 2430,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/providers"
+    },
+    {
+      "endpoint": "admin_summary",
+      "file": "copyfast_api.py",
+      "line": 2410,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/summary"
+    },
+    {
+      "endpoint": "admin_tickets",
+      "file": "copyfast_api.py",
+      "line": 2435,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/tickets"
+    },
+    {
+      "endpoint": "admin_users",
+      "file": "copyfast_api.py",
+      "line": 2415,
+      "methods": [
+        "GET"
+      ],
+      "path": "/admin/users"
+    },
+    {
+      "endpoint": "legacy_affiliate_redirect",
+      "file": "app.py",
+      "line": 213,
+      "methods": [
+        "GET"
+      ],
+      "path": "/affiliate-app"
+    },
+    {
+      "endpoint": "get_ai_advice",
+      "file": "erp_core.py",
+      "line": 175,
+      "methods": [
+        "GET"
+      ],
+      "path": "/ai-advice"
+    },
+    {
+      "endpoint": "process_ai_tool",
+      "file": "customer_api.py",
+      "line": 122,
+      "methods": [
+        "POST"
+      ],
+      "path": "/ai/process"
+    },
+    {
+      "endpoint": "analyze_campaign",
+      "file": "coach.py",
+      "line": 20,
+      "methods": [
+        "POST"
+      ],
+      "path": "/analyze"
+    },
+    {
+      "endpoint": "health",
+      "file": "app.py",
+      "line": 188,
+      "methods": [
+        "GET"
+      ],
+      "path": "/api/v1/health"
+    },
+    {
+      "endpoint": "add_approval",
+      "file": "erp_core.py",
+      "line": 129,
+      "methods": [
+        "POST"
+      ],
+      "path": "/approvals"
+    },
+    {
+      "endpoint": "get_approvals",
+      "file": "erp_core.py",
+      "line": 131,
+      "methods": [
+        "GET"
+      ],
+      "path": "/approvals"
+    },
+    {
+      "endpoint": "ask_assistant",
+      "file": "ai_assistant.py",
+      "line": 23,
+      "methods": [
+        "POST"
+      ],
+      "path": "/ask"
+    },
+    {
+      "endpoint": "assets",
+      "file": "copyfast_api.py",
+      "line": 2230,
+      "methods": [
+        "GET"
+      ],
+      "path": "/assets"
+    },
+    {
+      "endpoint": "add_asset",
+      "file": "erp_core.py",
+      "line": 105,
+      "methods": [
+        "POST"
+      ],
+      "path": "/assets"
+    },
+    {
+      "endpoint": "get_assets",
+      "file": "erp_core.py",
+      "line": 107,
+      "methods": [
+        "GET"
+      ],
+      "path": "/assets"
+    },
+    {
+      "endpoint": "save_asset",
+      "file": "media_ops.py",
+      "line": 39,
+      "methods": [
+        "POST"
+      ],
+      "path": "/assets"
+    },
+    {
+      "endpoint": "get_assets",
+      "file": "media_ops.py",
+      "line": 55,
+      "methods": [
+        "GET"
+      ],
+      "path": "/assets"
+    },
+    {
+      "endpoint": "asset_download",
+      "file": "copyfast_api.py",
+      "line": 2235,
+      "methods": [
+        "GET"
+      ],
+      "path": "/assets/{asset_id}/download"
+    },
+    {
+      "endpoint": "legacy_assistant_redirect",
+      "file": "app.py",
+      "line": 224,
+      "methods": [
+        "GET"
+      ],
+      "path": "/assistant-app"
+    },
+    {
+      "endpoint": "mark_attendance",
+      "file": "erp_core.py",
+      "line": 93,
+      "methods": [
+        "POST"
+      ],
+      "path": "/attendance"
+    },
+    {
+      "endpoint": "get_attendance",
+      "file": "erp_core.py",
+      "line": 95,
+      "methods": [
+        "GET"
+      ],
+      "path": "/attendance"
+    },
+    {
+      "endpoint": "legacy_b2b_redirect",
+      "file": "app.py",
+      "line": 229,
+      "methods": [
+        "GET"
+      ],
+      "path": "/b2b-app"
+    },
+    {
+      "endpoint": "add_banner",
+      "file": "erp_core.py",
+      "line": 153,
+      "methods": [
+        "POST"
+      ],
+      "path": "/banners"
+    },
+    {
+      "endpoint": "get_banners",
+      "file": "erp_core.py",
+      "line": 155,
+      "methods": [
+        "GET"
+      ],
+      "path": "/banners"
+    },
+    {
+      "endpoint": "legacy_campaign_redirect",
+      "file": "app.py",
+      "line": 208,
+      "methods": [
+        "GET"
+      ],
+      "path": "/campaign-app"
+    },
+    {
+      "endpoint": "list_campaign_plans",
+      "file": "copyfast_api.py",
+      "line": 1858,
+      "methods": [
+        "GET"
+      ],
+      "path": "/campaigns"
+    },
+    {
+      "endpoint": "create_campaign_plan",
+      "file": "copyfast_api.py",
+      "line": 1886,
+      "methods": [
+        "POST"
+      ],
+      "path": "/campaigns"
+    },
+    {
+      "endpoint": "update_campaign_plan",
+      "file": "copyfast_api.py",
+      "line": 1950,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/campaigns/{plan_id}"
+    },
+    {
+      "endpoint": "update_campaign_plan_status",
+      "file": "copyfast_api.py",
+      "line": 2021,
+      "methods": [
+        "POST"
+      ],
+      "path": "/campaigns/{plan_id}/status"
+    },
+    {
+      "endpoint": "feature_catalog",
+      "file": "copyfast_api.py",
+      "line": 1835,
+      "methods": [
+        "GET"
+      ],
+      "path": "/catalog"
+    },
+    {
+      "endpoint": "workflow_catalog",
+      "file": "workflow_engine.py",
+      "line": 474,
+      "methods": [
+        "GET"
+      ],
+      "path": "/catalog"
+    },
+    {
+      "endpoint": "add_chat",
+      "file": "erp_core.py",
+      "line": 160,
+      "methods": [
+        "POST"
+      ],
+      "path": "/chat"
+    },
+    {
+      "endpoint": "get_chat",
+      "file": "erp_core.py",
+      "line": 167,
+      "methods": [
+        "GET"
+      ],
+      "path": "/chat"
+    },
+    {
+      "endpoint": "legacy_assistant_redirect",
+      "file": "app.py",
+      "line": 224,
+      "methods": [
+        "GET"
+      ],
+      "path": "/coach-app"
+    },
+    {
+      "endpoint": "core_me",
+      "file": "copyfast_api.py",
+      "line": 2092,
+      "methods": [
+        "GET"
+      ],
+      "path": "/core/me"
+    },
+    {
+      "endpoint": "core_status",
+      "file": "copyfast_api.py",
+      "line": 1840,
+      "methods": [
+        "GET"
+      ],
+      "path": "/core/status"
+    },
+    {
+      "endpoint": "create_campaign",
+      "file": "campaign.py",
+      "line": 16,
+      "methods": [
+        "POST"
+      ],
+      "path": "/create"
+    },
+    {
+      "endpoint": "create_campaign",
+      "file": "campaign_ops.py",
+      "line": 33,
+      "methods": [
+        "POST"
+      ],
+      "path": "/create"
+    },
+    {
+      "endpoint": "create_payment_link",
+      "file": "billing.py",
+      "line": 102,
+      "methods": [
+        "POST"
+      ],
+      "path": "/create-payment-link"
+    },
+    {
+      "endpoint": "add_customer",
+      "file": "erp_core.py",
+      "line": 63,
+      "methods": [
+        "POST"
+      ],
+      "path": "/customers"
+    },
+    {
+      "endpoint": "get_customers",
+      "file": "erp_core.py",
+      "line": 65,
+      "methods": [
+        "GET"
+      ],
+      "path": "/customers"
+    },
+    {
+      "endpoint": "get_dashboard_summary",
+      "file": "report.py",
+      "line": 27,
+      "methods": [
+        "GET"
+      ],
+      "path": "/dashboard"
+    },
+    {
+      "endpoint": "get_dashboard_stats",
+      "file": "admin_ops.py",
+      "line": 12,
+      "methods": [
+        "GET"
+      ],
+      "path": "/dashboard-stats"
+    },
+    {
+      "endpoint": "get_erp_stats",
+      "file": "erp_core.py",
+      "line": 52,
+      "methods": [
+        "GET"
+      ],
+      "path": "/dashboard-stats"
+    },
+    {
+      "endpoint": "add_employee",
+      "file": "erp_core.py",
+      "line": 87,
+      "methods": [
+        "POST"
+      ],
+      "path": "/employees"
+    },
+    {
+      "endpoint": "get_employees",
+      "file": "erp_core.py",
+      "line": 89,
+      "methods": [
+        "GET"
+      ],
+      "path": "/employees"
+    },
+    {
+      "endpoint": "feature_status",
+      "file": "copyfast_api.py",
+      "line": 2310,
+      "methods": [
+        "GET"
+      ],
+      "path": "/features/status"
+    },
+    {
+      "endpoint": "feature_confirm",
+      "file": "copyfast_api.py",
+      "line": 2405,
+      "methods": [
+        "POST"
+      ],
+      "path": "/features/{feature}/confirm"
+    },
+    {
+      "endpoint": "feature_draft",
+      "file": "copyfast_api.py",
+      "line": 2395,
+      "methods": [
+        "POST"
+      ],
+      "path": "/features/{feature}/draft"
+    },
+    {
+      "endpoint": "feature_estimate",
+      "file": "copyfast_api.py",
+      "line": 2400,
+      "methods": [
+        "POST"
+      ],
+      "path": "/features/{feature}/estimate"
+    },
+    {
+      "endpoint": "submit_feedback",
+      "file": "customer_api.py",
+      "line": 27,
+      "methods": [
+        "POST"
+      ],
+      "path": "/feedback"
+    },
+    {
+      "endpoint": "add_finance",
+      "file": "erp_core.py",
+      "line": 81,
+      "methods": [
+        "POST"
+      ],
+      "path": "/finance"
+    },
+    {
+      "endpoint": "get_finance",
+      "file": "erp_core.py",
+      "line": 83,
+      "methods": [
+        "GET"
+      ],
+      "path": "/finance"
+    },
+    {
+      "endpoint": "generate_script",
+      "file": "video.py",
+      "line": 34,
+      "methods": [
+        "POST"
+      ],
+      "path": "/generate-script"
+    },
+    {
+      "endpoint": "add_goal",
+      "file": "erp_core.py",
+      "line": 147,
+      "methods": [
+        "POST"
+      ],
+      "path": "/goals"
+    },
+    {
+      "endpoint": "get_goals",
+      "file": "erp_core.py",
+      "line": 149,
+      "methods": [
+        "GET"
+      ],
+      "path": "/goals"
+    },
+    {
+      "endpoint": "health",
+      "file": "app.py",
+      "line": 188,
+      "methods": [
+        "GET"
+      ],
+      "path": "/health"
+    },
+    {
+      "endpoint": "confirm_telegram_link",
+      "file": "copyfast_auth.py",
+      "line": 2277,
+      "methods": [
+        "POST"
+      ],
+      "path": "/internal/telegram-link/confirm"
+    },
+    {
+      "endpoint": "confirm_telegram_link",
+      "file": "copyfast_auth.py",
+      "line": 2277,
+      "methods": [
+        "POST"
+      ],
+      "path": "/internal/telegram-link/confirm/"
+    },
+    {
+      "endpoint": "add_inventory",
+      "file": "erp_core.py",
+      "line": 75,
+      "methods": [
+        "POST"
+      ],
+      "path": "/inventory"
+    },
+    {
+      "endpoint": "get_inventory",
+      "file": "erp_core.py",
+      "line": 77,
+      "methods": [
+        "GET"
+      ],
+      "path": "/inventory"
+    },
+    {
+      "endpoint": "list_jobs",
+      "file": "copyfast_api.py",
+      "line": 2219,
+      "methods": [
+        "GET"
+      ],
+      "path": "/jobs"
+    },
+    {
+      "endpoint": "job_detail",
+      "file": "copyfast_api.py",
+      "line": 2224,
+      "methods": [
+        "GET"
+      ],
+      "path": "/jobs/{job_id}"
+    },
+    {
+      "endpoint": "add_link",
+      "file": "affiliate_ops.py",
+      "line": 34,
+      "methods": [
+        "POST"
+      ],
+      "path": "/links"
+    },
+    {
+      "endpoint": "get_links",
+      "file": "affiliate_ops.py",
+      "line": 50,
+      "methods": [
+        "GET"
+      ],
+      "path": "/links"
+    },
+    {
+      "endpoint": "login",
+      "file": "auth_ops.py",
+      "line": 69,
+      "methods": [
+        "POST"
+      ],
+      "path": "/login"
+    },
+    {
+      "endpoint": "login",
+      "file": "copyfast_auth.py",
+      "line": 1578,
+      "methods": [
+        "POST"
+      ],
+      "path": "/login"
+    },
+    {
+      "endpoint": "logout",
+      "file": "auth.py",
+      "line": 35,
+      "methods": [
+        "POST"
+      ],
+      "path": "/logout"
+    },
+    {
+      "endpoint": "logout",
+      "file": "copyfast_auth.py",
+      "line": 1606,
+      "methods": [
+        "POST"
+      ],
+      "path": "/logout"
+    },
+    {
+      "endpoint": "submit_manual_topup",
+      "file": "customer_api.py",
+      "line": 55,
+      "methods": [
+        "POST"
+      ],
+      "path": "/manual-topup"
+    },
+    {
+      "endpoint": "me",
+      "file": "copyfast_auth.py",
+      "line": 1616,
+      "methods": [
+        "GET"
+      ],
+      "path": "/me"
+    },
+    {
+      "endpoint": "get_my_profile",
+      "file": "auth.py",
+      "line": 41,
+      "methods": [
+        "GET"
+      ],
+      "path": "/me/{user_id}"
+    },
+    {
+      "endpoint": "me",
+      "file": "auth_ops.py",
+      "line": 100,
+      "methods": [
+        "GET"
+      ],
+      "path": "/me/{user_id}"
+    },
+    {
+      "endpoint": "legacy_media_redirect",
+      "file": "app.py",
+      "line": 218,
+      "methods": [
+        "GET"
+      ],
+      "path": "/media-app"
+    },
+    {
+      "endpoint": "apple_oauth_callback",
+      "file": "copyfast_auth.py",
+      "line": 1930,
+      "methods": [
+        "POST"
+      ],
+      "path": "/oauth/apple/callback"
+    },
+    {
+      "endpoint": "oauth_callback",
+      "file": "copyfast_auth.py",
+      "line": 1912,
+      "methods": [
+        "GET"
+      ],
+      "path": "/oauth/{provider}/callback"
+    },
+    {
+      "endpoint": "start_oauth_link",
+      "file": "copyfast_auth.py",
+      "line": 1772,
+      "methods": [
+        "POST"
+      ],
+      "path": "/oauth/{provider}/link/start"
+    },
+    {
+      "endpoint": "start_oauth",
+      "file": "copyfast_auth.py",
+      "line": 1790,
+      "methods": [
+        "GET"
+      ],
+      "path": "/oauth/{provider}/start"
+    },
+    {
+      "endpoint": "add_okr",
+      "file": "erp_core.py",
+      "line": 117,
+      "methods": [
+        "POST"
+      ],
+      "path": "/okrs"
+    },
+    {
+      "endpoint": "get_okrs",
+      "file": "erp_core.py",
+      "line": 119,
+      "methods": [
+        "GET"
+      ],
+      "path": "/okrs"
+    },
+    {
+      "endpoint": "packages",
+      "file": "copyfast_api.py",
+      "line": 2120,
+      "methods": [
+        "GET"
+      ],
+      "path": "/packages"
+    },
+    {
+      "endpoint": "create_payment",
+      "file": "copyfast_api.py",
+      "line": 2186,
+      "methods": [
+        "POST"
+      ],
+      "path": "/payments/create"
+    },
+    {
+      "endpoint": "payment_options",
+      "file": "copyfast_api.py",
+      "line": 2125,
+      "methods": [
+        "GET"
+      ],
+      "path": "/payments/options"
+    },
+    {
+      "endpoint": "payment_status",
+      "file": "copyfast_api.py",
+      "line": 2213,
+      "methods": [
+        "GET"
+      ],
+      "path": "/payments/{payment_id}"
+    },
+    {
+      "endpoint": "create_web_payos_link",
+      "file": "customer_api.py",
+      "line": 42,
+      "methods": [
+        "POST"
+      ],
+      "path": "/payos/create-link"
+    },
+    {
+      "endpoint": "customer_affiliates",
+      "file": "customer_api.py",
+      "line": 170,
+      "methods": [
+        "GET"
+      ],
+      "path": "/portal/affiliates/{user_id}"
+    },
+    {
+      "endpoint": "customer_history",
+      "file": "customer_api.py",
+      "line": 178,
+      "methods": [
+        "GET"
+      ],
+      "path": "/portal/history/{user_id}"
+    },
+    {
+      "endpoint": "customer_projects",
+      "file": "customer_api.py",
+      "line": 160,
+      "methods": [
+        "GET"
+      ],
+      "path": "/portal/projects/{user_id}"
+    },
+    {
+      "endpoint": "pricing",
+      "file": "copyfast_api.py",
+      "line": 2115,
+      "methods": [
+        "GET"
+      ],
+      "path": "/pricing"
+    },
+    {
+      "endpoint": "add_production",
+      "file": "erp_core.py",
+      "line": 135,
+      "methods": [
+        "POST"
+      ],
+      "path": "/production"
+    },
+    {
+      "endpoint": "get_production",
+      "file": "erp_core.py",
+      "line": 137,
+      "methods": [
+        "GET"
+      ],
+      "path": "/production"
+    },
+    {
+      "endpoint": "update_profile",
+      "file": "copyfast_auth.py",
+      "line": 1630,
+      "methods": [
+        "POST"
+      ],
+      "path": "/profile"
+    },
+    {
+      "endpoint": "create_project",
+      "file": "device_ops.py",
+      "line": 36,
+      "methods": [
+        "POST"
+      ],
+      "path": "/projects"
+    },
+    {
+      "endpoint": "get_projects",
+      "file": "device_ops.py",
+      "line": 52,
+      "methods": [
+        "GET"
+      ],
+      "path": "/projects"
+    },
+    {
+      "endpoint": "add_project",
+      "file": "erp_core.py",
+      "line": 69,
+      "methods": [
+        "POST"
+      ],
+      "path": "/projects"
+    },
+    {
+      "endpoint": "get_projects",
+      "file": "erp_core.py",
+      "line": 71,
+      "methods": [
+        "GET"
+      ],
+      "path": "/projects"
+    },
+    {
+      "endpoint": "oauth_providers",
+      "file": "copyfast_auth.py",
+      "line": 1736,
+      "methods": [
+        "GET"
+      ],
+      "path": "/providers"
+    },
+    {
+      "endpoint": "add_purchase",
+      "file": "erp_core.py",
+      "line": 123,
+      "methods": [
+        "POST"
+      ],
+      "path": "/purchases"
+    },
+    {
+      "endpoint": "get_purchases",
+      "file": "erp_core.py",
+      "line": 125,
+      "methods": [
+        "GET"
+      ],
+      "path": "/purchases"
+    },
+    {
+      "endpoint": "register",
+      "file": "auth_ops.py",
+      "line": 44,
+      "methods": [
+        "POST"
+      ],
+      "path": "/register"
+    },
+    {
+      "endpoint": "register",
+      "file": "copyfast_auth.py",
+      "line": 1535,
+      "methods": [
+        "POST"
+      ],
+      "path": "/register"
+    },
+    {
+      "endpoint": "remove_background",
+      "file": "ai_media.py",
+      "line": 61,
+      "methods": [
+        "POST"
+      ],
+      "path": "/remove-bg"
+    },
+    {
+      "endpoint": "add_sale",
+      "file": "erp_core.py",
+      "line": 99,
+      "methods": [
+        "POST"
+      ],
+      "path": "/sales"
+    },
+    {
+      "endpoint": "get_sales",
+      "file": "erp_core.py",
+      "line": 101,
+      "methods": [
+        "GET"
+      ],
+      "path": "/sales"
+    },
+    {
+      "endpoint": "add_post",
+      "file": "erp_core.py",
+      "line": 111,
+      "methods": [
+        "POST"
+      ],
+      "path": "/social"
+    },
+    {
+      "endpoint": "get_posts",
+      "file": "erp_core.py",
+      "line": 113,
+      "methods": [
+        "GET"
+      ],
+      "path": "/social"
+    },
+    {
+      "endpoint": "control_status",
+      "file": "control_status.py",
+      "line": 56,
+      "methods": [
+        "GET"
+      ],
+      "path": "/status"
+    },
+    {
+      "endpoint": "admin_grant_storage",
+      "file": "billing.py",
+      "line": 331,
+      "methods": [
+        "POST"
+      ],
+      "path": "/storage/admin/grant"
+    },
+    {
+      "endpoint": "storage_packages",
+      "file": "billing.py",
+      "line": 278,
+      "methods": [
+        "GET"
+      ],
+      "path": "/storage/packages"
+    },
+    {
+      "endpoint": "storage_status",
+      "file": "billing.py",
+      "line": 293,
+      "methods": [
+        "GET"
+      ],
+      "path": "/storage/status/{user_id}"
+    },
+    {
+      "endpoint": "speech_to_text",
+      "file": "ai_media.py",
+      "line": 45,
+      "methods": [
+        "POST"
+      ],
+      "path": "/stt"
+    },
+    {
+      "endpoint": "workflow_suggestions",
+      "file": "workflow_engine.py",
+      "line": 483,
+      "methods": [
+        "POST"
+      ],
+      "path": "/suggestions"
+    },
+    {
+      "endpoint": "support_tickets",
+      "file": "copyfast_api.py",
+      "line": 2287,
+      "methods": [
+        "GET"
+      ],
+      "path": "/support/tickets"
+    },
+    {
+      "endpoint": "create_support_ticket",
+      "file": "copyfast_api.py",
+      "line": 2292,
+      "methods": [
+        "POST"
+      ],
+      "path": "/support/tickets"
+    },
+    {
+      "endpoint": "sync_user",
+      "file": "user.py",
+      "line": 45,
+      "methods": [
+        "POST"
+      ],
+      "path": "/sync"
+    },
+    {
+      "endpoint": "upgrade_telegram_account",
+      "file": "copyfast_auth.py",
+      "line": 1666,
+      "methods": [
+        "POST"
+      ],
+      "path": "/telegram-account/upgrade"
+    },
+    {
+      "endpoint": "telegram_connection_status",
+      "file": "copyfast_auth.py",
+      "line": 1742,
+      "methods": [
+        "GET"
+      ],
+      "path": "/telegram/connection/status"
+    },
+    {
+      "endpoint": "complete_telegram_link",
+      "file": "copyfast_auth.py",
+      "line": 2583,
+      "methods": [
+        "POST"
+      ],
+      "path": "/telegram/link/complete"
+    },
+    {
+      "endpoint": "start_telegram_link",
+      "file": "copyfast_auth.py",
+      "line": 2131,
+      "methods": [
+        "POST"
+      ],
+      "path": "/telegram/link/start"
+    },
+    {
+      "endpoint": "telegram_link_status",
+      "file": "copyfast_auth.py",
+      "line": 2160,
+      "methods": [
+        "GET"
+      ],
+      "path": "/telegram/link/status"
+    },
+    {
+      "endpoint": "complete_telegram_login",
+      "file": "copyfast_auth.py",
+      "line": 2079,
+      "methods": [
+        "POST"
+      ],
+      "path": "/telegram/login/complete"
+    },
+    {
+      "endpoint": "start_telegram_login",
+      "file": "copyfast_auth.py",
+      "line": 1983,
+      "methods": [
+        "POST"
+      ],
+      "path": "/telegram/login/start"
+    },
+    {
+      "endpoint": "telegram_login_status",
+      "file": "copyfast_auth.py",
+      "line": 2050,
+      "methods": [
+        "GET"
+      ],
+      "path": "/telegram/login/status"
+    },
+    {
+      "endpoint": "text_to_speech",
+      "file": "ai_media.py",
+      "line": 27,
+      "methods": [
+        "POST"
+      ],
+      "path": "/tts"
+    },
+    {
+      "endpoint": "upload_to_canonical_staging",
+      "file": "copyfast_api.py",
+      "line": 2249,
+      "methods": [
+        "POST"
+      ],
+      "path": "/uploads"
+    },
+    {
+      "endpoint": "get_all_users",
+      "file": "admin_ops.py",
+      "line": 42,
+      "methods": [
+        "GET"
+      ],
+      "path": "/users"
+    },
+    {
+      "endpoint": "verify_login",
+      "file": "auth.py",
+      "line": 16,
+      "methods": [
+        "POST"
+      ],
+      "path": "/verify"
+    },
+    {
+      "endpoint": "legacy_video_redirect",
+      "file": "app.py",
+      "line": 203,
+      "methods": [
+        "GET"
+      ],
+      "path": "/video-app"
+    },
+    {
+      "endpoint": "voice_profiles",
+      "file": "copyfast_api.py",
+      "line": 2244,
+      "methods": [
+        "GET"
+      ],
+      "path": "/voice/profiles"
+    },
+    {
+      "endpoint": "wallet",
+      "file": "copyfast_api.py",
+      "line": 2104,
+      "methods": [
+        "GET"
+      ],
+      "path": "/wallet"
+    },
+    {
+      "endpoint": "legacy_wallet_redirect",
+      "file": "app.py",
+      "line": 198,
+      "methods": [
+        "GET"
+      ],
+      "path": "/wallet-app"
+    },
+    {
+      "endpoint": "wallet_history",
+      "file": "copyfast_api.py",
+      "line": 2109,
+      "methods": [
+        "GET"
+      ],
+      "path": "/wallet/history"
+    },
+    {
+      "endpoint": "payos_webhook",
+      "file": "billing.py",
+      "line": 184,
+      "methods": [
+        "POST"
+      ],
+      "path": "/webhook/payos"
+    },
+    {
+      "endpoint": "add_workload",
+      "file": "erp_core.py",
+      "line": 141,
+      "methods": [
+        "POST"
+      ],
+      "path": "/workloads"
+    },
+    {
+      "endpoint": "get_workloads",
+      "file": "erp_core.py",
+      "line": 143,
+      "methods": [
+        "GET"
+      ],
+      "path": "/workloads"
+    },
+    {
+      "endpoint": "page",
+      "file": "app.py",
+      "line": 234,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{page_path:path}"
+    },
+    {
+      "endpoint": "get_campaigns",
+      "file": "campaign.py",
+      "line": 43,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{user_id}"
+    },
+    {
+      "endpoint": "get_campaigns",
+      "file": "campaign_ops.py",
+      "line": 48,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{user_id}"
+    },
+    {
+      "endpoint": "get_user",
+      "file": "user.py",
+      "line": 23,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{user_id}"
+    }
+  ],
+  "schema_version": "1.0",
+  "source_files_discovered": 103,
+  "source_files_scanned": 103,
+  "source_fingerprint_sha256": "c8ec39f906e330b5522062089ff3121af802671bfc16c931682e1a6530cfd95d",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast1",
+  "ui_path_references": [
+    {
+      "file": "templates/dashboard.html",
+      "line": 70,
+      "path": "/api/generate"
+    },
+    {
+      "file": "affiliate.html",
+      "line": 86,
+      "path": "/api/v1/affiliate/links"
+    },
+    {
+      "file": "affiliate.html",
+      "line": 126,
+      "path": "/api/v1/affiliate/links"
+    },
+    {
+      "file": "mobile_chat.html",
+      "line": 112,
+      "path": "/api/v1/assistant/ask"
+    },
+    {
+      "file": "customer_app.html",
+      "line": 838,
+      "path": "/api/v1/billing/create-payment-link"
+    },
+    {
+      "file": "customer_app.html",
+      "line": 876,
+      "path": "/api/v1/billing/create-payment-link"
+    },
+    {
+      "file": "customer_app.html",
+      "line": 921,
+      "path": "/api/v1/billing/create-payment-link"
+    },
+    {
+      "file": "customer_app.js",
+      "line": 73,
+      "path": "/api/v1/billing/create-payment-link"
+    },
+    {
+      "file": "admin.html",
+      "line": 311,
+      "path": "/api/v1/billing/storage/admin/grant"
+    },
+    {
+      "file": "campaign.html",
+      "line": 114,
+      "path": "/api/v1/campaign/create"
+    },
+    {
+      "file": "coach.html",
+      "line": 74,
+      "path": "/api/v1/coach/analyze"
+    },
+    {
+      "file": "admin.html",
+      "line": 210,
+      "path": "/api/v1/control/status"
+    },
+    {
+      "file": "admin.html",
+      "line": 339,
+      "path": "/api/v1/control/status"
+    },
+    {
+      "file": "admin.html",
+      "line": 295,
+      "path": "/api/v1/customer/admin/approve-topup"
+    },
+    {
+      "file": "customer_app.js",
+      "line": 105,
+      "path": "/api/v1/customer/ai/process"
+    },
+    {
+      "file": "customer_app.js",
+      "line": 51,
+      "path": "/api/v1/customer/feedback"
+    },
+    {
+      "file": "customer_app.html",
+      "line": 947,
+      "path": "/api/v1/customer/manual-topup"
+    },
+    {
+      "file": "b2b.html",
+      "line": 87,
+      "path": "/api/v1/device-ops/projects"
+    },
+    {
+      "file": "b2b.html",
+      "line": 121,
+      "path": "/api/v1/device-ops/projects"
+    },
+    {
+      "file": "admin.html",
+      "line": 326,
+      "path": "/api/v1/erp/ai-advice"
+    },
+    {
+      "file": "mobile_app.html",
+      "line": 92,
+      "path": "/api/v1/erp/approvals"
+    },
+    {
+      "file": "mobile_app.html",
+      "line": 79,
+      "path": "/api/v1/erp/attendance"
+    },
+    {
+      "file": "admin.html",
+      "line": 246,
+      "path": "/api/v1/erp/chat"
+    },
+    {
+      "file": "admin.html",
+      "line": 254,
+      "path": "/api/v1/erp/chat"
+    },
+    {
+      "file": "admin.html",
+      "line": 233,
+      "path": "/api/v1/erp/customers"
+    },
+    {
+      "file": "admin.html",
+      "line": 234,
+      "path": "/api/v1/erp/customers"
+    },
+    {
+      "file": "admin.html",
+      "line": 196,
+      "path": "/api/v1/erp/dashboard-stats"
+    },
+    {
+      "file": "customer_app.js",
+      "line": 136,
+      "path": "/api/v1/erp/dashboard-stats"
+    },
+    {
+      "file": "admin.html",
+      "line": 239,
+      "path": "/api/v1/erp/finance"
+    },
+    {
+      "file": "admin.html",
+      "line": 240,
+      "path": "/api/v1/erp/finance"
+    },
+    {
+      "file": "admin.html",
+      "line": 241,
+      "path": "/api/v1/erp/goals"
+    },
+    {
+      "file": "admin.html",
+      "line": 242,
+      "path": "/api/v1/erp/goals"
+    },
+    {
+      "file": "admin.html",
+      "line": 237,
+      "path": "/api/v1/erp/inventory"
+    },
+    {
+      "file": "admin.html",
+      "line": 238,
+      "path": "/api/v1/erp/inventory"
+    },
+    {
+      "file": "admin.html",
+      "line": 235,
+      "path": "/api/v1/erp/projects"
+    },
+    {
+      "file": "admin.html",
+      "line": 236,
+      "path": "/api/v1/erp/projects"
+    },
+    {
+      "file": "mobile_app.html",
+      "line": 115,
+      "path": "/api/v1/erp/social"
+    },
+    {
+      "file": "mobile_app.html",
+      "line": 104,
+      "path": "/api/v1/erp/workloads"
+    },
+    {
+      "file": "customer_app.html",
+      "line": 677,
+      "path": "/api/v1/media-ops/assets"
+    },
+    {
+      "file": "media.html",
+      "line": 72,
+      "path": "/api/v1/media-ops/assets"
+    },
+    {
+      "file": "media.html",
+      "line": 115,
+      "path": "/api/v1/media-ops/assets"
+    },
+    {
+      "file": "index.html",
+      "line": 105,
+      "path": "/api/v1/report/dashboard"
+    },
+    {
+      "file": "video.html",
+      "line": 77,
+      "path": "/api/v1/video/generate-script"
+    },
+    {
+      "file": "templates/index.html",
+      "line": 90,
+      "path": "/generate"
+    },
+    {
+      "file": "templates/index.html",
+      "line": 97,
+      "path": "/history"
+    },
+    {
+      "file": "templates/index.html",
+      "line": 102,
+      "path": "/stats"
+    }
+  ]
+}
