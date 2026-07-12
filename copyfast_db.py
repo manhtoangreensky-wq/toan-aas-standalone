@@ -303,6 +303,10 @@ def transaction():
     parent = Path(path).expanduser().resolve().parent
     parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(path, timeout=30)
+    # SQLite leaves referential integrity opt-in per connection. The Web
+    # schema uses owner-scoped relationships (including ordered PDF Merge
+    # sources), so enforce them before any schema or application write.
+    conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA busy_timeout=30000")
     try:
         conn.execute("BEGIN IMMEDIATE")
@@ -707,6 +711,7 @@ def ensure_copyfast_schema() -> None:
                 request_fingerprint TEXT NOT NULL,
                 source_sha256 TEXT NOT NULL,
                 source_byte_size INTEGER NOT NULL,
+                source_count INTEGER NOT NULL DEFAULT 1,
                 requested_page_range TEXT NOT NULL,
                 selected_start_page INTEGER,
                 selected_end_page INTEGER,
@@ -745,6 +750,31 @@ def ensure_copyfast_schema() -> None:
         document_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_document_operation_events)").fetchall()}
         if "sequence" not in document_event_columns:
             conn.execute("ALTER TABLE web_document_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+        document_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_document_operations)").fetchall()}
+        if "source_count" not in document_columns:
+            conn.execute("ALTER TABLE web_document_operations ADD COLUMN source_count INTEGER NOT NULL DEFAULT 1")
+        # A merge has several independently verified Asset Vault sources. The
+        # operation row retains its first source for compatibility, while this
+        # immutable ordered map keeps every input hash/size out of browser
+        # responses and prevents a later Asset Vault change from rewriting a
+        # recorded operation intent.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_operation_sources (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                source_index INTEGER NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(operation_id, source_index),
+                UNIQUE(operation_id, source_asset_id),
+                FOREIGN KEY(operation_id) REFERENCES web_document_operations(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -792,6 +822,9 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_document_operation_events_operation_sequence ON web_document_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operation_sources_operation_order ON web_document_operation_sources(operation_id, source_index ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"

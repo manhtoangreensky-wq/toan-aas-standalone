@@ -1,13 +1,15 @@
 """Bounded, private Web-native document operations.
 
-The first operation is PDF Split.  It reuses only a verified, owner-scoped
-PDF already stored in the Web Asset Vault, copies that input into an isolated
-operation staging area, and creates a separately stored output attachment.
-It never calls the Bot, a provider, wallet, PayOS, or browser-supplied path.
+The first operations are PDF Split and PDF Merge. They reuse only verified,
+owner-scoped PDFs already stored in the Web Asset Vault, copy inputs into an
+isolated operation staging area, and create separately stored output
+attachments. They never call the Bot, a provider, wallet, PayOS, or a
+browser-supplied path.
 """
 
 from __future__ import annotations
 
+from contextlib import ExitStack
 from datetime import datetime, timedelta, timezone
 import hashlib
 import hmac
@@ -37,6 +39,8 @@ from copyfast_db import (
 router = APIRouter(prefix="/api/v1/document-operations", tags=["Web Document Operations"])
 
 PDF_SPLIT_KIND = "pdf_split"
+PDF_MERGE_KIND = "pdf_merge"
+SUPPORTED_KINDS = frozenset({PDF_SPLIT_KIND, PDF_MERGE_KIND})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -46,6 +50,8 @@ OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.pdf$")
 CHUNK_BYTES = 1024 * 1024
 MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
 MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
+MAX_MERGE_SOURCES = 8  # Web safety bound; Bot itself only requires at least two.
+MAX_MERGE_INPUT_BYTES = 40 * 1024 * 1024  # Aggregate bound beyond per-file 20 MiB.
 ORPHAN_RETENTION_SECONDS = 60 * 60
 PDF_EXCLUDED_PAGE_KEYS = ("/Annots", "/AA", "/Metadata", "/PieceInfo", "/StructParents")
 
@@ -53,7 +59,7 @@ OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, requested_pa
                       selected_start_page, selected_end_page, source_page_count, output_page_count,
                       original_filename, content_type, byte_size, created_at, queued_at, started_at,
                       completed_at, updated_at, failure_code, storage_key, sha256, source_sha256,
-                      source_byte_size"""
+                      source_byte_size, source_count"""
 
 
 class DocumentOperationError(Exception):
@@ -97,11 +103,31 @@ class PdfSplitRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class PdfMergeRequest(BaseModel):
+    source_asset_ids: list[str] = Field(min_length=2, max_length=MAX_MERGE_SOURCES)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_ids")
+    @classmethod
+    def valid_source_asset_ids(cls, values: list[str]) -> list[str]:
+        normalized = [_uuid(value, label="Asset Vault ID") for value in values]
+        if len(normalized) < 2:
+            raise ValueError("Cần ít nhất hai PDF private để gộp")
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("Mỗi PDF nguồn chỉ được chọn một lần trong cùng thao tác gộp")
+        return normalized
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 def _require_enabled() -> None:
     if not document_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
             status_code=503,
-            detail="PDF Split cần Document Operations và Asset Vault private đã được bật",
+            detail="Document Operations cần Asset Vault private và storage đầu ra riêng đã được bật",
         )
 
 
@@ -119,7 +145,7 @@ def _pdf_classes():
     try:
         from pypdf import PdfReader, PdfWriter
     except ImportError as exc:  # pragma: no cover - ensured at startup when enabled
-        raise DocumentOperationError("PDF Split chưa có runtime an toàn", code="PDF_RUNTIME_UNAVAILABLE") from exc
+        raise DocumentOperationError("Document Operations chưa có runtime PDF an toàn", code="PDF_RUNTIME_UNAVAILABLE") from exc
     return PdfReader, PdfWriter
 
 
@@ -277,9 +303,11 @@ def _selected_pages(page_range: str, page_count: int) -> tuple[list[int], int, i
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[4])
     byte_size = int(row[12]) if row[12] is not None else None
+    source_count = max(1, int(row[23] or 1)) if len(row) > 23 else 1
     return {
         "id": str(row[0]),
         "source_asset_id": str(row[1]),
+        "source_count": source_count,
         "project_id": str(row[2]) if row[2] else None,
         "kind": str(row[3]),
         "state": state,
@@ -321,7 +349,7 @@ def _source_not_found() -> dict[str, Any]:
 def _operation_unavailable() -> dict[str, Any]:
     return envelope(
         False,
-        "PDF đã tách không còn sẵn sàng để tải. Hãy chạy thao tác mới hoặc liên hệ hỗ trợ.",
+        "PDF đầu ra không còn sẵn sàng để tải. Hãy chạy thao tác mới hoặc liên hệ hỗ trợ.",
         status_name="guarded",
         error_code="WEB_DOCUMENT_OPERATION_UNAVAILABLE",
     )
@@ -357,6 +385,26 @@ def _request_fingerprint(*, source_asset_id: str, page_range: str, source_sha256
     return hashlib.sha256(payload).hexdigest()
 
 
+def _merge_request_fingerprint(sources: list[dict[str, Any]]) -> str:
+    """Bind a merge idempotency key to the ordered verified source set."""
+    payload = json.dumps(
+        {
+            "kind": PDF_MERGE_KIND,
+            "sources": [
+                {
+                    "asset_id": str(source["id"]),
+                    "sha256": str(source["sha256"]),
+                    "byte_size": int(source["byte_size"]),
+                }
+                for source in sources
+            ],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
     row = conn.execute(
         "SELECT COALESCE(SUM(byte_size), 0) FROM web_document_operations WHERE account_id=? AND byte_size IS NOT NULL",
@@ -368,14 +416,19 @@ def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
 
 def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
     state = str(operation.get("state") or "failed")
+    kind = str(operation.get("kind") or PDF_SPLIT_KIND)
+    label = "PDF Merge" if kind == PDF_MERGE_KIND else "PDF Split"
+    completed_message = "Đã gộp và xác minh PDF riêng tư." if kind == PDF_MERGE_KIND else "Đã tách và xác minh PDF riêng tư."
     if state == "completed":
-        return envelope(True, "Đã tách và xác minh PDF riêng tư.", data={"operation": operation}, status_name="completed")
+        return envelope(True, completed_message, data={"operation": operation}, status_name="completed")
     if state in {"queued", "processing"}:
-        return envelope(True, "PDF Split đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
-    return envelope(False, "PDF Split chưa thể hoàn tất an toàn.", data={"operation": operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
+        return envelope(True, f"{label} đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
+    return envelope(False, f"{label} chưa thể hoàn tất an toàn.", data={"operation": operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
 
 
-def _mark_failed(operation_id: str, account_id: str, *, request: Request, code: str) -> None:
+def _mark_failed(operation_id: str, account_id: str, *, kind: str, request: Request, code: str) -> None:
+    if kind not in SUPPORTED_KINDS:
+        raise RuntimeError("Loại Document Operation không hợp lệ")
     ensure_copyfast_schema()
     now = utc_now()
     with transaction() as conn:
@@ -395,7 +448,7 @@ def _mark_failed(operation_id: str, account_id: str, *, request: Request, code: 
             conn,
             account_id=account_id,
             canonical_user_id=None,
-            action="web.document_operation.pdf_split_failed",
+            action=f"web.document_operation.{kind}_failed",
             request_id=_request_id(request),
             target=operation_id,
             outcome="failed",
@@ -415,13 +468,21 @@ def _mark_output_unavailable(operation_id: str, account_id: str) -> None:
             _record_event(conn, operation_id=operation_id, state="unavailable")
 
 
-def _mark_source_unavailable(asset_id: str, account_id: str) -> None:
+def _mark_sources_unavailable(asset_ids: list[str], account_id: str) -> None:
+    unique_ids = sorted({str(asset_id) for asset_id in asset_ids if UUID_PATTERN.fullmatch(str(asset_id))})
+    if not unique_ids:
+        return
     with transaction() as conn:
+        placeholders = ", ".join("?" for _ in unique_ids)
         conn.execute(
-            """UPDATE web_asset_files SET state='unavailable', updated_at=?
-               WHERE id=? AND account_id=? AND state='active'""",
-            (utc_now(), asset_id, account_id),
+            f"""UPDATE web_asset_files SET state='unavailable', updated_at=?
+               WHERE id IN ({placeholders}) AND account_id=? AND state='active'""",
+            (utc_now(), *unique_ids, account_id),
         )
+
+
+def _mark_source_unavailable(asset_id: str, account_id: str) -> None:
+    _mark_sources_unavailable([asset_id], account_id)
 
 
 def _build_split_output(root: Path, source_copy: Path, *, page_range: str) -> tuple[Path, str, int, str, int, int, int]:
@@ -482,6 +543,82 @@ def _build_split_output(root: Path, source_copy: Path, *, page_range: str) -> tu
         if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
             raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra integrity", code="PDF_OUTPUT_INVALID")
         return final_path, storage_key, byte_size, output_digest, source_page_count, start_page, end_page
+    except Exception:
+        _safe_unlink(final_path)
+        raise
+    finally:
+        _safe_unlink(temporary_output)
+
+
+def _build_merge_output(root: Path, source_copies: list[Path]) -> tuple[Path, str, int, str, int]:
+    """Merge bounded copied PDFs in explicit input order into a clean artifact."""
+    if len(source_copies) < 2 or len(source_copies) > MAX_MERGE_SOURCES:
+        raise DocumentOperationError("Cần từ 2 đến 8 PDF nguồn để gộp an toàn", code="PDF_MERGE_SOURCE_COUNT")
+    temporary_output = _staging_path(root, ".pdf")
+    final_path: Path | None = None
+    try:
+        PdfReader, PdfWriter = _pdf_classes()
+        try:
+            writer = PdfWriter()
+            source_page_count = 0
+            # Keep each private copied input open until writer.write(). This
+            # avoids a lazy indirect-object read after an input file has been
+            # closed while retaining a hard bound of eight files/30 pages.
+            with ExitStack() as streams:
+                for source_copy in source_copies:
+                    source_stream = streams.enter_context(source_copy.open("rb"))
+                    reader = PdfReader(source_stream, strict=True)
+                    if reader.is_encrypted:
+                        raise DocumentOperationError("PDF được mã hóa chưa thể gộp an toàn", code="PDF_ENCRYPTED")
+                    page_count = len(reader.pages)
+                    if page_count < 1:
+                        raise DocumentOperationError("PDF nguồn không có trang hợp lệ để gộp", code="PDF_PAGE_LIMIT")
+                    source_page_count += page_count
+                    if source_page_count > MAX_PAGES:
+                        raise DocumentOperationError(
+                            f"Tổng số trang PDF vượt giới hạn {MAX_PAGES} trang/lần",
+                            code="PDF_PAGE_LIMIT",
+                        )
+                    for page in reader.pages:
+                        writer.add_page(page, excluded_keys=PDF_EXCLUDED_PAGE_KEYS)
+                writer.add_metadata({"/Title": "TOAN AAS PDF Merge", "/Producer": "TOAN AAS Web PDF Merge"})
+                with temporary_output.open("xb") as output_stream:
+                    writer.write(output_stream)
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF không hợp lệ hoặc không thể gộp an toàn", code="PDF_PARSE_FAILED") from exc
+
+        byte_size = temporary_output.stat().st_size
+        if byte_size < 1 or byte_size > _maximum_output_bytes():
+            raise DocumentOperationError("PDF đầu ra vượt giới hạn artifact an toàn", code="PDF_OUTPUT_LIMIT")
+        digest = hashlib.sha256()
+        with temporary_output.open("rb") as stream:
+            while True:
+                chunk = stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        output_digest = digest.hexdigest()
+        try:
+            with temporary_output.open("rb") as verify_stream:
+                verified = PdfReader(verify_stream, strict=True)
+                if verified.is_encrypted or len(verified.pages) != source_page_count:
+                    raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="PDF_OUTPUT_INVALID")
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="PDF_OUTPUT_INVALID") from exc
+
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}.pdf"
+        final_path = _output_path(root, storage_key)
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn PDF đầu ra không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra integrity", code="PDF_OUTPUT_INVALID")
+        return final_path, storage_key, byte_size, output_digest, source_page_count
     except Exception:
         _safe_unlink(final_path)
         raise
@@ -598,13 +735,13 @@ async def split_pdf(payload: PdfSplitRequest, request: Request, account: dict = 
         conn.execute(
             """INSERT INTO web_document_operations
                (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
-                request_fingerprint, source_sha256, source_byte_size, requested_page_range,
+                request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
                 created_at, queued_at, started_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 operation_id, account_id, source_asset_id, str(source_row[1]) if source_row[1] else None,
                 PDF_SPLIT_KIND, payload.idempotency_key, request_fingerprint, source_sha256, source_bytes,
-                payload.page_range, now, now, now, now,
+                1, payload.page_range, now, now, now, now,
             ),
         )
         _record_event(conn, operation_id=operation_id, state="queued", when=now)
@@ -669,18 +806,212 @@ async def split_pdf(payload: PdfSplitRequest, request: Request, account: dict = 
         _safe_unlink(final_path)
         if exc.code == "PDF_SOURCE_UNAVAILABLE":
             _mark_source_unavailable(source_asset_id, account_id)
-        _mark_failed(operation_id, account_id, request=request, code=exc.code)
+        _mark_failed(operation_id, account_id, kind=PDF_SPLIT_KIND, request=request, code=exc.code)
         raise HTTPException(status_code=422, detail=exc.public_message) from exc
     except HTTPException as exc:
         _safe_unlink(final_path)
-        _mark_failed(operation_id, account_id, request=request, code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION")
+        _mark_failed(operation_id, account_id, kind=PDF_SPLIT_KIND, request=request, code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION")
         raise
     except Exception as exc:
         _safe_unlink(final_path)
-        _mark_failed(operation_id, account_id, request=request, code="DOCUMENT_OPERATION")
+        _mark_failed(operation_id, account_id, kind=PDF_SPLIT_KIND, request=request, code="DOCUMENT_OPERATION")
         raise HTTPException(status_code=500, detail="Không thể tách PDF an toàn") from exc
     finally:
         _safe_unlink(source_copy)
+
+
+def _merge_sources_for_account(conn, *, source_asset_ids: list[str], account_id: str) -> tuple[list[dict[str, Any]], str | None]:
+    """Load ordered, owner-scoped PDF sources and apply aggregate bounds."""
+    sources: list[dict[str, Any]] = []
+    total_bytes = 0
+    project_ids: set[str] = set()
+    for asset_id in source_asset_ids:
+        row = conn.execute(
+            """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+               FROM web_asset_files WHERE id=? AND account_id=?""",
+            (asset_id, account_id),
+        ).fetchone()
+        if not row or str(row[7]) != "active":
+            raise DocumentOperationError("Không tìm thấy PDF private đang hoạt động thuộc Web account hiện tại.", code="PDF_SOURCE_NOT_FOUND")
+        if str(row[2]) != ".pdf" or str(row[3]) != "application/pdf":
+            raise DocumentOperationError("PDF Merge chỉ nhận PDF private hợp lệ trong Asset Vault", code="PDF_SOURCE_INVALID")
+        byte_size = int(row[4])
+        if byte_size < 1 or byte_size > MAX_INPUT_BYTES:
+            raise DocumentOperationError("Mỗi PDF nguồn không được vượt quá 20 MB", code="PDF_INPUT_TOO_LARGE")
+        total_bytes += byte_size
+        if total_bytes > MAX_MERGE_INPUT_BYTES:
+            raise DocumentOperationError("Tổng dung lượng PDF nguồn vượt giới hạn 40 MB", code="PDF_MERGE_INPUT_LIMIT")
+        source_sha256 = str(row[5] or "")
+        if not re.fullmatch(r"[0-9a-f]{64}", source_sha256):
+            raise DocumentOperationError("PDF nguồn không còn sẵn sàng", code="PDF_SOURCE_UNAVAILABLE")
+        storage_key = str(row[6] or "")
+        if not ASSET_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+            raise DocumentOperationError("PDF nguồn không còn sẵn sàng", code="PDF_SOURCE_UNAVAILABLE")
+        project_id = str(row[1]) if row[1] else None
+        if project_id:
+            project_ids.add(project_id)
+        sources.append(
+            {
+                "id": str(row[0]),
+                "project_id": project_id,
+                "byte_size": byte_size,
+                "sha256": source_sha256,
+                "storage_key": storage_key,
+            }
+        )
+    if len(sources) < 2:
+        raise DocumentOperationError("Cần ít nhất hai PDF private để gộp", code="PDF_MERGE_SOURCE_COUNT")
+    project_id = next(iter(project_ids)) if len(project_ids) == 1 else None
+    return sources, project_id
+
+
+@router.post("/pdf-merge")
+async def merge_pdf(payload: PdfMergeRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Merge ordered verified Asset Vault PDFs into one sanitized private PDF."""
+    _require_enabled()
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copies: list[Path] = []
+    final_path: Path | None = None
+    sources: list[dict[str, Any]] = []
+    active_source_id: str | None = None
+
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        try:
+            sources, scoped_project_id = _merge_sources_for_account(
+                conn,
+                source_asset_ids=payload.source_asset_ids,
+                account_id=account_id,
+            )
+        except DocumentOperationError as exc:
+            if exc.code == "PDF_SOURCE_NOT_FOUND":
+                return _source_not_found()
+            status_code = 413 if exc.code in {"PDF_INPUT_TOO_LARGE", "PDF_MERGE_INPUT_LIMIT"} else 422
+            raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+        request_fingerprint = _merge_request_fingerprint(sources)
+        existing = conn.execute(
+            f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                WHERE account_id=? AND kind=? AND idempotency_key=?""",
+            (account_id, PDF_MERGE_KIND, payload.idempotency_key),
+        ).fetchone()
+        if existing:
+            if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho PDF Merge khác")
+            return _operation_response(_operation_public(tuple(existing[:-1])))
+
+        operation_id = str(uuid.uuid4())
+        now = utc_now()
+        first = sources[0]
+        conn.execute(
+            """INSERT INTO web_document_operations
+               (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
+                created_at, queued_at, started_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, '', ?, ?, ?, ?)""",
+            (
+                operation_id, account_id, first["id"], scoped_project_id, PDF_MERGE_KIND,
+                payload.idempotency_key, request_fingerprint, first["sha256"], first["byte_size"],
+                len(sources), now, now, now, now,
+            ),
+        )
+        for source_index, source in enumerate(sources, start=1):
+            conn.execute(
+                """INSERT INTO web_document_operation_sources
+                   (id, operation_id, source_asset_id, source_index, source_sha256, source_byte_size, created_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    str(uuid.uuid4()), operation_id, source["id"], source_index,
+                    source["sha256"], source["byte_size"], now,
+                ),
+            )
+        _record_event(conn, operation_id=operation_id, state="queued", when=now)
+        conn.execute(
+            "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+            (now, operation_id, account_id),
+        )
+        _record_event(conn, operation_id=operation_id, state="processing", when=now)
+
+    try:
+        asset_root = asset_vault_directory()
+        for source in sources:
+            active_source_id = str(source["id"])
+            source_path = _asset_path(asset_root, source["storage_key"])
+            source_copy = _staging_path(root, ".source.pdf")
+            # Track the private staging name before any I/O so a failed
+            # integrity copy cannot leave an unreferenced source behind.
+            source_copies.append(source_copy)
+            _copy_verified_source(
+                source_path,
+                source_copy,
+                expected_bytes=int(source["byte_size"]),
+                expected_digest=str(source["sha256"]),
+            )
+        final_path, output_storage_key, output_bytes, output_digest, source_page_count = _build_merge_output(root, source_copies)
+        filename = "toan-aas-merged-pdf.pdf"
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, PDF_MERGE_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("PDF Merge không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', source_page_count=?, output_page_count=?, storage_key=?,
+                       original_filename=?, content_type='application/pdf', byte_size=?, sha256=?,
+                       completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_page_count, source_page_count, output_storage_key, filename, output_bytes,
+                    output_digest, now, now, operation_id, account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.pdf_merge",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=f"sources={len(sources)};pages={source_page_count};bytes={output_bytes}",
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc PDF Merge vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "PDF_SOURCE_UNAVAILABLE" and active_source_id:
+            _mark_source_unavailable(active_source_id, account_id)
+        _mark_failed(operation_id, account_id, kind=PDF_MERGE_KIND, request=request, code=exc.code)
+        raise HTTPException(status_code=422, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            kind=PDF_MERGE_KIND,
+            request=request,
+            code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION",
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, kind=PDF_MERGE_KIND, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể gộp PDF an toàn") from exc
+    finally:
+        for source_copy in source_copies:
+            _safe_unlink(source_copy)
 
 
 @router.get("/{operation_id}/download")

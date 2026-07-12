@@ -159,6 +159,8 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.project_package.export_failed": ("Project Package chưa hoàn tất", "Web Workspace"),
     "web.document_operation.pdf_split": ("Tách PDF riêng tư", "Web Workspace"),
     "web.document_operation.pdf_split_failed": ("Tách PDF chưa hoàn tất", "Web Workspace"),
+    "web.document_operation.pdf_merge": ("Gộp PDF riêng tư", "Web Workspace"),
+    "web.document_operation.pdf_merge_failed": ("Gộp PDF chưa hoàn tất", "Web Workspace"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
