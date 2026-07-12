@@ -7,7 +7,7 @@ Production Web App for `app.toanaas.vn`.
 - Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
-- Customer portal: `/dashboard`, `/wallet`, `/jobs`, `/assets`
+- Customer portal: `/dashboard`, `/projects`, `/asset-vault`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
 ## Required Railway production configuration
@@ -21,6 +21,11 @@ Production Web App for `app.toanaas.vn`.
   `RAILWAY_VOLUME_MOUNT_PATH`, or the standard persistent `/data` mount. See
   [`TELEGRAM_WEB_CONNECTION.md`](docs/migration/TELEGRAM_WEB_CONNECTION.md)
   for the full non-secret configuration contract.
+- `WEBAPP_ASSET_VAULT_ENABLED` defaults to `false`. Enable it only after this
+  **Web service** has a persistent volume. `WEBAPP_ASSET_VAULT_ROOT` must be
+  an absolute child directory of that volume in production (for example
+  `/data/toanaas_webapp_assets`); the application refuses static, relative or
+  out-of-volume storage. The vault never serves blobs from `/static`.
 
 ## Authority boundary
 
@@ -55,6 +60,10 @@ private Bot bridge.
   create a Bot campaign, calculate analytics/revenue, call a provider or
   affect Xu/PayOS; see
   [`CAMPAIGN_PLANNER_BOUNDARY.md`](docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md).
+- `/asset-vault` is a separate Web-owned private file library. It is not a
+  Bot output library, provider staging area, wallet/PayOS surface, or proof
+  that an engine generated an artifact. See
+  [`ASSET_VAULT_CONTRACT.md`](docs/migration/ASSET_VAULT_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially
 `PAYOS_WALLET_JOB_MAP.md`, `FEATURE_CONFIRM_CONTRACT.md`, and

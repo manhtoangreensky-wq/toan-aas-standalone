@@ -545,6 +545,10 @@
     layout: "project-center", type: "project-center", fields: [], action: "none", status: "ready",
     notes: ["Project và Studio Document thuộc Web account hiện tại, hoạt động ngay cả khi không liên kết Telegram.", "Đây là dữ liệu authoring do bạn tạo; không gọi Bot, provider, PayOS, ví Xu hoặc tự gắn nhãn output media."]
   });
+  customerPage("/asset-vault", "Asset Vault", "Lưu tệp riêng trong Web Workspace, tùy chọn gắn với Project và luôn tải qua signed session.", ICONS.assets, {
+    layout: "asset-vault", type: "asset-vault", fields: [], action: "none", status: "ready",
+    notes: ["Asset Vault là storage Web-owned, tách biệt hoàn toàn với Tài sản Bot và output job canonical.", "Tệp không có URL công khai, không nằm trong static/PWA cache và chỉ tải dạng attachment sau owner check."]
+  });
   botCompanionPage("/notes", "Ghi chú & Memory", "Mở nhanh các ghi chú, memory và plan cá nhân trong Bot canonical; Web không tạo một kho dữ liệu thứ hai.", ICONS.prompt, [
     { command: "/notes", title: "Danh sách ghi chú", text: "Xem ghi chú do Bot quản lý trong đúng cuộc hội thoại Telegram của bạn." },
     { command: "/note", title: "Tạo ghi chú", text: "Bắt đầu luồng tạo hoặc cập nhật note trong Bot; không gửi nội dung note qua Web." },
@@ -790,6 +794,10 @@
       jobs: Array.isArray(source.jobs) ? source.jobs : [],
       jobDetail: source.jobDetail && typeof source.jobDetail === "object" ? source.jobDetail : {},
       assets: Array.isArray(source.assets) ? source.assets : [],
+      // Asset Vault has a distinct owner-scoped projection. Never mix it
+      // with Bot delivery metadata in `assets`, whose download contract is
+      // intentionally different.
+      vaultItems: Array.isArray(source.vaultItems) ? source.vaultItems.slice(0, 100) : [],
       tickets: Array.isArray(source.tickets) ? source.tickets : [],
       // Workspace drafts are Web-owned, owner-scoped planning records. They
       // arrive after initial hydration and must survive the presentation
@@ -997,7 +1005,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/workspace", "Bản nháp", ICONS.prompt], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1009,7 +1017,7 @@
       {
         label: "Công việc",
         links: [
-          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Thư viện tài sản", ICONS.assets]
+          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản Bot", ICONS.assets]
         ]
       },
       {
@@ -1264,6 +1272,12 @@
               return { value: String(item.code), label: `${item.label || item.code}${priceLabel}` };
             });
         }
+        if (field.optionsFrom === "projects") {
+          const projects = context && Array.isArray(context.projects) ? context.projects : [];
+          options = projects
+            .filter((project) => project && validProjectId(project.id) && String(project.state || "active") === "active")
+            .map((project) => ({ value: String(project.id), label: String(project.title || "Project Web") }));
+        }
         if (field.optionsFrom === "topupPackages") {
           const payos = context && context.paymentOptions && context.paymentOptions.payos && typeof context.paymentOptions.payos === "object" ? context.paymentOptions.payos : {};
           options = Array.isArray(payos.topup_packages) ? payos.topup_packages
@@ -1313,7 +1327,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "campaign-planner", "campaign-detail", "workspace-drafts"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -1684,7 +1698,7 @@
   function projectFormFields() {
     return [
       { name: "title", label: "Tên Project", placeholder: "Ví dụ: Ra mắt sản phẩm mùa hè", required: true, minLength: 3, maxLength: 160, help: "Không gian làm việc riêng cho brief và Studio Document của bạn." },
-      { name: "summary", label: "Tóm tắt", type: "textarea", placeholder: "Bối cảnh, khách hàng hoặc định hướng sáng tạo…", maxLength: 1000, help: "Dữ liệu authoring Web-owned; không gửi Bot, provider hoặc payment." },
+      { name: "summary", label: "Tóm tắt", control: "textarea", placeholder: "Bối cảnh, khách hàng hoặc định hướng sáng tạo…", maxLength: 1000, help: "Dữ liệu authoring Web-owned; không gửi Bot, provider hoặc payment." },
       { name: "objective", label: "Mục tiêu", placeholder: "Ví dụ: Tăng chuyển đổi landing page", maxLength: 160, help: "Mục tiêu nội bộ của Project, có thể chỉnh sửa về sau." }
     ];
   }
@@ -1693,7 +1707,7 @@
     return [
       { name: "kind", label: "Loại Studio Document", control: "select", required: true, options: PROJECT_DOCUMENT_KINDS.map(([value, label]) => ({ value, label })) },
       { name: "title", label: "Tên tài liệu", placeholder: "Ví dụ: Storyboard video 30 giây", required: true, minLength: 3, maxLength: 160 },
-      { name: "content", label: "Nội dung", type: "textarea", placeholder: "Viết brief, prompt, caption, kịch bản hoặc storyboard của bạn…", required: true, minLength: 1, maxLength: 12000, help: "Mỗi lần lưu sẽ tạo một phiên bản mới. Không lưu API key, token, mật khẩu hoặc số thẻ." }
+      { name: "content", label: "Nội dung", control: "textarea", placeholder: "Viết brief, prompt, caption, kịch bản hoặc storyboard của bạn…", required: true, minLength: 1, maxLength: 12000, help: "Mỗi lần lưu sẽ tạo một phiên bản mới. Không lưu API key, token, mật khẩu hoặc số thẻ." }
     ];
   }
 
@@ -2359,6 +2373,61 @@
     const refreshEnabled = context.capabilities && context.capabilities["refresh-assets"] === true;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây (tối đa 100)</h2><p class="portal-card-subtitle">Bridge P0 hiện trả tối đa 100 metadata mới nhất. Output hợp lệ và URL tải là hai contract riêng: metadata không cấp quyền file.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-assets" data-portal-route="/assets"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${filters}${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Tạo lúc", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td><td>${assetDeliveryState(item, "asset")}</td>`, selected === "all" ? "Chưa có tài sản có thể mở" : "Không có tài sản ở bộ lọc này", selected === "all" ? "Shell không hiển thị placeholder là output thật. Tài sản hoàn tất sẽ đến từ Core Bridge." : "Đổi bộ lọc hoặc làm mới metadata canonical để kiểm tra delivery.")}</section></article>`;
+  }
+
+  function validVaultAssetId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function vaultItems(context) {
+    return (Array.isArray(context.vaultItems) ? context.vaultItems : [])
+      .filter((item) => item && typeof item === "object" && validVaultAssetId(item.id) && String(item.state || "") === "active")
+      .slice(0, 100);
+  }
+
+  function vaultBytes(value) {
+    const bytes = Number(value);
+    if (!Number.isFinite(bytes) || bytes < 0) return "—";
+    if (bytes < 1024) return `${Math.floor(bytes)} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  }
+
+  function vaultDownloadPath(item) {
+    const assetId = String(item && item.id || "").trim();
+    return validVaultAssetId(assetId) ? `/api/v1/asset-vault/${encodeURIComponent(assetId)}/download` : "";
+  }
+
+  function assetVaultFormFields() {
+    return [
+      { name: "display_name", label: "Tên hiển thị", placeholder: "Ví dụ: Brief ra mắt mùa hè", maxLength: 120, help: "Tùy chọn. Nếu để trống, Web dùng tên tệp an toàn làm nhãn." },
+      { name: "project_id", label: "Gắn với Project", control: "select", optionsFrom: "projects", emptyLabel: "Không gắn Project", help: "Tùy chọn; chỉ Project đang hoạt động thuộc Web account hiện tại được hiển thị." }
+    ];
+  }
+
+  function renderAssetVault(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["asset-vault-view"] === true);
+    const canUpload = Boolean(context.capabilities && context.capabilities["asset-vault-upload"] === true);
+    const canArchive = Boolean(context.capabilities && context.capabilities["asset-vault-archive"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["asset-vault-refresh"] === true);
+    if (!canView) {
+      return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.assets)}</span><div><h2>Asset Vault đang ở chế độ an toàn</h2><p>Kho tệp Web chỉ hoạt động khi môi trường có persistent volume riêng. Không có fallback sang static, browser storage hoặc Tài sản Bot.</p><div class="portal-state-meta"><span>Cần signed session</span><span>Không dùng storage công khai</span><span>Không có output giả</span></div></div></div></section></article>`;
+    }
+    const items = vaultItems(context);
+    const projectNames = new Map((Array.isArray(context.projects) ? context.projects : [])
+      .filter((project) => project && validProjectId(project.id))
+      .map((project) => [String(project.id), String(project.title || "Project Web")]));
+    const formValues = transientFormValues("/asset-vault");
+    const cards = items.length
+      ? `<div class="portal-vault-grid">${items.map((item) => {
+          const id = String(item.id);
+          const downloadPath = vaultDownloadPath(item);
+          const projectName = item.project_id ? (projectNames.get(String(item.project_id)) || "Project đã liên kết") : "Không gắn Project";
+          return `<article class="portal-card portal-card-pad portal-vault-card" data-vault-asset="${safeText(id)}"><div class="portal-card-header"><div class="portal-vault-card-title"><span class="portal-vault-file-icon" aria-hidden="true">${safeText(String(item.extension || "FILE").replace(".", "").slice(0, 5).toUpperCase())}</span><div><h2 class="portal-card-title">${safeText(String(item.display_name || "Tệp Web"))}</h2><p class="portal-card-subtitle">${safeText(String(item.original_filename || "Tệp riêng tư"))}</p></div></div>${badge("ready")}</div><dl class="portal-vault-meta"><div><dt>Dung lượng</dt><dd>${safeText(vaultBytes(item.byte_size))}</dd></div><div><dt>Project</dt><dd>${safeText(projectName)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải tệp <span aria-hidden="true">↓</span></a><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-archive" data-portal-route="/asset-vault" data-vault-asset-id="${safeText(id)}" data-portal-confirm="Lưu trữ tệp này khỏi Asset Vault đang hoạt động? Tệp vẫn được giữ riêng tư nhưng sẽ không thể tải từ danh sách active."${canArchive ? "" : " disabled"}>Lưu trữ</button></div></article>`;
+        }).join("")}</div>`
+      : renderEmpty("Asset Vault chưa có tệp", "Tải tệp đầu tiên để lưu cùng Project Web. Đây không phải asset delivery hay output của job Bot.", "▣");
+    const fileDisabled = canUpload ? "" : " disabled";
+    return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}<section class="portal-vault-intro"><div><span class="portal-section-kicker">Private Web storage</span><h2>Kho tệp riêng cho Project và workflow Web</h2><p>Asset Vault dùng signed session, owner check, CSRF và private storage. Không tạo public link, preview giả, job, Xu hay PayOS.</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>Tệp đang hoạt động</dd></div><div><dt>25 MB</dt><dd>Giới hạn mặc định mỗi tệp</dd></div></dl></section><div class="portal-vault-layout"><section class="portal-card portal-card-pad portal-vault-upload"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm tệp</h2><p class="portal-card-subtitle">Chỉ tải định dạng được kiểm tra ở máy chủ. Tệp luôn tải về dạng attachment riêng tư.</p></div>${badge(canUpload ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="asset-vault-upload" data-portal-route="/asset-vault" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class="portal-vault-dropzone" for="portal-vault-file"><span class="portal-vault-dropzone-icon" aria-hidden="true">↑</span><span><strong>Chọn tệp riêng tư</strong><small>Ảnh, video, audio, PDF, TXT/SRT/VTT hoặc DOCX · tối đa 25 MB mặc định</small></span><input id="portal-vault-file" class="portal-vault-file-input" name="file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx" required${fileDisabled}></label><div class="portal-form-footer"><span class="portal-form-note">Tệp không được gửi sang Bot, provider hoặc browser storage. Upload có idempotency và audit metadata đã sanitize.</span><button class="portal-button portal-button--primary" type="submit"${fileDisabled}>Lưu vào Asset Vault</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Hai thư viện phục vụ hai mục đích khác nhau.</p></div></div><ul class="portal-project-steps"><li><strong>Asset Vault Web</strong><span>Tệp bạn chủ động lưu cho Project/Web workflow, owner-scoped và private.</span></li><li><strong>Tài sản Bot</strong><span>Output delivery của job canonical, có metadata/URL ký riêng ở <a href="/assets">Tài sản Bot</a>.</span></li><li><strong>Không suy diễn output</strong><span>Một tệp Vault không tự trở thành input engine hoặc kết quả đã hoàn tất.</span></li></ul></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tệp đang hoạt động</h2><p class="portal-card-subtitle">Chỉ tệp thuộc signed Web account hiện tại. Lưu trữ sẽ gỡ tệp khỏi danh sách và khóa download active.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-refresh" data-portal-route="/asset-vault"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${cards}</section></article>`;
   }
 
   function renderTickets(page, context) {
@@ -3421,6 +3490,7 @@
       case "jobs": return renderJobs(page, context);
       case "job-detail": return renderJobDetail(page, context);
       case "assets": return renderAssets(page, context);
+      case "asset-vault": return renderAssetVault(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
       case "account-activity": return renderAccountActivity(page, context);
@@ -3578,7 +3648,7 @@
     if (form) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });

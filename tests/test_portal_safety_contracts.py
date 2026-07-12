@@ -507,6 +507,7 @@ def test_portal_normalizer_preserves_owner_scoped_hydration_state() -> None:
     normalizer = PORTAL[PORTAL.index("function normalizeBootstrap(raw)"):PORTAL.index("function getBootstrap()")]
     for expected in (
         "workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : []",
+        "vaultItems: Array.isArray(source.vaultItems) ? source.vaultItems.slice(0, 100) : []",
         "campaignPlanDetail: source.campaignPlanDetail && typeof source.campaignPlanDetail === \"object\" ? source.campaignPlanDetail : {}",
         "accountActivity: Array.isArray(source.accountActivity) ? source.accountActivity.slice(0, 50) : []",
         "assetFilter: typeof source.assetFilter === \"string\" ? source.assetFilter : \"all\"",
@@ -546,6 +547,34 @@ def test_project_center_is_a_web_owned_versioned_workspace_without_bot_execution
     assert "async function hydrateStudioDocument(documentId)" in INTEGRATION
     assert 'api("/projects")' in INTEGRATION
     assert 'api(`/projects/${encodeURIComponent(projectId)}`)' in INTEGRATION
+
+
+def test_asset_vault_is_a_separate_private_web_surface() -> None:
+    assets = (ROOT / "copyfast_assets.py").read_text(encoding="utf-8")
+    database = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    app = (ROOT / "app.py").read_text(encoding="utf-8")
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    assert 'router = APIRouter(prefix="/api/v1/asset-vault"' in assets
+    assert "web_asset_files" in database
+    assert "asset_vault_directory" in database
+    assert "copyfast_bridge" not in assets
+    assert "bridge_request" not in assets
+    assert "app.include_router(copyfast_assets.router)" in app
+    assert 'WebFeature("asset_vault", "Asset Vault"' in registry
+    assert 'customerPage("/asset-vault", "Asset Vault"' in PORTAL
+    assert 'layout: "asset-vault"' in PORTAL
+    assert "function renderAssetVault(page, context)" in PORTAL
+    assert 'case "asset-vault": return renderAssetVault(page, context);' in PORTAL
+    vault_renderer = PORTAL[PORTAL.index("function renderAssetVault(page, context)"):PORTAL.index("function renderTickets(page, context)")]
+    assert 'data-portal-action="asset-vault-upload"' in vault_renderer
+    assert 'data-portal-action="asset-vault-archive"' in vault_renderer
+    assert "/api/v1/assets/" not in vault_renderer
+    assert 'api("/asset-vault")' in INTEGRATION
+    assert "async function hydrateAssetVault()" in INTEGRATION
+    assert '"asset-vault-upload": Boolean(account && me.csrf_token && assetVaultEnabled)' in INTEGRATION
+    assert "FormData()" in INTEGRATION
+    assert "/api/v1/asset-vault" in SERVICE_WORKER
+    assert ".portal-vault-dropzone" in PORTAL_CSS
 
 
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:

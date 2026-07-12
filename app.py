@@ -21,10 +21,11 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
+import copyfast_assets
 import copyfast_auth
 import copyfast_projects
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
-from copyfast_db import ensure_copyfast_persistence, ensure_copyfast_schema
+from copyfast_db import ensure_asset_vault_persistence, ensure_copyfast_persistence, ensure_copyfast_schema
 from copyfast_pages import ROOT, render_portal
 
 
@@ -54,6 +55,8 @@ async def lifespan(_: FastAPI):
     ensure_oauth_configuration()
     ensure_copyfast_persistence()
     ensure_copyfast_schema()
+    ensure_asset_vault_persistence()
+    copyfast_assets.reconcile_asset_vault_storage()
     yield
 
 
@@ -129,13 +132,19 @@ async def security_headers(request: Request, call_next):
         # additional edge rate limit in front of Railway.
         "/api/v1/auth/internal/telegram-link/confirm": 60,
         "/api/v1/auth/internal/telegram-link/confirm/": 60,
+        # Private Web Asset Vault blobs are deliberately rate-limited before
+        # multipart parsing; this is separate from Bot upload staging.
+        "/api/v1/asset-vault/upload": 20,
     }
     oauth_start = (
         request.method == "GET"
         and request.url.path.startswith("/api/v1/auth/oauth/")
         and request.url.path.endswith("/start")
     )
+    asset_archive = request.method == "POST" and request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/archive")
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
+    if asset_archive:
+        rate_limit = 30
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -150,9 +159,13 @@ async def security_headers(request: Request, call_next):
     response = await call_next(request)
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["Referrer-Policy"] = "same-origin"
+    # A private attachment deliberately has a stricter per-response policy
+    # than the portal shell.  Do not overwrite it after the endpoint chose
+    # no-referrer / sandbox delivery headers.
+    private_asset_download = request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/download")
+    response.headers["Referrer-Policy"] = "no-referrer" if private_asset_download else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
+    response.headers["Content-Security-Policy"] = "sandbox" if private_asset_download else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     if request.url.path.startswith("/api/v1/") or request.url.path.startswith("/internal/"):
         response.headers["Cache-Control"] = "no-store, private"
     return response
@@ -183,6 +196,7 @@ if static_dir.is_dir():
 app.include_router(copyfast_auth.router, prefix="/api/v1/auth")
 app.include_router(copyfast_api.router)
 app.include_router(copyfast_projects.router)
+app.include_router(copyfast_assets.router)
 
 
 @app.get("/health")
