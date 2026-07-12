@@ -157,6 +157,8 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.asset_vault.archive": ("Lưu trữ tệp Asset Vault", "Web Workspace"),
     "web.project_package.export": ("Xuất Project Package", "Web Workspace"),
     "web.project_package.export_failed": ("Project Package chưa hoàn tất", "Web Workspace"),
+    "web.document_operation.pdf_split": ("Tách PDF riêng tư", "Web Workspace"),
+    "web.document_operation.pdf_split_failed": ("Tách PDF chưa hoàn tất", "Web Workspace"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -360,6 +362,9 @@ def _flags() -> dict[str, bool]:
         # Web-owned Project data. It has its own persistent storage boundary
         # and is never a Bot job, provider request, wallet or PayOS action.
         "project_package_enabled": enabled("WEBAPP_PROJECT_PACKAGE_ENABLED", False),
+        # Web-native document operations remain off until both private input
+        # storage and a separate generated-output volume boundary exist.
+        "document_operations_enabled": enabled("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 

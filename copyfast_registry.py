@@ -100,7 +100,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("documents_pdf", "PDF tools", "documents", "/documents/pdf"),
     WebFeature("documents_ocr", "OCR", "documents", "/documents/ocr"),
     WebFeature("documents_merge", "Gộp tài liệu", "documents", "/documents/merge"),
-    WebFeature("documents_split", "Tách tài liệu", "documents", "/documents/split"),
+    WebFeature("documents_split", "Tách PDF", "documents", "/documents/split", description="Tách PDF private từ Asset Vault qua Web-native operation có output attachment được kiểm tra; không tạo Bot job hoặc charge."),
     WebFeature("documents_compress", "Nén tài liệu", "documents", "/documents/compress"),
     WebFeature("documents_translate", "Dịch tài liệu", "documents", "/documents/translate"),
     WebFeature("support", "Hỗ trợ", "support", "/support"),

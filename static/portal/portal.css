@@ -842,6 +842,31 @@ a { color: inherit; text-decoration: none; }
 .portal-project-package-intro dt { color: #8eeeff; font-size: 26px; font-weight: 840; letter-spacing: -.045em; }
 .portal-project-package-intro dd { margin: 7px 0 0; color: #a3bcc6; font-size: 12px; line-height: 1.45; }
 
+/* Document Operations is a third Web-native file surface: its source stays
+   in Asset Vault and its verified PDF attachment lives in a separate output
+   root. Keep the visual system distinct from Bot job/asset delivery cards. */
+.portal-pdf-split { min-width: 0; }
+.portal-document-operation-intro { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(240px, .82fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid rgba(143, 168, 255, .2); border-radius: 22px; background: radial-gradient(circle at 88% 12%, rgba(110, 130, 241, .18), transparent 17rem), linear-gradient(145deg, rgba(17, 28, 64, .95), rgba(7, 18, 35, .99)); }
+.portal-document-operation-intro h2 { margin: 7px 0 8px; color: #f0f4ff; font-size: clamp(26px, 3vw, 38px); letter-spacing: -.045em; }
+.portal-document-operation-intro p { max-width: 720px; margin: 0; color: #b4c1dc; line-height: 1.7; }
+.portal-document-operation-intro dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.portal-document-operation-intro dl > div { min-height: 108px; padding: 15px; border: 1px solid rgba(180, 194, 255, .14); border-radius: 15px; background: rgba(3, 10, 30, .34); }
+.portal-document-operation-intro dt { color: #b9c8ff; font-size: 20px; font-weight: 840; letter-spacing: -.035em; }
+.portal-document-operation-intro dd { margin: 7px 0 0; color: #a5b4cf; font-size: 12px; line-height: 1.45; }
+.portal-document-operation-layout { display: grid; grid-template-columns: minmax(0, 1.18fr) minmax(270px, .82fr); gap: 18px; align-items: start; }
+.portal-document-operation-form { min-width: 0; }
+.portal-document-operation-boundary { min-width: 0; background: linear-gradient(148deg, rgba(18, 31, 62, .9), rgba(7, 17, 34, .99)); }
+.portal-document-operation-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.portal-document-operation-card { min-width: 0; background: linear-gradient(148deg, rgba(20, 33, 70, .96), rgba(6, 17, 36, .99)); }
+.portal-document-operation-title { display: flex; gap: 11px; min-width: 0; align-items: center; }
+.portal-document-operation-title > div { min-width: 0; }
+.portal-document-operation-title .portal-card-title, .portal-document-operation-title .portal-card-subtitle { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal-document-operation-icon { display: grid; flex: 0 0 auto; width: 40px; height: 40px; place-items: center; border: 1px solid rgba(157, 176, 255, .4); border-radius: 12px; background: rgba(116, 135, 247, .16); color: #c7d3ff; font-size: 9px; font-weight: 850; letter-spacing: .08em; }
+.portal-document-operation-meta { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 17px 0 0; }
+.portal-document-operation-meta > div { min-width: 0; padding: 10px; border: 1px solid rgba(181, 196, 255, .11); border-radius: 11px; background: rgba(1, 8, 25, .3); }
+.portal-document-operation-meta dt { color: #98a8c6; font-size: 9px; font-weight: 760; }
+.portal-document-operation-meta dd { margin: 5px 0 0; overflow: hidden; color: #edf2ff; font-size: 11px; font-weight: 680; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+
 /* Asset Vault is intentionally a distinct Web-owned file surface. Keep its
    visual language close to Project Center, but never reuse Bot delivery card
    selectors: private uploads and canonical output have different contracts. */
@@ -890,6 +915,7 @@ a { color: inherit; text-decoration: none; }
   .portal-status-grid, .portal-work-grid { grid-template-columns: 1fr; }
   .portal-project-intro, .portal-project-summary, .portal-project-detail-grid { grid-template-columns: 1fr; }
   .portal-project-package-intro { grid-template-columns: 1fr; }
+  .portal-document-operation-intro, .portal-document-operation-layout { grid-template-columns: 1fr; }
   .portal-vault-intro, .portal-vault-layout { grid-template-columns: 1fr; }
   .portal-project-package-actions { align-items: flex-start; flex-direction: column; }
   .portal-project-intro, .portal-project-summary { gap: 17px; }
@@ -962,15 +988,18 @@ a { color: inherit; text-decoration: none; }
   .portal-fields, .portal-auth-facts { grid-template-columns: 1fr; }
   .portal-project-grid { grid-template-columns: 1fr; }
   .portal-project-package-grid { grid-template-columns: 1fr; }
+  .portal-document-operation-grid { grid-template-columns: 1fr; }
   .portal-vault-grid { grid-template-columns: 1fr; }
   .portal-project-intro, .portal-project-summary { padding: 20px; border-radius: 18px; }
   .portal-project-intro dl, .portal-project-summary dl { grid-template-columns: 1fr; }
   .portal-project-package-intro dl { grid-template-columns: 1fr; }
+  .portal-document-operation-intro dl { grid-template-columns: 1fr; }
   .portal-vault-intro dl { grid-template-columns: 1fr; }
   .portal-project-intro dl > div, .portal-project-summary dl > div { min-height: 0; }
   .portal-project-document { grid-template-columns: auto minmax(0, 1fr) auto; }
   .portal-vault-meta { grid-template-columns: 1fr; }
   .portal-project-package-meta { grid-template-columns: 1fr; }
+  .portal-document-operation-meta { grid-template-columns: 1fr; }
   .portal-project-document > b { display: none; }
   .portal-version-row { align-items: flex-start; flex-direction: column; }
   .portal-studio-launchpad { display: flex; gap: 11px; margin-right: -16px; padding-right: 16px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }

@@ -711,7 +711,13 @@
   featurePage("/documents/pdf", "PDF tools", "Chuẩn bị thao tác PDF; Core Bridge kiểm tra file, path và ownership.", ICONS.document, FIELD_SETS.documentPdf, ["/pdf"]);
   featurePage("/documents/ocr", "OCR", "Chuẩn bị OCR, đợi engine trả về kết quả được kiểm tra thay vì text giả.", ICONS.document, FIELD_SETS.documentOcr);
   featurePage("/documents/merge", "Gộp tài liệu", "Gộp tài liệu qua job có kiểm tra file server-side.", ICONS.document, FIELD_SETS.documentMerge);
-  featurePage("/documents/split", "Tách tài liệu", "Tách tài liệu theo phạm vi trang sau khi bridge xác thực input.", ICONS.document, FIELD_SETS.documentSplit);
+  customerPage("/documents/split", "Tách PDF riêng tư", "Tách một trang hoặc dải liên tiếp từ PDF trong Asset Vault bằng Document Operations độc lập của Web.", ICONS.document, {
+    layout: "pdf-split", type: "document-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "PDF nguồn luôn được chọn từ Asset Vault của chính signed account; browser không gửi path hoặc byte PDF mới vào thao tác này.",
+      "Web tạo attachment PDF riêng trong storage cô lập, kiểm tra lại output trước khi cho tải và không gọi Bot, provider, PayOS hoặc ví Xu."
+    ]
+  });
   featurePage("/documents/compress", "Nén tài liệu", "Nén file theo job riêng; download chỉ xuất hiện khi output hợp lệ.", ICONS.document, FIELD_SETS.documentCompress);
   featurePage("/documents/translate", "Dịch tài liệu", "Dịch tài liệu bằng workflow server-side và output riêng tư đã xác minh.", ICONS.document, FIELD_SETS.documentTranslate);
 
@@ -827,6 +833,10 @@
       projectPackages: Array.isArray(source.projectPackages) ? source.projectPackages.slice(0, 100) : [],
       projectPackageEvents: source.projectPackageEvents && typeof source.projectPackageEvents === "object" ? source.projectPackageEvents : {},
       projectPackageEnabled: source.projectPackageEnabled === true,
+      // Document Operations output is a third, independent private surface:
+      // it is neither an Asset Vault source blob nor a Bot delivery/job.
+      documentOperations: Array.isArray(source.documentOperations) ? source.documentOperations.slice(0, 100) : [],
+      documentOperationsEnabled: source.documentOperationsEnabled === true,
       // Account activity is already a redacted, owner-scoped projection from
       // the Web API. Retain the bounded list during each presentation pass so
       // a successful signed read cannot be rendered as an empty history.
@@ -1289,6 +1299,16 @@
             .filter((project) => project && validProjectId(project.id) && String(project.state || "active") === "active")
             .map((project) => ({ value: String(project.id), label: String(project.title || "Project Web") }));
         }
+        if (field.optionsFrom === "pdfVaultAssets") {
+          const assets = context && Array.isArray(context.vaultItems) ? context.vaultItems : [];
+          options = assets
+            .filter((asset) => asset && validProjectId(asset.id) && String(asset.state || "") === "active"
+              && String(asset.extension || "").toLowerCase() === ".pdf" && String(asset.content_type || "") === "application/pdf")
+            .map((asset) => ({
+              value: String(asset.id),
+              label: `${asset.display_name || asset.original_filename || "PDF riêng tư"} · ${vaultBytes(asset.byte_size)}`
+            }));
+        }
         if (field.optionsFrom === "topupPackages") {
           const payos = context && context.paymentOptions && context.paymentOptions.payos && typeof context.paymentOptions.payos === "object" ? context.paymentOptions.payos : {};
           options = Array.isArray(payos.topup_packages) ? payos.topup_packages
@@ -1338,7 +1358,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "pdf-split"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -2474,6 +2494,91 @@
     ];
   }
 
+  function pdfVaultItems(context) {
+    return vaultItems(context)
+      .filter((item) => String(item.extension || "").toLowerCase() === ".pdf" && String(item.content_type || "") === "application/pdf")
+      .slice(0, 100);
+  }
+
+  function validDocumentOperationId(value) {
+    return validVaultAssetId(value);
+  }
+
+  function documentOperationItems(context) {
+    return (Array.isArray(context.documentOperations) ? context.documentOperations : [])
+      .filter((item) => item && typeof item === "object" && validDocumentOperationId(item.id) && String(item.kind || "") === "pdf_split")
+      .slice(0, 100);
+  }
+
+  function documentOperationState(item) {
+    const state = String(item && item.state || "guarded").toLowerCase();
+    return ALLOWED_STATES.has(state) ? state : "guarded";
+  }
+
+  function documentOperationDownloadPath(item) {
+    const operationId = String(item && item.id || "").trim();
+    return validDocumentOperationId(operationId) && documentOperationState(item) === "completed" && item && item.download_ready === true
+      ? `/api/v1/document-operations/${encodeURIComponent(operationId)}/download`
+      : "";
+  }
+
+  function pdfSplitFormFields() {
+    return [
+      {
+        name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets",
+        emptyLabel: "Chọn PDF riêng tư", required: true,
+        help: "Chỉ PDF active thuộc signed Web account hiện tại xuất hiện. Không chọn URL, path hoặc tệp từ browser ở bước này."
+      },
+      {
+        name: "page_range", label: "Trang cần tách", placeholder: "Ví dụ: 2 hoặc 2-5", required: true,
+        pattern: "\\d+(?:-\\d+)?", maxLength: 32,
+        help: "Chỉ một trang hoặc một dải liên tiếp. Dải đảo chiều như 5-2 được chuẩn hóa thành 2-5; giới hạn PDF nguồn là 20 MB và 30 trang."
+      }
+    ];
+  }
+
+  function renderDocumentOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có PDF đã tách", "Sau khi PDF riêng tư vượt qua kiểm tra nguồn, parser và output, attachment sẽ xuất hiện tại đây. Không có Job Bot hoặc output mô phỏng.", "▤");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const status = documentOperationState(item);
+      const downloadPath = documentOperationDownloadPath(item);
+      const start = Number(item.selected_start_page);
+      const end = Number(item.selected_end_page);
+      const selected = Number.isInteger(start) && Number.isInteger(end) ? (start === end ? `Trang ${start}` : `Trang ${start}–${end}`) : "Đang xác minh phạm vi";
+      const sourcePages = Number(item.source_page_count);
+      const outputPages = Number(item.output_page_count);
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">PDF</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PDF riêng tư"))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra"}</dd></div><div><dt>Đầu ra</dt><dd>${Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : "Chưa có"}</dd></div><div><dt>Artifact</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : "Đang kiểm tra")}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PDF riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${status === "failed" || status === "unavailable" ? "Không có output tải xuống; hãy kiểm tra nguồn và chạy thao tác mới." : "Chỉ tải xuống sau khi server xác minh output."}</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderPdfSplit(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-split"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
+    if (!canView) {
+      return `<article class="portal-page portal-pdf-split">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF Split chỉ bật khi cả Asset Vault và thư mục output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;
+    }
+    const sources = pdfVaultItems(context);
+    const operations = documentOperationItems(context);
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = transientFormValues("/documents/split");
+    const runReason = !canRunCapability
+      ? "Cần signed session, CSRF và capability Document Operations từ server."
+      : sources.length === 0
+        ? "Hãy lưu một PDF private vào Asset Vault trước khi tách."
+        : "Source → bản sao cô lập → xác minh parser/output → attachment riêng tư.";
+    const sourceSummary = sources.length === 1 ? "1 PDF đang hoạt động" : `${sources.length} PDF đang hoạt động`;
+    const completedCount = operations.filter((item) => documentOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-pdf-split">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Document Operations</span><h2>Tách PDF riêng tư, không qua Bot</h2><p>Chọn PDF đã có trong Asset Vault. Máy chủ sao chép input sang vùng xử lý cô lập, giới hạn parser theo 20 MB/30 trang, loại bỏ annotation/action tương tác và chỉ phát attachment khi output vượt qua kiểm tra.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PDF output sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo PDF Split</h2><p class="portal-card-subtitle">Một trang hoặc một dải liên tiếp. Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-split" data-portal-route="/documents/split" data-portal-confirm="Tách PDF từ Asset Vault? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra input và output." novalidate>${renderFields(pdfSplitFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tách PDF</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Document Operations là pipeline Web độc lập.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private đang active của signed account hiện tại được đọc.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>Không PDF mã hóa, không quá 20 MB/30 trang, không page list tuỳ ý.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được hash/parse lại và tải qua signed session; không public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã xử lý</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/split"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations)}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không thay thế workflow Bot</strong><p>PDF Split này là artifact Web-native có lifecycle riêng. Nó không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderAssetVault(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["asset-vault-view"] === true);
     const canUpload = Boolean(context.capabilities && context.capabilities["asset-vault-upload"] === true);
@@ -3561,6 +3666,7 @@
       case "job-detail": return renderJobDetail(page, context);
       case "assets": return renderAssets(page, context);
       case "asset-vault": return renderAssetVault(page, context);
+      case "pdf-split": return renderPdfSplit(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
       case "account-activity": return renderAccountActivity(page, context);
