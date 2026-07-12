@@ -1,6 +1,6 @@
-import asyncio
 from datetime import datetime, timedelta, timezone
 
+import anyio
 import httpx
 import pytest
 from fastapi import HTTPException
@@ -427,20 +427,33 @@ async def test_untrusted_route_identifiers_and_admin_modules_fail_before_the_bri
     account = {"id": "web-account", "canonical_user_id": "telegram-1", "role": "admin"}
     request = Request({"type": "http", "method": "GET", "path": "/api/v1/payments/invalid", "headers": []})
 
-    with pytest.raises(HTTPException, match="Mã payment không hợp lệ"):
+    # Older FastAPI/Starlette versions intentionally leave ``str(exc)``
+    # empty, so assert the public HTTP detail rather than relying on a
+    # framework-version-specific exception string.
+    with pytest.raises(HTTPException) as payment_error:
         await payment_status("../admin/payments", request, account)
-    with pytest.raises(HTTPException, match="Mã job không hợp lệ"):
+    assert payment_error.value.status_code == 422
+    assert payment_error.value.detail == "Mã payment không hợp lệ"
+    with pytest.raises(HTTPException) as job_error:
         await job_detail("job?other=1", request, account)
-    with pytest.raises(HTTPException, match="Mã tài sản không hợp lệ"):
+    assert job_error.value.status_code == 422
+    assert job_error.value.detail == "Mã job không hợp lệ"
+    with pytest.raises(HTTPException) as asset_error:
         await asset_download("asset/../secret", request, account)
-    with pytest.raises(HTTPException, match="Module Admin chưa được công bố"):
+    assert asset_error.value.status_code == 422
+    assert asset_error.value.detail == "Mã tài sản không hợp lệ"
+    with pytest.raises(HTTPException) as module_error:
         await admin_module("private-runtime", request, account)
+    assert module_error.value.status_code == 404
+    assert module_error.value.detail == "Module Admin chưa được công bố"
     record_request = Request({
         "type": "http", "method": "GET", "path": "/api/v1/admin/modules/users",
         "query_string": b"record_id=../other-user", "headers": [],
     })
-    with pytest.raises(HTTPException, match="ID bản ghi không hợp lệ"):
+    with pytest.raises(HTTPException) as record_error:
         await admin_module("users", record_request, account)
+    assert record_error.value.status_code == 422
+    assert record_error.value.detail == "ID bản ghi không hợp lệ"
     assert bridge_calls == []
 
 
@@ -676,7 +689,7 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
 
     async def fake_bridge(method, path, *, account, request, payload=None, params=None):
         calls.append({"method": method, "path": path, "payload": payload})
-        await asyncio.sleep(0.03)
+        await anyio.sleep(0.03)
         return {
             "ok": True,
             "status": "awaiting_confirm",
@@ -695,10 +708,15 @@ async def test_payment_idempotency_reserves_the_key_before_any_second_bridge_cal
     request = Request({"type": "http", "method": "POST", "path": "/api/v1/payments/create", "headers": []})
     account = {"id": "web-account", "canonical_user_id": "telegram-1"}
     payload = PaymentRequest(package_id="pkg-basic", payment_type="topup_xu", idempotency_key="payment-reserve-0001")
-    first, second = await asyncio.gather(
-        create_payment(payload, request, account),
-        create_payment(payload, request, account),
-    )
+    results = []
+
+    async def submit_duplicate() -> None:
+        results.append(await create_payment(payload, request, account))
+
+    async with anyio.create_task_group() as task_group:
+        task_group.start_soon(submit_duplicate)
+        task_group.start_soon(submit_duplicate)
+    first, second = results
     assert len(calls) == 1
     assert {first["error_code"], second["error_code"]} == {None, "IDEMPOTENCY_IN_PROGRESS"}
     # Payment results (including order, Xu and checkout URL) are never cached

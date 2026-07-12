@@ -1760,7 +1760,7 @@ def test_production_environment_requires_a_real_secret_and_sets_secure_session_c
         copyfast_auth.ensure_auth_configuration()
 
 
-def test_production_requires_persistent_session_database_configuration(monkeypatch):
+def test_production_requires_persistent_session_database_configuration(tmp_path, monkeypatch):
     import copyfast_db
 
     monkeypatch.setenv("APP_ENV", "production")
@@ -1773,7 +1773,9 @@ def test_production_requires_persistent_session_database_configuration(monkeypat
     with pytest.raises(RuntimeError, match="đường dẫn tuyệt đối"):
         copyfast_db.ensure_copyfast_persistence()
 
-    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", "C:\\persistent-data\\toanaas-session.db")
+    # Use the platform-native temporary path so this verifies the persistence
+    # guard on both Railway's Linux image and Windows development worktrees.
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "toanaas-session.db"))
     copyfast_db.ensure_copyfast_persistence()
 
 

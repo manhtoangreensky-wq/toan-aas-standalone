@@ -60,6 +60,16 @@ TELEGRAM_OIDC_ENVIRONMENT_NAMES = (
     "TELEGRAM_OAUTH_CLIENT_SECRET",
 )
 OAUTH_HTTP_TIMEOUT_SECONDS = 8.0
+# Starlette renamed these constants after the FastAPI version declared by this
+# project. Resolve the modern spelling first without evaluating the deprecated
+# fallback on newer runtimes, then retain a compatible value for Railway's
+# pinned Starlette 0.27 dependency.
+HTTP_413_PAYLOAD_TOO_LARGE = getattr(status, "HTTP_413_CONTENT_TOO_LARGE", None)
+if HTTP_413_PAYLOAD_TOO_LARGE is None:
+    HTTP_413_PAYLOAD_TOO_LARGE = status.HTTP_413_REQUEST_ENTITY_TOO_LARGE
+HTTP_422_UNPROCESSABLE = getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", None)
+if HTTP_422_UNPROCESSABLE is None:
+    HTTP_422_UNPROCESSABLE = status.HTTP_422_UNPROCESSABLE_ENTITY
 
 
 def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: str = "completed", error_code: str | None = None) -> dict:
@@ -1960,7 +1970,7 @@ async def _telegram_challenge_input_rejection(request: Request) -> JSONResponse 
     if len(body) > 1_024:
         return JSONResponse(
             envelope(False, "Đăng nhập Telegram không nhận dữ liệu từ browser. Hãy dùng nút Đăng nhập với Telegram để Bot xác minh.", status_name="failed", error_code="TELEGRAM_BROWSER_INPUT_NOT_ACCEPTED"),
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            status_code=HTTP_422_UNPROCESSABLE,
         )
     try:
         value = json.loads(body)
@@ -1975,7 +1985,7 @@ async def _telegram_challenge_input_rejection(request: Request) -> JSONResponse 
     )
     return JSONResponse(
         envelope(False, message, status_name="failed", error_code="TELEGRAM_BROWSER_INPUT_NOT_ACCEPTED"),
-        status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+        status_code=HTTP_422_UNPROCESSABLE,
     )
 
 
@@ -2282,7 +2292,7 @@ async def confirm_telegram_link(request: Request):
         return _bridge_callback_failure(
             "Callback Telegram vượt quá kích thước cho phép.",
             error_code="BRIDGE_CALLBACK_BODY_TOO_LARGE",
-            http_status=status.HTTP_413_CONTENT_TOO_LARGE,
+            http_status=HTTP_413_PAYLOAD_TOO_LARGE,
         )
     if not authorized:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Bridge authentication failed")
@@ -2293,7 +2303,7 @@ async def confirm_telegram_link(request: Request):
         return _bridge_callback_failure(
             "Dữ liệu callback Telegram không hợp lệ.",
             error_code="LINK_CALLBACK_INVALID",
-            http_status=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            http_status=HTTP_422_UNPROCESSABLE,
         )
     # The release gate is also an emergency stop, not merely a UI hint.  A
     # code issued shortly before an operator disables the paired Bot adapter
@@ -2313,7 +2323,7 @@ async def confirm_telegram_link(request: Request):
         return _bridge_callback_failure(
             "Telegram identity không hợp lệ",
             error_code="LINK_IDENTITY_INVALID",
-            http_status=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            http_status=HTTP_422_UNPROCESSABLE,
         )
     with transaction() as conn:
         row = conn.execute(

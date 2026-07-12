@@ -1,0 +1,9 @@
+-r requirements.txt
+
+# Test-only dependencies. They stay outside the Railway production image,
+# while allowing AnyIO tests to exercise both asyncio and Trio backends.
+pytest>=8,<10
+# FastAPI 0.104 pins AnyIO 3.x, whose Trio backend still imports
+# ``trio.MultiError``. Pin the last compatible Trio line instead of accepting
+# a latest release that removes that compatibility API.
+trio==0.22.2

@@ -7,7 +7,6 @@ instead of a locally fabricated result.
 
 from __future__ import annotations
 
-import asyncio
 import hashlib
 import hmac
 import json
@@ -17,6 +16,7 @@ import time
 import uuid
 from typing import Any
 
+import anyio
 import httpx
 
 
@@ -131,11 +131,11 @@ class CoreBridgeClient:
                     response = await client.request(method.upper(), normalized_path, content=body or None, params=params, headers=headers)
             except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError):
                 if attempt + 1 < attempts:
-                    await asyncio.sleep(0.05)
+                    await anyio.sleep(0.05)
                     continue
                 return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_UNAVAILABLE")
             if response.status_code in {502, 503, 504} and attempt + 1 < attempts:
-                await asyncio.sleep(0.05)
+                await anyio.sleep(0.05)
                 continue
             break
         if response is None:
