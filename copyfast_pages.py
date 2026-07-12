@@ -41,7 +41,7 @@ def _title_for(path: str) -> str:
         if item.route.split("?", 1)[0].rstrip("/") == normalized:
             return item.title
     aliases = {
-        "/login": "Đăng nhập", "/register": "Tạo tài khoản", "/onboarding": "Bắt đầu với TOAN AAS",
+        "/welcome": "Giới thiệu TOAN AAS", "/login": "Đăng nhập", "/register": "Tạo tài khoản", "/onboarding": "Bắt đầu với TOAN AAS",
         "/campaigns": "Campaign Planner", "/calendar": "Content Calendar", "/approvals": "Self-review Queue",
         "/image": "Studio ảnh", "/video": "Studio video", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
         "/features/content": "Content & Chat", "/features/image": "Image Studio", "/features/video": "Video Studio",

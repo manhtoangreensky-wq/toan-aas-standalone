@@ -447,6 +447,8 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     assert 'layout: "workspace-drafts", type: "workspace-drafts", fields: [], action: "none", status: "read_only"' in PORTAL
     assert 'case "workspace-drafts": return renderWorkspaceDrafts(page, context);' in PORTAL
     assert "function renderWorkspaceDrafts(page, context)" in PORTAL
+    normalizer = PORTAL[PORTAL.index("function normalizeBootstrap(raw)"):PORTAL.index("function getBootstrap()")]
+    assert "workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : []" in normalizer
     assert "function restoreWorkspaceDraft(route, input, draftId)" in PORTAL
     assert 'data-portal-action="workspace-draft-save"' in PORTAL
     form = PORTAL[PORTAL.index("function renderFormCard(page, context)"):PORTAL.index("function renderHero")]
@@ -494,6 +496,20 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     db = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
     assert "web_workspace_drafts" in db
     assert "idx_web_workspace_drafts_account_state_updated" in db
+
+
+def test_portal_normalizer_preserves_owner_scoped_hydration_state() -> None:
+    """Successful signed reads must survive every presentation rerender."""
+    normalizer = PORTAL[PORTAL.index("function normalizeBootstrap(raw)"):PORTAL.index("function getBootstrap()")]
+    for expected in (
+        "workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : []",
+        "campaignPlanDetail: source.campaignPlanDetail && typeof source.campaignPlanDetail === \"object\" ? source.campaignPlanDetail : {}",
+        "accountActivity: Array.isArray(source.accountActivity) ? source.accountActivity.slice(0, 50) : []",
+        "assetFilter: typeof source.assetFilter === \"string\" ? source.assetFilter : \"all\"",
+        "ticketFilter: typeof source.ticketFilter === \"string\" ? source.ticketFilter : \"all\"",
+        "pwaEnabled: source.pwaEnabled === true",
+    ):
+        assert expected in normalizer
 
 
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
@@ -1202,9 +1218,11 @@ def test_canonical_planning_can_be_reused_only_as_ephemeral_safe_form_text() -> 
     assert "data-canonical-text" in PORTAL
 
 
-def test_public_landing_is_a_responsive_product_entry_not_an_unauthenticated_workspace() -> None:
-    assert 'customerPage("/", "TOAN AAS"' in PORTAL
+def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -> None:
+    assert 'customerPage("/welcome", "TOAN AAS"' in PORTAL
     assert 'access: "public", layout: "landing", action: "none", status: "ready"' in PORTAL
+    assert "function customerPage(path, title, description, icon, extra, aliases)" in PORTAL
+    assert '}, ["/app"]);' in PORTAL
     assert "function renderLanding(page, context)" in PORTAL
     assert 'case "landing": return renderLanding(page, context);' in PORTAL
     assert "Không tạo output giả" in PORTAL
@@ -1229,9 +1247,37 @@ def test_public_landing_is_a_responsive_product_entry_not_an_unauthenticated_wor
     assert ".portal-landing-preview" in PORTAL_CSS
     assert "scroll-snap-type: x mandatory" in PORTAL_CSS
     app = (ROOT / "app.py").read_text(encoding="utf-8")
-    assert 'if normalized == "/":' in app
+    assert 'if normalized in {"/", "/app"}:' in app
+    assert 'return RedirectResponse("/login", status_code=307)' in app
     assert 'return RedirectResponse("/dashboard" if account.get("canonical_user_id") else "/onboarding", status_code=307)' in app
-    assert 'public_pages = {"/", "/legal", "/privacy"}' in app
+    assert 'public_pages = {"/welcome", "/legal", "/privacy"}' in app
+    railway = (ROOT / "railway.json").read_text(encoding="utf-8")
+    assert '"healthcheckPath": "/health"' in railway
+
+
+def test_dashboard_uses_an_application_workspace_shell_with_owner_scoped_drafts() -> None:
+    assert "function renderDashboardWorkspaceSummary(context)" in PORTAL
+    assert "function renderDashboardRecentDrafts(context)" in PORTAL
+    assert 'class="portal-page portal-dashboard-app"' in PORTAL
+    assert 'class="portal-dashboard-overview"' in PORTAL
+    assert 'class="portal-dashboard-draft-list"' in PORTAL
+    assert 'class="portal-sidebar-create" href="/features"' in PORTAL
+    assert 'label: "Bot companion"' in PORTAL
+    assert 'label: "Workspace"' in PORTAL
+    assert '["/workspace", "/dashboard"].includes(currentPath)' in INTEGRATION
+    for selector in (".portal-dashboard-overview", ".portal-dashboard-draft", ".portal-sidebar-create"):
+        assert selector in PORTAL_CSS
+
+
+def test_browser_idempotency_keys_normalize_route_scopes_to_the_server_contract() -> None:
+    """A safe draft save must not fail merely because its route contains `/`."""
+    assert "function randomKey(prefix)" in INTEGRATION
+    assert '.replace(/[^A-Za-z0-9._:-]+/g, "-")' in INTEGRATION
+    assert '.replace(/^-+|-+$/g, "")' in INTEGRATION
+    assert ".slice(0, 120) || \"web\"" in INTEGRATION
+    assert 'const scope = updating ? `workspace-draft:${draftId}:update` : `workspace-draft:${feature.key}:${route}:create`;' in INTEGRATION
+    api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert 'IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")' in api
 
 
 def test_video_finalization_maps_bot_navigation_without_faking_mux_or_delivery() -> None:

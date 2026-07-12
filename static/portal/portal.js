@@ -348,8 +348,8 @@
     return frozen;
   }
 
-  function customerPage(path, title, description, icon, extra) {
-    return definePage({ path, title, description, icon, section: "Khách hàng", ...extra });
+  function customerPage(path, title, description, icon, extra, aliases) {
+    return definePage({ path, title, description, icon, section: "Khách hàng", ...extra }, aliases);
   }
 
   function botCompanionPage(path, title, description, icon, commands) {
@@ -502,7 +502,10 @@
     access: "public", layout: "auth", status: "ready", action: "auth-register", actionLabel: "Tạo tài khoản", fields: copyFields(FIELD_SETS.authRegister),
     notes: ["Hồ sơ mới có sẵn locale vi, múi giờ Asia/Ho_Chi_Minh và avatar gradient. Browser không nhận hoặc lưu Telegram ID; server chỉ giữ identity canonical sau khi Bot xác minh.", "Email + mật khẩu là phương thức đang bật; địa chỉ Gmail hoạt động như email bình thường. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình OAuth thật.", "Web server kiểm tra định dạng email, băm mật khẩu và giới hạn tốc độ đăng ký; response đăng ký không tiết lộ email đã có tài khoản hay chưa.", "Chỉ đăng nhập Email + mật khẩu hoặc OAuth đã xác thực mới cấp signed session và CSRF; shell không giả lập token hoặc session."]
   });
-  customerPage("/", "TOAN AAS", "Không gian AI có kiểm soát cho nội dung, hình ảnh, video và âm thanh.", ICONS.dashboard, {
+  // Marketing remains available only as an explicit secondary route. The app
+  // origin itself is a product surface: the server sends unsigned visitors to
+  // secure access and signed visitors to their Workspace.
+  customerPage("/welcome", "TOAN AAS", "Không gian AI có kiểm soát cho nội dung, hình ảnh, video và âm thanh.", ICONS.dashboard, {
     access: "public", layout: "landing", action: "none", status: "ready", section: "AI workspace",
     notes: ["Landing không gọi provider, ví Xu hoặc Bot từ browser.", "Mọi workflow riêng tư bắt đầu sau signed session và liên kết Telegram canonical."]
   });
@@ -569,7 +572,7 @@
   analyticsBotCompanionPage("/campaign/report", "Báo cáo campaign", "Báo cáo campaign và file CSV được Bot tạo từ dữ liệu canonical; Web không tự tính doanh thu, performance hay tạo file xuất giả.", ICONS.reports, "/campaign_report", 30);
   customerPage("/dashboard", "Không gian làm việc", "Điểm xuất phát cho các bản nháp, job và tài sản do Core Bridge sở hữu.", ICONS.dashboard, {
     layout: "dashboard", action: "none", status: "guarded"
-  }, ["/", "/app"]);
+  }, ["/app"]);
   customerPage("/campaigns", "Campaign Planner", "Lập lịch và tự rà soát kế hoạch nội dung trên Web với bảng thời gian rõ ràng. Đây không phải campaign canonical, không tự publish hoặc tạo analytics/doanh thu.", ICONS.prompt, {
     layout: "campaign-planner", action: "campaign-create", actionLabel: "Lưu kế hoạch", status: "ready",
     fields: [
@@ -784,10 +787,20 @@
       jobDetail: source.jobDetail && typeof source.jobDetail === "object" ? source.jobDetail : {},
       assets: Array.isArray(source.assets) ? source.assets : [],
       tickets: Array.isArray(source.tickets) ? source.tickets : [],
+      // Workspace drafts are Web-owned, owner-scoped planning records. They
+      // arrive after initial hydration and must survive the presentation
+      // normalizer just like jobs/assets; otherwise a successful server read
+      // is silently rendered as an empty library.
+      workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : [],
       // Campaign Planner data is Web-owned and already account-scoped by the
       // API. Keep only a bounded presentation copy; the browser never keeps
       // a second campaign store in localStorage.
       campaignPlans: Array.isArray(source.campaignPlans) ? source.campaignPlans.slice(0, 100) : [],
+      campaignPlanDetail: source.campaignPlanDetail && typeof source.campaignPlanDetail === "object" ? source.campaignPlanDetail : {},
+      // Account activity is already a redacted, owner-scoped projection from
+      // the Web API. Retain the bounded list during each presentation pass so
+      // a successful signed read cannot be rendered as an empty history.
+      accountActivity: Array.isArray(source.accountActivity) ? source.accountActivity.slice(0, 50) : [],
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
       pricingCatalog: source.pricingCatalog && typeof source.pricingCatalog === "object" ? source.pricingCatalog : {},
       packageCatalog: source.packageCatalog && typeof source.packageCatalog === "object" ? source.packageCatalog : {},
@@ -803,9 +816,12 @@
       linkFlow: source.linkFlow && typeof source.linkFlow === "object" ? source.linkFlow : {},
       linkStatus: source.linkStatus && typeof source.linkStatus === "object" ? source.linkStatus : {},
       jobFilter: typeof source.jobFilter === "string" ? source.jobFilter : "all",
+      assetFilter: typeof source.assetFilter === "string" ? source.assetFilter : "all",
+      ticketFilter: typeof source.ticketFilter === "string" ? source.ticketFilter : "all",
       readiness: source.readiness && typeof source.readiness === "object" ? source.readiness : {},
       voiceProfiles: Array.isArray(source.voiceProfiles) ? source.voiceProfiles.slice(0, 20) : [],
       profile: source.profile && typeof source.profile === "object" ? source.profile : {},
+      pwaEnabled: source.pwaEnabled === true,
       notifications: Array.isArray(source.notifications) ? source.notifications.slice(0, 5) : []
     };
   }
@@ -958,30 +974,39 @@
   function navGroups(context, currentPage) {
     const groups = [
       {
-        label: "Tổng quan",
+        label: "Workspace",
         links: [
-          ["/dashboard", "Dashboard", ICONS.dashboard], ["/campaigns", "Campaign Planner", ICONS.prompt], ["/calendar", "Content Calendar", ICONS.system], ["/approvals", "Self-review Queue", ICONS.security], ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Tài sản", ICONS.assets]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/workspace", "Bản nháp", ICONS.prompt], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
-        label: "AI Studio",
+        label: "Tạo mới",
         links: [
-          ["/features", "Tất cả công cụ", ICONS.prompt], ["/workspace", "Bản nháp của tôi", ICONS.prompt], ["/tools", "Tools & models", ICONS.prompt], ["/studio", "Media Studio", ICONS.video], ["/chat", "AI Chat", ICONS.chat], ["/prompt-studio", "Prompt Studio", ICONS.prompt], ["/image/create", "Image", ICONS.image],
-          ["/video/create", "Video", ICONS.video], ["/voice/tts", "Voice", ICONS.voice], ["/music", "Music", ICONS.music],
-          ["/subtitle", "Ngôn ngữ", ICONS.subtitle], ["/documents", "Documents", ICONS.document]
+          ["/features", "Tất cả studio", ICONS.prompt], ["/chat", "Content & Chat", ICONS.chat], ["/image/create", "Image", ICONS.image], ["/video/create", "Video", ICONS.video], ["/voice/tts", "Voice & Music", ICONS.voice], ["/subtitle", "Ngôn ngữ & Docs", ICONS.subtitle]
         ]
       },
       {
-        label: "Thanh toán & gói",
+        label: "Công việc",
         links: [
-          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "Gói thành viên", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
+          ["/jobs", "Job Center", ICONS.jobs], ["/assets", "Thư viện tài sản", ICONS.assets]
         ]
       },
       {
-        label: "Tài khoản",
+        label: "Ví & gói",
         links: [
-          ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/notes", "Ghi chú", ICONS.prompt],
-          ["/reminders", "Nhắc việc", ICONS.jobs], ["/rewards", "Ưu đãi", ICONS.pricing], ["/guides", "Bot & hướng dẫn", ICONS.legal], ["/status", "Trạng thái dịch vụ", ICONS.system], ["/account", "Tài khoản", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account]
+          ["/wallet", "Ví Xu", ICONS.wallet], ["/wallet/topup", "Nạp Xu", ICONS.payments], ["/membership", "Membership", ICONS.pricing], ["/packages", "Gói dịch vụ", ICONS.pricing], ["/pricing", "Bảng giá", ICONS.pricing]
+        ]
+      },
+      {
+        label: "Tài khoản & hỗ trợ",
+        links: [
+          ["/account", "Tài khoản", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/status", "Trạng thái dịch vụ", ICONS.system]
+        ]
+      },
+      {
+        label: "Bot companion",
+        links: [
+          ["/notes", "Ghi chú", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/referrals", "Giới thiệu", ICONS.support], ["/rewards", "Ưu đãi", ICONS.pricing], ["/community", "Cộng đồng", ICONS.support], ["/guides", "Hướng dẫn Bot", ICONS.legal]
         ]
       }
     ];
@@ -1136,13 +1161,14 @@
     }).join("");
     return `<div class="portal-brand">
       <span class="portal-brand-mark" aria-hidden="true">TA</span>
-      <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">Control portal</span></span>
+      <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">AI Workspace</span></span>
       <button class="portal-sidebar-close" type="button" aria-label="Đóng điều hướng" data-portal-close-menu>×</button>
     </div>
+    <a class="portal-sidebar-create" href="/features"><span aria-hidden="true">+</span><span>Tạo workflow mới</span><b aria-hidden="true">→</b></a>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
-        <span><strong>${bridgeReady ? "Core Bridge sẵn sàng" : "Chờ Core Bridge"}</strong><span>${bridgeReady ? "Khả năng được cấp theo phiên" : "Không gọi provider hoặc payment"}</span></span>
+        <span><strong>${bridgeReady ? "Kết nối workspace sẵn sàng" : "Workspace đang ở chế độ an toàn"}</strong><span>${bridgeReady ? "Tính năng được cấp theo phiên hiện tại" : "Không gọi provider, Xu hoặc payment từ browser"}</span></span>
       </div>
       <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${ICONS.legal}</span><span>Pháp lý & riêng tư</span></a>
     </div>`;
@@ -1668,6 +1694,33 @@
     return `<div class="portal-data-table-wrap"><table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
   }
 
+  function dashboardActiveDrafts(context) {
+    return (Array.isArray(context.workspaceDrafts) ? context.workspaceDrafts : [])
+      .filter((item) => item && typeof item === "object" && String(item.state || "active") === "active")
+      .slice(0, 100);
+  }
+
+  function renderDashboardWorkspaceSummary(context) {
+    const name = displayName(context);
+    const drafts = dashboardActiveDrafts(context);
+    const jobs = Array.isArray(context.jobs) ? context.jobs : [];
+    const assets = Array.isArray(context.assets) ? context.assets : [];
+    const processing = jobs.filter((item) => ["queued", "processing"].includes(jobStatus(item))).length;
+    const deliveryReady = assets.filter((item) => item && item.delivery_ready === true && item.download_ready === true).length;
+    return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
+      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">TOAN AAS / Workspace</span><h1 id="workspace-overview-title">Chào ${safeText(name)}</h1><p>Chọn workflow, tiếp tục brief và theo dõi công việc ở một nơi. Dữ liệu job, Xu và delivery chỉ hiển thị khi server/Bot canonical đã cấp cho phiên của bạn.</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/features">Tạo workflow mới <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/workspace">Mở bản nháp</a></div></div>
+      <dl class="portal-dashboard-overview-stats" aria-label="Tóm tắt workspace"><div><dt>Bản nháp</dt><dd>${safeText(String(drafts.length))}</dd><span>Web-owned</span></div><div><dt>Đang xử lý</dt><dd>${safeText(String(processing))}</dd><span>Bot canonical</span></div><div><dt>Sẵn sàng tải</dt><dd>${safeText(String(deliveryReady))}</dd><span>Delivery đã kiểm tra</span></div></dl>
+    </section>`;
+  }
+
+  function renderDashboardRecentDrafts(context) {
+    const drafts = dashboardActiveDrafts(context).slice(0, 3);
+    const body = drafts.length
+      ? `<div class="portal-dashboard-draft-list">${drafts.map((item) => `<a class="portal-dashboard-draft" href="/workspace"><span class="portal-dashboard-draft-icon" aria-hidden="true">${safeText(ICONS.prompt)}</span><span><strong>${safeText(String(item.title || item.feature_title || "Bản nháp Web"))}</strong><small>${safeText(String(item.feature_title || "Workflow Web"))} · cập nhật ${safeText(String(item.updated_at || item.created_at || "—"))}</small></span><b aria-hidden="true">→</b></a>`).join("")}</div>`
+      : renderEmpty("Chưa có brief đang làm", "Bắt đầu ở một studio; bản nháp Web chỉ lưu brief an toàn và không tạo job, charge hay output.", "✦");
+    return `<section class="portal-card portal-card-pad portal-dashboard-drafts"><div class="portal-card-header"><div><span class="portal-section-kicker">Continue working</span><h2 class="portal-card-title">Bản nháp gần đây</h2><p class="portal-card-subtitle">Mở thư viện để tiếp tục đúng workflow; file, quote và trạng thái canonical luôn được kiểm tra lại.</p></div><a class="portal-button portal-button--quiet" href="/workspace">Xem tất cả →</a></div>${body}</section>`;
+  }
+
   function renderDashboard(page, context) {
     const jobs = Array.isArray(context.jobs) ? context.jobs.slice(0, 5) : [];
     const assets = Array.isArray(context.assets) ? context.assets.slice(0, 5) : [];
@@ -1677,7 +1730,7 @@
       : "";
     const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${renderStudioLaunchpad(context)}${renderModuleCards(context)}${activity}</article>`;
+    return `<article class="portal-page portal-dashboard-app">${renderDashboardWorkspaceSummary(context)}<div class="portal-status-grid portal-dashboard-assurance">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${renderDashboardRecentDrafts(context)}${renderStudioLaunchpad(context)}${activity}</article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -2502,7 +2555,7 @@
     const registerSetup = page.path === "/register"
       ? `<div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Hồ sơ mặc định sau khi tạo</strong><p>Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient. Email + mật khẩu (có thể dùng Gmail) đang hoạt động. Telegram Login dùng OIDC khi server đã cấu hình; Bot vẫn xác minh cùng identity trước khi mở dữ liệu canonical. Không nhập ID Telegram thô. Telegram Login, Google OAuth, GitHub OAuth và Sign in with Apple chỉ mở khi server có cấu hình thật.</p></div></div>`
       : "";
-    return `<article class="portal-auth-page"><a class="portal-auth-brand" href="/" aria-label="Về trang chủ TOAN AAS"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace · secure access</small></span><em>← Trang chủ</em></a><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p>
+    return `<article class="portal-auth-page"><a class="portal-auth-brand" href="/welcome" aria-label="Xem giới thiệu TOAN AAS"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace · secure access</small></span><em>← Giới thiệu</em></a><section class="portal-auth-intro"><div class="portal-eyebrow">TOAN AAS · secure access</div><h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p>
       <div class="portal-auth-facts"><div class="portal-auth-fact"><strong>Signed session</strong><span>Cookie/session do server quản lý, không dùng raw localStorage.</span></div><div class="portal-auth-fact"><strong>Telegram link</strong><span>Mã dùng một lần, hết hạn và chống replay.</span></div><div class="portal-auth-fact"><strong>CSRF</strong><span>Mọi thao tác ghi sau đăng nhập phải có CSRF hợp lệ.</span></div><div class="portal-auth-fact"><strong>Rate limit</strong><span>Login/register được giới hạn tại Web server; Core Bridge chỉ nhận yêu cầu đã xác thực.</span></div></div>
     </section><section class="portal-card portal-card-pad portal-auth-card"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(page.title)}</h2><p class="portal-card-subtitle">${enabled ? "Endpoint đã được server cấp khả năng." : safeText(reason)}</p></div>${badge(stateFor(page, context))}</div>
       ${registerSetup}${registrationHandoff}${oauthHandoff}<div class="portal-auth-notes">${renderNotes(page)}</div><form class="portal-form" data-portal-form data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(page.path)}" novalidate>${renderFields(page.fields, enabled, context, transientFormValues(page.path))}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${alternative[0]}">${alternative[1]} →</a><button class="portal-button portal-button--primary" type="submit"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button></div></form>
@@ -3195,12 +3248,12 @@
     ];
     const studioCards = studios.map((studio) => `<a class="portal-landing-studio portal-landing-studio--${safeText(studio.tone)}" href="${safeText(studio.href)}"><span class="portal-landing-studio-icon" aria-hidden="true">${safeText(studio.icon)}</span><span class="portal-landing-studio-tag">${safeText(studio.tag)}</span><strong>${safeText(studio.title)}</strong><span>${safeText(studio.text)}</span><em>Mở workflow <span aria-hidden="true">→</span></em></a>`).join("");
     return `<article class="portal-landing" aria-label="Giới thiệu TOAN AAS">
-      <nav class="portal-landing-nav" aria-label="Điều hướng giới thiệu"><a class="portal-landing-brand" href="/"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></a><div class="portal-landing-nav-links"><a href="#studios">Tính năng</a><a href="#workflow">Quy trình</a><a href="#trust">Bảo mật</a></div><div class="portal-landing-nav-actions"><a class="portal-button portal-button--quiet" href="${secondaryHref}">${secondaryLabel}</a><a class="portal-button portal-button--primary" href="${primaryHref}">${primaryLabel}</a></div></nav>
+      <nav class="portal-landing-nav" aria-label="Điều hướng giới thiệu"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></a><div class="portal-landing-nav-links"><a href="#studios">Tính năng</a><a href="#workflow">Quy trình</a><a href="#trust">Bảo mật</a></div><div class="portal-landing-nav-actions"><a class="portal-button portal-button--quiet" href="${secondaryHref}">${secondaryLabel}</a><a class="portal-button portal-button--primary" href="${primaryHref}">${primaryLabel}</a></div></nav>
       <section class="portal-landing-hero"><div class="portal-landing-hero-copy"><span class="portal-landing-kicker"><span aria-hidden="true">✦</span> Một workspace AI, có kiểm soát</span><h1>Biến brief thành nội dung, hình ảnh, video và âm thanh — theo đúng luồng làm việc.</h1><p>TOAN AAS gom các công cụ AI vào một portal rõ ràng. Bạn tạo bản nháp, xem ước tính canonical, xác nhận, rồi theo dõi job và tài sản thuộc quyền sở hữu của mình.</p><div class="portal-landing-hero-actions"><a class="portal-button portal-button--primary" href="${primaryHref}">${primaryLabel} <span aria-hidden="true">→</span></a><a class="portal-button" href="/login?next=/features">Khám phá công cụ</a></div><ul class="portal-landing-proof" aria-label="Cam kết sản phẩm"><li><span aria-hidden="true">✓</span> Không tạo output giả</li><li><span aria-hidden="true">✓</span> Xu và PayOS do Bot canonical</li><li><span aria-hidden="true">✓</span> Telegram xác minh một lần</li></ul></div><aside class="portal-landing-preview" aria-label="Minh họa quy trình"><div class="portal-landing-preview-bar"><span></span><span></span><span></span><strong>TOAN AAS / Workspace</strong></div><div class="portal-landing-preview-body"><div class="portal-landing-preview-heading"><span>Video sản phẩm</span><b>Draft</b></div><div class="portal-landing-preview-lines"><i></i><i></i><i></i></div><div class="portal-landing-preview-steps"><span class="is-active">1<br><small>Brief</small></span><span>2<br><small>Estimate</small></span><span>3<br><small>Confirm</small></span><span>4<br><small>Job</small></span></div><div class="portal-landing-preview-callout"><span aria-hidden="true">⌁</span><p><strong>Core Bridge</strong><br>Chỉ Bot quyết định Xu, payment, job và delivery.</p></div></div></aside></section>
       <section class="portal-landing-section" id="studios"><div class="portal-landing-section-heading"><span>AI Studios</span><h2>Một nơi cho toàn bộ workflow sáng tạo.</h2><p>Mỗi studio có route riêng, form phù hợp với bot và trạng thái sẵn sàng trung thực.</p></div><div class="portal-landing-studios">${studioCards}</div></section>
       <section class="portal-landing-workflow" id="workflow"><div><span class="portal-landing-kicker"><span aria-hidden="true">↗</span> Luồng rõ ràng</span><h2>Không có “đã xong” cho đến khi output thật sự được xác minh.</h2><p>Thiết kế Web giữ đúng authority của Bot: browser không gọi provider, không giữ ledger Xu và không tự xác nhận thanh toán.</p></div><ol><li><span>01</span><div><strong>Draft</strong><p>Chuẩn hóa brief và kiểm tra input.</p></div></li><li><span>02</span><div><strong>Estimate</strong><p>Nhận quote từ pricing canonical.</p></div></li><li><span>03</span><div><strong>Confirm</strong><p>Chỉ chuyển tiếp khi job adapter sẵn sàng.</p></div></li><li><span>04</span><div><strong>Delivery</strong><p>Job và file private phải qua ownership check.</p></div></li></ol></section>
       <section class="portal-landing-trust" id="trust"><div class="portal-landing-trust-copy"><span>Trust by design</span><h2>Đủ mạnh cho vận hành, đủ rõ ràng cho khách hàng.</h2><p>Đăng nhập dùng signed session; Telegram xác minh qua deep-link/mã một lần; tài sản chỉ tải qua delivery URL tạm thời đã được kiểm tra.</p></div><div class="portal-landing-trust-grid"><article><span aria-hidden="true">⌁</span><strong>Telegram verified</strong><p>Không nhận Telegram ID thô từ browser.</p></article><article><span aria-hidden="true">◌</span><strong>Canonical wallet</strong><p>Không có ledger Xu hoặc webhook PayOS thứ hai.</p></article><article><span aria-hidden="true">▣</span><strong>Private delivery</strong><p>Output phải đúng owner và được cấp URL ký.</p></article></div></section>
-      <footer class="portal-landing-footer"><a class="portal-landing-brand" href="/"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></a><span>Draft · Estimate · Confirm · Delivery</span><div><a href="/legal">Điều khoản</a><a href="/privacy">Quyền riêng tư</a></div></footer>
+      <footer class="portal-landing-footer"><a class="portal-landing-brand" href="/welcome"><span class="portal-brand-mark" aria-hidden="true">TA</span><span><strong>TOAN AAS</strong><small>AI workspace</small></span></a><span>Draft · Estimate · Confirm · Delivery</span><div><a href="/legal">Điều khoản</a><a href="/privacy">Quyền riêng tư</a></div></footer>
     </article>`;
   }
 

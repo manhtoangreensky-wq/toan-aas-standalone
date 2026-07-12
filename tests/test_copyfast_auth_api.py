@@ -1544,13 +1544,18 @@ def test_customer_portal_redirects_follow_signed_session_and_telegram_link_state
         assert unsafe_next.headers["location"] == "/dashboard"
 
 
-def test_public_landing_is_available_without_a_session_but_signed_home_keeps_the_portal_route(tmp_path, monkeypatch):
-    """The product entry must not weaken the signed workspace route gate."""
+def test_app_root_redirects_to_secure_access_and_welcome_is_explicit(tmp_path, monkeypatch):
+    """The application origin must never present a marketing shell as home."""
     with make_client(tmp_path, monkeypatch) as client:
-        landing = client.get("/", follow_redirects=False)
-        assert landing.status_code == 200
-        assert 'id="portal-bootstrap" type="application/json"' in landing.text
-        assert '"path": "/"' in landing.text
+        root = client.get("/", follow_redirects=False)
+        app_alias = client.get("/app", follow_redirects=False)
+        assert root.status_code == app_alias.status_code == 307
+        assert root.headers["location"] == app_alias.headers["location"] == "/login"
+
+        welcome = client.get("/welcome", follow_redirects=False)
+        assert welcome.status_code == 200
+        assert 'id="portal-bootstrap" type="application/json"' in welcome.text
+        assert '"path": "/welcome"' in welcome.text
 
         registration = client.post(
             "/api/v1/auth/register",
@@ -1565,6 +1570,7 @@ def test_public_landing_is_available_without_a_session_but_signed_home_keeps_the
         unlinked_home = client.get("/", follow_redirects=False)
         assert unlinked_home.status_code == 307
         assert unlinked_home.headers["location"] == "/onboarding"
+        assert client.get("/app", follow_redirects=False).headers["location"] == "/onboarding"
 
         csrf = login.json()["data"]["csrf_token"]
         code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
@@ -1573,6 +1579,7 @@ def test_public_landing_is_available_without_a_session_but_signed_home_keeps_the
         linked_home = client.get("/", follow_redirects=False)
         assert linked_home.status_code == 307
         assert linked_home.headers["location"] == "/dashboard"
+        assert client.get("/app", follow_redirects=False).headers["location"] == "/dashboard"
 
 
 def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_path, monkeypatch):

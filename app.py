@@ -248,17 +248,18 @@ async def page(page_path: str, request: Request):
     # admin role; browser-supplied IDs never influence this decision.
     if normalized == "/admin" or normalized.startswith("/admin/"):
         await require_canonical_admin(request)
-    # The public home is a product entry surface, not an unauthenticated
-    # workspace.  A signed customer still lands directly in their Portal so
-    # returning users never need to navigate past marketing copy.
-    if normalized == "/":
+    # app.toanaas.vn is an application origin, not the marketing site. Keep
+    # every root entry in product mode: unsigned users start at secure access,
+    # while existing sessions go directly to onboarding or their Workspace.
+    # `/welcome` is the explicit, optional product introduction route.
+    if normalized in {"/", "/app"}:
         try:
             account = current_session(request)["account"]
         except HTTPException:
-            return render_portal(page_path)
+            return RedirectResponse("/login", status_code=307)
         return RedirectResponse("/dashboard" if account.get("canonical_user_id") else "/onboarding", status_code=307)
 
-    public_pages = {"/", "/legal", "/privacy"}
+    public_pages = {"/welcome", "/legal", "/privacy"}
     if normalized in {"/login", "/register"}:
         try:
             existing = current_session(request)["account"]
