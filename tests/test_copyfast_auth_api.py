@@ -483,7 +483,7 @@ def test_google_oauth_uses_signed_state_pkce_and_creates_an_oauth_only_account(t
 
         callback = client.get(f"/api/v1/auth/oauth/google/callback?code=opaque-code&state={state_value}", follow_redirects=False)
         assert callback.status_code == 303
-        assert callback.headers["location"] == "/onboarding?next=/video/product"
+        assert callback.headers["location"] == "/video/product"
         assert seen == [("google", "opaque-code", state_value)]
         me = client.get("/api/v1/auth/me")
         account = me.json()["data"]["account"]
@@ -536,7 +536,7 @@ def test_telegram_oidc_creates_a_web_session_but_requires_the_same_bot_identity(
 
         callback = client.get(f"/api/v1/auth/oauth/telegram/callback?code=opaque-code&state={state_value}", follow_redirects=False)
         assert callback.status_code == 303
-        assert callback.headers["location"] == "/onboarding?next=/video/product"
+        assert callback.headers["location"] == "/video/product"
         assert calls == [("telegram", "opaque-code", state_value)]
         me = client.get("/api/v1/auth/me")
         account = me.json()["data"]["account"]
@@ -751,7 +751,7 @@ def test_apple_oauth_uses_form_post_and_can_link_without_relaxing_session_cookie
             follow_redirects=False,
         )
         assert signed_in.status_code == 303
-        assert signed_in.headers["location"] == "/onboarding?next=/documents"
+        assert signed_in.headers["location"] == "/documents"
         assert seen == [("apple-code", state_value, "Apple User")]
         account = client.get("/api/v1/auth/me").json()["data"]["account"]
         assert account["login_methods"] == {"email": False, "telegram_oidc": False, "telegram": False, "google": False, "github": False, "apple": True}
@@ -1293,7 +1293,7 @@ def test_telegram_connection_status_exposes_only_the_safe_oidc_feature_flag(tmp_
         assert "telegram-client-secret" not in json.dumps(status_payload)
 
 
-def test_bot_companion_routes_keep_the_signed_session_and_telegram_link_gate(tmp_path, monkeypatch):
+def test_bot_companion_routes_need_a_signed_session_but_telegram_link_is_optional(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         anonymous = client.get("/notes", follow_redirects=False)
         assert anonymous.status_code == 307
@@ -1303,8 +1303,8 @@ def test_bot_companion_routes_keep_the_signed_session_and_telegram_link_gate(tmp
         login = client.post("/api/v1/auth/login", json={"email": "companion@example.com", "password": "correct-horse-battery-staple"})
         assert login.status_code == 200
         unlinked = client.get("/notes", follow_redirects=False)
-        assert unlinked.status_code == 307
-        assert unlinked.headers["location"].endswith("/onboarding?next=/notes")
+        assert unlinked.status_code == 200
+        assert '"path": "/notes"' in unlinked.text
 
         client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": login.json()["data"]["csrf_token"]})
         csrf = register_and_link(client)
@@ -1509,7 +1509,7 @@ def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
             assert redirected.headers["location"] == target
 
 
-def test_customer_portal_redirects_follow_signed_session_and_telegram_link_state(tmp_path, monkeypatch):
+def test_customer_portal_keeps_web_workspace_independent_from_telegram_link_state(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         unauthenticated = client.get("/dashboard", follow_redirects=False)
         assert unauthenticated.status_code == 307
@@ -1521,14 +1521,14 @@ def test_customer_portal_redirects_follow_signed_session_and_telegram_link_state
         login = client.post("/api/v1/auth/login", json={"email": "redirect@example.com", "password": "correct-horse-battery-staple"})
         csrf = login.json()["data"]["csrf_token"]
         unlinked_dashboard = client.get("/dashboard", follow_redirects=False)
-        assert unlinked_dashboard.status_code == 307
-        assert unlinked_dashboard.headers["location"] == "/onboarding?next=/dashboard"
+        assert unlinked_dashboard.status_code == 200
+        assert '"path": "/dashboard"' in unlinked_dashboard.text
         unlinked_workflow = client.get("/video/product", follow_redirects=False)
-        assert unlinked_workflow.status_code == 307
-        assert unlinked_workflow.headers["location"] == "/onboarding?next=/video/product"
+        assert unlinked_workflow.status_code == 200
+        assert '"path": "/video/product"' in unlinked_workflow.text
         assert client.get("/account").status_code == 200
         signed_login = client.get("/login", follow_redirects=False)
-        assert signed_login.headers["location"] == "/onboarding"
+        assert signed_login.headers["location"] == "/dashboard"
 
         code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
         assert confirm_link(client, code).json()["ok"] is True
@@ -1569,8 +1569,8 @@ def test_app_root_redirects_to_secure_access_and_welcome_is_explicit(tmp_path, m
         assert login.json()["ok"] is True
         unlinked_home = client.get("/", follow_redirects=False)
         assert unlinked_home.status_code == 307
-        assert unlinked_home.headers["location"] == "/onboarding"
-        assert client.get("/app", follow_redirects=False).headers["location"] == "/onboarding"
+        assert unlinked_home.headers["location"] == "/dashboard"
+        assert client.get("/app", follow_redirects=False).headers["location"] == "/dashboard"
 
         csrf = login.json()["data"]["csrf_token"]
         code = client.post("/api/v1/auth/telegram/link/start", headers={"X-CSRF-Token": csrf}).json()["data"]["code"]
@@ -2156,23 +2156,37 @@ def test_web_campaign_planner_is_csrf_owned_idempotent_and_never_calls_canonical
         assert all("example.com" not in row[1] and "Video giới thiệu" not in row[1] for row in audits)
 
 
-def test_web_campaign_planner_enforces_account_ownership_and_portal_route_gate(tmp_path, monkeypatch):
+def test_web_campaign_planner_enforces_account_ownership_without_a_telegram_gate(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as first:
-        # A signed but unlinked account may not open the customer portal page;
-        # API writes still need their own ownership/CSRF checks below.
+        # A signed Web account owns planning even without a Telegram companion
+        # link; API writes still need their own ownership/CSRF checks below.
         registration = first.post(
             "/api/v1/auth/register",
             json={"email": "unlinked-campaign@example.com", "password": "correct-horse-battery-staple"},
         )
         assert registration.json()["ok"] is True
-        first.post("/api/v1/auth/login", json={"email": "unlinked-campaign@example.com", "password": "correct-horse-battery-staple"})
+        unlinked_login = first.post("/api/v1/auth/login", json={"email": "unlinked-campaign@example.com", "password": "correct-horse-battery-staple"})
         gate = first.get("/campaigns", follow_redirects=False)
-        assert gate.status_code == 307
-        assert gate.headers["location"] == "/onboarding?next=/campaigns"
+        assert gate.status_code == 200
+        assert '"path": "/campaigns"' in gate.text
         for path in ("/calendar", "/approvals"):
             gate = first.get(path, follow_redirects=False)
-            assert gate.status_code == 307
-            assert gate.headers["location"] == f"/onboarding?next={path}"
+            assert gate.status_code == 200
+            assert f'"path": "{path}"' in gate.text
+        independent_plan = first.post(
+            "/api/v1/campaigns",
+            headers={"X-CSRF-Token": unlinked_login.json()["data"]["csrf_token"]},
+            json={
+                "title": "Kế hoạch Web độc lập",
+                "destination_url": "https://example.com/independent-web",
+                "platform": "website",
+                "objective": "traffic",
+                "scheduled_for": "",
+                "idempotency_key": "campaign-unlinked-web-0001",
+            },
+        )
+        assert independent_plan.status_code == 200
+        assert independent_plan.json()["ok"] is True
         first.post("/api/v1/auth/logout", headers={"X-CSRF-Token": first.get("/api/v1/auth/me").json()["data"]["csrf_token"]})
 
         csrf_first = register_and_link(first)

@@ -22,6 +22,7 @@ from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
 import copyfast_auth
+import copyfast_projects
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
 from copyfast_db import ensure_copyfast_persistence, ensure_copyfast_schema
 from copyfast_pages import ROOT, render_portal
@@ -181,6 +182,7 @@ if static_dir.is_dir():
 
 app.include_router(copyfast_auth.router, prefix="/api/v1/auth")
 app.include_router(copyfast_api.router)
+app.include_router(copyfast_projects.router)
 
 
 @app.get("/health")
@@ -248,24 +250,26 @@ async def page(page_path: str, request: Request):
     # admin role; browser-supplied IDs never influence this decision.
     if normalized == "/admin" or normalized.startswith("/admin/"):
         await require_canonical_admin(request)
-    # app.toanaas.vn is an application origin, not the marketing site. Keep
-    # every root entry in product mode: unsigned users start at secure access,
-    # while existing sessions go directly to onboarding or their Workspace.
+    # app.toanaas.vn is an application origin, not the marketing site. A
+    # signed Web account owns an independent Workspace even before it chooses
+    # to link Telegram, so root entry always opens that Workspace. Telegram is
+    # an optional connector for companion/Bot capabilities, never a gate on
+    # Web-owned projects, drafts, planning or account data.
     # `/welcome` is the explicit, optional product introduction route.
     if normalized in {"/", "/app"}:
         try:
-            account = current_session(request)["account"]
+            current_session(request)
         except HTTPException:
             return RedirectResponse("/login", status_code=307)
-        return RedirectResponse("/dashboard" if account.get("canonical_user_id") else "/onboarding", status_code=307)
+        return RedirectResponse("/dashboard", status_code=307)
 
     public_pages = {"/welcome", "/legal", "/privacy"}
     if normalized in {"/login", "/register"}:
         try:
-            existing = current_session(request)["account"]
+            current_session(request)
         except HTTPException:
             return render_portal(page_path)
-        return RedirectResponse("/dashboard" if existing.get("canonical_user_id") else "/onboarding", status_code=307)
+        return RedirectResponse("/dashboard", status_code=307)
     if normalized not in public_pages:
         try:
             session = current_session(request)
@@ -275,10 +279,6 @@ async def page(page_path: str, request: Request):
             return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
         account = session["account"]
         linked = bool(account.get("canonical_user_id"))
-        if not linked and normalized not in {"/onboarding", "/account", "/account/activity", "/workspace"}:
-            # Preserve the intended local workflow through the Telegram link.
-            # The continuation is validated again before it is ever used.
-            return RedirectResponse(f"/onboarding?next={quote(normalized, safe='/')}", status_code=307)
         if linked and normalized == "/onboarding":
             return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
     return render_portal(page_path)

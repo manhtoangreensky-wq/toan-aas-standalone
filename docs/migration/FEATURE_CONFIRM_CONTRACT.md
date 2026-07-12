@@ -1,8 +1,10 @@
 # Guarded feature-confirm contract
 
-The Web App may prepare a feature draft and ask the canonical Bot for an
-estimate, but it never creates a provider task itself.  The final confirm is
-therefore intentionally behind a separate gate:
+The Web App owns its signed-session authoring layer: a customer can create
+and update a Web workspace draft without Telegram, a Bot bridge, provider,
+PayOS or Xu mutation. It may optionally ask the canonical Bot for an estimate
+for legacy Bot data, but it never creates a provider task itself. The final
+confirm is therefore intentionally behind a separate gate:
 
 ```text
 WEBAPP_COPYFAST_ENABLED=true
@@ -74,14 +76,15 @@ Center link and explicitly says that no job has been matched to the request.
 The tracking object is not a delivery channel: URLs, output/file metadata,
 provider task IDs, payment/ledger fields and identity fields are redacted.
 
-## Guarded Bot-menu continuation
+## Optional Bot-companion continuation
 
-When a Web feature has no reviewed confirm adapter, the Portal may show a
-user-initiated **Mở Bot / `/menu`** handoff. It is navigation only: no feature
-input, prompt, upload ID, Telegram ID, quote receipt, Xu amount, session,
-token or provider data is copied into Telegram. The customer chooses the Bot
-workflow again inside the canonical conversation. This is not a successful
-confirm, provider call, job, payment or output claim.
+When a Web feature has no reviewed confirm adapter, the Portal first keeps the
+customer in Web authoring: they can save a workspace draft and attach it to a
+Project. It may additionally show a user-initiated **Bot companion / `/menu`**
+handoff for customers who choose to use the existing Bot. It is navigation
+only: no feature input, prompt, upload ID, Telegram ID, quote receipt, Xu
+amount, session, token or provider data is copied into Telegram. This is not a
+successful confirm, provider call, job, payment or output claim.
 
 ## Web estimate receipt
 

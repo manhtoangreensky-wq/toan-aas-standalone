@@ -11,7 +11,7 @@ import os
 import re
 import secrets
 import uuid
-from urllib.parse import quote, urlencode, urlparse
+from urllib.parse import urlencode, urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from fastapi.responses import JSONResponse, RedirectResponse
@@ -1908,10 +1908,11 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         _clear_oauth_state_cookie(response)
         return response
     return_path = _safe_oauth_return_path(state_data["return_path"])
-    # OAuth may establish a signed Web session before a Telegram identity is
-    # linked. Preserve the same validated local workflow through onboarding,
-    # so Google/GitHub/Apple users return to what they intentionally opened.
-    target = return_path if account.get("canonical_user_id") else f"/onboarding?next={quote(return_path, safe='/')}"
+    # OAuth establishes a signed Web account with its own Workspace. Telegram
+    # linking is an optional companion integration, not an execution gate, so
+    # an email/Google/GitHub/Apple user returns straight to the validated Web
+    # route they intentionally opened.
+    target = return_path
     response = RedirectResponse(target, status_code=status.HTTP_303_SEE_OTHER)
     _create_session(response, account["id"])
     _clear_oauth_state_cookie(response)

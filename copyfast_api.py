@@ -148,6 +148,11 @@ ACCOUNT_ACTIVITY_LABELS = {
     "workspace.draft.create": ("Lưu bản nháp Web", "AI Studio"),
     "workspace.draft.update": ("Cập nhật bản nháp Web", "AI Studio"),
     "workspace.draft.archive": ("Lưu trữ bản nháp Web", "AI Studio"),
+    "web.project.create": ("Tạo Project Web", "Project Center"),
+    "web.project.update": ("Cập nhật Project Web", "Project Center"),
+    "web.studio_document.create": ("Tạo Studio Document", "Project Center"),
+    "web.studio_document.update": ("Lưu phiên bản Studio Document", "Project Center"),
+    "web.studio_document.restore": ("Khôi phục Studio Document", "Project Center"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
