@@ -1039,12 +1039,13 @@
       "asset-vault-upload": Boolean(account && me.csrf_token && assetVaultEnabled),
       "asset-vault-archive": Boolean(account && me.csrf_token && assetVaultEnabled),
       "asset-vault-refresh": Boolean(account && assetVaultEnabled),
-      // PDF Split/Merge are Web-native, storage-isolated operations. They require
+      // PDF Split/Merge/Optimize are Web-native, storage-isolated operations. They require
       // only the signed Web account, CSRF and both local storage contracts;
       // no Telegram link, Bot bridge, provider, wallet or payment state.
       "document-operation-view": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-pdf-split": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
+      "document-operation-pdf-optimize": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
@@ -1102,10 +1103,10 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge"].includes(currentPath)) await hydrateAssetVault();
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress"].includes(currentPath)) await hydrateAssetVault();
     else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
-    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge"].includes(currentPath)) await hydrateDocumentOperations();
-    else if (account && ["/documents/split", "/documents/merge"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
+    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge", "/documents/compress"].includes(currentPath)) await hydrateDocumentOperations();
+    else if (account && ["/documents/split", "/documents/merge", "/documents/compress"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1221,12 +1222,12 @@
       const result = await api("/document-operations");
       const items = result.data && Array.isArray(result.data.items)
         ? result.data.items
-          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge"].includes(String(item.kind || "")))
+          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge", "pdf_optimize"].includes(String(item.kind || "")))
           .slice(0, 100)
         : [];
       merge({
         documentOperations: items,
-        pageStates: { ...(base().pageStates || {}), "/documents/split": "ready", "/documents/merge": "ready" }
+        pageStates: { ...(base().pageStates || {}), "/documents/split": "ready", "/documents/merge": "ready", "/documents/compress": "ready" }
       });
       return items;
     } catch (_) {
@@ -1235,7 +1236,7 @@
       // browser-generated preview.
       merge({
         documentOperations: [],
-        pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded", "/documents/merge": "guarded" }
+        pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded", "/documents/merge": "guarded", "/documents/compress": "guarded" }
       });
       return [];
     }
@@ -1838,6 +1839,44 @@
           // A server envelope may contain a failed operation or a source
           // marked unavailable. Refresh only the signed, owner-scoped view;
           // never substitute Bot assets or client-side output.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-pdf-optimize") {
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF riêng tư hợp lệ từ Asset Vault.");
+        const scope = `document-operation:pdf-optimize:${sourceAssetId}`;
+        const submission = acquireSubmission(scope, sourceAssetId);
+        if (!submission) {
+          toast("PDF Optimize đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/pdf-optimize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_id: sourceAssetId, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_optimize") {
+            throw new Error("Máy chủ chưa trả metadata PDF Optimize hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã tối ưu và xác minh PDF riêng tư.");
+        } catch (error) {
+          // A guarded no-reduction response is a deliberate honest result,
+          // not a missing client-side preview. Re-read only owner-scoped
+          // operations and Vault state so the source always remains clear.
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
           throw error;

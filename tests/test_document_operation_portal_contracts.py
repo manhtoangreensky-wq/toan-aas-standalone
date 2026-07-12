@@ -10,6 +10,7 @@ SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(en
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "PDF_SPLIT_CONTRACT.md").read_text(encoding="utf-8")
 MERGE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_MERGE_CONTRACT.md").read_text(encoding="utf-8")
+OPTIMIZE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OPTIMIZE_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
@@ -19,6 +20,7 @@ def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surfa
     assert "function renderPdfSplit(page, context)" in PORTAL
     assert 'case "pdf-split": return renderPdfSplit(page, context);' in PORTAL
     assert "function pdfSplitFormFields()" in PORTAL
+    assert 'documentOperationItems(context, "pdf_split")' in PORTAL
     assert 'optionsFrom: "pdfVaultAssets"' in PORTAL
     assert 'name: "source_asset_id"' in PORTAL
     assert 'name: "page_range"' in PORTAL
@@ -87,7 +89,7 @@ def test_pdf_merge_replaces_the_generic_bot_feature_form_with_an_ordered_native_
 def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
     assert '"document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
     assert '"/documents/merge"' in INTEGRATION
-    assert '["pdf_split", "pdf_merge"].includes(String(item.kind || ""))' in INTEGRATION
+    assert '["pdf_split", "pdf_merge", "pdf_optimize"].includes(String(item.kind || ""))' in INTEGRATION
     assert 'api("/document-operations/pdf-merge"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-merge")'):
@@ -96,6 +98,38 @@ def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -
     assert "Array.from({ length: 8 }" in action
     assert "new Set(sourceAssetIds).size" in action
     assert "source_asset_ids: sourceAssetIds" in action
+    assert "idempotency_key: submission.key" in action
+    assert "hydrateDocumentOperations" in action
+    assert "hydrateAssetVault" in action
+    assert "bridge_request" not in action
+    assert "CORE_BRIDGE" not in action
+
+
+def test_pdf_optimize_replaces_the_generic_compress_feature_form_with_a_truthful_native_surface() -> None:
+    assert 'customerPage("/documents/compress", "Tối ưu PDF riêng tư"' in PORTAL
+    assert 'layout: "pdf-optimize", type: "document-operation", action: "none"' in PORTAL
+    assert 'featurePage("/documents/compress"' not in PORTAL
+    assert "function renderPdfOptimize(page, context)" in PORTAL
+    assert 'case "pdf-optimize": return renderPdfOptimize(page, context);' in PORTAL
+    assert "function pdfOptimizeFormFields()" in PORTAL
+    assert 'data-portal-action="document-operation-pdf-optimize"' in PORTAL
+    assert "light/medium/strong" in PORTAL
+    assert "file gốc không bị thay đổi" in PORTAL.lower()
+    assert "1 KiB" in PORTAL
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/documents/compress":' in pages
+    assert 'return "Tối ưu PDF riêng tư"' in pages
+
+
+def test_pdf_optimize_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
+    assert '"document-operation-pdf-optimize": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
+    assert '"/documents/compress"' in INTEGRATION
+    assert 'api("/document-operations/pdf-optimize"' in INTEGRATION
+    action = INTEGRATION[
+        INTEGRATION.index('if (action === "document-operation-pdf-optimize")'):
+        INTEGRATION.index('if (action === "document-operation-refresh")')
+    ]
+    assert "source_asset_id: sourceAssetId" in action
     assert "idempotency_key: submission.key" in action
     assert "hydrateDocumentOperations" in action
     assert "hydrateAssetVault" in action
@@ -148,3 +182,25 @@ def test_pdf_merge_contract_records_ordered_private_sources_and_no_bot_payment_p
         assert phrase in MERGE_CONTRACT
     app_source = (ROOT / "app.py").read_text(encoding="utf-8")
     assert '"/api/v1/document-operations/pdf-merge"' in app_source
+
+
+def test_pdf_optimize_contract_records_truthful_lossless_boundary_and_parser_gate() -> None:
+    for phrase in (
+        "PDF_NOT_REDUCED",
+        "20 MiB",
+        "1–30 pages",
+        "1 KiB and 1%",
+        "compress_content_streams",
+        "no storage key",
+        "No lossy image recompression",
+        "PayOS",
+        "pypdf",
+    ):
+        assert phrase in OPTIMIZE_CONTRACT
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    operation_source = (ROOT / "copyfast_document_operations.py").read_text(encoding="utf-8")
+    assert '"/api/v1/document-operations/pdf-optimize"' in app_source
+    assert "PDF_OPTIMIZE_KIND" in operation_source
+    assert "run_in_threadpool" in operation_source
+    assert "_has_meaningful_optimization" in operation_source
+    assert "bridge_request(" not in operation_source
