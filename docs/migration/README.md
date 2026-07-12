@@ -27,6 +27,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`ASSET_VAULT_CONTRACT.md`](ASSET_VAULT_CONTRACT.md) — private Web-owned file storage, volume boundary and attachment-only delivery.
 - [`PROJECT_PACKAGE_CONTRACT.md`](PROJECT_PACKAGE_CONTRACT.md) — immutable private ZIP export from Web-owned Project snapshots, separate from Bot jobs/assets/packages.
 - [`PDF_SPLIT_CONTRACT.md`](PDF_SPLIT_CONTRACT.md) — bounded PDF Split from Asset Vault into a separately verified Web-native attachment.
+- [`PDF_MERGE_CONTRACT.md`](PDF_MERGE_CONTRACT.md) — ordered, bounded PDF Merge from several verified Asset Vault files into a separately verified Web-native attachment.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — Bot-first notes, reminders, referral/rewards, community and help handoffs.

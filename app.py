@@ -160,7 +160,13 @@ async def security_headers(request: Request, call_next):
         and request.url.path.startswith("/api/v1/projects/")
         and request.url.path.endswith("/packages")
     )
-    document_operation_run = request.method == "POST" and request.url.path == "/api/v1/document-operations/pdf-split"
+    document_operation_run = (
+        request.method == "POST"
+        and request.url.path in {
+            "/api/v1/document-operations/pdf-split",
+            "/api/v1/document-operations/pdf-merge",
+        }
+    )
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
     if asset_archive:
         rate_limit = 30

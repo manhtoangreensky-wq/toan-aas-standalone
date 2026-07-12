@@ -1039,11 +1039,12 @@
       "asset-vault-upload": Boolean(account && me.csrf_token && assetVaultEnabled),
       "asset-vault-archive": Boolean(account && me.csrf_token && assetVaultEnabled),
       "asset-vault-refresh": Boolean(account && assetVaultEnabled),
-      // PDF Split is a Web-native, storage-isolated operation. It requires
+      // PDF Split/Merge are Web-native, storage-isolated operations. They require
       // only the signed Web account, CSRF and both local storage contracts;
       // no Telegram link, Bot bridge, provider, wallet or payment state.
       "document-operation-view": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-pdf-split": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
+      "document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
@@ -1101,10 +1102,10 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split"].includes(currentPath)) await hydrateAssetVault();
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge"].includes(currentPath)) await hydrateAssetVault();
     else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
-    if (account && assetVaultEnabled && documentOperationsEnabled && currentPath === "/documents/split") await hydrateDocumentOperations();
-    else if (account && currentPath === "/documents/split") merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded" } });
+    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge"].includes(currentPath)) await hydrateDocumentOperations();
+    else if (account && ["/documents/split", "/documents/merge"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1220,12 +1221,12 @@
       const result = await api("/document-operations");
       const items = result.data && Array.isArray(result.data.items)
         ? result.data.items
-          .filter((item) => item && validDocumentOperationId(item.id) && String(item.kind || "") === "pdf_split")
+          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge"].includes(String(item.kind || "")))
           .slice(0, 100)
         : [];
       merge({
         documentOperations: items,
-        pageStates: { ...(base().pageStates || {}), "/documents/split": "ready" }
+        pageStates: { ...(base().pageStates || {}), "/documents/split": "ready", "/documents/merge": "ready" }
       });
       return items;
     } catch (_) {
@@ -1234,7 +1235,7 @@
       // browser-generated preview.
       merge({
         documentOperations: [],
-        pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded" }
+        pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded", "/documents/merge": "guarded" }
       });
       return [];
     }
@@ -1795,6 +1796,50 @@
           if (acknowledged) {
             await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
           }
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-pdf-merge") {
+        // Ordered slots are intentionally collected by position instead of
+        // a multi-select. The array becomes part of the server fingerprint,
+        // so PDF 1 → PDF 8 is explicit and replay-safe.
+        const sourceAssetIds = Array.from({ length: 8 }, (_, index) => String(fields[`source_asset_id_${index + 1}`] || "").trim())
+          .filter(Boolean);
+        if (sourceAssetIds.length < 2) throw new Error("Hãy chọn ít nhất hai PDF riêng tư theo thứ tự muốn gộp.");
+        if (new Set(sourceAssetIds).size !== sourceAssetIds.length) throw new Error("Mỗi PDF nguồn chỉ được chọn một lần trong cùng thao tác gộp.");
+        if (!sourceAssetIds.every(validVaultAssetId)) throw new Error("Một hoặc nhiều PDF nguồn không hợp lệ.");
+        const scope = `document-operation:pdf-merge:${sourceAssetIds.join(":")}`;
+        const submission = acquireSubmission(scope, sourceAssetIds.join(":"));
+        if (!submission) {
+          toast("PDF Merge đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/pdf-merge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_ids: sourceAssetIds, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_merge") {
+            throw new Error("Máy chủ chưa trả metadata PDF Merge hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã gộp và xác minh PDF riêng tư.");
+        } catch (error) {
+          // A server envelope may contain a failed operation or a source
+          // marked unavailable. Refresh only the signed, owner-scoped view;
+          // never substitute Bot assets or client-side output.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
           throw error;
         } finally {
           releaseSubmission(submission);

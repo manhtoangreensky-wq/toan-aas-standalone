@@ -9,6 +9,7 @@ INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "PDF_SPLIT_CONTRACT.md").read_text(encoding="utf-8")
+MERGE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_MERGE_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
@@ -65,6 +66,43 @@ def test_pdf_split_hydration_and_write_are_signed_web_only_not_bridge_backed() -
     assert "CORE_BRIDGE" not in action
 
 
+def test_pdf_merge_replaces_the_generic_bot_feature_form_with_an_ordered_native_surface() -> None:
+    assert 'customerPage("/documents/merge", "Gộp PDF riêng tư"' in PORTAL
+    assert 'layout: "pdf-merge", type: "document-operation", action: "none"' in PORTAL
+    assert 'featurePage("/documents/merge"' not in PORTAL
+    assert "function renderPdfMerge(page, context)" in PORTAL
+    assert 'case "pdf-merge": return renderPdfMerge(page, context);' in PORTAL
+    assert "function pdfMergeFormFields()" in PORTAL
+    assert "Array.from({ length: 8 }" in PORTAL
+    assert 'name: `source_asset_id_${position}`' in PORTAL
+    assert 'optionsFrom: "pdfVaultAssets"' in PORTAL
+    assert 'data-portal-action="document-operation-pdf-merge"' in PORTAL
+    assert 'data-portal-route="/documents/merge"' in PORTAL
+    assert "PDF 1 → PDF 8" in PORTAL
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/documents/merge":' in pages
+    assert 'return "Gộp PDF riêng tư"' in pages
+
+
+def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
+    assert '"document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
+    assert '"/documents/merge"' in INTEGRATION
+    assert '["pdf_split", "pdf_merge"].includes(String(item.kind || ""))' in INTEGRATION
+    assert 'api("/document-operations/pdf-merge"' in INTEGRATION
+    action = INTEGRATION[
+        INTEGRATION.index('if (action === "document-operation-pdf-merge")'):
+        INTEGRATION.index('if (action === "document-operation-refresh")')
+    ]
+    assert "Array.from({ length: 8 }" in action
+    assert "new Set(sourceAssetIds).size" in action
+    assert "source_asset_ids: sourceAssetIds" in action
+    assert "idempotency_key: submission.key" in action
+    assert "hydrateDocumentOperations" in action
+    assert "hydrateAssetVault" in action
+    assert "bridge_request" not in action
+    assert "CORE_BRIDGE" not in action
+
+
 def test_document_operation_shell_is_responsive_and_never_pwa_cached_as_private_data() -> None:
     for selector in (
         ".portal-document-operation-intro",
@@ -93,3 +131,20 @@ def test_pdf_split_contract_records_separate_private_storage_and_no_bot_payment_
         "pypdf",
     ):
         assert phrase in CONTRACT
+
+
+def test_pdf_merge_contract_records_ordered_private_sources_and_no_bot_payment_provider_execution() -> None:
+    for phrase in (
+        "PDF 1 → PDF 8",
+        "20 MiB",
+        "40 MiB",
+        "30 pages",
+        "web_document_operation_sources",
+        "idempotency key",
+        "No Bot bridge",
+        "PayOS",
+        "pypdf",
+    ):
+        assert phrase in MERGE_CONTRACT
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    assert '"/api/v1/document-operations/pdf-merge"' in app_source

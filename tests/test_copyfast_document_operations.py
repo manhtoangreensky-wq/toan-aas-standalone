@@ -1,4 +1,4 @@
-"""Security and output contracts for the Web-native PDF Split operation."""
+"""Security and output contracts for Web-native PDF Split and Merge."""
 
 from __future__ import annotations
 
@@ -59,10 +59,16 @@ def register_and_login(client: TestClient, email: str) -> str:
     return login.json()["data"]["csrf_token"]
 
 
-def pdf_bytes(page_count: int, *, encrypted: bool = False, with_annotation: bool = False) -> bytes:
+def pdf_bytes(
+    page_count: int,
+    *,
+    encrypted: bool = False,
+    with_annotation: bool = False,
+    page_size: tuple[int, int] = (144, 144),
+) -> bytes:
     writer = PdfWriter()
     for page_index in range(page_count):
-        page = writer.add_blank_page(width=144, height=144)
+        page = writer.add_blank_page(width=page_size[0], height=page_size[1])
         if with_annotation and page_index == 0:
             annotation = DictionaryObject(
                 {
@@ -96,6 +102,14 @@ def split(client: TestClient, csrf: str, *, asset_id: str, page_range: str, key:
         "/api/v1/document-operations/pdf-split",
         headers={"X-CSRF-Token": csrf},
         json={"source_asset_id": asset_id, "page_range": page_range, "idempotency_key": key},
+    )
+
+
+def merge(client: TestClient, csrf: str, *, asset_ids: list[str], key: str):
+    return client.post(
+        "/api/v1/document-operations/pdf-merge",
+        headers={"X-CSRF-Token": csrf},
+        json={"source_asset_ids": asset_ids, "idempotency_key": key},
     )
 
 
@@ -168,6 +182,195 @@ def test_pdf_split_is_private_idempotent_and_matches_the_bounded_bot_range_behav
             assert hidden_download.json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
             rejected = split(second, csrf_second, asset_id=source["id"], page_range="1", key="pdf-split-other-0001")
             assert rejected.json()["error_code"] == "WEB_DOCUMENT_SOURCE_NOT_FOUND"
+
+
+def test_pdf_merge_is_private_ordered_idempotent_and_sanitizes_the_output(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as first:
+        csrf = register_and_login(first, "pdf-merge-owner@example.com")
+        assert first.get("/documents/merge").status_code == 200
+        first_source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-merge-source-first-0001",
+            body=pdf_bytes(2, page_size=(144, 144)),
+            name="first.pdf",
+        )
+        second_source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-merge-source-second-0001",
+            body=pdf_bytes(1, page_size=(222, 144), with_annotation=True),
+            name="second.pdf",
+        )
+
+        denied = first.post(
+            "/api/v1/document-operations/pdf-merge",
+            json={"source_asset_ids": [first_source["id"], second_source["id"]], "idempotency_key": "pdf-merge-denied-0001"},
+        )
+        assert denied.status_code == 403
+
+        created = merge(
+            first,
+            csrf,
+            asset_ids=[first_source["id"], second_source["id"]],
+            key="pdf-merge-create-0001",
+        )
+        assert created.status_code == 200
+        payload = created.json()
+        assert payload["ok"] is True
+        assert payload["status"] == "completed"
+        operation = payload["data"]["operation"]
+        assert operation["kind"] == "pdf_merge"
+        assert operation["source_asset_id"] == first_source["id"]
+        assert operation["source_count"] == 2
+        assert operation["requested_page_range"] == ""
+        assert operation["selected_start_page"] is None
+        assert operation["selected_end_page"] is None
+        assert operation["source_page_count"] == 3
+        assert operation["output_page_count"] == 3
+        assert operation["download_ready"] is True
+        for forbidden in ("storage_key", "sha256", "source_sha", "filesystem", "provider", "payment"):
+            assert forbidden not in created.text.lower()
+
+        replay = merge(
+            first,
+            csrf,
+            asset_ids=[first_source["id"], second_source["id"]],
+            key="pdf-merge-create-0001",
+        )
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+        reordered = merge(
+            first,
+            csrf,
+            asset_ids=[second_source["id"], first_source["id"]],
+            key="pdf-merge-create-0001",
+        )
+        assert reordered.status_code == 409
+
+        download = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert download.status_code == 200
+        assert download.headers["cache-control"] == "no-store, private"
+        assert download.headers["x-content-type-options"] == "nosniff"
+        output = PdfReader(BytesIO(download.content), strict=True)
+        assert len(output.pages) == 3
+        # Different source page widths make the server-preserved source order
+        # observable without exposing source names or storage metadata.
+        assert [float(page.mediabox.width) for page in output.pages] == [144.0, 144.0, 222.0]
+        assert all("/Annots" not in page and "/AA" not in page for page in output.pages)
+
+        detail = first.get(f"/api/v1/document-operations/{operation['id']}")
+        assert [event["state"] for event in detail.json()["data"]["events"]] == ["queued", "processing", "completed"]
+        listing = first.get("/api/v1/document-operations")
+        assert listing.json()["data"]["items"][0]["id"] == operation["id"]
+
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            source_rows = conn.execute(
+                "SELECT source_asset_id, source_index FROM web_document_operation_sources WHERE operation_id=? ORDER BY source_index",
+                (operation["id"],),
+            ).fetchall()
+            audit = conn.execute(
+                "SELECT detail FROM web_audit_events WHERE action='web.document_operation.pdf_merge'"
+            ).fetchone()
+        assert source_rows == [(first_source["id"], 1), (second_source["id"], 2)]
+        assert audit
+        assert audit[0].startswith("sources=2;pages=3;bytes=")
+        assert audit[0].removeprefix("sources=2;pages=3;bytes=").isdigit()
+        assert first_source["id"] not in audit[0]
+        assert second_source["id"] not in audit[0]
+
+        with make_client(tmp_path, monkeypatch) as second:
+            csrf_second = register_and_login(second, "pdf-merge-other@example.com")
+            hidden = second.get(f"/api/v1/document-operations/{operation['id']}")
+            assert hidden.json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            rejected = merge(
+                second,
+                csrf_second,
+                asset_ids=[first_source["id"], second_source["id"]],
+                key="pdf-merge-other-0001",
+            )
+            assert rejected.json()["error_code"] == "WEB_DOCUMENT_SOURCE_NOT_FOUND"
+
+
+def test_pdf_merge_rejects_duplicate_encrypted_oversize_page_and_tampered_inputs_without_fake_success(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "pdf-merge-safety@example.com")
+        first_source = upload_pdf(client, csrf, key="pdf-merge-safety-first-0001", body=pdf_bytes(1))
+        duplicate = merge(
+            client,
+            csrf,
+            asset_ids=[first_source["id"], first_source["id"]],
+            key="pdf-merge-duplicate-0001",
+        )
+        assert duplicate.status_code == 422
+
+        encrypted_source = upload_pdf(
+            client,
+            csrf,
+            key="pdf-merge-encrypted-source-0001",
+            body=pdf_bytes(1, encrypted=True),
+            name="encrypted.pdf",
+        )
+        encrypted = merge(
+            client,
+            csrf,
+            asset_ids=[first_source["id"], encrypted_source["id"]],
+            key="pdf-merge-encrypted-0001",
+        )
+        assert encrypted.status_code == 422
+        assert "mã hóa" in encrypted.json()["message"].lower()
+
+        many_pages = upload_pdf(
+            client,
+            csrf,
+            key="pdf-merge-pages-source-0001",
+            body=pdf_bytes(30),
+            name="many-pages.pdf",
+        )
+        page_limit = merge(
+            client,
+            csrf,
+            asset_ids=[first_source["id"], many_pages["id"]],
+            key="pdf-merge-page-limit-0001",
+        )
+        assert page_limit.status_code == 422
+        assert "30" in page_limit.json()["message"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            failed = conn.execute(
+                "SELECT state, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-merge-page-limit-0001",),
+            ).fetchone()
+        assert failed == ("failed", None)
+
+        good_source = upload_pdf(client, csrf, key="pdf-merge-tamper-good-0001", body=pdf_bytes(1))
+        tampered_source = upload_pdf(client, csrf, key="pdf-merge-tamper-bad-0001", body=pdf_bytes(1))
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            storage_key = conn.execute(
+                "SELECT storage_key FROM web_asset_files WHERE id=?", (tampered_source["id"],)
+            ).fetchone()[0]
+        (tmp_path / "private-web-assets" / storage_key).write_bytes(b"%PDF-tampered")
+        tampered = merge(
+            client,
+            csrf,
+            asset_ids=[good_source["id"], tampered_source["id"]],
+            key="pdf-merge-tampered-0001",
+        )
+        assert tampered.status_code == 422
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            states = dict(
+                conn.execute(
+                    "SELECT id, state FROM web_asset_files WHERE id IN (?, ?)",
+                    (good_source["id"], tampered_source["id"]),
+                ).fetchall()
+            )
+            failed = conn.execute(
+                "SELECT state, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-merge-tampered-0001",),
+            ).fetchone()
+        assert states == {good_source["id"]: "active", tampered_source["id"]: "unavailable"}
+        assert failed == ("failed", None)
+        staging = tmp_path / "private-document-outputs" / ".staging"
+        assert not list(staging.iterdir())
 
 
 def test_pdf_split_rejects_archived_tampered_encrypted_and_oversize_page_inputs_without_fake_success(tmp_path, monkeypatch):
