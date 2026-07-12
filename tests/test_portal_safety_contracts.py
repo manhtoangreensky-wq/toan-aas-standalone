@@ -102,8 +102,30 @@ def test_problem_job_detail_can_create_only_a_safe_text_support_ticket() -> None
 def test_dashboard_hydrates_only_canonical_metadata() -> None:
     assert 'path === "/dashboard"' in INTEGRATION
     assert 'api("/wallet")' in INTEGRATION
+    assert 'api("/support/tickets").catch(() => ({ data: { items: [] } }))' in INTEGRATION
     assert "Tài sản gần đây" in PORTAL
     assert "Không đồng nghĩa delivery" in PORTAL
+
+
+def test_dashboard_work_queue_uses_only_owner_scoped_canonical_metadata() -> None:
+    work_queue = PORTAL[
+        PORTAL.index("function renderWorkspaceActionCenter(context)"):
+        PORTAL.index("function renderStudioLaunchpad(context)")
+    ]
+    assert "data-workspace-action-center" in work_queue
+    assert "Công việc cần chú ý" in work_queue
+    assert 'Array.isArray(context.jobs)' in work_queue
+    assert 'Array.isArray(context.assets)' in work_queue
+    assert 'Array.isArray(context.tickets)' in work_queue
+    assert 'item.download_ready === true && item.delivery_ready === true' in work_queue
+    assert 'canonicalTicketStatus(item) === "waiting_user"' in work_queue
+    assert 'href: "/jobs"' in work_queue
+    assert 'href: "/assets"' in work_queue
+    assert 'href: "/tickets"' in work_queue
+    assert "fetch(" not in work_queue
+    assert "api(" not in work_queue
+    assert "toanaas:portal-action" not in work_queue
+    assert ".portal-action-center-grid" in PORTAL_CSS
 
 
 def test_portal_uses_canonical_price_tiers_topup_catalog_and_real_telegram_link_flow() -> None:

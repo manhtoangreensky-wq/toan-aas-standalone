@@ -7,7 +7,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 
 | Worktree | Command | Result |
 | --- | --- | --- |
-| Web App | `python -m pytest -q` | `167 passed, 1 warning` |
+| Web App | `python -m pytest -q` | `168 passed, 1 warning` |
 | Web App | `python -m compileall -q .` | passed |
 | Web App | `node --check static/portal/portal.js`, `integration.js`, `service-worker.js` | passed |
 | Web App | local Node check of Growth AI/Campaign report command builder | passed: fixed command, 1–90 day, platform, campaign-ID, goal and format allowlists accept canonical values and reject tampered input. |
@@ -19,6 +19,7 @@ separate COPYFAST branches. It is deliberately not a `LIVE PASS` claim.
 | Campaign Planner visual smoke | local mock account + signed one-time Telegram callback | passed: register/login, browser-bound Telegram completion, `/campaigns`, create plan, timeline/card render and `draft → review` self-review update all completed. The mock used a temporary local database and HMAC test credential only; no live Bot, provider, PayOS or production account was touched. |
 | Content Calendar visual smoke | same local mock at desktop and 390px mobile viewport | passed: the account-owned scheduled plan appears in the month grid, links back to its planner card, and mobile exposes a deliberately horizontally scrollable seven-day grid without clipping the app shell. Calendar and Self-review Queue carry no publish, reminder, provider, admin-approval or payment action. |
 | Manual top-up UX smoke | same local mock, bridge/payment disabled | passed: the portal cleanly separates PayOS QR handoff from manual VND/international guidance, exposes `/thucong` only as a Bot handoff, and renders pending/approval meanings without a Web bill, TXID, QR, bank-account, upload or credit action. |
+| Dashboard Work Queue smoke | local signed account + HMAC-only Bot-link mock, desktop and 390px mobile viewport | passed: the Dashboard derives processing jobs, delivery-ready assets, failed jobs and `waiting_user` tickets only from owner-scoped canonical responses. Empty data stays an honest zero state; the panel creates no notification, job, ticket, payment, provider or browser-side delivery state. No live Bot, provider, PayOS or Railway request was made. |
 
 ## Full bot-suite baseline result
 
@@ -251,3 +252,10 @@ tests); no PayOS/wallet/ledger migration, webhook, or provider call was added.
   staged upload ID, Telegram identity, quote, Xu amount, session or token; all
   other family entrypoints—including Voice—remain on the safe generic Bot menu
   until a customer-safe command and canonical bridge adapter exist.
+- Dashboard includes a responsive **Work Queue** rather than forcing customers
+  to infer next actions from a long route list. It reads only the already
+  owner-scoped jobs/assets/tickets bridge projections: queued/processing jobs,
+  assets with a real delivery contract, failed jobs, and `waiting_user`
+  tickets. Ticket hydration is optional, so a guarded ticket read cannot hide
+  wallet, job, asset or readiness metadata; no count creates a Web-side
+  notification, ticket, retry, refund, provider call, payment or delivery URL.

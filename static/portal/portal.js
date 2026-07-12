@@ -1505,7 +1505,59 @@
       : "";
     const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
-    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}${renderStudioLaunchpad(context)}${renderModuleCards(context)}${activity}</article>`;
+    return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}${renderWorkspaceActionCenter(context)}${renderStudioLaunchpad(context)}${renderModuleCards(context)}${activity}</article>`;
+  }
+
+  function renderWorkspaceActionCenter(context) {
+    // This is a read-only projection of records already scoped to the signed
+    // customer by the Core Bridge.  It deliberately creates no notification,
+    // job, ticket, payment or provider state in the browser.
+    const jobs = Array.isArray(context.jobs) ? context.jobs : [];
+    const assets = Array.isArray(context.assets) ? context.assets : [];
+    const tickets = Array.isArray(context.tickets) ? context.tickets : [];
+    const processing = jobs.filter((item) => ["queued", "processing"].includes(jobStatus(item))).length;
+    const deliveryReady = assets.filter((item) => item && item.download_ready === true && item.delivery_ready === true).length;
+    const needsReview = jobs.filter((item) => ["failed", "failed_no_charge"].includes(jobStatus(item))).length;
+    const waitingUser = tickets.filter((item) => canonicalTicketStatus(item) === "waiting_user").length;
+    const cards = [
+      {
+        icon: ICONS.jobs,
+        count: processing,
+        label: "Đang xử lý",
+        status: processing ? "processing" : "read_only",
+        detail: processing ? "Job đang xếp hàng hoặc chạy theo trạng thái Bot canonical." : "Không có job queued hoặc processing trong dữ liệu hiện tại.",
+        href: "/jobs",
+        action: "Mở Job Center"
+      },
+      {
+        icon: ICONS.assets,
+        count: deliveryReady,
+        label: "Tệp đã sẵn sàng",
+        status: deliveryReady ? "ready" : "read_only",
+        detail: deliveryReady ? "Asset đã có delivery contract owner-scoped từ Bot." : "Chưa có asset nào được Bot cấp delivery contract.",
+        href: "/assets",
+        action: "Mở thư viện"
+      },
+      {
+        icon: ICONS.jobs,
+        count: needsReview,
+        label: "Cần xem job",
+        status: needsReview ? "failed" : "read_only",
+        detail: needsReview ? "Bot báo job failed; mở chi tiết trước khi tạo ticket hỗ trợ." : "Không có job failed trong cửa sổ metadata hiện tại.",
+        href: "/jobs",
+        action: "Xem job"
+      },
+      {
+        icon: ICONS.ticket,
+        count: waitingUser,
+        label: "Ticket chờ bạn",
+        status: waitingUser ? "awaiting_confirm" : "read_only",
+        detail: waitingUser ? "Bot đang chờ phản hồi của bạn trong thread canonical." : "Không có ticket đang chờ phản hồi từ bạn.",
+        href: "/tickets",
+        action: "Mở ticket"
+      }
+    ];
+    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Work Queue</span><h2 id="workspace-action-center-title">Công việc cần chú ý</h2><p>Chỉ tổng hợp metadata canonical thuộc signed session hiện tại; không suy đoán output, charge hay delivery.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Xem tất cả công việc →</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${safeText(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${safeText(card.label)}</h3><p>${safeText(card.detail)}</p><span class="portal-action-card-link">${safeText(card.action)} <b aria-hidden="true">→</b></span></a>`).join("")}</div></section>`;
   }
 
   function renderStudioLaunchpad(context) {

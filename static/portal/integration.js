@@ -1022,11 +1022,18 @@
     const path = (context.path || window.location.pathname).split("?")[0];
     try {
       if (path === "/dashboard") {
-        const [wallet, jobs, assets, readiness] = await Promise.all([api("/wallet"), api("/jobs"), api("/assets"), api("/features/status")]);
+        const [wallet, jobs, assets, readiness, tickets] = await Promise.all([
+          api("/wallet"), api("/jobs"), api("/assets"), api("/features/status"),
+          // A read failure for the optional attention card must not hide the
+          // rest of the signed dashboard or turn an unknown ticket state into
+          // a browser-side alert.
+          api("/support/tickets").catch(() => ({ data: { items: [] } }))
+        ]);
         merge({
           wallet: wallet.data || null,
           jobs: jobs.data && jobs.data.items ? jobs.data.items : [],
           assets: assets.data && assets.data.items ? assets.data.items : [],
+          tickets: tickets.data && tickets.data.items ? tickets.data.items : [],
           readiness: readiness.data || {},
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures), [path]: "read_only" }
         });
