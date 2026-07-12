@@ -55,6 +55,74 @@ def _persistent_session_directory() -> Path | None:
     return None
 
 
+def asset_vault_enabled() -> bool:
+    """Whether the private, Web-owned Asset Vault is deliberately enabled."""
+    return os.environ.get("WEBAPP_ASSET_VAULT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _is_within(path: Path, parent: Path) -> bool:
+    try:
+        path.resolve().relative_to(parent.resolve())
+    except ValueError:
+        return False
+    return True
+
+
+def asset_vault_directory() -> Path:
+    """Resolve the dedicated private blob directory for the Web Asset Vault.
+
+    The directory is never mounted as static content.  In production it must
+    live *under* the service's persistent volume, not merely on an arbitrary
+    absolute filesystem path.  Local development gets an isolated sibling of
+    the configured Web session database so test data cannot leak into source
+    files or the legacy Bot asset area.
+    """
+    if not asset_vault_enabled():
+        raise RuntimeError("WEBAPP_ASSET_VAULT_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_ASSET_VAULT_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_ASSET_VAULT_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_assets"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_assets"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_ASSET_VAULT_ROOT không được nằm trong static")
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Asset Vault production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_ASSET_VAULT_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_ASSET_VAULT_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_asset_vault_persistence() -> Path | None:
+    """Validate the vault boundary before the app serves enabled uploads."""
+    if not asset_vault_enabled():
+        return None
+    return asset_vault_directory()
+
+
 def session_database_path() -> str:
     """Resolve the Web-owned auth/session database without using a Bot store."""
     configured = os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
@@ -261,11 +329,15 @@ def ensure_copyfast_schema() -> None:
                 scope TEXT NOT NULL,
                 key TEXT NOT NULL,
                 response_json TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL,
                 PRIMARY KEY(scope, key)
             )
             """
         )
+        idempotency_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_idempotency)").fetchall()}
+        if "request_fingerprint" not in idempotency_columns:
+            conn.execute("ALTER TABLE web_idempotency ADD COLUMN request_fingerprint TEXT NOT NULL DEFAULT ''")
         # A short-lived receipt binds a Web feature confirm to an estimate
         # observed by this signed session.  It deliberately stores only
         # one-way hashes and timing/binding metadata: never prompt text,
@@ -401,6 +473,32 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Asset Vault stores metadata for private, Web-owned blobs. The
+        # browser never receives ``storage_key`` or a filesystem path, and the
+        # table deliberately has no Bot job, provider, payment or Xu columns.
+        # A project relationship is optional and remains owner-scoped.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_asset_files (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                display_name TEXT NOT NULL,
+                original_filename TEXT NOT NULL,
+                extension TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                byte_size INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                storage_key TEXT NOT NULL UNIQUE,
+                state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -424,6 +522,12 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_studio_document_versions_document_revision ON web_studio_document_versions(document_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_asset_files_account_state_updated ON web_asset_files(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_asset_files_project_account_state ON web_asset_files(project_id, account_id, state, updated_at DESC, id DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"

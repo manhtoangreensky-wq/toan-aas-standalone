@@ -729,6 +729,10 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function validVaultAssetId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
   function validWorkspaceDraftId(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
@@ -956,6 +960,7 @@
       ? (account.display_name || account.email || (account.account_type === "telegram" ? "Người dùng Telegram" : "Khách"))
       : "";
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
+    const assetVaultEnabled = Boolean(status.flags && status.flags.asset_vault_enabled === true);
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
     const webFeatureExecutionFeatures = safeFeatureExecutionFeatures(status.web_feature_execution_features);
@@ -1011,6 +1016,13 @@
       "studio-document-open": Boolean(account),
       "studio-document-update": Boolean(account && me.csrf_token),
       "studio-document-restore": Boolean(account && me.csrf_token),
+      // The private vault is a native Web capability. It never needs a Bot
+      // bridge or a Telegram link, but stays disabled until the server has a
+      // dedicated persistent storage boundary.
+      "asset-vault-view": Boolean(account && assetVaultEnabled),
+      "asset-vault-upload": Boolean(account && me.csrf_token && assetVaultEnabled),
+      "asset-vault-archive": Boolean(account && me.csrf_token && assetVaultEnabled),
+      "asset-vault-refresh": Boolean(account && assetVaultEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1047,6 +1059,7 @@
         displayName: accountDisplayName, email: account ? account.email : ""
       },
       bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled, featureExecutionAvailable: webFeatureExecutionAvailable, featureExecutionFeatures: webFeatureExecutionFeatures },
+      assetVaultEnabled,
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
@@ -1060,6 +1073,8 @@
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
     if (account && ["/projects", "/dashboard"].includes(currentPath)) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard"].includes(currentPath)) await hydrateAssetVault();
+    else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1151,6 +1166,22 @@
       // Do not retain a previous account's authoring workspace after a failed
       // signed read. Project Center has no Bot/bridge fallback by design.
       merge({ projects: [], pageStates: { ...(base().pageStates || {}), "/projects": "guarded" } });
+    }
+  }
+
+  async function hydrateAssetVault() {
+    try {
+      const result = await api("/asset-vault");
+      const items = result.data && Array.isArray(result.data.items)
+        ? result.data.items.filter((item) => item && validVaultAssetId(item.id) && String(item.state || "") === "active").slice(0, 100)
+        : [];
+      merge({ vaultItems: items, pageStates: { ...(base().pageStates || {}), "/asset-vault": "ready" } });
+      return items;
+    } catch (_) {
+      // A failed private read must clear the previous account projection. The
+      // UI never falls back to Bot assets or browser storage.
+      merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
+      return [];
     }
   }
 
@@ -1573,6 +1604,72 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "asset-vault-upload") {
+        const file = fields.file;
+        if (!file || typeof file !== "object" || typeof file.name !== "string" || !Number.isFinite(Number(file.size)) || Number(file.size) < 1) {
+          throw new Error("Hãy chọn một tệp hợp lệ trước khi lưu vào Asset Vault.");
+        }
+        const displayName = String(fields.display_name || "").replace(/\s+/g, " ").trim();
+        const projectId = String(fields.project_id || "").trim();
+        if (displayName.length > 120) throw new Error("Tên hiển thị Asset Vault tối đa 120 ký tự.");
+        if (projectId && !validProjectId(projectId)) throw new Error("Project đính kèm không hợp lệ.");
+        const fingerprint = `${file.name}:${Number(file.size)}:${Number(file.lastModified || 0)}:${displayName}:${projectId}`;
+        const submission = acquireSubmission("asset-vault:upload", fingerprint);
+        if (!submission) {
+          toast("Tệp đang được lưu. Vui lòng chờ phản hồi từ Asset Vault.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const formData = new FormData();
+          formData.append("file", file, file.name);
+          if (displayName) formData.append("display_name", displayName);
+          if (projectId) formData.append("project_id", projectId);
+          const result = await api("/asset-vault/upload", {
+            method: "POST",
+            headers: { "Idempotency-Key": submission.key },
+            // Do not set Content-Type: the browser owns the multipart
+            // boundary, while api() still supplies the signed CSRF header.
+            body: formData
+          });
+          const asset = result.data && result.data.asset && typeof result.data.asset === "object" ? result.data.asset : null;
+          if (!asset || !validVaultAssetId(asset.id)) throw new Error("Asset Vault chưa trả metadata tệp hợp lệ.");
+          merge({ vaultItems: [asset, ...(Array.isArray(base().vaultItems) ? base().vaultItems.filter((item) => !item || String(item.id || "") !== String(asset.id)) : [])].slice(0, 100) });
+          await hydrateAssetVault();
+          toast(result.message || "Đã lưu tệp vào Asset Vault.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "asset-vault-archive") {
+        const assetId = String(detail.vaultAssetId || "").trim();
+        if (!validVaultAssetId(assetId)) throw new Error("Mã Asset Vault không hợp lệ.");
+        const submission = acquireSubmission(`asset-vault:${assetId}:archive`, "archive");
+        if (!submission) {
+          toast("Tệp đang được lưu trữ. Vui lòng chờ phản hồi từ Asset Vault.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/asset-vault/${encodeURIComponent(assetId)}/archive`, {
+            method: "POST",
+            headers: { "Idempotency-Key": submission.key }
+          });
+          await hydrateAssetVault();
+          toast(result.message || "Đã lưu trữ tệp Asset Vault.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "asset-vault-refresh") {
+        await hydrateAssetVault();
+        toast("Đã làm mới Asset Vault.");
+        return;
+      }
       if (action === "project-create") {
         const payload = {
           title: String(fields.title || "").trim(),

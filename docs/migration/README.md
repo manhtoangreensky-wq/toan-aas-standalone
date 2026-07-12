@@ -24,6 +24,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`CONTENT_OPERATIONS_ADMIN.md`](CONTENT_OPERATIONS_ADMIN.md) — guarded Campaign/Calendar/Publishing/Admin navigation.
 - [`ACCOUNT_ACTIVITY_BOUNDARY.md`](ACCOUNT_ACTIVITY_BOUNDARY.md) — signed, owner-scoped Web activity history with no Bot/audit-detail disclosure.
 - [`WORKSPACE_DRAFT_BOUNDARY.md`](WORKSPACE_DRAFT_BOUNDARY.md) — safe owner-scoped brief persistence without copying Bot feature/job/payment state.
+- [`ASSET_VAULT_CONTRACT.md`](ASSET_VAULT_CONTRACT.md) — private Web-owned file storage, volume boundary and attachment-only delivery.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — Bot-first notes, reminders, referral/rewards, community and help handoffs.

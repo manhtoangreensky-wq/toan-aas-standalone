@@ -153,6 +153,8 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.studio_document.create": ("Tạo Studio Document", "Project Center"),
     "web.studio_document.update": ("Lưu phiên bản Studio Document", "Project Center"),
     "web.studio_document.restore": ("Khôi phục Studio Document", "Project Center"),
+    "web.asset_vault.upload": ("Lưu tệp vào Asset Vault", "Web Workspace"),
+    "web.asset_vault.archive": ("Lưu trữ tệp Asset Vault", "Web Workspace"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -349,6 +351,9 @@ def _flags() -> dict[str, bool]:
         # draft or estimate.  It stays off until the Bot bridge has a reviewed
         # confirm adapter; provider readiness alone must never unlock it.
         "feature_job_adapter_enabled": enabled("WEBAPP_FEATURE_JOB_ADAPTER_ENABLED", False),
+        # Asset Vault is a Web-owned private file surface. It is disabled by
+        # default until a dedicated persistent volume is configured.
+        "asset_vault_enabled": enabled("WEBAPP_ASSET_VAULT_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
