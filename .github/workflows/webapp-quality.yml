@@ -24,6 +24,10 @@ jobs:
     steps:
       - name: Check out source
         uses: actions/checkout@v4
+        with:
+          # The whitespace gate compares the pushed commit with its parent.
+          # checkout defaults to a depth of one, where HEAD^ is unavailable.
+          fetch-depth: 2
 
       - name: Set up Python
         uses: actions/setup-python@v5
