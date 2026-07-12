@@ -1,8 +1,9 @@
-"""Web-only persistence for authentication, CSRF and audit records.
+"""Web-owned persistence for account, project, authoring and audit records.
 
-This database never stores a wallet balance, PayOS order, job result, or
-provider payload. Those values remain canonical in the Telegram bot and are
-retrieved through the private bridge.
+The standalone Web App owns its sessions, projects and Studio Documents. It
+never stores a Telegram-Bot Xu ledger, PayOS webhook/order authority, or raw
+third-party provider credential/payload. Bot connectivity is an optional
+integration, not the database authority for Web-owned work.
 """
 
 from __future__ import annotations
@@ -344,6 +345,62 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Project Center is a first-class, Web-owned work surface.  It holds
+        # customer-authored briefs and Studio Documents independently from the
+        # Telegram Bot.  It intentionally has no wallet, payment, provider,
+        # engine-job or delivery columns: those integrations must be added by
+        # a dedicated, separately audited adapter later.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_projects (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                summary TEXT NOT NULL DEFAULT '',
+                objective TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_studio_documents (
+                id TEXT PRIMARY KEY,
+                project_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1,
+                state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(project_id) REFERENCES web_projects(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Immutable snapshots make collaboration/recovery explicit without
+        # retaining browser state or pretending a Bot/provider made a result.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_studio_document_versions (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(document_id, revision),
+                FOREIGN KEY(document_id) REFERENCES web_studio_documents(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -358,6 +415,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_workspace_drafts_account_state_updated ON web_workspace_drafts(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_projects_account_state_updated ON web_projects(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_studio_documents_project_state_updated ON web_studio_documents(project_id, account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_studio_document_versions_document_revision ON web_studio_document_versions(document_id, revision DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"

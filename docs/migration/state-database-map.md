@@ -1,6 +1,9 @@
 # State and database authority map
 
-The bot remains the canonical writer for identity, wallet, PayOS, jobs, and provider state. The Web App consumes typed bridge contracts and must not duplicate those writes.
+The Web App owns its signed accounts, Projects, Studio Documents, and Web audit
+state. Bot-origin identity links, wallet, PayOS, existing jobs, and provider
+state remain separate integration data until a Web-native replacement is
+designed and tested. The Web App must not duplicate those Bot-origin writes.
 
 | Table set | Count | Examples |
 | --- | --- | --- |

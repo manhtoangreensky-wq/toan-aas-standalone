@@ -459,6 +459,10 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     assert "workspace-draft-update" in form
     assert "Lưu thành bản mới" in form
     assert "formFieldsEnabled" in form
+    assert "const localAuthoringOnly = !enabled && workspaceDraftEnabled;" in form
+    assert "const formAction = localAuthoringOnly ? localDraftAction : page.action;" in form
+    assert 'data-portal-action="${safeText(formAction)}"' in form
+    assert "primaryActionLabel = localAuthoringOnly ? localDraftLabel" in form
     assert "Bản nháp chỉ giữ brief scalar trên Web" in form
     restore = PORTAL[PORTAL.index("function restoreWorkspaceDraft(route, input, draftId)"):PORTAL.index("function dispatchAction")]
     assert "voice_profile_id" in restore
@@ -512,6 +516,38 @@ def test_portal_normalizer_preserves_owner_scoped_hydration_state() -> None:
         assert expected in normalizer
 
 
+def test_project_center_is_a_web_owned_versioned_workspace_without_bot_execution() -> None:
+    projects = (ROOT / "copyfast_projects.py").read_text(encoding="utf-8")
+    assert 'router = APIRouter(prefix="/api/v1/projects"' in projects
+    assert 'CREATE TABLE IF NOT EXISTS web_projects' in (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert 'CREATE TABLE IF NOT EXISTS web_studio_documents' in (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert 'CREATE TABLE IF NOT EXISTS web_studio_document_versions' in (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
+    assert "STUDIO_DOCUMENT_CONFLICT" in projects
+    assert "web.studio_document.restore" in projects
+    assert "from copyfast_bridge" not in projects
+    assert "bridge_request" not in projects
+    app = (ROOT / "app.py").read_text(encoding="utf-8")
+    assert "import copyfast_projects" in app
+    assert "app.include_router(copyfast_projects.router)" in app
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    assert 'WebFeature("projects", "Project Center"' in registry
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    assert "PROJECT_PATH" in pages
+    assert 'customerPage("/projects", "Project Center"' in PORTAL
+    assert 'layout: "project-center"' in PORTAL
+    assert 'layout: "project-detail"' in PORTAL
+    assert "function renderProjectCenter(page, context)" in PORTAL
+    assert "function renderProjectDetail(page, context)" in PORTAL
+    assert 'case "project-center": return renderProjectCenter(page, context);' in PORTAL
+    assert 'case "project-detail": return renderProjectDetail(page, context);' in PORTAL
+    assert '"project-create": Boolean(account && me.csrf_token)' in INTEGRATION
+    assert "async function hydrateProjects()" in INTEGRATION
+    assert "async function hydrateProjectDetail(path)" in INTEGRATION
+    assert "async function hydrateStudioDocument(documentId)" in INTEGRATION
+    assert 'api("/projects")' in INTEGRATION
+    assert 'api(`/projects/${encodeURIComponent(projectId)}`)' in INTEGRATION
+
+
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
     assert "Hồ sơ mặc định sau khi tạo" in PORTAL
     assert "Locale Tiếng Việt · múi giờ Asia/Ho_Chi_Minh · avatar gradient" in PORTAL
@@ -539,11 +575,11 @@ def test_initial_hydration_is_deduplicated_and_bfcache_refresh_is_explicit() -> 
     assert "hydrate().then(() => {" in INTEGRATION
 
 
-def test_login_return_path_is_internal_and_unlinked_accounts_go_to_onboarding() -> None:
+def test_login_return_path_is_internal_and_web_workspace_is_independent() -> None:
     assert "function safeReturnPath(value)" in INTEGRATION
     assert 'route.startsWith("//")' in INTEGRATION
     assert 'route.includes("?") || route.includes("#")' in INTEGRATION
-    assert 'window.location.assign(account.telegram_linked ? (requested || "/dashboard") : (requested ? `/onboarding?next=${encodeURIComponent(requested)}` : "/onboarding"));' in INTEGRATION
+    assert 'window.location.assign(requested || "/dashboard");' in INTEGRATION
     assert "account.canonical_user_id" not in INTEGRATION
 
 
@@ -803,7 +839,8 @@ def test_guarded_feature_handoffs_use_only_reviewed_zero_argument_bot_entry_comm
     assert "Không truyền prompt, upload ID, Telegram ID, quote, Xu, session hoặc token." in feature_handoff
     assert "fetch(" not in feature_handoff
     assert "/voiceover" not in handoff
-    assert "Voice hiện còn guarded/admin-only" in feature_handoff
+    assert "Engine Web chưa bật" in feature_handoff
+    assert "Bot companion (tùy chọn)" in feature_handoff
     contract = (ROOT / "docs" / "migration" / "BOT_COMPANION_HANDOFF.md").read_text(encoding="utf-8")
     assert "Feature-family handoff review (frozen Bot baseline)" in contract
     assert "that need a topic, file, transaction, job ID" in contract
@@ -959,11 +996,10 @@ def test_telegram_onboarding_preserves_only_a_safe_local_workflow_continuation()
     assert "def _safe_onboarding_next(value: str | None)" in app
     assert 'candidate.startswith("//")' in app
     assert "parsed.scheme or parsed.netloc or parsed.params or parsed.query or parsed.fragment" in app
-    assert 'f"/onboarding?next={quote(normalized, safe=\'/\')}"' in app
     assert "_safe_onboarding_next(request.query_params.get(\"next\")) or \"/dashboard\"" in app
     assert "function safeReturnPath(value)" in INTEGRATION
     assert "function requestedPortalRoute()" in INTEGRATION
-    assert "`/onboarding?next=${encodeURIComponent(requested)}`" in INTEGRATION
+    assert 'window.location.assign(requested || "/dashboard");' in INTEGRATION
     assert "function safeOnboardingContinuation(value)" in PORTAL
     assert "function onboardingContinuationRoute()" in PORTAL
     assert "Workflow đang chờ" in PORTAL
@@ -979,7 +1015,7 @@ def test_telegram_onboarding_preserves_only_a_safe_local_workflow_continuation()
     assert "const startPath" in oauth_card
     auth = (ROOT / "copyfast_auth.py").read_text(encoding="utf-8")
     assert "return_path = _safe_oauth_return_path(state_data[\"return_path\"])" in auth
-    assert 'f"/onboarding?next={quote(return_path, safe=\'/\')}"' in auth
+    assert "target = return_path" in auth
     assert "response = RedirectResponse(target" in auth
 
 
@@ -1028,20 +1064,23 @@ def test_account_profile_editor_only_targets_web_owned_defaults() -> None:
 
 
 def test_feature_planning_state_is_distinguished_from_provider_engine_readiness() -> None:
-    assert "const planningAvailable = page.type === \"feature\" && page.action !== \"none\"" in PORTAL
-    assert "Planning draft sẵn sàng; engine vẫn được bảo vệ" in PORTAL
+    assert "const planningAvailable = Boolean(" in PORTAL
+    assert "Web Studio đã sẵn sàng; engine vẫn được bảo vệ" in PORTAL
     assert "Web App đang chờ adapter tạo job canonical" in PORTAL
     assert "function featureConfirmExecutionReady(page, context)" in PORTAL
     assert "featureExecutionFeatures" in PORTAL
     assert "state.public_ready && allowed.has(key)" in INTEGRATION
+    assert "draftReady = Boolean(authoringReady && draftFeatures.has(key))" in INTEGRATION
     assert "featureExecutionAllowed(feature)" in INTEGRATION
     assert '"feature-confirm": webFeatureExecutionAvailable' in INTEGRATION
 
 
-def test_guarded_feature_execution_offers_only_a_no_data_bot_menu_continuation() -> None:
+def test_guarded_feature_execution_keeps_web_authoring_primary_and_bot_companion_optional() -> None:
     assert "function renderFeatureBotHandoff(page, context, flow)" in PORTAL
     handoff = PORTAL[PORTAL.index("function renderFeatureBotHandoff(page, context, flow)"):PORTAL.index("function renderWorkspace(page, context)")]
-    assert "Tiếp tục trong Telegram" in handoff
+    assert "Engine Web chưa bật" in handoff
+    assert "Bot companion (tùy chọn)" in handoff
+    assert "Mở Project Center" in handoff
     assert 'const handoffCommand = handoff ? handoff.command : "/menu";' in handoff
     assert 'data-copy-text="${safeText(handoffCommand)}"' in handoff
     assert "Không có" in handoff
@@ -1050,8 +1089,8 @@ def test_guarded_feature_execution_offers_only_a_no_data_bot_menu_continuation()
     assert "/api/v1/" not in handoff
     assert "${renderFeatureBotHandoff(page, context, flow)}" in PORTAL
     contract = (ROOT / "docs" / "migration" / "FEATURE_CONFIRM_CONTRACT.md").read_text(encoding="utf-8")
-    assert "Guarded Bot-menu continuation" in contract
-    assert "no feature\ninput, prompt, upload ID" in contract
+    assert "Optional Bot-companion continuation" in contract
+    assert "customer in Web authoring" in contract
 
 
 def test_support_form_does_not_silently_drop_a_file_attachment() -> None:
@@ -1226,8 +1265,8 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert "function renderLanding(page, context)" in PORTAL
     assert 'case "landing": return renderLanding(page, context);' in PORTAL
     assert "Không tạo output giả" in PORTAL
-    assert "Xu và PayOS do Bot canonical" in PORTAL
-    assert "Telegram xác minh một lần" in PORTAL
+    assert "Project &amp; Studio Document Web-owned" in PORTAL
+    assert "Telegram companion là tùy chọn" in PORTAL
     landing = PORTAL[
         PORTAL.index("function renderLanding(page, context)"):
         PORTAL.index("function renderNotFound(page, context)")
@@ -1235,6 +1274,7 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert "/api/v1/" not in landing
     assert "fetch(" not in landing
     assert "localStorage" not in landing
+    assert "Không có ledger Xu, webhook PayOS" in landing
     assert 'href: "/login?next=/video/create"' in landing
     assert 'id="studios"' in landing
     assert 'id="workflow"' in landing
@@ -1249,7 +1289,7 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     app = (ROOT / "app.py").read_text(encoding="utf-8")
     assert 'if normalized in {"/", "/app"}:' in app
     assert 'return RedirectResponse("/login", status_code=307)' in app
-    assert 'return RedirectResponse("/dashboard" if account.get("canonical_user_id") else "/onboarding", status_code=307)' in app
+    assert 'return RedirectResponse("/dashboard", status_code=307)' in app
     assert 'public_pages = {"/welcome", "/legal", "/privacy"}' in app
     railway = (ROOT / "railway.json").read_text(encoding="utf-8")
     assert '"healthcheckPath": "/health"' in railway

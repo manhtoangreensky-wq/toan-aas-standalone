@@ -725,6 +725,10 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function validProjectId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
   function validWorkspaceDraftId(value) {
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
@@ -757,6 +761,12 @@
     const match = /^\/campaigns\/([^/]+)$/.exec(String(path || "").split("?")[0]);
     const id = match ? String(match[1] || "") : "";
     return validCampaignPlanId(id) ? id : "";
+  }
+
+  function projectIdFromPath(path) {
+    const match = /^\/projects\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validProjectId(id) ? id : "";
   }
 
   function normalizeCampaignSchedule(value) {
@@ -870,19 +880,33 @@
     );
   }
 
-  function featurePageStates(catalog, readiness, executionFeatures) {
+  function featurePageStates(catalog, readiness, executionFeatures, workspaceDraftFeatures, webAuthoringAvailable) {
     const states = {};
     const features = (readiness && readiness.features) || {};
     const allowed = new Set(safeFeatureExecutionFeatures(executionFeatures));
-    Object.entries(FEATURE_BY_PATH).forEach(([route, key]) => {
+    const current = base();
+    const draftFeatures = new Set(Array.isArray(workspaceDraftFeatures)
+      ? workspaceDraftFeatures
+      : (Array.isArray(current.workspaceDraftFeatures) ? current.workspaceDraftFeatures : []));
+    const authoringReady = webAuthoringAvailable === true || Boolean(
+      current.session && current.session.authenticated === true
+      && current.session.csrfReady === true
+      && current.capabilities && current.capabilities["workspace-draft-save"] === true
+    );
+    const stateForFeature = (route, key) => {
+      if (typeof route !== "string" || !route || typeof key !== "string" || !key) return;
       const state = features[key];
-      if (!state) return;
-      states[route] = state.public_ready && allowed.has(key) ? "ready" : "guarded";
+      const executionReady = Boolean(state && state.public_ready && allowed.has(key));
+      const draftReady = Boolean(authoringReady && draftFeatures.has(key));
+      if (!state && !draftReady) return;
+      states[route] = executionReady || draftReady ? "ready" : "guarded";
+    };
+    Object.entries(FEATURE_BY_PATH).forEach(([route, key]) => {
+      stateForFeature(route, key);
     });
     (catalog || []).forEach((item) => {
-      const state = features[item.key];
-      if (!state) return;
-      states[item.route && item.route.split("?")[0]] = state.public_ready && allowed.has(item.key) ? "ready" : "guarded";
+      if (!item || typeof item.key !== "string") return;
+      stateForFeature(item.route && item.route.split("?")[0], item.key);
     });
     return states;
   }
@@ -977,6 +1001,16 @@
       "workspace-draft-archive": Boolean(account && me.csrf_token),
       "workspace-draft-resume": Boolean(account),
       "workspace-drafts-refresh": Boolean(account),
+      // Project Center is independently owned by the signed Web account.
+      // Telegram/Bot availability must never gate authoring, version history
+      // or owner-scoped project reads.
+      "project-create": Boolean(account && me.csrf_token),
+      "project-update": Boolean(account && me.csrf_token),
+      "projects-refresh": Boolean(account),
+      "studio-document-create": Boolean(account && me.csrf_token),
+      "studio-document-open": Boolean(account),
+      "studio-document-update": Boolean(account && me.csrf_token),
+      "studio-document-restore": Boolean(account && me.csrf_token),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1016,7 +1050,7 @@
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
-      pageStates: featurePageStates(catalog, {}, webFeatureExecutionFeatures)
+      pageStates: featurePageStates(catalog, {}, webFeatureExecutionFeatures, webWorkspaceDraftFeatures, Boolean(account && me.csrf_token))
     });
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/portal/service-worker.js").catch(() => {});
@@ -1024,6 +1058,8 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
+    if (account && ["/projects", "/dashboard"].includes(currentPath)) await hydrateProjects();
+    else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1096,6 +1132,57 @@
       // plan from an earlier hydration in browser state.
       merge({ campaignPlanDetail: {}, pageStates: { ...(base().pageStates || {}), [path]: "guarded" } });
     }
+  }
+
+  async function hydrateProjects() {
+    try {
+      const result = await api("/projects");
+      const items = result.data && Array.isArray(result.data.items)
+        ? result.data.items.filter((item) => item && validProjectId(item.id)).slice(0, 100)
+        : [];
+      merge({
+        projects: items,
+        // The GET projection itself is read-only, but Project Center has
+        // independently capability-gated CSRF writes. Keep the page ready
+        // rather than presenting an editable Web Workspace as read-only.
+        pageStates: { ...(base().pageStates || {}), "/projects": "ready" }
+      });
+    } catch (_) {
+      // Do not retain a previous account's authoring workspace after a failed
+      // signed read. Project Center has no Bot/bridge fallback by design.
+      merge({ projects: [], pageStates: { ...(base().pageStates || {}), "/projects": "guarded" } });
+    }
+  }
+
+  async function hydrateProjectDetail(path) {
+    const projectId = projectIdFromPath(path);
+    if (!projectId) return;
+    try {
+      const result = await api(`/projects/${encodeURIComponent(projectId)}`);
+      const project = result.data && result.data.project && typeof result.data.project === "object" ? result.data.project : null;
+      const documents = result.data && Array.isArray(result.data.documents)
+        ? result.data.documents.filter((item) => item && validProjectId(item.id)).slice(0, 100)
+        : [];
+      if (!project || String(project.id || "") !== projectId || !validProjectId(project.id)) throw new Error("project detail unavailable");
+      merge({
+        projectDetail: project,
+        projectDocuments: documents,
+        studioDocumentDetail: {},
+        pageStates: { ...(base().pageStates || {}), [path]: "ready" }
+      });
+    } catch (_) {
+      merge({ projectDetail: {}, projectDocuments: [], studioDocumentDetail: {}, pageStates: { ...(base().pageStates || {}), [path]: "guarded" } });
+    }
+  }
+
+  async function hydrateStudioDocument(documentId) {
+    if (!validProjectId(documentId)) throw new Error("Mã Studio Document không hợp lệ.");
+    const result = await api(`/projects/documents/${encodeURIComponent(documentId)}`);
+    const document = result.data && result.data.document && typeof result.data.document === "object" ? result.data.document : null;
+    if (!document || String(document.id || "") !== String(documentId) || !validProjectId(document.id)) throw new Error("Studio Document không còn khả dụng.");
+    const versions = result.data && Array.isArray(result.data.versions) ? result.data.versions.slice(0, 50) : [];
+    merge({ studioDocumentDetail: { document, versions } });
+    return { document, versions };
   }
 
   async function hydrateAccountActivity() {
@@ -1313,9 +1400,12 @@
     const completed = await api("/auth/telegram/login/complete", { method: "POST", headers: { "Content-Type": "application/json" }, body: "{}" });
     toast(completed.message);
     await hydrate();
-    const account = completed.data && completed.data.account ? completed.data.account : {};
     const requested = requestedPortalRoute();
-    window.location.assign(account.telegram_linked ? (requested || "/dashboard") : (requested ? `/onboarding?next=${encodeURIComponent(requested)}` : "/onboarding"));
+    // A successful Web sign-in owns a full Web Workspace even when the
+    // customer has not opted into Telegram. Linking remains an optional
+    // companion connector and must never trap an email/OAuth user in
+    // onboarding before they can open their own projects or studios.
+    window.location.assign(requested || "/dashboard");
     return true;
   }
 
@@ -1483,6 +1573,124 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "project-create") {
+        const payload = {
+          title: String(fields.title || "").trim(),
+          summary: String(fields.summary || "").trim(),
+          objective: String(fields.objective || "").trim()
+        };
+        const submission = acquireSubmission("project:create", JSON.stringify(payload));
+        if (!submission) {
+          toast("Project đang được tạo. Vui lòng chờ phản hồi từ Web Workspace.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/projects", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key }) });
+          const project = result.data && result.data.project && typeof result.data.project === "object" ? result.data.project : null;
+          if (!project || !validProjectId(project.id)) throw new Error("Web Workspace chưa trả Project hợp lệ.");
+          merge({ projects: [project, ...(Array.isArray(base().projects) ? base().projects.filter((item) => !item || String(item.id || "") !== String(project.id)) : [])].slice(0, 100) });
+          toast(result.message || "Đã tạo Project trên Web.");
+          window.location.assign(`/projects/${encodeURIComponent(project.id)}`);
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "projects-refresh") {
+        await hydrateProjects();
+        toast("Đã làm mới Project Center.");
+        return;
+      }
+      if (action === "project-update") {
+        const projectId = String(detail.projectId || projectIdFromPath(route) || "").trim();
+        if (!validProjectId(projectId)) throw new Error("Mã Project không hợp lệ.");
+        const payload = {
+          title: String(fields.title || "").trim(), summary: String(fields.summary || "").trim(),
+          objective: String(fields.objective || "").trim(), state: String(fields.state || "active").trim()
+        };
+        const submission = acquireSubmission(`project:${projectId}:update`, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/projects/${encodeURIComponent(projectId)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key }) });
+          if (result.data && result.data.project) merge({ projectDetail: result.data.project });
+          toast(result.message || "Đã cập nhật Project trên Web.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "studio-document-create") {
+        const projectId = String(detail.projectId || projectIdFromPath(route) || "").trim();
+        if (!validProjectId(projectId)) throw new Error("Mã Project không hợp lệ.");
+        const payload = { kind: String(fields.kind || "").trim(), title: String(fields.title || "").trim(), content: String(fields.content || "") };
+        const submission = acquireSubmission(`project:${projectId}:document:create`, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/projects/${encodeURIComponent(projectId)}/documents`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key }) });
+          const document = result.data && result.data.document && typeof result.data.document === "object" ? result.data.document : null;
+          await hydrateProjectDetail(route);
+          if (document && validProjectId(document.id)) await hydrateStudioDocument(document.id);
+          toast(result.message || "Đã thêm Studio Document.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "studio-document-open") {
+        const documentId = String(detail.studioDocumentId || "").trim();
+        await hydrateStudioDocument(documentId);
+        toast("Đã nạp Studio Document và version history.");
+        return;
+      }
+      if (action === "studio-document-update") {
+        const documentId = String(detail.studioDocumentId || "").trim();
+        const expectedRevision = Number(detail.studioDocumentRevision || 0);
+        if (!validProjectId(documentId) || !Number.isInteger(expectedRevision) || expectedRevision < 1) throw new Error("Phiên bản Studio Document không hợp lệ.");
+        const payload = { title: String(fields.title || "").trim(), content: String(fields.content || ""), expected_revision: expectedRevision };
+        const submission = acquireSubmission(`studio-document:${documentId}:update`, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/projects/documents/${encodeURIComponent(documentId)}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key }) });
+          if (result.ok) {
+            await hydrateProjectDetail(route);
+            await hydrateStudioDocument(documentId);
+          }
+          toast(result.message || "Đã lưu Studio Document.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "studio-document-restore") {
+        const documentId = String(detail.studioDocumentId || "").trim();
+        const expectedRevision = Number(detail.studioDocumentRevision || 0);
+        const sourceRevision = Number(detail.studioDocumentVersion || 0);
+        if (!validProjectId(documentId) || !Number.isInteger(expectedRevision) || expectedRevision < 1 || !Number.isInteger(sourceRevision) || sourceRevision < 1) throw new Error("Phiên bản Studio Document không hợp lệ.");
+        const payload = { expected_revision: expectedRevision };
+        const submission = acquireSubmission(`studio-document:${documentId}:restore:${sourceRevision}`, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/projects/documents/${encodeURIComponent(documentId)}/restore/${encodeURIComponent(String(sourceRevision))}`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key }) });
+          if (result.ok) {
+            await hydrateProjectDetail(route);
+            await hydrateStudioDocument(documentId);
+          }
+          toast(result.message || "Đã khôi phục Studio Document.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "campaign-create") {
         const campaign = campaignCreatePayload(fields);
         const scope = "campaign-plan:create";
@@ -1650,9 +1858,8 @@
         const result = await api("/auth/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: fields.email || "", password: fields.password || "" }) });
         toast(result.message);
         await hydrate();
-        const account = result.data && result.data.account ? result.data.account : {};
         const requested = requestedPortalRoute();
-        window.location.assign(account.telegram_linked ? (requested || "/dashboard") : (requested ? `/onboarding?next=${encodeURIComponent(requested)}` : "/onboarding"));
+        window.location.assign(requested || "/dashboard");
         return;
       }
       if (action === "start-telegram-login") {

@@ -1,9 +1,11 @@
-"""Canonical Web-App surface for the COPYFAST compatibility layer.
+"""Canonical public capability catalog for the standalone Web App.
 
-This module deliberately contains no provider implementation.  It is the one
-place the web shell, API and migration inventory use to decide which public
-route corresponds to a bot capability.  Runtime readiness always comes from
-the private bot bridge; a catalog entry is never evidence that an engine works.
+This module deliberately contains no provider implementation. It is the one
+place the Web shell, API and migration inventory use to describe routes owned
+by the independent Web product and the small set of optional Bot companion
+surfaces. A catalog entry is never evidence that an engine works: Web
+authoring, Web-native execution and Bot integration each expose readiness
+through their own capability checks.
 """
 
 from __future__ import annotations
@@ -25,7 +27,8 @@ class WebFeature:
 
 CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("dashboard", "Tổng quan", "account", "/dashboard", description="Tài khoản, Xu, job và trạng thái gần đây."),
-    WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá các workflow Web đã được định tuyến và trạng thái canonical của chúng."),
+    WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá workflow Web, phần authoring độc lập và trạng thái Engine/Bot companion tách biệt."),
+    WebFeature("projects", "Project Center", "content", "/projects", description="Project và Studio Document có version do Web Workspace sở hữu, không phụ thuộc Telegram."),
     WebFeature("workspace_drafts", "Bản nháp của tôi", "content", "/workspace", description="Lưu và tiếp tục brief Web an toàn, không lưu file, quote hoặc trạng thái Bot."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
