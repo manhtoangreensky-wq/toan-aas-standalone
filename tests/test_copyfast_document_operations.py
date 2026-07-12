@@ -1,4 +1,4 @@
-"""Security and output contracts for Web-native PDF Split and Merge."""
+"""Security and output contracts for Web-native PDF Split, Merge and Optimize."""
 
 from __future__ import annotations
 
@@ -65,6 +65,7 @@ def pdf_bytes(
     encrypted: bool = False,
     with_annotation: bool = False,
     page_size: tuple[int, int] = (144, 144),
+    metadata_padding: int = 0,
 ) -> bytes:
     writer = PdfWriter()
     for page_index in range(page_count):
@@ -79,6 +80,13 @@ def pdf_bytes(
                 }
             )
             page[NameObject("/Annots")] = ArrayObject([writer._add_object(annotation)])
+    if metadata_padding:
+        writer.add_metadata(
+            {
+                "/Title": "Untrusted source metadata",
+                "/Subject": "x" * metadata_padding,
+            }
+        )
     if encrypted:
         writer.encrypt("test-password")
     result = BytesIO()
@@ -110,6 +118,14 @@ def merge(client: TestClient, csrf: str, *, asset_ids: list[str], key: str):
         "/api/v1/document-operations/pdf-merge",
         headers={"X-CSRF-Token": csrf},
         json={"source_asset_ids": asset_ids, "idempotency_key": key},
+    )
+
+
+def optimize(client: TestClient, csrf: str, *, asset_id: str, key: str):
+    return client.post(
+        "/api/v1/document-operations/pdf-optimize",
+        headers={"X-CSRF-Token": csrf},
+        json={"source_asset_id": asset_id, "idempotency_key": key},
     )
 
 
@@ -373,6 +389,140 @@ def test_pdf_merge_rejects_duplicate_encrypted_oversize_page_and_tampered_inputs
         assert not list(staging.iterdir())
 
 
+def test_pdf_optimize_is_private_idempotent_and_only_publishes_a_verified_smaller_artifact(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as first:
+        csrf = register_and_login(first, "pdf-optimize-owner@example.com")
+        assert first.get("/documents/compress").status_code == 200
+        source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-optimize-source-0001",
+            body=pdf_bytes(2, with_annotation=True, metadata_padding=16_384),
+            name="metadata-heavy.pdf",
+        )
+
+        denied = first.post(
+            "/api/v1/document-operations/pdf-optimize",
+            json={"source_asset_id": source["id"], "idempotency_key": "pdf-optimize-denied-0001"},
+        )
+        assert denied.status_code == 403
+
+        created = optimize(first, csrf, asset_id=source["id"], key="pdf-optimize-create-0001")
+        assert created.status_code == 200
+        payload = created.json()
+        assert payload["ok"] is True
+        assert payload["status"] == "completed"
+        operation = payload["data"]["operation"]
+        assert operation["kind"] == "pdf_optimize"
+        assert operation["source_asset_id"] == source["id"]
+        assert operation["source_count"] == 1
+        assert operation["source_page_count"] == 2
+        assert operation["output_page_count"] == 2
+        assert operation["input_byte_size"] == source["byte_size"]
+        assert operation["byte_size"] < source["byte_size"]
+        assert operation["saved_bytes"] == source["byte_size"] - operation["byte_size"]
+        assert operation["saved_bytes"] >= 1024
+        assert operation["saved_percent"] > 0
+        assert operation["download_ready"] is True
+        for forbidden in ("storage_key", "sha256", "source_sha", "filesystem", "provider", "payment"):
+            assert forbidden not in created.text.lower()
+
+        replay = optimize(first, csrf, asset_id=source["id"], key="pdf-optimize-create-0001")
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+        other_source = upload_pdf(first, csrf, key="pdf-optimize-source-other-0001", body=pdf_bytes(1, metadata_padding=8_192))
+        conflicting = optimize(first, csrf, asset_id=other_source["id"], key="pdf-optimize-create-0001")
+        assert conflicting.status_code == 409
+
+        download = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert download.status_code == 200
+        assert download.headers["cache-control"] == "no-store, private"
+        assert download.headers["x-content-type-options"] == "nosniff"
+        assert download.headers["content-security-policy"] == "sandbox"
+        output = PdfReader(BytesIO(download.content), strict=True)
+        assert len(output.pages) == 2
+        assert all("/Annots" not in page and "/AA" not in page for page in output.pages)
+        assert len(download.content) == operation["byte_size"]
+
+        detail = first.get(f"/api/v1/document-operations/{operation['id']}")
+        assert [event["state"] for event in detail.json()["data"]["events"]] == ["queued", "processing", "completed"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            audit = conn.execute(
+                "SELECT detail FROM web_audit_events WHERE action='web.document_operation.pdf_optimize'"
+            ).fetchone()
+            source_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (source["id"],)).fetchone()[0]
+        assert audit and audit[0].startswith("source_pages=2;saved_bytes=")
+        assert source["id"] not in audit[0]
+        assert source_state == "active"
+
+        with make_client(tmp_path, monkeypatch) as second:
+            csrf_second = register_and_login(second, "pdf-optimize-other@example.com")
+            hidden = second.get(f"/api/v1/document-operations/{operation['id']}")
+            assert hidden.json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            rejected = optimize(second, csrf_second, asset_id=source["id"], key="pdf-optimize-other-0001")
+            assert rejected.json()["error_code"] == "WEB_DOCUMENT_SOURCE_NOT_FOUND"
+
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            output_key = conn.execute(
+                "SELECT storage_key FROM web_document_operations WHERE id=?", (operation["id"],)
+            ).fetchone()[0]
+        (tmp_path / "private-document-outputs" / output_key).write_bytes(b"%PDF-tampered")
+        unavailable = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
+        assert first.get(f"/api/v1/document-operations/{operation['id']}").json()["data"]["operation"]["state"] == "unavailable"
+
+
+def test_pdf_optimize_marks_no_reduction_guarded_and_rejects_unsafe_inputs_without_fake_output(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "pdf-optimize-safety@example.com")
+        source = upload_pdf(client, csrf, key="pdf-optimize-guarded-source-0001", body=pdf_bytes(1, metadata_padding=8_192))
+        operations = importlib.import_module("copyfast_document_operations")
+        monkeypatch.setattr(operations, "_has_meaningful_optimization", lambda **_: False)
+        not_reduced = optimize(client, csrf, asset_id=source["id"], key="pdf-optimize-guarded-0001")
+        assert not_reduced.status_code == 422
+        assert "file gốc không thay đổi" in not_reduced.json()["message"].lower()
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            guarded = conn.execute(
+                "SELECT id, state, failure_code, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-optimize-guarded-0001",),
+            ).fetchone()
+            source_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (source["id"],)).fetchone()[0]
+        assert guarded[1:] == ("guarded", "PDF_NOT_REDUCED", None)
+        assert source_state == "active"
+        detail = client.get(f"/api/v1/document-operations/{guarded[0]}")
+        assert detail.json()["data"]["operation"]["state"] == "guarded"
+        assert detail.json()["data"]["operation"]["download_ready"] is False
+        assert [event["state"] for event in detail.json()["data"]["events"]] == ["queued", "processing", "guarded"]
+        assert client.get(f"/api/v1/document-operations/{guarded[0]}/download").json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+        staging = tmp_path / "private-document-outputs" / ".staging"
+        assert not list(staging.iterdir())
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "pdf-optimize-inputs@example.com")
+        encrypted = upload_pdf(client, csrf, key="pdf-optimize-encrypted-source-0001", body=pdf_bytes(1, encrypted=True))
+        encrypted_result = optimize(client, csrf, asset_id=encrypted["id"], key="pdf-optimize-encrypted-0001")
+        assert encrypted_result.status_code == 422
+        assert "mã hóa" in encrypted_result.json()["message"].lower()
+        too_many_pages = upload_pdf(client, csrf, key="pdf-optimize-pages-source-0001", body=pdf_bytes(31))
+        page_limit = optimize(client, csrf, asset_id=too_many_pages["id"], key="pdf-optimize-pages-0001")
+        assert page_limit.status_code == 422
+        assert "30" in page_limit.json()["message"]
+        tampered = upload_pdf(client, csrf, key="pdf-optimize-tamper-source-0001", body=pdf_bytes(1))
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            storage_key = conn.execute("SELECT storage_key FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        (tmp_path / "private-web-assets" / storage_key).write_bytes(b"%PDF-tampered")
+        tampered_result = optimize(client, csrf, asset_id=tampered["id"], key="pdf-optimize-tamper-0001")
+        assert tampered_result.status_code == 422
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            failed = conn.execute(
+                "SELECT state, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-optimize-tamper-0001",),
+            ).fetchone()
+            tampered_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        assert failed == ("failed", None)
+        assert tampered_state == "unavailable"
+
+
 def test_pdf_split_rejects_archived_tampered_encrypted_and_oversize_page_inputs_without_fake_success(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         csrf = register_and_login(client, "pdf-safety@example.com")
@@ -509,7 +659,7 @@ def test_document_operation_reconciliation_fails_only_stale_interrupted_records(
         assert events == [("failed",)]
 
 
-def test_pdf_split_has_no_bot_bridge_public_storage_or_unbounded_parser_contract():
+def test_document_operations_have_no_bot_bridge_public_storage_or_unbounded_parser_contract():
     source = Path("copyfast_document_operations.py").read_text(encoding="utf-8")
     assert "from copyfast_bridge" not in source
     assert "import copyfast_bridge" not in source
@@ -517,4 +667,10 @@ def test_pdf_split_has_no_bot_bridge_public_storage_or_unbounded_parser_contract
     assert "MAX_INPUT_BYTES = 20 * 1024 * 1024" in source
     assert "MAX_PAGES = 30" in source
     assert "PDF_EXCLUDED_PAGE_KEYS" in source
+    assert "PDF_OPTIMIZE_KIND" in source
+    assert "_has_meaningful_optimization" in source
+    assert "compress_content_streams(level=9)" in source
+    assert "subprocess" not in source
+    assert "import fitz" not in source
     assert 'app.mount("/document-operations"' not in Path("app.py").read_text(encoding="utf-8")
+    assert '"/api/v1/document-operations/pdf-optimize"' in Path("app.py").read_text(encoding="utf-8")

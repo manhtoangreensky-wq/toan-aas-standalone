@@ -161,6 +161,9 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.document_operation.pdf_split_failed": ("Tách PDF chưa hoàn tất", "Web Workspace"),
     "web.document_operation.pdf_merge": ("Gộp PDF riêng tư", "Web Workspace"),
     "web.document_operation.pdf_merge_failed": ("Gộp PDF chưa hoàn tất", "Web Workspace"),
+    "web.document_operation.pdf_optimize": ("Tối ưu PDF riêng tư", "Web Workspace"),
+    "web.document_operation.pdf_optimize_failed": ("Tối ưu PDF chưa hoàn tất", "Web Workspace"),
+    "web.document_operation.pdf_optimize_guarded": ("PDF không có bản lossless nhỏ hơn", "Web Workspace"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 

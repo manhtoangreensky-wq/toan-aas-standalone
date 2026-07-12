@@ -1,6 +1,6 @@
 """Bounded, private Web-native document operations.
 
-The first operations are PDF Split and PDF Merge. They reuse only verified,
+The first operations are PDF Split, PDF Merge and lossless PDF Optimize. They reuse only verified,
 owner-scoped PDFs already stored in the Web Asset Vault, copy inputs into an
 isolated operation staging area, and create separately stored output
 attachments. They never call the Bot, a provider, wallet, PayOS, or a
@@ -23,6 +23,7 @@ from typing import Any
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, field_validator
+from starlette.concurrency import run_in_threadpool
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import (
@@ -40,8 +41,9 @@ router = APIRouter(prefix="/api/v1/document-operations", tags=["Web Document Ope
 
 PDF_SPLIT_KIND = "pdf_split"
 PDF_MERGE_KIND = "pdf_merge"
-SUPPORTED_KINDS = frozenset({PDF_SPLIT_KIND, PDF_MERGE_KIND})
-OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable"})
+PDF_OPTIMIZE_KIND = "pdf_optimize"
+SUPPORTED_KINDS = frozenset({PDF_SPLIT_KIND, PDF_MERGE_KIND, PDF_OPTIMIZE_KIND})
+OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 PAGE_RANGE_PATTERN = re.compile(r"^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$")
@@ -52,6 +54,11 @@ MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
 MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
 MAX_MERGE_SOURCES = 8  # Web safety bound; Bot itself only requires at least two.
 MAX_MERGE_INPUT_BYTES = 40 * 1024 * 1024  # Aggregate bound beyond per-file 20 MiB.
+# A result that is technically one byte smaller is not a professional
+# optimization. Keep the original unless the verified final artifact saves a
+# meaningful amount without a lossy engine or an external command runner.
+MIN_OPTIMIZATION_SAVED_BYTES = 1024
+MIN_OPTIMIZATION_SAVED_RATIO = 0.01
 ORPHAN_RETENTION_SECONDS = 60 * 60
 PDF_EXCLUDED_PAGE_KEYS = ("/Annots", "/AA", "/Metadata", "/PieceInfo", "/StructParents")
 
@@ -116,6 +123,21 @@ class PdfMergeRequest(BaseModel):
         if len(set(normalized)) != len(normalized):
             raise ValueError("Mỗi PDF nguồn chỉ được chọn một lần trong cùng thao tác gộp")
         return normalized
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
+class PdfOptimizeRequest(BaseModel):
+    source_asset_id: str = Field(min_length=36, max_length=36)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: str) -> str:
+        return _uuid(value, label="Asset Vault ID")
 
     @field_validator("idempotency_key")
     @classmethod
@@ -302,14 +324,21 @@ def _selected_pages(page_range: str, page_count: int) -> tuple[list[int], int, i
 
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[4])
+    kind = str(row[3])
     byte_size = int(row[12]) if row[12] is not None else None
+    source_byte_size = int(row[22]) if row[22] is not None else None
     source_count = max(1, int(row[23] or 1)) if len(row) > 23 else 1
+    optimization_saved_bytes = (
+        max(0, source_byte_size - byte_size)
+        if kind == PDF_OPTIMIZE_KIND and source_byte_size is not None and byte_size is not None and state == "completed"
+        else None
+    )
     return {
         "id": str(row[0]),
         "source_asset_id": str(row[1]),
         "source_count": source_count,
         "project_id": str(row[2]) if row[2] else None,
-        "kind": str(row[3]),
+        "kind": kind,
         "state": state,
         "requested_page_range": str(row[5]),
         "selected_start_page": int(row[6]) if row[6] is not None else None,
@@ -325,6 +354,15 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "completed_at": str(row[16]) if row[16] else None,
         "updated_at": str(row[17]),
         "download_ready": state == "completed" and bool(row[19]) and byte_size is not None,
+        # These derived values are exposed only for a completed optimize
+        # artifact. They are safe account-owned measurements, not a storage
+        # key, hash, path or source blob projection.
+        "input_byte_size": source_byte_size if kind == PDF_OPTIMIZE_KIND and state == "completed" else None,
+        "saved_bytes": optimization_saved_bytes,
+        "saved_percent": (
+            round((optimization_saved_bytes / source_byte_size) * 100, 1)
+            if optimization_saved_bytes is not None and source_byte_size else None
+        ),
     }
 
 
@@ -405,6 +443,21 @@ def _merge_request_fingerprint(sources: list[dict[str, Any]]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _optimize_request_fingerprint(*, source_asset_id: str, source_sha256: str, source_bytes: int) -> str:
+    """Bind one structural optimize intent to its verified source revision."""
+    payload = json.dumps(
+        {
+            "kind": PDF_OPTIMIZE_KIND,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
     row = conn.execute(
         "SELECT COALESCE(SUM(byte_size), 0) FROM web_document_operations WHERE account_id=? AND byte_size IS NOT NULL",
@@ -417,12 +470,23 @@ def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
 def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
     state = str(operation.get("state") or "failed")
     kind = str(operation.get("kind") or PDF_SPLIT_KIND)
-    label = "PDF Merge" if kind == PDF_MERGE_KIND else "PDF Split"
-    completed_message = "Đã gộp và xác minh PDF riêng tư." if kind == PDF_MERGE_KIND else "Đã tách và xác minh PDF riêng tư."
+    label, completed_message = {
+        PDF_SPLIT_KIND: ("PDF Split", "Đã tách và xác minh PDF riêng tư."),
+        PDF_MERGE_KIND: ("PDF Merge", "Đã gộp và xác minh PDF riêng tư."),
+        PDF_OPTIMIZE_KIND: ("PDF Optimize", "Đã tối ưu và xác minh PDF riêng tư."),
+    }.get(kind, ("Document Operation", "Đã xác minh artifact tài liệu riêng tư."))
     if state == "completed":
         return envelope(True, completed_message, data={"operation": operation}, status_name="completed")
     if state in {"queued", "processing"}:
         return envelope(True, f"{label} đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
+    if state == "guarded" and kind == PDF_OPTIMIZE_KIND:
+        return envelope(
+            False,
+            "Không có bản PDF nhỏ hơn đạt chuẩn an toàn; file gốc không thay đổi.",
+            data={"operation": operation},
+            status_name="guarded",
+            error_code="WEB_DOCUMENT_OPERATION_NOT_REDUCED",
+        )
     return envelope(False, f"{label} chưa thể hoàn tất an toàn.", data={"operation": operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
 
 
@@ -436,7 +500,7 @@ def _mark_failed(operation_id: str, account_id: str, *, kind: str, request: Requ
             "SELECT state FROM web_document_operations WHERE id=? AND account_id=?",
             (operation_id, account_id),
         ).fetchone()
-        if not row or str(row[0]) in {"completed", "unavailable"}:
+        if not row or str(row[0]) in {"completed", "unavailable", "guarded"}:
             return
         conn.execute(
             """UPDATE web_document_operations SET state='failed', failure_code=?, updated_at=?
@@ -452,6 +516,37 @@ def _mark_failed(operation_id: str, account_id: str, *, kind: str, request: Requ
             request_id=_request_id(request),
             target=operation_id,
             outcome="failed",
+            detail=f"code={code}",
+        )
+
+
+def _mark_guarded(operation_id: str, account_id: str, *, kind: str, request: Request, code: str) -> None:
+    """Record a safe terminal non-delivery without presenting it as failure/success."""
+    if kind not in SUPPORTED_KINDS:
+        raise RuntimeError("Loại Document Operation không hợp lệ")
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        row = conn.execute(
+            "SELECT state FROM web_document_operations WHERE id=? AND account_id=?",
+            (operation_id, account_id),
+        ).fetchone()
+        if not row or str(row[0]) in {"completed", "unavailable", "guarded"}:
+            return
+        conn.execute(
+            """UPDATE web_document_operations SET state='guarded', failure_code=?, updated_at=?
+               WHERE id=? AND account_id=?""",
+            (code, now, operation_id, account_id),
+        )
+        _record_event(conn, operation_id=operation_id, state="guarded", when=now)
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=None,
+            action=f"web.document_operation.{kind}_guarded",
+            request_id=_request_id(request),
+            target=operation_id,
+            outcome="guarded",
             detail=f"code={code}",
         )
 
@@ -592,6 +687,96 @@ def _build_merge_output(root: Path, source_copies: list[Path]) -> tuple[Path, st
         byte_size = temporary_output.stat().st_size
         if byte_size < 1 or byte_size > _maximum_output_bytes():
             raise DocumentOperationError("PDF đầu ra vượt giới hạn artifact an toàn", code="PDF_OUTPUT_LIMIT")
+        digest = hashlib.sha256()
+        with temporary_output.open("rb") as stream:
+            while True:
+                chunk = stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        output_digest = digest.hexdigest()
+        try:
+            with temporary_output.open("rb") as verify_stream:
+                verified = PdfReader(verify_stream, strict=True)
+                if verified.is_encrypted or len(verified.pages) != source_page_count:
+                    raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="PDF_OUTPUT_INVALID")
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="PDF_OUTPUT_INVALID") from exc
+
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}.pdf"
+        final_path = _output_path(root, storage_key)
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn PDF đầu ra không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra integrity", code="PDF_OUTPUT_INVALID")
+        return final_path, storage_key, byte_size, output_digest, source_page_count
+    except Exception:
+        _safe_unlink(final_path)
+        raise
+    finally:
+        _safe_unlink(temporary_output)
+
+
+def _has_meaningful_optimization(*, source_bytes: int, output_bytes: int) -> bool:
+    """Require a useful verified reduction before replacing a user's source."""
+    if source_bytes < 1 or output_bytes < 1 or output_bytes >= source_bytes:
+        return False
+    saved_bytes = source_bytes - output_bytes
+    # At least 1 KiB and 1% protects customers from a nominal byte-level
+    # difference being labelled as a useful compression result.
+    minimum_saved = max(
+        MIN_OPTIMIZATION_SAVED_BYTES,
+        int(source_bytes * MIN_OPTIMIZATION_SAVED_RATIO + 0.999999),
+    )
+    return saved_bytes >= minimum_saved
+
+
+def _build_optimize_output(root: Path, source_copy: Path, *, source_bytes: int) -> tuple[Path, str, int, str, int]:
+    """Create a structural PDF optimization only when it saves space."""
+    temporary_output = _staging_path(root, ".pdf")
+    final_path: Path | None = None
+    try:
+        PdfReader, PdfWriter = _pdf_classes()
+        try:
+            with source_copy.open("rb") as source_stream:
+                reader = PdfReader(source_stream, strict=True)
+                if reader.is_encrypted:
+                    raise DocumentOperationError("PDF được mã hóa chưa thể tối ưu an toàn", code="PDF_ENCRYPTED")
+                source_page_count = len(reader.pages)
+                if source_page_count < 1 or source_page_count > MAX_PAGES:
+                    raise DocumentOperationError(
+                        f"PDF cần từ 1 đến {MAX_PAGES} trang để tối ưu an toàn",
+                        code="PDF_PAGE_LIMIT",
+                    )
+                writer = PdfWriter()
+                # A fresh writer deliberately retains the visual page content
+                # while discarding page-level interactive behavior and source
+                # metadata. It never downscales images or claims a lossy tier.
+                for page in reader.pages:
+                    writer.add_page(page, excluded_keys=PDF_EXCLUDED_PAGE_KEYS)
+                for output_page in writer.pages:
+                    output_page.compress_content_streams(level=9)
+                writer.compress_identical_objects(remove_duplicates=True, remove_unreferenced=True)
+                writer.add_metadata({"/Title": "TOAN AAS PDF Optimize", "/Producer": "TOAN AAS Web PDF Optimize"})
+                with temporary_output.open("xb") as output_stream:
+                    writer.write(output_stream)
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF không hợp lệ hoặc không thể tối ưu cấu trúc an toàn", code="PDF_PARSE_FAILED") from exc
+
+        byte_size = temporary_output.stat().st_size
+        if byte_size < 1 or byte_size > _maximum_output_bytes():
+            raise DocumentOperationError("PDF đầu ra vượt giới hạn artifact an toàn", code="PDF_OUTPUT_LIMIT")
+        if not _has_meaningful_optimization(source_bytes=source_bytes, output_bytes=byte_size):
+            raise DocumentOperationError(
+                "Không có bản PDF nhỏ hơn đạt chuẩn an toàn; file gốc không thay đổi",
+                code="PDF_NOT_REDUCED",
+            )
         digest = hashlib.sha256()
         with temporary_output.open("rb") as stream:
             while True:
@@ -1014,6 +1199,148 @@ async def merge_pdf(payload: PdfMergeRequest, request: Request, account: dict = 
             _safe_unlink(source_copy)
 
 
+@router.post("/pdf-optimize")
+async def optimize_pdf(payload: PdfOptimizeRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Optimize one verified Asset Vault PDF only if it becomes smaller."""
+    _require_enabled()
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    source_asset_id = payload.source_asset_id
+
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        source_row = conn.execute(
+            """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+               FROM web_asset_files WHERE id=? AND account_id=?""",
+            (source_asset_id, account_id),
+        ).fetchone()
+        if not source_row or str(source_row[7]) != "active":
+            return _source_not_found()
+        if str(source_row[2]) != ".pdf" or str(source_row[3]) != "application/pdf":
+            raise HTTPException(status_code=422, detail="PDF Optimize chỉ nhận PDF private hợp lệ trong Asset Vault")
+        source_bytes = int(source_row[4])
+        if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+            raise HTTPException(status_code=413, detail="PDF nguồn vượt giới hạn 20 MB")
+        source_sha256 = str(source_row[5] or "")
+        source_storage_key = str(source_row[6] or "")
+        if not re.fullmatch(r"[0-9a-f]{64}", source_sha256) or not ASSET_STORAGE_KEY_PATTERN.fullmatch(source_storage_key):
+            raise HTTPException(status_code=422, detail="PDF nguồn không còn sẵn sàng")
+        request_fingerprint = _optimize_request_fingerprint(
+            source_asset_id=source_asset_id,
+            source_sha256=source_sha256,
+            source_bytes=source_bytes,
+        )
+        existing = conn.execute(
+            f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                WHERE account_id=? AND kind=? AND idempotency_key=?""",
+            (account_id, PDF_OPTIMIZE_KIND, payload.idempotency_key),
+        ).fetchone()
+        if existing:
+            if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho PDF Optimize khác")
+            return _operation_response(_operation_public(tuple(existing[:-1])))
+
+        operation_id = str(uuid.uuid4())
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_document_operations
+               (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
+                created_at, queued_at, started_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, 1, '', ?, ?, ?, ?)""",
+            (
+                operation_id, account_id, source_asset_id, str(source_row[1]) if source_row[1] else None,
+                PDF_OPTIMIZE_KIND, payload.idempotency_key, request_fingerprint, source_sha256, source_bytes,
+                now, now, now, now,
+            ),
+        )
+        _record_event(conn, operation_id=operation_id, state="queued", when=now)
+        conn.execute(
+            "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+            (now, operation_id, account_id),
+        )
+        _record_event(conn, operation_id=operation_id, state="processing", when=now)
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, ".source.pdf")
+        _copy_verified_source(source_path, source_copy, expected_bytes=source_bytes, expected_digest=source_sha256)
+        final_path, output_storage_key, output_bytes, output_digest, source_page_count = await run_in_threadpool(
+            _build_optimize_output,
+            root,
+            source_copy,
+            source_bytes=source_bytes,
+        )
+        saved_bytes = source_bytes - output_bytes
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, PDF_OPTIMIZE_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("PDF Optimize không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', source_page_count=?, output_page_count=?, storage_key=?,
+                       original_filename='toan-aas-optimized-pdf.pdf', content_type='application/pdf',
+                       byte_size=?, sha256=?, completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_page_count, source_page_count, output_storage_key, output_bytes, output_digest,
+                    now, now, operation_id, account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.pdf_optimize",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=f"source_pages={source_page_count};saved_bytes={saved_bytes};bytes={output_bytes}",
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc PDF Optimize vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "PDF_NOT_REDUCED":
+            _mark_guarded(operation_id, account_id, kind=PDF_OPTIMIZE_KIND, request=request, code=exc.code)
+        else:
+            if exc.code == "PDF_SOURCE_UNAVAILABLE":
+                _mark_source_unavailable(source_asset_id, account_id)
+            _mark_failed(operation_id, account_id, kind=PDF_OPTIMIZE_KIND, request=request, code=exc.code)
+        raise HTTPException(status_code=422, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            kind=PDF_OPTIMIZE_KIND,
+            request=request,
+            code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION",
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, kind=PDF_OPTIMIZE_KIND, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể tối ưu PDF an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+
+
 @router.get("/{operation_id}/download")
 async def download_document_operation(operation_id: str, account: dict = Depends(require_account)):
     _require_enabled()
@@ -1038,7 +1365,7 @@ async def download_document_operation(operation_id: str, account: dict = Depends
     return FileResponse(
         path=private_path,
         media_type="application/pdf",
-        filename=str(row[10] or "toan-aas-pdf-split.pdf"),
+        filename=str(row[10] or "toan-aas-document.pdf"),
         content_disposition_type="attachment",
         headers={
             "Cache-Control": "no-store, private",

@@ -32,15 +32,16 @@ Production Web App for `app.toanaas.vn`.
   of that volume (for example `/data/toanaas_webapp_project_packages`), never
   `/static`, Asset Vault or its parent. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
-- `WEBAPP_DOCUMENT_OPERATIONS_ENABLED` defaults to `false`. PDF Split and PDF
-  Merge require
+- `WEBAPP_DOCUMENT_OPERATIONS_ENABLED` defaults to `false`. PDF Split, PDF
+  Merge and PDF Optimize require
   Asset Vault **and** a separate persistent
   `WEBAPP_DOCUMENT_OPERATIONS_ROOT` (for example
   `/data/toanaas_webapp_document_operations`). It may not overlap Asset Vault,
   Project Package or `/static`; startup fails closed when the parser/runtime
   or private storage boundary is absent. See
-  [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md) and
-  [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md).
+  [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
+  [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
+  [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md).
 
 ## Authority boundary
 
@@ -83,12 +84,14 @@ private Bot bridge.
   Project snapshot. It does not create a Bot job, copy Asset Vault source
   blobs, change Xu, invoke PayOS or call a provider. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
-- `/documents/split` and `/documents/merge` are distinct Web-native PDF
-  operations: they accept only verified private Asset Vault PDFs, write
-  separately validated private attachments, and do not create a Bot job, call
-  a provider, alter Xu or touch PayOS. See
-  [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md) and
-  [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md).
+- `/documents/split`, `/documents/merge` and `/documents/compress` are
+  distinct Web-native PDF operations: they accept only verified private Asset
+  Vault PDFs, write separately validated private attachments, and do not
+  create a Bot job, call a provider, alter Xu or touch PayOS. PDF Optimize
+  only delivers when its final artifact is meaningfully smaller. See
+  [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
+  [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
+  [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially
 `PAYOS_WALLET_JOB_MAP.md`, `FEATURE_CONFIRM_CONTRACT.md`, and
