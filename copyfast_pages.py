@@ -36,6 +36,8 @@ def _title_for(path: str) -> str:
     normalized = path.rstrip("/") or "/"
     if normalized == "/":
         return "TOAN AAS"
+    if normalized == "/documents/split":
+        return "Tách PDF riêng tư"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
         return "Chi tiết kế hoạch"
     if PROJECT_PATH.fullmatch(normalized):

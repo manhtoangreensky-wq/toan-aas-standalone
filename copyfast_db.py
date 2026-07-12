@@ -70,6 +70,11 @@ def project_package_enabled() -> bool:
     return os.environ.get("WEBAPP_PROJECT_PACKAGE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def document_operations_enabled() -> bool:
+    """Whether bounded, Web-native document operations are deliberately enabled."""
+    return os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -190,6 +195,73 @@ def ensure_project_package_persistence() -> Path | None:
     if not project_package_enabled():
         return None
     return project_package_directory()
+
+
+def document_operations_directory() -> Path:
+    """Resolve the isolated private root for generated document outputs.
+
+    Document operations consume verified Asset Vault inputs but must never
+    write their generated files back into the input vault or Project Package
+    archive.  A distinct root also makes any later retention policy explicit.
+    """
+    if not document_operations_enabled():
+        raise RuntimeError("WEBAPP_DOCUMENT_OPERATIONS_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_DOCUMENT_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_document_operations"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_document_operations"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_DOCUMENT_OPERATIONS_ROOT không được nằm trong static")
+
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError("WEBAPP_DOCUMENT_OPERATIONS_ROOT phải tách riêng Asset Vault và Project Package")
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Document Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_DOCUMENT_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_DOCUMENT_OPERATIONS_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_document_operations_persistence() -> Path | None:
+    """Validate the private generated-document storage boundary when enabled."""
+    if not document_operations_enabled():
+        return None
+    # PDF Split intentionally accepts only an integrity-checked Asset Vault
+    # input. Do not expose a misleading "enabled" document runtime when that
+    # private input boundary is absent.
+    if not asset_vault_enabled():
+        raise RuntimeError("Document Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
+    return document_operations_directory()
 
 
 def session_database_path() -> str:
@@ -619,6 +691,60 @@ def ensure_copyfast_schema() -> None:
         package_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_project_package_events)").fetchall()}
         if "sequence" not in package_event_columns:
             conn.execute("ALTER TABLE web_project_package_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+        # Generated document outputs are a separate Web-native execution
+        # surface. Input stays in Asset Vault, output stays in an isolated
+        # directory/table, and neither is a Bot job, asset, payment or ledger.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                project_id TEXT,
+                kind TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                requested_page_range TEXT NOT NULL,
+                selected_start_page INTEGER,
+                selected_end_page INTEGER,
+                source_page_count INTEGER,
+                output_page_count INTEGER,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, kind, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_operation_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_document_operations(id)
+            )
+            """
+        )
+        document_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_document_operation_events)").fetchall()}
+        if "sequence" not in document_event_columns:
+            conn.execute("ALTER TABLE web_document_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -657,6 +783,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_project_package_events_package_sequence ON web_project_package_events(package_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operations_account_updated ON web_document_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operations_source_account ON web_document_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_operation_events_operation_sequence ON web_document_operation_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"

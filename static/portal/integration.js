@@ -733,6 +733,10 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function validDocumentOperationId(value) {
+    return validVaultAssetId(value);
+  }
+
   function validProjectPackageId(value) {
     return validProjectId(value);
   }
@@ -966,6 +970,7 @@
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
     const assetVaultEnabled = Boolean(status.flags && status.flags.asset_vault_enabled === true);
     const projectPackageEnabled = Boolean(status.flags && status.flags.project_package_enabled === true);
+    const documentOperationsEnabled = Boolean(status.flags && status.flags.document_operations_enabled === true);
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
     const webFeatureExecutionFeatures = safeFeatureExecutionFeatures(status.web_feature_execution_features);
@@ -1034,6 +1039,12 @@
       "asset-vault-upload": Boolean(account && me.csrf_token && assetVaultEnabled),
       "asset-vault-archive": Boolean(account && me.csrf_token && assetVaultEnabled),
       "asset-vault-refresh": Boolean(account && assetVaultEnabled),
+      // PDF Split is a Web-native, storage-isolated operation. It requires
+      // only the signed Web account, CSRF and both local storage contracts;
+      // no Telegram link, Bot bridge, provider, wallet or payment state.
+      "document-operation-view": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
+      "document-operation-pdf-split": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
+      "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1072,6 +1083,8 @@
       bridge: { available: bridgeAvailable, csrfReady: Boolean(me.csrf_token), configured: Boolean(status.bridge_configured), copyfastEnabled, featureExecutionAvailable: webFeatureExecutionAvailable, featureExecutionFeatures: webFeatureExecutionFeatures },
       assetVaultEnabled,
       projectPackageEnabled,
+      documentOperationsEnabled,
+      documentOperations: account && Array.isArray(context.documentOperations) ? context.documentOperations : [],
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
@@ -1088,8 +1101,10 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard"].includes(currentPath)) await hydrateAssetVault();
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split"].includes(currentPath)) await hydrateAssetVault();
     else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
+    if (account && assetVaultEnabled && documentOperationsEnabled && currentPath === "/documents/split") await hydrateDocumentOperations();
+    else if (account && currentPath === "/documents/split") merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded" } });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1196,6 +1211,31 @@
       // A failed private read must clear the previous account projection. The
       // UI never falls back to Bot assets or browser storage.
       merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
+      return [];
+    }
+  }
+
+  async function hydrateDocumentOperations() {
+    try {
+      const result = await api("/document-operations");
+      const items = result.data && Array.isArray(result.data.items)
+        ? result.data.items
+          .filter((item) => item && validDocumentOperationId(item.id) && String(item.kind || "") === "pdf_split")
+          .slice(0, 100)
+        : [];
+      merge({
+        documentOperations: items,
+        pageStates: { ...(base().pageStates || {}), "/documents/split": "ready" }
+      });
+      return items;
+    } catch (_) {
+      // Clear the projection on every failed signed read. A document artifact
+      // is never substituted with a Bot asset, stale account data or a
+      // browser-generated preview.
+      merge({
+        documentOperations: [],
+        pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded" }
+      });
       return [];
     }
   }
@@ -1714,6 +1754,58 @@
       if (action === "asset-vault-refresh") {
         await hydrateAssetVault();
         toast("Đã làm mới Asset Vault.");
+        return;
+      }
+      if (action === "document-operation-pdf-split") {
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const pageRange = String(fields.page_range || "").trim();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF riêng tư hợp lệ từ Asset Vault.");
+        if (!/^\d+(?:-\d+)?$/.test(pageRange)) throw new Error("Khoảng trang phải là một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5.");
+        const scope = `document-operation:pdf-split:${sourceAssetId}`;
+        const submission = acquireSubmission(scope, `${sourceAssetId}:${pageRange}`);
+        if (!submission) {
+          toast("PDF Split đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/pdf-split", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              page_range: pageRange,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_split") {
+            throw new Error("Máy chủ chưa trả metadata PDF Split hợp lệ.");
+          }
+          await hydrateDocumentOperations();
+          await hydrateAssetVault();
+          toast(result.message || "Đã tạo PDF riêng tư đã được xác minh.");
+        } catch (error) {
+          // If the server returned any envelope, the key is no longer
+          // ambiguous. Refresh owner-scoped projections so a recorded failed
+          // operation/source-unavailable state cannot be hidden by the UI.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) {
+            await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          }
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-refresh") {
+        await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+        toast("Đã làm mới Document Operations.");
         return;
       }
       if (action === "project-package-export") {

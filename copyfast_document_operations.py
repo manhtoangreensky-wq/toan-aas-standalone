@@ -1,0 +1,746 @@
+"""Bounded, private Web-native document operations.
+
+The first operation is PDF Split.  It reuses only a verified, owner-scoped
+PDF already stored in the Web Asset Vault, copies that input into an isolated
+operation staging area, and creates a separately stored output attachment.
+It never calls the Bot, a provider, wallet, PayOS, or browser-supplied path.
+"""
+
+from __future__ import annotations
+
+from datetime import datetime, timedelta, timezone
+import hashlib
+import hmac
+import json
+import os
+from pathlib import Path
+import re
+import uuid
+from typing import Any
+
+from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import FileResponse
+from pydantic import BaseModel, Field, field_validator
+
+from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
+from copyfast_db import (
+    asset_vault_directory,
+    asset_vault_enabled,
+    document_operations_directory,
+    document_operations_enabled,
+    ensure_copyfast_schema,
+    transaction,
+    utc_now,
+)
+
+
+router = APIRouter(prefix="/api/v1/document-operations", tags=["Web Document Operations"])
+
+PDF_SPLIT_KIND = "pdf_split"
+OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable"})
+IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
+UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+PAGE_RANGE_PATTERN = re.compile(r"^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$")
+ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
+OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.pdf$")
+CHUNK_BYTES = 1024 * 1024
+MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
+MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
+ORPHAN_RETENTION_SECONDS = 60 * 60
+PDF_EXCLUDED_PAGE_KEYS = ("/Annots", "/AA", "/Metadata", "/PieceInfo", "/StructParents")
+
+OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, requested_page_range,
+                      selected_start_page, selected_end_page, source_page_count, output_page_count,
+                      original_filename, content_type, byte_size, created_at, queued_at, started_at,
+                      completed_at, updated_at, failure_code, storage_key, sha256, source_sha256,
+                      source_byte_size"""
+
+
+class DocumentOperationError(Exception):
+    """A known safe failure that must never expose a parser/infrastructure trace."""
+
+    def __init__(self, message: str, *, code: str = "DOCUMENT_OPERATION_INVALID"):
+        super().__init__(message)
+        self.public_message = message
+        self.code = code
+
+
+class PdfSplitRequest(BaseModel):
+    source_asset_id: str = Field(min_length=36, max_length=36)
+    page_range: str = Field(min_length=1, max_length=32)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: str) -> str:
+        return _uuid(value, label="Asset Vault ID")
+
+    @field_validator("page_range")
+    @classmethod
+    def valid_page_range(cls, value: str) -> str:
+        compact = str(value or "").strip()
+        match = PAGE_RANGE_PATTERN.fullmatch(compact)
+        if not match:
+            raise ValueError("Khoảng trang phải là một trang hoặc dải liên tiếp, ví dụ 2 hoặc 2-5")
+        start = int(match.group(1))
+        end = int(match.group(2) or start)
+        # Keep Bot's useful reverse-range behavior, while canonicalizing the
+        # request before it enters the idempotency fingerprint/database.
+        # `5-2` and `2-5` are one user intent, not two output artifacts.
+        if start > end:
+            start, end = end, start
+        return str(start) if start == end else f"{start}-{end}"
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
+def _require_enabled() -> None:
+    if not document_operations_enabled() or not asset_vault_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="PDF Split cần Document Operations và Asset Vault private đã được bật",
+        )
+
+
+def ensure_document_operations_runtime() -> None:
+    """Fail closed at startup when an enabled PDF capability lacks its parser."""
+    if not document_operations_enabled():
+        return
+    try:
+        from pypdf import PdfReader, PdfWriter  # noqa: F401
+    except ImportError as exc:  # pragma: no cover - deployment configuration
+        raise RuntimeError("Document Operations cần dependency pypdf") from exc
+
+
+def _pdf_classes():
+    try:
+        from pypdf import PdfReader, PdfWriter
+    except ImportError as exc:  # pragma: no cover - ensured at startup when enabled
+        raise DocumentOperationError("PDF Split chưa có runtime an toàn", code="PDF_RUNTIME_UNAVAILABLE") from exc
+    return PdfReader, PdfWriter
+
+
+def _maximum_output_bytes() -> int:
+    raw = os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20").strip()
+    try:
+        megabytes = int(raw)
+    except ValueError:
+        megabytes = 20
+    return max(1, min(megabytes, 50)) * 1024 * 1024
+
+
+def _maximum_account_bytes() -> int:
+    raw = os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100").strip()
+    try:
+        megabytes = int(raw)
+    except ValueError:
+        megabytes = 100
+    return max(1, min(megabytes, 5_000)) * 1024 * 1024
+
+
+def _uuid(value: str, *, label: str) -> str:
+    candidate = str(value or "").strip()
+    if not UUID_PATTERN.fullmatch(candidate):
+        raise HTTPException(status_code=422, detail=f"{label} không hợp lệ")
+    return str(uuid.UUID(candidate))
+
+
+def _idempotency_key(value: str | None) -> str:
+    key = str(value or "").strip()
+    if not IDEMPOTENCY_PATTERN.fullmatch(key):
+        raise HTTPException(status_code=422, detail="Idempotency key không hợp lệ")
+    return key
+
+
+def _asset_path(root: Path, storage_key: str) -> Path:
+    if not ASSET_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        raise RuntimeError("Storage key Asset Vault không hợp lệ")
+    candidate = (root / storage_key).resolve()
+    try:
+        candidate.relative_to(root.resolve())
+    except ValueError as exc:
+        raise RuntimeError("Storage key Asset Vault vượt ngoài thư mục riêng") from exc
+    return candidate
+
+
+def _output_path(root: Path, storage_key: str) -> Path:
+    if not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+        raise RuntimeError("Storage key Document Operation không hợp lệ")
+    candidate = (root / storage_key).resolve()
+    try:
+        candidate.relative_to(root.resolve())
+    except ValueError as exc:
+        raise RuntimeError("Storage key Document Operation vượt ngoài thư mục riêng") from exc
+    return candidate
+
+
+def _staging_path(root: Path, suffix: str) -> Path:
+    staging = _private_operation_directory(root, ".staging")
+    return staging / f"{uuid.uuid4().hex}{suffix}"
+
+
+def _private_operation_directory(root: Path, name: str) -> Path:
+    """Create a real child directory without following a later symlink swap."""
+    if name not in {".staging", "outputs"}:
+        raise RuntimeError("Thư mục Document Operation không hợp lệ")
+    private_root = root.resolve()
+    candidate = private_root / name
+    if candidate.exists() and candidate.is_symlink():
+        raise RuntimeError("Thư mục Document Operation không được là symbolic link")
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir() or candidate.is_symlink():
+        raise RuntimeError("Thư mục Document Operation không hợp lệ")
+    resolved = candidate.resolve()
+    try:
+        resolved.relative_to(private_root)
+    except ValueError as exc:
+        raise RuntimeError("Thư mục Document Operation vượt ngoài storage riêng") from exc
+    return resolved
+
+
+def _safe_unlink(path: Path | None) -> None:
+    if path is None:
+        return
+    try:
+        if path.is_file() and not path.is_symlink():
+            path.unlink()
+    except OSError:
+        pass
+
+
+def _verify_file(path: Path, *, expected_bytes: int, expected_digest: str) -> bool:
+    try:
+        if not path.is_file() or path.is_symlink() or path.stat().st_size != expected_bytes:
+            return False
+        digest = hashlib.sha256()
+        with path.open("rb") as stream:
+            while True:
+                chunk = stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        return hmac.compare_digest(digest.hexdigest(), expected_digest)
+    except OSError:
+        return False
+
+
+def _copy_verified_source(source: Path, destination: Path, *, expected_bytes: int, expected_digest: str) -> None:
+    """Copy a verified Asset Vault blob so parser input cannot race its source."""
+    total = 0
+    digest = hashlib.sha256()
+    prefix = b""
+    try:
+        if not source.is_file() or source.is_symlink() or source.stat().st_size != expected_bytes:
+            raise DocumentOperationError("PDF nguồn không còn sẵn sàng", code="PDF_SOURCE_UNAVAILABLE")
+        with source.open("rb") as read_stream, destination.open("xb") as write_stream:
+            while True:
+                chunk = read_stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_INPUT_BYTES:
+                    raise DocumentOperationError("PDF nguồn vượt giới hạn 20 MB", code="PDF_INPUT_TOO_LARGE")
+                if len(prefix) < 8:
+                    prefix += chunk[: 8 - len(prefix)]
+                digest.update(chunk)
+                write_stream.write(chunk)
+    except OSError as exc:
+        raise DocumentOperationError("Không thể đọc PDF nguồn riêng tư", code="PDF_SOURCE_UNAVAILABLE") from exc
+    if total != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest) or not prefix.startswith(b"%PDF-"):
+        raise DocumentOperationError("PDF nguồn không vượt qua kiểm tra integrity", code="PDF_SOURCE_UNAVAILABLE")
+
+
+def _selected_pages(page_range: str, page_count: int) -> tuple[list[int], int, int]:
+    if page_count < 1 or page_count > MAX_PAGES:
+        raise DocumentOperationError(
+            f"PDF cần từ 1 đến {MAX_PAGES} trang để tách an toàn",
+            code="PDF_PAGE_LIMIT",
+        )
+    match = PAGE_RANGE_PATTERN.fullmatch(str(page_range or "").strip())
+    if not match:
+        raise DocumentOperationError("Khoảng trang không hợp lệ", code="PDF_PAGE_RANGE")
+    start = int(match.group(1))
+    end = int(match.group(2) or start)
+    if start > end:
+        start, end = end, start
+    if start < 1 or end > page_count:
+        raise DocumentOperationError(f"Trang cần nằm trong phạm vi 1-{page_count}", code="PDF_PAGE_RANGE")
+    selected = list(range(start - 1, end))
+    if not selected or len(selected) > MAX_PAGES:
+        raise DocumentOperationError("Số trang cần tách vượt giới hạn an toàn", code="PDF_PAGE_LIMIT")
+    return selected, start, end
+
+
+def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    state = str(row[4])
+    byte_size = int(row[12]) if row[12] is not None else None
+    return {
+        "id": str(row[0]),
+        "source_asset_id": str(row[1]),
+        "project_id": str(row[2]) if row[2] else None,
+        "kind": str(row[3]),
+        "state": state,
+        "requested_page_range": str(row[5]),
+        "selected_start_page": int(row[6]) if row[6] is not None else None,
+        "selected_end_page": int(row[7]) if row[7] is not None else None,
+        "source_page_count": int(row[8]) if row[8] is not None else None,
+        "output_page_count": int(row[9]) if row[9] is not None else None,
+        "original_filename": str(row[10]) if row[10] else None,
+        "content_type": str(row[11]) if row[11] else None,
+        "byte_size": byte_size,
+        "created_at": str(row[13]),
+        "queued_at": str(row[14]),
+        "started_at": str(row[15]) if row[15] else None,
+        "completed_at": str(row[16]) if row[16] else None,
+        "updated_at": str(row[17]),
+        "download_ready": state == "completed" and bool(row[19]) and byte_size is not None,
+    }
+
+
+def _operation_not_found() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Không tìm thấy thao tác tài liệu thuộc Web account hiện tại.",
+        status_name="guarded",
+        error_code="WEB_DOCUMENT_OPERATION_NOT_FOUND",
+    )
+
+
+def _source_not_found() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Không tìm thấy PDF private đang hoạt động thuộc Web account hiện tại.",
+        status_name="guarded",
+        error_code="WEB_DOCUMENT_SOURCE_NOT_FOUND",
+    )
+
+
+def _operation_unavailable() -> dict[str, Any]:
+    return envelope(
+        False,
+        "PDF đã tách không còn sẵn sàng để tải. Hãy chạy thao tác mới hoặc liên hệ hỗ trợ.",
+        status_name="guarded",
+        error_code="WEB_DOCUMENT_OPERATION_UNAVAILABLE",
+    )
+
+
+def _record_event(conn, *, operation_id: str, state: str, when: str | None = None) -> None:
+    if state not in OPERATION_STATES:
+        raise RuntimeError("Trạng thái Document Operation không hợp lệ")
+    row = conn.execute(
+        "SELECT COALESCE(MAX(sequence), 0) + 1 FROM web_document_operation_events WHERE operation_id=?",
+        (operation_id,),
+    ).fetchone()
+    sequence = int(row[0] or 1) if row else 1
+    conn.execute(
+        """INSERT INTO web_document_operation_events (id, operation_id, state, sequence, created_at)
+           VALUES (?, ?, ?, ?, ?)""",
+        (str(uuid.uuid4()), operation_id, state, sequence, when or utc_now()),
+    )
+
+
+def _request_fingerprint(*, source_asset_id: str, page_range: str, source_sha256: str, source_bytes: int) -> str:
+    payload = json.dumps(
+        {
+            "kind": PDF_SPLIT_KIND,
+            "source_asset_id": source_asset_id,
+            "page_range": page_range,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
+    row = conn.execute(
+        "SELECT COALESCE(SUM(byte_size), 0) FROM web_document_operations WHERE account_id=? AND byte_size IS NOT NULL",
+        (account_id,),
+    ).fetchone()
+    used = int(row[0] or 0) if row else 0
+    return used + additional_bytes <= _maximum_account_bytes()
+
+
+def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
+    state = str(operation.get("state") or "failed")
+    if state == "completed":
+        return envelope(True, "Đã tách và xác minh PDF riêng tư.", data={"operation": operation}, status_name="completed")
+    if state in {"queued", "processing"}:
+        return envelope(True, "PDF Split đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
+    return envelope(False, "PDF Split chưa thể hoàn tất an toàn.", data={"operation": operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
+
+
+def _mark_failed(operation_id: str, account_id: str, *, request: Request, code: str) -> None:
+    ensure_copyfast_schema()
+    now = utc_now()
+    with transaction() as conn:
+        row = conn.execute(
+            "SELECT state FROM web_document_operations WHERE id=? AND account_id=?",
+            (operation_id, account_id),
+        ).fetchone()
+        if not row or str(row[0]) in {"completed", "unavailable"}:
+            return
+        conn.execute(
+            """UPDATE web_document_operations SET state='failed', failure_code=?, updated_at=?
+               WHERE id=? AND account_id=?""",
+            (code, now, operation_id, account_id),
+        )
+        _record_event(conn, operation_id=operation_id, state="failed", when=now)
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=None,
+            action="web.document_operation.pdf_split_failed",
+            request_id=_request_id(request),
+            target=operation_id,
+            outcome="failed",
+            detail=f"code={code}",
+        )
+
+
+def _mark_output_unavailable(operation_id: str, account_id: str) -> None:
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        updated = conn.execute(
+            """UPDATE web_document_operations SET state='unavailable', updated_at=?
+               WHERE id=? AND account_id=? AND state='completed'""",
+            (utc_now(), operation_id, account_id),
+        )
+        if updated.rowcount:
+            _record_event(conn, operation_id=operation_id, state="unavailable")
+
+
+def _mark_source_unavailable(asset_id: str, account_id: str) -> None:
+    with transaction() as conn:
+        conn.execute(
+            """UPDATE web_asset_files SET state='unavailable', updated_at=?
+               WHERE id=? AND account_id=? AND state='active'""",
+            (utc_now(), asset_id, account_id),
+        )
+
+
+def _build_split_output(root: Path, source_copy: Path, *, page_range: str) -> tuple[Path, str, int, str, int, int, int]:
+    """Create a stripped, verified PDF output from a bounded copied input."""
+    temporary_output = _staging_path(root, ".pdf")
+    final_path: Path | None = None
+    try:
+        PdfReader, PdfWriter = _pdf_classes()
+        try:
+            with source_copy.open("rb") as source_stream:
+                reader = PdfReader(source_stream, strict=True)
+                if reader.is_encrypted:
+                    raise DocumentOperationError("PDF được mã hóa chưa thể tách an toàn", code="PDF_ENCRYPTED")
+                source_page_count = len(reader.pages)
+                indices, start_page, end_page = _selected_pages(page_range, source_page_count)
+                writer = PdfWriter()
+                # Start with a fresh writer, omit annotations/automatic actions
+                # on every copied page, and write only neutral metadata. This
+                # prevents interactive input PDF behavior from becoming part
+                # of the delivered attachment.
+                for index in indices:
+                    writer.add_page(reader.pages[index], excluded_keys=PDF_EXCLUDED_PAGE_KEYS)
+                writer.add_metadata({"/Title": "TOAN AAS PDF Split", "/Producer": "TOAN AAS Web PDF Split"})
+                with temporary_output.open("xb") as output_stream:
+                    writer.write(output_stream)
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF không hợp lệ hoặc không thể tách an toàn", code="PDF_PARSE_FAILED") from exc
+
+        byte_size = temporary_output.stat().st_size
+        if byte_size < 1 or byte_size > _maximum_output_bytes():
+            raise DocumentOperationError("PDF đầu ra vượt giới hạn artifact an toàn", code="PDF_OUTPUT_LIMIT")
+        digest = hashlib.sha256()
+        with temporary_output.open("rb") as stream:
+            while True:
+                chunk = stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        output_digest = digest.hexdigest()
+        try:
+            with temporary_output.open("rb") as verify_stream:
+                verified = PdfReader(verify_stream, strict=True)
+                if verified.is_encrypted or len(verified.pages) != len(indices):
+                    raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="PDF_OUTPUT_INVALID")
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="PDF_OUTPUT_INVALID") from exc
+
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}.pdf"
+        final_path = _output_path(root, storage_key)
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn PDF đầu ra không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra integrity", code="PDF_OUTPUT_INVALID")
+        return final_path, storage_key, byte_size, output_digest, source_page_count, start_page, end_page
+    except Exception:
+        _safe_unlink(final_path)
+        raise
+    finally:
+        _safe_unlink(temporary_output)
+
+
+def reconcile_document_operation_storage() -> None:
+    """Remove only old unreferenced staging/generated outputs after interruption."""
+    if not document_operations_enabled():
+        return
+    ensure_copyfast_schema()
+    root = document_operations_directory()
+    staging = _private_operation_directory(root, ".staging")
+    outputs = _private_operation_directory(root, "outputs")
+    cutoff_at = (datetime.now(timezone.utc) - timedelta(seconds=ORPHAN_RETENTION_SECONDS)).isoformat(timespec="seconds")
+    now = utc_now()
+    with transaction() as conn:
+        referenced = {str(row[0]) for row in conn.execute("SELECT storage_key FROM web_document_operations WHERE storage_key IS NOT NULL").fetchall()}
+        # An interrupted synchronous parser must never remain replayable as
+        # `queued`/`processing` forever. Wait one retention window so a
+        # short application restart cannot race an active worker, then record
+        # an explicit failed lifecycle without inventing an output.
+        interrupted = conn.execute(
+            """SELECT id FROM web_document_operations
+               WHERE state IN ('queued', 'processing') AND updated_at < ?""",
+            (cutoff_at,),
+        ).fetchall()
+        for row in interrupted:
+            operation_id = str(row[0])
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='failed', failure_code='INTERRUPTED', updated_at=?
+                   WHERE id=? AND state IN ('queued', 'processing')""",
+                (now, operation_id),
+            )
+            _record_event(conn, operation_id=operation_id, state="failed", when=now)
+    cutoff = datetime.now(timezone.utc).timestamp() - ORPHAN_RETENTION_SECONDS
+    for directory, check_reference in ((staging, False), (outputs, True)):
+        try:
+            candidates = list(directory.iterdir())
+        except OSError:
+            continue
+        for candidate in candidates:
+            try:
+                if not candidate.is_file() or candidate.is_symlink() or candidate.stat().st_mtime > cutoff:
+                    continue
+                relative = candidate.resolve().relative_to(root.resolve()).as_posix()
+            except (OSError, ValueError):
+                continue
+            if check_reference and relative in referenced:
+                continue
+            _safe_unlink(candidate)
+
+
+@router.get("")
+async def list_document_operations(limit: int = 50, account: dict = Depends(require_account)):
+    _require_enabled()
+    bounded_limit = max(1, min(int(limit), 100))
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            f"""SELECT {OPERATION_SELECT} FROM web_document_operations
+                WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
+            (str(account["id"]), bounded_limit),
+        ).fetchall()
+    return envelope(True, "Đã tải thao tác tài liệu Web.", data={"items": [_operation_public(tuple(row)) for row in rows]})
+
+
+@router.post("/pdf-split")
+async def split_pdf(payload: PdfSplitRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Split one verified private Asset Vault PDF into a private sanitized PDF."""
+    _require_enabled()
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    source_asset_id = payload.source_asset_id
+
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        source_row = conn.execute(
+            """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+               FROM web_asset_files WHERE id=? AND account_id=?""",
+            (source_asset_id, account_id),
+        ).fetchone()
+        if not source_row or str(source_row[7]) != "active":
+            return _source_not_found()
+        if str(source_row[2]) != ".pdf" or str(source_row[3]) != "application/pdf":
+            raise HTTPException(status_code=422, detail="PDF Split chỉ nhận PDF private hợp lệ trong Asset Vault")
+        source_bytes = int(source_row[4])
+        if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+            raise HTTPException(status_code=413, detail="PDF nguồn vượt giới hạn 20 MB")
+        source_sha256 = str(source_row[5])
+        request_fingerprint = _request_fingerprint(
+            source_asset_id=source_asset_id,
+            page_range=payload.page_range,
+            source_sha256=source_sha256,
+            source_bytes=source_bytes,
+        )
+        existing = conn.execute(
+            f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                WHERE account_id=? AND kind=? AND idempotency_key=?""",
+            (account_id, PDF_SPLIT_KIND, payload.idempotency_key),
+        ).fetchone()
+        if existing:
+            if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho PDF Split khác")
+            return _operation_response(_operation_public(tuple(existing[:-1])))
+
+        operation_id = str(uuid.uuid4())
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_document_operations
+               (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                request_fingerprint, source_sha256, source_byte_size, requested_page_range,
+                created_at, queued_at, started_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                operation_id, account_id, source_asset_id, str(source_row[1]) if source_row[1] else None,
+                PDF_SPLIT_KIND, payload.idempotency_key, request_fingerprint, source_sha256, source_bytes,
+                payload.page_range, now, now, now, now,
+            ),
+        )
+        _record_event(conn, operation_id=operation_id, state="queued", when=now)
+        conn.execute(
+            "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+            (now, operation_id, account_id),
+        )
+        _record_event(conn, operation_id=operation_id, state="processing", when=now)
+        source_storage_key = str(source_row[6])
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, ".source.pdf")
+        _copy_verified_source(source_path, source_copy, expected_bytes=source_bytes, expected_digest=source_sha256)
+        final_path, output_storage_key, output_bytes, output_digest, source_page_count, start_page, end_page = _build_split_output(
+            root,
+            source_copy,
+            page_range=payload.page_range,
+        )
+        output_pages = end_page - start_page + 1
+        filename = f"toan-aas-pdf-pages-{start_page}-{end_page}.pdf"
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, PDF_SPLIT_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("PDF Split không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', selected_start_page=?, selected_end_page=?, source_page_count=?,
+                       output_page_count=?, storage_key=?, original_filename=?, content_type='application/pdf',
+                       byte_size=?, sha256=?, completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    start_page, end_page, source_page_count, output_pages, output_storage_key, filename,
+                    output_bytes, output_digest, now, now, operation_id, account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.pdf_split",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=f"pages={start_page}-{end_page};source_pages={source_page_count};bytes={output_bytes}",
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc PDF Split vừa hoàn tất")
+        final_path = None  # Output now has committed metadata ownership.
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "PDF_SOURCE_UNAVAILABLE":
+            _mark_source_unavailable(source_asset_id, account_id)
+        _mark_failed(operation_id, account_id, request=request, code=exc.code)
+        raise HTTPException(status_code=422, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, request=request, code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION")
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể tách PDF an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+
+
+@router.get("/{operation_id}/download")
+async def download_document_operation(operation_id: str, account: dict = Depends(require_account)):
+    _require_enabled()
+    operation_id = _uuid(operation_id, label="Mã thao tác tài liệu")
+    account_id = str(account["id"])
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+            (operation_id, account_id),
+        ).fetchone()
+    if not row or str(row[4]) != "completed":
+        return _operation_not_found()
+    try:
+        private_path = _output_path(document_operations_directory(), str(row[19] or ""))
+    except RuntimeError:
+        _mark_output_unavailable(operation_id, account_id)
+        return _operation_unavailable()
+    if not _verify_file(private_path, expected_bytes=int(row[12] or 0), expected_digest=str(row[20] or "")):
+        _mark_output_unavailable(operation_id, account_id)
+        return _operation_unavailable()
+    return FileResponse(
+        path=private_path,
+        media_type="application/pdf",
+        filename=str(row[10] or "toan-aas-pdf-split.pdf"),
+        content_disposition_type="attachment",
+        headers={
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+        },
+    )
+
+
+@router.get("/{operation_id}")
+async def get_document_operation(operation_id: str, account: dict = Depends(require_account)):
+    _require_enabled()
+    operation_id = _uuid(operation_id, label="Mã thao tác tài liệu")
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = conn.execute(
+            f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+            (operation_id, str(account["id"])),
+        ).fetchone()
+        events = conn.execute(
+            """SELECT state, created_at FROM web_document_operation_events
+               WHERE operation_id=? ORDER BY sequence ASC, id ASC LIMIT 20""",
+            (operation_id,),
+        ).fetchall()
+    if not row:
+        return _operation_not_found()
+    return envelope(
+        True,
+        "Đã tải trạng thái thao tác tài liệu.",
+        data={
+            "operation": _operation_public(tuple(row)),
+            "events": [{"state": str(event[0]), "created_at": str(event[1])} for event in events],
+        },
+        status_name=str(row[4]) if str(row[4]) in OPERATION_STATES else "guarded",
+    )
