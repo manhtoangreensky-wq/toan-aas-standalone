@@ -1536,6 +1536,148 @@
     );
   }
 
+  // Subtitle & Transcript Workspace is a separate text-authoring boundary.
+  // Unlike a media pipeline it accepts no upload/source/provider/job/file
+  // reference.  Cue text may legitimately contain an uttered/displayed URL;
+  // it stays escaped plain text in the portal and is never a clickable or
+  // fetchable source. Project metadata and editor notes remain stricter.
+  const SUBTITLE_STUDIO_FORMATS = new Set(["srt", "vtt"]);
+  const SUBTITLE_STUDIO_INTENTS = new Set(["subtitle", "translation", "asr_review", "dubbing_direction"]);
+  const SUBTITLE_STUDIO_PROJECT_STATES = new Set(["draft", "review", "approved", "archived"]);
+  function validSubtitleStudioProjectId(value) { return validProjectId(value); }
+  function validSubtitleStudioCueId(value) { return validProjectId(value); }
+  function validSubtitleStudioRevision(value) { return validMemoryRevision(value); }
+  function subtitleProjectIdFromPath(path) {
+    const match = /^\/subtitle-studio\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validSubtitleStudioProjectId(id) ? id : "";
+  }
+  function isNativeSubtitleStudioPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/subtitle-studio" || normalized === "/subtitle-studio/new" || Boolean(subtitleProjectIdFromPath(normalized));
+  }
+  function subtitleStudioSecretSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Subtitle Studio không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Subtitle Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Subtitle Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    return "";
+  }
+  function subtitleStudioMetadataSafetyError(...values) {
+    const secret = subtitleStudioSecretSafetyError(...values);
+    if (secret) return secret;
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "Metadata Subtitle Studio không nhận URL hoặc scheme tệp.";
+    if (/\b(?:(?:provider|asr|tts|dub(?:bing)?|translation|job|media|file)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Metadata Subtitle Studio không nhận provider, engine, Bot, job hoặc file handle.";
+    return "";
+  }
+  function subtitleStudioLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function subtitleStudioBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function subtitleStudioTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = subtitleStudioLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi transcript project.");
+    return result;
+  }
+  function subtitleStudioReference(value, label) {
+    const id = String(value || "").trim();
+    if (id && !validSubtitleStudioProjectId(id)) throw new Error(label + " không hợp lệ.");
+    return id;
+  }
+  function subtitleProjectPayload(fields) {
+    const title = subtitleStudioLine(fields.title, "Tên transcript project", 2, 180, false);
+    const sourceLanguage = subtitleStudioLine(fields.source_language || "vi", "Ngôn ngữ nguồn", 1, 100, false);
+    const targetLanguage = subtitleStudioLine(fields.target_language || "en", "Ngôn ngữ bản nháp", 1, 100, false);
+    const intent = subtitleStudioLine(fields.intent || "subtitle", "Mục đích workspace", 1, 32, false).toLowerCase();
+    const captionFormat = subtitleStudioLine(fields.caption_format || "srt", "Chuẩn preview", 1, 16, false).toLowerCase();
+    const context = subtitleStudioBody(fields.context, "Review context", 5000, true);
+    const tags = subtitleStudioTags(fields.tags);
+    if (!SUBTITLE_STUDIO_INTENTS.has(intent)) throw new Error("Mục đích Subtitle Studio không hợp lệ.");
+    if (!SUBTITLE_STUDIO_FORMATS.has(captionFormat)) throw new Error("Chuẩn preview subtitle không hợp lệ.");
+    const safety = subtitleStudioMetadataSafetyError(title, sourceLanguage, targetLanguage, intent, captionFormat, context, ...tags);
+    if (safety) throw new Error(safety);
+    return {
+      title, source_language: sourceLanguage, target_language: targetLanguage, intent, caption_format: captionFormat,
+      context, tags, project_id: subtitleStudioReference(fields.project_id, "Project liên kết") || null
+    };
+  }
+  function subtitleCuePayload(fields) {
+    const startMs = Number(fields.start_ms);
+    const endMs = Number(fields.end_ms);
+    const speaker = subtitleStudioLine(fields.speaker, "Người nói", 0, 120, true);
+    const sourceText = subtitleStudioBody(fields.source_text, "Caption nguồn", 5000, false);
+    const translatedText = subtitleStudioBody(fields.translated_text, "Bản nháp ngôn ngữ", 5000, true);
+    const notes = subtitleStudioBody(fields.notes, "Ghi chú biên tập", 2000, true);
+    if (!Number.isInteger(startMs) || startMs < 0 || startMs > 86399999 || !Number.isInteger(endMs) || endMs < 1 || endMs > 86400000 || endMs <= startMs) {
+      throw new Error("Timing cue cần là mili-giây hợp lệ, kết thúc phải sau bắt đầu.");
+    }
+    // Source/translated text can contain URLs which are merely words shown in
+    // a caption.  They are still checked for secrets/payment markers, then
+    // rendered with `safeText`; only speaker/notes get metadata URL guards.
+    const cueSafety = subtitleStudioSecretSafetyError(sourceText, translatedText);
+    if (cueSafety) throw new Error(cueSafety);
+    const metadataSafety = subtitleStudioMetadataSafetyError(speaker, notes);
+    if (metadataSafety) throw new Error(metadataSafety);
+    return { start_ms: startMs, end_ms: endMs, speaker, source_text: sourceText, translated_text: translatedText, notes };
+  }
+  function subtitleTextImportPayload(fields) {
+    const format = subtitleStudioLine(fields.format || "srt", "Chuẩn văn bản", 1, 16, false).toLowerCase();
+    const text = subtitleStudioBody(fields.text, "Nội dung SRT/VTT", 60000, false);
+    if (!SUBTITLE_STUDIO_FORMATS.has(format)) throw new Error("Chuẩn văn bản subtitle không hợp lệ.");
+    // Text import can include caption URLs as literals, but it never receives
+    // files, paths, provider/job handles or a browser-selected upload.
+    const safety = subtitleStudioSecretSafetyError(text);
+    if (safety) throw new Error(safety);
+    return { format, content: text };
+  }
+  async function copySubtitleStudioText(value) {
+    const text = String(value || "");
+    if (!text || text.length > 100000) throw new Error("Máy chủ chưa trả văn bản subtitle hợp lệ để sao chép.");
+    if (navigator.clipboard && window.isSecureContext) {
+      await navigator.clipboard.writeText(text);
+      return;
+    }
+    const field = document.createElement("textarea");
+    field.value = text;
+    field.setAttribute("readonly", "");
+    field.style.position = "fixed";
+    field.style.opacity = "0";
+    document.body.appendChild(field);
+    field.select();
+    const copied = document.execCommand("copy");
+    field.remove();
+    if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép văn bản subtitle.");
+  }
+  function subtitleStudioBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : source;
+    return Boolean(
+      boundary.execution === "authoring_only"
+      && boundary.provider_called === false
+      && boundary.output_created === false
+      && boundary.asr_called === false
+      && boundary.tts_called === false
+      && boundary.dubbing_called === false
+      && boundary.translation_called === false
+    );
+  }
+
   async function downloadPromptLibraryExport() {
     const context = base();
     const csrfToken = context.session && context.session.csrfToken ? String(context.session.csrfToken) : "";
@@ -1836,6 +1978,10 @@
     // Its flag permits planning/review records only; it never means media
     // execution, rendering, output or delivery is available.
     const videoStudioEnabled = Boolean(status.flags && status.flags.video_studio_enabled === true);
+    // Subtitle Studio is a signed-account, text-only authoring workspace. Its
+    // feature flag never represents ASR, translation, TTS, dubbing, upload,
+    // file export, provider, job, wallet, Xu or payment availability.
+    const subtitleStudioEnabled = Boolean(status.flags && status.flags.subtitle_studio_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -2022,6 +2168,20 @@
       "video-scene-restore": Boolean(account && me.csrf_token && videoStudioEnabled),
       "video-scene-restore-version": Boolean(account && me.csrf_token && videoStudioEnabled),
       "video-scene-reorder": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "subtitle-studio-view": Boolean(account && subtitleStudioEnabled),
+      "subtitle-studio-refresh": Boolean(account && subtitleStudioEnabled),
+      "subtitle-project-create": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-project-update": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-project-lifecycle": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-project-restore-version": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-create": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-import": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-update": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-archive": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-restore": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-restore-version": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-cue-reorder": Boolean(account && me.csrf_token && subtitleStudioEnabled),
+      "subtitle-text-export": Boolean(account && subtitleStudioEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -2084,6 +2244,7 @@
       contentStudioEnabled,
       voiceStudioEnabled,
       videoStudioEnabled,
+      subtitleStudioEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -2150,6 +2311,16 @@
       videoStudioReferences: {},
       videoStudioEvents: [],
       videoStudioReadState: account && videoStudioEnabled ? "loading" : "guarded",
+      // Transcript/cue projections are owner-scoped.  Always clear them
+      // during hydration so a failed signed request cannot expose a prior
+      // account's caption text, language draft or version metadata.
+      subtitleStudioSummary: {},
+      subtitleProjects: [],
+      subtitleProjectDetail: {},
+      subtitleProjectEstimate: {},
+      subtitleStudioReferences: {},
+      subtitleStudioEvents: [],
+      subtitleStudioReadState: account && subtitleStudioEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -2195,6 +2366,8 @@
         "/voice-studio/new": account && voiceStudioEnabled ? "processing" : "guarded",
         "/video-studio": account && videoStudioEnabled ? "processing" : "guarded",
         "/video-studio/new": account && videoStudioEnabled ? "processing" : "guarded",
+        "/subtitle-studio": account && subtitleStudioEnabled ? "processing" : "guarded",
+        "/subtitle-studio/new": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -2206,7 +2379,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath) || isNativeSubtitleStudioPath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -2283,6 +2456,16 @@
       merge({
         videoStudioSummary: {}, videoPlans: [], videoPlanDetail: {}, videoPlanEstimate: {}, videoStudioReferences: {}, videoStudioEvents: [],
         videoStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
+    if (account && subtitleStudioEnabled && ["/subtitle-studio", "/subtitle-studio/new"].includes(currentPath)) await hydrateSubtitleStudio();
+    else if (account && subtitleStudioEnabled && subtitleProjectIdFromPath(currentPath)) await hydrateSubtitleProject(subtitleProjectIdFromPath(currentPath));
+    else if (isNativeSubtitleStudioPath(currentPath)) {
+      // Never fall back to legacy subtitle/translate/dubbing/ASR state.  This
+      // surface owns only signed Web authoring metadata and fails closed.
+      merge({
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleStudioEvents: [],
+        subtitleStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && supportDeskEnabled) {
@@ -2911,6 +3094,85 @@
     }
   }
 
+  async function hydrateSubtitleStudio() {
+    // Use only the signed Web-owned Subtitle Studio API.  It must never read
+    // broad legacy `/subtitle`, `/translate`, `/dubbing` or `/asr` state.
+    try {
+      const [summaryResult, projectsResult, eventsResult, referencesResult] = await Promise.all([
+        api("/subtitle-studio/summary"),
+        api("/subtitle-studio/projects"),
+        api("/subtitle-studio/events?limit=50"),
+        api("/subtitle-studio/references")
+      ]);
+      const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
+      if (!subtitleStudioBoundaryIsSafe(summary)) throw new Error("Boundary Subtitle Studio chưa được máy chủ xác nhận.");
+      const projects = projectsResult.data && Array.isArray(projectsResult.data.items)
+        ? projectsResult.data.items.filter((item) => item && validSubtitleStudioProjectId(item.id) && validSubtitleStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validSubtitleStudioProjectId(item.project_id) && validSubtitleStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        subtitleStudioSummary: summary, subtitleProjects: projects, subtitleStudioEvents: events,
+        subtitleStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/subtitle-studio": "ready", "/subtitle-studio/new": "ready" }
+      });
+      return { projects, events };
+    } catch (_) {
+      merge({
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleStudioEvents: [],
+        subtitleStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), "/subtitle-studio": "guarded", "/subtitle-studio/new": "guarded" }
+      });
+      return { projects: [], events: [] };
+    }
+  }
+
+  async function hydrateSubtitleProject(projectId) {
+    if (!validSubtitleStudioProjectId(projectId)) throw new Error("Mã transcript project không hợp lệ.");
+    const route = "/subtitle-studio/" + encodeURIComponent(String(projectId));
+    try {
+      const [detailResult, referencesResult] = await Promise.all([
+        api("/subtitle-studio/projects/" + encodeURIComponent(String(projectId))),
+        api("/subtitle-studio/references")
+      ]);
+      const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const project = data.project && typeof data.project === "object" ? data.project : null;
+      if (!subtitleStudioBoundaryIsSafe(data) || !project || !validSubtitleStudioProjectId(project.id) || String(project.id) !== String(projectId) || !validSubtitleStudioRevision(project.revision)) {
+        throw new Error("Transcript project không còn khả dụng cho Web account hiện tại.");
+      }
+      const archived = String(project.state || "") === "archived";
+      let estimate = {};
+      if (!archived) {
+        const estimateResult = await api("/subtitle-studio/projects/" + encodeURIComponent(String(projectId)) + "/estimate");
+        estimate = estimateResult.data && typeof estimateResult.data === "object" ? estimateResult.data : {};
+        if (!subtitleStudioBoundaryIsSafe(estimate)) throw new Error("Máy chủ chưa xác nhận timeline estimate an toàn.");
+      }
+      const cues = Array.isArray(data.cues)
+        ? data.cues.filter((item) => item && validSubtitleStudioCueId(item.id) && String(item.project_id || "") === String(projectId) && validSubtitleStudioRevision(item.revision)).slice(0, 250)
+        : [];
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validSubtitleStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = Array.isArray(data.events)
+        ? data.events.filter((item) => item && typeof item === "object" && validSubtitleStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        subtitleProjectDetail: { project, cues, versions, events, references: data.references && typeof data.references === "object" ? data.references : {}, estimate },
+        subtitleProjectEstimate: estimate,
+        subtitleStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        subtitleStudioReadState: "ready", pageStates: { ...(base().pageStates || {}), [route]: archived ? "archived" : "ready" }
+      });
+      return { project, cues, versions, estimate };
+    } catch (_) {
+      merge({
+        subtitleStudioSummary: {}, subtitleProjects: [], subtitleProjectDetail: {}, subtitleProjectEstimate: {}, subtitleStudioReferences: {}, subtitleStudioEvents: [],
+        subtitleStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
   async function hydrateSupportDesk(filterValue) {
     // Support Desk is a signed-account Web projection, deliberately separate
     // from `hydrateCanonicalData` and the legacy `/support/tickets` bridge.
@@ -3306,7 +3568,7 @@
     // Native authoring workspaces have no generic feature/bridge projection.
     // Return before any canonical endpoint can overwrite their owner-scoped
     // state, including the similarly-prefixed `/voice-studio` route.
-    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path)) return;
+    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
@@ -3729,6 +3991,36 @@
     const submission = acquireSubmission(scope, JSON.stringify(payload));
     if (!submission) {
       toast("Thao tác Video Production Studio đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
+  async function subtitleStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // Writes stay within the same CSRF/idempotency discipline as every other
+    // native workspace.  The browser never infers a successful ASR/translate/
+    // TTS/dub/output operation from a local mutation.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Subtitle Studio đang chờ máy chủ xác nhận.", "error");
       return null;
     }
     let acknowledged = false;
@@ -4512,6 +4804,222 @@
             if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự scene an toàn.");
             await hydrateVideoPlan(planId);
             toast(result.message || "Đã cập nhật thứ tự scene.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-studio-refresh") {
+        const projectId = subtitleProjectIdFromPath(route);
+        if (projectId) await hydrateSubtitleProject(projectId);
+        else await hydrateSubtitleStudio();
+        toast("Đã làm mới Subtitle & Transcript Workspace của Web account hiện tại.");
+        return;
+      }
+      if (action === "subtitle-project-create") {
+        const payload = subtitleProjectPayload(fields);
+        await subtitleStudioMutation({
+          action, route, scope: "subtitle-studio:project:create", path: "/subtitle-studio/projects", payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.project && typeof data.project === "object" ? data.project : null;
+            const projectId = receipt && validSubtitleStudioProjectId(receipt.id) ? String(receipt.id) : "";
+            if (!subtitleStudioBoundaryIsSafe(data) || !projectId || !validSubtitleStudioRevision(receipt.revision)) {
+              throw new Error("Máy chủ chưa trả receipt transcript project Web-native hợp lệ.");
+            }
+            await hydrateSubtitleStudio();
+            toast(result.message || "Đã tạo transcript project riêng tư.");
+            window.location.assign(`/subtitle-studio/${encodeURIComponent(projectId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-project-update") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleProjectRevision);
+        if (!validSubtitleStudioProjectId(projectId) || !expectedRevision) throw new Error("Mã hoặc revision transcript project không hợp lệ.");
+        const payload = { ...subtitleProjectPayload(fields), expected_revision: expectedRevision };
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:update`, method: "PATCH",
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}`, payload,
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision transcript project an toàn.");
+            await hydrateSubtitleStudio();
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã lưu revision transcript project mới.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-project-state") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleProjectRevision);
+        const state = String(detail.subtitleProjectState || "").trim().toLowerCase();
+        if (!validSubtitleStudioProjectId(projectId) || !expectedRevision || !SUBTITLE_STUDIO_PROJECT_STATES.has(state)) throw new Error("Trạng thái hoặc revision transcript project không hợp lệ.");
+        const current = base().subtitleProjectDetail && base().subtitleProjectDetail.project;
+        const currentState = current && String(current.id || "") === projectId ? String(current.state || "") : "";
+        if (currentState === "archived" && state !== "draft") throw new Error("Project đã archive chỉ có thể được khôi phục về Draft.");
+        if (currentState === "approved" && !["draft", "archived"].includes(state)) throw new Error("Project self-review xong cần về Draft trước khi thay đổi review.");
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:state:${state}`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.project && typeof result.data.project === "object" ? result.data.project : null;
+            if (!subtitleStudioBoundaryIsSafe(result.data) || !receipt || !validSubtitleStudioRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái project an toàn.");
+            await hydrateSubtitleStudio();
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã cập nhật trạng thái self-review.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-project-restore-version") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleProjectRevision);
+        const targetRevision = validSubtitleStudioRevision(detail.subtitleProjectVersion);
+        if (!validSubtitleStudioProjectId(projectId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision transcript project không hợp lệ.");
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:restore-version:${targetRevision}`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version transcript project an toàn.");
+            await hydrateSubtitleStudio();
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã khôi phục version transcript project thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-cue-create") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleProjectRevision);
+        if (!validSubtitleStudioProjectId(projectId) || !expectedRevision) throw new Error("Mã hoặc revision transcript project không hợp lệ.");
+        const payload = { ...subtitleCuePayload(fields), expected_revision: expectedRevision };
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:cue:create`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/cues`, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.cue && typeof result.data.cue === "object" ? result.data.cue : null;
+            if (!subtitleStudioBoundaryIsSafe(result.data) || !receipt || !validSubtitleStudioCueId(receipt.id) || String(receipt.project_id || "") !== projectId) {
+              throw new Error("Máy chủ chưa trả receipt cue hợp lệ.");
+            }
+            await hydrateSubtitleStudio();
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã thêm cue riêng tư.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-cue-import") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleProjectRevision);
+        if (!validSubtitleStudioProjectId(projectId) || !expectedRevision) throw new Error("Mã hoặc revision transcript project không hợp lệ.");
+        const payload = { ...subtitleTextImportPayload(fields), expected_revision: expectedRevision };
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:cue-import`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/import`, payload,
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận text import Subtitle Studio an toàn.");
+            await hydrateSubtitleStudio();
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã archive cue active cũ và thay bằng cue parse từ văn bản tác giả; history vẫn được giữ.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-text-export") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const format = String(detail.subtitleExportFormat || "").trim().toLowerCase();
+        if (!validSubtitleStudioProjectId(projectId) || !SUBTITLE_STUDIO_FORMATS.has(format)) throw new Error("Mã project hoặc chuẩn text subtitle không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/subtitle-studio/projects/${encodeURIComponent(projectId)}/export?format=${encodeURIComponent(format)}`);
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (!subtitleStudioBoundaryIsSafe(data) || String(data.format || "").toLowerCase() !== format || typeof data.text !== "string") {
+            throw new Error("Máy chủ chưa trả văn bản subtitle an toàn để sao chép.");
+          }
+          await copySubtitleStudioText(data.text);
+          toast(result.message || `Đã sao chép ${format.toUpperCase()} text từ cue authoring. Không có file hoặc delivery được tạo.`);
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "subtitle-cue-update") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const cueId = String(detail.subtitleCueId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleCueRevision);
+        if (!validSubtitleStudioProjectId(projectId) || !validSubtitleStudioCueId(cueId) || !expectedRevision) throw new Error("Mã hoặc revision cue không hợp lệ.");
+        const payload = { ...subtitleCuePayload(fields), expected_revision: expectedRevision };
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:cue:${cueId}:update`, method: "PATCH",
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/cues/${encodeURIComponent(cueId)}`, payload,
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision cue an toàn.");
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã lưu revision cue mới.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-cue-archive" || action === "subtitle-cue-restore") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const cueId = String(detail.subtitleCueId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleCueRevision);
+        if (!validSubtitleStudioProjectId(projectId) || !validSubtitleStudioCueId(cueId) || !expectedRevision) throw new Error("Mã hoặc revision cue không hợp lệ.");
+        const operation = action.replace("subtitle-cue-", "");
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:cue:${cueId}:${operation}`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/cues/${encodeURIComponent(cueId)}/${encodeURIComponent(operation)}`,
+          payload: { expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái cue an toàn.");
+            await hydrateSubtitleStudio();
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã cập nhật cue.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-cue-restore-version") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const cueId = String(detail.subtitleCueId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleCueRevision);
+        const targetRevision = validSubtitleStudioRevision(detail.subtitleCueVersion);
+        if (!validSubtitleStudioProjectId(projectId) || !validSubtitleStudioCueId(cueId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision cue không hợp lệ.");
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:cue:${cueId}:restore-version:${targetRevision}`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/cues/${encodeURIComponent(cueId)}/restore-version`,
+          payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version cue an toàn.");
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã khôi phục version cue thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "subtitle-cue-reorder") {
+        const projectId = String(detail.subtitleProjectId || "").trim();
+        const expectedRevision = validSubtitleStudioRevision(detail.subtitleProjectRevision);
+        const cueId = String(detail.subtitleCueId || "").trim();
+        const direction = String(detail.subtitleCueDirection || "").trim().toLowerCase();
+        if (!validSubtitleStudioProjectId(projectId) || !expectedRevision || !validSubtitleStudioCueId(cueId) || !["up", "down"].includes(direction)) throw new Error("Yêu cầu sắp xếp cue không hợp lệ.");
+        const projectDetail = base().subtitleProjectDetail && typeof base().subtitleProjectDetail === "object" ? base().subtitleProjectDetail : {};
+        const activeCues = Array.isArray(projectDetail.cues)
+          ? projectDetail.cues.filter((item) => item && String(item.project_id || "") === projectId && String(item.state || "active") === "active" && validSubtitleStudioCueId(item.id))
+          : [];
+        const index = activeCues.findIndex((item) => String(item.id) === cueId);
+        const target = direction === "up" ? index - 1 : index + 1;
+        if (index < 0 || target < 0 || target >= activeCues.length) throw new Error("Không thể đổi thứ tự cue ở vị trí này.");
+        const cueIds = activeCues.map((item) => String(item.id));
+        [cueIds[index], cueIds[target]] = [cueIds[target], cueIds[index]];
+        await subtitleStudioMutation({
+          action, route, scope: `subtitle-studio:project:${projectId}:cues:reorder`,
+          path: `/subtitle-studio/projects/${encodeURIComponent(projectId)}/cues/reorder`, payload: { expected_revision: expectedRevision, cue_ids: cueIds },
+          onSuccess: async (result) => {
+            if (!subtitleStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự cue an toàn.");
+            await hydrateSubtitleProject(projectId);
+            toast(result.message || "Đã cập nhật thứ tự cue.");
           }
         });
         return;

@@ -84,7 +84,10 @@ def test_video_studio_uses_only_its_private_web_api_and_safe_mutations() -> None
         assert capability in INTEGRATION
 
     start = INTEGRATION.index('if (action === "video-studio-refresh")')
-    end = INTEGRATION.index('if (action === "voice-studio-filter"')
+    # Keep this assertion scoped to Video Studio's action block.  Subtitle
+    # Studio follows it and may honestly mention its own text-only export
+    # boundary, which is unrelated to Video Studio provider isolation.
+    end = INTEGRATION.index('if (action === "subtitle-studio-refresh")')
     actions = INTEGRATION[start:end].lower()
     for forbidden in ("bridgeavailable", "core bridge", "payos", "/payments", "/jobs", "provider", "renderer", "preview", "delivery"):
         assert forbidden not in actions
@@ -121,7 +124,7 @@ def test_video_studio_has_no_private_pwa_cache_or_fake_media_surface() -> None:
     assert "/api/v1/video-studio" in SERVICE_WORKER
     assert "/api/v1/video-studio" not in shell
     assert '"/video-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v10"' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v11"' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

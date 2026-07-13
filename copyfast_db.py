@@ -219,6 +219,17 @@ def video_studio_enabled() -> bool:
     return os.environ.get("WEBAPP_VIDEO_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def subtitle_studio_enabled() -> bool:
+    """Whether the Web-native Subtitle, Transcript & Language Studio is available.
+
+    This switch exposes only signed-account authored cue text, revisions and
+    bounded SRT/VTT text transforms.  It never enables media upload, ASR,
+    translation, TTS, dubbing, provider/Bot calls, jobs, wallet, PayOS or
+    delivery functionality.
+    """
+    return os.environ.get("WEBAPP_SUBTITLE_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1523,6 +1534,122 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_video_events_account_created ON web_video_studio_events(account_id, created_at DESC, id DESC)"
+        )
+        # Subtitle Studio is a deliberately text-only Web workspace.  It
+        # persists user-authored cues, optional bilingual drafts and immutable
+        # revisions, never raw uploads/media paths/provider IDs/ASR or dubbing
+        # output/job/payment/delivery references.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_projects (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                linked_project_id TEXT,
+                title TEXT NOT NULL,
+                source_language TEXT NOT NULL DEFAULT 'vi',
+                target_language TEXT NOT NULL DEFAULT '',
+                caption_format TEXT NOT NULL DEFAULT 'srt',
+                context TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                intent TEXT NOT NULL DEFAULT 'subtitle',
+                lifecycle TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(linked_project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_project_versions (
+                id TEXT PRIMARY KEY,
+                subtitle_project_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(subtitle_project_id, revision),
+                FOREIGN KEY(subtitle_project_id) REFERENCES web_subtitle_projects(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_cues (
+                id TEXT PRIMARY KEY,
+                subtitle_project_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                start_ms INTEGER NOT NULL,
+                end_ms INTEGER NOT NULL,
+                speaker TEXT NOT NULL DEFAULT '',
+                source_text TEXT NOT NULL,
+                translated_text TEXT NOT NULL DEFAULT '',
+                notes TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(subtitle_project_id, ordinal),
+                FOREIGN KEY(subtitle_project_id) REFERENCES web_subtitle_projects(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_cue_versions (
+                id TEXT PRIMARY KEY,
+                cue_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(cue_id, revision),
+                FOREIGN KEY(cue_id) REFERENCES web_subtitle_cues(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_workspace_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                subtitle_project_id TEXT NOT NULL,
+                cue_id TEXT,
+                entity_type TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(subtitle_project_id) REFERENCES web_subtitle_projects(id),
+                FOREIGN KEY(cue_id) REFERENCES web_subtitle_cues(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_projects_account_lifecycle_updated ON web_subtitle_projects(account_id, lifecycle, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_projects_linked_account_updated ON web_subtitle_projects(linked_project_id, account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_project_versions_project_revision ON web_subtitle_project_versions(subtitle_project_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_cues_project_account_ordinal ON web_subtitle_cues(subtitle_project_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_cue_versions_cue_revision ON web_subtitle_cue_versions(cue_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_events_account_created ON web_subtitle_workspace_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the
