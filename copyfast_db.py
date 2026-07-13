@@ -75,6 +75,16 @@ def document_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_to_pdf_enabled() -> bool:
+    """Whether the Pillow-backed Image-to-PDF decoder is deliberately enabled.
+
+    This stays separate from the base Document Operations flag because image
+    decoding has its own dependency and memory boundary.  Its route still
+    requires the Asset Vault and generated-output storage contracts.
+    """
+    return os.environ.get("WEBAPP_IMAGE_TO_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())

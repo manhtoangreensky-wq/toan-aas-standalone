@@ -42,6 +42,8 @@ def _title_for(path: str) -> str:
         return "Gộp PDF riêng tư"
     if normalized == "/documents/compress":
         return "Tối ưu PDF riêng tư"
+    if normalized == "/documents/image-to-pdf":
+        return "Ảnh sang PDF riêng tư"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
         return "Chi tiết kế hoạch"
     if PROJECT_PATH.fullmatch(normalized):

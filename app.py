@@ -166,6 +166,7 @@ async def security_headers(request: Request, call_next):
             "/api/v1/document-operations/pdf-split",
             "/api/v1/document-operations/pdf-merge",
             "/api/v1/document-operations/pdf-optimize",
+            "/api/v1/document-operations/image-to-pdf",
         }
     )
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
@@ -177,9 +178,9 @@ async def security_headers(request: Request, call_next):
         # amplification path even before the idempotency record is reached.
         rate_limit = 20
     if document_operation_run:
-        # PDF parsing is bounded further by source/page/output limits, but an
-        # explicit early rate gate also prevents repeated parser work before
-        # the operation's idempotency record can be observed.
+        # PDF parsing and bounded image decoding are further constrained by
+        # source/page/pixel/output limits, while this early gate blocks repeat
+        # work before the operation's idempotency record can be observed.
         rate_limit = 10
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"

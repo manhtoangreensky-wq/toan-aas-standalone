@@ -971,6 +971,12 @@
     const assetVaultEnabled = Boolean(status.flags && status.flags.asset_vault_enabled === true);
     const projectPackageEnabled = Boolean(status.flags && status.flags.project_package_enabled === true);
     const documentOperationsEnabled = Boolean(status.flags && status.flags.document_operations_enabled === true);
+    const imageToPdfEnabled = Boolean(status.flags && status.flags.image_to_pdf_enabled === true);
+    // This native page must never display the static catalog's `ready` badge
+    // while its server-side decoder gate is intentionally off.
+    const nativeDocumentPageStates = account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled
+      ? { "/documents/image-to-pdf": "ready" }
+      : { "/documents/image-to-pdf": "guarded" };
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
     const webFeatureExecutionFeatures = safeFeatureExecutionFeatures(status.web_feature_execution_features);
@@ -1046,6 +1052,7 @@
       "document-operation-pdf-split": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-pdf-optimize": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
+      "document-operation-image-to-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
@@ -1086,11 +1093,15 @@
       assetVaultEnabled,
       projectPackageEnabled,
       documentOperationsEnabled,
+      imageToPdfEnabled,
       documentOperations: account && Array.isArray(context.documentOperations) ? context.documentOperations : [],
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
-      pageStates: featurePageStates(catalog, {}, webFeatureExecutionFeatures, webWorkspaceDraftFeatures, Boolean(account && me.csrf_token))
+      pageStates: {
+        ...featurePageStates(catalog, {}, webFeatureExecutionFeatures, webWorkspaceDraftFeatures, Boolean(account && me.csrf_token)),
+        ...nativeDocumentPageStates
+      }
     });
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
       navigator.serviceWorker.register("/static/portal/service-worker.js").catch(() => {});
@@ -1103,10 +1114,10 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress"].includes(currentPath)) await hydrateAssetVault();
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf"].includes(currentPath)) await hydrateAssetVault();
     else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
-    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge", "/documents/compress"].includes(currentPath)) await hydrateDocumentOperations();
-    else if (account && ["/documents/split", "/documents/merge", "/documents/compress"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
+    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf"].includes(currentPath)) await hydrateDocumentOperations();
+    else if (account && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1217,17 +1228,31 @@
     }
   }
 
+  function documentOperationKindForCurrentRoute() {
+    const currentPath = String(base().path || window.location.pathname || "").split("?")[0];
+    return currentPath === "/documents/image-to-pdf" ? "image_to_pdf" : "";
+  }
+
   async function hydrateDocumentOperations() {
+    const kind = documentOperationKindForCurrentRoute();
     try {
-      const result = await api("/document-operations");
+      const result = kind === "image_to_pdf"
+        ? await api("/document-operations?kind=image_to_pdf&limit=100")
+        : await api("/document-operations");
       const items = result.data && Array.isArray(result.data.items)
         ? result.data.items
-          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge", "pdf_optimize"].includes(String(item.kind || "")))
+          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf"].includes(String(item.kind || "")))
           .slice(0, 100)
         : [];
       merge({
         documentOperations: items,
-        pageStates: { ...(base().pageStates || {}), "/documents/split": "ready", "/documents/merge": "ready", "/documents/compress": "ready" }
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/documents/split": "ready",
+          "/documents/merge": "ready",
+          "/documents/compress": "ready",
+          "/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded"
+        }
       });
       return items;
     } catch (_) {
@@ -1236,7 +1261,13 @@
       // browser-generated preview.
       merge({
         documentOperations: [],
-        pageStates: { ...(base().pageStates || {}), "/documents/split": "guarded", "/documents/merge": "guarded", "/documents/compress": "guarded" }
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/documents/split": "guarded",
+          "/documents/merge": "guarded",
+          "/documents/compress": "guarded",
+          "/documents/image-to-pdf": "guarded"
+        }
       });
       return [];
     }
@@ -1877,6 +1908,49 @@
           // A guarded no-reduction response is a deliberate honest result,
           // not a missing client-side preview. Re-read only owner-scoped
           // operations and Vault state so the source always remains clear.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-image-to-pdf") {
+        // Ordered slots intentionally become the exact server fingerprint:
+        // Ảnh 1 → Ảnh 8 is the resulting PDF page order, never a browser
+        // multi-select approximation or raw file/path upload.
+        const sourceAssetIds = Array.from({ length: 8 }, (_, index) => String(fields[`source_asset_id_${index + 1}`] || "").trim())
+          .filter(Boolean);
+        if (sourceAssetIds.length < 1) throw new Error("Hãy chọn ít nhất một ảnh riêng tư theo thứ tự muốn tạo PDF.");
+        if (new Set(sourceAssetIds).size !== sourceAssetIds.length) throw new Error("Mỗi ảnh nguồn chỉ được chọn một lần trong cùng thao tác.");
+        if (!sourceAssetIds.every(validVaultAssetId)) throw new Error("Một hoặc nhiều ảnh nguồn không hợp lệ.");
+        const scope = `document-operation:image-to-pdf:${sourceAssetIds.join(":")}`;
+        const submission = acquireSubmission(scope, sourceAssetIds.join(":"));
+        if (!submission) {
+          toast("Ảnh → PDF đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/image-to-pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_ids: sourceAssetIds, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "image_to_pdf") {
+            throw new Error("Máy chủ chưa trả metadata Ảnh → PDF hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã tạo và xác minh PDF riêng tư từ ảnh.");
+        } catch (error) {
+          // If a source turns out malformed, animated or tampered, retain
+          // only the server-recorded state; never manufacture a client PDF.
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
           throw error;
