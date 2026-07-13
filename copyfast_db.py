@@ -116,6 +116,17 @@ def image_resize_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_RESIZE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_enhance_enabled() -> bool:
+    """Whether the bounded local Image Enhance Studio executor is enabled.
+
+    This flag is deliberately narrower than the shared Image Operations
+    storage boundary.  It only unlocks deterministic Pillow adjustments and
+    never grants a provider-backed AI edit, Bot job, wallet mutation or
+    payment action.
+    """
+    return os.environ.get("WEBAPP_IMAGE_ENHANCE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -918,6 +929,7 @@ def ensure_copyfast_schema() -> None:
                 started_at TEXT,
                 completed_at TEXT,
                 updated_at TEXT NOT NULL,
+                settings_json TEXT NOT NULL DEFAULT '{}',
                 UNIQUE(account_id, kind, idempotency_key),
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id),
                 FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
@@ -925,6 +937,12 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        image_operation_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_image_operations)").fetchall()}
+        if "settings_json" not in image_operation_columns:
+            # Append-only migration: preserve all existing resize index offsets
+            # and immutable request/asset evidence while adding canonical
+            # server-normalized settings for later Web-native image kinds.
+            conn.execute("ALTER TABLE web_image_operations ADD COLUMN settings_json TEXT NOT NULL DEFAULT '{}'")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_image_operation_events (

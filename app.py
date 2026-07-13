@@ -174,6 +174,7 @@ async def security_headers(request: Request, call_next):
             "/api/v1/document-operations/image-to-pdf",
             "/api/v1/document-operations/pdf-to-word",
             "/api/v1/image-operations/resize",
+            "/api/v1/image-operations/enhance",
         }
     )
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)

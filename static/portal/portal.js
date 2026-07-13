@@ -651,7 +651,14 @@
   featurePage("/content/pack", "Content Pack", "Gom brief nội dung thành một bản nháp có thể ước tính qua bridge.", ICONS.prompt, FIELD_SETS.prompt, ["/content-pack"]);
 
   featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image"]);
-  featurePage("/image/edit", "Chỉnh sửa ảnh", "Chuẩn bị thay đổi ảnh qua Core Bridge. Để resize, đổi tỷ lệ hoặc thêm blur/pad nền deterministic, dùng Resize & Aspect Studio riêng tư.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  customerPage("/image/edit", "Image Enhance Studio", "Chỉnh màu và làm nét cơ bản deterministic từ Asset Vault; không phải AI edit, Bot job hay provider call.", ICONS.image, {
+    // Native private data must hydrate before the page may advertise readiness.
+    layout: "image-enhance", type: "image-operation", action: "none", status: "guarded", fields: [],
+    notes: [
+      "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn. Browser gửi Asset Vault ID và thông số đã giới hạn; không gửi path, URL hoặc bytes ảnh.",
+      "Công cụ áp preset màu/làm nét cục bộ deterministic. Nó không tạo chi tiết AI, không xóa vật thể/nền, không gọi provider và không thay đổi file gốc."
+    ]
+  });
   customerPage("/image/resize", "Resize & Aspect Studio", "Tạo PNG private từ Asset Vault bằng crop, pad hoặc blur nền đã được kiểm tra; không phải AI upscale, Bot job hay provider call.", ICONS.image, {
     // This page has two owner-scoped reads before it can become usable. Start
     // fail-closed so the first paint never advertises readiness before the
@@ -881,6 +888,14 @@
       imageResizeEnabled: source.imageResizeEnabled === true,
       imageOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageOperationsReadState || ""))
         ? String(source.imageOperationsReadState)
+        : "guarded",
+      // Enhance history is a separate owner-scoped projection. Keeping it
+      // distinct prevents a previously viewed Resize row from momentarily
+      // looking like an Image Enhance result during route hydration.
+      imageEnhanceOperations: Array.isArray(source.imageEnhanceOperations) ? source.imageEnhanceOperations.slice(0, 100) : [],
+      imageEnhanceEnabled: source.imageEnhanceEnabled === true,
+      imageEnhanceOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageEnhanceOperationsReadState || ""))
+        ? String(source.imageEnhanceOperationsReadState)
         : "guarded",
       // Account activity is already a redacted, owner-scoped projection from
       // the Web API. Retain the bounded list during each presentation pass so
@@ -1412,7 +1427,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -2672,6 +2687,13 @@
       .slice(0, 100);
   }
 
+  function imageEnhanceOperationItems(context) {
+    return (Array.isArray(context.imageEnhanceOperations) ? context.imageEnhanceOperations : [])
+      .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
+        && String(item.kind || "") === "image_enhance")
+      .slice(0, 100);
+  }
+
   function imageOperationState(item) {
     const state = String(item && item.state || "guarded").toLowerCase();
     return ALLOWED_STATES.has(state) ? state : "guarded";
@@ -2727,6 +2749,109 @@
         help: "Crop luôn cắt tâm, không có focal-point editor ở phiên bản này. Blur không nhận diện chủ thể; đây là xử lý ảnh cục bộ deterministic."
       }
     ];
+  }
+
+  const IMAGE_ENHANCE_PRESET_LABELS = {
+    photo_clear_detail: "Rõ và chi tiết",
+    product_clean: "Sản phẩm sạch sáng",
+    cinematic_warm: "Cinematic ấm",
+    fresh_blue: "Tươi xanh",
+    food_vivid: "Ẩm thực nổi bật",
+    custom: "Thông số tùy chỉnh"
+  };
+
+  function imageEnhanceFormFields(values) {
+    const selectedPreset = String(values && values.preset || transientFormValues("/image/edit").preset || "photo_clear_detail");
+    const isCustom = selectedPreset === "custom";
+    return [
+      {
+        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets",
+        emptyLabel: "Chọn ảnh private", required: true,
+        help: "Chỉ JPEG, PNG hoặc WebP active của signed Web account hiện tại xuất hiện. File gốc không bị ghi đè."
+      },
+      {
+        name: "preset", label: "Công thức màu cục bộ", control: "select", options: [
+          { value: "photo_clear_detail", label: "Rõ và chi tiết · auto enhance" },
+          { value: "product_clean", label: "Sản phẩm sạch sáng" },
+          { value: "cinematic_warm", label: "Cinematic ấm" },
+          { value: "fresh_blue", label: "Tươi xanh" },
+          { value: "food_vivid", label: "Ẩm thực nổi bật" },
+          { value: "custom", label: "Tùy chỉnh thông số" }
+        ],
+        help: "Preset dùng thông số deterministic canonical từ local editor của Bot. Chỉ chọn Tùy chỉnh khi cần nhập đủ bốn thông số bên dưới."
+      },
+      {
+        name: "brightness", label: "Độ sáng", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        required: isCustom, dynamicRequired: true, disabled: !isCustom,
+        help: "Chỉ dùng với Tùy chỉnh. 1.00 là giữ nguyên trước khi áp các bước tăng cường khác."
+      },
+      {
+        name: "contrast", label: "Tương phản", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        required: isCustom, dynamicRequired: true, disabled: !isCustom,
+        help: "Chỉ dùng với Tùy chỉnh. Không có HDR, khôi phục chi tiết hoặc AI retouch."
+      },
+      {
+        name: "saturation", label: "Bão hòa màu", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        required: isCustom, dynamicRequired: true, disabled: !isCustom,
+        help: "Chỉ dùng với Tùy chỉnh. Server chặn số ngoài 0.50–2.00."
+      },
+      {
+        name: "sharpness", label: "Độ nét", type: "number", placeholder: "0.50 – 2.00", min: 0.5, max: 2, step: 0.01, inputMode: "decimal",
+        required: isCustom, dynamicRequired: true, disabled: !isCustom,
+        help: "Chỉ dùng với Tùy chỉnh. Đây là filter local, không tạo chi tiết AI mới."
+      },
+      {
+        name: "tone", label: "Tone tùy chỉnh", control: "select", disabled: !isCustom, options: [
+          { value: "neutral", label: "Neutral · không phủ tone" },
+          { value: "warm", label: "Warm · ấm nhẹ" },
+          { value: "cool", label: "Cool · xanh nhẹ" },
+          { value: "clean", label: "Clean · sáng sạch" }
+        ],
+        help: "Chỉ dùng với Tùy chỉnh. Preset đã có tone canonical riêng."
+      },
+      {
+        name: "basic_upscale", label: "Làm nét / nâng kích thước cơ bản", control: "select", options: [
+          { value: "false", label: "Không · giữ kích thước an toàn" },
+          { value: "true", label: "Có · tối đa 2×, luôn theo trần 4096 px / 16 MP" }
+        ],
+        help: "Dùng nội suy LANCZOS và UnsharpMask cục bộ. Không phải AI upscale; ảnh lớn có thể bị hạ về trần output để giữ an toàn."
+      }
+    ];
+  }
+
+  function imageEnhanceSettings(item) {
+    const raw = item && item.settings && typeof item.settings === "object" ? item.settings : {};
+    const values = ["brightness", "contrast", "saturation", "sharpness"].map((key) => {
+      const value = Number(raw[key]);
+      return Number.isFinite(value) ? `${key === "brightness" ? "Sáng" : key === "contrast" ? "Tương phản" : key === "saturation" ? "Bão hòa" : "Nét"} ${value.toFixed(2)}` : "";
+    }).filter(Boolean);
+    const tone = ["neutral", "warm", "cool", "clean"].includes(String(raw.tone || "")) ? `Tone ${String(raw.tone)}` : "";
+    if (tone) values.push(tone);
+    if (raw.basic_upscale === true) values.push("LANCZOS + sharpen cơ bản");
+    return values.join(" · ") || "Preset canonical đã được server xác minh";
+  }
+
+  function renderImageEnhanceOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có PNG đã chỉnh", "Bản sao chỉ xuất hiện sau khi server kiểm tra ảnh nguồn, áp preset/thông số cục bộ, mở lại PNG và xác minh integrity. Không có preview hoặc output mô phỏng.", "✦");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const status = imageOperationState(item);
+      const downloadPath = imageOperationDownloadPath(item);
+      const sourceWidth = Number(item.source_width);
+      const sourceHeight = Number(item.source_height);
+      const targetWidth = Number(item.target_width);
+      const targetHeight = Number(item.target_height);
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "Canvas an toàn";
+      const preset = String(item.preset || "custom");
+      const pendingMessage = status === "failed" || status === "unavailable"
+        ? "Không có PNG tải xuống; kiểm tra ảnh nguồn private và tạo bản sao mới."
+        : status === "guarded"
+          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
+          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">✦</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(IMAGE_ENHANCE_PRESET_LABELS[preset] || preset)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>Thông số</dt><dd>${safeText(imageEnhanceSettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+    }).join("")}</div>`;
   }
 
   function renderImageOperationCards(items) {
@@ -2980,6 +3105,48 @@
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo canvas mới</h2><p class="portal-card-subtitle">Không upload bytes, URL hoặc raw file path ở bước này. Browser chỉ gửi Asset Vault ID và cấu hình canvas đã chọn.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-resize" data-portal-route="/image/resize" data-portal-confirm="Tạo một PNG private mới theo canvas và cách đặt ảnh đã chọn? File gốc trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageResizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách khung hoạt động</h2><p class="portal-card-subtitle">Canvas là thông số deterministic, không phải promise AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Crop giữa khung</strong><span>Lấp đầy canvas theo tỉ lệ và cắt phần rìa từ tâm. Không có focal-point hoặc nhận diện chủ thể.</span></li><li><strong>2. Pad nền trắng</strong><span>Giữ trọn ảnh, đặt giữa canvas trắng; alpha/metadata nguồn không đi sang PNG mới.</span></li><li><strong>3. Blur nền</strong><span>Giữ trọn ảnh ở giữa trên nền cover được làm mờ. Đây là hiệu ứng cục bộ, không retouch hay AI upscale.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã tạo</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Không có preview công khai; download bị khóa nếu ownership hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageOperationCards(operations)}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Resize & Aspect Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook thanh toán. AI Upscale vẫn là workflow riêng, chỉ hiển thị readiness canonical.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderImageEnhance(page, context) {
+    const canViewCapability = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-enhance"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["image-enhance-refresh"] === true);
+    if (!canViewCapability) {
+      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Image Enhance Studio đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi Asset Vault và storage output private của Web được server xác nhận. Web không fallback sang canvas trình duyệt, Bot job, provider hay output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không AI giả</span></div></div></div></section></article>`;
+    }
+    const assetReadState = String(context.assetVaultReadState || "loading");
+    const operationReadState = String(context.imageEnhanceOperationsReadState || "loading");
+    const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
+    if (!privateReadsReady) {
+      const loading = assetReadState === "loading" || operationReadState === "loading";
+      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const message = loading
+        ? "Image Enhance Studio đang tải Asset Vault và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi cả hai phản hồi server-side hoàn tất."
+        : "Asset Vault hoặc lịch sử Image Enhance chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, output hay dữ liệu thay thế.";
+      const retry = !loading && canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+    }
+    const sources = imageVaultItems(context);
+    const operations = imageEnhanceOperationItems(context);
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = transientFormValues("/image/edit");
+    const runReason = !canRunCapability
+      ? (context.imageEnhanceEnabled === true
+        ? "Cần signed session, CSRF và capability Image Enhance Studio từ server."
+        : "Image Enhance Studio đang được server giữ guarded cho đến khi WEBAPP_IMAGE_ENHANCE_ENABLED được bật có chủ đích.")
+      : sources.length === 0
+        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo bản sao."
+        : "Nguồn → hash-copy cô lập → chỉnh màu/làm nét deterministic → PNG được mở lại và xác minh trước khi tải.";
+    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-image-enhance">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Làm ảnh sạch, rõ và nhất quán — không hứa hẹn AI</h2><p>Chọn ảnh private trong Asset Vault rồi áp một preset màu/làm nét cục bộ hoặc nhập đủ bốn thông số tùy chỉnh. Server giữ nguyên file gốc, chuẩn hóa orientation, làm phẳng alpha nền trắng, loại metadata nguồn và chỉ phát PNG mới sau khi tự mở lại, kiểm tra kích thước và hash integrity.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo bản sao đã chỉnh</h2><p class="portal-card-subtitle">Browser chỉ gửi Asset Vault ID và thông số đã giới hạn. Không upload bytes, URL hoặc raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-enhance" data-portal-route="/image/edit" data-portal-confirm="Tạo một PNG private mới theo preset hoặc thông số cục bộ đã chọn? File gốc trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageEnhanceFormFields(formValues), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Giới hạn trung thực</h2><p class="portal-card-subtitle">Preset là công thức local deterministic, không phải lời hứa retouch AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Thứ tự có thể kiểm tra</strong><span>Auto-contrast → sáng → tương phản → bão hòa → nét → tone, cùng thứ tự local editor của Bot tham chiếu.</span></li><li><strong>2. Upscale cơ bản có trần</strong><span>Nếu bật, server chỉ dùng LANCZOS + UnsharpMask tối đa 2× và luôn giữ trần 4096 px/16 MP. Không tạo chi tiết mới.</span></li><li><strong>3. Delivery riêng tư</strong><span>PNG mới được strict-reparse, hash lại và tải qua signed session; không có public URL, preview công khai hay PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã chỉnh</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download bị khóa nếu ownership hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-enhance-refresh" data-portal-route="/image/edit"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageEnhanceOperationCards(operations)}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Image Enhance Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook thanh toán. AI edit, remove background và AI upscale vẫn là workflow riêng, chỉ hiển thị readiness canonical.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -4076,6 +4243,7 @@
       case "pdf-to-word": return renderPdfToWord(page, context);
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
+      case "image-enhance": return renderImageEnhance(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
       case "account-activity": return renderAccountActivity(page, context);
@@ -4132,6 +4300,26 @@
       if (requiredMark) requiredMark.hidden = !isCustom;
       if (requiredMessage) requiredMessage.hidden = !isCustom;
       if (!isCustom) input.value = "";
+    });
+  }
+
+  function synchronizeImageEnhancePreset(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-operation-enhance") return;
+    const preset = form.querySelector('[name="preset"]');
+    const isCustom = Boolean(preset && String(preset.value || "") === "custom");
+    ["brightness", "contrast", "saturation", "sharpness", "tone"].forEach((name) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      if (!input) return;
+      input.disabled = !isCustom;
+      input.required = isCustom && name !== "tone";
+      input.setAttribute("aria-disabled", String(!isCustom));
+      if (name !== "tone") input.setAttribute("aria-required", String(isCustom));
+      const field = input.closest(".portal-field");
+      const requiredMark = field && field.querySelector("[data-portal-required-mark]");
+      const requiredMessage = field && field.querySelector("[data-portal-required-message]");
+      if (requiredMark) requiredMark.hidden = !isCustom || name === "tone";
+      if (requiredMessage) requiredMessage.hidden = !isCustom || name === "tone";
+      if (!isCustom) input.value = name === "tone" ? "neutral" : "";
     });
   }
 
@@ -4471,7 +4659,10 @@
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {
-        if (event.target && event.target.name === "preset") synchronizeImageResizePreset(form);
+        if (event.target && event.target.name === "preset") {
+          synchronizeImageResizePreset(form);
+          synchronizeImageEnhancePreset(form);
+        }
         rememberTransientFormDraft(form);
       }
     });

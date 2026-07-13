@@ -57,6 +57,13 @@ Production Web App for `app.toanaas.vn`.
   only verified private PNG artifacts from crop/pad/blur processing; it is not
   AI upscale, a Bot job, provider request or payment path. See
   [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](docs/migration/IMAGE_RESIZE_ASPECT_CONTRACT.md).
+- `WEBAPP_IMAGE_ENHANCE_ENABLED` defaults to `false`. Image Enhance Studio
+  needs Asset Vault, `WEBAPP_IMAGE_OPERATIONS_ENABLED=true`, Pillow and the
+  same separate persistent `WEBAPP_IMAGE_OPERATIONS_ROOT`; it does not enable
+  Resize Studio. It creates only verified private PNG artifacts from bounded
+  local colour/detail adjustments (and optional deterministic basic upscale),
+  never AI edit/upscale, a Bot job, provider request or payment path. See
+  [`IMAGE_ENHANCE_CONTRACT.md`](docs/migration/IMAGE_ENHANCE_CONTRACT.md).
 
 ## Authority boundary
 

@@ -32,6 +32,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`IMAGE_TO_PDF_CONTRACT.md`](IMAGE_TO_PDF_CONTRACT.md) — ordered, bounded Image to PDF from verified private JPEG, PNG and WebP Asset Vault assets into a separately verified Web-native attachment.
 - [`PDF_TO_WORD_CONTRACT.md`](PDF_TO_WORD_CONTRACT.md) — real text-only PDF to DOCX extraction with bounded private output, no OCR/layout promise and a guarded no-text outcome.
 - [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) — deterministic crop/pad/blur PNG generation from one verified Asset Vault image, with a separate private output lifecycle and no Bot/provider/payment execution.
+- [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — deterministic local colour/detail PNG generation from one verified Asset Vault image, with Bot-parity presets, bounded basic upscale and no Bot/provider/payment execution.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — Bot-first notes, reminders, referral/rewards, community and help handoffs.

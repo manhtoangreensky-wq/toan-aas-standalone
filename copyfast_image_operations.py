@@ -1,10 +1,10 @@
 """Bounded, private Web-native image operations.
 
-Resize & Aspect Studio mirrors the deterministic local Telegram image helper:
-center crop, white pad and blur background.  It deliberately improves the
-transport boundary for the Web: inputs are owner-scoped Asset Vault blobs,
-bytes are hash-copied into isolated staging, and only a verified fresh PNG is
-made downloadable.  This module never calls the Bot, a provider, PayOS, a Xu
+Resize & Aspect Studio and Image Enhance Studio mirror bounded deterministic
+local Telegram image helpers.  They deliberately improve the transport
+boundary for the Web: inputs are owner-scoped Asset Vault blobs, bytes are
+hash-copied into isolated staging, and only a verified fresh PNG is made
+downloadable.  This module never calls the Bot, a provider, PayOS, a Xu
 ledger, a webhook, or browser-supplied paths.
 """
 
@@ -15,6 +15,7 @@ import hashlib
 import hmac
 from io import BytesIO
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -36,6 +37,7 @@ from copyfast_db import (
     ensure_copyfast_schema,
     image_operations_directory,
     image_operations_enabled,
+    image_enhance_enabled,
     image_resize_enabled,
     transaction,
     utc_now,
@@ -46,9 +48,12 @@ from copyfast_image_runtime import image_decoder_capacity
 router = APIRouter(prefix="/api/v1/image-operations", tags=["Web Image Operations"])
 
 IMAGE_RESIZE_KIND = "image_resize"
-SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND})
+IMAGE_ENHANCE_KIND = "image_enhance"
+SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 FIT_MODES = frozenset({"crop", "pad", "blur"})
+ENHANCE_FIT_MODE = "enhance"
+ENHANCE_TONES = frozenset({"neutral", "warm", "cool", "clean"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -120,11 +125,24 @@ IMAGE_INPUT_MIME_BY_EXTENSION = {
 }
 PNG_MEDIA_TYPE = "image/png"
 OUTPUT_FILENAME = "toan-aas-image-resized.png"
+ENHANCE_OUTPUT_FILENAME = "toan-aas-image-enhanced.png"
+
+# Values and visual treatment intentionally match the Bot's local image editor
+# baseline.  The Web uses the stricter Image Operations source/output limits
+# and never labels this deterministic renderer as AI editing or AI upscale.
+ENHANCE_PRESETS: dict[str, dict[str, float | str]] = {
+    "photo_clear_detail": {"brightness": 1.03, "contrast": 1.10, "saturation": 1.05, "sharpness": 1.30, "tone": "neutral"},
+    "product_clean": {"brightness": 1.08, "contrast": 1.08, "saturation": 1.02, "sharpness": 1.22, "tone": "clean"},
+    "cinematic_warm": {"brightness": 0.99, "contrast": 1.14, "saturation": 1.08, "sharpness": 1.12, "tone": "warm"},
+    "fresh_blue": {"brightness": 1.03, "contrast": 1.08, "saturation": 1.12, "sharpness": 1.16, "tone": "cool"},
+    "food_vivid": {"brightness": 1.04, "contrast": 1.12, "saturation": 1.24, "sharpness": 1.25, "tone": "warm"},
+}
+ENHANCE_ADJUSTMENT_KEYS = ("brightness", "contrast", "saturation", "sharpness")
 
 OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, target_width, target_height,
                        preset, fit_mode, source_width, source_height, original_filename, content_type,
                        byte_size, created_at, queued_at, started_at, completed_at, updated_at,
-                       failure_code, storage_key, sha256, source_byte_size, source_sha256"""
+                        failure_code, storage_key, sha256, source_byte_size, source_sha256, settings_json"""
 
 
 class ImageOperationError(Exception):
@@ -173,6 +191,58 @@ class ImageResizeRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class ImageEnhanceRequest(BaseModel):
+    """One immutable Asset Vault image becomes a deterministic local PNG."""
+
+    source_asset_id: str = Field(min_length=36, max_length=36)
+    preset: str = Field(default="photo_clear_detail", min_length=1, max_length=40)
+    brightness: float | None = Field(default=None, ge=0.5, le=2.0)
+    contrast: float | None = Field(default=None, ge=0.5, le=2.0)
+    saturation: float | None = Field(default=None, ge=0.5, le=2.0)
+    sharpness: float | None = Field(default=None, ge=0.5, le=2.0)
+    tone: str | None = Field(default=None, min_length=1, max_length=16)
+    basic_upscale: bool = False
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: str) -> str:
+        return _uuid(value, label="Asset Vault ID")
+
+    @field_validator("preset")
+    @classmethod
+    def valid_preset(cls, value: str) -> str:
+        candidate = str(value or "").strip().lower()
+        if candidate not in {*ENHANCE_PRESETS, "custom"}:
+            raise ValueError("Preset Image Enhance không hợp lệ")
+        return candidate
+
+    @field_validator(*ENHANCE_ADJUSTMENT_KEYS)
+    @classmethod
+    def valid_adjustment(cls, value: float | None) -> float | None:
+        if value is None:
+            return None
+        candidate = float(value)
+        if not math.isfinite(candidate) or candidate < 0.5 or candidate > 2.0:
+            raise ValueError("Thông số chỉnh ảnh phải từ 0.50 đến 2.00")
+        return candidate
+
+    @field_validator("tone")
+    @classmethod
+    def valid_tone(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        candidate = str(value or "").strip().lower()
+        if candidate not in ENHANCE_TONES:
+            raise ValueError("Tone chỉ nhận neutral, warm, cool hoặc clean")
+        return candidate
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 def _require_enabled() -> None:
     if not image_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
@@ -187,6 +257,15 @@ def _require_resize_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Resize & Aspect Studio chưa được bật; cần WEBAPP_IMAGE_RESIZE_ENABLED và private storage",
+        )
+
+
+def _require_enhance_enabled() -> None:
+    _require_enabled()
+    if not image_enhance_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Image Enhance Studio chưa được bật; cần WEBAPP_IMAGE_ENHANCE_ENABLED và private storage",
         )
 
 
@@ -338,19 +417,49 @@ def _copy_verified_image_source(
     try:
         if not source.is_file() or source.is_symlink() or source.stat().st_size != expected_bytes:
             raise ImageOperationError("Ảnh nguồn không còn sẵn sàng", code="IMAGE_SOURCE_UNAVAILABLE")
-        with source.open("rb") as read_stream, destination.open("xb") as write_stream:
-            while True:
-                chunk = read_stream.read(CHUNK_BYTES)
-                if not chunk:
-                    break
-                total += len(chunk)
-                if total > MAX_INPUT_BYTES:
-                    raise ImageOperationError("Ảnh nguồn vượt giới hạn 20 MB", code="IMAGE_INPUT_TOO_LARGE")
-                if len(prefix) < 16:
-                    prefix += chunk[: 16 - len(prefix)]
-                digest.update(chunk)
-                write_stream.write(chunk)
+    except ImageOperationError:
+        raise
     except OSError as exc:
+        raise ImageOperationError("Không thể đọc ảnh nguồn riêng tư", code="IMAGE_SOURCE_UNAVAILABLE") from exc
+    try:
+        with source.open("rb") as read_stream:
+            try:
+                with destination.open("xb") as write_stream:
+                    while True:
+                        try:
+                            chunk = read_stream.read(CHUNK_BYTES)
+                        except OSError as exc:
+                            raise ImageOperationError("Không thể đọc ảnh nguồn riêng tư", code="IMAGE_SOURCE_UNAVAILABLE") from exc
+                        if not chunk:
+                            break
+                        total += len(chunk)
+                        if total > MAX_INPUT_BYTES:
+                            raise ImageOperationError("Ảnh nguồn vượt giới hạn 20 MB", code="IMAGE_INPUT_TOO_LARGE")
+                        if len(prefix) < 16:
+                            prefix += chunk[: 16 - len(prefix)]
+                        digest.update(chunk)
+                        try:
+                            write_stream.write(chunk)
+                        except OSError as exc:
+                            raise ImageOperationError(
+                                "Không thể chuẩn bị vùng xử lý ảnh riêng tư",
+                                code="IMAGE_STAGING_UNAVAILABLE",
+                            ) from exc
+            except ImageOperationError:
+                raise
+            except OSError as exc:
+                # Destination open/close failures belong to the isolated
+                # staging boundary. They must never poison a valid source
+                # Asset Vault record as unavailable.
+                raise ImageOperationError(
+                    "Không thể chuẩn bị vùng xử lý ảnh riêng tư",
+                    code="IMAGE_STAGING_UNAVAILABLE",
+                ) from exc
+    except ImageOperationError:
+        _safe_unlink(destination)
+        raise
+    except OSError as exc:
+        _safe_unlink(destination)
         raise ImageOperationError("Không thể đọc ảnh nguồn riêng tư", code="IMAGE_SOURCE_UNAVAILABLE") from exc
     if (
         total != expected_bytes
@@ -444,6 +553,26 @@ def _normalized_spec(payload: ImageResizeRequest) -> tuple[str, int, int, str]:
     return preset, width, height, str(payload.fit_mode)
 
 
+def _normalized_enhance_spec(payload: ImageEnhanceRequest) -> tuple[str, dict[str, float | str | bool]]:
+    """Resolve Bot-parity presets without accepting ambiguous client overrides."""
+    preset = str(payload.preset)
+    supplied_adjustments = {key: getattr(payload, key) for key in ENHANCE_ADJUSTMENT_KEYS}
+    if preset == "custom":
+        missing = [key for key, value in supplied_adjustments.items() if value is None]
+        if missing:
+            raise HTTPException(status_code=422, detail="Tùy chỉnh Image Enhance cần đủ sáng, tương phản, bão hòa và độ nét")
+        config: dict[str, float | str | bool] = {
+            key: round(float(value), 4) for key, value in supplied_adjustments.items() if value is not None
+        }
+        config["tone"] = str(payload.tone or "neutral")
+    else:
+        if any(value is not None for value in supplied_adjustments.values()) or payload.tone is not None:
+            raise HTTPException(status_code=422, detail="Preset Image Enhance không nhận thông số tùy chỉnh kèm theo")
+        config = dict(ENHANCE_PRESETS[preset])
+    config["basic_upscale"] = bool(payload.basic_upscale)
+    return preset, config
+
+
 def _request_fingerprint(
     *,
     source_asset_id: str,
@@ -472,6 +601,55 @@ def _request_fingerprint(
     return hashlib.sha256(encoded).hexdigest()
 
 
+def _enhance_request_fingerprint(
+    *,
+    source_asset_id: str,
+    source_sha256: str,
+    source_bytes: int,
+    preset: str,
+    settings: dict[str, float | str | bool],
+) -> str:
+    encoded = json.dumps(
+        {
+            "kind": IMAGE_ENHANCE_KIND,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+            "preset": preset,
+            "settings": settings,
+            "output_format": "png",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _operation_settings(value: Any) -> dict[str, float | str | bool]:
+    """Expose only server-normalized settings, never arbitrary stored JSON."""
+    try:
+        decoded = json.loads(str(value or "{}"))
+    except (TypeError, ValueError):
+        return {}
+    if not isinstance(decoded, dict):
+        return {}
+    settings: dict[str, float | str | bool] = {}
+    for key in ENHANCE_ADJUSTMENT_KEYS:
+        candidate = decoded.get(key)
+        if isinstance(candidate, (int, float)) and not isinstance(candidate, bool) and math.isfinite(float(candidate)) and 0.5 <= float(candidate) <= 2.0:
+            settings[key] = round(float(candidate), 4)
+    tone = decoded.get("tone")
+    if isinstance(tone, str) and tone in ENHANCE_TONES:
+        settings["tone"] = tone
+    if isinstance(decoded.get("basic_upscale"), bool):
+        settings["basic_upscale"] = decoded["basic_upscale"]
+    return settings
+
+
+def _operation_output_filename(kind: str) -> str:
+    return ENHANCE_OUTPUT_FILENAME if kind == IMAGE_ENHANCE_KIND else OUTPUT_FILENAME
+
+
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[4])
     byte_size = int(row[13]) if row[13] is not None else None
@@ -496,18 +674,23 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "completed_at": str(row[17]) if row[17] else None,
         "updated_at": str(row[18]),
         "download_ready": state == "completed" and bool(row[20]) and byte_size is not None,
+        "settings": _operation_settings(row[24] if len(row) > 24 else "{}"),
     }
 
 
 def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
     state = str(operation.get("state") or "failed")
+    kind = str(operation.get("kind") or "")
+    is_enhance = kind == IMAGE_ENHANCE_KIND
+    label = "Image Enhance Studio" if is_enhance else "Resize & Aspect Studio"
     if state == "completed":
-        return envelope(True, "Đã resize và xác minh PNG riêng tư.", data={"operation": operation}, status_name="completed")
+        message = "Đã nâng chất lượng cơ bản và xác minh PNG riêng tư." if is_enhance else "Đã resize và xác minh PNG riêng tư."
+        return envelope(True, message, data={"operation": operation}, status_name="completed")
     if state in {"queued", "processing"}:
-        return envelope(True, "Resize & Aspect Studio đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
+        return envelope(True, f"{label} đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
     if state == "guarded":
-        return envelope(False, "Resize & Aspect Studio đã được chặn an toàn; không có output thay thế.", data={"operation": operation}, status_name="guarded", error_code="WEB_IMAGE_OPERATION_GUARDED")
-    return envelope(False, "Resize & Aspect Studio không hoàn tất; không có output được phát hành.", data={"operation": operation}, status_name=state, error_code="WEB_IMAGE_OPERATION_FAILED")
+        return envelope(False, f"{label} đã được chặn an toàn; không có output thay thế.", data={"operation": operation}, status_name="guarded", error_code="WEB_IMAGE_OPERATION_GUARDED")
+    return envelope(False, f"{label} không hoàn tất; không có output được phát hành.", data={"operation": operation}, status_name=state, error_code="WEB_IMAGE_OPERATION_FAILED")
 
 
 def _operation_not_found() -> dict[str, Any]:
@@ -519,12 +702,12 @@ def _operation_not_found() -> dict[str, Any]:
     )
 
 
-def _source_not_found() -> dict[str, Any]:
+def _source_not_found(kind: str = IMAGE_RESIZE_KIND) -> dict[str, Any]:
     return envelope(
         False,
         "Không tìm thấy ảnh private đang hoạt động thuộc Web account hiện tại.",
         status_name="guarded",
-        error_code="WEB_IMAGE_RESIZE_SOURCE_NOT_FOUND",
+        error_code="WEB_IMAGE_ENHANCE_SOURCE_NOT_FOUND" if kind == IMAGE_ENHANCE_KIND else "WEB_IMAGE_RESIZE_SOURCE_NOT_FOUND",
     )
 
 
@@ -535,6 +718,23 @@ def _operation_unavailable() -> dict[str, Any]:
         status_name="guarded",
         error_code="WEB_IMAGE_OPERATION_UNAVAILABLE",
     )
+
+
+def _image_operation_error_status(code: str) -> int:
+    """Map known safe processing failures to a truthful public HTTP class."""
+    if code in {
+        "IMAGE_INPUT_TOO_LARGE",
+        "IMAGE_DIMENSION_LIMIT",
+        "IMAGE_ASPECT_RATIO_LIMIT",
+        "IMAGE_PIXEL_LIMIT",
+        "IMAGE_OUTPUT_LIMIT",
+    }:
+        return 413
+    if code in {"IMAGE_RUNTIME_UNAVAILABLE", "IMAGE_STAGING_UNAVAILABLE"}:
+        # Runtime/storage boundary failures are retriable service conditions,
+        # not invalid user input and never evidence against its source.
+        return 503
+    return 422
 
 
 def _record_event(conn, *, operation_id: str, state: str, when: str | None = None) -> None:
@@ -563,14 +763,23 @@ def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
     return used + additional_bytes <= _maximum_account_bytes()
 
 
-def _mark_failed(operation_id: str, account_id: str, *, request: Request, code: str) -> None:
+def _mark_failed(
+    operation_id: str,
+    account_id: str,
+    *,
+    request: Request,
+    code: str,
+    kind: str = IMAGE_RESIZE_KIND,
+) -> None:
     if not operation_id:
+        return
+    if kind not in SUPPORTED_KINDS:
         return
     now = utc_now()
     with transaction() as conn:
         row = conn.execute(
             "SELECT state FROM web_image_operations WHERE id=? AND account_id=? AND kind=?",
-            (operation_id, account_id, IMAGE_RESIZE_KIND),
+            (operation_id, account_id, kind),
         ).fetchone()
         if not row or str(row[0]) not in {"queued", "processing"}:
             return
@@ -585,7 +794,7 @@ def _mark_failed(operation_id: str, account_id: str, *, request: Request, code: 
             conn,
             account_id=account_id,
             canonical_user_id=None,
-            action="web.image_operation.image_resize_failed",
+            action=f"web.image_operation.{kind}_failed",
             request_id=_request_id(request),
             target=operation_id,
             detail=f"code={code[:80]}",
@@ -718,6 +927,186 @@ def _render_resize(source_copy: Path, *, extension: str, target_width: int, targ
         raise ImageOperationError("Độ phân giải ảnh nguồn vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
     except (UnidentifiedImageError, OSError, ValueError) as exc:
         raise ImageOperationError("Không thể decode ảnh nguồn an toàn", code="IMAGE_PARSE_FAILED") from exc
+
+
+def _enhance_target_dimensions(
+    source_width: int,
+    source_height: int,
+    *,
+    basic_upscale: bool,
+) -> tuple[int, int]:
+    """Derive one bounded PNG geometry before persisting an Enhance operation.
+
+    Asset Vault permits a larger (but bounded) source for compatibility.  The
+    emitted PNG is stricter: at most 4096 px per side / 16 MP.  Large sources
+    therefore downscale deterministically even when basic upscale is off;
+    basic upscale otherwise requests up to 2x only within that same ceiling.
+    """
+    source_pixels = source_width * source_height
+    ceiling = min(
+        MAX_TARGET_DIMENSION / source_width,
+        MAX_TARGET_DIMENSION / source_height,
+        math.sqrt(MAX_OUTPUT_PIXELS / source_pixels),
+    )
+    if ceiling <= 0:
+        raise ImageOperationError("Không thể xác định kích thước PNG đầu ra", code="IMAGE_OUTPUT_LIMIT")
+    if ceiling < 1:
+        scale = ceiling
+    elif basic_upscale:
+        candidate = min(2.0, ceiling)
+        # Preserve Bot's small-change threshold: a near-identity enlargement
+        # is not advertised as an upscale, but its sharpen pass still applies.
+        scale = candidate if candidate > 1.02 else 1.0
+    else:
+        scale = 1.0
+    target_width = max(1, int(source_width * scale))
+    target_height = max(1, int(source_height * scale))
+    _validate_dimensions(target_width, target_height, source=False)
+    return target_width, target_height
+
+
+def _inspect_enhance_geometry(
+    source_copy: Path,
+    *,
+    extension: str,
+    basic_upscale: bool,
+) -> tuple[int, int, int, int]:
+    """Read EXIF orientation and derive immutable Enhance geometry pre-insert."""
+    Image, ImageFile, _, _, UnidentifiedImageError = _image_classes()
+    if ImageFile.LOAD_TRUNCATED_IMAGES:
+        raise ImageOperationError("Image runtime không ở chế độ kiểm tra đầy đủ", code="IMAGE_RUNTIME_UNAVAILABLE")
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(source_copy) as verifier:
+                if not _image_format_matches(extension, verifier.format):
+                    raise ImageOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+                if int(getattr(verifier, "n_frames", 1) or 1) != 1 or bool(getattr(verifier, "is_animated", False)):
+                    raise ImageOperationError("Ảnh động chưa được hỗ trợ trong Image Enhance Studio", code="IMAGE_ANIMATED")
+                width, height = (int(verifier.size[0]), int(verifier.size[1]))
+                _validate_dimensions(width, height, source=True)
+                try:
+                    orientation = int(verifier.getexif().get(274, 1) or 1)
+                except (AttributeError, TypeError, ValueError):
+                    orientation = 1
+                if orientation in {5, 6, 7, 8}:
+                    width, height = height, width
+                _validate_dimensions(width, height, source=True)
+                target_width, target_height = _enhance_target_dimensions(
+                    width,
+                    height,
+                    basic_upscale=basic_upscale,
+                )
+                return width, height, target_width, target_height
+    except ImageOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise ImageOperationError("Độ phân giải ảnh nguồn vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ImageOperationError("Không thể đọc thông số ảnh nguồn an toàn", code="IMAGE_PARSE_FAILED") from exc
+
+
+def _apply_enhance_tone(image, *, tone: str, Image):
+    if tone not in {"warm", "cool", "clean"}:
+        return image
+    colors = {"warm": (255, 190, 120), "cool": (120, 205, 255), "clean": (255, 255, 255)}
+    opacity = 0.055 if tone != "clean" else 0.035
+    overlay = Image.new("RGB", image.size, colors[tone])
+    try:
+        return Image.blend(image, overlay, opacity)
+    finally:
+        overlay.close()
+
+
+def _render_enhance(
+    source_copy: Path,
+    *,
+    extension: str,
+    settings: dict[str, float | str | bool],
+    target_width: int,
+    target_height: int,
+):
+    """Apply the Bot's deterministic local enhance order without AI/provider calls."""
+    Image, _, ImageFilter, ImageOps, UnidentifiedImageError = _image_classes()
+    try:
+        from PIL import ImageEnhance
+    except ImportError as exc:  # pragma: no cover - pinned Pillow deployment
+        raise ImageOperationError("Image Enhance Studio chưa có runtime Pillow an toàn", code="IMAGE_RUNTIME_UNAVAILABLE") from exc
+    working = None
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            _inspect_image_source(source_copy, extension=extension)
+            with Image.open(source_copy) as decoded:
+                if not _image_format_matches(extension, decoded.format):
+                    raise ImageOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+                if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                    raise ImageOperationError("Ảnh động chưa được hỗ trợ trong Image Enhance Studio", code="IMAGE_ANIMATED")
+                decoded.load()
+                normalized = ImageOps.exif_transpose(decoded)
+                try:
+                    rgba = normalized.convert("RGBA")
+                finally:
+                    if normalized is not decoded:
+                        normalized.close()
+                try:
+                    source_rgb = Image.new("RGB", rgba.size, (255, 255, 255))
+                    source_rgb.paste(rgba, mask=rgba.getchannel("A"))
+                finally:
+                    rgba.close()
+                try:
+                    _validate_dimensions(source_rgb.width, source_rgb.height, source=True)
+                    expected_width, expected_height = _enhance_target_dimensions(
+                        source_rgb.width,
+                        source_rgb.height,
+                        basic_upscale=bool(settings.get("basic_upscale")),
+                    )
+                    if (expected_width, expected_height) != (target_width, target_height):
+                        raise ImageOperationError("Kích thước Image Enhance không còn khớp yêu cầu", code="IMAGE_OUTPUT_INVALID")
+                    autocontrasted = ImageOps.autocontrast(source_rgb, cutoff=1)
+                    # Pillow normally returns a new image, but retain an owned
+                    # copy if a future implementation returns its input. The
+                    # source object is closed in this finally block.
+                    working = autocontrasted.copy() if autocontrasted is source_rgb else autocontrasted
+                finally:
+                    source_rgb.close()
+                for key, enhancer in (
+                    ("brightness", ImageEnhance.Brightness),
+                    ("contrast", ImageEnhance.Contrast),
+                    ("saturation", ImageEnhance.Color),
+                    ("sharpness", ImageEnhance.Sharpness),
+                ):
+                    next_image = enhancer(working).enhance(float(settings[key]))
+                    working.close()
+                    working = next_image
+                tone_image = _apply_enhance_tone(working, tone=str(settings.get("tone") or "neutral"), Image=Image)
+                if tone_image is not working:
+                    working.close()
+                    working = tone_image
+                if working.size != (target_width, target_height):
+                    resized = working.resize((target_width, target_height), resample=Image.Resampling.LANCZOS)
+                    working.close()
+                    working = resized
+                if bool(settings.get("basic_upscale")):
+                    if ImageFilter is None:
+                        raise ImageOperationError("Runtime làm nét chưa sẵn sàng", code="IMAGE_RUNTIME_UNAVAILABLE")
+                    sharpened = working.filter(ImageFilter.UnsharpMask(radius=1.6, percent=125, threshold=3))
+                    working.close()
+                    working = sharpened
+                if working.mode != "RGB" or working.size != (target_width, target_height):
+                    raise ImageOperationError("Kết quả Image Enhance không hợp lệ", code="IMAGE_OUTPUT_INVALID")
+                rendered = working
+                working = None
+                return rendered
+    except ImageOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise ImageOperationError("Độ phân giải ảnh nguồn vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ImageOperationError("Không thể decode ảnh cho Image Enhance an toàn", code="IMAGE_PARSE_FAILED") from exc
+    finally:
+        if working is not None:
+            working.close()
 
 
 def _parser_copy(stream):
@@ -853,27 +1242,19 @@ def _stream_open_file(stream):
         stream.close()
 
 
-def _build_resize_output(
+def _publish_verified_png(
     root: Path,
-    source_copy: Path,
+    rendered,
     *,
-    extension: str,
     target_width: int,
     target_height: int,
-    fit_mode: str,
-) -> tuple[Path, str, int, str, int, int]:
-    """Render, atomically publish and rehash one fresh private PNG."""
-    _validate_dimensions(target_width, target_height, source=False)
+) -> tuple[Path, str, int, str]:
+    """Save, hash, parse and atomically publish one private rendered PNG."""
     temporary_output = _staging_path(root, ".output.png")
     final_path: Path | None = None
     try:
-        rendered = _render_resize(
-            source_copy,
-            extension=extension,
-            target_width=target_width,
-            target_height=target_height,
-            fit_mode=fit_mode,
-        )
+        if getattr(rendered, "mode", "") != "RGB" or tuple(getattr(rendered, "size", ())) != (target_width, target_height):
+            raise ImageOperationError("Kết quả PNG không khớp contract đầu ra", code="IMAGE_OUTPUT_INVALID")
         try:
             with temporary_output.open("xb") as stream:
                 rendered.save(stream, format="PNG", optimize=True)
@@ -901,12 +1282,66 @@ def _build_resize_output(
         )
         if verified_bytes != output_bytes or not hmac.compare_digest(verified_digest, output_digest):
             raise ImageOperationError("PNG đầu ra không vượt qua kiểm tra integrity", code="IMAGE_OUTPUT_INVALID")
-        return final_path, storage_key, output_bytes, output_digest, target_width, target_height
+        return final_path, storage_key, output_bytes, output_digest
     except Exception:
         _safe_unlink(final_path)
         raise
     finally:
         _safe_unlink(temporary_output)
+
+
+def _build_resize_output(
+    root: Path,
+    source_copy: Path,
+    *,
+    extension: str,
+    target_width: int,
+    target_height: int,
+    fit_mode: str,
+) -> tuple[Path, str, int, str, int, int]:
+    """Render, atomically publish and rehash one fresh private Resize PNG."""
+    _validate_dimensions(target_width, target_height, source=False)
+    rendered = _render_resize(
+        source_copy,
+        extension=extension,
+        target_width=target_width,
+        target_height=target_height,
+        fit_mode=fit_mode,
+    )
+    final_path, storage_key, output_bytes, output_digest = _publish_verified_png(
+        root,
+        rendered,
+        target_width=target_width,
+        target_height=target_height,
+    )
+    return final_path, storage_key, output_bytes, output_digest, target_width, target_height
+
+
+def _build_enhance_output(
+    root: Path,
+    source_copy: Path,
+    *,
+    extension: str,
+    settings: dict[str, float | str | bool],
+    target_width: int,
+    target_height: int,
+) -> tuple[Path, str, int, str, int, int]:
+    """Render and publish the deterministic local Image Enhance PNG."""
+    _validate_dimensions(target_width, target_height, source=False)
+    rendered = _render_enhance(
+        source_copy,
+        extension=extension,
+        settings=settings,
+        target_width=target_width,
+        target_height=target_height,
+    )
+    final_path, storage_key, output_bytes, output_digest = _publish_verified_png(
+        root,
+        rendered,
+        target_width=target_width,
+        target_height=target_height,
+    )
+    return final_path, storage_key, output_bytes, output_digest, target_width, target_height
 
 
 def reconcile_image_operation_storage() -> None:
@@ -923,10 +1358,11 @@ def reconcile_image_operation_storage() -> None:
         # that can resume after a process restart. Never leave a stale row in
         # queued/processing: its idempotency key would otherwise replay a job
         # that no worker owns any more.
+        placeholders = ", ".join("?" for _ in SUPPORTED_KINDS)
         interrupted = conn.execute(
-            """SELECT id FROM web_image_operations
-               WHERE kind=? AND state IN ('queued', 'processing')""",
-            (IMAGE_RESIZE_KIND,),
+            f"""SELECT id FROM web_image_operations
+                WHERE kind IN ({placeholders}) AND state IN ('queued', 'processing')""",
+            tuple(sorted(SUPPORTED_KINDS)),
         ).fetchall()
         for interrupted_row in interrupted:
             operation_id = str(interrupted_row[0])
@@ -938,8 +1374,10 @@ def reconcile_image_operation_storage() -> None:
             )
             _record_event(conn, operation_id=operation_id, state="failed", when=now)
         rows = conn.execute(
-            """SELECT id, account_id, storage_key, byte_size, sha256
-               FROM web_image_operations WHERE state='completed'"""
+            f"""SELECT id, account_id, storage_key, byte_size, sha256
+                 FROM web_image_operations
+                 WHERE kind IN ({placeholders}) AND state='completed'""",
+            tuple(sorted(SUPPORTED_KINDS)),
         ).fetchall()
     known_storage: set[str] = set()
     for row in rows:
@@ -1224,14 +1662,7 @@ async def resize_image(payload: ImageResizeRequest, request: Request, account: d
         if exc.code == "IMAGE_SOURCE_UNAVAILABLE":
             _mark_source_unavailable(source_asset_id, account_id)
         _mark_failed(operation_id, account_id, request=request, code=exc.code)
-        status_code = 413 if exc.code in {
-            "IMAGE_INPUT_TOO_LARGE",
-            "IMAGE_DIMENSION_LIMIT",
-            "IMAGE_ASPECT_RATIO_LIMIT",
-            "IMAGE_PIXEL_LIMIT",
-            "IMAGE_OUTPUT_LIMIT",
-        } else 422
-        raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+        raise HTTPException(status_code=_image_operation_error_status(exc.code), detail=exc.public_message) from exc
     except HTTPException as exc:
         _safe_unlink(final_path)
         _mark_failed(
@@ -1245,6 +1676,285 @@ async def resize_image(payload: ImageResizeRequest, request: Request, account: d
         _safe_unlink(final_path)
         _mark_failed(operation_id, account_id, request=request, code="IMAGE_OPERATION")
         raise HTTPException(status_code=500, detail="Không thể resize ảnh an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+        if capacity_reserved:
+            image_decoder_capacity().release()
+
+
+@router.post("/enhance")
+async def enhance_image(payload: ImageEnhanceRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Create a verified private PNG with bounded deterministic local enhancement."""
+    _require_enhance_enabled()
+    root = image_operations_directory()
+    account_id = str(account["id"])
+    preset, settings = _normalized_enhance_spec(payload)
+    settings_json = json.dumps(settings, sort_keys=True, separators=(",", ":"))
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    capacity_reserved = False
+    source_asset_id = payload.source_asset_id
+    source_storage_key = ""
+    source_project_id: str | None = None
+    source_extension = ""
+    source_bytes = 0
+    source_sha256 = ""
+    source_width = 0
+    source_height = 0
+    target_width = 0
+    target_height = 0
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            # Replay is checked before source activity and the shared decoder
+            # slot, so an archived source can still return its canonical prior
+            # operation without creating a second render or output.
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_image_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_ENHANCE_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                existing_operation = tuple(existing[:-1])
+                existing_source_sha256 = str(existing_operation[23] or "")
+                existing_source_bytes = int(existing_operation[22] or 0)
+                if (
+                    re.fullmatch(r"[0-9a-f]{64}", existing_source_sha256)
+                    and existing_source_bytes > 0
+                    and hmac.compare_digest(
+                        str(existing[-1] or ""),
+                        _enhance_request_fingerprint(
+                            source_asset_id=source_asset_id,
+                            source_sha256=existing_source_sha256,
+                            source_bytes=existing_source_bytes,
+                            preset=preset,
+                            settings=settings,
+                        ),
+                    )
+                ):
+                    return _operation_response(_operation_public(existing_operation))
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Image Enhance khác")
+
+            source_row = conn.execute(
+                """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+                   FROM web_asset_files WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if not source_row or str(source_row[7]) != "active":
+                return _source_not_found(IMAGE_ENHANCE_KIND)
+            source_extension = str(source_row[2] or "").lower()
+            source_project_id = str(source_row[1]) if source_row[1] else None
+            expected_mime = IMAGE_INPUT_MIME_BY_EXTENSION.get(source_extension)
+            if expected_mime is None or str(source_row[3] or "") != expected_mime:
+                raise HTTPException(status_code=422, detail="Image Enhance Studio chỉ nhận JPEG, PNG hoặc WebP private hợp lệ trong Asset Vault")
+            source_bytes = int(source_row[4] or 0)
+            if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+                raise HTTPException(status_code=413, detail="Ảnh nguồn vượt giới hạn 20 MB")
+            source_sha256 = str(source_row[5] or "")
+            source_storage_key = str(source_row[6] or "")
+            if not re.fullmatch(r"[0-9a-f]{64}", source_sha256) or not ASSET_STORAGE_KEY_PATTERN.fullmatch(source_storage_key):
+                raise HTTPException(status_code=422, detail="Ảnh nguồn không còn sẵn sàng")
+            # The one shared Pillow slot is acquired before the isolated copy so
+            # a concurrent request cannot race this pre-insert window into a
+            # duplicate operation. Replays above never need the slot.
+            capacity = image_decoder_capacity()
+            if not capacity.acquire(blocking=False):
+                raise HTTPException(status_code=429, detail="Image Enhance Studio đang bận xử lý một ảnh khác; vui lòng thử lại sau ít phút")
+            capacity_reserved = True
+    except Exception:
+        if capacity_reserved:
+            image_decoder_capacity().release()
+        raise
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, f".enhance-source{source_extension}")
+        await run_in_threadpool(
+            _copy_verified_image_source,
+            source_path,
+            source_copy,
+            extension=source_extension,
+            expected_bytes=source_bytes,
+            expected_digest=source_sha256,
+        )
+        # Verify compressed bytes before deriving EXIF-normalized geometry.
+        await run_in_threadpool(_inspect_image_source, source_copy, extension=source_extension)
+        source_width, source_height, target_width, target_height = await run_in_threadpool(
+            _inspect_enhance_geometry,
+            source_copy,
+            extension=source_extension,
+            basic_upscale=bool(settings["basic_upscale"]),
+        )
+
+        with transaction() as conn:
+            # A second check retains deterministic behaviour if another
+            # process inserted the same operation while this request copied the
+            # source. It also refuses an archive/tamper transition after copy.
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_image_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_ENHANCE_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                existing_operation = tuple(existing[:-1])
+                existing_source_sha256 = str(existing_operation[23] or "")
+                existing_source_bytes = int(existing_operation[22] or 0)
+                if (
+                    re.fullmatch(r"[0-9a-f]{64}", existing_source_sha256)
+                    and existing_source_bytes > 0
+                    and hmac.compare_digest(
+                        str(existing[-1] or ""),
+                        _enhance_request_fingerprint(
+                            source_asset_id=source_asset_id,
+                            source_sha256=existing_source_sha256,
+                            source_bytes=existing_source_bytes,
+                            preset=preset,
+                            settings=settings,
+                        ),
+                    )
+                ):
+                    return _operation_response(_operation_public(existing_operation))
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Image Enhance khác")
+            current_source = conn.execute(
+                """SELECT byte_size, sha256, storage_key, state FROM web_asset_files
+                   WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if (
+                not current_source
+                or str(current_source[3]) != "active"
+                or int(current_source[0] or 0) != source_bytes
+                or not hmac.compare_digest(str(current_source[1] or ""), source_sha256)
+                or not hmac.compare_digest(str(current_source[2] or ""), source_storage_key)
+            ):
+                return _source_not_found(IMAGE_ENHANCE_KIND)
+            request_fingerprint = _enhance_request_fingerprint(
+                source_asset_id=source_asset_id,
+                source_sha256=source_sha256,
+                source_bytes=source_bytes,
+                preset=preset,
+                settings=settings,
+            )
+            operation_id = str(uuid.uuid4())
+            now = utc_now()
+            conn.execute(
+                """INSERT INTO web_image_operations
+                   (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                    request_fingerprint, source_sha256, source_byte_size, target_width, target_height,
+                    preset, fit_mode, settings_json, created_at, queued_at, started_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    operation_id,
+                    account_id,
+                    source_asset_id,
+                    source_project_id,
+                    IMAGE_ENHANCE_KIND,
+                    payload.idempotency_key,
+                    request_fingerprint,
+                    source_sha256,
+                    source_bytes,
+                    target_width,
+                    target_height,
+                    preset,
+                    ENHANCE_FIT_MODE,
+                    settings_json,
+                    now,
+                    now,
+                    now,
+                    now,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="queued", when=now)
+            conn.execute(
+                "UPDATE web_image_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                (now, operation_id, account_id),
+            )
+            _record_event(conn, operation_id=operation_id, state="processing", when=now)
+
+        final_path, output_storage_key, output_bytes, output_digest, output_width, output_height = await run_in_threadpool(
+            _build_enhance_output,
+            root,
+            source_copy,
+            extension=source_extension,
+            settings=settings,
+            target_width=target_width,
+            target_height=target_height,
+        )
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_image_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, IMAGE_ENHANCE_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("Image Enhance Studio không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Image Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_image_operations
+                   SET state='completed', source_width=?, source_height=?, target_width=?, target_height=?, storage_key=?,
+                       original_filename=?, content_type=?, byte_size=?, sha256=?,
+                       completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_width,
+                    source_height,
+                    output_width,
+                    output_height,
+                    output_storage_key,
+                    ENHANCE_OUTPUT_FILENAME,
+                    PNG_MEDIA_TYPE,
+                    output_bytes,
+                    output_digest,
+                    now,
+                    now,
+                    operation_id,
+                    account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.image_operation.image_enhance",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=(
+                    f"preset={preset};upscale={int(bool(settings['basic_upscale']))};"
+                    f"source={source_width}x{source_height};output={output_width}x{output_height};bytes={output_bytes}"
+                ),
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_image_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc Image Enhance Studio vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except ImageOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "IMAGE_SOURCE_UNAVAILABLE":
+            _mark_source_unavailable(source_asset_id, account_id)
+        _mark_failed(operation_id, account_id, request=request, code=exc.code, kind=IMAGE_ENHANCE_KIND)
+        raise HTTPException(status_code=_image_operation_error_status(exc.code), detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            request=request,
+            code="IMAGE_QUOTA" if exc.status_code == 413 else "IMAGE_OPERATION",
+            kind=IMAGE_ENHANCE_KIND,
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, request=request, code="IMAGE_OPERATION", kind=IMAGE_ENHANCE_KIND)
+        raise HTTPException(status_code=500, detail="Không thể chỉnh ảnh an toàn") from exc
     finally:
         _safe_unlink(source_copy)
         if capacity_reserved:
@@ -1266,7 +1976,8 @@ async def download_image_operation(operation_id: str, account: dict = Depends(re
         return _operation_not_found()
     private_path: Path | None = None
     try:
-        if str(row[3]) != IMAGE_RESIZE_KIND or str(row[12] or "") != PNG_MEDIA_TYPE:
+        operation_kind = str(row[3] or "")
+        if operation_kind not in SUPPORTED_KINDS or str(row[12] or "") != PNG_MEDIA_TYPE:
             raise RuntimeError("Artifact Image Operation có MIME không hợp lệ")
         private_path = _output_path(image_operations_directory(), str(row[20] or ""))
         verified_stream = _open_verified_output_stream(
@@ -1289,7 +2000,7 @@ async def download_image_operation(operation_id: str, account: dict = Depends(re
         background=BackgroundTask(verified_stream.close),
         headers={
             "Content-Length": str(int(row[13] or 0)),
-            "Content-Disposition": f'attachment; filename="{OUTPUT_FILENAME}"',
+            "Content-Disposition": f'attachment; filename="{_operation_output_filename(operation_kind)}"',
             "Cache-Control": "no-store, private",
             "X-Content-Type-Options": "nosniff",
             "Referrer-Policy": "no-referrer",
