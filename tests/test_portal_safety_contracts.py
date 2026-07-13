@@ -43,7 +43,7 @@ def test_job_polling_uses_only_the_signed_web_api() -> None:
     assert "function exactJobRecord(value, expectedId)" in INTEGRATION
     assert "function ownedAssetsForJob(job, items)" in INTEGRATION
     assert 'api("/assets").catch(() => ({ data: { items: [] } }))' in INTEGRATION
-    assert "provider" not in INTEGRATION[INTEGRATION.index("function scheduleJobPolling"):INTEGRATION.index("function featurePageStates")]
+    assert "provider" not in INTEGRATION[INTEGRATION.index("function scheduleJobPolling"):INTEGRATION.index("function validAdminFeatureKey")]
 
 
 def test_job_detail_matches_only_owner_scoped_asset_metadata_before_delivery() -> None:
@@ -727,7 +727,7 @@ def test_pwa_caches_only_the_fixed_public_shell() -> None:
     assert 'wallet, payment, admin' in SERVICE_WORKER
     assert 'fetch(request).catch(() => caches.match(url.pathname).then((cached) => cached || Response.error()))' in SERVICE_WORKER
     # A public-shell change must invalidate the prior PWA shell bundle.
-    assert 'portal-shell-v6' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
 
 
 def test_public_landing_hides_authenticated_shell_without_leaving_a_layout_slot() -> None:
