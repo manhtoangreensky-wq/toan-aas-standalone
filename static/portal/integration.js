@@ -1302,6 +1302,130 @@
     return "/content-studio/briefs?" + query.toString();
   }
 
+  // Voice Studio is deliberately a separate Web-native authoring boundary.
+  // It never creates or transports audio, provider voice identifiers, Bot
+  // profile identifiers, previews, jobs, payment intent or clone requests.
+  // These narrow browser checks are defence in depth; the API remains the
+  // authority for session, CSRF, ownership, consent, revision and storage.
+  const VOICE_STUDIO_VAULT_KINDS = new Set(["delivery_style", "brand_narration", "consented_reference"]);
+  const VOICE_STUDIO_SCRIPT_KINDS = new Set(["narration", "ad", "explainer", "podcast", "training", "custom"]);
+  const VOICE_STUDIO_STATES = new Set(["active", "archived"]);
+  const VOICE_STUDIO_CONSENT_STATUSES = new Set(["not_required", "self_attested", "revoked"]);
+  const VOICE_STUDIO_IMITATION_PATTERN = /(?:clone\s+(?:giọng|voice)|clone\s*voice|nhái\s+giọng|bắt\s+chước\s+giọng|giống\s+(?:giọng|ca\s*sĩ|nghệ\s*sĩ)|giọng\s+của|voice\s+clone|imitate\s+voice|impersonate|sound(?:s)?\s+like|in\s+the\s+voice\s+of|voice\s+of|celebrity\s+voice|artist\s+voice|same\s+voice)/i;
+
+  function validVoiceStudioVaultId(value) { return validProjectId(value); }
+  function validVoiceStudioScriptId(value) { return validProjectId(value); }
+  function validVoiceStudioRevision(value) { return validMemoryRevision(value); }
+  function voiceVaultIdFromPath(path) {
+    const match = /^\/voice-studio\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validVoiceStudioVaultId(id) ? id : "";
+  }
+  function isNativeVoiceStudioPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/voice-studio" || normalized === "/voice-studio/new" || Boolean(voiceVaultIdFromPath(normalized));
+  }
+  function voiceStudioSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Voice Studio không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Voice Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Voice Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    if (VOICE_STUDIO_IMITATION_PATTERN.test(text)) return "Voice Studio không nhận chỉ dẫn mô phỏng, nhái hoặc clone giọng của một người cụ thể.";
+    return "";
+  }
+  function voiceStudioLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function voiceStudioBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function voiceStudioTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = voiceStudioLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi Voice Vault hoặc script.");
+    return result;
+  }
+  function voiceStudioReference(value, label) {
+    const id = String(value || "").trim();
+    if (id && !validVoiceStudioVaultId(id)) throw new Error(label + " không hợp lệ.");
+    return id;
+  }
+  function voiceVaultPayload(fields) {
+    const title = voiceStudioLine(fields.title, "Tên voice direction", 2, 180, false);
+    const vaultKind = voiceStudioLine(fields.vault_kind || "delivery_style", "Loại voice direction", 1, 32, false).toLowerCase();
+    const language = voiceStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 100, false);
+    const styleNotes = voiceStudioBody(fields.style_notes, "Mô tả cách thể hiện", 1600, true);
+    const useContext = voiceStudioBody(fields.use_context, "Ngữ cảnh sử dụng", 1600, true);
+    const consentStatus = voiceStudioLine(fields.consent_status || "not_required", "Trạng thái consent", 1, 32, false).toLowerCase();
+    const consentNote = voiceStudioBody(fields.consent_note, "Ghi chú consent", 1400, true);
+    const tags = voiceStudioTags(fields.tags);
+    if (!VOICE_STUDIO_VAULT_KINDS.has(vaultKind)) throw new Error("Loại Voice Vault không hợp lệ.");
+    if (!VOICE_STUDIO_CONSENT_STATUSES.has(consentStatus)) throw new Error("Trạng thái consent không hợp lệ.");
+    const isDefault = fields.is_default === true;
+    if (vaultKind === "consented_reference") {
+      if (!new Set(["self_attested", "revoked"]).has(consentStatus) || consentNote.length < 12) throw new Error("Reference cần self-attestation hoặc trạng thái đã thu hồi, cùng ghi chú tối thiểu 12 ký tự.");
+      if (consentStatus === "revoked" && isDefault) throw new Error("Reference đã thu hồi consent không thể đặt làm direction mặc định local.");
+    } else if (consentStatus !== "not_required") {
+      throw new Error("Chỉ consented reference mới được gắn consent trong Voice Studio.");
+    }
+    const safety = voiceStudioSafetyError(title, vaultKind, language, styleNotes, useContext, consentStatus, consentNote, ...tags);
+    if (safety) throw new Error(safety);
+    return {
+      title, vault_kind: vaultKind, language, style_notes: styleNotes, use_context: useContext,
+      consent_status: consentStatus, consent_note: consentNote,
+      is_default: isDefault,
+      tags,
+      project_id: voiceStudioReference(fields.project_id, "Project liên kết") || null,
+      content_brief_id: voiceStudioReference(fields.content_brief_id, "Content Brief liên kết") || null
+    };
+  }
+  function voiceScriptPayload(fields) {
+    const title = voiceStudioLine(fields.title, "Tên script", 2, 180, false);
+    const scriptKind = voiceStudioLine(fields.script_kind || "narration", "Loại script", 1, 32, false).toLowerCase();
+    const language = voiceStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 100, false);
+    const audience = voiceStudioLine(fields.audience, "Đối tượng", 0, 500, true);
+    const paceWpm = Number(fields.pace_wpm || 145);
+    const scriptText = voiceStudioBody(fields.script_text, "Lời thoại", 24000, false);
+    const deliveryNotes = voiceStudioBody(fields.delivery_notes, "Chỉ dẫn thể hiện", 5000, true);
+    const pronunciationNotes = voiceStudioBody(fields.pronunciation_notes, "Ghi chú phát âm", 3000, true);
+    const tags = voiceStudioTags(fields.tags);
+    if (!VOICE_STUDIO_SCRIPT_KINDS.has(scriptKind)) throw new Error("Loại script Voice Studio không hợp lệ.");
+    if (!Number.isInteger(paceWpm) || paceWpm < 80 || paceWpm > 240) throw new Error("Nhịp đọc cần là số nguyên từ 80 đến 240 WPM.");
+    const safety = voiceStudioSafetyError(title, scriptKind, language, audience, scriptText, deliveryNotes, pronunciationNotes, ...tags);
+    if (safety) throw new Error(safety);
+    return {
+      title, script_kind: scriptKind, language, audience, pace_wpm: paceWpm,
+      script_text: scriptText, delivery_notes: deliveryNotes, pronunciation_notes: pronunciationNotes, tags
+    };
+  }
+  function voiceStudioFilterPayload(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const q = voiceStudioLine(source.q, "Từ khóa tìm kiếm", 0, 100, true);
+    const tag = voiceStudioLine(source.tag, "Tag", 0, 48, true);
+    const state = String(source.state || "all").trim().toLowerCase();
+    if (state !== "all" && !VOICE_STUDIO_STATES.has(state)) throw new Error("Bộ lọc trạng thái Voice Studio không hợp lệ.");
+    const safety = voiceStudioSafetyError(q, tag, state);
+    if (safety) throw new Error(safety);
+    return { q, tag, state };
+  }
+  function voiceStudioVaultListPath(filter) {
+    const query = new URLSearchParams({ state: filter.state || "all", limit: "100" });
+    ["q", "tag"].forEach((key) => { if (filter[key]) query.set(key, filter[key]); });
+    return "/voice-studio/vaults?" + query.toString();
+  }
+
   async function downloadPromptLibraryExport() {
     const context = base();
     const csrfToken = context.session && context.session.csrfToken ? String(context.session.csrfToken) : "";
@@ -1594,6 +1718,10 @@
     // deliberately has no Bot bridge, Telegram, provider, payment, Xu, job
     // or publishing implication.
     const contentStudioEnabled = Boolean(status.flags && status.flags.content_studio_enabled === true);
+    // Voice Studio is an independently owned, metadata-and-script authoring
+    // workspace. It does not imply access to a Bot voice profile, TTS, clone,
+    // preview, audio delivery, provider, job, wallet, Xu or payment flow.
+    const voiceStudioEnabled = Boolean(status.flags && status.flags.voice_studio_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -1752,6 +1880,22 @@
       "content-studio-variant-archive": Boolean(account && me.csrf_token && contentStudioEnabled),
       "content-studio-variant-restore": Boolean(account && me.csrf_token && contentStudioEnabled),
       "content-studio-variant-select": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "voice-studio-view": Boolean(account && voiceStudioEnabled),
+      "voice-studio-refresh": Boolean(account && voiceStudioEnabled),
+      "voice-vault-create": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-vault-update": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-vault-archive": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-vault-restore": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-vault-duplicate": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-vault-restore-version": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-vault-compose": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-create": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-update": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-archive": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-restore": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-duplicate": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-restore-version": Boolean(account && me.csrf_token && voiceStudioEnabled),
+      "voice-script-cue-sheet": Boolean(account && voiceStudioEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -1812,6 +1956,7 @@
       promptLibraryEnabled,
       mediaWorkspaceEnabled,
       contentStudioEnabled,
+      voiceStudioEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -1856,6 +2001,18 @@
       contentStudioPolicy: {},
       contentStudioFilter: { q: "", tag: "", content_kind: "", state: "all" },
       contentStudioReadState: account && contentStudioEnabled ? "loading" : "guarded",
+      // Voice Studio is cleared independently before every signed hydration.
+      // No prior account's consent assertion, script, cue estimate, version,
+      // or reference metadata may survive a session change/read failure.
+      voiceStudioSummary: {},
+      voiceVaults: [],
+      voiceVaultDetail: {},
+      voiceStudioReferences: {},
+      voiceStudioEvents: [],
+      voiceStudioPolicy: {},
+      voiceCueSheet: {},
+      voiceStudioFilter: { q: "", tag: "", state: "all" },
+      voiceStudioReadState: account && voiceStudioEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -1897,6 +2054,8 @@
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/content-studio": account && contentStudioEnabled ? "processing" : "guarded",
         "/content-studio/new": account && contentStudioEnabled ? "processing" : "guarded",
+        "/voice-studio": account && voiceStudioEnabled ? "processing" : "guarded",
+        "/voice-studio/new": account && voiceStudioEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -1908,7 +2067,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -1966,6 +2125,17 @@
         pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
+    if (account && voiceStudioEnabled && ["/voice-studio", "/voice-studio/new"].includes(currentPath)) await hydrateVoiceStudio();
+    else if (account && voiceStudioEnabled && voiceVaultIdFromPath(currentPath)) await hydrateVoiceVault(voiceVaultIdFromPath(currentPath));
+    else if (isNativeVoiceStudioPath(currentPath)) {
+      // Never fall back to `/voice/*` Core Bridge data. Voice Studio owns
+      // only its account-scoped metadata/script boundary and fails closed.
+      merge({
+        voiceStudioSummary: {}, voiceVaults: [], voiceVaultDetail: {}, voiceStudioReferences: {}, voiceStudioEvents: [],
+        voiceStudioPolicy: {}, voiceCueSheet: {}, voiceStudioReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
       else if (supportCaseIdFromPath(currentPath)) await hydrateSupportCase(supportCaseIdFromPath(currentPath));
@@ -2003,7 +2173,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeVoiceStudioPath(currentPath)) await hydrateCanonicalData();
   }
 
   async function hydrateLinkStatus() {
@@ -2381,6 +2551,136 @@
       : [];
     merge({ contentVariantHistory: { variant_id: String(variantId), revision: Number(variant.revision), versions } });
     return { variant, versions };
+  }
+
+  function voiceStudioPolicyIsSafe(policy) {
+    return Boolean(
+      policy && typeof policy === "object"
+      && policy.execution === "authoring_only"
+      && policy.provider_called === false
+      && policy.audio_created === false
+      && policy.raw_audio_stored === false
+      && policy.provider_voice_ids_stored === false
+      && policy.telegram_file_ids_stored === false
+      && policy.tts === "guarded"
+      && policy.voice_clone === "guarded"
+      && policy.preview === "guarded"
+      && policy.output_delivery === "guarded"
+    );
+  }
+
+  async function hydrateVoiceStudio(filterValue) {
+    // This deliberately queries only the Web-owned Voice Studio API. It must
+    // never reuse `/voice/profiles`, generic feature readiness, or any Bot
+    // bridge route because its records are not a provider voice vault.
+    const filter = voiceStudioFilterPayload(filterValue === undefined ? base().voiceStudioFilter : filterValue);
+    try {
+      const [summaryResult, policyResult, vaultsResult, eventsResult, referencesResult] = await Promise.all([
+        api("/voice-studio/summary"),
+        api("/voice-studio/policy"),
+        api(voiceStudioVaultListPath(filter)),
+        api("/voice-studio/events?limit=50"),
+        api("/voice-studio/references")
+      ]);
+      const policy = policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {};
+      if (!voiceStudioPolicyIsSafe(policy)) throw new Error("Boundary Voice Studio chưa được máy chủ xác nhận.");
+      const vaults = vaultsResult.data && Array.isArray(vaultsResult.data.items)
+        ? vaultsResult.data.items.filter((item) => item && validVoiceStudioVaultId(item.id) && validVoiceStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validVoiceStudioVaultId(item.vault_id) && validVoiceStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        voiceStudioSummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
+        voiceStudioPolicy: policy,
+        voiceVaults: vaults,
+        voiceStudioEvents: events,
+        voiceStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        voiceVaultDetail: {},
+        voiceCueSheet: {},
+        voiceStudioFilter: filter,
+        voiceStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/voice-studio": "ready", "/voice-studio/new": "ready" }
+      });
+      return { vaults, events };
+    } catch (_) {
+      // The content here can contain private script/consent references. Clear
+      // every projection rather than showing stale account-scoped metadata.
+      merge({
+        voiceStudioSummary: {}, voiceStudioPolicy: {}, voiceVaults: [], voiceVaultDetail: {}, voiceStudioReferences: {},
+        voiceStudioEvents: [], voiceCueSheet: {}, voiceStudioFilter: filter, voiceStudioReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/voice-studio": "guarded", "/voice-studio/new": "guarded" }
+      });
+      return { vaults: [], events: [] };
+    }
+  }
+
+  async function hydrateVoiceVault(vaultId) {
+    if (!validVoiceStudioVaultId(vaultId)) throw new Error("Mã Voice Vault không hợp lệ.");
+    const route = "/voice-studio/" + encodeURIComponent(String(vaultId));
+    try {
+      const [detailResult, policyResult, referencesResult] = await Promise.all([
+        api("/voice-studio/vaults/" + encodeURIComponent(String(vaultId))),
+        api("/voice-studio/policy"),
+        api("/voice-studio/references")
+      ]);
+      const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const policy = policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {};
+      const vault = data.vault && typeof data.vault === "object" ? data.vault : null;
+      if (!voiceStudioPolicyIsSafe(policy) || !vault || !validVoiceStudioVaultId(vault.id) || String(vault.id) !== String(vaultId) || !validVoiceStudioRevision(vault.revision)) {
+        throw new Error("Voice Vault không còn khả dụng cho Web account hiện tại.");
+      }
+      const scripts = Array.isArray(data.scripts)
+        ? data.scripts.filter((item) => item && validVoiceStudioScriptId(item.id) && String(item.vault_id || "") === String(vaultId) && validVoiceStudioRevision(item.revision)).slice(0, 250)
+        : [];
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validVoiceStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = Array.isArray(data.events)
+        ? data.events.filter((item) => item && typeof item === "object" && validVoiceStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        voiceVaultDetail: {
+          vault, scripts, versions, events,
+          script_count: Number(data.script_count || scripts.length), script_limit: Number(data.script_limit || 250),
+          references: data.references && typeof data.references === "object" ? data.references : {}
+        },
+        voiceStudioPolicy: policy,
+        voiceStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        voiceCueSheet: {},
+        voiceStudioReadState: "ready",
+        // The detail itself is owner-scoped and safely hydrated, but an active
+        // Voice Vault remains editable. Marking the page read-only here would
+        // contradict the available CSRF-protected authoring controls.
+        pageStates: { ...(base().pageStates || {}), [route]: "ready" }
+      });
+      return { vault, scripts, versions };
+    } catch (_) {
+      merge({
+        voiceStudioSummary: {}, voiceVaults: [], voiceVaultDetail: {}, voiceStudioReferences: {}, voiceStudioEvents: [],
+        voiceStudioPolicy: {}, voiceCueSheet: {}, voiceStudioReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  async function hydrateVoiceCueSheet(vaultId, scriptId) {
+    if (!validVoiceStudioVaultId(vaultId) || !validVoiceStudioScriptId(scriptId)) throw new Error("Mã Voice Vault hoặc script không hợp lệ.");
+    const result = await api(`/voice-studio/vaults/${encodeURIComponent(String(vaultId))}/scripts/${encodeURIComponent(String(scriptId))}/cue-sheet`);
+    const data = result.data && typeof result.data === "object" ? result.data : {};
+    const items = Array.isArray(data.items) ? data.items.filter((item) => item && typeof item === "object").slice(0, 200) : [];
+    if (
+      String(data.script_id || "") !== String(scriptId)
+      || data.execution !== "local_deterministic_writing_aid"
+      || data.provider_called !== false
+      || data.audio_created !== false
+      || !data.metrics || typeof data.metrics !== "object"
+    ) {
+      throw new Error("Máy chủ chưa trả cue-sheet cục bộ hợp lệ.");
+    }
+    merge({ voiceCueSheet: { ...data, items, vault_id: String(vaultId), script_id: String(scriptId) } });
+    return { ...data, items };
   }
 
   async function hydrateSupportDesk(filterValue) {
@@ -2775,9 +3075,10 @@
   async function hydrateCanonicalData() {
     const context = base();
     const path = (context.path || window.location.pathname).split("?")[0];
-    // Native Content Studio has no generic feature/bridge projection. Return
-    // before any canonical endpoint can overwrite its owner-scoped state.
-    if (isNativeContentStudioPath(path)) return;
+    // Native authoring workspaces have no generic feature/bridge projection.
+    // Return before any canonical endpoint can overwrite their owner-scoped
+    // state, including the similarly-prefixed `/voice-studio` route.
+    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path)) return;
     try {
       if (path === "/dashboard") {
         const [wallet, jobs, assets, readiness, tickets] = await Promise.all([
@@ -2856,7 +3157,7 @@
           readiness: readiness.data || {},
           pageStates: featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)
         });
-      } else if (path === "/tts" || path === "/dubbing" || path.startsWith("/voice")) {
+      } else if (path === "/tts" || path === "/dubbing" || path === "/voice" || path.startsWith("/voice/")) {
         const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
         merge({
           voiceProfiles: profiles.data && profiles.data.items ? profiles.data.items : [],
@@ -3132,6 +3433,36 @@
     const submission = acquireSubmission(scope, JSON.stringify(payload));
     if (!submission) {
       toast("Thao tác Content Studio đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
+  async function voiceStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // Use the same write discipline as the other Web-native workspaces:
+    // browser-generated idempotency, CSRF in `api`, no retry after an
+    // acknowledged response, and no client-side success reconstruction.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Voice Studio đang chờ máy chủ xác nhận.", "error");
       return null;
     }
     let acknowledged = false;
@@ -3733,6 +4064,189 @@
         try {
           await hydrateContentVariantHistory(briefId, variantId);
           toast("Đã tải lịch sử content piece riêng tư.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "voice-studio-filter" || action === "voice-studio-filter-clear") {
+        const filter = action === "voice-studio-filter-clear"
+          ? { q: "", tag: "", state: "all" }
+          : voiceStudioFilterPayload(fields);
+        await hydrateVoiceStudio(filter);
+        toast(filter.q || filter.tag || filter.state !== "all" ? "Đã áp dụng bộ lọc Voice Studio." : "Đã hiển thị tất cả Voice Vault riêng tư.");
+        return;
+      }
+      if (action === "voice-studio-refresh") {
+        const vaultId = voiceVaultIdFromPath(route);
+        if (vaultId) await hydrateVoiceVault(vaultId);
+        else await hydrateVoiceStudio();
+        toast("Đã làm mới Voice Studio của Web account hiện tại.");
+        return;
+      }
+      if (action === "voice-vault-create") {
+        const payload = voiceVaultPayload(fields);
+        await voiceStudioMutation({
+          action, route, scope: "voice-studio:vault:create", path: "/voice-studio/vaults", payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.vault && typeof result.data.vault === "object" ? result.data.vault : null;
+            const vaultId = receipt && validVoiceStudioVaultId(receipt.id) ? String(receipt.id) : "";
+            if (!vaultId || !validVoiceStudioRevision(receipt.revision) || result.data.provider_called !== false || result.data.audio_created !== false) {
+              throw new Error("Máy chủ chưa trả receipt Voice Vault Web-native hợp lệ.");
+            }
+            await hydrateVoiceStudio();
+            toast(result.message || "Đã tạo Voice Vault Web-native.");
+            window.location.assign(`/voice-studio/${encodeURIComponent(vaultId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "voice-vault-update") {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        const expectedRevision = validVoiceStudioRevision(detail.voiceVaultRevision);
+        if (!validVoiceStudioVaultId(vaultId) || !expectedRevision) throw new Error("Mã hoặc revision Voice Vault không hợp lệ.");
+        const payload = { ...voiceVaultPayload(fields), expected_revision: expectedRevision };
+        await voiceStudioMutation({
+          action, route, scope: `voice-studio:vault:${vaultId}:update`, method: "PATCH",
+          path: `/voice-studio/vaults/${encodeURIComponent(vaultId)}`, payload,
+          onSuccess: async (result) => {
+            if (!result.data || result.data.provider_called !== false || result.data.audio_created !== false) throw new Error("Máy chủ chưa xác nhận revision Voice Vault an toàn.");
+            await hydrateVoiceStudio();
+            await hydrateVoiceVault(vaultId);
+            toast(result.message || "Đã lưu revision Voice Vault mới.");
+          }
+        });
+        return;
+      }
+      if (["voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version"].includes(action)) {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        const expectedRevision = validVoiceStudioRevision(detail.voiceVaultRevision);
+        if (!validVoiceStudioVaultId(vaultId) || !expectedRevision) throw new Error("Mã hoặc revision Voice Vault không hợp lệ.");
+        const operation = action.replace("voice-vault-", "");
+        const targetRevision = action === "voice-vault-restore-version" ? validVoiceStudioRevision(detail.voiceVaultVersion) : 0;
+        if (action === "voice-vault-restore-version" && !targetRevision) throw new Error("Phiên bản Voice Vault cần khôi phục không hợp lệ.");
+        const payload = action === "voice-vault-restore-version"
+          ? { expected_revision: expectedRevision, target_revision: targetRevision }
+          : { expected_revision: expectedRevision };
+        const path = action === "voice-vault-restore-version"
+          ? `/voice-studio/vaults/${encodeURIComponent(vaultId)}/restore-version`
+          : `/voice-studio/vaults/${encodeURIComponent(vaultId)}/${encodeURIComponent(operation)}`;
+        const scope = `voice-studio:vault:${vaultId}:${operation}${targetRevision ? `:${targetRevision}` : ""}`;
+        await voiceStudioMutation({
+          action, route, scope, path, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.vault && typeof result.data.vault === "object" ? result.data.vault : null;
+            if (!receipt || result.data.provider_called !== false || result.data.audio_created !== false) throw new Error("Máy chủ chưa xác nhận trạng thái Voice Vault an toàn.");
+            const createdId = action === "voice-vault-duplicate" && validVoiceStudioVaultId(receipt.id) ? String(receipt.id) : "";
+            if (action === "voice-vault-duplicate" && !createdId) throw new Error("Máy chủ chưa trả bản sao Voice Vault hợp lệ.");
+            await hydrateVoiceStudio();
+            if (createdId) {
+              toast(result.message || "Đã nhân bản Voice Vault riêng tư.");
+              window.location.assign(`/voice-studio/${encodeURIComponent(createdId)}`);
+              return;
+            }
+            await hydrateVoiceVault(vaultId);
+            toast(result.message || "Đã cập nhật Voice Vault.");
+          }
+        });
+        return;
+      }
+      if (action === "voice-vault-compose") {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        const expectedRevision = validVoiceStudioRevision(detail.voiceVaultRevision);
+        if (!validVoiceStudioVaultId(vaultId) || !expectedRevision) throw new Error("Mã hoặc revision Voice Vault không hợp lệ.");
+        await voiceStudioMutation({
+          action, route, scope: `voice-studio:vault:${vaultId}:compose`,
+          path: `/voice-studio/vaults/${encodeURIComponent(vaultId)}/compose`, payload: { expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const output = result.data && typeof result.data === "object" ? result.data : {};
+            const ids = Array.isArray(output.script_ids) ? output.script_ids.filter(validVoiceStudioScriptId) : [];
+            if (output.execution !== "local_deterministic_draft_only" || output.provider_called !== false || output.audio_created !== false || ids.length !== 3) {
+              throw new Error("Máy chủ chưa trả 3 khung script cục bộ hợp lệ.");
+            }
+            await hydrateVoiceStudio();
+            await hydrateVoiceVault(vaultId);
+            toast(result.message || "Đã tạo 3 khung script cục bộ để biên tập.");
+          }
+        });
+        return;
+      }
+      if (action === "voice-script-create") {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        // Creating a script is guarded by the enclosing vault revision, not
+        // an invented browser-side script revision.
+        const expectedRevision = validVoiceStudioRevision(detail.voiceVaultRevision);
+        if (!validVoiceStudioVaultId(vaultId) || !expectedRevision) throw new Error("Mã hoặc revision Voice Vault không hợp lệ.");
+        const payload = { ...voiceScriptPayload(fields), expected_revision: expectedRevision };
+        await voiceStudioMutation({
+          action, route, scope: `voice-studio:vault:${vaultId}:script:create`,
+          path: `/voice-studio/vaults/${encodeURIComponent(vaultId)}/scripts`, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.script && typeof result.data.script === "object" ? result.data.script : null;
+            if (!receipt || !validVoiceStudioScriptId(receipt.id) || String(receipt.vault_id || "") !== vaultId || receipt.source_kind !== "manual" || result.data.provider_called !== false || result.data.audio_created !== false) {
+              throw new Error("Máy chủ chưa trả receipt script Voice Studio hợp lệ.");
+            }
+            await hydrateVoiceStudio();
+            await hydrateVoiceVault(vaultId);
+            toast(result.message || "Đã thêm script riêng tư vào Voice Vault.");
+          }
+        });
+        return;
+      }
+      if (action === "voice-script-update") {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        const scriptId = String(detail.voiceScriptId || "").trim();
+        const expectedRevision = validVoiceStudioRevision(detail.voiceScriptRevision);
+        if (!validVoiceStudioVaultId(vaultId) || !validVoiceStudioScriptId(scriptId) || !expectedRevision) throw new Error("Mã hoặc revision script Voice Studio không hợp lệ.");
+        const payload = { ...voiceScriptPayload(fields), expected_revision: expectedRevision };
+        await voiceStudioMutation({
+          action, route, scope: `voice-studio:vault:${vaultId}:script:${scriptId}:update`, method: "PATCH",
+          path: `/voice-studio/vaults/${encodeURIComponent(vaultId)}/scripts/${encodeURIComponent(scriptId)}`, payload,
+          onSuccess: async (result) => {
+            if (!result.data || result.data.provider_called !== false || result.data.audio_created !== false) throw new Error("Máy chủ chưa xác nhận revision script an toàn.");
+            await hydrateVoiceVault(vaultId);
+            toast(result.message || "Đã lưu revision script mới.");
+          }
+        });
+        return;
+      }
+      if (["voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version"].includes(action)) {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        const scriptId = String(detail.voiceScriptId || "").trim();
+        const expectedRevision = validVoiceStudioRevision(detail.voiceScriptRevision);
+        if (!validVoiceStudioVaultId(vaultId) || !validVoiceStudioScriptId(scriptId) || !expectedRevision) throw new Error("Mã hoặc revision script Voice Studio không hợp lệ.");
+        const operation = action.replace("voice-script-", "");
+        const targetRevision = action === "voice-script-restore-version" ? validVoiceStudioRevision(detail.voiceScriptVersion) : 0;
+        if (action === "voice-script-restore-version" && !targetRevision) throw new Error("Phiên bản script cần khôi phục không hợp lệ.");
+        const payload = action === "voice-script-restore-version"
+          ? { expected_revision: expectedRevision, target_revision: targetRevision }
+          : { expected_revision: expectedRevision };
+        const path = action === "voice-script-restore-version"
+          ? `/voice-studio/vaults/${encodeURIComponent(vaultId)}/scripts/${encodeURIComponent(scriptId)}/restore-version`
+          : `/voice-studio/vaults/${encodeURIComponent(vaultId)}/scripts/${encodeURIComponent(scriptId)}/${encodeURIComponent(operation)}`;
+        const scope = `voice-studio:vault:${vaultId}:script:${scriptId}:${operation}${targetRevision ? `:${targetRevision}` : ""}`;
+        await voiceStudioMutation({
+          action, route, scope, path, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.script && typeof result.data.script === "object" ? result.data.script : null;
+            if (!receipt || result.data.provider_called !== false || result.data.audio_created !== false) throw new Error("Máy chủ chưa xác nhận trạng thái script an toàn.");
+            if (action === "voice-script-duplicate" && (!validVoiceStudioScriptId(receipt.id) || String(receipt.vault_id || "") !== vaultId)) {
+              throw new Error("Máy chủ chưa trả bản sao script hợp lệ.");
+            }
+            await hydrateVoiceVault(vaultId);
+            toast(result.message || "Đã cập nhật script riêng tư.");
+          }
+        });
+        return;
+      }
+      if (action === "voice-script-cue-sheet") {
+        const vaultId = String(detail.voiceVaultId || "").trim();
+        const scriptId = String(detail.voiceScriptId || "").trim();
+        if (!validVoiceStudioVaultId(vaultId) || !validVoiceStudioScriptId(scriptId)) throw new Error("Mã Voice Vault hoặc script không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await hydrateVoiceCueSheet(vaultId, scriptId);
+          toast("Đã tạo cue-sheet cục bộ để review script; không có audio hoặc preview.");
         } finally {
           setActionBusy(action, route, false);
         }

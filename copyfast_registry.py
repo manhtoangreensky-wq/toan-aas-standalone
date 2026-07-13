@@ -54,6 +54,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("prompt_library", "Prompt Library", "content", "/prompt-library", description="Kho template prompt riêng tư có tag, metadata, version history và preview cục bộ; không gọi AI engine hoặc Bot."),
     WebFeature("content_studio", "Creative Content Studio", "content", "/content-studio", description="Workspace brief, caption, hook, script, storyboard và content pack có version/review riêng tư; chỉ tạo khung nháp cục bộ, không gọi Bot, provider, job, ví Xu, PayOS hoặc publish."),
     WebFeature("media_workspace", "Audio Library & Briefing", "music", "/media-workspace", description="Kho audio Asset Vault và music/SFX brief riêng tư có collection, revision, policy guard và hướng prompt cục bộ; không phải provider catalog, AI generator hay output Bot."),
+    WebFeature("voice_studio", "Voice Studio & Consent Vault", "voice", "/voice-studio", description="Workspace profile direction, consent self-attestation, script, cue-sheet và revision Web-native; không clone/TTS/preview/audio output, provider, Bot job, Xu hoặc PayOS."),
     WebFeature("caption", "Caption", "content", "/content/caption"),
     WebFeature("hashtag", "Hashtag", "content", "/content/hashtag"),
     WebFeature("hook", "Hook", "content", "/content/hook"),

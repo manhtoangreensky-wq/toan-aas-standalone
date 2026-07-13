@@ -1135,6 +1135,84 @@ a { color: inherit; text-decoration: none; }
 .portal-content-activity-list strong { color: #e0fffa; font-size: 11px; text-transform: capitalize; }
 .portal-content-activity-list small { margin-top: 3px; color: #91b8bb; font-size: 9px; }
 
+/* Voice Studio & Consent Vault: a private writing and governance workspace.
+   It deliberately has no player, waveform, provider status console or faux
+   delivery chrome: direction and scripts are useful even while audio remains
+   guarded behind a future reviewed adapter. */
+.portal-voice-studio, .portal-voice-studio-detail { display: grid; gap: 18px; min-width: 0; }
+.portal-voice-studio-intro, .portal-voice-studio-detail-summary { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(268px, .78fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid rgba(249, 177, 96, .23); border-radius: 22px; background: radial-gradient(circle at 89% 12%, rgba(235, 142, 70, .17), transparent 18rem), linear-gradient(145deg, rgba(61, 34, 37, .95), rgba(10, 18, 31, .99)); box-shadow: 0 19px 47px rgba(0, 0, 0, .16); }
+.portal-voice-studio-intro h2, .portal-voice-studio-detail-summary h2 { margin: 7px 0 8px; color: #fff3e7; font-size: clamp(26px, 3vw, 39px); letter-spacing: -.047em; }
+.portal-voice-studio-intro p, .portal-voice-studio-detail-summary p { max-width: 770px; margin: 0; color: #d6bcb0; line-height: 1.72; }
+.portal-voice-studio-intro dl, .portal-voice-studio-detail-summary dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-voice-studio-intro dl > div, .portal-voice-studio-detail-summary dl > div { min-width: 0; min-height: 106px; padding: 15px; border: 1px solid rgba(255, 209, 163, .14); border-radius: 15px; background: rgba(31, 17, 28, .46); }
+.portal-voice-studio-intro dt { color: #ffc68d; font-size: 25px; font-weight: 840; letter-spacing: -.045em; }
+.portal-voice-studio-intro dd, .portal-voice-studio-detail-summary dt { margin: 7px 0 0; color: #bc9da0; font-size: 11px; line-height: 1.45; }
+.portal-voice-studio-detail-summary dt { margin: 0; color: #bba1a3; font-size: 9px; font-weight: 780; text-transform: uppercase; letter-spacing: .06em; }
+.portal-voice-studio-detail-summary dd { margin: 5px 0 0; overflow-wrap: anywhere; color: #fff0e4; font-size: 13px; font-weight: 760; }
+.portal-voice-studio-layout, .portal-voice-studio-detail-grid, .portal-voice-studio-history-grid { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
+.portal-voice-studio-create, .portal-voice-studio-editor, .portal-voice-script-create { background: linear-gradient(150deg, rgba(61, 34, 37, .93), rgba(9, 17, 30, .99)); }
+.portal-voice-studio-policy, .portal-voice-studio-composer, .portal-voice-studio-activity, .portal-voice-studio-boundary { background: linear-gradient(150deg, rgba(49, 30, 42, .84), rgba(8, 16, 29, .98)); }
+.portal-voice-studio-policy { display: grid; gap: 14px; }
+.portal-voice-studio-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.portal-voice-studio-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid rgba(255, 191, 126, .14); border-radius: 11px; background: rgba(32, 17, 29, .48); }
+.portal-voice-studio-guard-list strong { overflow: hidden; color: #f7ded0; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.portal-voice-studio-guard-list em { padding: 3px 6px; border: 1px solid rgba(255, 174, 96, .17); border-radius: 999px; background: rgba(237, 139, 62, .08); color: #ffcc99; font-size: 8px; font-style: normal; font-weight: 760; text-transform: uppercase; letter-spacing: .045em; }
+.portal-voice-vault-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 14px; }
+.portal-voice-vault-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 238px; border-color: rgba(249, 176, 104, .17); background: linear-gradient(150deg, rgba(52, 31, 38, .94), rgba(8, 17, 30, .99)); transition: border-color .16s ease, transform .16s ease, background .16s ease; }
+.portal-voice-vault-card:hover { border-color: rgba(255, 193, 126, .48); background: linear-gradient(150deg, rgba(67, 38, 43, .98), rgba(10, 19, 33, 1)); transform: translateY(-1px); }
+.portal-voice-vault-card.is-default { border-color: rgba(255, 190, 111, .38); background: radial-gradient(circle at 92% 8%, rgba(244, 156, 77, .14), transparent 13rem), linear-gradient(150deg, rgba(64, 35, 39, .98), rgba(9, 17, 31, 1)); box-shadow: inset 0 0 0 1px rgba(255, 205, 144, .07); }
+.portal-voice-vault-card .portal-card-header { align-items: flex-start; }
+.portal-voice-vault-card .portal-card-subtitle { display: -webkit-box; min-height: 49px; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.portal-voice-vault-card .portal-form-footer { margin-top: auto; padding-top: 1px; }
+.portal-voice-vault-meta, .portal-voice-script-meta, .portal-voice-studio-tags, .portal-voice-reference-list { display: flex; flex-wrap: wrap; gap: 7px; }
+.portal-voice-vault-meta span, .portal-voice-script-meta span, .portal-voice-studio-tags span, .portal-voice-reference-list span, .portal-voice-default, .portal-voice-policy-flag { display: inline-flex; min-height: 23px; align-items: center; max-width: 100%; padding: 4px 8px; overflow: hidden; border: 1px solid rgba(255, 190, 123, .17); border-radius: 999px; background: rgba(237, 139, 62, .08); color: #ffd2aa; font-size: 9px; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
+.portal-voice-studio-tags span { border-color: rgba(181, 161, 255, .19); background: rgba(140, 123, 247, .1); color: #d4caff; }
+.portal-voice-default { border-color: rgba(255, 205, 139, .37); background: rgba(248, 169, 83, .14); color: #ffe2bf; }
+.portal-voice-policy-flag { border-color: rgba(255, 163, 117, .35); background: rgba(242, 101, 70, .11); color: #ffc1aa; }
+.portal-voice-studio-filter { display: grid; grid-template-columns: minmax(190px, 1.35fr) repeat(2, minmax(124px, .72fr)); gap: 11px; align-items: end; margin-top: 14px; padding: 13px; border: 1px solid rgba(255, 187, 119, .15); border-radius: 15px; background: rgba(37, 19, 30, .46); }
+.portal-voice-studio-filter .portal-field { gap: 6px; }
+.portal-voice-studio-filter .portal-form-footer { grid-column: 1 / -1; margin-top: 0; padding-top: 1px; }
+.portal-voice-studio-composer { display: grid; gap: 13px; }
+.portal-voice-script-create { margin-top: 0; }
+.portal-voice-script-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 14px; }
+.portal-voice-script-card { display: grid; gap: 13px; min-width: 0; padding: 16px; border: 1px solid rgba(255, 183, 113, .16); border-radius: 17px; background: linear-gradient(145deg, rgba(48, 29, 40, .94), rgba(7, 16, 30, .99)); }
+.portal-voice-script-card .portal-card-header { align-items: flex-start; }
+.portal-voice-script-card .portal-card-subtitle { display: -webkit-box; min-height: 42px; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.portal-voice-script-form { padding-top: 13px; border-top: 1px solid rgba(255, 190, 125, .12); }
+.portal-voice-script-form .portal-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.portal-voice-script-form .portal-field--wide { grid-column: 1 / -1; }
+.portal-voice-script-history { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid rgba(255, 190, 125, .12); }
+.portal-voice-script-history > strong { color: #ffe8d3; font-size: 11px; }
+.portal-voice-script-history > div { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; padding: 8px 0; border-top: 1px solid rgba(255, 190, 125, .08); color: #d7b6aa; font-size: 10px; }
+.portal-voice-script-history > div:first-of-type { border-top: 0; }
+.portal-voice-script-history em { color: #ffd19e; font-size: 10px; font-style: normal; font-weight: 750; }
+.portal-voice-cue-sheet { display: grid; gap: 12px; padding: 14px; border: 1px solid rgba(190, 173, 255, .19); border-radius: 14px; background: linear-gradient(145deg, rgba(35, 27, 57, .59), rgba(10, 17, 31, .77)); }
+.portal-voice-cue-sheet h4 { margin: 4px 0; color: #efeaff; font-size: 13px; }
+.portal-voice-cue-sheet p { margin: 0; color: #bbb7d5; font-size: 11px; line-height: 1.55; }
+.portal-voice-cue-metrics { display: flex; flex-wrap: wrap; gap: 7px; }
+.portal-voice-cue-metrics span { padding: 4px 8px; border: 1px solid rgba(184, 168, 255, .17); border-radius: 999px; background: rgba(137, 121, 238, .09); color: #d9d0ff; font-size: 9px; font-weight: 720; }
+.portal-voice-cue-sheet ol { display: grid; gap: 0; padding: 0; margin: 0; list-style: none; }
+.portal-voice-cue-sheet li { display: grid; grid-template-columns: 21px 92px minmax(0, 1fr) auto; gap: 9px; align-items: start; padding: 10px 0; border-top: 1px solid rgba(185, 168, 255, .11); }
+.portal-voice-cue-sheet li:first-child { border-top: 0; }
+.portal-voice-cue-sheet li > span { display: grid; width: 20px; height: 20px; place-items: center; border-radius: 50%; background: rgba(143, 126, 242, .14); color: #d9d1ff; font-size: 9px; font-weight: 780; }
+.portal-voice-cue-sheet time, .portal-voice-cue-sheet small { color: #aaa3c8; font: 9px/1.6 var(--portal-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace); }
+.portal-voice-cue-sheet small { white-space: nowrap; }
+.portal-voice-version-list { display: grid; gap: 0; }
+.portal-voice-version-list > article { display: flex; flex-wrap: wrap; gap: 13px; align-items: center; justify-content: space-between; padding: 14px 0; border-top: 1px solid rgba(255, 190, 125, .11); }
+.portal-voice-version-list > article:first-child { border-top: 0; }
+.portal-voice-version-list > article > div { min-width: 0; }
+.portal-voice-version-list strong, .portal-voice-version-list p, .portal-voice-version-list small { display: block; }
+.portal-voice-version-list strong { color: #ffe8d3; font-size: 12px; }
+.portal-voice-version-list p { max-width: 630px; margin: 4px 0 0; color: #d1b7ad; font-size: 10px; line-height: 1.55; }
+.portal-voice-version-list small { margin-top: 4px; color: #aa918f; font-size: 9px; }
+.portal-voice-studio-events { display: grid; gap: 0; }
+.portal-voice-studio-events > div { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 9px; padding: 11px 0; border-top: 1px solid rgba(255, 190, 125, .1); }
+.portal-voice-studio-events > div:first-child { border-top: 0; }
+.portal-voice-studio-events > div > span:first-child { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #ffbb7c; box-shadow: 0 0 0 4px rgba(248, 161, 83, .1); color: transparent; }
+.portal-voice-studio-events strong, .portal-voice-studio-events small { display: block; }
+.portal-voice-studio-events strong { color: #ffe9d6; font-size: 11px; text-transform: capitalize; }
+.portal-voice-studio-events small { margin-top: 3px; color: #c5a8a4; font-size: 9px; }
+
 /* Audio Library & Briefing: a private working surface for music/SFX intent
    and Asset Vault references. It deliberately avoids a faux audio player,
    provider dashboard, streaming chrome or landing-page treatment. */
@@ -1209,6 +1287,8 @@ a { color: inherit; text-decoration: none; }
   .portal-prompt-library-filter { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .portal-content-studio-intro, .portal-content-studio-detail-summary, .portal-content-studio-layout, .portal-content-studio-detail-grid, .portal-content-studio-history-grid { grid-template-columns: 1fr; }
   .portal-content-studio-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-voice-studio-intro, .portal-voice-studio-detail-summary, .portal-voice-studio-layout, .portal-voice-studio-detail-grid, .portal-voice-studio-history-grid { grid-template-columns: 1fr; }
+  .portal-voice-studio-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .portal-media-workspace-intro, .portal-media-detail-summary, .portal-media-workspace-layout, .portal-media-detail-grid { grid-template-columns: 1fr; }
   .portal-media-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero, .portal-support-layout, .portal-support-detail-layout { grid-template-columns: 1fr; }
@@ -1301,6 +1381,16 @@ a { color: inherit; text-decoration: none; }
   .portal-content-variant-form .portal-fields { grid-template-columns: 1fr; }
   .portal-content-variant-form .portal-field--wide { grid-column: auto; }
   .portal-content-version-list > article { align-items: flex-start; flex-direction: column; }
+  .portal-voice-vault-grid, .portal-voice-script-grid { grid-template-columns: 1fr; }
+  .portal-voice-studio-filter { grid-template-columns: 1fr; }
+  .portal-voice-studio-filter .portal-form-footer { grid-column: auto; }
+  .portal-voice-studio-intro, .portal-voice-studio-detail-summary { padding: 20px; border-radius: 18px; }
+  .portal-voice-studio-intro dl, .portal-voice-studio-detail-summary dl { grid-template-columns: 1fr; }
+  .portal-voice-script-form .portal-fields { grid-template-columns: 1fr; }
+  .portal-voice-script-form .portal-field--wide { grid-column: auto; }
+  .portal-voice-cue-sheet li { grid-template-columns: 21px minmax(0, 1fr); }
+  .portal-voice-cue-sheet li time, .portal-voice-cue-sheet li small { grid-column: 2; }
+  .portal-voice-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-media-collection-grid { grid-template-columns: 1fr; }
   .portal-media-filter { grid-template-columns: 1fr; }
   .portal-media-filter .portal-form-footer { grid-column: auto; }
