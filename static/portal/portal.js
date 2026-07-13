@@ -613,6 +613,18 @@
     layout: "subtitle-studio", type: "subtitle-studio", fields: [], action: "none", status: "ready",
     notes: ["Không nhập secret, OTP/CVV, chứng từ thanh toán, provider/job/file handle hoặc URL trong metadata dự án.", "Mỗi lần ghi cần signed session, CSRF, ownership, idempotency và optimistic revision do server xác minh."]
   });
+  // Image Creative Studio intentionally has a route family of its own.  The
+  // legacy `/image/*` pages retain their existing deterministic operations;
+  // this workspace holds signed-account creative directions only and never
+  // pretends to call an image provider, render an image, or deliver a file.
+  customerPage("/image-studio", "Image Creative Studio", "Tổ chức art direction, Asset Vault reference, biến thể và self-review trong workspace riêng tư.", ICONS.image, {
+    layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
+    notes: ["Image Creative Studio chỉ lưu creative brief, direction và metadata Asset Vault đã qua owner check. Không có URL media, upload, provider, render, preview hoặc delivery tại đây.", "Approve là self-review của brief, không phải xác nhận ảnh đã tạo hoặc kết quả xử lý AI."]
+  });
+  customerPage("/image-studio/new", "Artboard mới", "Tạo art direction có cấu trúc, tham chiếu Asset Vault an toàn và version history riêng.", ICONS.image, {
+    layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
+    notes: ["Chỉ chọn reference thuộc Asset Vault của signed account; không nhập URL, provider/job/file handle, secret, OTP/CVV hoặc chứng từ thanh toán.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -1078,6 +1090,19 @@
         state: source.voiceStudioFilter && ["all", "active", "archived"].includes(String(source.voiceStudioFilter.state || "")) ? String(source.voiceStudioFilter.state || "all") : "all"
       },
       voiceStudioReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.voiceStudioReadState || "")) ? String(source.voiceStudioReadState) : "guarded",
+      // Image Creative Studio is a distinct owner-scoped planning surface.
+      // Preserve only bounded safe metadata from its signed API; a failed
+      // hydration must never fall back to legacy `/image`, a prior account,
+      // browser cached artwork, provider data or a fabricated preview.
+      imageStudioEnabled: source.imageStudioEnabled === true,
+      imageStudioSummary: source.imageStudioSummary && typeof source.imageStudioSummary === "object" ? source.imageStudioSummary : {},
+      imageArtboards: Array.isArray(source.imageArtboards) ? source.imageArtboards.slice(0, 100) : [],
+      imageArtboardDetail: source.imageArtboardDetail && typeof source.imageArtboardDetail === "object" ? source.imageArtboardDetail : {},
+      imageArtboardEstimate: source.imageArtboardEstimate && typeof source.imageArtboardEstimate === "object" ? source.imageArtboardEstimate : {},
+      imageStudioReferences: source.imageStudioReferences && typeof source.imageStudioReferences === "object" ? source.imageStudioReferences : {},
+      imageStudioEvents: Array.isArray(source.imageStudioEvents) ? source.imageStudioEvents.slice(0, 50) : [],
+      imageStudioPolicy: source.imageStudioPolicy && typeof source.imageStudioPolicy === "object" ? source.imageStudioPolicy : {},
+      imageStudioReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageStudioReadState || "")) ? String(source.imageStudioReadState) : "guarded",
       // Support Desk is a separate Web-native case store.  It never falls
       // back to Bot support/ticket state, and redacted page data must survive
       // render normalization after a successful owner-scoped hydration.
@@ -1240,6 +1265,16 @@
         status: "processing", access: "member", layout: "video-studio-detail", action: "none", actionLabel: "", fields: [],
         recordId: planId,
         notes: ["Plan chỉ là authoring metadata Web-owned. Không có render, media URL, kết quả hoặc delivery được tạo ở trang này.", "Approved chỉ đánh dấu self-review nội bộ; quyền sở hữu và mọi bước thực thi tương lai cần contract riêng."]
+      });
+    }
+    if (/^\/image-studio\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const artboardId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/image-studio/:id", routePath: normalized, title: "Image Creative Studio", icon: ICONS.image, section: "Image Creative Studio",
+        description: "Biên tập art direction, reference Asset Vault, biến thể và version history thuộc signed Web account hiện tại.",
+        status: "processing", access: "member", layout: "image-studio-detail", action: "none", actionLabel: "", fields: [],
+        recordId: artboardId,
+        notes: ["Artboard và direction chỉ là authoring metadata Web-owned. Không tạo ảnh, thumbnail, preview, URL media, job hay delivery.", "Reference chỉ là metadata Asset Vault đã qua owner check; Resize/Enhance Web-native là utility riêng, không phải provider image engine."]
       });
     }
     if (/^\/subtitle-studio\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -1412,7 +1447,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/video-studio", "Video Studio", ICONS.video], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image], ["/video-studio", "Video Studio", ICONS.video], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1481,6 +1516,7 @@
     if (linkPath === "/prompt-library") return matchesRouteFamily(path, "/prompt-library");
     if (linkPath === "/media-workspace") return matchesRouteFamily(path, "/media-workspace");
     if (linkPath === "/content-studio") return matchesRouteFamily(path, "/content-studio");
+    if (linkPath === "/image-studio") return matchesRouteFamily(path, "/image-studio");
     if (linkPath === "/video-studio") return matchesRouteFamily(path, "/video-studio");
     if (linkPath === "/subtitle-studio") return matchesRouteFamily(path, "/subtitle-studio");
     if (linkPath === "/voice-studio") return matchesRouteFamily(path, "/voice-studio");
@@ -3332,6 +3368,231 @@
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Ordered scene board</span><h2 class="portal-card-title">Scenes & nhịp kể chuyện</h2><p class="portal-card-subtitle">Dùng mũi tên để thay thứ tự active scene. Thao tác gửi toàn bộ sequence cùng revision của plan để tránh ghi đè im lặng.</p></div></div><div class="portal-video-scene-grid">${sceneMarkup}</div></section>
       <div class="portal-video-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử video plan</h2><p class="portal-card-subtitle">Khôi phục version tạo revision mới, không xóa history cũ.</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-video-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn, revision và thời điểm; không đưa brief hay scene text vào audit view.</p></div></div>${events.length ? `<div class="portal-video-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(videoStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</section></div>
       ${renderVideoStudioBoundary()}
+    </article>`;
+  }
+
+  // Image Creative Studio is a signed-account art-direction boundary.  It
+  // keeps briefs, owned Asset Vault references, variants and self-review in
+  // one place without becoming a proxy for any image provider or output.
+  const IMAGE_STUDIO_INTENTS = Object.freeze([
+    ["create", "Tạo concept (brief only)"], ["edit", "Chỉnh sửa direction"], ["upscale", "Nâng cấp direction"],
+    ["image_to_image", "Image-to-image direction"], ["remove_background", "Tách nền direction"]
+  ]);
+  const IMAGE_STUDIO_ASPECT_RATIOS = Object.freeze([
+    ["1:1", "1:1 · Vuông"], ["4:5", "4:5 · Portrait"], ["3:4", "3:4 · Dọc"], ["16:9", "16:9 · Ngang"],
+    ["9:16", "9:16 · Story"], ["3:2", "3:2 · Landscape"], ["2:3", "2:3 · Portrait"], ["custom", "Tỷ lệ tùy chỉnh"]
+  ]);
+  const IMAGE_STUDIO_OUTPUT_FORMATS = Object.freeze([["png", "PNG · target metadata"], ["jpg", "JPG · target metadata"], ["webp", "WebP · target metadata"]]);
+  const IMAGE_STUDIO_STATES = Object.freeze({
+    draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
+  });
+
+  function validImageStudioArtboardId(value) { return validProjectId(value); }
+  function validImageStudioDirectionId(value) { return validProjectId(value); }
+  function imageStudioIntentLabel(value) {
+    const found = IMAGE_STUDIO_INTENTS.find(([key]) => key === String(value || ""));
+    return found ? found[1] : "Art direction";
+  }
+  function imageStudioFormatLabel(value) {
+    const found = IMAGE_STUDIO_OUTPUT_FORMATS.find(([key]) => key === String(value || ""));
+    return found ? found[1] : "Target metadata";
+  }
+  function imageStudioState(value) {
+    const state = String(value || "").toLowerCase();
+    return Object.prototype.hasOwnProperty.call(IMAGE_STUDIO_STATES, state) ? state : "guarded";
+  }
+  function imageStudioStateBadge(value) {
+    const state = imageStudioState(value);
+    return `<span class="portal-badge" data-status="${safeText(state)}">${safeText(IMAGE_STUDIO_STATES[state] || "Được bảo vệ")}</span>`;
+  }
+  function imageStudioTags(value) {
+    return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 20) : [];
+  }
+  function renderImageStudioTags(value) {
+    const tags = imageStudioTags(value);
+    return tags.length ? `<div class="portal-image-studio-tags">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>` : "";
+  }
+  function imageStudioProjectOptions(context) {
+    const refs = context && context.imageStudioReferences && typeof context.imageStudioReferences === "object" ? context.imageStudioReferences : {};
+    return (Array.isArray(refs.projects) ? refs.projects : []).filter((item) => item && validImageStudioArtboardId(item.id)).slice(0, 100)
+      .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
+  }
+  function imageStudioAssetOptions(context) {
+    const refs = context && context.imageStudioReferences && typeof context.imageStudioReferences === "object" ? context.imageStudioReferences : {};
+    return (Array.isArray(refs.image_assets) ? refs.image_assets : []).filter((item) => item && validImageStudioArtboardId(item.id)).slice(0, 100)
+      .map((item) => {
+        // The Image Studio API intentionally exposes a safe display label,
+        // not a client filename/path. Do not revive a legacy filename field
+        // if a future payload happens to contain one.
+        const label = String(item.display_name || "Ảnh Asset Vault").replace(/\s+/g, " ").trim().slice(0, 160);
+        const extension = String(item.extension || "").replace(/^\./, "").toUpperCase();
+        return { value: String(item.id), label: extension ? `${label} · ${extension}` : label };
+      });
+  }
+  function imageStudioAssetName(context, assetId) {
+    const id = String(assetId || "");
+    const refs = context && context.imageStudioReferences && typeof context.imageStudioReferences === "object" ? context.imageStudioReferences : {};
+    const asset = (Array.isArray(refs.image_assets) ? refs.image_assets : []).find((item) => item && String(item.id || "") === id);
+    if (!asset) return id ? "Asset Vault reference đã chọn" : "Không gắn asset";
+    return String(asset.display_name || "Ảnh Asset Vault").replace(/\s+/g, " ").trim().slice(0, 160);
+  }
+  function imageStudioArtboardFields(context) {
+    return [
+      { name: "title", label: "Tên artboard", placeholder: "Ví dụ: Key visual bộ sưu tập mùa hè", required: true, minLength: 2, maxLength: 180 },
+      { name: "image_intent", label: "Ý định direction", control: "select", required: true, options: IMAGE_STUDIO_INTENTS, help: "Nhãn để tổ chức brief; không gọi engine, provider hoặc tạo ảnh." },
+      { name: "language", label: "Ngôn ngữ direction", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "aspect_ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: IMAGE_STUDIO_ASPECT_RATIOS },
+      { name: "output_format", label: "Định dạng đích", control: "select", required: true, options: IMAGE_STUDIO_OUTPUT_FORMATS, help: "Chỉ là metadata cho self-review, không có file đích được tạo." },
+      { name: "creative_brief", label: "Creative brief", control: "textarea", placeholder: "Thông điệp, bối cảnh, giới hạn thương hiệu và điểm cần tự rà soát…", required: true, minLength: 3, maxLength: 12000, wide: true },
+      { name: "style_direction", label: "Style direction", control: "textarea", placeholder: "Bố cục, ánh sáng, palette, chất liệu và cảm xúc mong muốn…", maxLength: 6000, wide: true },
+      { name: "negative_direction", label: "Điều cần tránh", control: "textarea", placeholder: "Các yếu tố không phù hợp với thương hiệu hoặc mục tiêu brief…", maxLength: 4000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "launch, product, review", maxLength: 1000 },
+      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: imageStudioProjectOptions(context), emptyLabel: "Không liên kết Project" }
+    ];
+  }
+  function imageStudioArtboardValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const intent = String(source.image_intent || "");
+    const aspectRatio = String(source.aspect_ratio || "");
+    const outputFormat = String(source.output_format || "");
+    return {
+      title: String(source.title || ""), image_intent: IMAGE_STUDIO_INTENTS.some(([key]) => key === intent) ? intent : "create",
+      language: String(source.language || "vi"), aspect_ratio: IMAGE_STUDIO_ASPECT_RATIOS.some(([key]) => key === aspectRatio) ? aspectRatio : "1:1",
+      output_format: IMAGE_STUDIO_OUTPUT_FORMATS.some(([key]) => key === outputFormat) ? outputFormat : "png",
+      creative_brief: String(source.creative_brief || source.creative_brief_excerpt || source.brief_excerpt || ""), style_direction: String(source.style_direction || ""),
+      negative_direction: String(source.negative_direction || ""), tags: imageStudioTags(source.tags).join(", "), project_id: String(source.project_id || "")
+    };
+  }
+  function imageStudioDirectionFields(context) {
+    return [
+      { name: "title", label: "Tên biến thể direction", placeholder: "Ví dụ: Bản tối giản cho feed", required: true, minLength: 2, maxLength: 180 },
+      { name: "operation", label: "Loại biến thể", control: "select", required: true, options: IMAGE_STUDIO_INTENTS, help: "Không chạy thao tác ảnh. Với Edit/Upscale/Image-to-image/Tách nền, hãy chọn ảnh gốc trong Asset Vault." },
+      { name: "asset_id", label: "Ảnh gốc từ Asset Vault", control: "select", options: imageStudioAssetOptions(context), emptyLabel: "Không dùng ảnh gốc (chỉ phù hợp Create)", help: "Chỉ có metadata của ảnh thuộc account hiện tại; không có thumbnail, blob hay URL công khai." },
+      { name: "reference_asset_id", label: "Ảnh tham chiếu (tùy chọn)", control: "select", options: imageStudioAssetOptions(context), emptyLabel: "Không thêm ảnh tham chiếu" },
+      { name: "prompt_text", label: "Prompt / concept text", control: "textarea", placeholder: "Mô tả concept, đối tượng và thông điệp cần được biên tập…", maxLength: 12000, wide: true },
+      { name: "edit_instructions", label: "Chỉ dẫn chỉnh sửa", control: "textarea", placeholder: "Những thay đổi cần review nếu direction dựa trên ảnh Asset Vault…", maxLength: 6000, wide: true },
+      { name: "composition_notes", label: "Bố cục & visual notes", control: "textarea", placeholder: "Vị trí chủ thể, crop, ánh sáng, khoảng trống, hệ chữ…", maxLength: 6000, wide: true },
+      { name: "negative_direction", label: "Điều cần tránh", control: "textarea", placeholder: "Các yếu tố không nên xuất hiện trong direction này…", maxLength: 4000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "hero, minimal, feed", maxLength: 1000 }
+    ];
+  }
+  function imageStudioDirectionValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const operation = String(source.operation || "");
+    return {
+      title: String(source.title || ""), operation: IMAGE_STUDIO_INTENTS.some(([key]) => key === operation) ? operation : "create",
+      prompt_text: String(source.prompt_text || source.prompt_excerpt || ""), edit_instructions: String(source.edit_instructions || ""),
+      composition_notes: String(source.composition_notes || ""), negative_direction: String(source.negative_direction || ""),
+      asset_id: String(source.asset_id || ""), reference_asset_id: String(source.reference_asset_id || ""), tags: imageStudioTags(source.tags).join(", ")
+    };
+  }
+  function imageStudioEventLabel(value) {
+    const labels = {
+      artboard_created: "Đã tạo artboard", artboard_updated: "Đã lưu artboard", artboard_state_changed: "Đã đổi trạng thái self-review", artboard_version_restored: "Đã khôi phục version artboard",
+      artboard_review: "Đã bắt đầu self-review", artboard_approved: "Đã hoàn tất self-review", artboard_archived: "Đã archive artboard", artboard_draft: "Đã trả artboard về Draft",
+      direction_created: "Đã thêm biến thể direction", direction_updated: "Đã lưu biến thể direction", direction_archived: "Đã archive biến thể", direction_restored: "Đã khôi phục biến thể", direction_version_restored: "Đã khôi phục version biến thể"
+    };
+    return labels[String(value || "")] || String(value || "image_studio_updated").replace(/_/g, " ");
+  }
+  function renderImageStudioBoundary() {
+    return `<aside class="portal-card portal-card-pad portal-image-studio-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Direction & self-review, không tạo ảnh</h2><p class="portal-card-subtitle">Workspace chỉ lưu brief, Asset Vault reference đã được owner check và biến thể direction. Không gọi provider, không tạo ảnh/preview/job, không trừ Xu hay khởi tạo thanh toán.</p></div>${badge("guarded")}</div><div class="portal-image-studio-guard-list"><span><strong>Provider image call</strong><em>guarded</em></span><span><strong>Image / preview</strong><em>guarded</em></span><span><strong>Job / delivery</strong><em>guarded</em></span><span><strong>Wallet / payment</strong><em>guarded</em></span></div></aside>`;
+  }
+  function renderImageArtboardCards(items, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["image-studio-view"] === true);
+    if (!items.length) return renderEmpty("Chưa có artboard", "Tạo artboard đầu tiên để tổ chức brief, Asset Vault reference và self-review. Workspace không sinh ảnh hoặc output thay thế.", ICONS.image);
+    return `<div class="portal-image-artboard-grid">${items.map((item) => {
+      const id = String(item.id || "");
+      const state = imageStudioState(item.state);
+      const directionCount = Number(item.direction_count || 0);
+      return `<article class="portal-card portal-card-pad portal-image-artboard-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioIntentLabel(item.image_intent))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Image artboard"))}</h3><p class="portal-card-subtitle">${safeText(String(item.creative_brief_excerpt || item.brief_excerpt || item.creative_brief || "Chưa có brief hiển thị."))}</p></div>${imageStudioStateBadge(state)}</div><div class="portal-image-artboard-meta"><span>${safeText(String(item.aspect_ratio || "—"))}</span><span>${safeText(String(item.output_format || "png").toUpperCase())} target</span><span>${safeText(String(directionCount))} directions</span><span>v${safeText(String(item.revision || 1))}</span></div>${renderImageStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${state === "approved" ? "Self-review đã đánh dấu" : state === "archived" ? "Đã archive · chỉ đọc" : "Đang biên tập"}</span>${canView && validImageStudioArtboardId(id) ? `<a class="portal-button portal-button--quiet" href="/image-studio/${encodeURIComponent(id)}">Mở artboard <span aria-hidden="true">→</span></a>` : ""}</div></article>`;
+    }).join("")}</div>`;
+  }
+  function renderImageStudio(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["image-studio-view"] === true);
+    const enabled = context.imageStudioEnabled === true;
+    if (!canView) {
+      const copy = enabled
+        ? "Đăng nhập bằng signed session để mở artboard thuộc account hiện tại. Route native này không sử dụng dữ liệu từ legacy /image."
+        : "Image Creative Studio đang được server giữ ở chế độ guarded. Khi cờ feature chưa bật, Web không hiển thị fallback, provider flow, hình giả hoặc output giả.";
+      return `<article class="portal-page portal-image-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Image Creative Studio đang được bảo vệ", copy, ICONS.image)}</section></article>`;
+    }
+    const summary = context.imageStudioSummary && typeof context.imageStudioSummary === "object" ? context.imageStudioSummary : {};
+    const artboardsSummary = summary.artboards && typeof summary.artboards === "object" ? summary.artboards : {};
+    const artboards = Array.isArray(context.imageArtboards) ? context.imageArtboards.filter((item) => item && validImageStudioArtboardId(item.id)).slice(0, 100) : [];
+    const values = imageStudioArtboardValues(transientFormValues(page.routePath || page.path));
+    const total = Number(artboardsSummary.total || artboards.length);
+    const review = Number(artboardsSummary.review || 0);
+    const approved = Number(artboardsSummary.approved || 0);
+    return `<article class="portal-page portal-image-studio">${renderHero(page, context)}
+      <section class="portal-image-studio-intro"><div><span class="portal-section-kicker">Web-native visual direction</span><h2>Đi từ art direction đến review, với Asset Vault reference có kiểm soát.</h2><p>Giữ creative brief, negative direction và biến thể trong không gian riêng tư. Mọi số liệu là metadata authoring; không phải ảnh, thumbnail hay preview đã được tạo.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Artboards</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>
+      <div class="portal-image-studio-layout"><section class="portal-card portal-card-pad portal-image-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New creative artboard</span><h2 class="portal-card-title">Lập art direction</h2><p class="portal-card-subtitle">Bắt đầu bằng intent, tỷ lệ, định dạng đích, creative brief và style direction. Server kiểm tra session, CSRF, ownership, revision và idempotency cho mỗi lần ghi.</p></div>${badge(canView && context.capabilities["image-artboard-create"] ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-artboard-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(imageStudioArtboardFields(context), Boolean(context.capabilities && context.capabilities["image-artboard-create"]), context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL, asset path, provider/job ID, secret, OTP/CVV hoặc chứng từ thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${context.capabilities && context.capabilities["image-artboard-create"] ? "" : " disabled"}>Tạo artboard</button></div></form></section>${renderImageStudioBoundary()}</div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Artboard library</span><h2 class="portal-card-title">Tiếp tục creative review</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở artboard để server owner-check direction, history và Asset Vault reference an toàn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-studio-refresh" data-portal-route="/image-studio">Làm mới</button></div>${renderImageArtboardCards(artboards, context)}</section>
+    </article>`;
+  }
+  function imageStudioEstimateMarkup(estimate, directions) {
+    const source = estimate && typeof estimate === "object" ? estimate : {};
+    const active = Number(source.active_direction_count ?? source.direction_count ?? directions.length);
+    const withAsset = Number(source.asset_reference_count ?? source.referenced_asset_count ?? directions.filter((item) => String(item.asset_id || "")).length);
+    const variants = Number(source.variant_count ?? directions.length);
+    return `<section class="portal-card portal-card-pad portal-image-studio-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Review estimate</span><h2 class="portal-card-title">Tổng hợp metadata để rà soát</h2><p class="portal-card-subtitle">Estimate chỉ tổng hợp direction và Asset Vault reference đã chọn. Nó không đọc hình, render, tạo thumbnail, gọi provider hay xác nhận output.</p></div>${badge("read_only")}</div><div class="portal-image-studio-estimate-grid"><span><strong>${safeText(String(active))}</strong> directions active</span><span><strong>${safeText(String(withAsset))}</strong> Asset Vault refs</span><span><strong>${safeText(String(variants))}</strong> variant metadata</span></div></section>`;
+  }
+  function renderImageDirectionCard(direction, artboard, context, route) {
+    const directionId = String(direction.id || "");
+    const active = String(direction.state || "active") === "active";
+    const artboardWritable = String(artboard.state || "") === "draft";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["image-direction-update"] === true && active && artboardWritable);
+    const canArchive = Boolean(context.capabilities && context.capabilities["image-direction-archive"] === true && active && artboardWritable);
+    const canRestore = Boolean(context.capabilities && context.capabilities["image-direction-restore"] === true && !active && artboardWritable);
+    const canRestoreVersion = Boolean(context.capabilities && context.capabilities["image-direction-restore-version"] === true && active && artboardWritable);
+    const versions = Array.isArray(direction.versions) ? direction.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 20) : [];
+    const stateAction = active
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-direction-archive" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-image-direction-id="${safeText(directionId)}" data-image-direction-revision="${safeText(String(direction.revision))}" data-portal-confirm="Archive biến thể direction này? Metadata và history riêng tư vẫn được giữ để khôi phục."${canArchive ? "" : " disabled"}>Archive</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-direction-restore" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-image-direction-id="${safeText(directionId)}" data-image-direction-revision="${safeText(String(direction.revision))}"${canRestore ? "" : " disabled"}>Khôi phục</button>`;
+    const versionsMarkup = versions.length ? `<div class="portal-image-direction-history"><strong>Lịch sử biến thể</strong>${versions.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(direction.revision) ? "<em>Đang mở</em>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-direction-restore-version" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-image-direction-id="${safeText(directionId)}" data-image-direction-revision="${safeText(String(direction.revision))}" data-image-direction-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision biến thể mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
+    const assetName = imageStudioAssetName(context, direction.asset_id);
+    const referenceName = imageStudioAssetName(context, direction.reference_asset_id);
+    return `<article class="portal-image-direction-card${active ? "" : " is-archived"}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(imageStudioIntentLabel(direction.operation))}</span><h3 class="portal-card-title">${safeText(String(direction.title || "Image direction"))}</h3><p class="portal-card-subtitle">${safeText(String(direction.prompt_excerpt || direction.prompt_text || direction.edit_instructions || "Chưa có direction hiển thị."))}</p></div>${badge(active ? "ready" : "archived")}</div><div class="portal-image-direction-meta"><span>Asset: ${safeText(assetName)}</span><span>Ref: ${safeText(referenceName)}</span><span>v${safeText(String(direction.revision || 1))}</span></div>${renderImageStudioTags(direction.tags)}<div class="portal-inline-actions">${stateAction}</div><form class="portal-form portal-image-direction-form" data-portal-form data-portal-action="image-direction-update" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-image-direction-id="${safeText(directionId)}" data-image-direction-revision="${safeText(String(direction.revision))}" novalidate>${renderFields(imageStudioDirectionFields(context), canUpdate, context, imageStudioDirectionValues(direction))}<div class="portal-form-footer"><span class="portal-form-note">Lưu direction không đọc Asset Vault blob, không tạo ảnh/preview và không gọi provider.</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision biến thể</button></div></form>${versionsMarkup}</article>`;
+  }
+  function renderImageStudioDetail(page, context) {
+    const detail = context.imageArtboardDetail && typeof context.imageArtboardDetail === "object" ? context.imageArtboardDetail : {};
+    const artboard = detail.artboard && typeof detail.artboard === "object" && validImageStudioArtboardId(detail.artboard.id) && String(detail.artboard.id) === String(page.recordId || "") ? detail.artboard : null;
+    const canView = Boolean(context.capabilities && context.capabilities["image-studio-view"] === true);
+    if (!canView || !artboard) {
+      const title = !canView ? "Image Creative Studio đang được bảo vệ" : "Không tìm thấy artboard";
+      const copy = !canView ? "Đăng nhập bằng signed session và chờ feature flag server-side để mở artboard của account hiện tại." : "Server cần xác minh owner trước khi hiển thị art direction, Asset Vault reference và history; dữ liệu cũ không được giữ trong browser.";
+      return `<article class="portal-page portal-image-studio-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(title, copy, ICONS.image)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/image-studio">Về Image Studio</a></div></section></article>`;
+    }
+    const route = page.routePath || page.path;
+    const state = imageStudioState(artboard.state);
+    // The server permits authoring mutations only in Draft.  Review is an
+    // explicit frozen self-review checkpoint, so keep the client affordance
+    // conservative rather than letting a stale browser invite a rejected write.
+    const writable = state === "draft";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["image-artboard-update"] === true && writable);
+    const canLifecycle = Boolean(context.capabilities && context.capabilities["image-artboard-lifecycle"] === true);
+    const canRestoreVersion = Boolean(context.capabilities && context.capabilities["image-artboard-restore-version"] === true && writable);
+    const canDirectionCreate = Boolean(context.capabilities && context.capabilities["image-direction-create"] === true && writable);
+    const directions = Array.isArray(detail.directions) ? detail.directions.filter((item) => item && validImageStudioDirectionId(item.id) && String(item.artboard_id || "") === String(artboard.id)).slice(0, 250) : [];
+    const activeDirections = directions.filter((item) => String(item.state || "active") === "active");
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 24) : [];
+    const stateActions = state === "archived"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-artboard-state" data-image-artboard-state="draft" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-portal-confirm="Khôi phục artboard về Draft để tiếp tục biên tập?"${canLifecycle ? "" : " disabled"}>Khôi phục về Draft</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-artboard-state" data-image-artboard-state="${state === "draft" ? "review" : "draft"}" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-portal-confirm="${state === "draft" ? "Chuyển artboard sang Self-review?" : "Trả artboard về Draft để tiếp tục biên tập?"}"${canLifecycle ? "" : " disabled"}>${state === "draft" ? "Bắt đầu self-review" : "Trả về Draft"}</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-artboard-state" data-image-artboard-state="approved" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-portal-confirm="Đánh dấu self-review hoàn tất? Điều này không tạo ảnh, preview, job hoặc output."${canLifecycle && state === "review" ? "" : " disabled"}>Đánh dấu review xong</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-artboard-state" data-image-artboard-state="archived" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-portal-confirm="Archive artboard? Direction và history riêng tư vẫn được giữ."${canLifecycle ? "" : " disabled"}>Archive artboard</button>`;
+    const versionMarkup = versions.length ? `<div class="portal-image-version-list">${versions.map((version) => `<article><div><strong>v${safeText(String(version.revision))} · ${safeText(String(version.title || "Image artboard"))}</strong><p>${safeText(String(version.creative_brief_excerpt || version.brief_excerpt || version.creative_brief || ""))}</p><small>${safeText(String(version.created_at || "—"))}</small></div>${Number(version.revision) === Number(artboard.revision) ? "<span class=\"portal-form-note\">Đang mở</span>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="image-artboard-restore-version" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" data-image-artboard-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision artboard mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</article>`).join("")}</div>` : renderEmpty("Chưa có history", "Version đầu tiên xuất hiện khi artboard được lưu.", "↺");
+    const directionMarkup = directions.length ? directions.map((direction) => renderImageDirectionCard(direction, artboard, context, route)).join("") : renderEmpty("Chưa có biến thể direction", "Thêm direction thủ công để tách các phương án review. Workspace không tạo hình thay bạn.", ICONS.image);
+    const estimate = detail.estimate && typeof detail.estimate === "object" ? detail.estimate : (context.imageArtboardEstimate && typeof context.imageArtboardEstimate === "object" ? context.imageArtboardEstimate : {});
+    const estimateMarkup = state === "archived"
+      ? `<section class="portal-card portal-card-pad portal-image-studio-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Review estimate</span><h2 class="portal-card-title">Estimate đã được khóa</h2><p class="portal-card-subtitle">Artboard đang archive nên direction và estimate không được tính lại. Khôi phục về Draft khi bạn muốn tiếp tục review.</p></div>${badge("archived")}</div></section>`
+      : imageStudioEstimateMarkup(estimate, activeDirections);
+    return `<article class="portal-page portal-image-studio-detail">${renderHero(page, context)}
+      <section class="portal-image-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(imageStudioIntentLabel(artboard.image_intent))} · ${safeText(String(artboard.aspect_ratio || "—"))}</span><h2>${safeText(String(artboard.title || "Image artboard"))}</h2><p>${safeText(String(artboard.creative_brief || artboard.creative_brief_excerpt || artboard.brief_excerpt || "Chưa có brief hiển thị."))}</p>${renderImageStudioTags(artboard.tags)}</div><dl><div><dt>Trạng thái</dt><dd>${safeText(IMAGE_STUDIO_STATES[state] || "Được bảo vệ")}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(artboard.revision || 1))}</dd></div><div><dt>Directions</dt><dd>${safeText(String(activeDirections.length))}</dd></div></dl></section>
+      <div class="portal-image-studio-detail-grid"><section class="portal-card portal-card-pad portal-image-studio-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Artboard editor</span><h2 class="portal-card-title">Brief & visual direction</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không do browser tự suy diễn.</p></div>${imageStudioStateBadge(state)}</div><form class="portal-form" data-portal-form data-portal-action="image-artboard-update" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" novalidate>${renderFields(imageStudioArtboardFields(context), canUpdate, context, imageStudioArtboardValues(artboard))}<div class="portal-form-footer"><span class="portal-form-note">Chỉ Draft có thể biên tập. Approved hoặc archived cần được server đưa về Draft trước khi sửa.</span><div class="portal-inline-actions">${stateActions}<button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision artboard</button></div></div></form></section>${estimateMarkup}</div>
+      <section class="portal-card portal-card-pad portal-image-direction-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Variant direction board</span><h2 class="portal-card-title">Thêm biến thể direction</h2><p class="portal-card-subtitle">Mỗi biến thể có prompt, visual notes, Asset Vault reference và history riêng. Với non-create, server yêu cầu ảnh gốc thuộc account hiện tại.</p></div>${badge(canDirectionCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-direction-create" data-portal-route="${safeText(route)}" data-image-artboard-id="${safeText(String(artboard.id))}" data-image-artboard-revision="${safeText(String(artboard.revision))}" novalidate>${renderFields(imageStudioDirectionFields(context), canDirectionCreate, context, { operation: artboard.image_intent || "create" })}<div class="portal-form-footer"><span class="portal-form-note">Chỉ reference Asset Vault UUID được gửi. Không có raw URL, blob, thumbnail, provider call, preview hoặc output.</span><button class="portal-button portal-button--primary" type="submit"${canDirectionCreate ? "" : " disabled"}>Thêm biến thể direction</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Review-safe local utilities</span><h2 class="portal-card-title">Có ảnh private cần xử lý deterministic?</h2><p class="portal-card-subtitle">Resize & Enhance là utility Web-native riêng có output/private history riêng. Chúng không phải provider AI và không chuyển direction này thành ảnh đã tạo.</p></div>${badge("read_only")}</div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/image/resize">Mở Resize & Aspect Studio</a><a class="portal-button portal-button--quiet" href="/image/edit">Mở Image Enhance Studio</a><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Direction library</span><h2 class="portal-card-title">Biến thể & notes</h2><p class="portal-card-subtitle">Mọi card là metadata authoring. Asset name được hiển thị từ owner-scoped metadata, không phải thumbnail hoặc media URL.</p></div></div><div class="portal-image-direction-grid">${directionMarkup}</div></section>
+      <div class="portal-image-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử artboard</h2><p class="portal-card-subtitle">Khôi phục version tạo revision mới, không xóa history cũ.</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-image-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn, revision và thời điểm; không chứa prompt, asset path, URL, provider hay payment data.</p></div></div>${events.length ? `<div class="portal-image-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(imageStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</section></div>
+      ${renderImageStudioBoundary()}
     </article>`;
   }
 
@@ -6222,6 +6483,8 @@
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "content-studio": return renderContentStudio(page, context);
       case "content-studio-detail": return renderContentStudioDetail(page, context);
+      case "image-studio": return renderImageStudio(page, context);
+      case "image-studio-detail": return renderImageStudioDetail(page, context);
       case "video-studio": return renderVideoStudio(page, context);
       case "video-studio-detail": return renderVideoStudioDetail(page, context);
       case "subtitle-studio": return renderSubtitleStudio(page, context);
@@ -6436,7 +6699,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
+    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -6447,10 +6710,10 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", contentBriefId: source.getAttribute("data-content-brief-id") || "", contentBriefRevision: source.getAttribute("data-content-brief-revision") || "", contentBriefVersion: source.getAttribute("data-content-brief-version") || "", contentVariantId: source.getAttribute("data-content-variant-id") || "", contentVariantRevision: source.getAttribute("data-content-variant-revision") || "", videoPlanId: source.getAttribute("data-video-plan-id") || "", videoPlanRevision: source.getAttribute("data-video-plan-revision") || "", videoPlanVersion: source.getAttribute("data-video-plan-version") || "", videoPlanState: source.getAttribute("data-video-plan-state") || "", videoSceneId: source.getAttribute("data-video-scene-id") || "", videoSceneRevision: source.getAttribute("data-video-scene-revision") || "", videoSceneVersion: source.getAttribute("data-video-scene-version") || "", videoSceneDirection: source.getAttribute("data-video-scene-direction") || "", subtitleProjectId: source.getAttribute("data-subtitle-project-id") || "", subtitleProjectRevision: source.getAttribute("data-subtitle-project-revision") || "", subtitleProjectVersion: source.getAttribute("data-subtitle-project-version") || "", subtitleProjectState: source.getAttribute("data-subtitle-project-state") || "", subtitleCueId: source.getAttribute("data-subtitle-cue-id") || "", subtitleCueRevision: source.getAttribute("data-subtitle-cue-revision") || "", subtitleCueVersion: source.getAttribute("data-subtitle-cue-version") || "", subtitleCueDirection: source.getAttribute("data-subtitle-cue-direction") || "", subtitleExportFormat: source.getAttribute("data-subtitle-export-format") || "", voiceVaultId: source.getAttribute("data-voice-vault-id") || "", voiceVaultRevision: source.getAttribute("data-voice-vault-revision") || "", voiceVaultVersion: source.getAttribute("data-voice-vault-version") || "", voiceScriptId: source.getAttribute("data-voice-script-id") || "", voiceScriptRevision: source.getAttribute("data-voice-script-revision") || "", voiceScriptVersion: source.getAttribute("data-voice-script-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", contentBriefId: source.getAttribute("data-content-brief-id") || "", contentBriefRevision: source.getAttribute("data-content-brief-revision") || "", contentBriefVersion: source.getAttribute("data-content-brief-version") || "", contentVariantId: source.getAttribute("data-content-variant-id") || "", contentVariantRevision: source.getAttribute("data-content-variant-revision") || "", imageArtboardId: source.getAttribute("data-image-artboard-id") || "", imageArtboardRevision: source.getAttribute("data-image-artboard-revision") || "", imageArtboardVersion: source.getAttribute("data-image-artboard-version") || "", imageArtboardState: source.getAttribute("data-image-artboard-state") || "", imageDirectionId: source.getAttribute("data-image-direction-id") || "", imageDirectionRevision: source.getAttribute("data-image-direction-revision") || "", imageDirectionVersion: source.getAttribute("data-image-direction-version") || "", videoPlanId: source.getAttribute("data-video-plan-id") || "", videoPlanRevision: source.getAttribute("data-video-plan-revision") || "", videoPlanVersion: source.getAttribute("data-video-plan-version") || "", videoPlanState: source.getAttribute("data-video-plan-state") || "", videoSceneId: source.getAttribute("data-video-scene-id") || "", videoSceneRevision: source.getAttribute("data-video-scene-revision") || "", videoSceneVersion: source.getAttribute("data-video-scene-version") || "", videoSceneDirection: source.getAttribute("data-video-scene-direction") || "", subtitleProjectId: source.getAttribute("data-subtitle-project-id") || "", subtitleProjectRevision: source.getAttribute("data-subtitle-project-revision") || "", subtitleProjectVersion: source.getAttribute("data-subtitle-project-version") || "", subtitleProjectState: source.getAttribute("data-subtitle-project-state") || "", subtitleCueId: source.getAttribute("data-subtitle-cue-id") || "", subtitleCueRevision: source.getAttribute("data-subtitle-cue-revision") || "", subtitleCueVersion: source.getAttribute("data-subtitle-cue-version") || "", subtitleCueDirection: source.getAttribute("data-subtitle-cue-direction") || "", subtitleExportFormat: source.getAttribute("data-subtitle-export-format") || "", voiceVaultId: source.getAttribute("data-voice-vault-id") || "", voiceVaultRevision: source.getAttribute("data-voice-vault-revision") || "", voiceVaultVersion: source.getAttribute("data-voice-vault-version") || "", voiceScriptId: source.getAttribute("data-voice-script-id") || "", voiceScriptRevision: source.getAttribute("data-voice-script-revision") || "", voiceScriptVersion: source.getAttribute("data-voice-script-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });
