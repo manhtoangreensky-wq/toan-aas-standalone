@@ -1,9 +1,9 @@
 """Bounded, private Web-native document operations.
 
-The first operations are PDF Split, PDF Merge and lossless PDF Optimize. They reuse only verified,
-owner-scoped PDFs already stored in the Web Asset Vault, copy inputs into an
-isolated operation staging area, and create separately stored output
-attachments. They never call the Bot, a provider, wallet, PayOS, or a
+The first operations are PDF Split, PDF Merge, lossless PDF Optimize and
+Image to PDF. They reuse only verified, owner-scoped Asset Vault inputs, copy
+them into an isolated operation staging area, and create separately stored
+output attachments. They never call the Bot, a provider, wallet, PayOS, or a
 browser-supplied path.
 """
 
@@ -17,8 +17,10 @@ import json
 import os
 from pathlib import Path
 import re
+import threading
 import uuid
 from typing import Any
+import warnings
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
@@ -32,6 +34,7 @@ from copyfast_db import (
     document_operations_directory,
     document_operations_enabled,
     ensure_copyfast_schema,
+    image_to_pdf_enabled,
     transaction,
     utc_now,
 )
@@ -42,7 +45,8 @@ router = APIRouter(prefix="/api/v1/document-operations", tags=["Web Document Ope
 PDF_SPLIT_KIND = "pdf_split"
 PDF_MERGE_KIND = "pdf_merge"
 PDF_OPTIMIZE_KIND = "pdf_optimize"
-SUPPORTED_KINDS = frozenset({PDF_SPLIT_KIND, PDF_MERGE_KIND, PDF_OPTIMIZE_KIND})
+IMAGE_TO_PDF_KIND = "image_to_pdf"
+SUPPORTED_KINDS = frozenset({PDF_SPLIT_KIND, PDF_MERGE_KIND, PDF_OPTIMIZE_KIND, IMAGE_TO_PDF_KIND})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
@@ -54,6 +58,29 @@ MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
 MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
 MAX_MERGE_SOURCES = 8  # Web safety bound; Bot itself only requires at least two.
 MAX_MERGE_INPUT_BYTES = 40 * 1024 * 1024  # Aggregate bound beyond per-file 20 MiB.
+# Image-to-PDF deliberately keeps a lower bounded batch than the legacy Bot.
+# Each decoded source can use substantially more memory than its compressed
+# upload size, so a 1–8 page Web batch is both useful and predictable on the
+# shared application runtime.  The Bot's wider 20-file guided flow is recorded
+# in the migration inventory rather than copied without its missing guards.
+MAX_IMAGE_PDF_SOURCES = 8
+MAX_IMAGE_PDF_INPUT_BYTES = 40 * 1024 * 1024
+# A decoded raster uses far more memory than its compressed upload.  Keep the
+# per-page maximum comfortably below a 512 MiB service, then serialize this
+# decoder-backed operation per process below.  This is intentionally stricter
+# than the old Bot helper, whose runtime and operational limits are different.
+MAX_IMAGE_PIXELS_PER_SOURCE = 16 * 1024 * 1024
+MAX_IMAGE_PIXELS_TOTAL = 32 * 1024 * 1024
+MAX_IMAGE_DIMENSION = 7_680
+MAX_IMAGE_ASPECT_RATIO = 12
+IMAGE_TO_PDF_MAX_CONCURRENT = 1
+_IMAGE_TO_PDF_CAPACITY = threading.BoundedSemaphore(value=IMAGE_TO_PDF_MAX_CONCURRENT)
+IMAGE_INPUT_MIME_BY_EXTENSION = {
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".webp": "image/webp",
+}
 # A result that is technically one byte smaller is not a professional
 # optimization. Keep the original unless the verified final artifact saves a
 # meaningful amount without a lossy engine or an external command runner.
@@ -145,6 +172,28 @@ class PdfOptimizeRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class ImageToPdfRequest(BaseModel):
+    """An explicit private image order; every source becomes one PDF page."""
+
+    source_asset_ids: list[str] = Field(min_length=1, max_length=MAX_IMAGE_PDF_SOURCES)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_ids")
+    @classmethod
+    def valid_source_asset_ids(cls, values: list[str]) -> list[str]:
+        normalized = [_uuid(value, label="Asset Vault ID") for value in values]
+        if not normalized:
+            raise ValueError("Cần ít nhất một ảnh private để tạo PDF")
+        if len(set(normalized)) != len(normalized):
+            raise ValueError("Mỗi ảnh nguồn chỉ được chọn một lần trong cùng thao tác")
+        return normalized
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 def _require_enabled() -> None:
     if not document_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
@@ -153,14 +202,41 @@ def _require_enabled() -> None:
         )
 
 
+def _require_image_to_pdf_enabled() -> None:
+    """Keep the decoder-backed operation behind its own explicit circuit breaker."""
+    _require_enabled()
+    if not image_to_pdf_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Ảnh → PDF chưa được bật; cần private storage và WEBAPP_IMAGE_TO_PDF_ENABLED",
+        )
+
+
+def _reserve_image_to_pdf_capacity() -> None:
+    """Allow only one decoder-heavy image batch per Web process.
+
+    The HTTP/IP limiter protects the request surface, but it cannot bound
+    aggregate decoded memory across distinct clients.  This small process-wide
+    semaphore is deliberately fail-fast: a second batch receives an honest
+    retry response before it can create a database row or staging artifact.
+    """
+    if not _IMAGE_TO_PDF_CAPACITY.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="Ảnh → PDF đang bận xử lý một lô khác; vui lòng thử lại sau ít phút",
+        )
+
+
 def ensure_document_operations_runtime() -> None:
-    """Fail closed at startup when an enabled PDF capability lacks its parser."""
+    """Fail closed only for enabled parsers, leaving disabled surfaces inert."""
     if not document_operations_enabled():
         return
     try:
         from pypdf import PdfReader, PdfWriter  # noqa: F401
     except ImportError as exc:  # pragma: no cover - deployment configuration
         raise RuntimeError("Document Operations cần dependency pypdf") from exc
+    if image_to_pdf_enabled():
+        _image_classes()
 
 
 def _pdf_classes():
@@ -169,6 +245,18 @@ def _pdf_classes():
     except ImportError as exc:  # pragma: no cover - ensured at startup when enabled
         raise DocumentOperationError("Document Operations chưa có runtime PDF an toàn", code="PDF_RUNTIME_UNAVAILABLE") from exc
     return PdfReader, PdfWriter
+
+
+def _image_classes():
+    """Load the decoder lazily so a disabled feature cannot alter startup."""
+    try:
+        from PIL import Image, ImageFile, ImageOps, UnidentifiedImageError
+    except ImportError as exc:  # pragma: no cover - deployment configuration
+        raise DocumentOperationError(
+            "Ảnh → PDF chưa có runtime Pillow an toàn",
+            code="IMAGE_RUNTIME_UNAVAILABLE",
+        ) from exc
+    return Image, ImageFile, ImageOps, UnidentifiedImageError
 
 
 def _maximum_output_bytes() -> int:
@@ -301,6 +389,54 @@ def _copy_verified_source(source: Path, destination: Path, *, expected_bytes: in
         raise DocumentOperationError("PDF nguồn không vượt qua kiểm tra integrity", code="PDF_SOURCE_UNAVAILABLE")
 
 
+def _image_magic_matches(extension: str, prefix: bytes) -> bool:
+    """Repeat the Asset Vault signature check after an isolated copy."""
+    if extension in {".jpg", ".jpeg"}:
+        return prefix.startswith(b"\xff\xd8\xff")
+    if extension == ".png":
+        return prefix.startswith(b"\x89PNG\r\n\x1a\n")
+    if extension == ".webp":
+        return len(prefix) >= 12 and prefix.startswith(b"RIFF") and prefix[8:12] == b"WEBP"
+    return False
+
+
+def _copy_verified_image_source(
+    source: Path,
+    destination: Path,
+    *,
+    extension: str,
+    expected_bytes: int,
+    expected_digest: str,
+) -> None:
+    """Copy one image into private staging and verify bytes/hash/signature again."""
+    total = 0
+    digest = hashlib.sha256()
+    prefix = b""
+    try:
+        if not source.is_file() or source.is_symlink() or source.stat().st_size != expected_bytes:
+            raise DocumentOperationError("Ảnh nguồn không còn sẵn sàng", code="IMAGE_SOURCE_UNAVAILABLE")
+        with source.open("rb") as read_stream, destination.open("xb") as write_stream:
+            while True:
+                chunk = read_stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                total += len(chunk)
+                if total > MAX_INPUT_BYTES:
+                    raise DocumentOperationError("Mỗi ảnh nguồn không được vượt quá 20 MB", code="IMAGE_INPUT_TOO_LARGE")
+                if len(prefix) < 16:
+                    prefix += chunk[: 16 - len(prefix)]
+                digest.update(chunk)
+                write_stream.write(chunk)
+    except OSError as exc:
+        raise DocumentOperationError("Không thể đọc ảnh nguồn riêng tư", code="IMAGE_SOURCE_UNAVAILABLE") from exc
+    if (
+        total != expected_bytes
+        or not hmac.compare_digest(digest.hexdigest(), expected_digest)
+        or not _image_magic_matches(extension, prefix)
+    ):
+        raise DocumentOperationError("Ảnh nguồn không vượt qua kiểm tra integrity", code="IMAGE_SOURCE_UNAVAILABLE")
+
+
 def _selected_pages(page_range: str, page_count: int) -> tuple[list[int], int, int]:
     if page_count < 1 or page_count > MAX_PAGES:
         raise DocumentOperationError(
@@ -384,6 +520,15 @@ def _source_not_found() -> dict[str, Any]:
     )
 
 
+def _image_source_not_found() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Không tìm thấy ảnh private đang hoạt động thuộc Web account hiện tại.",
+        status_name="guarded",
+        error_code="WEB_IMAGE_TO_PDF_SOURCE_NOT_FOUND",
+    )
+
+
 def _operation_unavailable() -> dict[str, Any]:
     return envelope(
         False,
@@ -443,6 +588,26 @@ def _merge_request_fingerprint(sources: list[dict[str, Any]]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _image_to_pdf_request_fingerprint(sources: list[dict[str, Any]]) -> str:
+    """Bind an idempotency key to the exact image order and source revisions."""
+    payload = json.dumps(
+        {
+            "kind": IMAGE_TO_PDF_KIND,
+            "sources": [
+                {
+                    "asset_id": str(source["id"]),
+                    "sha256": str(source["sha256"]),
+                    "byte_size": int(source["byte_size"]),
+                }
+                for source in sources
+            ],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _optimize_request_fingerprint(*, source_asset_id: str, source_sha256: str, source_bytes: int) -> str:
     """Bind one structural optimize intent to its verified source revision."""
     payload = json.dumps(
@@ -474,6 +639,7 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
         PDF_SPLIT_KIND: ("PDF Split", "Đã tách và xác minh PDF riêng tư."),
         PDF_MERGE_KIND: ("PDF Merge", "Đã gộp và xác minh PDF riêng tư."),
         PDF_OPTIMIZE_KIND: ("PDF Optimize", "Đã tối ưu và xác minh PDF riêng tư."),
+        IMAGE_TO_PDF_KIND: ("Ảnh → PDF", "Đã tạo và xác minh PDF riêng tư từ ảnh."),
     }.get(kind, ("Document Operation", "Đã xác minh artifact tài liệu riêng tư."))
     if state == "completed":
         return envelope(True, completed_message, data={"operation": operation}, status_name="completed")
@@ -721,6 +887,216 @@ def _build_merge_output(root: Path, source_copies: list[Path]) -> tuple[Path, st
         _safe_unlink(temporary_output)
 
 
+def _image_format_matches(extension: str, image_format: str | None) -> bool:
+    expected = {
+        ".jpg": {"JPEG"},
+        ".jpeg": {"JPEG"},
+        ".png": {"PNG"},
+        ".webp": {"WEBP"},
+    }.get(extension, set())
+    return str(image_format or "").upper() in expected
+
+
+def _inspect_image_source(source_copy: Path, *, extension: str) -> int:
+    """Verify the encoded image and return only its bounded raster size.
+
+    This phase runs for every staged source before any page PDF is created,
+    which means the aggregate pixel limit is enforced before a large decode or
+    generated artifact is retained.
+    """
+    Image, ImageFile, _, UnidentifiedImageError = _image_classes()
+    if ImageFile.LOAD_TRUNCATED_IMAGES:
+        raise DocumentOperationError("Image runtime không ở chế độ kiểm tra đầy đủ", code="IMAGE_RUNTIME_UNAVAILABLE")
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            with Image.open(source_copy) as verifier:
+                if not _image_format_matches(extension, verifier.format):
+                    raise DocumentOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+                frame_count = int(getattr(verifier, "n_frames", 1) or 1)
+                if frame_count != 1 or bool(getattr(verifier, "is_animated", False)):
+                    raise DocumentOperationError("Ảnh động chưa được hỗ trợ để tạo PDF an toàn", code="IMAGE_ANIMATED")
+                width, height = verifier.size
+                pixels = int(width) * int(height)
+                if width < 1 or height < 1:
+                    raise DocumentOperationError("Kích thước ảnh không hợp lệ", code="IMAGE_DIMENSION_LIMIT")
+                if width > MAX_IMAGE_DIMENSION or height > MAX_IMAGE_DIMENSION:
+                    raise DocumentOperationError(
+                        "Cạnh dài ảnh vượt giới hạn 7680 px mỗi nguồn",
+                        code="IMAGE_DIMENSION_LIMIT",
+                    )
+                if max(width, height) / min(width, height) > MAX_IMAGE_ASPECT_RATIO:
+                    raise DocumentOperationError(
+                        "Tỷ lệ khung hình ảnh vượt giới hạn xử lý an toàn",
+                        code="IMAGE_ASPECT_RATIO_LIMIT",
+                    )
+                if pixels > MAX_IMAGE_PIXELS_PER_SOURCE:
+                    raise DocumentOperationError(
+                        "Độ phân giải ảnh vượt giới hạn 16 MP mỗi nguồn",
+                        code="IMAGE_PIXEL_LIMIT",
+                    )
+                # verify() checks the compressed source before a later full
+                # decode. It does not retain raster data in memory.
+                verifier.verify()
+        return pixels
+    except DocumentOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise DocumentOperationError(
+            "Độ phân giải ảnh vượt giới hạn xử lý an toàn",
+            code="IMAGE_PIXEL_LIMIT",
+        ) from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise DocumentOperationError("Ảnh không hợp lệ hoặc bị hỏng", code="IMAGE_PARSE_FAILED") from exc
+
+
+def _render_image_page(source_copy: Path, page_pdf: Path, *, extension: str) -> int:
+    """Decode, normalize and rasterize one trusted staging image into one PDF page.
+
+    The input is already copied and hash-verified, but this step deliberately
+    performs real decoder validation.  A fresh RGB image drops EXIF, comments,
+    ICC profiles and transparency before the PDF writer sees any pixels.
+    """
+    Image, _, ImageOps, UnidentifiedImageError = _image_classes()
+    try:
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            # Re-inspect immediately before decode. The first pass in the
+            # batch builder enforces the aggregate bound; this second pass
+            # preserves the same decoder checks at the point of use.
+            pixels = _inspect_image_source(source_copy, extension=extension)
+
+            with Image.open(source_copy) as decoded:
+                if not _image_format_matches(extension, decoded.format):
+                    raise DocumentOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+                if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                    raise DocumentOperationError("Ảnh động chưa được hỗ trợ để tạo PDF an toàn", code="IMAGE_ANIMATED")
+                decoded.load()
+                normalized = ImageOps.exif_transpose(decoded)
+                rgba = None
+                rgb = None
+                alpha = None
+                try:
+                    rgba = normalized.convert("RGBA")
+                    rgb = Image.new("RGB", rgba.size, (255, 255, 255))
+                    alpha = rgba.getchannel("A")
+                    rgb.paste(rgba, mask=alpha)
+                    # Opening our own output handle with exclusive create
+                    # avoids a destination race and keeps metadata opt-in.
+                    with page_pdf.open("xb") as page_stream:
+                        rgb.save(page_stream, format="PDF", resolution=144.0, quality=95, subsampling=0)
+                finally:
+                    if alpha is not None:
+                        alpha.close()
+                    if rgb is not None:
+                        rgb.close()
+                    if rgba is not None:
+                        rgba.close()
+                    if normalized is not decoded:
+                        normalized.close()
+        return pixels
+    except DocumentOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise DocumentOperationError(
+            "Độ phân giải ảnh vượt giới hạn xử lý an toàn",
+            code="IMAGE_PIXEL_LIMIT",
+        ) from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise DocumentOperationError("Ảnh không hợp lệ hoặc bị hỏng", code="IMAGE_PARSE_FAILED") from exc
+    except MemoryError as exc:
+        raise DocumentOperationError("Ảnh vượt giới hạn bộ nhớ xử lý an toàn", code="IMAGE_RESOURCE_LIMIT") from exc
+
+
+def _build_image_to_pdf_output(
+    root: Path,
+    source_copies: list[tuple[Path, str]],
+) -> tuple[Path, str, int, str, int, int]:
+    """Build a clean one-page-per-image PDF from bounded private sources."""
+    if not 1 <= len(source_copies) <= MAX_IMAGE_PDF_SOURCES:
+        raise DocumentOperationError("Cần từ 1 đến 8 ảnh nguồn để tạo PDF an toàn", code="IMAGE_SOURCE_COUNT")
+    temporary_output = _staging_path(root, ".pdf")
+    page_pdfs: list[Path] = []
+    final_path: Path | None = None
+    try:
+        total_pixels = 0
+        # Inspect every encoded source before rendering any page. This makes
+        # the aggregate resource decision early and avoids partially built
+        # PDFs for a batch that is collectively too large.
+        inspected_sources: list[tuple[Path, str]] = []
+        for source_copy, extension in source_copies:
+            pixels = _inspect_image_source(source_copy, extension=extension)
+            total_pixels += pixels
+            if total_pixels > MAX_IMAGE_PIXELS_TOTAL:
+                raise DocumentOperationError(
+                    "Tổng độ phân giải ảnh vượt giới hạn 32 MP mỗi lần",
+                    code="IMAGE_TOTAL_PIXEL_LIMIT",
+                )
+            inspected_sources.append((source_copy, extension))
+        for source_copy, extension in inspected_sources:
+            page_pdf = _staging_path(root, ".image-page.pdf")
+            page_pdfs.append(page_pdf)
+            _render_image_page(source_copy, page_pdf, extension=extension)
+
+        PdfReader, PdfWriter = _pdf_classes()
+        try:
+            writer = PdfWriter()
+            with ExitStack() as streams:
+                for page_pdf in page_pdfs:
+                    page_stream = streams.enter_context(page_pdf.open("rb"))
+                    generated = PdfReader(page_stream, strict=True)
+                    if generated.is_encrypted or len(generated.pages) != 1:
+                        raise DocumentOperationError("PDF trang ảnh không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID")
+                    writer.add_page(generated.pages[0], excluded_keys=PDF_EXCLUDED_PAGE_KEYS)
+                # Keep every generated single-page PDF open until write():
+                # pypdf may defer indirect-object reads from source streams.
+                writer.add_metadata({"/Title": "TOAN AAS Image to PDF", "/Producer": "TOAN AAS Web Image to PDF"})
+                with temporary_output.open("xb") as output_stream:
+                    writer.write(output_stream)
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("Không thể tạo PDF từ ảnh an toàn", code="IMAGE_PARSE_FAILED") from exc
+
+        byte_size = temporary_output.stat().st_size
+        if byte_size < 1 or byte_size > _maximum_output_bytes():
+            raise DocumentOperationError("PDF đầu ra vượt giới hạn artifact an toàn", code="PDF_OUTPUT_LIMIT")
+        digest = hashlib.sha256()
+        with temporary_output.open("rb") as stream:
+            while True:
+                chunk = stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        output_digest = digest.hexdigest()
+        try:
+            with temporary_output.open("rb") as verify_stream:
+                verified = PdfReader(verify_stream, strict=True)
+                if verified.is_encrypted or len(verified.pages) != len(source_copies):
+                    raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID")
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra", code="IMAGE_OUTPUT_INVALID") from exc
+
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}.pdf"
+        final_path = _output_path(root, storage_key)
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn PDF đầu ra không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
+            raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra integrity", code="IMAGE_OUTPUT_INVALID")
+        return final_path, storage_key, byte_size, output_digest, len(source_copies), total_pixels
+    except Exception:
+        _safe_unlink(final_path)
+        raise
+    finally:
+        _safe_unlink(temporary_output)
+        for page_pdf in page_pdfs:
+            _safe_unlink(page_pdf)
+
+
 def _has_meaningful_optimization(*, source_bytes: int, output_bytes: int) -> bool:
     """Require a useful verified reduction before replacing a user's source."""
     if source_bytes < 1 or output_bytes < 1 or output_bytes >= source_bytes:
@@ -860,16 +1236,26 @@ def reconcile_document_operation_storage() -> None:
 
 
 @router.get("")
-async def list_document_operations(limit: int = 50, account: dict = Depends(require_account)):
+async def list_document_operations(limit: int = 50, kind: str | None = None, account: dict = Depends(require_account)):
     _require_enabled()
     bounded_limit = max(1, min(int(limit), 100))
+    requested_kind = str(kind or "").strip().lower()
+    if requested_kind and requested_kind not in SUPPORTED_KINDS:
+        raise HTTPException(status_code=422, detail="Loại Document Operation không hợp lệ")
     ensure_copyfast_schema()
     with transaction() as conn:
-        rows = conn.execute(
-            f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
-            (str(account["id"]), bounded_limit),
-        ).fetchall()
+        if requested_kind:
+            rows = conn.execute(
+                f"""SELECT {OPERATION_SELECT} FROM web_document_operations
+                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
+                (str(account["id"]), requested_kind, bounded_limit),
+            ).fetchall()
+        else:
+            rows = conn.execute(
+                f"""SELECT {OPERATION_SELECT} FROM web_document_operations
+                    WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
+                (str(account["id"]), bounded_limit),
+            ).fetchall()
     return envelope(True, "Đã tải thao tác tài liệu Web.", data={"items": [_operation_public(tuple(row)) for row in rows]})
 
 
@@ -1050,6 +1436,54 @@ def _merge_sources_for_account(conn, *, source_asset_ids: list[str], account_id:
     return sources, project_id
 
 
+def _image_sources_for_account(conn, *, source_asset_ids: list[str], account_id: str) -> tuple[list[dict[str, Any]], str | None]:
+    """Load ordered, owner-scoped static image sources and enforce batch bounds."""
+    sources: list[dict[str, Any]] = []
+    total_bytes = 0
+    project_ids: set[str] = set()
+    for asset_id in source_asset_ids:
+        row = conn.execute(
+            """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+               FROM web_asset_files WHERE id=? AND account_id=?""",
+            (asset_id, account_id),
+        ).fetchone()
+        if not row or str(row[7]) != "active":
+            raise DocumentOperationError("Không tìm thấy ảnh private đang hoạt động thuộc Web account hiện tại.", code="IMAGE_SOURCE_NOT_FOUND")
+        extension = str(row[2] or "").lower()
+        content_type = str(row[3] or "").lower()
+        if IMAGE_INPUT_MIME_BY_EXTENSION.get(extension) != content_type:
+            raise DocumentOperationError("Ảnh → PDF chỉ nhận JPEG, PNG hoặc WebP private hợp lệ trong Asset Vault", code="IMAGE_SOURCE_INVALID")
+        byte_size = int(row[4])
+        if byte_size < 1 or byte_size > MAX_INPUT_BYTES:
+            raise DocumentOperationError("Mỗi ảnh nguồn không được vượt quá 20 MB", code="IMAGE_INPUT_TOO_LARGE")
+        total_bytes += byte_size
+        if total_bytes > MAX_IMAGE_PDF_INPUT_BYTES:
+            raise DocumentOperationError("Tổng dung lượng ảnh nguồn vượt giới hạn 40 MB", code="IMAGE_TO_PDF_INPUT_LIMIT")
+        source_sha256 = str(row[5] or "")
+        if not re.fullmatch(r"[0-9a-f]{64}", source_sha256):
+            raise DocumentOperationError("Ảnh nguồn không còn sẵn sàng", code="IMAGE_SOURCE_UNAVAILABLE")
+        storage_key = str(row[6] or "")
+        if not ASSET_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+            raise DocumentOperationError("Ảnh nguồn không còn sẵn sàng", code="IMAGE_SOURCE_UNAVAILABLE")
+        project_id = str(row[1]) if row[1] else None
+        if project_id:
+            project_ids.add(project_id)
+        sources.append(
+            {
+                "id": str(row[0]),
+                "project_id": project_id,
+                "extension": extension,
+                "byte_size": byte_size,
+                "sha256": source_sha256,
+                "storage_key": storage_key,
+            }
+        )
+    if not 1 <= len(sources) <= MAX_IMAGE_PDF_SOURCES:
+        raise DocumentOperationError("Cần từ 1 đến 8 ảnh private để tạo PDF", code="IMAGE_SOURCE_COUNT")
+    project_id = next(iter(project_ids)) if len(project_ids) == 1 else None
+    return sources, project_id
+
+
 @router.post("/pdf-merge")
 async def merge_pdf(payload: PdfMergeRequest, request: Request, account: dict = Depends(require_csrf)):
     """Merge ordered verified Asset Vault PDFs into one sanitized private PDF."""
@@ -1197,6 +1631,187 @@ async def merge_pdf(payload: PdfMergeRequest, request: Request, account: dict = 
     finally:
         for source_copy in source_copies:
             _safe_unlink(source_copy)
+
+
+@router.post("/image-to-pdf")
+async def image_to_pdf(
+    payload: ImageToPdfRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Create a verified one-page-per-image PDF from ordered private Vault sources."""
+    _require_image_to_pdf_enabled()
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copies: list[Path] = []
+    final_path: Path | None = None
+    sources: list[dict[str, Any]] = []
+    active_source_id: str | None = None
+    capacity_reserved = False
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            try:
+                sources, scoped_project_id = _image_sources_for_account(
+                    conn,
+                    source_asset_ids=payload.source_asset_ids,
+                    account_id=account_id,
+                )
+            except DocumentOperationError as exc:
+                if exc.code == "IMAGE_SOURCE_NOT_FOUND":
+                    return _image_source_not_found()
+                status_code = 413 if exc.code in {"IMAGE_INPUT_TOO_LARGE", "IMAGE_TO_PDF_INPUT_LIMIT"} else 422
+                raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+            request_fingerprint = _image_to_pdf_request_fingerprint(sources)
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_TO_PDF_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                    raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Ảnh → PDF khác")
+                return _operation_response(_operation_public(tuple(existing[:-1])))
+
+            # The request is new only after its authenticated, owner-scoped
+            # idempotency lookup. This keeps a completed retry available even
+            # while another decoder-heavy batch is consuming the one slot.
+            _reserve_image_to_pdf_capacity()
+            capacity_reserved = True
+            operation_id = str(uuid.uuid4())
+            now = utc_now()
+            first = sources[0]
+            conn.execute(
+                """INSERT INTO web_document_operations
+                   (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                    request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
+                    created_at, queued_at, started_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, '', ?, ?, ?, ?)""",
+                (
+                    operation_id, account_id, first["id"], scoped_project_id, IMAGE_TO_PDF_KIND,
+                    payload.idempotency_key, request_fingerprint, first["sha256"], first["byte_size"],
+                    len(sources), now, now, now, now,
+                ),
+            )
+            for source_index, source in enumerate(sources, start=1):
+                conn.execute(
+                    """INSERT INTO web_document_operation_sources
+                       (id, operation_id, source_asset_id, source_index, source_sha256, source_byte_size, created_at)
+                       VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                    (
+                        str(uuid.uuid4()), operation_id, source["id"], source_index,
+                        source["sha256"], source["byte_size"], now,
+                    ),
+                )
+            _record_event(conn, operation_id=operation_id, state="queued", when=now)
+            conn.execute(
+                "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                (now, operation_id, account_id),
+            )
+            _record_event(conn, operation_id=operation_id, state="processing", when=now)
+    except Exception:
+        if capacity_reserved:
+            _IMAGE_TO_PDF_CAPACITY.release()
+        raise
+
+    try:
+        asset_root = asset_vault_directory()
+        for source in sources:
+            active_source_id = str(source["id"])
+            source_path = _asset_path(asset_root, str(source["storage_key"]))
+            source_copy = _staging_path(root, f".source{source['extension']}")
+            # Track each staging name before I/O so partial copy failures are
+            # always removed from the private processing directory.
+            source_copies.append(source_copy)
+            await run_in_threadpool(
+                _copy_verified_image_source,
+                source_path,
+                source_copy,
+                extension=str(source["extension"]),
+                expected_bytes=int(source["byte_size"]),
+                expected_digest=str(source["sha256"]),
+            )
+        final_path, output_storage_key, output_bytes, output_digest, output_pages, total_pixels = await run_in_threadpool(
+            _build_image_to_pdf_output,
+            root,
+            [(source_copy, str(source["extension"])) for source_copy, source in zip(source_copies, sources, strict=True)],
+        )
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, IMAGE_TO_PDF_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("Ảnh → PDF không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', source_page_count=?, output_page_count=?, storage_key=?,
+                       original_filename='toan-aas-images.pdf', content_type='application/pdf',
+                       byte_size=?, sha256=?, completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    output_pages, output_pages, output_storage_key, output_bytes, output_digest,
+                    now, now, operation_id, account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.image_to_pdf",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=f"sources={len(sources)};pixels={total_pixels};bytes={output_bytes}",
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc Ảnh → PDF vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "IMAGE_SOURCE_UNAVAILABLE" and active_source_id:
+            _mark_source_unavailable(active_source_id, account_id)
+        _mark_failed(operation_id, account_id, kind=IMAGE_TO_PDF_KIND, request=request, code=exc.code)
+        status_code = 413 if exc.code in {
+            "IMAGE_INPUT_TOO_LARGE",
+            "IMAGE_TO_PDF_INPUT_LIMIT",
+            "IMAGE_DIMENSION_LIMIT",
+            "IMAGE_ASPECT_RATIO_LIMIT",
+            "IMAGE_PIXEL_LIMIT",
+            "IMAGE_TOTAL_PIXEL_LIMIT",
+            "IMAGE_RESOURCE_LIMIT",
+            "PDF_OUTPUT_LIMIT",
+        } else 422
+        raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            kind=IMAGE_TO_PDF_KIND,
+            request=request,
+            code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION",
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, kind=IMAGE_TO_PDF_KIND, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể tạo PDF từ ảnh an toàn") from exc
+    finally:
+        for source_copy in source_copies:
+            _safe_unlink(source_copy)
+        if capacity_reserved:
+            _IMAGE_TO_PDF_CAPACITY.release()
 
 
 @router.post("/pdf-optimize")

@@ -10,6 +10,7 @@ import sys
 
 import pytest
 from fastapi.testclient import TestClient
+from PIL import Image
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import ArrayObject, DictionaryObject, NameObject, NumberObject, TextStringObject
 
@@ -21,7 +22,7 @@ MODULES = [
 ]
 
 
-def make_client(tmp_path, monkeypatch) -> TestClient:
+def make_client(tmp_path, monkeypatch, *, image_to_pdf_enabled: bool = True) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-document-operations-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-document-operations-session-secret")
     monkeypatch.setenv("WEBAPP_ASSET_VAULT_ENABLED", "true")
@@ -32,6 +33,7 @@ def make_client(tmp_path, monkeypatch) -> TestClient:
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ROOT", str(tmp_path / "private-document-outputs"))
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100")
+    monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "true" if image_to_pdf_enabled else "false")
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ENABLED", raising=False)
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ROOT", raising=False)
     monkeypatch.delenv("APP_ENV", raising=False)
@@ -127,6 +129,372 @@ def optimize(client: TestClient, csrf: str, *, asset_id: str, key: str):
         headers={"X-CSRF-Token": csrf},
         json={"source_asset_id": asset_id, "idempotency_key": key},
     )
+
+
+def image_bytes(
+    image_format: str,
+    *,
+    size: tuple[int, int] = (160, 100),
+    color: tuple[int, ...] = (32, 144, 240),
+) -> bytes:
+    mode = "RGBA" if image_format.upper() == "PNG" and len(color) == 4 else "RGB"
+    image = Image.new(mode, size, color)
+    stream = BytesIO()
+    try:
+        image.save(stream, format=image_format, quality=95)
+        return stream.getvalue()
+    finally:
+        image.close()
+
+
+def animated_webp_bytes() -> bytes:
+    first = Image.new("RGB", (96, 64), (240, 96, 64))
+    second = Image.new("RGB", (96, 64), (64, 160, 240))
+    stream = BytesIO()
+    try:
+        first.save(stream, format="WEBP", save_all=True, append_images=[second], duration=100, loop=0, quality=95)
+        return stream.getvalue()
+    finally:
+        first.close()
+        second.close()
+
+
+def upload_image(
+    client: TestClient,
+    csrf: str,
+    *,
+    key: str,
+    body: bytes,
+    name: str,
+    content_type: str,
+) -> dict:
+    response = client.post(
+        "/api/v1/asset-vault/upload",
+        headers={"X-CSRF-Token": csrf, "Idempotency-Key": key},
+        data={"display_name": "Ảnh nguồn riêng tư"},
+        files={"file": (name, body, content_type)},
+    )
+    assert response.status_code == 200
+    return response.json()["data"]["asset"]
+
+
+def images_to_pdf(client: TestClient, csrf: str, *, asset_ids: list[str], key: str):
+    return client.post(
+        "/api/v1/document-operations/image-to-pdf",
+        headers={"X-CSRF-Token": csrf},
+        json={"source_asset_ids": asset_ids, "idempotency_key": key},
+    )
+
+
+def test_image_to_pdf_is_private_ordered_idempotent_and_verifies_the_output(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as first:
+        csrf = register_and_login(first, "image-to-pdf-owner@example.com")
+        assert first.get("/documents/image-to-pdf").status_code == 200
+        first_source = upload_image(
+            first,
+            csrf,
+            key="image-to-pdf-source-jpeg-0001",
+            body=image_bytes("JPEG", size=(160, 100), color=(32, 144, 240)),
+            name="first.jpg",
+            content_type="image/jpeg",
+        )
+        second_source = upload_image(
+            first,
+            csrf,
+            key="image-to-pdf-source-png-0001",
+            body=image_bytes("PNG", size=(240, 100), color=(240, 64, 128, 128)),
+            name="second.png",
+            content_type="image/png",
+        )
+
+        denied = first.post(
+            "/api/v1/document-operations/image-to-pdf",
+            json={"source_asset_ids": [first_source["id"], second_source["id"]], "idempotency_key": "image-to-pdf-denied-0001"},
+        )
+        assert denied.status_code == 403
+
+        created = images_to_pdf(
+            first,
+            csrf,
+            asset_ids=[first_source["id"], second_source["id"]],
+            key="image-to-pdf-create-0001",
+        )
+        assert created.status_code == 200
+        payload = created.json()
+        assert payload["ok"] is True
+        assert payload["status"] == "completed"
+        operation = payload["data"]["operation"]
+        assert operation["kind"] == "image_to_pdf"
+        assert operation["source_asset_id"] == first_source["id"]
+        assert operation["source_count"] == 2
+        assert operation["source_page_count"] == 2
+        assert operation["output_page_count"] == 2
+        assert operation["download_ready"] is True
+        image_history = first.get("/api/v1/document-operations?kind=image_to_pdf&limit=100")
+        assert image_history.status_code == 200
+        assert [item["id"] for item in image_history.json()["data"]["items"]] == [operation["id"]]
+        assert first.get("/api/v1/document-operations?kind=untrusted_operation").status_code == 422
+        for forbidden in ("storage_key", "sha256", "source_sha", "filesystem", "provider", "payment"):
+            assert forbidden not in created.text.lower()
+
+        replay = images_to_pdf(
+            first,
+            csrf,
+            asset_ids=[first_source["id"], second_source["id"]],
+            key="image-to-pdf-create-0001",
+        )
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+        reordered = images_to_pdf(
+            first,
+            csrf,
+            asset_ids=[second_source["id"], first_source["id"]],
+            key="image-to-pdf-create-0001",
+        )
+        assert reordered.status_code == 409
+
+        download = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert download.status_code == 200
+        assert download.headers["cache-control"] == "no-store, private"
+        assert download.headers["x-content-type-options"] == "nosniff"
+        assert download.headers["referrer-policy"] == "no-referrer"
+        assert download.headers["content-security-policy"] == "sandbox"
+        assert "attachment" in download.headers["content-disposition"]
+        output = PdfReader(BytesIO(download.content), strict=True)
+        assert len(output.pages) == 2
+        # 144dpi normalization makes the different source widths observable,
+        # so this asserts server-preserved page order without exposing names.
+        assert [round(float(page.mediabox.width), 3) for page in output.pages] == [80.0, 120.0]
+        assert all("/Annots" not in page and "/AA" not in page for page in output.pages)
+
+        detail = first.get(f"/api/v1/document-operations/{operation['id']}")
+        assert [event["state"] for event in detail.json()["data"]["events"]] == ["queued", "processing", "completed"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            source_rows = conn.execute(
+                "SELECT source_asset_id, source_index FROM web_document_operation_sources WHERE operation_id=? ORDER BY source_index",
+                (operation["id"],),
+            ).fetchall()
+            audit = conn.execute(
+                "SELECT detail FROM web_audit_events WHERE action='web.document_operation.image_to_pdf'"
+            ).fetchone()
+            output_key = conn.execute(
+                "SELECT storage_key FROM web_document_operations WHERE id=?", (operation["id"],)
+            ).fetchone()[0]
+        assert source_rows == [(first_source["id"], 1), (second_source["id"], 2)]
+        assert audit and audit[0].startswith("sources=2;pixels=40000;bytes=")
+        assert first_source["id"] not in audit[0]
+        assert second_source["id"] not in audit[0]
+
+        with make_client(tmp_path, monkeypatch) as second:
+            csrf_second = register_and_login(second, "image-to-pdf-other@example.com")
+            hidden = second.get(f"/api/v1/document-operations/{operation['id']}")
+            assert hidden.json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            hidden_download = second.get(f"/api/v1/document-operations/{operation['id']}/download")
+            assert hidden_download.json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            rejected = images_to_pdf(
+                second,
+                csrf_second,
+                asset_ids=[first_source["id"]],
+                key="image-to-pdf-other-0001",
+            )
+            assert rejected.json()["error_code"] == "WEB_IMAGE_TO_PDF_SOURCE_NOT_FOUND"
+
+        (tmp_path / "private-document-outputs" / output_key).write_bytes(b"%PDF-tampered")
+        unavailable = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
+        assert first.get(f"/api/v1/document-operations/{operation['id']}").json()["data"]["operation"]["state"] == "unavailable"
+
+
+def test_image_to_pdf_accepts_a_static_private_webp_source(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "image-to-pdf-webp@example.com")
+        source = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-webp-source-0001",
+            body=image_bytes("WEBP", size=(128, 96), color=(64, 192, 128)),
+            name="source.webp",
+            content_type="image/webp",
+        )
+        created = images_to_pdf(client, csrf, asset_ids=[source["id"]], key="image-to-pdf-webp-run-0001")
+        assert created.status_code == 200
+        operation = created.json()["data"]["operation"]
+        assert operation["kind"] == "image_to_pdf"
+        assert operation["source_count"] == 1
+        output = client.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert output.status_code == 200
+        assert len(PdfReader(BytesIO(output.content), strict=True).pages) == 1
+
+
+def test_image_to_pdf_fails_closed_for_disabled_decoder_and_unsafe_sources(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch, image_to_pdf_enabled=False) as client:
+        csrf = register_and_login(client, "image-to-pdf-disabled@example.com")
+        source = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-disabled-source-0001",
+            body=image_bytes("JPEG"),
+            name="source.jpg",
+            content_type="image/jpeg",
+        )
+        disabled = images_to_pdf(client, csrf, asset_ids=[source["id"]], key="image-to-pdf-disabled-run-0001")
+        assert disabled.status_code == 503
+        assert "WEBAPP_IMAGE_TO_PDF_ENABLED" in disabled.json()["message"]
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "image-to-pdf-safety@example.com")
+        malformed = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-malformed-source-0001",
+            body=b"\x89PNG\r\n\x1a\nnot-a-real-png",
+            name="malformed.png",
+            content_type="image/png",
+        )
+        malformed_result = images_to_pdf(client, csrf, asset_ids=[malformed["id"]], key="image-to-pdf-malformed-run-0001")
+        assert malformed_result.status_code == 422
+        assert "không hợp lệ" in malformed_result.json()["message"].lower() or "bị hỏng" in malformed_result.json()["message"].lower()
+
+        animated = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-animated-source-0001",
+            body=animated_webp_bytes(),
+            name="animated.webp",
+            content_type="image/webp",
+        )
+        animated_result = images_to_pdf(client, csrf, asset_ids=[animated["id"]], key="image-to-pdf-animated-run-0001")
+        assert animated_result.status_code == 422
+        assert "động" in animated_result.json()["message"].lower()
+
+        pixel_limited = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-pixel-source-0001",
+            body=image_bytes("JPEG", size=(20, 20)),
+            name="pixel.jpg",
+            content_type="image/jpeg",
+        )
+        operations = importlib.import_module("copyfast_document_operations")
+        with monkeypatch.context() as limits:
+            limits.setattr(operations, "MAX_IMAGE_PIXELS_PER_SOURCE", 1)
+            pixel_result = images_to_pdf(client, csrf, asset_ids=[pixel_limited["id"]], key="image-to-pdf-pixel-run-0001")
+        assert pixel_result.status_code == 413
+        assert "16 MP" in pixel_result.json()["message"]
+
+        dimension_limited = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-dimension-source-0001",
+            body=image_bytes("JPEG", size=(20, 20)),
+            name="dimension.jpg",
+            content_type="image/jpeg",
+        )
+        with monkeypatch.context() as limits:
+            limits.setattr(operations, "MAX_IMAGE_DIMENSION", 10)
+            dimension_result = images_to_pdf(client, csrf, asset_ids=[dimension_limited["id"]], key="image-to-pdf-dimension-run-0001")
+        assert dimension_result.status_code == 413
+        assert "7680 px" in dimension_result.json()["message"]
+
+        aspect_limited = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-aspect-source-0001",
+            body=image_bytes("PNG", size=(120, 10)),
+            name="aspect.png",
+            content_type="image/png",
+        )
+        with monkeypatch.context() as limits:
+            limits.setattr(operations, "MAX_IMAGE_ASPECT_RATIO", 2)
+            aspect_result = images_to_pdf(client, csrf, asset_ids=[aspect_limited["id"]], key="image-to-pdf-aspect-run-0001")
+        assert aspect_result.status_code == 413
+        assert "Tỷ lệ" in aspect_result.json()["message"]
+
+        bomb_limited = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-bomb-source-0001",
+            body=image_bytes("JPEG", size=(20, 20)),
+            name="bomb.jpg",
+            content_type="image/jpeg",
+        )
+        with monkeypatch.context() as limits:
+            limits.setattr(Image, "MAX_IMAGE_PIXELS", 1)
+            bomb_result = images_to_pdf(client, csrf, asset_ids=[bomb_limited["id"]], key="image-to-pdf-bomb-run-0001")
+        assert bomb_result.status_code == 413
+        assert "Độ phân giải" in bomb_result.json()["message"]
+
+        tampered = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-tamper-source-0001",
+            body=image_bytes("PNG"),
+            name="tampered.png",
+            content_type="image/png",
+        )
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            storage_key = conn.execute("SELECT storage_key FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        (tmp_path / "private-web-assets" / storage_key).write_bytes(b"\x89PNG\r\n\x1a\ntampered")
+        tampered_result = images_to_pdf(client, csrf, asset_ids=[tampered["id"]], key="image-to-pdf-tamper-run-0001")
+        assert tampered_result.status_code == 422
+
+        duplicate = images_to_pdf(
+            client,
+            csrf,
+            asset_ids=[malformed["id"], malformed["id"]],
+            key="image-to-pdf-duplicate-run-0001",
+        )
+        assert duplicate.status_code == 422
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            malformed_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (malformed["id"],)).fetchone()[0]
+            animated_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (animated["id"],)).fetchone()[0]
+            tampered_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+            failures = conn.execute(
+                "SELECT failure_code, storage_key FROM web_document_operations WHERE kind='image_to_pdf' ORDER BY created_at"
+            ).fetchall()
+        assert malformed_state == "active"
+        assert animated_state == "active"
+        assert tampered_state == "unavailable"
+        assert all(storage_key is None for _, storage_key in failures)
+        assert {code for code, _ in failures} >= {
+            "IMAGE_PARSE_FAILED",
+            "IMAGE_ANIMATED",
+            "IMAGE_PIXEL_LIMIT",
+            "IMAGE_DIMENSION_LIMIT",
+            "IMAGE_ASPECT_RATIO_LIMIT",
+            "IMAGE_SOURCE_UNAVAILABLE",
+        }
+        staging = tmp_path / "private-document-outputs" / ".staging"
+        assert not list(staging.iterdir())
+
+
+def test_image_to_pdf_replays_completed_idempotency_while_rejecting_a_new_busy_batch(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "image-to-pdf-capacity@example.com")
+        source = upload_image(
+            client,
+            csrf,
+            key="image-to-pdf-capacity-source-0001",
+            body=image_bytes("JPEG", size=(32, 32)),
+            name="source.jpg",
+            content_type="image/jpeg",
+        )
+        created = images_to_pdf(client, csrf, asset_ids=[source["id"]], key="image-to-pdf-capacity-completed-0001")
+        assert created.status_code == 200
+        completed_id = created.json()["data"]["operation"]["id"]
+        operations = importlib.import_module("copyfast_document_operations")
+        assert operations._IMAGE_TO_PDF_CAPACITY.acquire(blocking=False)
+        try:
+            replay = images_to_pdf(client, csrf, asset_ids=[source["id"]], key="image-to-pdf-capacity-completed-0001")
+            busy = images_to_pdf(client, csrf, asset_ids=[source["id"]], key="image-to-pdf-capacity-new-run-0001")
+        finally:
+            operations._IMAGE_TO_PDF_CAPACITY.release()
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == completed_id
+        assert busy.status_code == 429
+        assert "đang bận" in busy.json()["message"].lower()
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_document_operations WHERE kind='image_to_pdf'").fetchone()[0] == 1
 
 
 def test_pdf_split_is_private_idempotent_and_matches_the_bounded_bot_range_behavior(tmp_path, monkeypatch):

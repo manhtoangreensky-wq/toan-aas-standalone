@@ -370,6 +370,9 @@ def _flags() -> dict[str, bool]:
         # Web-native document operations remain off until both private input
         # storage and a separate generated-output volume boundary exist.
         "document_operations_enabled": enabled("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", False),
+        # Image decoding is a distinct capability and stays disabled until
+        # Pillow plus the bounded private storage contract are deployed.
+        "image_to_pdf_enabled": enabled("WEBAPP_IMAGE_TO_PDF_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
@@ -1281,6 +1284,15 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
     upload_ids = _canonical_upload_ids(raw_upload_ids)
     if upload_ids is None:
         return "upload_ids_invalid"
+    # Image → PDF is now a Web-native private operation with a different
+    # ownership/storage/output contract. Reject direct calls to the older
+    # generic feature path before they can reach the bridge and accidentally
+    # create a second customer journey or a Bot-owned artifact.
+    document_operation = str(values.get("operation") or "").strip().lower().replace("-", "_")
+    if feature in {"documents", "documents_pdf"} and document_operation == "image_to_pdf":
+        return "web_native_image_to_pdf_required"
+    if feature in {"documents", "documents_pdf"} and document_operation not in {"pdf_to_word", "pdf_to_images"}:
+        return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
         return "text_required"
     if feature in FEATURE_UPLOAD_REQUIRED and not upload_ids:
@@ -1326,6 +1338,8 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
     messages = {
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
         "upload_ids_invalid": "Tham chiếu tệp staging không hợp lệ. Hãy chọn lại tệp để Web gửi qua luồng canonical.",
+        "web_native_image_to_pdf_required": "Ảnh sang PDF là tiện ích Web-native riêng tư. Hãy dùng /documents/image-to-pdf để tạo output đã được kiểm tra.",
+        "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF canonical hoặc Ảnh sang PDF private tại /documents/image-to-pdf.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
         "upload_required": "Workflow này cần tệp đã vào staging canonical trước khi tiếp tục.",

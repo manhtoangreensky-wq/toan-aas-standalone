@@ -11,6 +11,7 @@ CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "PDF_SPLIT_CONTRACT.md").read_text(encoding="utf-8")
 MERGE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_MERGE_CONTRACT.md").read_text(encoding="utf-8")
 OPTIMIZE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OPTIMIZE_CONTRACT.md").read_text(encoding="utf-8")
+IMAGE_TO_PDF_CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_TO_PDF_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
@@ -89,7 +90,7 @@ def test_pdf_merge_replaces_the_generic_bot_feature_form_with_an_ordered_native_
 def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
     assert '"document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
     assert '"/documents/merge"' in INTEGRATION
-    assert '["pdf_split", "pdf_merge", "pdf_optimize"].includes(String(item.kind || ""))' in INTEGRATION
+    assert '["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf"].includes(String(item.kind || ""))' in INTEGRATION
     assert 'api("/document-operations/pdf-merge"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-merge")'):
@@ -204,3 +205,77 @@ def test_pdf_optimize_contract_records_truthful_lossless_boundary_and_parser_gat
     assert "run_in_threadpool" in operation_source
     assert "_has_meaningful_optimization" in operation_source
     assert "bridge_request(" not in operation_source
+
+
+def test_image_to_pdf_replaces_the_generic_form_with_a_native_ordered_private_surface() -> None:
+    assert 'customerPage("/documents/image-to-pdf", "Ảnh sang PDF riêng tư"' in PORTAL
+    assert 'layout: "image-to-pdf", type: "document-operation", action: "none"' in PORTAL
+    assert 'featurePage("/documents/image-to-pdf"' not in PORTAL
+    assert "function renderImageToPdf(page, context)" in PORTAL
+    assert 'case "image-to-pdf": return renderImageToPdf(page, context);' in PORTAL
+    assert "function imageToPdfFormFields()" in PORTAL
+    assert 'documentOperationItems(context, "image_to_pdf")' in PORTAL
+    assert 'optionsFrom: "imageVaultAssets"' in PORTAL
+    assert 'data-portal-action="document-operation-image-to-pdf"' in PORTAL
+    assert 'data-portal-route="/documents/image-to-pdf"' in PORTAL
+    assert "Ảnh 1 → Ảnh 8" in PORTAL
+    document_pdf = PORTAL[PORTAL.index("documentPdf: ["):PORTAL.index("documentOcr: [")]
+    assert 'options: ["pdf_to_word", "pdf_to_images"]' in document_pdf
+    assert "image_to_pdf" not in document_pdf
+    assert 'accept: "application/pdf"' in document_pdf
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/documents/image-to-pdf":' in pages
+    assert 'return "Ảnh sang PDF riêng tư"' in pages
+
+
+def test_image_to_pdf_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
+    assert "const imageToPdfEnabled" in INTEGRATION
+    assert '"document-operation-image-to-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled)' in INTEGRATION
+    assert '"/documents/image-to-pdf"' in INTEGRATION
+    assert 'const nativeDocumentPageStates = account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled' in INTEGRATION
+    assert '"/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded"' in INTEGRATION
+    assert "function documentOperationKindForCurrentRoute()" in INTEGRATION
+    assert '"/document-operations?kind=image_to_pdf&limit=100"' in INTEGRATION
+    assert 'api("/document-operations/image-to-pdf"' in INTEGRATION
+    action = INTEGRATION[
+        INTEGRATION.index('if (action === "document-operation-image-to-pdf")'):
+        INTEGRATION.index('if (action === "document-operation-refresh")')
+    ]
+    assert "Array.from({ length: 8 }" in action
+    assert "new Set(sourceAssetIds).size" in action
+    assert "source_asset_ids: sourceAssetIds" in action
+    assert "idempotency_key: submission.key" in action
+    assert "hydrateDocumentOperations" in action
+    assert "hydrateAssetVault" in action
+    assert "bridge_request" not in action
+    assert "CORE_BRIDGE" not in action
+
+
+def test_image_to_pdf_contract_records_decoder_bounds_private_delivery_and_no_bot_payment_provider_execution() -> None:
+    for phrase in (
+        "Ảnh 1 → Ảnh 8",
+        "20 MiB",
+        "40 MiB",
+        "16 MP",
+        "32 MP",
+        "7,680 px",
+        "12:1",
+        "Pillow",
+        "pypdf",
+        "WEBAPP_IMAGE_TO_PDF_ENABLED",
+        "No Bot bridge",
+        "PayOS",
+    ):
+        assert phrase in IMAGE_TO_PDF_CONTRACT
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    operation_source = (ROOT / "copyfast_document_operations.py").read_text(encoding="utf-8")
+    api_source = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert '"/api/v1/document-operations/image-to-pdf"' in app_source
+    assert "IMAGE_TO_PDF_KIND" in operation_source
+    assert "MAX_IMAGE_PIXELS_PER_SOURCE" in operation_source
+    assert "DecompressionBombWarning" in operation_source
+    assert "DecompressionBombError" in operation_source
+    assert "IMAGE_TO_PDF_MAX_CONCURRENT = 1" in operation_source
+    assert "web_native_image_to_pdf_required" in api_source
+    assert "bridge_request(" not in operation_source
+    assert '"image_to_pdf_enabled": enabled("WEBAPP_IMAGE_TO_PDF_ENABLED", False)' in api_source
