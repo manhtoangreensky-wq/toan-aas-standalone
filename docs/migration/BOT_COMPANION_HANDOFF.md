@@ -5,8 +5,8 @@ their own signed customer routes:
 
 | Web route | Bot commands offered | Ownership boundary |
 | --- | --- | --- |
-| `/notes` | `/notes`, `/note`, `/memory` | Notes, memory and plans remain Bot state. |
-| `/reminders` | `/reminders`, `/remind` | Reminder time, repetition and completion remain Bot state. |
+| `/notes` | Bot reference: `/notes`, `/note`, `/memory` | Web-owned notes, tag/search/priority/archive and version history; never reads or writes Bot `memory_*` state. |
+| `/reminders` | Bot reference: `/reminders`, `/remind` | Web-owned one-time/recurring reminder state; no Telegram/email/push delivery claim and no Bot reminder mutation. |
 | `/referrals` | `/referral`, `/ref` | Referral identity, links and rewards remain canonical in Bot. |
 | `/rewards` | `/gift`, `/promos`, `/birthday` | Gift/promo/birthday eligibility and Xu effects remain Bot state. |
 | `/community` | `/community`, `/official_channels` | Bot publishes community/channel information. |
@@ -22,10 +22,14 @@ their own signed customer routes:
 | guarded Subtitle/ASR/Dubbing routes | `/translate` | Zero-argument command opens the Bot translation picker; no text, media or target-language value travels from Web. |
 | guarded Document routes | `/doc_tools` | Zero-argument command opens the Bot document-tool chooser; files remain inside the Telegram workflow. |
 
-Each route requires the normal signed Web session and linked Telegram identity
-before it renders. It receives only public `BOT_USERNAME` metadata from the
-safe Telegram connection-status endpoint, then offers a user-initiated
-`https://t.me/<BOT_USERNAME>` handoff and an allowlisted command copy action.
+All remaining Bot-companion routes require the normal signed Web session and
+linked Telegram identity before they render. They receive only public
+`BOT_USERNAME` metadata from the safe Telegram connection-status endpoint,
+then offer a user-initiated `https://t.me/<BOT_USERNAME>` handoff and an
+allowlisted command copy action. `/notes` and `/reminders` are the explicit
+exception: they require a signed Web session but not a Telegram link, and they
+call only the owner-scoped Web Memory API documented in
+[`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md).
 
 The two analytics handoffs use a separate closed schema rather than accepting
 arbitrary Bot text: days `1..90`, the Bot's supported manual-publish
@@ -34,19 +38,22 @@ or `csv` for campaign reports. The Portal does not read performance data,
 produce a preview, calculate revenue, estimate charge, attach a file, or send
 any report input through its own API.
 
-The Portal does **not** send a Telegram ID, note text, reminder state,
-referral/reward identity, ticket ID/thread, browser session, password, Bot
+For the remaining companion routes, the Portal does **not** send a Telegram
+ID, referral/reward identity, ticket ID/thread, browser session, password, Bot
 token, bridge secret, wallet/Xu state, provider input, or payment data to
-Telegram. It also does not create a Web copy of the Bot tables or expose a
-generic feature draft endpoint for these routes. The `/data_delete` button
-copies only the allowlisted Bot command; it does not delete a Web/Bot account.
-If the public Bot username is missing, links and copy controls remain disabled
-rather than pointing to an ambiguous destination.
+Telegram. `/notes` and `/reminders` send their own note/reminder data only to
+the same-origin, signed Web API; they never send it to Telegram or copy Bot
+tables. The `/data_delete` button copies only the allowlisted Bot command; it
+does not delete a Web/Bot account. If the public Bot username is missing,
+companion links and copy controls remain disabled rather than pointing to an
+ambiguous destination.
 
 This is an intentional product boundary: the Web dashboard makes all
 discoverable workflows visible, while the Telegram Bot remains the fast,
-conversation-first interface for these stateful personal operations until a
-feature-specific, read-only/private Core Bridge contract is implemented.
+conversation-first interface for the remaining Bot-owned operations.
+Memory Center is a feature-specific Web-native contract rather than a Bot
+handoff; its AI classification, billing quota and actual notification sender
+remain guarded until separately designed adapters exist.
 
 ## Feature-family handoff review (frozen Bot baseline)
 

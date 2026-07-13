@@ -137,6 +137,17 @@ def image_enhance_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_ENHANCE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def memory_center_enabled() -> bool:
+    """Whether the Web-owned Memory Center is available to signed accounts.
+
+    Notes and reminders use the existing persistent Web session database and
+    no provider, Bot, wallet or payment runtime.  They are therefore useful
+    by default, while an operator can still turn the complete Web-owned
+    surface off with an explicit false value during maintenance.
+    """
+    return os.environ.get("WEBAPP_MEMORY_CENTER_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -692,6 +703,96 @@ def ensure_copyfast_schema() -> None:
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
+        )
+        # Memory Center is a separate Web-owned knowledge/task surface.  It
+        # intentionally never mirrors Bot `memory_*` tables, canonical
+        # Telegram identity, wallet, PayOS, provider or job state. UUIDs keep
+        # object references unguessable and every read/write is owner scoped
+        # in the router.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_memory_notes (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                category TEXT NOT NULL DEFAULT '',
+                priority TEXT NOT NULL DEFAULT 'normal',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_memory_note_versions (
+                id TEXT PRIMARY KEY,
+                note_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                category TEXT NOT NULL DEFAULT '',
+                priority TEXT NOT NULL DEFAULT 'normal',
+                created_at TEXT NOT NULL,
+                UNIQUE(note_id, revision),
+                FOREIGN KEY(note_id) REFERENCES web_memory_notes(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_memory_reminders (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                note_id TEXT,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL DEFAULT '',
+                due_at TEXT NOT NULL,
+                next_run_at TEXT NOT NULL,
+                timezone TEXT NOT NULL DEFAULT 'Asia/Ho_Chi_Minh',
+                repeat_rule TEXT NOT NULL DEFAULT 'none',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                last_completed_at TEXT,
+                completed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(note_id) REFERENCES web_memory_notes(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_memory_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                note_id TEXT,
+                reminder_id TEXT,
+                action TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_memory_notes_account_state_updated ON web_memory_notes(account_id, state, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_memory_note_versions_note_revision ON web_memory_note_versions(note_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_memory_reminders_account_state_next ON web_memory_reminders(account_id, state, next_run_at ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_memory_events_account_created ON web_memory_events(account_id, created_at DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

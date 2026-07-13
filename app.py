@@ -25,6 +25,7 @@ import copyfast_assets
 import copyfast_auth
 import copyfast_document_operations
 import copyfast_image_operations
+import copyfast_memory
 import copyfast_project_packages
 import copyfast_projects
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
@@ -178,6 +179,10 @@ async def security_headers(request: Request, call_next):
             "/api/v1/image-operations/enhance",
         }
     )
+    # Memory writes are tiny text/state mutations, but remain intentionally
+    # rate limited before SQLite work.  GET views stay unthrottled here while
+    # signed-session/ownership checks remain mandatory in the router.
+    memory_write = request.method == "POST" and request.url.path.startswith("/api/v1/memory/")
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
     if asset_archive:
         rate_limit = 30
@@ -191,6 +196,8 @@ async def security_headers(request: Request, call_next):
         # source/page/pixel/output limits, while this early gate blocks repeat
         # work before the operation's idempotency record can be observed.
         rate_limit = 10
+    if memory_write:
+        rate_limit = 40
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -250,6 +257,7 @@ app.include_router(copyfast_assets.router)
 app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
+app.include_router(copyfast_memory.router)
 
 
 @app.get("/health")

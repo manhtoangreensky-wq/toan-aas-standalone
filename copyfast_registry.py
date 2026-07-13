@@ -33,11 +33,11 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("workspace_drafts", "Bản nháp của tôi", "content", "/workspace", description="Lưu và tiếp tục brief Web an toàn, không lưu file, quote hoặc trạng thái Bot."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
-    # Bot-companion surfaces keep fast Telegram conversations discoverable in
-    # the Web portal without copying Bot-owned memory/reward/community tables
-    # into the standalone app. They are read-only handoffs, not engine APIs.
-    WebFeature("notes", "Ghi chú & Memory", "account", "/notes", description="Ghi chú và memory do Bot canonical quản lý."),
-    WebFeature("reminders", "Nhắc việc", "account", "/reminders", description="Nhắc việc, lặp lại và trạng thái do Bot canonical quản lý."),
+    # Memory Center is deliberately Web-owned: it gives the full portal a
+    # professional notes/task surface without copying Bot Telegram state,
+    # wallet, payment, job or provider data.
+    WebFeature("notes", "Ghi chú & Memory", "account", "/notes", description="Ghi chú, tag, ưu tiên, version history và reminder liên kết do Web account sở hữu riêng."),
+    WebFeature("reminders", "Nhắc việc", "account", "/reminders", description="Nhắc việc một lần/lặp lại, pause/resume/complete do Web account quản lý; không giả Telegram notification."),
     WebFeature("referrals", "Giới thiệu", "account", "/referrals", description="Referral/link thống kê cần Bot canonical xác minh."),
     WebFeature("rewards", "Ưu đãi & quà", "account", "/rewards", description="Gift, birthday và promo chỉ được Bot canonical xử lý."),
     WebFeature("community", "Cộng đồng", "account", "/community", description="Kênh chính thức và community handoff qua Bot."),

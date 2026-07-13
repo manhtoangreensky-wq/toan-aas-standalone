@@ -1984,13 +1984,13 @@ async def list_document_operations(limit: int = 50, kind: str | None = None, acc
         if requested_kind:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
+                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, rowid DESC LIMIT ?""",
                 (str(account["id"]), requested_kind, bounded_limit),
             ).fetchall()
         else:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                    WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
+                    WHERE account_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?""",
                 (str(account["id"]), bounded_limit),
             ).fetchall()
     return envelope(True, "Đã tải thao tác tài liệu Web.", data={"items": [_operation_public(tuple(row)) for row in rows]})

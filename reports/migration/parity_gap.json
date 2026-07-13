@@ -15,7 +15,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3091,
+        "line": 3109,
         "method": "POST",
         "path": "/internal/v1/admin/features/{*}/freeze",
         "static": true
@@ -23,7 +23,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2989,
+        "line": 3007,
         "method": "GET",
         "path": "/internal/v1/admin/jobs",
         "static": true
@@ -31,7 +31,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3067,
+        "line": 3085,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/refund",
         "static": true
@@ -39,7 +39,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3044,
+        "line": 3062,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/retry",
         "static": true
@@ -47,7 +47,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3014,
+        "line": 3032,
         "method": "GET",
         "path": "/internal/v1/admin/modules/{*}",
         "static": true
@@ -55,7 +55,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2994,
+        "line": 3012,
         "method": "GET",
         "path": "/internal/v1/admin/payments",
         "static": true
@@ -63,7 +63,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2999,
+        "line": 3017,
         "method": "GET",
         "path": "/internal/v1/admin/providers",
         "static": true
@@ -71,7 +71,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2979,
+        "line": 2997,
         "method": "GET",
         "path": "/internal/v1/admin/summary",
         "static": true
@@ -79,7 +79,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3004,
+        "line": 3022,
         "method": "GET",
         "path": "/internal/v1/admin/tickets",
         "static": true
@@ -87,7 +87,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2984,
+        "line": 3002,
         "method": "GET",
         "path": "/internal/v1/admin/users",
         "static": true
@@ -95,7 +95,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2799,
+        "line": 2817,
         "method": "GET",
         "path": "/internal/v1/assets",
         "static": true
@@ -103,7 +103,7 @@
       {
         "call": "bridge_request",
         "file": "copyfast_api.py",
-        "line": 2074,
+        "line": 2092,
         "method": "GET",
         "path": "/internal/v1/assets/{*}/download",
         "static": true
@@ -111,7 +111,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2879,
+        "line": 2897,
         "method": "GET",
         "path": "/internal/v1/features/status",
         "static": true
@@ -119,7 +119,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2921,
+        "line": 2939,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -127,7 +127,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2942,
+        "line": 2960,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -135,7 +135,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2788,
+        "line": 2806,
         "method": "GET",
         "path": "/internal/v1/jobs",
         "static": true
@@ -143,7 +143,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2794,
+        "line": 2812,
         "method": "GET",
         "path": "/internal/v1/jobs/{*}",
         "static": true
@@ -159,7 +159,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2689,
+        "line": 2707,
         "method": "GET",
         "path": "/internal/v1/packages",
         "static": true
@@ -167,7 +167,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2773,
+        "line": 2791,
         "method": "POST",
         "path": "/internal/v1/payments/create",
         "static": true
@@ -175,7 +175,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2783,
+        "line": 2801,
         "method": "GET",
         "path": "/internal/v1/payments/{*}",
         "static": true
@@ -183,7 +183,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2684,
+        "line": 2702,
         "method": "GET",
         "path": "/internal/v1/pricing",
         "static": true
@@ -191,7 +191,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2856,
+        "line": 2874,
         "method": "GET",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -199,7 +199,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2867,
+        "line": 2885,
         "method": "POST",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -207,7 +207,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2838,
+        "line": 2856,
         "method": "POST",
         "path": "/internal/v1/uploads",
         "static": true
@@ -215,7 +215,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2813,
+        "line": 2831,
         "method": "GET",
         "path": "/internal/v1/voice/profiles",
         "static": true
@@ -223,7 +223,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2673,
+        "line": 2691,
         "method": "GET",
         "path": "/internal/v1/wallet",
         "static": true
@@ -231,7 +231,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2678,
+        "line": 2696,
         "method": "GET",
         "path": "/internal/v1/wallet/history",
         "static": true
@@ -2120,7 +2120,7 @@
       },
       "source": "adconcept|message|memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -6751,7 +6751,7 @@
       },
       "source": "memory|list",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12515,7 +12515,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12526,7 +12526,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12537,7 +12537,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12548,7 +12548,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12559,7 +12559,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12570,7 +12570,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12581,7 +12581,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12592,7 +12592,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12603,7 +12603,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -12614,7 +12614,7 @@
       },
       "source": "menu|main_memory",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13120,7 +13120,7 @@
       },
       "source": "menu|memory_storage_addon",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13131,7 +13131,7 @@
       },
       "source": "menu|memory_storage_addon",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13142,7 +13142,7 @@
       },
       "source": "menu|memory_storage_addon",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13153,7 +13153,7 @@
       },
       "source": "menu|memory_storage_cleanup",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13164,7 +13164,7 @@
       },
       "source": "menu|memory_storage_cleanup",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13175,7 +13175,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13186,7 +13186,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13197,7 +13197,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13208,7 +13208,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13219,7 +13219,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13230,7 +13230,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13241,7 +13241,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -13252,7 +13252,7 @@
       },
       "source": "menu|memory_storage_status",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -14616,7 +14616,7 @@
       },
       "source": "payosalert|remind_later",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -25142,7 +25142,7 @@
       "handler": "cmd_memory",
       "source": "/memory",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25166,7 +25166,7 @@
       "handler": "cmd_memory_plan",
       "source": "/memory_plan",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25202,7 +25202,7 @@
       "handler": "cmd_memory_status",
       "source": "/memory_status",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25634,7 +25634,7 @@
       "handler": "cmd_note",
       "source": "/note",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25658,7 +25658,7 @@
       "handler": "cmd_note_archive",
       "source": "/note_archive",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25670,7 +25670,7 @@
       "handler": "cmd_note_category",
       "source": "/note_category",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25682,7 +25682,7 @@
       "handler": "cmd_note_delete",
       "source": "/note_delete",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25694,7 +25694,7 @@
       "handler": "cmd_note_priority",
       "source": "/note_priority",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25706,7 +25706,7 @@
       "handler": "cmd_note_remind",
       "source": "/note_remind",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25718,7 +25718,7 @@
       "handler": "cmd_note_tags",
       "source": "/note_tags",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25730,7 +25730,7 @@
       "handler": "cmd_note_view",
       "source": "/note_view",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25742,7 +25742,7 @@
       "handler": "cmd_notes",
       "source": "/notes",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25754,7 +25754,7 @@
       "handler": "cmd_notes_category",
       "source": "/notes_category",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -25766,7 +25766,7 @@
       "handler": "cmd_notes_important",
       "source": "/notes_important",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -27446,7 +27446,7 @@
       "handler": "cmd_remind",
       "source": "/remind",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27458,7 +27458,7 @@
       "handler": "cmd_reminder_cancel",
       "source": "/reminder_cancel",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27470,7 +27470,7 @@
       "handler": "cmd_reminder_done",
       "source": "/reminder_done",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27482,7 +27482,7 @@
       "handler": "cmd_reminder_pause",
       "source": "/reminder_pause",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27494,7 +27494,7 @@
       "handler": "cmd_reminder_resume",
       "source": "/reminder_resume",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27506,7 +27506,7 @@
       "handler": "cmd_reminders",
       "source": "/reminders",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27542,7 +27542,7 @@
       "handler": "cmd_repeat_daily",
       "source": "/repeat_daily",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27554,7 +27554,7 @@
       "handler": "cmd_repeat_monthly",
       "source": "/repeat_monthly",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27566,7 +27566,7 @@
       "handler": "cmd_repeat_weekly",
       "source": "/repeat_weekly",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27578,7 +27578,7 @@
       "handler": "cmd_repeat_yearly",
       "source": "/repeat_yearly",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/reminders"
     },
     {
@@ -27878,7 +27878,7 @@
       "handler": "cmd_search_note",
       "source": "/search_note",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
+      "status": "MAPPED_TO_EXISTING_ROUTE",
       "target": "/notes"
     },
     {
@@ -31415,8 +31415,8 @@
   "implemented_coverage_percent": 93.2,
   "mapping_coverage_percent": 100.0,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2560,
-    "MAPPED_TO_EXISTING_ROUTE": 5,
+    "COPIED_GUARDED": 2509,
+    "MAPPED_TO_EXISTING_ROUTE": 56,
     "TELEGRAM_ONLY": 187
   },
   "notes": [
