@@ -178,6 +178,14 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.memory.reminder.pause": ("Tạm dừng nhắc việc Web", "Memory Center"),
     "web.memory.reminder.resume": ("Tiếp tục nhắc việc Web", "Memory Center"),
     "web.memory.reminder.cancel": ("Hủy nhắc việc Web", "Memory Center"),
+    "web.prompt_library.create": ("Lưu template Prompt Library", "Prompt Library"),
+    "web.prompt_library.update": ("Lưu phiên bản template", "Prompt Library"),
+    "web.prompt_library.archive": ("Lưu trữ template", "Prompt Library"),
+    "web.prompt_library.restore": ("Khôi phục template", "Prompt Library"),
+    "web.prompt_library.purge": ("Xóa vĩnh viễn template", "Prompt Library"),
+    "web.prompt_library.restore_version": ("Khôi phục phiên bản template", "Prompt Library"),
+    "web.prompt_library.duplicate": ("Nhân bản template", "Prompt Library"),
+    "web.prompt_library.import": ("Import template Prompt Library", "Prompt Library"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -405,6 +413,10 @@ def _flags() -> dict[str, bool]:
         # database.  This flag is intentionally independent of Bot, wallet,
         # payment, provider and persistent-file capability flags.
         "memory_center_enabled": enabled("WEBAPP_MEMORY_CENTER_ENABLED", True),
+        # Prompt templates and immutable revisions are owned by the signed
+        # Web account. This flag has no Bot bridge, wallet, payment, provider
+        # or job-runtime implication.
+        "prompt_library_enabled": enabled("WEBAPP_PROMPT_LIBRARY_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

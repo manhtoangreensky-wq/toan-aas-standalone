@@ -77,7 +77,9 @@
 | /employees | GET | get_employees |
 | /enhance | POST | enhance_image |
 | /events | GET | memory_events |
+| /events | GET | prompt_library_events |
 | /events | GET | support_events |
+| /export | POST | export_templates |
 | /features/status | GET | feature_status |
 | /features/{feature}/confirm | POST | feature_confirm |
 | /features/{feature}/draft | POST | feature_draft |
@@ -90,6 +92,7 @@
 | /goals | GET | get_goals |
 | /health | GET | health |
 | /image-to-pdf | POST | image_to_pdf |
+| /import | POST | import_templates |
 | /internal/telegram-link/confirm | POST | confirm_telegram_link |
 | /internal/telegram-link/confirm/ | POST | confirm_telegram_link |
 | /inventory | POST | add_inventory |
@@ -159,8 +162,5 @@
 | /reminders/{reminder_id}/resume | POST | resume_reminder |
 | /reminders/{reminder_id}/update | POST | update_reminder |
 | /remove-bg | POST | remove_background |
-| /resize | POST | resize_image |
-| /sales | POST | add_sale |
-| /sales | GET | get_sales |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

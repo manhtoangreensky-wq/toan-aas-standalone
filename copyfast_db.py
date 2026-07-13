@@ -160,6 +160,17 @@ def support_desk_enabled() -> bool:
     return os.environ.get("WEBAPP_SUPPORT_DESK_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def prompt_library_enabled() -> bool:
+    """Whether the private, Web-owned Prompt Library is available.
+
+    Prompt templates, revisions and local previews use only the signed Web
+    session database.  They do not contact Bot runtime, provider, wallet or
+    payment systems, so the surface is useful by default while still having a
+    single maintenance switch for operators.
+    """
+    return os.environ.get("WEBAPP_PROMPT_LIBRARY_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -473,6 +484,33 @@ def transaction():
         conn.close()
 
 
+@contextmanager
+def read_transaction():
+    """Open a deferred, query-only SQLite transaction for owner-scoped reads.
+
+    The Web app creates additive schema during lifespan/startup and uses
+    ``transaction()`` for mutations. After session authentication, read-heavy
+    workspace handlers use this path so their own vault query does not add a
+    second immediate write reservation just to render a private list/detail.
+    """
+    path = session_database_path()
+    parent = Path(path).expanduser().resolve().parent
+    parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path, timeout=30)
+    conn.execute("PRAGMA foreign_keys=ON")
+    conn.execute("PRAGMA busy_timeout=30000")
+    conn.execute("PRAGMA query_only=ON")
+    try:
+        conn.execute("BEGIN")
+        yield conn
+        conn.rollback()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
 def ensure_copyfast_schema() -> None:
     """Create additive, idempotent tables owned solely by the web app."""
     with transaction() as conn:
@@ -637,6 +675,9 @@ def ensure_copyfast_schema() -> None:
         idempotency_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_idempotency)").fetchall()}
         if "request_fingerprint" not in idempotency_columns:
             conn.execute("ALTER TABLE web_idempotency ADD COLUMN request_fingerprint TEXT NOT NULL DEFAULT ''")
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_idempotency_scope_created ON web_idempotency(scope, created_at)"
+        )
         # A short-lived receipt binds a Web feature confirm to an estimate
         # observed by this signed session.  It deliberately stores only
         # one-way hashes and timing/binding metadata: never prompt text,
@@ -874,6 +915,87 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_support_events_case_created ON web_support_events(case_id, created_at ASC, id ASC)"
+        )
+        # Prompt Library is a private Web-owned template vault.  It does not
+        # reuse the frozen Bot's global prompt seed or mutable JSON path:
+        # every record belongs to a signed Web account and every change has a
+        # compact immutable snapshot for conflict-safe version history.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_prompt_templates (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT '',
+                product_context TEXT NOT NULL DEFAULT '',
+                platform TEXT NOT NULL DEFAULT '',
+                style TEXT NOT NULL DEFAULT '',
+                language TEXT NOT NULL DEFAULT '',
+                prompt_text TEXT NOT NULL,
+                negative_prompt TEXT NOT NULL DEFAULT '',
+                variables_json TEXT NOT NULL DEFAULT '[]',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                source_note TEXT NOT NULL DEFAULT '',
+                license_note TEXT NOT NULL DEFAULT '',
+                quality_score INTEGER NOT NULL DEFAULT 50,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_prompt_template_versions (
+                id TEXT PRIMARY KEY,
+                template_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                category TEXT NOT NULL DEFAULT '',
+                product_context TEXT NOT NULL DEFAULT '',
+                platform TEXT NOT NULL DEFAULT '',
+                style TEXT NOT NULL DEFAULT '',
+                language TEXT NOT NULL DEFAULT '',
+                prompt_text TEXT NOT NULL,
+                negative_prompt TEXT NOT NULL DEFAULT '',
+                variables_json TEXT NOT NULL DEFAULT '[]',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                source_note TEXT NOT NULL DEFAULT '',
+                license_note TEXT NOT NULL DEFAULT '',
+                quality_score INTEGER NOT NULL DEFAULT 50,
+                state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                UNIQUE(template_id, revision),
+                FOREIGN KEY(template_id) REFERENCES web_prompt_templates(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_prompt_template_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                template_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(template_id) REFERENCES web_prompt_templates(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_prompt_templates_account_state_updated ON web_prompt_templates(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_prompt_template_versions_template_revision ON web_prompt_template_versions(template_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_prompt_template_events_account_created ON web_prompt_template_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

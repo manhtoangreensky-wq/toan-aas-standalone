@@ -554,6 +554,14 @@
     layout: "project-center", type: "project-center", fields: [], action: "none", status: "ready",
     notes: ["Project và Studio Document thuộc Web account hiện tại, hoạt động ngay cả khi không liên kết Telegram.", "Đây là dữ liệu authoring do bạn tạo; không gọi Bot, provider, PayOS, ví Xu hoặc tự gắn nhãn output media."]
   });
+  customerPage("/prompt-library", "Prompt Library", "Lưu template prompt riêng tư có metadata, biến, tag, version history và preview cục bộ — không tạo AI job hoặc gọi provider.", ICONS.prompt, {
+    layout: "prompt-library", type: "prompt-library", fields: [], action: "none", status: "ready",
+    notes: ["Mỗi template thuộc signed Web account hiện tại; kho JSON seed global của Bot không được copy hoặc hiển thị tại đây.", "Preview chỉ thay thế variable đã khai báo trong trình duyệt/server Web; không gọi engine, Bot, provider, Xu hoặc PayOS."]
+  });
+  customerPage("/prompt-library/new", "Template Prompt mới", "Tạo một recipe prompt có thể tái sử dụng trong Prompt Library riêng tư của Web account.", ICONS.prompt, {
+    layout: "prompt-library", type: "prompt-library", fields: [], action: "none", status: "ready",
+    notes: ["Điền nguồn và quyền sử dụng rõ ràng trước khi lưu. Không gửi secret, token, OTP/CVV, số thẻ hay dữ liệu thanh toán.", "Bạn có thể sao chép template sang Prompt Studio sau khi lưu; đó không phải yêu cầu chạy AI."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -945,6 +953,24 @@
       memoryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.memoryReadState || ""))
         ? String(source.memoryReadState)
         : "guarded",
+      // Prompt Library is a separate private template store. It remains
+      // account-scoped and never falls back to Bot seed data, a bridge read or
+      // browser persistence when its signed Web API hydration fails.
+      promptLibraryEnabled: source.promptLibraryEnabled === true,
+      promptLibrarySummary: source.promptLibrarySummary && typeof source.promptLibrarySummary === "object" ? source.promptLibrarySummary : {},
+      promptTemplates: Array.isArray(source.promptTemplates) ? source.promptTemplates.slice(0, 100) : [],
+      promptTemplateDetail: source.promptTemplateDetail && typeof source.promptTemplateDetail === "object" ? source.promptTemplateDetail : {},
+      promptTemplatePreview: source.promptTemplatePreview && typeof source.promptTemplatePreview === "object" ? source.promptTemplatePreview : {},
+      promptLibraryEvents: Array.isArray(source.promptLibraryEvents) ? source.promptLibraryEvents.slice(0, 50) : [],
+      promptLibraryFilter: {
+        q: source.promptLibraryFilter && typeof source.promptLibraryFilter.q === "string" ? source.promptLibraryFilter.q.replace(/\s+/g, " ").trim().slice(0, 100) : "",
+        category: source.promptLibraryFilter && typeof source.promptLibraryFilter.category === "string" ? source.promptLibraryFilter.category.replace(/\s+/g, " ").trim().slice(0, 100) : "",
+        platform: source.promptLibraryFilter && typeof source.promptLibraryFilter.platform === "string" ? source.promptLibraryFilter.platform.replace(/\s+/g, " ").trim().slice(0, 100) : "",
+        product_context: source.promptLibraryFilter && typeof source.promptLibraryFilter.product_context === "string" ? source.promptLibraryFilter.product_context.replace(/\s+/g, " ").trim().slice(0, 100) : "",
+        tag: source.promptLibraryFilter && typeof source.promptLibraryFilter.tag === "string" ? source.promptLibraryFilter.tag.replace(/\s+/g, " ").trim().slice(0, 48) : "",
+        state: source.promptLibraryFilter && ["all", "active", "archived"].includes(String(source.promptLibraryFilter.state || "")) ? String(source.promptLibraryFilter.state) : "all"
+      },
+      promptLibraryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.promptLibraryReadState || "")) ? String(source.promptLibraryReadState) : "guarded",
       // Support Desk is a separate Web-native case store.  It never falls
       // back to Bot support/ticket state, and redacted page data must survive
       // render normalization after a successful owner-scoped hydration.
@@ -1057,6 +1083,16 @@
         status: "read_only", access: "member", layout: "campaign-detail", action: "none", actionLabel: "", fields: [],
         recordId: planId,
         notes: ["Kế hoạch này chỉ là metadata Web-owned, không phải campaign canonical của Bot.", "Không publish, tạo analytics/revenue, job, Xu hoặc PayOS từ trang chi tiết."]
+      });
+    }
+    if (/^\/prompt-library\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const templateId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/prompt-library/:id", routePath: normalized, title: "Chi tiết template", icon: ICONS.prompt, section: "Prompt Library",
+        description: "Chỉnh metadata, xem version history và preview cục bộ của một template thuộc Web account hiện tại.",
+        status: "read_only", access: "member", layout: "prompt-library-detail", action: "none", actionLabel: "", fields: [],
+        recordId: templateId,
+        notes: ["Template chỉ được nạp sau owner check ở server. Không có JSON seed/global path từ Bot, provider, job, Xu hoặc PayOS trong trang này.", "Preview thay variable đã khai báo theo dữ liệu bạn nhập; đó không phải AI execution hoặc output."]
       });
     }
     if (/^\/projects\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -1219,7 +1255,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1285,6 +1321,7 @@
     if (linkPath === "/studio") return path === "/studio";
     if (linkPath === "/chat") return path === "/chat" || path === "/tools/chat";
     if (linkPath === "/prompt-studio") return path === "/prompt-studio" || path === "/prompts" || matchesRouteFamily(path, "/content");
+    if (linkPath === "/prompt-library") return matchesRouteFamily(path, "/prompt-library");
     if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");
     if (linkPath === "/video/create") return path === "/video" || matchesRouteFamily(path, "/video");
     if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");
@@ -1314,7 +1351,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/projects", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/");
+      return ["/dashboard", "/projects", "/prompt-library", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -1585,7 +1622,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -2166,6 +2203,171 @@
     const events = memoryItems(context, "memoryEvents");
     const eventList = events.length ? `<div class="portal-memory-event-list">${events.map((item) => `<div class="portal-memory-event"><span aria-hidden="true">•</span><span><strong>${safeText(memoryEventLabel(item.action))}</strong><small>${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Các cập nhật note/reminder của Web account sẽ xuất hiện tại đây sau khi server ghi audit event.", "○");
     return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-memory-intro"><div><span class="portal-section-kicker">Web view-only delivery</span><h2>Quản lý nhịp công việc mà không đánh đồng với thông báo đã gửi</h2><p>Reminder giữ lịch một lần hoặc lặp lại, pause/resume và complete. Web chỉ hiển thị trạng thái trong account của bạn; Telegram, email và push cần adapter riêng.</p></div><dl><div><dt>${safeText(String(Number(reminderSummary.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(reminderSummary.due_soon || 0)))}</dt><dd>Đến hạn trong 24h</dd></div><div><dt>${safeText(String(Number(reminderSummary.overdue || 0)))}</dt><dd>Cần xem lại</dd></div></dl></section><div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo reminder</h2><p class="portal-card-subtitle">Chọn mốc, múi giờ, lịch lặp và tùy chọn liên kết một ghi chú đang active.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="memory-reminder-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(memoryReminderFormFields(), canCreate, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">Không tạo Bot job, Xu, PayOS, provider call hay notification delivery.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo reminder</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Explicit status</span><h2 class="portal-card-title">Không có thông báo giả</h2><p class="portal-card-subtitle">Quá hạn chỉ là state để bạn xem lại. Việc complete reminder lặp lại tính mốc tiếp theo ở server theo đúng múi giờ đã chọn.</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Reminder của tôi</h2><p class="portal-card-subtitle">Mọi thay đổi phải có CSRF, revision và idempotency. Các trạng thái terminal không thể chỉnh sửa.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div>${cards}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ hiển thị nhãn thao tác đã sanitize, không lộ nội dung ghi chú hoặc request detail.</p></div></div>${eventList}</section></article>`;
+  }
+
+  // Prompt Library is intentionally a reusable recipe inventory rather than
+  // a Bot prompt seed, a temporary workspace draft or a Project-bound Studio
+  // Document. Every card below is rendered from an owner-scoped Web API
+  // projection, with text escaped before it reaches the DOM.
+  const PROMPT_LIBRARY_STATES = Object.freeze(["active", "archived"]);
+
+  function validPromptTemplateId(value) {
+    return validProjectId(value);
+  }
+
+  function promptTemplateItems(context) {
+    return (Array.isArray(context && context.promptTemplates) ? context.promptTemplates : [])
+      .filter((item) => item && typeof item === "object" && validPromptTemplateId(item.id))
+      .slice(0, 100);
+  }
+
+  function promptTemplateState(value) {
+    const state = String(value || "").toLowerCase();
+    return state === "active" ? "ready" : state === "archived" ? "read_only" : "guarded";
+  }
+
+  function promptTemplateStateLabel(value) {
+    return String(value || "").toLowerCase() === "archived" ? "Đã archive" : "Đang hoạt động";
+  }
+
+  function promptTemplateTags(value) {
+    return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 16) : [];
+  }
+
+  function promptTemplateVariables(value) {
+    return Array.isArray(value) ? value.filter((name) => typeof name === "string" && name.trim()).slice(0, 24) : [];
+  }
+
+  function renderPromptTemplateTags(value) {
+    const tags = promptTemplateTags(value);
+    return tags.length ? `<div class="portal-prompt-library-tags">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>` : "";
+  }
+
+  function promptLibraryFilterState(context) {
+    const source = context && context.promptLibraryFilter && typeof context.promptLibraryFilter === "object" ? context.promptLibraryFilter : {};
+    const clean = (value, maximum) => typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, maximum) : "";
+    const state = String(source.state || "all").toLowerCase();
+    return {
+      q: clean(source.q, 100), category: clean(source.category, 100), platform: clean(source.platform, 100),
+      product_context: clean(source.product_context, 100), tag: clean(source.tag, 48),
+      state: ["all", ...PROMPT_LIBRARY_STATES].includes(state) ? state : "all"
+    };
+  }
+
+  function promptTemplateFormFields() {
+    return [
+      { name: "title", label: "Tên template", placeholder: "Ví dụ: Hook video sản phẩm 3 giây", required: true, minLength: 3, maxLength: 180 },
+      { name: "prompt_text", label: "Prompt", control: "textarea", placeholder: "Dùng {{product}}, {{benefit}} cho biến có thể thay thế…", required: true, minLength: 1, maxLength: 16000, help: "Đây là recipe authoring. Lưu template không chạy AI, không tạo job hoặc charge." },
+      { name: "negative_prompt", label: "Negative prompt", control: "textarea", placeholder: "Điều cần tránh (tùy chọn)", maxLength: 8000 },
+      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Video product", required: true, maxLength: 100 },
+      { name: "product_context", label: "Ngữ cảnh", placeholder: "Ví dụ: video, image, content", required: true, maxLength: 100 },
+      { name: "platform", label: "Nền tảng", placeholder: "Ví dụ: TikTok", required: true, maxLength: 100 },
+      { name: "style", label: "Phong cách", placeholder: "Ví dụ: rõ ràng, giàu nhịp điệu", maxLength: 100 },
+      { name: "language", label: "Ngôn ngữ", placeholder: "Ví dụ: vi", required: true, maxLength: 100 },
+      { name: "variables", label: "Variables", placeholder: "product, benefit", maxLength: 1560, help: "Tên biến ngắn, phân tách bằng dấu phẩy. Chỉ variable khai báo mới được preview thay thế." },
+      { name: "tags", label: "Tags", placeholder: "launch, tiktok, hook", maxLength: 800, help: "Tối đa 16 tags, phân tách bằng dấu phẩy." },
+      { name: "source", label: "Nguồn", placeholder: "Ví dụ: Tự soạn trong TOAN AAS Web", required: true, minLength: 2, maxLength: 600 },
+      { name: "license_note", label: "Quyền sử dụng", placeholder: "Ví dụ: Tôi có quyền sử dụng nội dung này.", required: true, minLength: 2, maxLength: 600 },
+      { name: "quality_score", label: "Mức hoàn thiện tự đánh giá", type: "number", min: 0, max: 100, step: 1, required: true, help: "Điểm tự mô tả của bạn, không phải điểm đánh giá AI hoặc provider." }
+    ];
+  }
+
+  function promptLibraryFilterFields() {
+    return [
+      { name: "q", label: "Tìm template", placeholder: "Tên, metadata, tag hoặc prompt…", maxLength: 100, wide: true },
+      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Video", maxLength: 100 },
+      { name: "platform", label: "Nền tảng", placeholder: "Ví dụ: TikTok", maxLength: 100 },
+      { name: "product_context", label: "Ngữ cảnh", placeholder: "Ví dụ: video", maxLength: 100 },
+      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
+      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+    ];
+  }
+
+  function promptTemplateValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      title: String(source.title || ""), category: String(source.category || "General"), product_context: String(source.product_context || "general"),
+      platform: String(source.platform || "general"), style: String(source.style || ""), language: String(source.language || "vi"),
+      prompt_text: String(source.prompt_text || ""), negative_prompt: String(source.negative_prompt || ""),
+      variables: promptTemplateVariables(source.variables).join(", "), tags: promptTemplateTags(source.tags).join(", "),
+      source: String(source.source || "Tự soạn"), license_note: String(source.license_note || "Tôi có quyền sử dụng nội dung này."),
+      quality_score: Number.isFinite(Number(source.quality_score)) ? String(Math.max(0, Math.min(100, Math.round(Number(source.quality_score))))) : "50"
+    };
+  }
+
+  function promptLibraryEventLabel(value) {
+    return ({
+      template_created: "Đã tạo template", template_updated: "Đã lưu phiên bản mới", template_archived: "Đã archive template",
+      template_restored: "Đã khôi phục template", template_version_restored: "Đã khôi phục phiên bản", template_duplicated: "Đã nhân bản template",
+      template_imported: "Đã import template"
+    })[String(value || "")] || "Đã cập nhật Prompt Library";
+  }
+
+  function renderPromptLibraryCards(items) {
+    if (!items.length) return renderEmpty("Chưa có template", "Lưu recipe đầu tiên để tái sử dụng prompt, metadata và variables trong Web Workspace riêng tư.", "◇");
+    return `<div class="portal-prompt-library-grid">${items.map((item) => {
+      const id = String(item.id || "");
+      const quality = Math.max(0, Math.min(100, Number(item.quality_score || 0) || 0));
+      return `<article class="portal-card portal-card-pad portal-prompt-library-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.product_context || "general"))} · ${safeText(String(item.platform || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Template"))}</h3><p class="portal-card-subtitle">${safeText(String(item.excerpt || "Chưa có prompt hiển thị."))}</p></div>${badge(promptTemplateState(item.state))}</div><div class="portal-prompt-library-meta"><span>${safeText(String(item.category || "Chưa phân loại"))}</span><span>${safeText(String(item.language || "vi"))}</span><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(String(quality))}/100</span></div>${renderPromptTemplateTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(promptTemplateStateLabel(item.state))} · cập nhật ${safeText(String(item.updated_at || item.created_at || "—"))}</span><a class="portal-button portal-button--quiet" href="/prompt-library/${encodeURIComponent(id)}">Mở template <span aria-hidden="true">→</span></a></div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderPromptLibrary(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["prompt-library-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["prompt-library-create"] === true);
+    const canImport = Boolean(context.capabilities && context.capabilities["prompt-library-import"] === true);
+    const canExport = Boolean(context.capabilities && context.capabilities["prompt-library-export"] === true);
+    const templates = promptTemplateItems(context);
+    const summary = context.promptLibrarySummary && typeof context.promptLibrarySummary === "object" ? context.promptLibrarySummary : {};
+    const counts = summary.templates && typeof summary.templates === "object" ? summary.templates : {};
+    const filter = promptLibraryFilterState(context);
+    const route = page.routePath || page.path;
+    const values = promptTemplateValues({ ...transientFormValues(route), quality_score: transientFormValues(route).quality_score || "50" });
+    if (!canView) return `<article class="portal-page portal-prompt-library">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Prompt Library đang được bảo vệ", "Đăng nhập bằng signed session để xem template riêng tư. Web không nhận Telegram ID thô hoặc mở kho seed global của Bot.", "⌁")}</section></article>`;
+    const filterForm = `<form class="portal-prompt-library-filter" data-portal-form data-portal-action="prompt-library-filter" data-portal-route="/prompt-library" novalidate>${renderFields(promptLibraryFilterFields(), true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong trang đang mở và đi qua API owner-scoped; không lưu vào URL, localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-filter-clear" data-portal-route="/prompt-library">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm kiếm</button></div></div></form>`;
+    const events = Array.isArray(context.promptLibraryEvents) ? context.promptLibraryEvents.slice(0, 8) : [];
+    const eventList = events.length ? `<div class="portal-prompt-library-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(promptLibraryEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Timeline chỉ chứa nhãn audit-safe; không hiển thị prompt, license note hoặc request detail.", "○");
+    return `<article class="portal-page portal-prompt-library">${renderHero(page, context)}
+      <section class="portal-prompt-library-intro"><div><span class="portal-section-kicker">Private Web template vault</span><h2>Prompt tốt là tài sản có thể tiếp tục, không phải đoạn text bị thất lạc</h2><p>Lưu recipe có bối cảnh, biến, quyền sử dụng và lịch sử phiên bản rõ ràng. Prompt Library độc lập với Bot, provider, job, Xu và PayOS.</p></div><dl><div><dt>${safeText(String(Number(counts.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(counts.with_variables || 0)))}</dt><dd>Có variables</dd></div><div><dt>${safeText(String(Number(counts.archived || 0)))}</dt><dd>Đã archive</dd></div></dl></section>
+      <div class="portal-prompt-library-layout"><section class="portal-card portal-card-pad portal-prompt-library-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo template mới</h2><p class="portal-card-subtitle">Một template là recipe reusable. Hãy mô tả nguồn và quyền sử dụng, không lưu credential hay chứng từ thanh toán.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(promptTemplateFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Lưu version 1 với CSRF, idempotency và owner check. Không tạo engine request hoặc output.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Lưu template</button></div></form></section><aside class="portal-card portal-card-pad portal-prompt-library-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới rõ ràng</span><h2 class="portal-card-title">Sử dụng có kiểm soát</h2><p class="portal-card-subtitle">Kho này là không gian authoring riêng tư, không phải catalog seed chung hoặc provider console.</p></div></div><ol class="portal-project-steps"><li><strong>1. Recipe có ngữ cảnh</strong><span>Ghi danh mục, nền tảng, phong cách, ngôn ngữ và variable.</span></li><li><strong>2. Version không ghi đè</strong><span>Mỗi lần lưu hoặc khôi phục tạo revision mới để so sánh rõ ràng.</span></li><li><strong>3. Preview trung thực</strong><span>Chỉ thay {{variable}} tại chỗ; không chạy AI hay phát sinh charge.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Prompt Studio</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-export" data-portal-route="${safeText(route)}"${canExport ? "" : " disabled"}>Xuất JSON riêng tư</button></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục template</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại. Nội dung đầy đủ chỉ nạp khi mở template.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-library-refresh" data-portal-route="/prompt-library">Làm mới</button></div>${filterForm}${renderPromptLibraryCards(templates)}</section>
+      <details class="portal-prompt-library-import"><summary>Import JSON an toàn</summary><p>Chỉ dán JSON object có trường <code>templates</code> hoặc một mảng template. Không nhận file path, URL, scrape hoặc seed global của Bot; import tối đa 50 template mỗi lần.</p><form class="portal-form" data-portal-form data-portal-action="prompt-library-import" data-portal-route="/prompt-library" data-portal-confirm="Import các template JSON vào Prompt Library riêng tư? Dữ liệu sẽ được kiểm tra schema, secret và quyền sử dụng trước khi lưu." novalidate><label class="portal-field"><span>JSON template</span><textarea class="portal-textarea" name="templates_json" required minlength="2" maxlength="1400000" placeholder='{"templates":[{"title":"…","prompt_text":"…"}]}'${canImport ? "" : " disabled"}></textarea><small>Tối đa 1.400.000 ký tự mỗi batch; không bao gồm account ID, đường dẫn file, token, API key, khóa riêng, OTP/CVV, số thẻ hoặc chứng từ thanh toán.</small></label><div class="portal-form-footer"><span class="portal-form-note">Import append-only, idempotent và không fetch URL ngoài.</span><button class="portal-button portal-button--primary" type="submit"${canImport ? "" : " disabled"}>Kiểm tra & import</button></div></form></details>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ nhãn thao tác và revision; không lộ prompt, variable value, license note hoặc request detail.</p></div></div>${eventList}</section>
+    </article>`;
+  }
+
+  function renderPromptLibraryDetail(page, context) {
+    const detail = context.promptTemplateDetail && typeof context.promptTemplateDetail === "object" ? context.promptTemplateDetail : {};
+    const template = detail.template && typeof detail.template === "object" && validPromptTemplateId(detail.template.id) && String(detail.template.id) === String(page.recordId || "") ? detail.template : null;
+    const canView = Boolean(context.capabilities && context.capabilities["prompt-library-view"] === true);
+    if (!canView || !template) return `<article class="portal-page portal-prompt-library-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy template", "Template có thể không thuộc Web account hiện tại, đã bị gỡ hoặc dữ liệu riêng tư chưa được server xác minh.", "◇")}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/prompt-library">Về Prompt Library</a></div></section></article>`;
+    const state = String(template.state || "active");
+    const canUpdate = Boolean(context.capabilities && context.capabilities["prompt-library-update"] === true && state === "active");
+    const canArchive = Boolean(context.capabilities && context.capabilities["prompt-library-archive"] === true && state === "active");
+    const canRestore = Boolean(context.capabilities && context.capabilities["prompt-library-restore"] === true && state === "archived");
+    const canPurge = Boolean(context.capabilities && context.capabilities["prompt-library-purge"] === true && state === "archived");
+    const canDuplicate = Boolean(context.capabilities && context.capabilities["prompt-library-duplicate"] === true && state === "active");
+    const canPreview = Boolean(context.capabilities && context.capabilities["prompt-library-preview"] === true && state === "active");
+    const canCopy = state === "active";
+    const route = page.routePath || page.path;
+    const values = promptTemplateValues(template);
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const variables = promptTemplateVariables(template.variables);
+    const stateAction = state === "active"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-archive" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-portal-confirm="Archive template này? Nội dung và version history vẫn được giữ riêng tư, nhưng template không thể chỉnh sửa cho đến khi được khôi phục."${canArchive ? "" : " disabled"}>Archive</button>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="prompt-template-restore" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}"${canRestore ? "" : " disabled"}>Khôi phục template</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-purge" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-portal-confirm="Xóa vĩnh viễn template đã archive cùng toàn bộ version history? Thao tác này không thể hoàn tác."${canPurge ? "" : " disabled"}>Xóa vĩnh viễn</button>`;
+    const versionList = versions.length ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || "Template"))} · ${safeText(String(version.created_at || "—"))} · ${safeText(promptTemplateStateLabel(version.state))}</small></span>${Number(version.revision) === Number(template.revision) ? `<span class="portal-form-note">Đang mở</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-restore-version" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" data-prompt-template-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision mới? Phiên bản hiện tại vẫn được giữ trong history."${canUpdate ? "" : " disabled"}>Khôi phục</button>`}</div>`).join("")}</div>` : renderEmpty("Chưa có version history", "Version đầu tiên được lưu khi template được tạo và không bị ghi đè âm thầm.", "○");
+    const preview = context.promptTemplatePreview && typeof context.promptTemplatePreview === "object" ? context.promptTemplatePreview : {};
+    const previewForTemplate = String(preview.template_id || "") === String(template.id) ? preview : {};
+    const variableFields = variables.length ? variables.map((name) => `<label class="portal-field"><span>${safeText(name)}</span><input class="portal-input" name="variable_${safeText(name)}" maxlength="600" placeholder="Giá trị preview cho ${safeText(name)}"${canPreview ? "" : " disabled"}></label>`).join("") : `<p class="portal-form-note">Template chưa khai báo variable. Preview sẽ giữ nguyên nội dung.</p>`;
+    const previewResult = previewForTemplate && typeof previewForTemplate.prompt_text === "string" ? `<section class="portal-prompt-library-preview-result"><div><span class="portal-section-kicker">Preview only</span><h3>Prompt sau khi thay variable</h3><p>Đây là render cục bộ, không phải AI output hoặc request engine.</p></div><pre>${safeText(previewForTemplate.prompt_text)}</pre>${previewForTemplate.negative_prompt ? `<h4>Negative prompt</h4><pre>${safeText(previewForTemplate.negative_prompt)}</pre>` : ""}</section>` : "";
+    return `<article class="portal-page portal-prompt-library-detail">${renderHero(page, context)}
+      <section class="portal-prompt-library-detail-summary"><div><span class="portal-section-kicker">${safeText(String(template.product_context || "general"))} · ${safeText(String(template.platform || "general"))}</span><h2>${safeText(String(template.title || "Template"))}</h2><p>${safeText(String(template.category || "Chưa phân loại"))} · ${safeText(String(template.style || "Chưa đặt phong cách"))} · ${safeText(String(template.language || "vi"))}</p>${renderPromptTemplateTags(template.tags)}</div><dl><div><dt>Revision</dt><dd>v${safeText(String(template.revision || 1))}</dd></div><div><dt>Tự đánh giá</dt><dd>${safeText(String(template.quality_score || 0))}/100</dd></div><div><dt>Trạng thái</dt><dd>${badge(promptTemplateState(template.state))}</dd></div></dl></section>
+      <div class="portal-prompt-library-detail-grid"><section class="portal-card portal-card-pad portal-prompt-library-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Template editor</h2><p class="portal-card-subtitle">Mỗi lần lưu tạo revision mới. Server kiểm tra owner, CSRF, idempotency và optimistic revision trước khi ghi.</p></div>${badge(promptTemplateState(template.state))}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-update" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" novalidate>${renderFields(promptTemplateFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không có provider/engine call, job, Xu hoặc payment trong thao tác lưu template.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-duplicate" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="prompt-template-copy" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}"${canCopy ? "" : " disabled"}>Sao chép prompt</button><a class="portal-button portal-button--quiet" href="/prompt-studio">Mở Prompt Studio</a></div></section>
+        <aside class="portal-card portal-card-pad portal-prompt-library-preview"><div class="portal-card-header"><div><span class="portal-section-kicker">Local preview</span><h2 class="portal-card-title">Thử variable an toàn</h2><p class="portal-card-subtitle">Chỉ variable đã khai báo mới được thay. Nội dung preview không được lưu tự động hoặc gửi tới engine.</p></div>${badge(canPreview ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="prompt-template-preview" data-portal-route="${safeText(route)}" data-prompt-template-id="${safeText(String(template.id))}" data-prompt-template-revision="${safeText(String(template.revision))}" novalidate><div class="portal-fields">${variableFields}</div><div class="portal-form-footer"><span class="portal-form-note">Preview local-only · không tạo AI output.</span><button class="portal-button portal-button--primary" type="submit"${canPreview ? "" : " disabled"}>Tạo preview</button></div></form>${previewResult}</aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử phiên bản</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới. Dữ liệu phiên bản chỉ nạp sau owner check và không được cache PWA.</p></div></div>${versionList}</section>
+      <section class="portal-card portal-card-pad portal-prompt-library-provenance"><div class="portal-card-header"><div><span class="portal-section-kicker">Provenance</span><h2 class="portal-card-title">Nguồn & quyền sử dụng</h2><p class="portal-card-subtitle">Thông tin này do bạn khai báo để quản lý template của chính mình; Web không tự chứng nhận bản quyền hoặc provenance ngoài hệ thống.</p></div></div><dl><div><dt>Nguồn</dt><dd>${safeText(String(template.source || "—"))}</dd></div><div><dt>Quyền sử dụng</dt><dd>${safeText(String(template.license_note || "—"))}</dd></div></dl>${renderNotes(page)}</section>
+    </article>`;
   }
 
   function renderStudioDocumentEditor(page, context, project) {
@@ -4831,6 +5033,8 @@
       case "project-center": return renderProjectCenter(page, context);
       case "memory-notes": return renderMemoryNotes(page, context);
       case "memory-reminders": return renderMemoryReminders(page, context);
+      case "prompt-library": return renderPromptLibrary(page, context);
+      case "prompt-library-detail": return renderPromptLibraryDetail(page, context);
       case "project-detail": return renderProjectDetail(page, context);
       case "project-packages": return renderProjectPackages(page, context);
       case "feature-family": return renderFeatureFamily(page, context);
@@ -5039,7 +5243,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version"].includes(action) && !form.reportValidity()) {
+    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -5050,10 +5254,10 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter") rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });

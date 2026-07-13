@@ -727,7 +727,7 @@ def test_pwa_caches_only_the_fixed_public_shell() -> None:
     assert 'wallet, payment, admin' in SERVICE_WORKER
     assert 'fetch(request).catch(() => caches.match(url.pathname).then((cached) => cached || Response.error()))' in SERVICE_WORKER
     # A public-shell change must invalidate the prior PWA shell bundle.
-    assert 'portal-shell-v5' in SERVICE_WORKER
+    assert 'portal-shell-v6' in SERVICE_WORKER
 
 
 def test_public_landing_hides_authenticated_shell_without_leaving_a_layout_slot() -> None:

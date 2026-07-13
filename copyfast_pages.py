@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent
 TEMPLATE = ROOT / "templates" / "portal_shell.html"
 CAMPAIGN_PLAN_PATH = re.compile(r"^/campaigns/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 PROJECT_PATH = re.compile(r"^/projects/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+PROMPT_LIBRARY_PATH = re.compile(r"^/prompt-library/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 
 
 def _portal_asset_version() -> str:
@@ -52,6 +53,10 @@ def _title_for(path: str) -> str:
         return "Memory Center"
     if normalized == "/reminders":
         return "Nhắc việc"
+    if normalized == "/prompt-library/new":
+        return "Template Prompt mới"
+    if PROMPT_LIBRARY_PATH.fullmatch(normalized):
+        return "Prompt Library"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
         return "Chi tiết kế hoạch"
     if PROJECT_PATH.fullmatch(normalized):
@@ -79,7 +84,7 @@ def _fallback_template() -> str:
 def render_portal(path: str) -> HTMLResponse:
     normalized = ("/" + path.lstrip("/")) if path else "/"
     normalized = normalized.rstrip("/") or "/"
-    if normalized not in allowed_paths() and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/support", "/tickets", "/admin", "/features", "/content", "/tools", "/prompts", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/support", "/tickets", "/admin", "/features", "/content", "/tools", "/prompts", "/prompt-library", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     template = TEMPLATE.read_text(encoding="utf-8") if TEMPLATE.exists() else _fallback_template()
     payload = {
