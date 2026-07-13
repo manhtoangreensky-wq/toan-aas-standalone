@@ -157,6 +157,10 @@ def test_image_studio_is_truthful_about_no_execution_or_media_output() -> None:
     assert "Direction & self-review, không tạo ảnh" in PORTAL
     assert "Không có raw URL, blob, thumbnail, provider call, preview hoặc output." in PORTAL
     assert "Resize & Enhance là utility Web-native riêng" in PORTAL
+    # List, detail and version DTOs intentionally expose bounded excerpts;
+    # use their actual response keys instead of rendering a blank card.
+    assert "item.creative_brief_excerpt || item.brief_excerpt" in PORTAL
+    assert "version.creative_brief_excerpt || version.brief_excerpt" in PORTAL
 
 
 def test_image_studio_private_routes_and_api_are_not_in_pwa_shell_cache() -> None:
