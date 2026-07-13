@@ -32,7 +32,7 @@ def test_voice_studio_is_a_native_private_route_not_the_legacy_voice_alias() -> 
 
     # `/voice` remains the existing Bot/Core-Bridge family.  The hyphenated
     # Web-native route must not be swallowed by a startsWith("/voice") check.
-    assert 'path === "/voice" || path.startsWith("/voice/")' in INTEGRATION
+    assert 'const canonicalBotVoiceRoute = path === "/voice" || path.startsWith("/voice/");' in INTEGRATION
 
     # The globally delegated shell action must forward native Voice Studio
     # IDs/revisions and must not let an unrelated incomplete form block a

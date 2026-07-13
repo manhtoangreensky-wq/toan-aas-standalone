@@ -3079,6 +3079,11 @@
     // Return before any canonical endpoint can overwrite their owner-scoped
     // state, including the similarly-prefixed `/voice-studio` route.
     if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path)) return;
+    // Keep the canonical Bot Voice/TTS projection intact, but never let its
+    // broad historical `/voice*` matcher absorb the independently owned
+    // `/voice-studio` workspace.
+    const canonicalBotVoiceRoute = path === "/voice" || path.startsWith("/voice/");
+    const canonicalVoicePath = path === "/tts" || path === "/dubbing" || canonicalBotVoiceRoute;
     try {
       if (path === "/dashboard") {
         const [wallet, jobs, assets, readiness, tickets] = await Promise.all([
@@ -3157,7 +3162,7 @@
           readiness: readiness.data || {},
           pageStates: featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)
         });
-      } else if (path === "/tts" || path === "/dubbing" || path === "/voice" || path.startsWith("/voice/")) {
+      } else if (canonicalVoicePath) {
         const [profiles, readiness] = await Promise.all([api("/voice/profiles"), api("/features/status")]);
         merge({
           voiceProfiles: profiles.data && profiles.data.items ? profiles.data.items : [],

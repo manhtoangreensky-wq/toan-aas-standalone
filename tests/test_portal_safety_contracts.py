@@ -216,7 +216,7 @@ def test_video_music_and_dubbing_forms_forward_the_bot_planning_controls() -> No
     dubbing = PORTAL[PORTAL.index("dubbing: ["):PORTAL.index("documentPdf:")]
     assert 'name: "voice_profile_id"' in dubbing
     assert 'optionsFrom: "voiceProfiles"' in dubbing
-    assert 'path === "/tts" || path === "/dubbing" || path.startsWith("/voice")' in INTEGRATION
+    assert 'const canonicalVoicePath = path === "/tts" || path === "/dubbing" || canonicalBotVoiceRoute;' in INTEGRATION
     assert 'api("/voice/profiles")' in INTEGRATION
     assert "if (feature === \"music_song\")" in INTEGRATION
     assert "Khi chọn Theo số giây" in INTEGRATION
@@ -708,7 +708,7 @@ def test_readiness_maps_all_feature_route_aliases_not_only_catalog_routes() -> N
     assert 'api("/features/status")' in INTEGRATION
     assert "function safeFeatureExecutionFeatures(value)" in INTEGRATION
     assert "featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures)" in INTEGRATION
-    assert 'path === "/tts" || path === "/dubbing" || path.startsWith("/voice")' in INTEGRATION
+    assert 'const canonicalVoicePath = path === "/tts" || path === "/dubbing" || canonicalBotVoiceRoute;' in INTEGRATION
     assert 'context.pageStates[normalizePath(context.path)]' in PORTAL
 
 
