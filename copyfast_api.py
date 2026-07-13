@@ -195,6 +195,23 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.media.item.item_attached": ("Gắn audio Asset Vault", "Audio Library"),
     "web.media.item.item_updated": ("Cập nhật audio reference", "Audio Library"),
     "web.media.item.item_detached": ("Gỡ audio reference", "Audio Library"),
+    # Creative Content Studio is deliberately Web-native. Its events describe
+    # signed-account authoring only; they never imply Bot, provider, payment,
+    # Xu, job, publishing or delivery activity.
+    "web.content.brief.create": ("Tạo Content Studio brief", "Content Studio"),
+    "web.content.brief.update": ("Lưu phiên bản Content Studio brief", "Content Studio"),
+    "web.content.brief.brief_archived": ("Lưu trữ Content Studio brief", "Content Studio"),
+    "web.content.brief.brief_restored": ("Khôi phục Content Studio brief", "Content Studio"),
+    "web.content.brief.duplicate": ("Nhân bản Content Studio brief", "Content Studio"),
+    "web.content.brief.restore_version": ("Khôi phục phiên bản Content Studio brief", "Content Studio"),
+    "web.content.brief.compose": ("Tạo khung nháp cục bộ", "Content Studio"),
+    "web.content.brief.select_variant": ("Chọn content piece", "Content Studio"),
+    "web.content.variant.create": ("Thêm content piece", "Content Studio"),
+    "web.content.variant.update": ("Lưu phiên bản content piece", "Content Studio"),
+    "web.content.variant.variant_archived": ("Lưu trữ content piece", "Content Studio"),
+    "web.content.variant.variant_restored": ("Khôi phục content piece", "Content Studio"),
+    "web.content.variant.duplicate": ("Nhân bản content piece", "Content Studio"),
+    "web.content.variant.restore_version": ("Khôi phục phiên bản content piece", "Content Studio"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -431,6 +448,11 @@ def _flags() -> dict[str, bool]:
         # enabling it never enables provider search, AI music, a Bot job, Xu,
         # PayOS, remote audio fetch or media delivery.
         "music_media_workspace_enabled": enabled("WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED", True),
+        # Creative Content Studio keeps authoring data in the signed Web
+        # account database. This independent maintenance switch does not
+        # enable Bot execution, an AI/provider, payments, Xu, jobs, publish
+        # automation or external delivery.
+        "content_studio_enabled": enabled("WEBAPP_CONTENT_STUDIO_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

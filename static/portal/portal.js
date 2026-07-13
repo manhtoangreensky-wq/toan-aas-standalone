@@ -570,6 +570,14 @@
     layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
     notes: ["Không nhập URL audio, Telegram file ID, provider preview hoặc thông tin thanh toán. Chỉ Asset Vault audio active thuộc account hiện tại có thể được gắn sau khi tạo collection.", "Duration là thông tin do bạn khai báo, không phải số liệu được parse, waveform hoặc promise render."]
   });
+  customerPage("/content-studio", "Creative Content Studio", "Workspace chuyên nghiệp để tổ chức brief, caption, hook, script, storyboard và content pack với version history riêng tư.", ICONS.prompt, {
+    layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
+    notes: ["Content Studio là authoring workspace Web-native. Nó không gọi Bot, provider, ví Xu, PayOS, job, publish hoặc delivery.", "Composer chỉ tạo ba khung nháp cục bộ có nhãn rõ ràng để biên tập; không tự nhận là AI output hoặc nội dung đã được duyệt."]
+  });
+  customerPage("/content-studio/new", "Content Brief mới", "Tạo brief có cấu trúc và liên kết Project, Campaign, Prompt Library hoặc Audio Library riêng tư.", ICONS.prompt, {
+    layout: "content-studio", type: "content-studio", fields: [], action: "none", status: "ready",
+    notes: ["Không truyền brief, ID hoặc text riêng tư qua query string. Chỉ loại nội dung allowlist mới được dùng từ liên kết nội bộ.", "Mọi write cần signed session, CSRF, optimistic revision, idempotency và owner check trên server."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -998,6 +1006,25 @@
         state: source.mediaWorkspaceFilter && ["all", "active", "archived"].includes(String(source.mediaWorkspaceFilter.state || "")) ? String(source.mediaWorkspaceFilter.state || "all") : "all"
       },
       mediaWorkspaceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.mediaWorkspaceReadState || "")) ? String(source.mediaWorkspaceReadState) : "guarded",
+      // Content Studio is a standalone signed-account authoring surface.
+      // Keep only bounded owner-scoped projections; no generic Bot fallback or
+      // browser persistence can refill this state after a failed hydration.
+      contentStudioEnabled: source.contentStudioEnabled === true,
+      contentStudioSummary: source.contentStudioSummary && typeof source.contentStudioSummary === "object" ? source.contentStudioSummary : {},
+      contentBriefs: Array.isArray(source.contentBriefs) ? source.contentBriefs.slice(0, 100) : [],
+      contentBriefDetail: source.contentBriefDetail && typeof source.contentBriefDetail === "object" ? source.contentBriefDetail : {},
+      contentVariantHistory: source.contentVariantHistory && typeof source.contentVariantHistory === "object" ? source.contentVariantHistory : {},
+      contentStudioComposer: source.contentStudioComposer && typeof source.contentStudioComposer === "object" ? source.contentStudioComposer : {},
+      contentStudioReferences: source.contentStudioReferences && typeof source.contentStudioReferences === "object" ? source.contentStudioReferences : {},
+      contentStudioEvents: Array.isArray(source.contentStudioEvents) ? source.contentStudioEvents.slice(0, 50) : [],
+      contentStudioPolicy: source.contentStudioPolicy && typeof source.contentStudioPolicy === "object" ? source.contentStudioPolicy : {},
+      contentStudioFilter: {
+        q: source.contentStudioFilter && typeof source.contentStudioFilter.q === "string" ? source.contentStudioFilter.q.replace(/\s+/g, " ").trim().slice(0, 100) : "",
+        tag: source.contentStudioFilter && typeof source.contentStudioFilter.tag === "string" ? source.contentStudioFilter.tag.replace(/\s+/g, " ").trim().slice(0, 48) : "",
+        content_kind: source.contentStudioFilter && ["", "caption_hashtag", "content_ideas", "hook_script", "content_pack", "storyboard"].includes(String(source.contentStudioFilter.content_kind || "")) ? String(source.contentStudioFilter.content_kind || "") : "",
+        state: source.contentStudioFilter && ["all", "active", "archived"].includes(String(source.contentStudioFilter.state || "")) ? String(source.contentStudioFilter.state || "all") : "all"
+      },
+      contentStudioReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.contentStudioReadState || "")) ? String(source.contentStudioReadState) : "guarded",
       // Support Desk is a separate Web-native case store.  It never falls
       // back to Bot support/ticket state, and redacted page data must survive
       // render normalization after a successful owner-scoped hydration.
@@ -1130,6 +1157,16 @@
         status: "processing", access: "member", layout: "media-workspace-detail", action: "none", actionLabel: "", fields: [],
         recordId: collectionId,
         notes: ["Asset chỉ là tham chiếu private đến Asset Vault và tải qua attachment route hiện có; trang này không phát audio, waveform, URL provider hoặc Telegram file ID.", "Composer chỉ tạo text direction cục bộ. Nó không chạy AI, tạo job, charge Xu, output hay delivery."]
+      });
+    }
+    if (/^\/content-studio\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const briefId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/content-studio/:id", routePath: normalized, title: "Creative Content Studio", icon: ICONS.prompt, section: "Content Studio",
+        description: "Biên tập brief, content pieces, selection và version history thuộc signed Web account hiện tại.",
+        status: "processing", access: "member", layout: "content-studio-detail", action: "none", actionLabel: "", fields: [],
+        recordId: briefId,
+        notes: ["Brief và content pieces chỉ được nạp qua owner check. Không có generic Bot bridge hoặc browser storage fallback.", "Composer chỉ tạo khung nháp cục bộ có nhãn rõ ràng; không chạy AI, tạo job, charge, output media hay publish."]
       });
     }
     if (/^\/projects\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -1292,7 +1329,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1360,6 +1397,7 @@
     if (linkPath === "/prompt-studio") return path === "/prompt-studio" || path === "/prompts" || matchesRouteFamily(path, "/content");
     if (linkPath === "/prompt-library") return matchesRouteFamily(path, "/prompt-library");
     if (linkPath === "/media-workspace") return matchesRouteFamily(path, "/media-workspace");
+    if (linkPath === "/content-studio") return matchesRouteFamily(path, "/content-studio");
     if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");
     if (linkPath === "/video/create") return path === "/video" || matchesRouteFamily(path, "/video");
     if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");
@@ -1389,7 +1427,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/projects", "/prompt-library", "/media-workspace", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/media-workspace/");
+      return ["/dashboard", "/projects", "/prompt-library", "/content-studio", "/media-workspace", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/media-workspace/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -1660,7 +1698,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "media-workspace", "media-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "content-studio", "content-studio-detail", "media-workspace", "media-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -2611,6 +2649,167 @@
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault references</span><h2 class="portal-card-title">Gắn audio private</h2><p class="portal-card-subtitle">Chỉ audio Asset Vault active thuộc account hiện tại. Không có URL, upload mới, player, waveform hay provider preview trong collection.</p></div>${badge(canAttach ? "ready" : "guarded")}</div><form class="portal-form portal-media-attach-form" data-portal-form data-portal-action="media-item-attach" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaAttachFields(context), canAttach, context, { role: "music", license_note: "Tôi chịu trách nhiệm kiểm tra license và quyền thương mại trước khi đăng." })}<div class="portal-form-footer"><span class="portal-form-note">Attachment chỉ tạo reference private; tệp gốc không bị copy, đổi state hoặc biến thành output.</span><button class="portal-button portal-button--primary" type="submit"${canAttach ? "" : " disabled"}>Gắn audio từ Asset Vault</button></div></form><div class="portal-media-item-grid">${items.length ? items.map((item) => mediaItemEditor(item, collection, canItemUpdate, route)).join("") : renderEmpty("Chưa có audio reference", "Chọn một tệp audio đã vào Asset Vault để gắn vào collection này. Tệp không được tạo hoặc upload lại ở đây.", ICONS.assets)}</div></section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử metadata</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới; audio references không bị tự động đảo theo version metadata.</p></div></div>${versionList}</section>
       <section class="portal-card portal-card-pad portal-media-detail-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Delivery boundary</span><h2 class="portal-card-title">Tệp vẫn đi qua Asset Vault</h2><p class="portal-card-subtitle">Nếu tệp còn active, nút tải dùng attachment route private đã có. Collection không tạo public URL, streaming, preview hay xác nhận output.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  // Creative Content Studio remains separate from generic /content/* bridge
+  // forms. It owns private Web authoring records and local draft scaffolds.
+  const CONTENT_STUDIO_KINDS = Object.freeze([
+    ["caption_hashtag", "Caption & hashtag"], ["content_ideas", "Ý tưởng nội dung"],
+    ["hook_script", "Hook & script"], ["content_pack", "Content pack"], ["storyboard", "Storyboard"]
+  ]);
+
+  function validContentBriefId(value) { return validProjectId(value); }
+  function contentStudioKindLabel(value) {
+    const found = CONTENT_STUDIO_KINDS.find(([key]) => key === String(value || ""));
+    return found ? found[1] : "Content brief";
+  }
+  function contentStudioTags(value) {
+    return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()).slice(0, 20) : [];
+  }
+  function renderContentStudioTags(value) {
+    const tags = contentStudioTags(value);
+    return tags.length ? `<div class="portal-content-studio-tags">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>` : "";
+  }
+  function contentStudioFilterState(context) {
+    const source = context && context.contentStudioFilter && typeof context.contentStudioFilter === "object" ? context.contentStudioFilter : {};
+    const tidy = (value, max) => typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, max) : "";
+    const kind = String(source.content_kind || "").trim().toLowerCase();
+    const state = String(source.state || "all").trim().toLowerCase();
+    return { q: tidy(source.q, 100), tag: tidy(source.tag, 48), content_kind: CONTENT_STUDIO_KINDS.some(([key]) => key === kind) ? kind : "", state: ["all", "active", "archived"].includes(state) ? state : "all" };
+  }
+  function contentStudioKindFromQuery() {
+    const raw = String(new URLSearchParams(window.location.search || "").get("kind") || "").trim().toLowerCase();
+    return CONTENT_STUDIO_KINDS.some(([key]) => key === raw) ? raw : "caption_hashtag";
+  }
+  function contentStudioReferenceOptions(context, key) {
+    const refs = context && context.contentStudioReferences && typeof context.contentStudioReferences === "object" ? context.contentStudioReferences : {};
+    const names = { project_id: "projects", campaign_plan_id: "campaigns", prompt_template_id: "prompt_templates", media_collection_id: "media_collections" };
+    return (Array.isArray(refs[names[key]]) ? refs[names[key]] : []).filter((item) => item && validContentBriefId(item.id)).slice(0, 100).map((item) => ({ value: String(item.id), label: String(item.title || "Reference riêng tư") }));
+  }
+  function contentStudioFields(context) {
+    return [
+      { name: "title", label: "Tên brief", placeholder: "Ví dụ: Launch mùa hè · Caption Instagram", required: true, minLength: 2, maxLength: 180 },
+      { name: "content_kind", label: "Loại nội dung", control: "select", required: true, options: CONTENT_STUDIO_KINDS },
+      { name: "subject", label: "Chủ đề", placeholder: "Sản phẩm, câu chuyện hoặc vấn đề cần truyền đạt", required: true, minLength: 2, maxLength: 700 },
+      { name: "objective", label: "Mục tiêu", placeholder: "Lợi ích cần làm rõ", maxLength: 500 },
+      { name: "audience", label: "Đối tượng", placeholder: "Người xem phù hợp", maxLength: 500 },
+      { name: "platform", label: "Nền tảng", placeholder: "Instagram / TikTok / Website", maxLength: 100 },
+      { name: "tone", label: "Giọng điệu", placeholder: "Rõ ràng, gần gũi", maxLength: 160 },
+      { name: "language", label: "Ngôn ngữ", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "call_to_action", label: "CTA", control: "textarea", placeholder: "Hành động mong muốn…", maxLength: 600 },
+      { name: "brief_text", label: "Nội dung brief", control: "textarea", placeholder: "Bối cảnh, insight, điểm cần chứng minh và hướng triển khai…", required: true, minLength: 1, maxLength: 12000, wide: true },
+      { name: "constraints", label: "Ràng buộc / review notes", control: "textarea", placeholder: "Claim cần kiểm tra, giới hạn thương hiệu, quyền dùng asset…", maxLength: 6000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "launch, summer, review", maxLength: 1000 },
+      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "project_id"), emptyLabel: "Không liên kết Project" },
+      { name: "campaign_plan_id", label: "Campaign (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "campaign_plan_id"), emptyLabel: "Không liên kết Campaign" },
+      { name: "prompt_template_id", label: "Prompt template (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "prompt_template_id"), emptyLabel: "Không liên kết Prompt template" },
+      { name: "media_collection_id", label: "Audio collection (tùy chọn)", control: "select", options: contentStudioReferenceOptions(context, "media_collection_id"), emptyLabel: "Không liên kết Audio collection" },
+      { name: "rights_note", label: "Ghi chú quyền sử dụng", control: "textarea", placeholder: "Kiểm tra quyền asset và claim trước khi publish.", maxLength: 1000, wide: true }
+    ];
+  }
+  function contentStudioValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      title: String(source.title || ""), content_kind: CONTENT_STUDIO_KINDS.some(([key]) => key === String(source.content_kind || "")) ? String(source.content_kind) : contentStudioKindFromQuery(),
+      subject: String(source.subject || ""), objective: String(source.objective || ""), audience: String(source.audience || ""),
+      platform: String(source.platform || ""), tone: String(source.tone || ""), language: String(source.language || "vi"),
+      call_to_action: String(source.call_to_action || ""), brief_text: String(source.brief_text || ""), constraints: String(source.constraints || ""),
+      tags: contentStudioTags(source.tags).join(", "), project_id: String(source.project_id || ""), campaign_plan_id: String(source.campaign_plan_id || ""),
+      prompt_template_id: String(source.prompt_template_id || ""), media_collection_id: String(source.media_collection_id || ""), rights_note: String(source.rights_note || "")
+    };
+  }
+  function contentVariantFields() {
+    return [
+      { name: "kind", label: "Loại content piece", control: "select", required: true, options: [["caption", "Caption"], ["hashtag_set", "Hashtag set"], ["hook", "Hook"], ["script", "Script"], ["storyboard", "Storyboard"], ["content_pack", "Content pack"], ["content_ideas", "Content ideas"], ["custom", "Tùy chỉnh"]] },
+      { name: "title", label: "Tiêu đề", placeholder: "Ví dụ: Hook mở đầu", required: true, minLength: 2, maxLength: 180 },
+      { name: "content_text", label: "Nội dung", control: "textarea", placeholder: "Viết khung nội dung có thể review…", required: true, minLength: 1, maxLength: 20000, wide: true },
+      { name: "note", label: "Ghi chú review", control: "textarea", placeholder: "Claim, quyền asset hoặc điểm cần xác minh…", maxLength: 2000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "launch, review", maxLength: 1000 }
+    ];
+  }
+  function renderContentStudioPolicy(context) {
+    const policy = context.contentStudioPolicy && typeof context.contentStudioPolicy === "object" ? context.contentStudioPolicy : {};
+    const lines = Array.isArray(policy.guardrails) ? policy.guardrails.filter((item) => typeof item === "string").slice(0, 5) : [];
+    return `<aside class="portal-card portal-card-pad portal-content-studio-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">Review boundary</span><h2 class="portal-card-title">Authoring trước, execution sau</h2><p class="portal-card-subtitle">Không có Bot, provider, payment, job, publish hoặc delivery trong workspace này.</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${lines.length ? lines.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : "<li><strong>1.</strong><span>Chính sách đang được nạp an toàn từ server.</span></li>"}</ol></aside>`;
+  }
+  function renderContentBriefCards(items) {
+    if (!items.length) return renderEmpty("Chưa có content brief", "Tạo brief đầu tiên để tách tư duy, review và version history khỏi các form generic.", ICONS.prompt);
+    return `<div class="portal-content-studio-grid">${items.map((item) => {
+      const id = String(item.id || "");
+      const archived = String(item.state || "") === "archived";
+      return `<article class="portal-card portal-card-pad portal-content-studio-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(contentStudioKindLabel(item.content_kind))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Content brief"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.subject_excerpt || "Chưa có brief hiển thị."))}</p></div>${badge(archived ? "read_only" : "ready")}</div><div class="portal-content-studio-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(archived ? "Đã archive" : "Đang hoạt động")}</span><span>${safeText(String(item.platform || "Chưa chọn kênh"))}</span></div>${renderContentStudioTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">Private authoring · không có job, charge, output hay publish.</span><a class="portal-button portal-button--quiet" href="/content-studio/${encodeURIComponent(id)}">Mở brief <span aria-hidden="true">→</span></a></div></article>`;
+    }).join("")}</div>`;
+  }
+  function renderContentStudio(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["content-studio-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["content-studio-create"] === true);
+    if (!canView) return `<article class="portal-page portal-content-studio">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Content Studio đang được bảo vệ", "Đăng nhập bằng signed session để mở workspace authoring riêng tư.", ICONS.prompt)}</section></article>`;
+    const summary = context.contentStudioSummary && typeof context.contentStudioSummary === "object" ? context.contentStudioSummary : {};
+    const briefs = summary.briefs && typeof summary.briefs === "object" ? summary.briefs : {};
+    const variants = summary.variants && typeof summary.variants === "object" ? summary.variants : {};
+    const draft = transientFormValues(page.routePath || page.path);
+    const values = contentStudioValues({ ...draft, content_kind: draft.content_kind || contentStudioKindFromQuery() });
+    const filter = contentStudioFilterState(context);
+    const filterFields = [
+      { name: "q", label: "Tìm brief", placeholder: "Tên, chủ đề hoặc brief…", maxLength: 100, wide: true },
+      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
+      { name: "content_kind", label: "Loại", control: "select", options: CONTENT_STUDIO_KINDS, emptyLabel: "Tất cả loại" },
+      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+    ];
+    return `<article class="portal-page portal-content-studio">${renderHero(page, context)}
+      <section class="portal-content-studio-intro"><div><span class="portal-section-kicker">Creative Content Workspace</span><h2>Biến brief thành content có cấu trúc, dễ review và dễ tiếp tục</h2><p>Quản lý caption, hook, script, storyboard và content pack trong workspace riêng tư có version history. Mọi khung nháp cần được biên tập và xác minh trước khi dùng bên ngoài.</p></div><dl><div><dt>${safeText(String(Number(briefs.active || 0)))}</dt><dd>Brief đang hoạt động</dd></div><div><dt>${safeText(String(Number(variants.active || 0)))}</dt><dd>Content pieces</dd></div><div><dt>${safeText(String(Number(briefs.archived || 0)))}</dt><dd>Đã archive</dd></div></dl></section>
+      <div class="portal-content-studio-layout"><section class="portal-card portal-card-pad portal-content-studio-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo content brief</h2><p class="portal-card-subtitle">Lưu ngữ cảnh, ràng buộc và reference theo signed account. Không có AI request, job hoặc publish.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(contentStudioFields(context), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Nhập nội dung nguyên bản; không nhập token, OTP, payment proof hoặc yêu cầu mô phỏng tác giả/phong cách.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo brief</button></div></form></section>${renderContentStudioPolicy(context)}</div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục brief</h2><p class="portal-card-subtitle">List chỉ chứa metadata/excerpt riêng tư; nội dung đầy đủ chỉ nạp khi owner mở brief.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-refresh" data-portal-route="/content-studio">Làm mới</button></div><form class="portal-content-studio-filter" data-portal-form data-portal-action="content-studio-filter" data-portal-route="/content-studio" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-studio-filter-clear" data-portal-route="/content-studio">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm brief</button></div></div></form>${renderContentBriefCards(Array.isArray(context.contentBriefs) ? context.contentBriefs : [])}</section>
+    </article>`;
+  }
+  function renderContentStudioDetail(page, context) {
+    const detail = context.contentBriefDetail && typeof context.contentBriefDetail === "object" ? context.contentBriefDetail : {};
+    const brief = detail.brief && typeof detail.brief === "object" && validContentBriefId(detail.brief.id) && String(detail.brief.id) === String(page.recordId || "") ? detail.brief : null;
+    const canView = Boolean(context.capabilities && context.capabilities["content-studio-view"] === true);
+    if (!canView || !brief) return `<article class="portal-page portal-content-studio-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy content brief", "Brief có thể không thuộc Web account hiện tại hoặc chưa được server xác minh.", ICONS.prompt)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/content-studio">Về Content Studio</a></div></section></article>`;
+    const route = page.routePath || page.path;
+    const writable = String(brief.state || "") === "active";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["content-studio-update"] === true && writable);
+    const canCompose = Boolean(context.capabilities && context.capabilities["content-studio-compose"] === true && writable);
+    const canArchive = Boolean(context.capabilities && context.capabilities["content-studio-archive"] === true && writable);
+    const canRestore = Boolean(context.capabilities && context.capabilities["content-studio-restore"] === true && !writable);
+    const canDuplicate = Boolean(context.capabilities && context.capabilities["content-studio-duplicate"] === true);
+    const canRestoreVersion = Boolean(context.capabilities && context.capabilities["content-studio-restore-version"] === true && writable);
+    const canVariantCreate = Boolean(context.capabilities && context.capabilities["content-studio-variant-create"] === true && writable);
+    const canVariantArchive = Boolean(context.capabilities && context.capabilities["content-studio-variant-archive"] === true);
+    const canVariantRestore = Boolean(context.capabilities && context.capabilities["content-studio-variant-restore"] === true);
+    const canVariantDuplicate = Boolean(context.capabilities && context.capabilities["content-studio-variant-duplicate"] === true);
+    const canVariantRestoreVersion = Boolean(context.capabilities && context.capabilities["content-studio-variant-restore-version"] === true && writable);
+    const variants = Array.isArray(detail.variants) ? detail.variants.filter((item) => item && validContentBriefId(item.id)).slice(0, 250) : [];
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const activeHistory = context.contentVariantHistory && typeof context.contentVariantHistory === "object" ? context.contentVariantHistory : {};
+    const variantHistoryId = validContentBriefId(activeHistory.variant_id) ? String(activeHistory.variant_id) : "";
+    const variantHistoryVersions = Array.isArray(activeHistory.versions) ? activeHistory.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const contentCards = variants.length ? variants.map((item) => {
+      const itemId = String(item.id || "");
+      const selected = String(brief.selected_variant_id || "") === itemId;
+      const active = String(item.state || "") === "active";
+      const selectable = Boolean(context.capabilities && context.capabilities["content-studio-variant-select"] === true && writable && active);
+      const editable = Boolean(context.capabilities && context.capabilities["content-studio-variant-update"] === true && writable && active);
+      const itemHistory = variantHistoryId === itemId ? variantHistoryVersions : [];
+      const stateAction = active
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-archive" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" data-portal-confirm="Archive content piece này? Nội dung và history vẫn được giữ riêng tư cho đến khi khôi phục."${canVariantArchive && writable ? "" : " disabled"}>Archive</button>`
+        : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-restore" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}"${canVariantRestore && writable ? "" : " disabled"}>Khôi phục</button>`;
+      const historyPanel = itemHistory.length ? `<div class="portal-content-variant-history"><strong>Lịch sử content piece</strong>${itemHistory.map((version) => `<div><span>v${safeText(String(version.revision))} · ${safeText(String(version.created_at || "—"))}</span>${Number(version.revision) === Number(item.revision) ? "<em>Đang mở</em>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-restore-version" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" data-content-variant-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một revision content piece mới?"${canVariantRestoreVersion && active ? "" : " disabled"}>Khôi phục v${safeText(String(version.revision))}</button>`}</div>`).join("")}</div>` : "";
+      return `<article class="portal-content-variant-card${selected ? " is-selected" : ""}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(item.kind || "custom").replace(/_/g, " "))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Content piece"))}</h3><p class="portal-card-subtitle">${safeText(String(item.content_excerpt || ""))}</p></div>${selected ? "<span class=\"portal-content-selected\">Đang chọn</span>" : badge(active ? "ready" : "read_only")}</div>${renderContentStudioTags(item.tags)}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-select" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-content-variant-id="${safeText(itemId)}"${selectable ? "" : " disabled"}>Chọn</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-history" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}">Lịch sử</button>${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-variant-duplicate" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}"${canVariantDuplicate && active && writable ? "" : " disabled"}>Nhân bản</button></div><form id="piece-${safeText(itemId)}" class="portal-form portal-content-variant-form" data-portal-form data-portal-action="content-variant-update" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-variant-id="${safeText(itemId)}" data-content-variant-revision="${safeText(String(item.revision))}" novalidate>${renderFields(contentVariantFields(), editable, context, { kind: String(item.kind || "custom"), title: String(item.title || ""), content_text: String(item.content_text || ""), note: String(item.note || ""), tags: contentStudioTags(item.tags).join(", ") })}<div class="portal-form-footer"><span class="portal-form-note">Content piece vẫn là bản biên tập riêng tư.</span><button class="portal-button portal-button--primary" type="submit"${editable ? "" : " disabled"}>Lưu piece</button></div></form>${historyPanel}</article>`;
+    }).join("") : renderEmpty("Chưa có content piece", "Dùng composer hoặc thêm piece thủ công để bắt đầu review.", ICONS.prompt);
+    const stateAction = writable
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-archive" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-portal-confirm="Archive brief này? Nội dung, pieces và history vẫn giữ riêng tư cho đến khi khôi phục."${canArchive ? "" : " disabled"}>Archive brief</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-restore" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canRestore ? "" : " disabled"}>Khôi phục brief</button>`;
+    const activity = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 12) : [];
+    return `<article class="portal-page portal-content-studio-detail">${renderHero(page, context)}
+      <section class="portal-content-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(contentStudioKindLabel(brief.content_kind))}</span><h2>${safeText(String(brief.title || "Content brief"))}</h2><p>${safeText(String(brief.brief_excerpt || brief.subject || ""))}</p></div><dl><div><dt>Trạng thái</dt><dd>${safeText(writable ? "Đang hoạt động" : "Đã archive")}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(brief.revision || 1))}</dd></div><div><dt>Pieces</dt><dd>${safeText(String(variants.length))}</dd></div></dl></section>
+      <div class="portal-content-studio-detail-grid"><section class="portal-card portal-card-pad portal-content-studio-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Brief & review context</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision và owner check cho reference.</p></div>${badge(writable ? "ready" : "read_only")}</div><form class="portal-form" data-portal-form data-portal-action="content-brief-update" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" novalidate>${renderFields(contentStudioFields(context), canUpdate, context, contentStudioValues(brief))}<div class="portal-form-footer"><span class="portal-form-note">Mỗi lần lưu tạo revision mới; reference luôn được kiểm tra lại trên server.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-duplicate" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản brief</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu brief</button></div></div></form></section>${renderContentStudioPolicy(context)}</div>
+      <section class="portal-card portal-card-pad portal-content-studio-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">Local deterministic drafts</span><h2 class="portal-card-title">Tạo 3 khung nháp để biên tập</h2><p class="portal-card-subtitle">Không phải AI output, job, asset, delivery hoặc nội dung đã publish.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Các khung nháp được lưu thành content pieces riêng tư và cần review thủ công.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="content-brief-compose" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}"${canCompose ? "" : " disabled"}>Tạo 3 khung nháp</button></div></section>
+      <section class="portal-card portal-card-pad portal-content-variant-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual authoring</span><h2 class="portal-card-title">Thêm content piece thủ công</h2><p class="portal-card-subtitle">Dành cho ý tưởng, caption, script hoặc checklist đã có sẵn để đưa vào cùng brief.</p></div>${badge(canVariantCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="content-variant-create" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" novalidate>${renderFields(contentVariantFields(), canVariantCreate, context, { kind: "custom", title: "", content_text: "", note: "", tags: "" })}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, OTP, payment proof hoặc yêu cầu mô phỏng tác giả/phong cách.</span><button class="portal-button portal-button--primary" type="submit"${canVariantCreate ? "" : " disabled"}>Thêm content piece</button></div></form></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Content pieces</h2><p class="portal-card-subtitle">Chọn, biên tập, archive hoặc xem history của từng piece trong brief.</p></div></div><div class="portal-content-variant-grid">${contentCards}</div></section>
+      <div class="portal-content-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử brief</h2><p class="portal-card-subtitle">Khôi phục version chỉ khi reference còn hợp lệ và thuộc signed account.</p></div></div><div class="portal-content-version-list">${versions.length ? versions.map((item) => `<article><div><strong>v${safeText(String(item.revision))} · ${safeText(String(item.title || "Content brief"))}</strong><p>${safeText(String(item.brief_excerpt || ""))}</p><small>${safeText(String(item.created_at || "—"))}</small></div>${Number(item.revision) === Number(brief.revision) ? "<span class=\"portal-form-note\">Đang mở</span>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="content-brief-restore-version" data-portal-route="${safeText(route)}" data-content-brief-id="${safeText(String(brief.id))}" data-content-brief-revision="${safeText(String(brief.revision))}" data-content-brief-version="${safeText(String(item.revision))}" data-portal-confirm="Khôi phục v${safeText(String(item.revision))} thành một revision brief mới?"${canRestoreVersion ? "" : " disabled"}>Khôi phục v${safeText(String(item.revision))}</button>`}</article>`).join("") : renderEmpty("Chưa có history", "Version đầu tiên sẽ xuất hiện sau khi server lưu brief.", "↺")}</div></section><section class="portal-card portal-card-pad portal-content-studio-activity"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ ghi nhãn thao tác và revision, không đưa nội dung brief vào audit feed.</p></div></div><div class="portal-content-activity-list">${activity.length ? activity.map((item) => `<div><span></span><p><strong>${safeText(String(item.action || "content_updated").replace(/_/g, " "))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></p></div>`).join("") : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</div></section></div>
     </article>`;
   }
 
@@ -4731,13 +4930,22 @@
 
   function renderWorkspace(page, context) {
     const route = page.routePath || page.path;
+    const contentStudioKindForFeaturePath = {
+      "/content/caption": "caption_hashtag", "/content/hashtag": "caption_hashtag",
+      "/content/hook": "hook_script", "/content/script": "hook_script",
+      "/content/storyboard": "storyboard", "/content/pack": "content_pack"
+    };
+    const contentStudioKind = contentStudioKindForFeaturePath[page.path] || "";
+    const contentStudioLink = contentStudioKind
+      ? `<div class="portal-form-footer"><span class="portal-form-note">Cần tổ chức và review nội dung trong workspace riêng tư?</span><a class="portal-button portal-button--quiet" href="/content-studio?kind=${encodeURIComponent(contentStudioKind)}">Mở Content Studio</a></div>`
+      : "";
     const flow = context.featureFlows && context.featureFlows[route];
     const flowOutput = flow
       ? `<div class="portal-state" data-state="${safeText(flow.status || "guarded")}"><span class="portal-state-icon" aria-hidden="true">○</span><div><h3>${safeText(flow.message || "Core Bridge đã cập nhật trạng thái.")}</h3><p>Trạng thái canonical: ${safeText(STATE_LABELS[flow.status] || flow.status || "guarded")}. ${flow.status === "completed" ? "Output chỉ được cấp qua asset đã xác minh." : "Bản nháp planning có thể hiển thị; output engine vẫn phải qua job và asset hợp lệ."}</p></div></div>${renderCanonicalFlow(flow, route)}${renderFeatureTracking(flow)}`
       : renderEmpty("Chờ Engine Web hoặc integration tùy chọn", "Khi một engine đã được cấp capability, backend mới cung cấp trạng thái và asset được xác minh.", "○");
     const voiceVault = page.path.startsWith("/voice") && page.path !== "/voice/outputs" ? renderVoiceVault(context) : "";
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
-      <div class="portal-work-grid"><div>${renderFormCard(page, context)}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
+      <div class="portal-work-grid"><div>${renderFormCard(page, context)}${contentStudioLink}</div><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tích hợp an toàn</h2><p class="portal-card-subtitle">UI chỉ phát sự kiện có cấu trúc cho lớp FastAPI.</p></div></div>${renderNotes(page)}</aside></div>
       ${voiceVault}${renderFeatureBotHandoff(page, context, flow)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Output & trạng thái</h2><p class="portal-card-subtitle">Không tạo text, media, transcript hoặc file giả để thay thế engine thật.</p></div>${badge((flow && flow.status) || stateFor(page, context))}</div>${flowOutput}</section></article>`;
   }
 
@@ -5282,6 +5490,8 @@
       case "prompt-library-detail": return renderPromptLibraryDetail(page, context);
       case "media-workspace": return renderMediaWorkspace(page, context);
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
+      case "content-studio": return renderContentStudio(page, context);
+      case "content-studio-detail": return renderContentStudioDetail(page, context);
       case "project-detail": return renderProjectDetail(page, context);
       case "project-packages": return renderProjectPackages(page, context);
       case "feature-family": return renderFeatureFamily(page, context);
@@ -5490,7 +5700,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach"].includes(action) && !form.reportValidity()) {
+    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -5501,10 +5711,10 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach"].includes(action)) rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", contentBriefId: source.getAttribute("data-content-brief-id") || "", contentBriefRevision: source.getAttribute("data-content-brief-revision") || "", contentBriefVersion: source.getAttribute("data-content-brief-version") || "", contentVariantId: source.getAttribute("data-content-variant-id") || "", contentVariantRevision: source.getAttribute("data-content-variant-revision") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });
