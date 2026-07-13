@@ -21,6 +21,7 @@ import threading
 import uuid
 from typing import Any
 import warnings
+from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse
@@ -35,6 +36,7 @@ from copyfast_db import (
     document_operations_enabled,
     ensure_copyfast_schema,
     image_to_pdf_enabled,
+    pdf_to_word_enabled,
     transaction,
     utc_now,
 )
@@ -46,13 +48,20 @@ PDF_SPLIT_KIND = "pdf_split"
 PDF_MERGE_KIND = "pdf_merge"
 PDF_OPTIMIZE_KIND = "pdf_optimize"
 IMAGE_TO_PDF_KIND = "image_to_pdf"
-SUPPORTED_KINDS = frozenset({PDF_SPLIT_KIND, PDF_MERGE_KIND, PDF_OPTIMIZE_KIND, IMAGE_TO_PDF_KIND})
+PDF_TO_WORD_KIND = "pdf_to_word_text"
+SUPPORTED_KINDS = frozenset({
+    PDF_SPLIT_KIND,
+    PDF_MERGE_KIND,
+    PDF_OPTIMIZE_KIND,
+    IMAGE_TO_PDF_KIND,
+    PDF_TO_WORD_KIND,
+})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 PAGE_RANGE_PATTERN = re.compile(r"^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$")
 ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
-OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.pdf$")
+OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?P<suffix>pdf|docx)$")
 CHUNK_BYTES = 1024 * 1024
 MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
 MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
@@ -75,6 +84,17 @@ MAX_IMAGE_DIMENSION = 7_680
 MAX_IMAGE_ASPECT_RATIO = 12
 IMAGE_TO_PDF_MAX_CONCURRENT = 1
 _IMAGE_TO_PDF_CAPACITY = threading.BoundedSemaphore(value=IMAGE_TO_PDF_MAX_CONCURRENT)
+PDF_TO_WORD_MAX_CONCURRENT = 1
+_PDF_TO_WORD_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_WORD_MAX_CONCURRENT)
+# Text extraction is bounded independently of PDF byte/page limits.  Text can
+# expand disproportionately when the input contains repeated or malformed
+# glyph streams.  The DOCX is a logical-text export, not an OCR/layout engine.
+MAX_PDF_TO_WORD_CHARACTERS = 250_000
+MAX_PDF_TO_WORD_PAGE_CHARACTERS = 25_000
+MAX_PDF_TO_WORD_PARAGRAPHS = 10_000
+MAX_DOCX_ARCHIVE_MEMBERS = 200
+MAX_DOCX_UNCOMPRESSED_BYTES = 8 * 1024 * 1024
+DOCX_MEDIA_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 IMAGE_INPUT_MIME_BY_EXTENSION = {
     ".jpg": "image/jpeg",
     ".jpeg": "image/jpeg",
@@ -88,6 +108,14 @@ MIN_OPTIMIZATION_SAVED_BYTES = 1024
 MIN_OPTIMIZATION_SAVED_RATIO = 0.01
 ORPHAN_RETENTION_SECONDS = 60 * 60
 PDF_EXCLUDED_PAGE_KEYS = ("/Annots", "/AA", "/Metadata", "/PieceInfo", "/StructParents")
+
+OUTPUT_SPEC_BY_KIND = {
+    PDF_SPLIT_KIND: (".pdf", "application/pdf", "toan-aas-pdf-split.pdf"),
+    PDF_MERGE_KIND: (".pdf", "application/pdf", "toan-aas-pdf-merged.pdf"),
+    PDF_OPTIMIZE_KIND: (".pdf", "application/pdf", "toan-aas-pdf-optimized.pdf"),
+    IMAGE_TO_PDF_KIND: (".pdf", "application/pdf", "toan-aas-images.pdf"),
+    PDF_TO_WORD_KIND: (".docx", DOCX_MEDIA_TYPE, "toan-aas-pdf-text.docx"),
+}
 
 OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, requested_page_range,
                       selected_start_page, selected_end_page, source_page_count, output_page_count,
@@ -172,6 +200,23 @@ class PdfOptimizeRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class PdfToWordRequest(BaseModel):
+    """One owner-scoped text-bearing PDF becomes a fresh private DOCX."""
+
+    source_asset_id: str = Field(min_length=36, max_length=36)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: str) -> str:
+        return _uuid(value, label="Asset Vault ID")
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 class ImageToPdfRequest(BaseModel):
     """An explicit private image order; every source becomes one PDF page."""
 
@@ -212,6 +257,16 @@ def _require_image_to_pdf_enabled() -> None:
         )
 
 
+def _require_pdf_to_word_enabled() -> None:
+    """Keep the DOCX writer behind an independent, fail-closed feature gate."""
+    _require_enabled()
+    if not pdf_to_word_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="PDF có text → Word chưa được bật; cần private storage và WEBAPP_PDF_TO_WORD_ENABLED",
+        )
+
+
 def _reserve_image_to_pdf_capacity() -> None:
     """Allow only one decoder-heavy image batch per Web process.
 
@@ -227,6 +282,15 @@ def _reserve_image_to_pdf_capacity() -> None:
         )
 
 
+def _reserve_pdf_to_word_capacity() -> None:
+    """Serialize bounded text extraction/DOCX generation per Web process."""
+    if not _PDF_TO_WORD_CAPACITY.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="PDF có text → Word đang bận xử lý một tệp khác; vui lòng thử lại sau ít phút",
+        )
+
+
 def ensure_document_operations_runtime() -> None:
     """Fail closed only for enabled parsers, leaving disabled surfaces inert."""
     if not document_operations_enabled():
@@ -237,6 +301,8 @@ def ensure_document_operations_runtime() -> None:
         raise RuntimeError("Document Operations cần dependency pypdf") from exc
     if image_to_pdf_enabled():
         _image_classes()
+    if pdf_to_word_enabled():
+        _word_classes()
 
 
 def _pdf_classes():
@@ -257,6 +323,18 @@ def _image_classes():
             code="IMAGE_RUNTIME_UNAVAILABLE",
         ) from exc
     return Image, ImageFile, ImageOps, UnidentifiedImageError
+
+
+def _word_classes():
+    """Load python-docx only for the explicitly enabled DOCX exporter."""
+    try:
+        from docx import Document
+    except ImportError as exc:  # pragma: no cover - deployment configuration
+        raise DocumentOperationError(
+            "PDF có text → Word chưa có runtime DOCX an toàn",
+            code="PDF_TO_WORD_RUNTIME_UNAVAILABLE",
+        ) from exc
+    return Document
 
 
 def _maximum_output_bytes() -> int:
@@ -302,8 +380,9 @@ def _asset_path(root: Path, storage_key: str) -> Path:
     return candidate
 
 
-def _output_path(root: Path, storage_key: str) -> Path:
-    if not OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key):
+def _output_path(root: Path, storage_key: str, *, expected_suffix: str | None = None) -> Path:
+    match = OUTPUT_STORAGE_KEY_PATTERN.fullmatch(storage_key)
+    if not match or (expected_suffix is not None and f".{match.group('suffix')}" != expected_suffix):
         raise RuntimeError("Storage key Document Operation không hợp lệ")
     candidate = (root / storage_key).resolve()
     try:
@@ -623,6 +702,29 @@ def _optimize_request_fingerprint(*, source_asset_id: str, source_sha256: str, s
     return hashlib.sha256(payload).hexdigest()
 
 
+def _pdf_to_word_request_fingerprint(*, source_asset_id: str, source_sha256: str, source_bytes: int) -> str:
+    """Bind PDF-text-to-DOCX replay to the exact verified source revision."""
+    payload = json.dumps(
+        {
+            "kind": PDF_TO_WORD_KIND,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _output_spec(kind: str) -> tuple[str, str, str]:
+    """Return server-owned suffix, MIME and attachment name for one kind."""
+    try:
+        return OUTPUT_SPEC_BY_KIND[kind]
+    except KeyError as exc:
+        raise RuntimeError("Loại artifact Document Operation không hợp lệ") from exc
+
+
 def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
     row = conn.execute(
         "SELECT COALESCE(SUM(byte_size), 0) FROM web_document_operations WHERE account_id=? AND byte_size IS NOT NULL",
@@ -640,6 +742,7 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
         PDF_MERGE_KIND: ("PDF Merge", "Đã gộp và xác minh PDF riêng tư."),
         PDF_OPTIMIZE_KIND: ("PDF Optimize", "Đã tối ưu và xác minh PDF riêng tư."),
         IMAGE_TO_PDF_KIND: ("Ảnh → PDF", "Đã tạo và xác minh PDF riêng tư từ ảnh."),
+        PDF_TO_WORD_KIND: ("PDF có text → Word", "Đã trích xuất text và xác minh DOCX riêng tư."),
     }.get(kind, ("Document Operation", "Đã xác minh artifact tài liệu riêng tư."))
     if state == "completed":
         return envelope(True, completed_message, data={"operation": operation}, status_name="completed")
@@ -652,6 +755,14 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
             data={"operation": operation},
             status_name="guarded",
             error_code="WEB_DOCUMENT_OPERATION_NOT_REDUCED",
+        )
+    if state == "guarded" and kind == PDF_TO_WORD_KIND:
+        return envelope(
+            False,
+            "PDF chưa có văn bản trích xuất được. File scan/ảnh cần OCR riêng; Web không phát DOCX giả.",
+            data={"operation": operation},
+            status_name="guarded",
+            error_code="WEB_DOCUMENT_OPERATION_TEXT_NOT_FOUND",
         )
     return envelope(False, f"{label} chưa thể hoàn tất an toàn.", data={"operation": operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
 
@@ -1180,6 +1291,198 @@ def _build_optimize_output(root: Path, source_copy: Path, *, source_bytes: int) 
         if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
             raise DocumentOperationError("PDF đầu ra không vượt qua kiểm tra integrity", code="PDF_OUTPUT_INVALID")
         return final_path, storage_key, byte_size, output_digest, source_page_count
+    except Exception:
+        _safe_unlink(final_path)
+        raise
+    finally:
+        _safe_unlink(temporary_output)
+
+
+def _safe_docx_text(value: str) -> str:
+    """Keep only XML 1.0 characters python-docx can safely serialize."""
+    normalized = str(value or "").replace("\r\n", "\n").replace("\r", "\n")
+    return "".join(
+        character
+        for character in normalized
+        if character in {"\t", "\n"}
+        or 0x20 <= ord(character) <= 0xD7FF
+        or 0xE000 <= ord(character) <= 0xFFFD
+        or 0x10000 <= ord(character) <= 0x10FFFF
+    )
+
+
+def _text_paragraphs(value: str) -> list[str]:
+    """Turn extracted logical text into bounded DOCX paragraphs without OCR."""
+    return [line.strip() for line in _safe_docx_text(value).split("\n") if line.strip()]
+
+
+def _verify_docx_output(path: Path, *, expected_paragraphs: list[str], expected_bytes: int) -> None:
+    """Reject an unsafe/incomplete generated DOCX before it reaches outputs.
+
+    The DOCX must be the document that this process just generated: bounded,
+    ordinary OOXML only, no macro/ActiveX/embed payload, no ZIP traversal or
+    external relationship, and its reopened visible paragraphs must match the
+    bounded text extraction used to create it.
+    """
+    if expected_bytes < 1 or expected_bytes > _maximum_output_bytes():
+        raise DocumentOperationError("DOCX đầu ra vượt giới hạn artifact an toàn", code="PDF_TO_WORD_OUTPUT_LIMIT")
+    if not expected_paragraphs or len(expected_paragraphs) > MAX_PDF_TO_WORD_PARAGRAPHS:
+        raise DocumentOperationError("DOCX đầu ra không vượt qua kiểm tra text", code="PDF_TO_WORD_OUTPUT_INVALID")
+    try:
+        with ZipFile(path) as archive:
+            infos = archive.infolist()
+            if not infos or len(infos) > MAX_DOCX_ARCHIVE_MEMBERS:
+                raise DocumentOperationError("DOCX đầu ra có cấu trúc không an toàn", code="PDF_TO_WORD_OUTPUT_INVALID")
+            names: set[str] = set()
+            uncompressed_bytes = 0
+            for info in infos:
+                name = str(info.filename or "")
+                posix_name = name.replace("\\", "/")
+                parts = [part for part in posix_name.split("/") if part]
+                mode = (info.external_attr >> 16) & 0o170000
+                if (
+                    not name
+                    or name != posix_name
+                    or posix_name.startswith("/")
+                    or ".." in parts
+                    or info.flag_bits & 0x1
+                    or mode == 0o120000
+                ):
+                    raise DocumentOperationError("DOCX đầu ra có cấu trúc không an toàn", code="PDF_TO_WORD_OUTPUT_INVALID")
+                lowered = posix_name.lower()
+                if (
+                    "vbaproject" in lowered
+                    or lowered.startswith("word/embeddings/")
+                    or lowered.startswith("word/activex/")
+                ):
+                    raise DocumentOperationError("DOCX đầu ra chứa thành phần không được phép", code="PDF_TO_WORD_OUTPUT_INVALID")
+                uncompressed_bytes += max(0, int(info.file_size))
+                if uncompressed_bytes > MAX_DOCX_UNCOMPRESSED_BYTES:
+                    raise DocumentOperationError("DOCX đầu ra vượt giới hạn an toàn", code="PDF_TO_WORD_OUTPUT_LIMIT")
+                names.add(posix_name)
+                if lowered.endswith(".rels") and b'TargetMode="External"' in archive.read(info):
+                    raise DocumentOperationError("DOCX đầu ra có liên kết ngoài không được phép", code="PDF_TO_WORD_OUTPUT_INVALID")
+            if {"[Content_Types].xml", "word/document.xml"} - names:
+                raise DocumentOperationError("DOCX đầu ra thiếu cấu trúc bắt buộc", code="PDF_TO_WORD_OUTPUT_INVALID")
+    except DocumentOperationError:
+        raise
+    except (BadZipFile, OSError) as exc:
+        raise DocumentOperationError("DOCX đầu ra không vượt qua kiểm tra", code="PDF_TO_WORD_OUTPUT_INVALID") from exc
+
+    try:
+        Document = _word_classes()
+        reopened = Document(str(path))
+        actual_paragraphs = [text for paragraph in reopened.paragraphs if (text := _safe_docx_text(paragraph.text)).strip()]
+    except Exception as exc:
+        raise DocumentOperationError("DOCX đầu ra không thể mở lại an toàn", code="PDF_TO_WORD_OUTPUT_INVALID") from exc
+    if actual_paragraphs != expected_paragraphs:
+        raise DocumentOperationError("DOCX đầu ra không vượt qua kiểm tra text", code="PDF_TO_WORD_OUTPUT_INVALID")
+
+
+def _build_pdf_to_word_output(root: Path, source_copy: Path) -> tuple[Path, str, int, str, int, int, int]:
+    """Export real extracted PDF text into a freshly generated private DOCX.
+
+    This deliberately reads no source attachments, links, annotations, images,
+    metadata or layout. It creates a new document from text only, so a scan or
+    PDF without selectable text remains guarded instead of receiving a fake
+    blank DOCX or an unstated OCR/provider fallback.
+    """
+    temporary_output = _staging_path(root, ".docx")
+    final_path: Path | None = None
+    try:
+        PdfReader, _ = _pdf_classes()
+        Document = _word_classes()
+        extracted_paragraphs: list[str] = []
+        source_page_count = 0
+        extracted_characters = 0
+        try:
+            with source_copy.open("rb") as source_stream:
+                reader = PdfReader(source_stream, strict=True)
+                if reader.is_encrypted:
+                    raise DocumentOperationError("PDF được mã hóa chưa thể trích xuất text an toàn", code="PDF_ENCRYPTED")
+                source_page_count = len(reader.pages)
+                if source_page_count < 1 or source_page_count > MAX_PAGES:
+                    raise DocumentOperationError(
+                        f"PDF cần từ 1 đến {MAX_PAGES} trang để trích xuất text an toàn",
+                        code="PDF_PAGE_LIMIT",
+                    )
+                for page in reader.pages:
+                    try:
+                        raw_text = page.extract_text() or ""
+                    except Exception as exc:
+                        raise DocumentOperationError(
+                            "Không thể trích xuất văn bản từ PDF này an toàn",
+                            code="PDF_TEXT_EXTRACTION_FAILED",
+                        ) from exc
+                    safe_text = _safe_docx_text(raw_text)
+                    page_characters = len(safe_text)
+                    if page_characters > MAX_PDF_TO_WORD_PAGE_CHARACTERS:
+                        raise DocumentOperationError(
+                            "Văn bản một trang PDF vượt giới hạn xử lý an toàn",
+                            code="PDF_TEXT_LIMIT",
+                        )
+                    extracted_characters += page_characters
+                    if extracted_characters > MAX_PDF_TO_WORD_CHARACTERS:
+                        raise DocumentOperationError(
+                            "Văn bản PDF vượt giới hạn xử lý an toàn",
+                            code="PDF_TEXT_LIMIT",
+                        )
+                    extracted_paragraphs.extend(_text_paragraphs(safe_text))
+                    if len(extracted_paragraphs) > MAX_PDF_TO_WORD_PARAGRAPHS:
+                        raise DocumentOperationError(
+                            "PDF tạo quá nhiều đoạn văn để xuất an toàn",
+                            code="PDF_TEXT_LIMIT",
+                        )
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF không hợp lệ hoặc không thể trích xuất text an toàn", code="PDF_PARSE_FAILED") from exc
+
+        if not extracted_paragraphs:
+            raise DocumentOperationError(
+                "PDF chưa có văn bản trích xuất được. File scan/ảnh cần OCR riêng; Web không phát DOCX giả.",
+                code="PDF_TEXT_NOT_FOUND",
+            )
+
+        document = Document()
+        document.core_properties.title = "TOAN AAS PDF text export"
+        document.core_properties.author = "TOAN AAS Web"
+        document.core_properties.subject = "Extracted PDF text"
+        for index, paragraph_text in enumerate(extracted_paragraphs):
+            document.add_paragraph(paragraph_text)
+        document.save(str(temporary_output))
+
+        byte_size = temporary_output.stat().st_size
+        _verify_docx_output(
+            temporary_output,
+            expected_paragraphs=extracted_paragraphs,
+            expected_bytes=byte_size,
+        )
+        digest = hashlib.sha256()
+        with temporary_output.open("rb") as stream:
+            while True:
+                chunk = stream.read(CHUNK_BYTES)
+                if not chunk:
+                    break
+                digest.update(chunk)
+        output_digest = digest.hexdigest()
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}.docx"
+        final_path = _output_path(root, storage_key, expected_suffix=".docx")
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn DOCX đầu ra không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=output_digest):
+            raise DocumentOperationError("DOCX đầu ra không vượt qua kiểm tra integrity", code="PDF_TO_WORD_OUTPUT_INVALID")
+        return (
+            final_path,
+            storage_key,
+            byte_size,
+            output_digest,
+            source_page_count,
+            extracted_characters,
+            len(extracted_paragraphs),
+        )
     except Exception:
         _safe_unlink(final_path)
         raise
@@ -1814,6 +2117,198 @@ async def image_to_pdf(
             _IMAGE_TO_PDF_CAPACITY.release()
 
 
+@router.post("/pdf-to-word")
+async def pdf_to_word(payload: PdfToWordRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Export only real selectable PDF text into a private verified DOCX."""
+    _require_pdf_to_word_enabled()
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    source_asset_id = payload.source_asset_id
+    source_storage_key = ""
+    source_bytes = 0
+    source_sha256 = ""
+    capacity_reserved = False
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            source_row = conn.execute(
+                """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+                   FROM web_asset_files WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if not source_row or str(source_row[7]) != "active":
+                return _source_not_found()
+            if str(source_row[2]) != ".pdf" or str(source_row[3]) != "application/pdf":
+                raise HTTPException(status_code=422, detail="PDF có text → Word chỉ nhận PDF private hợp lệ trong Asset Vault")
+            source_bytes = int(source_row[4])
+            if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+                raise HTTPException(status_code=413, detail="PDF nguồn vượt giới hạn 20 MB")
+            source_sha256 = str(source_row[5] or "")
+            source_storage_key = str(source_row[6] or "")
+            if not re.fullmatch(r"[0-9a-f]{64}", source_sha256) or not ASSET_STORAGE_KEY_PATTERN.fullmatch(source_storage_key):
+                raise HTTPException(status_code=422, detail="PDF nguồn không còn sẵn sàng")
+            request_fingerprint = _pdf_to_word_request_fingerprint(
+                source_asset_id=source_asset_id,
+                source_sha256=source_sha256,
+                source_bytes=source_bytes,
+            )
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, PDF_TO_WORD_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                    raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho PDF có text → Word khác")
+                return _operation_response(_operation_public(tuple(existing[:-1])))
+
+            # A replayed completed/guarded request must remain readable even
+            # while the one extraction slot is occupied. Only a truly new job
+            # reserves capacity and creates a lifecycle row.
+            _reserve_pdf_to_word_capacity()
+            capacity_reserved = True
+            operation_id = str(uuid.uuid4())
+            now = utc_now()
+            conn.execute(
+                """INSERT INTO web_document_operations
+                   (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                    request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
+                    created_at, queued_at, started_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, 1, '', ?, ?, ?, ?)""",
+                (
+                    operation_id,
+                    account_id,
+                    source_asset_id,
+                    str(source_row[1]) if source_row[1] else None,
+                    PDF_TO_WORD_KIND,
+                    payload.idempotency_key,
+                    request_fingerprint,
+                    source_sha256,
+                    source_bytes,
+                    now,
+                    now,
+                    now,
+                    now,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="queued", when=now)
+            conn.execute(
+                "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                (now, operation_id, account_id),
+            )
+            _record_event(conn, operation_id=operation_id, state="processing", when=now)
+    except Exception:
+        if capacity_reserved:
+            _PDF_TO_WORD_CAPACITY.release()
+        raise
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, ".source.pdf")
+        await run_in_threadpool(
+            _copy_verified_source,
+            source_path,
+            source_copy,
+            expected_bytes=source_bytes,
+            expected_digest=source_sha256,
+        )
+        (
+            final_path,
+            output_storage_key,
+            output_bytes,
+            output_digest,
+            source_page_count,
+            extracted_characters,
+            paragraph_count,
+        ) = await run_in_threadpool(_build_pdf_to_word_output, root, source_copy)
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, PDF_TO_WORD_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("PDF có text → Word không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', source_page_count=?, output_page_count=NULL, storage_key=?,
+                       original_filename='toan-aas-pdf-text.docx', content_type=?,
+                       byte_size=?, sha256=?, completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_page_count,
+                    output_storage_key,
+                    DOCX_MEDIA_TYPE,
+                    output_bytes,
+                    output_digest,
+                    now,
+                    now,
+                    operation_id,
+                    account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.pdf_to_word_text",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=(
+                    f"source_pages={source_page_count};characters={extracted_characters};"
+                    f"paragraphs={paragraph_count};bytes={output_bytes}"
+                ),
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc PDF có text → Word vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "PDF_TEXT_NOT_FOUND":
+            _mark_guarded(operation_id, account_id, kind=PDF_TO_WORD_KIND, request=request, code=exc.code)
+        else:
+            if exc.code == "PDF_SOURCE_UNAVAILABLE":
+                _mark_source_unavailable(source_asset_id, account_id)
+            _mark_failed(operation_id, account_id, kind=PDF_TO_WORD_KIND, request=request, code=exc.code)
+        status_code = 413 if exc.code in {
+            "PDF_INPUT_TOO_LARGE",
+            "PDF_PAGE_LIMIT",
+            "PDF_TEXT_LIMIT",
+            "PDF_TO_WORD_OUTPUT_LIMIT",
+        } else 422
+        raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            kind=PDF_TO_WORD_KIND,
+            request=request,
+            code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION",
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, kind=PDF_TO_WORD_KIND, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể xuất DOCX từ PDF an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+        if capacity_reserved:
+            _PDF_TO_WORD_CAPACITY.release()
+
+
 @router.post("/pdf-optimize")
 async def optimize_pdf(payload: PdfOptimizeRequest, request: Request, account: dict = Depends(require_csrf)):
     """Optimize one verified Asset Vault PDF only if it becomes smaller."""
@@ -1970,7 +2465,17 @@ async def download_document_operation(operation_id: str, account: dict = Depends
     if not row or str(row[4]) != "completed":
         return _operation_not_found()
     try:
-        private_path = _output_path(document_operations_directory(), str(row[19] or ""))
+        suffix, media_type, download_filename = _output_spec(str(row[3] or ""))
+        # Content-type and extension are canonical server data for the known
+        # operation kind. Never let a mutable database filename/MIME value
+        # change how a private attachment is delivered to the browser.
+        if str(row[11] or "") != media_type:
+            raise RuntimeError("Artifact Document Operation có MIME không hợp lệ")
+        private_path = _output_path(
+            document_operations_directory(),
+            str(row[19] or ""),
+            expected_suffix=suffix,
+        )
     except RuntimeError:
         _mark_output_unavailable(operation_id, account_id)
         return _operation_unavailable()
@@ -1979,8 +2484,8 @@ async def download_document_operation(operation_id: str, account: dict = Depends
         return _operation_unavailable()
     return FileResponse(
         path=private_path,
-        media_type="application/pdf",
-        filename=str(row[10] or "toan-aas-document.pdf"),
+        media_type=media_type,
+        filename=download_filename,
         content_disposition_type="attachment",
         headers={
             "Cache-Control": "no-store, private",

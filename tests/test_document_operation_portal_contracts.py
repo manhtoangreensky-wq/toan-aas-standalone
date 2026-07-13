@@ -12,6 +12,7 @@ CONTRACT = (ROOT / "docs" / "migration" / "PDF_SPLIT_CONTRACT.md").read_text(enc
 MERGE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_MERGE_CONTRACT.md").read_text(encoding="utf-8")
 OPTIMIZE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OPTIMIZE_CONTRACT.md").read_text(encoding="utf-8")
 IMAGE_TO_PDF_CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_TO_PDF_CONTRACT.md").read_text(encoding="utf-8")
+PDF_TO_WORD_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_WORD_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
@@ -90,7 +91,7 @@ def test_pdf_merge_replaces_the_generic_bot_feature_form_with_an_ordered_native_
 def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
     assert '"document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
     assert '"/documents/merge"' in INTEGRATION
-    assert '["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf"].includes(String(item.kind || ""))' in INTEGRATION
+    assert '["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text"].includes(String(item.kind || ""))' in INTEGRATION
     assert 'api("/document-operations/pdf-merge"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-merge")'):
@@ -220,7 +221,8 @@ def test_image_to_pdf_replaces_the_generic_form_with_a_native_ordered_private_su
     assert 'data-portal-route="/documents/image-to-pdf"' in PORTAL
     assert "Ảnh 1 → Ảnh 8" in PORTAL
     document_pdf = PORTAL[PORTAL.index("documentPdf: ["):PORTAL.index("documentOcr: [")]
-    assert 'options: ["pdf_to_word", "pdf_to_images"]' in document_pdf
+    assert 'options: ["pdf_to_images"]' in document_pdf
+    assert "pdf_to_word" not in document_pdf
     assert "image_to_pdf" not in document_pdf
     assert 'accept: "application/pdf"' in document_pdf
     pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
@@ -232,7 +234,7 @@ def test_image_to_pdf_hydration_and_write_are_signed_web_only_not_bridge_backed(
     assert "const imageToPdfEnabled" in INTEGRATION
     assert '"document-operation-image-to-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled)' in INTEGRATION
     assert '"/documents/image-to-pdf"' in INTEGRATION
-    assert 'const nativeDocumentPageStates = account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled' in INTEGRATION
+    assert "const nativeDocumentPageStates = {" in INTEGRATION
     assert '"/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded"' in INTEGRATION
     assert "function documentOperationKindForCurrentRoute()" in INTEGRATION
     assert '"/document-operations?kind=image_to_pdf&limit=100"' in INTEGRATION
@@ -279,3 +281,74 @@ def test_image_to_pdf_contract_records_decoder_bounds_private_delivery_and_no_bo
     assert "web_native_image_to_pdf_required" in api_source
     assert "bridge_request(" not in operation_source
     assert '"image_to_pdf_enabled": enabled("WEBAPP_IMAGE_TO_PDF_ENABLED", False)' in api_source
+
+
+def test_pdf_to_word_replaces_the_generic_feature_with_a_truthful_native_private_surface() -> None:
+    assert 'customerPage("/documents/pdf-to-word", "PDF có text → Word riêng tư"' in PORTAL
+    assert 'layout: "pdf-to-word", type: "document-operation", action: "none"' in PORTAL
+    assert 'featurePage("/documents/pdf-to-word"' not in PORTAL
+    assert "function renderPdfToWord(page, context)" in PORTAL
+    assert 'case "pdf-to-word": return renderPdfToWord(page, context);' in PORTAL
+    assert "function pdfToWordFormFields()" in PORTAL
+    assert 'documentOperationItems(context, "pdf_to_word_text")' in PORTAL
+    assert 'data-portal-action="document-operation-pdf-to-word"' in PORTAL
+    assert 'data-portal-route="/documents/pdf-to-word"' in PORTAL
+    surface = PORTAL[PORTAL.index("function renderPdfToWord(page, context)"):PORTAL.index("function renderImageToPdf(page, context)")]
+    assert "Không OCR" in surface
+    assert "không có DOCX giả" in surface
+    assert "không upload bytes" in surface
+    assert "Bot job" in surface
+    assert "PayOS" in surface
+    assert "fetch(" not in surface
+    assert "api(" not in surface
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/documents/pdf-to-word":' in pages
+    assert 'return "PDF có text → Word riêng tư"' in pages
+    assert 'WebFeature("documents_pdf_to_word"' in registry
+
+
+def test_pdf_to_word_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
+    assert "const pdfToWordEnabled" in INTEGRATION
+    assert '"document-operation-pdf-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled)' in INTEGRATION
+    assert '"/documents/pdf-to-word"' in INTEGRATION
+    assert '"/documents/pdf-to-word": base().pdfToWordEnabled === true ? "ready" : "guarded"' in INTEGRATION
+    assert '"/document-operations?kind=pdf_to_word_text&limit=100"' in INTEGRATION
+    assert 'api("/document-operations/pdf-to-word"' in INTEGRATION
+    action = INTEGRATION[
+        INTEGRATION.index('if (action === "document-operation-pdf-to-word")'):
+        INTEGRATION.index('if (action === "document-operation-image-to-pdf")')
+    ]
+    assert "source_asset_id: sourceAssetId" in action
+    assert "idempotency_key: submission.key" in action
+    assert "hydrateDocumentOperations" in action
+    assert "hydrateAssetVault" in action
+    assert "bridge_request" not in action
+    assert "CORE_BRIDGE" not in action
+
+
+def test_pdf_to_word_contract_records_text_only_guarded_delivery_and_no_bot_payment_provider_execution() -> None:
+    for phrase in (
+        "pdf_to_word_text",
+        "20 MiB",
+        "1–30 page",
+        "250,000",
+        "25,000",
+        "PDF_TEXT_NOT_FOUND",
+        "WEBAPP_PDF_TO_WORD_ENABLED",
+        "python-docx",
+        "No Bot bridge",
+        "PayOS",
+        "No OCR fallback",
+    ):
+        assert phrase in PDF_TO_WORD_CONTRACT
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    operation_source = (ROOT / "copyfast_document_operations.py").read_text(encoding="utf-8")
+    api_source = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert '"/api/v1/document-operations/pdf-to-word"' in app_source
+    assert "PDF_TO_WORD_KIND" in operation_source
+    assert "_verify_docx_output" in operation_source
+    assert "PDF_TO_WORD_MAX_CONCURRENT = 1" in operation_source
+    assert "web_native_pdf_to_word_required" in api_source
+    assert '"pdf_to_word_enabled": enabled("WEBAPP_PDF_TO_WORD_ENABLED", False)' in api_source
+    assert "bridge_request(" not in operation_source

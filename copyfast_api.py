@@ -373,6 +373,10 @@ def _flags() -> dict[str, bool]:
         # Image decoding is a distinct capability and stays disabled until
         # Pillow plus the bounded private storage contract are deployed.
         "image_to_pdf_enabled": enabled("WEBAPP_IMAGE_TO_PDF_ENABLED", False),
+        # PDF text extraction creates a DOCX artifact with a separate writer
+        # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
+        # PDF layout converter.
+        "pdf_to_word_enabled": enabled("WEBAPP_PDF_TO_WORD_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
@@ -1291,7 +1295,9 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
     document_operation = str(values.get("operation") or "").strip().lower().replace("-", "_")
     if feature in {"documents", "documents_pdf"} and document_operation == "image_to_pdf":
         return "web_native_image_to_pdf_required"
-    if feature in {"documents", "documents_pdf"} and document_operation not in {"pdf_to_word", "pdf_to_images"}:
+    if feature in {"documents", "documents_pdf"} and document_operation == "pdf_to_word":
+        return "web_native_pdf_to_word_required"
+    if feature in {"documents", "documents_pdf"} and document_operation not in {"pdf_to_images"}:
         return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
         return "text_required"
@@ -1339,7 +1345,8 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "authority_field_not_allowed": "Yêu cầu feature có trường hệ thống không được phép; Web không nhận identity, Xu, provider, job hoặc output từ browser.",
         "upload_ids_invalid": "Tham chiếu tệp staging không hợp lệ. Hãy chọn lại tệp để Web gửi qua luồng canonical.",
         "web_native_image_to_pdf_required": "Ảnh sang PDF là tiện ích Web-native riêng tư. Hãy dùng /documents/image-to-pdf để tạo output đã được kiểm tra.",
-        "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF canonical hoặc Ảnh sang PDF private tại /documents/image-to-pdf.",
+        "web_native_pdf_to_word_required": "PDF có text → Word là tiện ích Web-native riêng tư. Hãy dùng /documents/pdf-to-word; PDF scan hoặc layout ảnh không được giả OCR.",
+        "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF canonical hoặc tiện ích private tại /documents/image-to-pdf hay /documents/pdf-to-word.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
         "upload_required": "Workflow này cần tệp đã vào staging canonical trước khi tiếp tục.",

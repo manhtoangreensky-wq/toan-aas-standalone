@@ -352,6 +352,8 @@ async def test_feature_action_rejects_browser_bypass_of_web_intake_contract(monk
         ("documents_merge", {"upload_ids": ["staged-one"]}, "multiple_uploads_required"),
         ("documents", {"upload_ids": ["staged-image"], "operation": "image_to_pdf"}, "web_native_image_to_pdf_required"),
         ("documents_pdf", {"upload_ids": ["staged-image"], "operation": "image-to-pdf"}, "web_native_image_to_pdf_required"),
+        ("documents", {"upload_ids": ["staged-document"], "operation": "pdf_to_word"}, "web_native_pdf_to_word_required"),
+        ("documents_pdf", {"upload_ids": ["staged-document"], "operation": "pdf-to-word"}, "web_native_pdf_to_word_required"),
         ("documents", {"upload_ids": ["staged-document"], "operation": "unsafe_custom_converter"}, "document_operation_invalid"),
         ("documents_merge", {"upload_ids": [f"staged-{index}" for index in range(9)]}, "too_many_uploads"),
         ("voice_clone", {"upload_ids": ["staged-audio"], "consent": False}, "voice_clone_consent_required"),
