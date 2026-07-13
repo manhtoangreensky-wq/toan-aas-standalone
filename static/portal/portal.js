@@ -226,7 +226,7 @@
     ],
     documentPdf: [
       { name: "document", label: "Tài liệu PDF nguồn", type: "file", accept: "application/pdf", requiredUpload: true, help: "Tệp chỉ vào bot-owned staging sau validation; Web không giữ raw path hoặc bytes lâu dài." },
-      { name: "operation", label: "Công cụ PDF", control: "select", options: ["pdf_to_word", "pdf_to_images"], help: "Ảnh sang PDF có pipeline private riêng tại /documents/image-to-pdf; delivery PDF còn lại vẫn cần canonical job/asset.", required: true },
+      { name: "operation", label: "Công cụ PDF", control: "select", options: ["pdf_to_images"], help: "Ảnh sang PDF có pipeline private riêng tại /documents/image-to-pdf. PDF có text → Word dùng trích xuất Web-native riêng tại /documents/pdf-to-word; không đi qua bridge generic.", required: true },
       { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 3", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" }
     ],
     documentOcr: [
@@ -733,6 +733,13 @@
       "Mỗi ảnh được hash-copy vào vùng cô lập, decode/kiểm tra thật, chuẩn hóa orientation và alpha trước khi output PDF riêng được parse/hash lại. Không gọi Bot, provider, PayOS hoặc ví Xu."
     ]
   });
+  customerPage("/documents/pdf-to-word", "PDF có text → Word riêng tư", "Trích xuất text có thể chọn thực sự từ PDF private trong Asset Vault thành DOCX; không OCR và không cam kết giữ bố cục trực quan.", ICONS.document, {
+    layout: "pdf-to-word", type: "document-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "Chỉ PDF active thuộc signed account hiện tại được chọn từ Asset Vault. Browser không gửi URL, path hoặc bytes PDF vào thao tác này.",
+      "Nếu PDF là bản scan hoặc không có text mà parser trích xuất được, thao tác dừng ở guarded và không tạo DOCX giả. Bố cục, ảnh, font và OCR không nằm trong phạm vi này."
+    ]
+  });
   featurePage("/documents/translate", "Dịch tài liệu", "Dịch tài liệu bằng workflow server-side và output riêng tư đã xác minh.", ICONS.document, FIELD_SETS.documentTranslate);
 
   // ERP pages. Server routes remain the actual access-control boundary.
@@ -852,6 +859,7 @@
       documentOperations: Array.isArray(source.documentOperations) ? source.documentOperations.slice(0, 100) : [],
       documentOperationsEnabled: source.documentOperationsEnabled === true,
       imageToPdfEnabled: source.imageToPdfEnabled === true,
+      pdfToWordEnabled: source.pdfToWordEnabled === true,
       // Account activity is already a redacted, owner-scoped projection from
       // the Web API. Retain the bounded list during each presentation pass so
       // a successful signed read cannot be rendered as an empty history.
@@ -1379,7 +1387,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -2543,7 +2551,7 @@
       .filter((item) => {
         const itemKind = String(item && item.kind || "");
         return item && typeof item === "object" && validDocumentOperationId(item.id)
-          && (kind ? itemKind === kind : ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf"].includes(itemKind));
+          && (kind ? itemKind === kind : ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text"].includes(itemKind));
       })
       .slice(0, 100);
   }
@@ -2603,6 +2611,14 @@
     }];
   }
 
+  function pdfToWordFormFields() {
+    return [{
+      name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets",
+      emptyLabel: "Chọn PDF có text riêng tư", required: true,
+      help: "Web chỉ trích xuất text mà parser PDF đọc được và tạo DOCX riêng tư mới. Không OCR, không đưa ảnh vào DOCX và không cam kết giữ nguyên bố cục, font hoặc định dạng thị giác."
+    }];
+  }
+
   function imageToPdfFormFields() {
     return Array.from({ length: 8 }, (_, index) => {
       const position = index + 1;
@@ -2620,7 +2636,7 @@
     });
   }
 
-  function renderDocumentOperationCards(items, emptyTitle = "Chưa có PDF đã xử lý", emptyText = "Sau khi PDF riêng tư vượt qua kiểm tra nguồn, parser và output, attachment sẽ xuất hiện tại đây. Không có Job Bot hoặc output mô phỏng.") {
+  function renderDocumentOperationCards(items, emptyTitle = "Chưa có artifact đã xử lý", emptyText = "Sau khi nguồn private vượt qua kiểm tra parser và output, attachment sẽ xuất hiện tại đây. Không có Job Bot hoặc output mô phỏng.") {
     if (!items.length) {
       return renderEmpty(emptyTitle, emptyText, "▤");
     }
@@ -2631,6 +2647,7 @@
       const isMerge = kind === "pdf_merge";
       const isOptimize = kind === "pdf_optimize";
       const isImageToPdf = kind === "image_to_pdf";
+      const isPdfToWord = kind === "pdf_to_word_text";
       const start = Number(item.selected_start_page);
       const end = Number(item.selected_end_page);
       const sourceCount = Math.max(1, Number(item.source_count) || 1);
@@ -2640,6 +2657,8 @@
         ? `${sourceCount} PDF nguồn theo thứ tự đã chọn`
         : isImageToPdf
         ? `${sourceCount} ảnh nguồn theo thứ tự đã chọn`
+        : isPdfToWord
+        ? "Trích xuất text có thể chọn từ PDF"
         : (Number.isInteger(start) && Number.isInteger(end) ? (start === end ? `Trang ${start}` : `Trang ${start}–${end}`) : "Đang xác minh phạm vi");
       const sourcePages = Number(item.source_page_count);
       const outputPages = Number(item.output_page_count);
@@ -2649,6 +2668,8 @@
         ? `${safeText(String(sourceCount))} PDF${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : ""}`
         : isImageToPdf
         ? `${safeText(String(sourceCount))} ảnh${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : ""}`
+        : isPdfToWord
+        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
         : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra");
       const savedBytes = Number(item.saved_bytes);
       const savedPercent = Number(item.saved_percent);
@@ -2657,8 +2678,16 @@
         : safeText(item.byte_size ? vaultBytes(item.byte_size) : "Đang kiểm tra");
       const pendingMessage = isOptimize && status === "guarded"
         ? "Không có bản nhỏ hơn đạt chuẩn an toàn; file gốc không thay đổi và không có artifact tải xuống."
+        : isPdfToWord && status === "guarded"
+        ? "PDF không có text có thể trích xuất; Web không OCR hoặc tạo DOCX giả."
         : (status === "failed" || status === "unavailable" ? "Không có output tải xuống; hãy kiểm tra nguồn và chạy thao tác mới." : "Chỉ tải xuống sau khi server xác minh output.");
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isImageToPdf ? "ẢNH" : "PDF"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PDF riêng tư"))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có") : (Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : "Chưa có")}</dd></div><div><dt>${isOptimize ? "Đã giảm" : "Artifact"}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PDF riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+      const outputMetric = isPdfToWord
+        ? (status === "completed" && downloadPath ? "DOCX đã xác minh" : "Chưa có")
+        : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có") : (Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : "Chưa có"));
+      const artifactLabel = isPdfToWord ? "DOCX" : (isOptimize ? "Đã giảm" : "Artifact");
+      const downloadLabel = isPdfToWord ? "Tải DOCX riêng tư" : "Tải PDF riêng tư";
+      const fallbackFilename = isPdfToWord ? "DOCX riêng tư" : "PDF riêng tư";
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isPdfToWord ? "DOCX" : (isImageToPdf ? "ẢNH" : "PDF")}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -2737,6 +2766,34 @@
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tối ưu PDF không resample</h2><p class="portal-card-subtitle">Một profile duy nhất, có kiểm tra thật. Không có dropdown light/medium/strong không tác động engine.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-optimize" data-portal-route="/documents/compress" data-portal-confirm="Tối ưu PDF từ Asset Vault? File gốc không bị thay đổi; output chỉ được tạo nếu máy chủ xác minh bản mới nhỏ hơn đủ ý nghĩa." novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tối ưu PDF</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Kết quả trung thực</h2><p class="portal-card-subtitle">Không resample ảnh hoặc tạo output giả; annotation/action tương tác được loại bỏ để delivery an toàn.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private active của signed account hiện tại được sao chép/đọc.</span></li><li><strong>2. Tối ưu có giới hạn</strong><span>Tối đa 20 MB/30 trang; không PDF mã hóa, không chạy shell/command hoặc dịch vụ ngoài.</span></li><li><strong>3. Chỉ giao khi giảm thật</strong><span>Artifact phải strict-reparse, hash đúng và tiết kiệm tối thiểu 1 KiB cùng 1%; nếu không có output.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã tối ưu</h2><p class="portal-card-subtitle">Dung lượng nguồn, output và mức giảm chỉ được server công bố sau completed. Trạng thái guarded nghĩa là không có bản nhỏ hơn đạt chuẩn — không phải một download bị ẩn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/compress"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có PDF tối ưu", "Một output chỉ xuất hiện khi máy chủ xác minh bản lossless nhỏ hơn thật. File gốc trong Asset Vault luôn được giữ nguyên.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không thay thế workflow Bot</strong><p>PDF Optimize này là artifact Web-native có lifecycle riêng. Nó không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderPdfToWord(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-to-word"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
+    if (!canView) {
+      return `<article class="portal-page portal-pdf-to-word">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>Document Operations đang ở chế độ an toàn</h2><p>PDF có text → Word chỉ bật khi cả Asset Vault và storage output cô lập, persistent của Web được server xác nhận. Không fallback sang static, browser storage, Bot job hoặc provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không OCR giả</span></div></div></div></section></article>`;
+    }
+    const sources = pdfVaultItems(context);
+    const operations = documentOperationItems(context, "pdf_to_word_text");
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = transientFormValues("/documents/pdf-to-word");
+    const runReason = !canRunCapability
+      ? (context.pdfToWordEnabled === true
+        ? "Cần signed session, CSRF và capability PDF có text → Word từ server."
+        : "PDF có text → Word đang tắt an toàn trên server; Web không fallback sang OCR hoặc DOCX mô phỏng.")
+      : sources.length === 0
+        ? "Hãy lưu một PDF private có text có thể chọn vào Asset Vault trước khi trích xuất."
+        : "Server chỉ tạo DOCX sau khi parser đọc được text thực và xác minh output private.";
+    const sourceSummary = sources.length === 1 ? "1 PDF đang hoạt động" : `${sources.length} PDF đang hoạt động`;
+    const completedCount = operations.filter((item) => documentOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-pdf-to-word">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Document Operations</span><h2>Trích xuất text PDF thành DOCX riêng tư</h2><p>Chọn PDF đã có trong Asset Vault. Server chỉ lấy văn bản mà parser PDF thực sự đọc được, rồi tạo DOCX mới trong storage cô lập. Đây không phải OCR và không sao chép ảnh, font, bảng hay bố cục trực quan từ PDF sang Word.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>DOCX sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn PDF có text</h2><p class="portal-card-subtitle">Browser chỉ gửi ID asset private đã chọn; không upload bytes, URL hoặc raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-to-word" data-portal-route="/documents/pdf-to-word" data-portal-confirm="Trích xuất text thực từ PDF sang DOCX riêng tư? PDF scan hoặc không có text sẽ không tạo output giả." novalidate>${renderFields(pdfToWordFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo DOCX riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Giới hạn trung thực</h2><p class="portal-card-subtitle">Chỉ delivery khi có text có thể trích xuất và DOCX được server xác minh.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private active của signed account hiện tại được sao chép/đọc trong vùng xử lý cô lập.</span></li><li><strong>2. Không OCR, không sao chép layout</strong><span>PDF scan hoặc rỗng text được ghi guarded, không có DOCX giả. Bố cục, ảnh, font, bảng và khả năng khớp thị giác không được cam kết.</span></li><li><strong>3. Delivery riêng tư</strong><span>DOCX mới được kiểm tra trước khi tải qua signed session; không public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">DOCX đã trích xuất</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Trạng thái guarded nghĩa là PDF không có text parser đọc được — không có download bị ẩn hoặc output thay thế.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/pdf-to-word"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có DOCX đã trích xuất", "DOCX chỉ xuất hiện sau khi server đọc được text thực từ PDF và xác minh output private. PDF scan/rỗng text sẽ không sinh file giả.")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Artifact DOCX có lifecycle private riêng; thao tác này không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -3858,6 +3915,7 @@
       case "pdf-split": return renderPdfSplit(page, context);
       case "pdf-merge": return renderPdfMerge(page, context);
       case "pdf-optimize": return renderPdfOptimize(page, context);
+      case "pdf-to-word": return renderPdfToWord(page, context);
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);

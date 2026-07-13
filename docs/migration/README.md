@@ -30,6 +30,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`PDF_MERGE_CONTRACT.md`](PDF_MERGE_CONTRACT.md) — ordered, bounded PDF Merge from several verified Asset Vault files into a separately verified Web-native attachment.
 - [`PDF_OPTIMIZE_CONTRACT.md`](PDF_OPTIMIZE_CONTRACT.md) — lossless PDF Optimize that only delivers a separate verified artifact when it is meaningfully smaller than the source.
 - [`IMAGE_TO_PDF_CONTRACT.md`](IMAGE_TO_PDF_CONTRACT.md) — ordered, bounded Image to PDF from verified private JPEG, PNG and WebP Asset Vault assets into a separately verified Web-native attachment.
+- [`PDF_TO_WORD_CONTRACT.md`](PDF_TO_WORD_CONTRACT.md) — real text-only PDF to DOCX extraction with bounded private output, no OCR/layout promise and a guarded no-text outcome.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — Bot-first notes, reminders, referral/rewards, community and help handoffs.

@@ -85,6 +85,16 @@ def image_to_pdf_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_TO_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def pdf_to_word_enabled() -> bool:
+    """Whether the private PDF-text-to-DOCX exporter is deliberately enabled.
+
+    This remains independent from the base document switch: a DOCX writer is
+    not the same runtime boundary as PDF parsing, and a disabled exporter must
+    fail closed rather than advertising an OCR or layout-conversion service.
+    """
+    return os.environ.get("WEBAPP_PDF_TO_WORD_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())

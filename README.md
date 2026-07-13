@@ -33,18 +33,21 @@ Production Web App for `app.toanaas.vn`.
   `/static`, Asset Vault or its parent. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 - `WEBAPP_DOCUMENT_OPERATIONS_ENABLED` defaults to `false`. PDF Split, PDF
-  Merge, PDF Optimize and Image to PDF require
+  Merge, PDF Optimize, Image to PDF and PDF text → Word require
   Asset Vault **and** a separate persistent
   `WEBAPP_DOCUMENT_OPERATIONS_ROOT` (for example
   `/data/toanaas_webapp_document_operations`). It may not overlap Asset Vault,
   Project Package or `/static`; startup fails closed when the parser/runtime
   or private storage boundary is absent. Image to PDF also requires the
   separate opt-in `WEBAPP_IMAGE_TO_PDF_ENABLED=true` gate and its Pillow
-  decoder runtime. See
+  decoder runtime. PDF text → Word separately requires
+  `WEBAPP_PDF_TO_WORD_ENABLED=true` and `python-docx`; it exports only real
+  selectable text, not OCR or visual layout. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
-  [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md), and
-  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md).
+  [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
+  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md), and
+  [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
 
 ## Authority boundary
 
@@ -87,17 +90,21 @@ private Bot bridge.
   Project snapshot. It does not create a Bot job, copy Asset Vault source
   blobs, change Xu, invoke PayOS or call a provider. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
-- `/documents/split`, `/documents/merge`, `/documents/compress` and
-  `/documents/image-to-pdf` are distinct Web-native document operations:
+- `/documents/split`, `/documents/merge`, `/documents/compress`,
+  `/documents/image-to-pdf` and `/documents/pdf-to-word` are distinct
+  Web-native document operations:
   the PDF tools accept only verified private Asset Vault PDFs, while Image to
   PDF accepts ordered, verified private JPEG/PNG/WebP assets. Each writes a
   separately validated private attachment and does not create a Bot job, call
   a provider, alter Xu or touch PayOS. PDF Optimize only delivers when its
-  final artifact is meaningfully smaller. See
+  final artifact is meaningfully smaller; PDF text → Word delivers only when
+  the private source contains real extractable text and its fresh DOCX passes
+  verification. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
-  [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md), and
-  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md).
+  [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
+  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md), and
+  [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially
 `PAYOS_WALLET_JOB_MAP.md`, `FEATURE_CONFIRM_CONTRACT.md`, and

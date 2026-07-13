@@ -8,11 +8,12 @@ from pathlib import Path
 import sqlite3
 import sys
 
+from docx import Document
 import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 from pypdf import PdfReader, PdfWriter
-from pypdf.generic import ArrayObject, DictionaryObject, NameObject, NumberObject, TextStringObject
+from pypdf.generic import ArrayObject, DecodedStreamObject, DictionaryObject, NameObject, NumberObject, TextStringObject
 
 
 MODULES = [
@@ -22,7 +23,13 @@ MODULES = [
 ]
 
 
-def make_client(tmp_path, monkeypatch, *, image_to_pdf_enabled: bool = True) -> TestClient:
+def make_client(
+    tmp_path,
+    monkeypatch,
+    *,
+    image_to_pdf_enabled: bool = True,
+    pdf_to_word_enabled: bool = True,
+) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-document-operations-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-document-operations-session-secret")
     monkeypatch.setenv("WEBAPP_ASSET_VAULT_ENABLED", "true")
@@ -34,6 +41,7 @@ def make_client(tmp_path, monkeypatch, *, image_to_pdf_enabled: bool = True) -> 
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "true" if image_to_pdf_enabled else "false")
+    monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "true" if pdf_to_word_enabled else "false")
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ENABLED", raising=False)
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ROOT", raising=False)
     monkeypatch.delenv("APP_ENV", raising=False)
@@ -96,6 +104,44 @@ def pdf_bytes(
     return result.getvalue()
 
 
+def _pdf_literal(value: str) -> bytes:
+    """Minimal PDF literal escaping for deterministic selectable ASCII text."""
+    return value.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)").encode("latin-1")
+
+
+def pdf_text_bytes(pages: list[str], *, encrypted: bool = False) -> bytes:
+    """Create small text-bearing PDFs without adding a renderer dependency."""
+    writer = PdfWriter()
+    for text in pages:
+        page = writer.add_blank_page(width=360, height=360)
+        font = DictionaryObject(
+            {
+                NameObject("/Type"): NameObject("/Font"),
+                NameObject("/Subtype"): NameObject("/Type1"),
+                NameObject("/BaseFont"): NameObject("/Helvetica"),
+            }
+        )
+        font_ref = writer._add_object(font)
+        page[NameObject("/Resources")] = DictionaryObject(
+            {NameObject("/Font"): DictionaryObject({NameObject("/F1"): font_ref})}
+        )
+        content = DecodedStreamObject()
+        lines = [line for line in text.split("\n") if line]
+        instructions = [b"BT", b"/F1 12 Tf", b"32 320 Td"]
+        for index, line in enumerate(lines):
+            if index:
+                instructions.append(b"0 -18 Td")
+            instructions.append(b"(" + _pdf_literal(line) + b") Tj")
+        instructions.append(b"ET")
+        content.set_data(b"\n".join(instructions))
+        page[NameObject("/Contents")] = writer._add_object(content)
+    if encrypted:
+        writer.encrypt("test-password")
+    result = BytesIO()
+    writer.write(result)
+    return result.getvalue()
+
+
 def upload_pdf(client: TestClient, csrf: str, *, key: str, body: bytes | None = None, name: str = "source.pdf") -> dict:
     response = client.post(
         "/api/v1/asset-vault/upload",
@@ -126,6 +172,14 @@ def merge(client: TestClient, csrf: str, *, asset_ids: list[str], key: str):
 def optimize(client: TestClient, csrf: str, *, asset_id: str, key: str):
     return client.post(
         "/api/v1/document-operations/pdf-optimize",
+        headers={"X-CSRF-Token": csrf},
+        json={"source_asset_id": asset_id, "idempotency_key": key},
+    )
+
+
+def pdf_to_word(client: TestClient, csrf: str, *, asset_id: str, key: str):
+    return client.post(
+        "/api/v1/document-operations/pdf-to-word",
         headers={"X-CSRF-Token": csrf},
         json={"source_asset_id": asset_id, "idempotency_key": key},
     )
@@ -838,6 +892,233 @@ def test_pdf_optimize_is_private_idempotent_and_only_publishes_a_verified_smalle
         unavailable = first.get(f"/api/v1/document-operations/{operation['id']}/download")
         assert unavailable.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
         assert first.get(f"/api/v1/document-operations/{operation['id']}").json()["data"]["operation"]["state"] == "unavailable"
+
+
+def test_pdf_to_word_exports_only_real_private_pdf_text_and_keeps_docx_download_private(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as first:
+        csrf = register_and_login(first, "pdf-to-word-owner@example.com")
+        assert first.get("/documents/pdf-to-word").status_code == 200
+        source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-to-word-text-source-0001",
+            body=pdf_text_bytes(["First source paragraph\nSecond source paragraph", "Third page text"]),
+            name="selectable-text.pdf",
+        )
+        denied = first.post(
+            "/api/v1/document-operations/pdf-to-word",
+            json={"source_asset_id": source["id"], "idempotency_key": "pdf-to-word-denied-0001"},
+        )
+        assert denied.status_code == 403
+
+        created = pdf_to_word(first, csrf, asset_id=source["id"], key="pdf-to-word-create-0001")
+        assert created.status_code == 200
+        payload = created.json()
+        assert payload["ok"] is True
+        assert payload["status"] == "completed"
+        operation = payload["data"]["operation"]
+        assert operation["kind"] == "pdf_to_word_text"
+        assert operation["source_asset_id"] == source["id"]
+        assert operation["source_count"] == 1
+        assert operation["source_page_count"] == 2
+        assert operation["output_page_count"] is None
+        assert operation["content_type"] == "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        assert operation["original_filename"] == "toan-aas-pdf-text.docx"
+        assert operation["download_ready"] is True
+        for forbidden in ("storage_key", "sha256", "source_sha", "filesystem", "provider", "payment", "bot"):
+            assert forbidden not in created.text.lower()
+
+        replay = pdf_to_word(first, csrf, asset_id=source["id"], key="pdf-to-word-create-0001")
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+        other_source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-to-word-other-source-0001",
+            body=pdf_text_bytes(["Other selectable text"]),
+        )
+        assert pdf_to_word(first, csrf, asset_id=other_source["id"], key="pdf-to-word-create-0001").status_code == 409
+
+        history = first.get("/api/v1/document-operations?kind=pdf_to_word_text&limit=100")
+        assert history.status_code == 200
+        assert [item["id"] for item in history.json()["data"]["items"]] == [operation["id"]]
+        download = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert download.status_code == 200
+        assert download.headers["content-type"].startswith("application/vnd.openxmlformats-officedocument.wordprocessingml.document")
+        assert "toan-aas-pdf-text.docx" in download.headers["content-disposition"]
+        assert download.headers["cache-control"] == "no-store, private"
+        assert download.headers["x-content-type-options"] == "nosniff"
+        assert download.headers["content-security-policy"] == "sandbox"
+        exported = Document(BytesIO(download.content))
+        assert [paragraph.text for paragraph in exported.paragraphs if paragraph.text] == [
+            "First source paragraph",
+            "Second source paragraph",
+            "Third page text",
+        ]
+        assert len(download.content) == operation["byte_size"]
+
+        detail = first.get(f"/api/v1/document-operations/{operation['id']}")
+        assert [event["state"] for event in detail.json()["data"]["events"]] == ["queued", "processing", "completed"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            audit = conn.execute(
+                "SELECT detail FROM web_audit_events WHERE action='web.document_operation.pdf_to_word_text'"
+            ).fetchone()
+            source_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (source["id"],)).fetchone()[0]
+        assert audit and audit[0].startswith("source_pages=2;characters=")
+        assert source["id"] not in audit[0]
+        assert source_state == "active"
+
+        with make_client(tmp_path, monkeypatch) as second:
+            csrf_second = register_and_login(second, "pdf-to-word-other@example.com")
+            hidden = second.get(f"/api/v1/document-operations/{operation['id']}")
+            assert hidden.json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            assert pdf_to_word(second, csrf_second, asset_id=source["id"], key="pdf-to-word-other-0001").json()["error_code"] == "WEB_DOCUMENT_SOURCE_NOT_FOUND"
+
+
+def test_pdf_to_word_guards_scans_and_rejects_unsafe_or_disabled_inputs_without_fake_docx(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "pdf-to-word-safety@example.com")
+        scan = upload_pdf(client, csrf, key="pdf-to-word-scan-source-0001", body=pdf_bytes(1))
+        guarded = pdf_to_word(client, csrf, asset_id=scan["id"], key="pdf-to-word-scan-0001")
+        assert guarded.status_code == 422
+        assert "không phát docx giả" in guarded.json()["message"].lower()
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            row = conn.execute(
+                "SELECT id, state, failure_code, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-to-word-scan-0001",),
+            ).fetchone()
+            source_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (scan["id"],)).fetchone()[0]
+        assert row[1:] == ("guarded", "PDF_TEXT_NOT_FOUND", None)
+        assert source_state == "active"
+        replay = pdf_to_word(client, csrf, asset_id=scan["id"], key="pdf-to-word-scan-0001")
+        assert replay.status_code == 200
+        assert replay.json()["status"] == "guarded"
+        assert replay.json()["data"]["operation"]["download_ready"] is False
+        assert client.get(f"/api/v1/document-operations/{row[0]}/download").json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+
+        encrypted = upload_pdf(
+            client,
+            csrf,
+            key="pdf-to-word-encrypted-source-0001",
+            body=pdf_text_bytes(["locked text"], encrypted=True),
+        )
+        encrypted_result = pdf_to_word(client, csrf, asset_id=encrypted["id"], key="pdf-to-word-encrypted-0001")
+        assert encrypted_result.status_code == 422
+        assert "mã hóa" in encrypted_result.json()["message"].lower()
+
+        too_many = upload_pdf(
+            client,
+            csrf,
+            key="pdf-to-word-pages-source-0001",
+            body=pdf_text_bytes(["page"] * 31),
+        )
+        page_limit = pdf_to_word(client, csrf, asset_id=too_many["id"], key="pdf-to-word-pages-0001")
+        assert page_limit.status_code == 413
+        assert "30" in page_limit.json()["message"]
+
+        limited = upload_pdf(
+            client,
+            csrf,
+            key="pdf-to-word-text-limit-source-0001",
+            body=pdf_text_bytes(["six chars"]),
+        )
+        operations = importlib.import_module("copyfast_document_operations")
+        monkeypatch.setattr(operations, "MAX_PDF_TO_WORD_PAGE_CHARACTERS", 5)
+        text_limit = pdf_to_word(client, csrf, asset_id=limited["id"], key="pdf-to-word-text-limit-0001")
+        assert text_limit.status_code == 413
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            failed = conn.execute(
+                "SELECT state, failure_code, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-to-word-text-limit-0001",),
+            ).fetchone()
+        assert failed == ("failed", "PDF_TEXT_LIMIT", None)
+
+        tampered = upload_pdf(client, csrf, key="pdf-to-word-tamper-source-0001", body=pdf_text_bytes(["integrity text"]))
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            source_key = conn.execute("SELECT storage_key FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        (tmp_path / "private-web-assets" / source_key).write_bytes(b"%PDF-tampered")
+        tampered_result = pdf_to_word(client, csrf, asset_id=tampered["id"], key="pdf-to-word-tamper-0001")
+        assert tampered_result.status_code == 422
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            failed = conn.execute(
+                "SELECT state, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-to-word-tamper-0001",),
+            ).fetchone()
+            source_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        assert failed == ("failed", None)
+        assert source_state == "unavailable"
+        staging = tmp_path / "private-document-outputs" / ".staging"
+        assert not list(staging.iterdir())
+
+    with make_client(tmp_path, monkeypatch, pdf_to_word_enabled=False) as disabled:
+        csrf = register_and_login(disabled, "pdf-to-word-disabled@example.com")
+        response = pdf_to_word(
+            disabled,
+            csrf,
+            asset_id="11111111-1111-4111-8111-111111111111",
+            key="pdf-to-word-disabled-0001",
+        )
+        assert response.status_code == 503
+        assert "WEBAPP_PDF_TO_WORD_ENABLED" in response.json()["message"]
+
+
+def test_pdf_to_word_capacity_and_private_docx_integrity_fail_closed(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "pdf-to-word-capacity@example.com")
+        source = upload_pdf(client, csrf, key="pdf-to-word-capacity-source-0001", body=pdf_text_bytes(["capacity text"]))
+        operations = importlib.import_module("copyfast_document_operations")
+        assert operations._PDF_TO_WORD_CAPACITY.acquire(blocking=False)
+        try:
+            busy = pdf_to_word(client, csrf, asset_id=source["id"], key="pdf-to-word-capacity-busy-0001")
+            assert busy.status_code == 429
+        finally:
+            operations._PDF_TO_WORD_CAPACITY.release()
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            count = conn.execute(
+                "SELECT COUNT(*) FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-to-word-capacity-busy-0001",),
+            ).fetchone()[0]
+        assert count == 0
+
+        created = pdf_to_word(client, csrf, asset_id=source["id"], key="pdf-to-word-capacity-create-0001")
+        assert created.status_code == 200
+        operation = created.json()["data"]["operation"]
+        assert operations._PDF_TO_WORD_CAPACITY.acquire(blocking=False)
+        try:
+            replay = pdf_to_word(client, csrf, asset_id=source["id"], key="pdf-to-word-capacity-create-0001")
+            assert replay.status_code == 200
+            assert replay.json()["data"]["operation"]["id"] == operation["id"]
+            second = upload_pdf(client, csrf, key="pdf-to-word-capacity-source-0002", body=pdf_text_bytes(["other text"]))
+            assert pdf_to_word(client, csrf, asset_id=second["id"], key="pdf-to-word-capacity-new-0001").status_code == 429
+        finally:
+            operations._PDF_TO_WORD_CAPACITY.release()
+
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            output_key = conn.execute(
+                "SELECT storage_key FROM web_document_operations WHERE id=?", (operation["id"],)
+            ).fetchone()[0]
+        (tmp_path / "private-document-outputs" / output_key).write_bytes(b"not-a-docx")
+        unavailable = client.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
+        assert client.get(f"/api/v1/document-operations/{operation['id']}").json()["data"]["operation"]["state"] == "unavailable"
+
+        canonical_source = upload_pdf(
+            client,
+            csrf,
+            key="pdf-to-word-mime-source-0001",
+            body=pdf_text_bytes(["canonical MIME text"]),
+        )
+        canonical = pdf_to_word(client, csrf, asset_id=canonical_source["id"], key="pdf-to-word-mime-create-0001")
+        assert canonical.status_code == 200
+        canonical_id = canonical.json()["data"]["operation"]["id"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            conn.execute(
+                "UPDATE web_document_operations SET content_type='application/pdf' WHERE id=?",
+                (canonical_id,),
+            )
+            conn.commit()
+        noncanonical = client.get(f"/api/v1/document-operations/{canonical_id}/download")
+        assert noncanonical.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
 
 
 def test_pdf_optimize_marks_no_reduction_guarded_and_rejects_unsafe_inputs_without_fake_output(tmp_path, monkeypatch):
