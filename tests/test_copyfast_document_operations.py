@@ -19,7 +19,7 @@ from pypdf.generic import ArrayObject, DecodedStreamObject, DictionaryObject, Na
 MODULES = [
     "app", "copyfast_db", "copyfast_auth", "copyfast_bridge", "copyfast_registry",
     "copyfast_api", "copyfast_projects", "copyfast_assets", "copyfast_project_packages",
-    "copyfast_document_operations", "copyfast_pages",
+    "copyfast_document_operations", "copyfast_image_runtime", "copyfast_image_operations", "copyfast_pages",
 ]
 
 

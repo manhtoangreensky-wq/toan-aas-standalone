@@ -651,7 +651,17 @@
   featurePage("/content/pack", "Content Pack", "Gom brief nội dung thành một bản nháp có thể ước tính qua bridge.", ICONS.prompt, FIELD_SETS.prompt, ["/content-pack"]);
 
   featurePage("/image/create", "Tạo ảnh", "Chuẩn bị yêu cầu tạo ảnh và đợi Core Bridge ước tính trước khi xác nhận.", ICONS.image, FIELD_SETS.imageCreate, ["/image"]);
-  featurePage("/image/edit", "Chỉnh sửa ảnh", "Chuẩn bị thay đổi ảnh; upload và xử lý chỉ diễn ra qua đường dẫn được ký tạm thời.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  featurePage("/image/edit", "Chỉnh sửa ảnh", "Chuẩn bị thay đổi ảnh qua Core Bridge. Để resize, đổi tỷ lệ hoặc thêm blur/pad nền deterministic, dùng Resize & Aspect Studio riêng tư.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  customerPage("/image/resize", "Resize & Aspect Studio", "Tạo PNG private từ Asset Vault bằng crop, pad hoặc blur nền đã được kiểm tra; không phải AI upscale, Bot job hay provider call.", ICONS.image, {
+    // This page has two owner-scoped reads before it can become usable. Start
+    // fail-closed so the first paint never advertises readiness before the
+    // signed integration has returned the native gates and private data.
+    layout: "image-resize", type: "image-operation", action: "none", status: "guarded", fields: [],
+    notes: [
+      "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn. Browser chỉ gửi Asset Vault ID và lựa chọn khung; không gửi path, URL hoặc bytes ảnh vào thao tác.",
+      "Resize là nội suy LANCZOS deterministic. Nó không tạo chi tiết AI, không retouch, không subject-aware crop và không thay đổi file gốc trong Asset Vault."
+    ]
+  });
   featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi yêu cầu upscale từ ảnh nguồn và nhận quote canonical trước khi xác nhận.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.imageTransform, ["/image/image-to-image"]);
   featurePage("/image/remove-background", "Xóa nền", "Tạo quote xóa nền từ ảnh nguồn; job chỉ xuất hiện sau adapter canonical.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
@@ -830,6 +840,9 @@
       // with Bot delivery metadata in `assets`, whose download contract is
       // intentionally different.
       vaultItems: Array.isArray(source.vaultItems) ? source.vaultItems.slice(0, 100) : [],
+      assetVaultReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.assetVaultReadState || ""))
+        ? String(source.assetVaultReadState)
+        : "guarded",
       tickets: Array.isArray(source.tickets) ? source.tickets : [],
       // Workspace drafts are Web-owned, owner-scoped planning records. They
       // arrive after initial hydration and must survive the presentation
@@ -860,6 +873,15 @@
       documentOperationsEnabled: source.documentOperationsEnabled === true,
       imageToPdfEnabled: source.imageToPdfEnabled === true,
       pdfToWordEnabled: source.pdfToWordEnabled === true,
+      // Resize Studio has its own private output schema and read readiness.
+      // Preserve both through normalisation so a successful signed hydration
+      // cannot be mistaken for an empty/static browser projection.
+      imageOperations: Array.isArray(source.imageOperations) ? source.imageOperations.slice(0, 100) : [],
+      imageOperationsEnabled: source.imageOperationsEnabled === true,
+      imageResizeEnabled: source.imageResizeEnabled === true,
+      imageOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageOperationsReadState || ""))
+        ? String(source.imageOperationsReadState)
+        : "guarded",
       // Account activity is already a redacted, owner-scoped projection from
       // the Web API. Retain the bounded list during each presentation pass so
       // a successful signed read cannot be rendered as an empty history.
@@ -1268,7 +1290,7 @@
     return `<div class="portal-fields">${fields.map((field) => {
       const wide = field.control === "textarea" || field.type === "file" || field.wide;
       const id = `portal-field-${safeText(field.name || "input").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
-      const disabled = enabled ? "" : " disabled";
+      const disabled = enabled && field.disabled !== true ? "" : " disabled";
       const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
       const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
       const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
@@ -1277,7 +1299,8 @@
       const staged = stagedUploadCount ? (descriptionIds.push(`${id}-staged`), `<span id="${id}-staged" class="portal-field-staged">${safeText(String(stagedUploadCount))} tệp đã vào staging canonical; không cần chọn lại để estimate/confirm.</span>`) : "";
       const describedBy = descriptionIds.length ? ` aria-describedby="${descriptionIds.join(" ")}"` : "";
       const required = field.required === true && field.type !== "file" ? " required" : "";
-      const ariaRequired = (field.required === true || field.requiredUpload === true) ? ' aria-required="true"' : "";
+      const hasRequiredIndicator = field.required === true || field.requiredUpload === true || field.dynamicRequired === true;
+      const ariaRequired = hasRequiredIndicator ? ` aria-required="${field.required === true || field.requiredUpload === true ? "true" : "false"}"` : "";
       const min = field.min !== undefined ? ` min="${safeText(String(field.min))}"` : "";
       const max = field.max !== undefined ? ` max="${safeText(String(field.max))}"` : "";
       const step = field.step !== undefined ? ` step="${safeText(String(field.step))}"` : "";
@@ -1369,7 +1392,9 @@
         const valueAttribute = type === "file" || type === "password" ? "" : ` value="${safeText(value)}"`;
         control = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${disabled}>`;
       }
-      const requiredMark = field.required === true || field.requiredUpload === true ? '<span class="portal-required-mark" aria-hidden="true">*</span><span class="portal-sr-only"> bắt buộc</span>' : "";
+      const requiredMark = hasRequiredIndicator
+        ? `<span class="portal-required-mark" data-portal-required-mark aria-hidden="true"${field.required === true || field.requiredUpload === true ? "" : " hidden"}>*</span><span class="portal-sr-only" data-portal-required-message${field.required === true || field.requiredUpload === true ? "" : " hidden"}> bắt buộc</span>`
+        : "";
       return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}${requiredMark}</label>${control}${help}${staged}</div>`;
     }).join("")}</div>`;
   }
@@ -2636,6 +2661,97 @@
     });
   }
 
+  function validImageOperationId(value) {
+    return validVaultAssetId(value);
+  }
+
+  function imageOperationItems(context) {
+    return (Array.isArray(context.imageOperations) ? context.imageOperations : [])
+      .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
+        && String(item.kind || "") === "image_resize")
+      .slice(0, 100);
+  }
+
+  function imageOperationState(item) {
+    const state = String(item && item.state || "guarded").toLowerCase();
+    return ALLOWED_STATES.has(state) ? state : "guarded";
+  }
+
+  function imageOperationDownloadPath(item) {
+    const operationId = String(item && item.id || "").trim();
+    return validImageOperationId(operationId) && imageOperationState(item) === "completed" && item && item.download_ready === true
+      ? `/api/v1/image-operations/${encodeURIComponent(operationId)}/download`
+      : "";
+  }
+
+  function imageResizeFormFields(values) {
+    const selectedPreset = String(values && values.preset || transientFormValues("/image/resize").preset || "custom");
+    const isCustom = selectedPreset === "custom";
+    return [
+      {
+        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets",
+        emptyLabel: "Chọn ảnh private", required: true,
+        help: "Chỉ JPEG, PNG hoặc WebP active của signed Web account hiện tại xuất hiện. File gốc không bị ghi đè."
+      },
+      {
+        name: "preset", label: "Canvas / tỷ lệ đích", control: "select", options: [
+          { value: "custom", label: "Tùy chỉnh (nhập pixel)" },
+          { value: "1:1", label: "Vuông 1:1 · 1024 × 1024" },
+          { value: "4:5", label: "Chân dung 4:5 · 1080 × 1350" },
+          { value: "9:16", label: "Story / Reel 9:16 · 1080 × 1920" },
+          { value: "16:9", label: "Ngang 16:9 · 1920 × 1080" },
+          { value: "3:4", label: "Chân dung 3:4 · 1080 × 1440" },
+          { value: "4:3", label: "Cổ điển 4:3 · 1440 × 1080" },
+          { value: "3:2", label: "Ảnh 3:2 · 1500 × 1000" },
+          { value: "2:3", label: "Ảnh dọc 2:3 · 1000 × 1500" },
+          { value: "21:9", label: "Wide 21:9 · 1920 × 823" }
+        ],
+        help: "Chọn preset để server dùng đúng pixel canonical của local image tool. Khi chọn Tùy chỉnh, nhập cả hai cạnh bên dưới."
+      },
+      {
+        name: "target_width", label: "Chiều rộng tùy chỉnh (px)", type: "number", placeholder: "Ví dụ: 1080", min: 128, max: 4096, step: 1, inputMode: "numeric",
+        required: isCustom, dynamicRequired: true, disabled: !isCustom,
+        help: "Chỉ dùng khi Canvas là Tùy chỉnh. Nếu chọn preset, để trống để server áp pixel chuẩn; không nhập số khác preset."
+      },
+      {
+        name: "target_height", label: "Chiều cao tùy chỉnh (px)", type: "number", placeholder: "Ví dụ: 1350", min: 128, max: 4096, step: 1, inputMode: "numeric",
+        required: isCustom, dynamicRequired: true, disabled: !isCustom,
+        help: "Canvas tối đa 16 MP, mỗi cạnh 128–4096 px, tỷ lệ tối đa 12:1. Không có upscale AI hoặc khôi phục chi tiết."
+      },
+      {
+        name: "fit_mode", label: "Cách đặt ảnh vào canvas", control: "select", options: [
+          { value: "pad", label: "Pad nền trắng · giữ trọn ảnh, không cắt" },
+          { value: "crop", label: "Crop giữa khung · lấp đầy canvas, có thể cắt rìa" },
+          { value: "blur", label: "Blur nền · giữ trọn ảnh ở giữa, nền mờ" }
+        ],
+        help: "Crop luôn cắt tâm, không có focal-point editor ở phiên bản này. Blur không nhận diện chủ thể; đây là xử lý ảnh cục bộ deterministic."
+      }
+    ];
+  }
+
+  function renderImageOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có PNG đã resize", "Bản sao chỉ xuất hiện sau khi server kiểm tra ảnh nguồn, render, mở lại PNG và xác minh integrity. Không có preview hay output mô phỏng.", "▧");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const status = imageOperationState(item);
+      const downloadPath = imageOperationDownloadPath(item);
+      const sourceWidth = Number(item.source_width);
+      const sourceHeight = Number(item.source_height);
+      const targetWidth = Number(item.target_width);
+      const targetHeight = Number(item.target_height);
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "Canvas đã yêu cầu";
+      const fitLabel = { crop: "Crop giữa khung", pad: "Pad nền trắng", blur: "Blur nền" }[String(item.fit_mode || "")] || "Đang kiểm tra";
+      const pendingMessage = status === "failed" || status === "unavailable"
+        ? "Không có PNG tải xuống; kiểm tra nguồn private và tạo bản sao mới."
+        : status === "guarded"
+          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
+          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">PNG</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã resize"))}</h2><p class="portal-card-subtitle">${safeText(fitLabel)} · ${safeText(String(item.preset || "custom"))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>Canvas</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có")}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
   function renderDocumentOperationCards(items, emptyTitle = "Chưa có artifact đã xử lý", emptyText = "Sau khi nguồn private vượt qua kiểm tra parser và output, attachment sẽ xuất hiện tại đây. Không có Job Bot hoặc output mô phỏng.") {
     if (!items.length) {
       return renderEmpty(emptyTitle, emptyText, "▤");
@@ -2822,6 +2938,48 @@
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn thứ tự ảnh</h2><p class="portal-card-subtitle">Ảnh 1 trở thành trang 1, rồi tới Ảnh 2… Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-image-to-pdf" data-portal-route="/documents/image-to-pdf" data-portal-confirm="Tạo PDF từ ảnh theo đúng thứ tự đã chọn? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra mọi input và output." novalidate>${renderFields(imageToPdfFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PDF riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Web-native, có kiểm soát</h2><p class="portal-card-subtitle">Tiện ích tạo PDF riêng tư với output được xác minh trước khi phát hành.</p></div></div><ol class="portal-project-steps"><li><strong>1. Thứ tự có chủ đích</strong><span>Slot Ảnh 1 đến Ảnh 8 được giữ trong request fingerprint và trở thành thứ tự trang PDF.</span></li><li><strong>2. Decode có giới hạn</strong><span>JPEG/PNG/WebP tĩnh, tối đa 20 MB mỗi ảnh, 40 MB tổng, 7.680 px mỗi cạnh, tỷ lệ 12:1, 16 MP mỗi ảnh và 32 MP mỗi lần; chặn nguồn trùng hoặc ảnh động.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được strict-reparse, hash lại và tải qua signed session; không có public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã tạo từ ảnh</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/image-to-pdf"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có PDF từ ảnh", "PDF chỉ xuất hiện sau khi mọi ảnh nguồn và output đều vượt qua kiểm tra server-side. Không có output mô phỏng.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Artifact có lifecycle private riêng; thao tác này không thay đổi ví, thanh toán, provider hoặc webhook.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderImageResize(page, context) {
+    const canViewCapability = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["image-operation-resize"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["image-operation-refresh"] === true);
+    if (!canViewCapability) {
+      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Resize & Aspect Studio đang ở chế độ an toàn</h2><p>Tiện ích chỉ bật khi Asset Vault, private output storage và runtime Pillow được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không AI giả</span></div></div></div></section></article>`;
+    }
+    const assetReadState = String(context.assetVaultReadState || "loading");
+    const operationReadState = String(context.imageOperationsReadState || "loading");
+    const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
+    if (!privateReadsReady) {
+      const loading = assetReadState === "loading" || operationReadState === "loading";
+      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const message = loading
+        ? "Resize Studio đang tải Asset Vault và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi cả hai phản hồi server-side hoàn tất."
+        : "Asset Vault hoặc lịch sử Resize Studio chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, output hay dữ liệu thay thế.";
+      const retry = !loading && canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-image-resize">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+    }
+    const sources = imageVaultItems(context);
+    const operations = imageOperationItems(context);
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = transientFormValues("/image/resize");
+    const runReason = !canRunCapability
+      ? (context.imageResizeEnabled === true
+        ? "Cần signed session, CSRF và capability Resize Studio từ server."
+        : "Resize Studio đang được server giữ guarded cho đến khi private storage và WEBAPP_IMAGE_RESIZE_ENABLED được bật có chủ đích.")
+      : sources.length === 0
+        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo bản sao."
+        : "Nguồn → hash-copy cô lập → decode có giới hạn → PNG được mở lại và xác minh trước khi tải.";
+    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-image-resize">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Đổi canvas ảnh rõ ràng, không tạo ảnh AI</h2><p>Chọn ảnh private trong Asset Vault rồi tạo PNG mới theo crop giữa khung, pad nền trắng hoặc blur nền. Server giữ nguyên file gốc, sửa orientation, loại metadata nguồn, giới hạn decoder và chỉ phát bản sao sau khi tự mở lại, kiểm tra kích thước và hash integrity.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo canvas mới</h2><p class="portal-card-subtitle">Không upload bytes, URL hoặc raw file path ở bước này. Browser chỉ gửi Asset Vault ID và cấu hình canvas đã chọn.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="image-operation-resize" data-portal-route="/image/resize" data-portal-confirm="Tạo một PNG private mới theo canvas và cách đặt ảnh đã chọn? File gốc trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageResizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách khung hoạt động</h2><p class="portal-card-subtitle">Canvas là thông số deterministic, không phải promise AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Crop giữa khung</strong><span>Lấp đầy canvas theo tỉ lệ và cắt phần rìa từ tâm. Không có focal-point hoặc nhận diện chủ thể.</span></li><li><strong>2. Pad nền trắng</strong><span>Giữ trọn ảnh, đặt giữa canvas trắng; alpha/metadata nguồn không đi sang PNG mới.</span></li><li><strong>3. Blur nền</strong><span>Giữ trọn ảnh ở giữa trên nền cover được làm mờ. Đây là hiệu ứng cục bộ, không retouch hay AI upscale.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã tạo</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Không có preview công khai; download bị khóa nếu ownership hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-operation-refresh" data-portal-route="/image/resize"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageOperationCards(operations)}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Resize & Aspect Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook thanh toán. AI Upscale vẫn là workflow riêng, chỉ hiển thị readiness canonical.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -3917,6 +4075,7 @@
       case "pdf-optimize": return renderPdfOptimize(page, context);
       case "pdf-to-word": return renderPdfToWord(page, context);
       case "image-to-pdf": return renderImageToPdf(page, context);
+      case "image-resize": return renderImageResize(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
       case "account-activity": return renderAccountActivity(page, context);
@@ -3954,6 +4113,26 @@
       values[input.name] = input.type === "checkbox" ? input.checked : input.value;
     });
     transientFormDrafts.set(route, values);
+  }
+
+  function synchronizeImageResizePreset(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "image-operation-resize") return;
+    const preset = form.querySelector('[name="preset"]');
+    const isCustom = Boolean(preset && String(preset.value || "") === "custom");
+    ["target_width", "target_height"].forEach((name) => {
+      const input = form.querySelector(`[name="${name}"]`);
+      if (!input) return;
+      input.disabled = !isCustom;
+      input.required = isCustom;
+      input.setAttribute("aria-disabled", String(!isCustom));
+      input.setAttribute("aria-required", String(isCustom));
+      const field = input.closest(".portal-field");
+      const requiredMark = field && field.querySelector("[data-portal-required-mark]");
+      const requiredMessage = field && field.querySelector("[data-portal-required-message]");
+      if (requiredMark) requiredMark.hidden = !isCustom;
+      if (requiredMessage) requiredMessage.hidden = !isCustom;
+      if (!isCustom) input.value = "";
+    });
   }
 
   function collectFormFields(form) {
@@ -4291,7 +4470,10 @@
     });
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
-      if (form) rememberTransientFormDraft(form);
+      if (form) {
+        if (event.target && event.target.name === "preset") synchronizeImageResizePreset(form);
+        rememberTransientFormDraft(form);
+      }
     });
     window.addEventListener("keydown", (event) => {
       const paletteOpen = isCommandPaletteOpen();

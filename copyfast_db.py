@@ -95,6 +95,27 @@ def pdf_to_word_enabled() -> bool:
     return os.environ.get("WEBAPP_PDF_TO_WORD_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_operations_enabled() -> bool:
+    """Whether bounded, Web-native private image operations are enabled.
+
+    Image transformations are deliberately a separate runtime and storage
+    boundary from document operations.  They consume immutable Asset Vault
+    sources and create new private artifacts; they are never Bot jobs,
+    provider calls, wallet entries or payment actions.
+    """
+    return os.environ.get("WEBAPP_IMAGE_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def image_resize_enabled() -> bool:
+    """Whether the Pillow-backed Resize & Aspect Studio executor is enabled.
+
+    A narrow switch lets production keep the image-operation storage boundary
+    prepared while still failing closed until this decoder-backed operation is
+    explicitly reviewed and enabled.
+    """
+    return os.environ.get("WEBAPP_IMAGE_RESIZE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -282,6 +303,75 @@ def ensure_document_operations_persistence() -> Path | None:
     if not asset_vault_enabled():
         raise RuntimeError("Document Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
     return document_operations_directory()
+
+
+def image_operations_directory() -> Path:
+    """Resolve the private output root for Web-native image operations.
+
+    This must remain distinct from uploads, Project Package archives and
+    generated documents.  Keeping a separate root makes retention, backup and
+    incident response explicit, and prevents a generated PNG from ever being
+    confused with a source Asset Vault object.
+    """
+    if not image_operations_enabled():
+        raise RuntimeError("WEBAPP_IMAGE_OPERATIONS_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_IMAGE_OPERATIONS_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_IMAGE_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_image_operations"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_image_operations"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_IMAGE_OPERATIONS_ROOT không được nằm trong static")
+
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_IMAGE_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package và Document Operations"
+            )
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Image Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_IMAGE_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_IMAGE_OPERATIONS_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_image_operations_persistence() -> Path | None:
+    """Validate private inputs/outputs before an enabled image runtime serves."""
+    if not image_operations_enabled():
+        return None
+    if not asset_vault_enabled():
+        raise RuntimeError("Image Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
+    return image_operations_directory()
 
 
 def session_database_path() -> str:
@@ -795,6 +885,61 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Image operations have an independent lifecycle and artifact store.
+        # Do not reuse `web_document_operations`: an image transform has a
+        # different decoder boundary, output contract and retention policy.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                project_id TEXT,
+                kind TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_width INTEGER,
+                source_height INTEGER,
+                target_width INTEGER NOT NULL,
+                target_height INTEGER NOT NULL,
+                preset TEXT NOT NULL,
+                fit_mode TEXT NOT NULL,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, kind, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_operation_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_image_operations(id)
+            )
+            """
+        )
+        image_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_image_operation_events)").fetchall()}
+        if "sequence" not in image_event_columns:
+            conn.execute("ALTER TABLE web_image_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -845,6 +990,15 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_document_operation_sources_operation_order ON web_document_operation_sources(operation_id, source_index ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_operations_account_updated ON web_image_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_operations_source_account ON web_image_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_operation_events_operation_sequence ON web_image_operation_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
