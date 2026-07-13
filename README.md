@@ -7,7 +7,7 @@ Production Web App for `app.toanaas.vn`.
 - Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
-- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/voice-studio`, `/wallet`, `/jobs`, `/assets`
+- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/video-studio`, `/voice-studio`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
 ## Required Railway production configuration
@@ -82,6 +82,12 @@ Production Web App for `app.toanaas.vn`.
   audio/provider IDs, invokes TTS or clone, creates an audio preview/output,
   changes Xu/PayOS, or mutates Bot state. See
   [`VOICE_STUDIO_CONTRACT.md`](docs/migration/VOICE_STUDIO_CONTRACT.md).
+- `WEBAPP_VIDEO_STUDIO_ENABLED` defaults to `true`. `/video-studio` is a
+  signed-account workspace for video brief, scenes, runtime estimate,
+  self-review and revision history. It never uploads/render media, calls a
+  provider/Bot engine, creates preview/output, changes Xu/PayOS or mutates
+  canonical jobs. See
+  [`VIDEO_PRODUCTION_STUDIO_CONTRACT.md`](docs/migration/VIDEO_PRODUCTION_STUDIO_CONTRACT.md).
 - `WEBAPP_SUPPORT_DESK_ENABLED` defaults to `true`. `/support` and
   `/tickets` are a signed-account, Web-owned Support Desk for text-only case
   intake and timeline. `/admin/support` is separately protected by a

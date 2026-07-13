@@ -1426,6 +1426,116 @@
     return "/voice-studio/vaults?" + query.toString();
   }
 
+  // Video Production Studio is an independent Web-native planning boundary.
+  // It accepts structured editorial metadata only: it never accepts media
+  // uploads, source URLs, renderer options or a request to manufacture a
+  // result from the browser.
+  const VIDEO_STUDIO_FORMATS = new Set(["short_form", "product_demo", "explainer", "ugc", "campaign", "custom"]);
+  const VIDEO_STUDIO_ASPECT_RATIOS = new Set(["9:16", "16:9", "1:1", "4:5", "custom"]);
+  const VIDEO_STUDIO_SCENE_TYPES = new Set(["hook", "problem", "solution", "product", "proof", "cta", "transition", "custom"]);
+  const VIDEO_STUDIO_PLAN_STATES = new Set(["draft", "review", "approved", "archived"]);
+
+  function validVideoStudioPlanId(value) { return validProjectId(value); }
+  function validVideoStudioSceneId(value) { return validProjectId(value); }
+  function validVideoStudioRevision(value) { return validMemoryRevision(value); }
+  function videoPlanIdFromPath(path) {
+    const match = /^\/video-studio\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validVideoStudioPlanId(id) ? id : "";
+  }
+  function isNativeVideoStudioPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/video-studio" || normalized === "/video-studio/new" || Boolean(videoPlanIdFromPath(normalized));
+  }
+  function videoStudioSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Video Production Studio không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Video Production Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Video Production Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "Video Production Studio không nhận URL hoặc scheme tệp trong nội dung plan.";
+    if (/\b(?:(?:provider|render|job|media)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id|file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Video Production Studio không nhận provider, Bot, job hoặc media ID trong nội dung plan.";
+    return "";
+  }
+  function videoStudioLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function videoStudioBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function videoStudioTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = videoStudioLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi video plan hoặc scene.");
+    return result;
+  }
+  function videoStudioReference(value, label) {
+    const id = String(value || "").trim();
+    if (id && !validVideoStudioPlanId(id)) throw new Error(label + " không hợp lệ.");
+    return id;
+  }
+  function videoPlanPayload(fields) {
+    const title = videoStudioLine(fields.title, "Tên video plan", 2, 180, false);
+    const format = videoStudioLine(fields.format || "short_form", "Loại kế hoạch", 1, 32, false).toLowerCase();
+    const language = videoStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 100, false);
+    const aspectRatio = videoStudioLine(fields.aspect_ratio || "9:16", "Tỷ lệ khung hình", 1, 32, false);
+    const duration = Number(fields.target_duration_seconds);
+    const objective = videoStudioBody(fields.objective, "Mục tiêu", 1200, true);
+    const audience = videoStudioBody(fields.audience, "Đối tượng", 1200, true);
+    const brief = videoStudioBody(fields.brief, "Creative brief", 12000, false);
+    const tags = videoStudioTags(fields.tags);
+    if (!VIDEO_STUDIO_FORMATS.has(format)) throw new Error("Loại video plan không hợp lệ.");
+    if (!VIDEO_STUDIO_ASPECT_RATIOS.has(aspectRatio)) throw new Error("Tỷ lệ khung hình không hợp lệ.");
+    if (!Number.isInteger(duration) || duration < 1 || duration > 7200) throw new Error("Thời lượng mục tiêu cần là số nguyên từ 1 đến 7.200 giây.");
+    const safety = videoStudioSafetyError(title, format, language, aspectRatio, objective, audience, brief, ...tags);
+    if (safety) throw new Error(safety);
+    return {
+      title, format, language, aspect_ratio: aspectRatio, target_duration_seconds: duration,
+      objective, audience, brief, tags, project_id: videoStudioReference(fields.project_id, "Project liên kết") || null
+    };
+  }
+  function videoScenePayload(fields) {
+    const title = videoStudioLine(fields.title, "Tên scene", 2, 180, false);
+    const sceneType = videoStudioLine(fields.scene_type || "custom", "Vai trò scene", 1, 32, false).toLowerCase();
+    const duration = Number(fields.duration_seconds);
+    const visualDirection = videoStudioBody(fields.visual_direction, "Visual direction", 5000, true);
+    const narration = videoStudioBody(fields.narration, "Narration", 5000, true);
+    const onScreenText = videoStudioBody(fields.on_screen_text, "Text trên màn hình", 3000, true);
+    const shotNotes = videoStudioBody(fields.shot_notes, "Ghi chú quay dựng", 5000, true);
+    const transition = videoStudioLine(fields.transition, "Chuyển cảnh", 0, 500, true);
+    const tags = videoStudioTags(fields.tags);
+    if (!VIDEO_STUDIO_SCENE_TYPES.has(sceneType)) throw new Error("Vai trò scene không hợp lệ.");
+    if (!Number.isInteger(duration) || duration < 1 || duration > 1800) throw new Error("Thời lượng scene cần là số nguyên từ 1 đến 1.800 giây.");
+    const safety = videoStudioSafetyError(title, sceneType, visualDirection, narration, onScreenText, shotNotes, transition, ...tags);
+    if (safety) throw new Error(safety);
+    return {
+      title, scene_type: sceneType, duration_seconds: duration, visual_direction: visualDirection,
+      narration, on_screen_text: onScreenText, shot_notes: shotNotes, transition, tags
+    };
+  }
+  function videoStudioBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object"
+      ? source.boundary
+      : (source.policy && typeof source.policy === "object" ? source.policy : source);
+    return Boolean(
+      boundary.execution === "authoring_only"
+      && boundary.provider_called === false
+      && boundary.video_created === false
+    );
+  }
+
   async function downloadPromptLibraryExport() {
     const context = base();
     const csrfToken = context.session && context.session.csrfToken ? String(context.session.csrfToken) : "";
@@ -1722,6 +1832,10 @@
     // workspace. It does not imply access to a Bot voice profile, TTS, clone,
     // preview, audio delivery, provider, job, wallet, Xu or payment flow.
     const voiceStudioEnabled = Boolean(status.flags && status.flags.voice_studio_enabled === true);
+    // Video Production Studio is another signed-account Web-native boundary.
+    // Its flag permits planning/review records only; it never means media
+    // execution, rendering, output or delivery is available.
+    const videoStudioEnabled = Boolean(status.flags && status.flags.video_studio_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -1896,6 +2010,18 @@
       "voice-script-duplicate": Boolean(account && me.csrf_token && voiceStudioEnabled),
       "voice-script-restore-version": Boolean(account && me.csrf_token && voiceStudioEnabled),
       "voice-script-cue-sheet": Boolean(account && voiceStudioEnabled),
+      "video-studio-view": Boolean(account && videoStudioEnabled),
+      "video-studio-refresh": Boolean(account && videoStudioEnabled),
+      "video-plan-create": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-plan-update": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-plan-lifecycle": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-plan-restore-version": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-scene-create": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-scene-update": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-scene-archive": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-scene-restore": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-scene-restore-version": Boolean(account && me.csrf_token && videoStudioEnabled),
+      "video-scene-reorder": Boolean(account && me.csrf_token && videoStudioEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -1957,6 +2083,7 @@
       mediaWorkspaceEnabled,
       contentStudioEnabled,
       voiceStudioEnabled,
+      videoStudioEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -2013,6 +2140,16 @@
       voiceCueSheet: {},
       voiceStudioFilter: { q: "", tag: "", state: "all" },
       voiceStudioReadState: account && voiceStudioEnabled ? "loading" : "guarded",
+      // Clear every Video Production Studio projection before a signed read.
+      // A failed request or account switch must never leave a prior owner's
+      // brief, scene, runtime estimate or audit metadata on screen.
+      videoStudioSummary: {},
+      videoPlans: [],
+      videoPlanDetail: {},
+      videoPlanEstimate: {},
+      videoStudioReferences: {},
+      videoStudioEvents: [],
+      videoStudioReadState: account && videoStudioEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -2056,6 +2193,8 @@
         "/content-studio/new": account && contentStudioEnabled ? "processing" : "guarded",
         "/voice-studio": account && voiceStudioEnabled ? "processing" : "guarded",
         "/voice-studio/new": account && voiceStudioEnabled ? "processing" : "guarded",
+        "/video-studio": account && videoStudioEnabled ? "processing" : "guarded",
+        "/video-studio/new": account && videoStudioEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -2067,7 +2206,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -2136,6 +2275,16 @@
         pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
+    if (account && videoStudioEnabled && ["/video-studio", "/video-studio/new"].includes(currentPath)) await hydrateVideoStudio();
+    else if (account && videoStudioEnabled && videoPlanIdFromPath(currentPath)) await hydrateVideoPlan(videoPlanIdFromPath(currentPath));
+    else if (isNativeVideoStudioPath(currentPath)) {
+      // Never reuse legacy `/video/*` data for this signed Web-native
+      // authoring space.  It holds only plan/scene metadata and fails closed.
+      merge({
+        videoStudioSummary: {}, videoPlans: [], videoPlanDetail: {}, videoPlanEstimate: {}, videoStudioReferences: {}, videoStudioEvents: [],
+        videoStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
       else if (supportCaseIdFromPath(currentPath)) await hydrateSupportCase(supportCaseIdFromPath(currentPath));
@@ -2173,7 +2322,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeVoiceStudioPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath)) await hydrateCanonicalData();
   }
 
   async function hydrateLinkStatus() {
@@ -2683,6 +2832,85 @@
     return { ...data, items };
   }
 
+  async function hydrateVideoStudio() {
+    // This deliberately requests only the signed Web-owned Video Production
+    // Studio API.  It must not reuse the legacy `/video/*` feature state.
+    try {
+      const [summaryResult, plansResult, eventsResult, referencesResult] = await Promise.all([
+        api("/video-studio/summary"),
+        api("/video-studio/plans"),
+        api("/video-studio/events?limit=50"),
+        api("/video-studio/references")
+      ]);
+      const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
+      if (!videoStudioBoundaryIsSafe(summary)) throw new Error("Boundary Video Production Studio chưa được máy chủ xác nhận.");
+      const plans = plansResult.data && Array.isArray(plansResult.data.items)
+        ? plansResult.data.items.filter((item) => item && validVideoStudioPlanId(item.id) && validVideoStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validVideoStudioPlanId(item.plan_id) && validVideoStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        videoStudioSummary: summary, videoPlans: plans, videoStudioEvents: events,
+        videoStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        videoPlanDetail: {}, videoPlanEstimate: {}, videoStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/video-studio": "ready", "/video-studio/new": "ready" }
+      });
+      return { plans, events };
+    } catch (_) {
+      merge({
+        videoStudioSummary: {}, videoPlans: [], videoPlanDetail: {}, videoPlanEstimate: {}, videoStudioReferences: {}, videoStudioEvents: [],
+        videoStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), "/video-studio": "guarded", "/video-studio/new": "guarded" }
+      });
+      return { plans: [], events: [] };
+    }
+  }
+
+  async function hydrateVideoPlan(planId) {
+    if (!validVideoStudioPlanId(planId)) throw new Error("Mã video plan không hợp lệ.");
+    const route = "/video-studio/" + encodeURIComponent(String(planId));
+    try {
+      const [detailResult, referencesResult] = await Promise.all([
+        api("/video-studio/plans/" + encodeURIComponent(String(planId))),
+        api("/video-studio/references")
+      ]);
+      const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const plan = data.plan && typeof data.plan === "object" ? data.plan : null;
+      if (!videoStudioBoundaryIsSafe(data) || !plan || !validVideoStudioPlanId(plan.id) || String(plan.id) !== String(planId) || !validVideoStudioRevision(plan.revision)) {
+        throw new Error("Video plan không còn khả dụng cho Web account hiện tại.");
+      }
+      const archived = String(plan.state || "") === "archived";
+      let estimate = {};
+      if (!archived) {
+        const estimateResult = await api("/video-studio/plans/" + encodeURIComponent(String(planId)) + "/estimate");
+        estimate = estimateResult.data && typeof estimateResult.data === "object" ? estimateResult.data : {};
+        if (!videoStudioBoundaryIsSafe(estimate)) throw new Error("Máy chủ chưa xác nhận runtime estimate an toàn.");
+      }
+      const scenes = Array.isArray(data.scenes)
+        ? data.scenes.filter((item) => item && validVideoStudioSceneId(item.id) && String(item.plan_id || "") === String(planId) && validVideoStudioRevision(item.revision)).slice(0, 250)
+        : [];
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validVideoStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = Array.isArray(data.events)
+        ? data.events.filter((item) => item && typeof item === "object" && validVideoStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        videoPlanDetail: { plan, scenes, versions, events, references: data.references && typeof data.references === "object" ? data.references : {}, estimate },
+        videoPlanEstimate: estimate,
+        videoStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        videoStudioReadState: "ready", pageStates: { ...(base().pageStates || {}), [route]: archived ? "archived" : "ready" }
+      });
+      return { plan, scenes, versions, estimate };
+    } catch (_) {
+      merge({
+        videoStudioSummary: {}, videoPlans: [], videoPlanDetail: {}, videoPlanEstimate: {}, videoStudioReferences: {}, videoStudioEvents: [],
+        videoStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
   async function hydrateSupportDesk(filterValue) {
     // Support Desk is a signed-account Web projection, deliberately separate
     // from `hydrateCanonicalData` and the legacy `/support/tickets` bridge.
@@ -3078,12 +3306,15 @@
     // Native authoring workspaces have no generic feature/bridge projection.
     // Return before any canonical endpoint can overwrite their owner-scoped
     // state, including the similarly-prefixed `/voice-studio` route.
-    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path)) return;
+    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
     const canonicalBotVoiceRoute = path === "/voice" || path.startsWith("/voice/");
     const canonicalVoicePath = path === "/tts" || path === "/dubbing" || canonicalBotVoiceRoute;
+    // Keep the historical Video family exact.  `/video-studio` is not a
+    // legacy feature child and must never trigger canonical feature reads.
+    const canonicalBotVideoRoute = path === "/video" || path.startsWith("/video/");
     try {
       if (path === "/dashboard") {
         const [wallet, jobs, assets, readiness, tickets] = await Promise.all([
@@ -3155,7 +3386,7 @@
         // Native image operations hydrate separately from Asset Vault. Do not
         // request pricing/readiness from the bridge or overwrite the strict
         // server-side guarded/ready state with a generic image feature badge.
-      } else if ((path === "/image" || (path.startsWith("/image/") && path !== "/image/history")) || (path === "/video" || (path.startsWith("/video/") && !["/video/progress", "/video/preview", "/video/export"].includes(path)))) {
+      } else if ((path === "/image" || (path.startsWith("/image/") && path !== "/image/history")) || (canonicalBotVideoRoute && !["/video/progress", "/video/preview", "/video/export"].includes(path))) {
         const [pricing, readiness] = await Promise.all([api("/pricing"), api("/features/status")]);
         merge({
           pricingCatalog: pricing.data || {},
@@ -3468,6 +3699,36 @@
     const submission = acquireSubmission(scope, JSON.stringify(payload));
     if (!submission) {
       toast("Thao tác Voice Studio đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
+  async function videoStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // Use the same signed write discipline as each other Web-native
+    // workspace: CSRF in `api`, a browser idempotency key, no local success
+    // reconstruction and no replay after a response is acknowledged.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Video Production Studio đang chờ máy chủ xác nhận.", "error");
       return null;
     }
     let acknowledged = false;
@@ -4072,6 +4333,187 @@
         } finally {
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "video-studio-refresh") {
+        const planId = videoPlanIdFromPath(route);
+        if (planId) await hydrateVideoPlan(planId);
+        else await hydrateVideoStudio();
+        toast("Đã làm mới Video Production Studio của Web account hiện tại.");
+        return;
+      }
+      if (action === "video-plan-create") {
+        const payload = videoPlanPayload(fields);
+        await videoStudioMutation({
+          action, route, scope: "video-studio:plan:create", path: "/video-studio/plans", payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.plan && typeof data.plan === "object" ? data.plan : null;
+            const planId = receipt && validVideoStudioPlanId(receipt.id) ? String(receipt.id) : "";
+            if (!videoStudioBoundaryIsSafe(data) || !planId || !validVideoStudioRevision(receipt.revision)) {
+              throw new Error("Máy chủ chưa trả receipt video plan Web-native hợp lệ.");
+            }
+            await hydrateVideoStudio();
+            toast(result.message || "Đã tạo video plan riêng tư.");
+            window.location.assign(`/video-studio/${encodeURIComponent(planId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "video-plan-update") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoPlanRevision);
+        if (!validVideoStudioPlanId(planId) || !expectedRevision) throw new Error("Mã hoặc revision video plan không hợp lệ.");
+        const payload = { ...videoPlanPayload(fields), expected_revision: expectedRevision };
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:update`, method: "PATCH",
+          path: `/video-studio/plans/${encodeURIComponent(planId)}`, payload,
+          onSuccess: async (result) => {
+            if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision video plan an toàn.");
+            await hydrateVideoStudio();
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã lưu revision video plan mới.");
+          }
+        });
+        return;
+      }
+      if (action === "video-plan-state") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoPlanRevision);
+        const state = String(detail.videoPlanState || "").trim().toLowerCase();
+        if (!validVideoStudioPlanId(planId) || !expectedRevision || !VIDEO_STUDIO_PLAN_STATES.has(state)) throw new Error("Trạng thái hoặc revision video plan không hợp lệ.");
+        const current = base().videoPlanDetail && base().videoPlanDetail.plan;
+        const currentState = current && String(current.id || "") === planId ? String(current.state || "") : "";
+        if (currentState === "archived" && state !== "draft") throw new Error("Plan đã archive chỉ có thể được khôi phục về Draft.");
+        if (currentState === "approved" && !["draft", "archived"].includes(state)) throw new Error("Plan self-review xong cần về Draft trước khi thay đổi review.");
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:state:${state}`,
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.plan && typeof result.data.plan === "object" ? result.data.plan : null;
+            if (!videoStudioBoundaryIsSafe(result.data) || !receipt || !validVideoStudioRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái plan an toàn.");
+            await hydrateVideoStudio();
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã cập nhật trạng thái self-review.");
+          }
+        });
+        return;
+      }
+      if (action === "video-plan-restore-version") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoPlanRevision);
+        const targetRevision = validVideoStudioRevision(detail.videoPlanVersion);
+        if (!validVideoStudioPlanId(planId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision video plan không hợp lệ.");
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:restore-version:${targetRevision}`,
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version video plan an toàn.");
+            await hydrateVideoStudio();
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã khôi phục version video plan thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "video-scene-create") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoPlanRevision);
+        if (!validVideoStudioPlanId(planId) || !expectedRevision) throw new Error("Mã hoặc revision video plan không hợp lệ.");
+        const payload = { ...videoScenePayload(fields), expected_revision: expectedRevision };
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:scene:create`,
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/scenes`, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.scene && typeof result.data.scene === "object" ? result.data.scene : null;
+            if (!videoStudioBoundaryIsSafe(result.data) || !receipt || !validVideoStudioSceneId(receipt.id) || String(receipt.plan_id || "") !== planId) {
+              throw new Error("Máy chủ chưa trả receipt scene hợp lệ.");
+            }
+            await hydrateVideoStudio();
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã thêm scene riêng tư vào video plan.");
+          }
+        });
+        return;
+      }
+      if (action === "video-scene-update") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const sceneId = String(detail.videoSceneId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoSceneRevision);
+        if (!validVideoStudioPlanId(planId) || !validVideoStudioSceneId(sceneId) || !expectedRevision) throw new Error("Mã hoặc revision scene không hợp lệ.");
+        const payload = { ...videoScenePayload(fields), expected_revision: expectedRevision };
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:scene:${sceneId}:update`, method: "PATCH",
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/scenes/${encodeURIComponent(sceneId)}`, payload,
+          onSuccess: async (result) => {
+            if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision scene an toàn.");
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã lưu revision scene mới.");
+          }
+        });
+        return;
+      }
+      if (action === "video-scene-archive" || action === "video-scene-restore") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const sceneId = String(detail.videoSceneId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoSceneRevision);
+        if (!validVideoStudioPlanId(planId) || !validVideoStudioSceneId(sceneId) || !expectedRevision) throw new Error("Mã hoặc revision scene không hợp lệ.");
+        const operation = action.replace("video-scene-", "");
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:scene:${sceneId}:${operation}`,
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/scenes/${encodeURIComponent(sceneId)}/${encodeURIComponent(operation)}`,
+          payload: { expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái scene an toàn.");
+            await hydrateVideoStudio();
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã cập nhật scene.");
+          }
+        });
+        return;
+      }
+      if (action === "video-scene-restore-version") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const sceneId = String(detail.videoSceneId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoSceneRevision);
+        const targetRevision = validVideoStudioRevision(detail.videoSceneVersion);
+        if (!validVideoStudioPlanId(planId) || !validVideoStudioSceneId(sceneId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision scene không hợp lệ.");
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:scene:${sceneId}:restore-version:${targetRevision}`,
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/scenes/${encodeURIComponent(sceneId)}/restore-version`,
+          payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version scene an toàn.");
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã khôi phục version scene thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "video-scene-reorder") {
+        const planId = String(detail.videoPlanId || "").trim();
+        const expectedRevision = validVideoStudioRevision(detail.videoPlanRevision);
+        const sceneId = String(detail.videoSceneId || "").trim();
+        const direction = String(detail.videoSceneDirection || "").trim().toLowerCase();
+        if (!validVideoStudioPlanId(planId) || !expectedRevision || !validVideoStudioSceneId(sceneId) || !["up", "down"].includes(direction)) throw new Error("Yêu cầu sắp xếp scene không hợp lệ.");
+        const planDetail = base().videoPlanDetail && typeof base().videoPlanDetail === "object" ? base().videoPlanDetail : {};
+        const activeScenes = Array.isArray(planDetail.scenes)
+          ? planDetail.scenes.filter((item) => item && String(item.plan_id || "") === planId && String(item.state || "active") === "active" && validVideoStudioSceneId(item.id))
+          : [];
+        const index = activeScenes.findIndex((item) => String(item.id) === sceneId);
+        const target = direction === "up" ? index - 1 : index + 1;
+        if (index < 0 || target < 0 || target >= activeScenes.length) throw new Error("Không thể đổi thứ tự scene ở vị trí này.");
+        const sceneIds = activeScenes.map((item) => String(item.id));
+        [sceneIds[index], sceneIds[target]] = [sceneIds[target], sceneIds[index]];
+        await videoStudioMutation({
+          action, route, scope: `video-studio:plan:${planId}:scenes:reorder`,
+          path: `/video-studio/plans/${encodeURIComponent(planId)}/scenes/reorder`, payload: { expected_revision: expectedRevision, scene_ids: sceneIds },
+          onSuccess: async (result) => {
+            if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự scene an toàn.");
+            await hydrateVideoPlan(planId);
+            toast(result.message || "Đã cập nhật thứ tự scene.");
+          }
+        });
         return;
       }
       if (action === "voice-studio-filter" || action === "voice-studio-filter-clear") {

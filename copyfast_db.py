@@ -207,6 +207,18 @@ def voice_studio_enabled() -> bool:
     return os.environ.get("WEBAPP_VOICE_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def video_studio_enabled() -> bool:
+    """Whether the Web-native Video Production Studio is available.
+
+    Plans, scene directions, self-review state and revision snapshots stay in
+    the signed Web account database.  The switch never enables an execution
+    engine, a Bot companion, media ingest, provider call, wallet mutation or
+    payment action.  It is on by default because the planning-only surface is
+    useful without any of those integrations.
+    """
+    return os.environ.get("WEBAPP_VIDEO_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1389,6 +1401,128 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_voice_events_account_created ON web_voice_studio_events(account_id, created_at DESC, id DESC)"
+        )
+        # Video Production Studio is a Web-owned planning surface.  It keeps
+        # only authored plan/scene text, sequence metadata and immutable
+        # revisions.  In particular, it deliberately has no media bytes,
+        # file references, render identifiers, external runtime state,
+        # wallet, payment or delivery columns.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_plans (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                title TEXT NOT NULL,
+                video_format TEXT NOT NULL,
+                language TEXT NOT NULL DEFAULT 'vi',
+                aspect_ratio TEXT NOT NULL DEFAULT '9:16',
+                target_duration_seconds INTEGER NOT NULL DEFAULT 30,
+                objective TEXT NOT NULL DEFAULT '',
+                audience TEXT NOT NULL DEFAULT '',
+                brief TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                lifecycle TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_plan_versions (
+                id TEXT PRIMARY KEY,
+                plan_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(plan_id, revision),
+                FOREIGN KEY(plan_id) REFERENCES web_video_plans(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_scenes (
+                id TEXT PRIMARY KEY,
+                plan_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                scene_type TEXT NOT NULL,
+                duration_seconds INTEGER NOT NULL DEFAULT 5,
+                visual_direction TEXT NOT NULL DEFAULT '',
+                narration TEXT NOT NULL DEFAULT '',
+                on_screen_text TEXT NOT NULL DEFAULT '',
+                shot_notes TEXT NOT NULL DEFAULT '',
+                transition TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(plan_id, ordinal),
+                FOREIGN KEY(plan_id) REFERENCES web_video_plans(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_scene_versions (
+                id TEXT PRIMARY KEY,
+                scene_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(scene_id, revision),
+                FOREIGN KEY(scene_id) REFERENCES web_video_scenes(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_studio_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                plan_id TEXT NOT NULL,
+                scene_id TEXT,
+                entity_type TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(plan_id) REFERENCES web_video_plans(id),
+                FOREIGN KEY(scene_id) REFERENCES web_video_scenes(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_plans_account_lifecycle_updated ON web_video_plans(account_id, lifecycle, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_plans_project_account_updated ON web_video_plans(project_id, account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_plan_versions_plan_revision ON web_video_plan_versions(plan_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_scenes_plan_account_ordinal ON web_video_scenes(plan_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_scene_versions_scene_revision ON web_video_scene_versions(scene_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_events_account_created ON web_video_studio_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the
