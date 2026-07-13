@@ -27,8 +27,6 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `COBALT_API_KEY`
 - `COBALT_API_URL`
 - `COHERE_KEY`
-- `CORE_BRIDGE_HMAC_SECRET`
-- `CORE_BRIDGE_TOKEN`
 - `CUTOUT_API_KEY`
 - `DATABASE_URL`
 - `DATABASE_URL`
@@ -356,11 +354,6 @@ Only environment variable names are recorded. Values are never read and secret-s
 - `VIDEO_PUBLIC_BLOCK_TIERS`
 - `VIDEO_PUBLIC_COMING_SOON_TIERS`
 - `VIDEO_RETRY_BUFFER_FACTOR`
-- `WEBAPP_LINK_CALLBACK_HMAC_SECRET`
-- `WEBAPP_LINK_CALLBACK_TOKEN`
-- `WEBAPP_LINK_CALLBACK_URL`
-- `WEBAPP_UPLOAD_MAX_BYTES`
-- `WEBAPP_UPLOAD_MAX_MB`
 - `WEBHOOK_URL`
 - `WEBSITE_URL`
 - `WEB_BILLING_API_BASE_URL`
@@ -380,7 +373,7 @@ Only environment variable names are recorded. Values are never read and secret-s
 
 | Provider | Occurrences | Sample files |
 | --- | --- | --- |
-| PayOS | 684 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
+| PayOS | 680 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
 | Key4U | 319 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_PRICING_KNOWLEDGE.md, docs/provider_backlog_notes.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_HUB.md |
 | ShopAIKey | 516 | bot.py, docs/COMMAND_REGISTRY.md, docs/data_persistence_plan.md, docs/LIVE_BOT_QA_REPORT.md, docs/provider_backlog_notes.md |
 | MiniMax | 162 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md, docs/reports/TOAN_AAS_BOT_FULL_AUDIT_REPORT_20260614.md |
@@ -394,4 +387,4 @@ Only environment variable names are recorded. Values are never read and secret-s
 | Kling | 106 | bot.py, docs/COMMAND_REGISTRY.md, docs/knowledge/TOAN_AAS_BOT_APP_KNOWLEDGE.md, docs/providers/TOAN_AAS_KEY4U_PROVIDER_INTEGRATION.md, docs/reports/TOAN_AAS_ENGINE_ROADMAP_VOICE_MUSIC_SUBTITLE_VIDEO.md |
 | Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
-| Telegram | 608 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
+| Telegram | 594 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |

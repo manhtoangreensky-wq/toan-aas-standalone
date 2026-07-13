@@ -2,6 +2,7 @@
 
 | Route | Methods | Endpoint |
 | --- | --- | --- |
+| /account/activity | GET | account_activity |
 | /add | POST | add_performance |
 | /add-xu | POST | admin_add_xu |
 | /admin-app | GET | legacy_admin_redirect |
@@ -40,6 +41,7 @@
 | /campaign-app | GET | legacy_campaign_redirect |
 | /campaigns | GET | list_campaign_plans |
 | /campaigns | POST | create_campaign_plan |
+| /campaigns/{plan_id} | GET | get_campaign_plan |
 | /campaigns/{plan_id} | PATCH | update_campaign_plan |
 | /campaigns/{plan_id}/status | POST | update_campaign_plan_status |
 | /catalog | GET | feature_catalog |
@@ -57,8 +59,12 @@
 | /dashboard | GET | get_dashboard_summary |
 | /dashboard-stats | GET | get_dashboard_stats |
 | /dashboard-stats | GET | get_erp_stats |
+| /documents/{document_id} | GET | get_studio_document |
+| /documents/{document_id} | PATCH | update_studio_document |
+| /documents/{document_id}/restore/{revision} | POST | restore_studio_document_version |
 | /employees | POST | add_employee |
 | /employees | GET | get_employees |
+| /enhance | POST | enhance_image |
 | /features/status | GET | feature_status |
 | /features/{feature}/confirm | POST | feature_confirm |
 | /features/{feature}/draft | POST | feature_draft |
@@ -70,6 +76,7 @@
 | /goals | POST | add_goal |
 | /goals | GET | get_goals |
 | /health | GET | health |
+| /image-to-pdf | POST | image_to_pdf |
 | /internal/telegram-link/confirm | POST | confirm_telegram_link |
 | /internal/telegram-link/confirm/ | POST | confirm_telegram_link |
 | /inventory | POST | add_inventory |
@@ -98,6 +105,11 @@
 | /payments/options | GET | payment_options |
 | /payments/{payment_id} | GET | payment_status |
 | /payos/create-link | POST | create_web_payos_link |
+| /pdf-merge | POST | merge_pdf |
+| /pdf-optimize | POST | optimize_pdf |
+| /pdf-split | POST | split_pdf |
+| /pdf-to-images | POST | pdf_to_images |
+| /pdf-to-word | POST | pdf_to_word |
 | /portal/affiliates/{user_id} | GET | customer_affiliates |
 | /portal/history/{user_id} | GET | customer_history |
 | /portal/projects/{user_id} | GET | customer_projects |
@@ -105,16 +117,22 @@
 | /production | POST | add_production |
 | /production | GET | get_production |
 | /profile | POST | update_profile |
+| /project-packages | GET | list_all_project_packages |
+| /project-packages/{package_id} | GET | get_project_package |
+| /project-packages/{package_id}/download | GET | download_project_package |
 | /projects | POST | create_project |
 | /projects | GET | get_projects |
 | /projects | POST | add_project |
 | /projects | GET | get_projects |
+| /projects/{project_id}/packages | GET | list_project_packages |
+| /projects/{project_id}/packages | POST | create_project_package |
 | /providers | GET | oauth_providers |
 | /purchases | POST | add_purchase |
 | /purchases | GET | get_purchases |
 | /register | POST | register |
 | /register | POST | register |
 | /remove-bg | POST | remove_background |
+| /resize | POST | resize_image |
 | /sales | POST | add_sale |
 | /sales | GET | get_sales |
 | /social | POST | add_post |
@@ -137,20 +155,12 @@
 | /telegram/login/start | POST | start_telegram_login |
 | /telegram/login/status | GET | telegram_login_status |
 | /tts | POST | text_to_speech |
+| /upload | POST | upload_asset |
 | /uploads | POST | upload_to_canonical_staging |
 | /users | GET | get_all_users |
 | /verify | POST | verify_login |
 | /video-app | GET | legacy_video_redirect |
 | /voice/profiles | GET | voice_profiles |
 | /wallet | GET | wallet |
-| /wallet-app | GET | legacy_wallet_redirect |
-| /wallet/history | GET | wallet_history |
-| /webhook/payos | POST | payos_webhook |
-| /workloads | POST | add_workload |
-| /workloads | GET | get_workloads |
-| /{page_path:path} | GET | page |
-| /{user_id} | GET | get_campaigns |
-| /{user_id} | GET | get_campaigns |
-| /{user_id} | GET | get_user |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

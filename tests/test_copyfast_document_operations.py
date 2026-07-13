@@ -7,6 +7,7 @@ import importlib
 from pathlib import Path
 import sqlite3
 import sys
+from zipfile import ZipFile
 
 from docx import Document
 import pytest
@@ -28,6 +29,7 @@ def make_client(
     monkeypatch,
     *,
     image_to_pdf_enabled: bool = True,
+    pdf_to_images_enabled: bool = True,
     pdf_to_word_enabled: bool = True,
 ) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-document-operations-test.db"))
@@ -41,6 +43,7 @@ def make_client(
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "true" if image_to_pdf_enabled else "false")
+    monkeypatch.setenv("WEBAPP_PDF_TO_IMAGES_ENABLED", "true" if pdf_to_images_enabled else "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "true" if pdf_to_word_enabled else "false")
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ENABLED", raising=False)
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ROOT", raising=False)
@@ -180,6 +183,14 @@ def optimize(client: TestClient, csrf: str, *, asset_id: str, key: str):
 def pdf_to_word(client: TestClient, csrf: str, *, asset_id: str, key: str):
     return client.post(
         "/api/v1/document-operations/pdf-to-word",
+        headers={"X-CSRF-Token": csrf},
+        json={"source_asset_id": asset_id, "idempotency_key": key},
+    )
+
+
+def pdf_to_images(client: TestClient, csrf: str, *, asset_id: str, key: str):
+    return client.post(
+        "/api/v1/document-operations/pdf-to-images",
         headers={"X-CSRF-Token": csrf},
         json={"source_asset_id": asset_id, "idempotency_key": key},
     )
@@ -1119,6 +1130,176 @@ def test_pdf_to_word_capacity_and_private_docx_integrity_fail_closed(tmp_path, m
             conn.commit()
         noncanonical = client.get(f"/api/v1/document-operations/{canonical_id}/download")
         assert noncanonical.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
+
+
+def test_pdf_to_images_renders_private_png_and_deterministic_multi_page_zip(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as first:
+        csrf = register_and_login(first, "pdf-to-images-owner@example.com")
+        assert first.get("/documents/pdf-to-images").status_code == 200
+        single_source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-to-images-single-source-0001",
+            body=pdf_bytes(1, page_size=(144, 144)),
+            name="one-page.pdf",
+        )
+        denied = first.post(
+            "/api/v1/document-operations/pdf-to-images",
+            json={"source_asset_id": single_source["id"], "idempotency_key": "pdf-to-images-denied-0001"},
+        )
+        assert denied.status_code == 403
+
+        single = pdf_to_images(first, csrf, asset_id=single_source["id"], key="pdf-to-images-single-create-0001")
+        assert single.status_code == 200
+        payload = single.json()
+        assert payload["ok"] is True
+        assert payload["status"] == "completed"
+        operation = payload["data"]["operation"]
+        assert operation["kind"] == "pdf_to_images"
+        assert operation["source_asset_id"] == single_source["id"]
+        assert operation["source_count"] == 1
+        assert operation["source_page_count"] == 1
+        assert operation["output_page_count"] == 1
+        assert operation["content_type"] == "image/png"
+        assert operation["original_filename"] == "toan-aas-pdf-page-001.png"
+        assert operation["download_ready"] is True
+        for forbidden in ("storage_key", "sha256", "source_sha", "filesystem", "provider", "payment", "bot", "fitz"):
+            assert forbidden not in single.text.lower()
+
+        replay = pdf_to_images(first, csrf, asset_id=single_source["id"], key="pdf-to-images-single-create-0001")
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+        collision_source = upload_pdf(first, csrf, key="pdf-to-images-collision-source-0001", body=pdf_bytes(1))
+        assert pdf_to_images(first, csrf, asset_id=collision_source["id"], key="pdf-to-images-single-create-0001").status_code == 409
+
+        png_download = first.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert png_download.status_code == 200
+        assert png_download.headers["content-type"].startswith("image/png")
+        assert "toan-aas-pdf-page-001.png" in png_download.headers["content-disposition"]
+        assert png_download.headers["cache-control"] == "no-store, private"
+        assert png_download.headers["x-content-type-options"] == "nosniff"
+        assert png_download.headers["referrer-policy"] == "no-referrer"
+        assert png_download.headers["content-security-policy"] == "sandbox"
+        with Image.open(BytesIO(png_download.content)) as image:
+            assert image.format == "PNG"
+            assert image.mode == "RGB"
+            assert image.size == (288, 288)
+            image.verify()
+        assert len(png_download.content) == operation["byte_size"]
+
+        multi_source = upload_pdf(
+            first,
+            csrf,
+            key="pdf-to-images-multi-source-0001",
+            body=pdf_bytes(2, page_size=(144, 216)),
+            name="two-pages.pdf",
+        )
+        multi = pdf_to_images(first, csrf, asset_id=multi_source["id"], key="pdf-to-images-multi-create-0001")
+        assert multi.status_code == 200
+        multi_operation = multi.json()["data"]["operation"]
+        assert multi_operation["kind"] == "pdf_to_images"
+        assert multi_operation["source_page_count"] == 2
+        assert multi_operation["output_page_count"] == 2
+        assert multi_operation["content_type"] == "application/zip"
+        assert multi_operation["original_filename"] == "toan-aas-pdf-pages.zip"
+        history = first.get("/api/v1/document-operations?kind=pdf_to_images&limit=100")
+        assert history.status_code == 200
+        assert [item["id"] for item in history.json()["data"]["items"]] == [multi_operation["id"], operation["id"]]
+        zip_download = first.get(f"/api/v1/document-operations/{multi_operation['id']}/download")
+        assert zip_download.status_code == 200
+        assert zip_download.headers["content-type"].startswith("application/zip")
+        assert "toan-aas-pdf-pages.zip" in zip_download.headers["content-disposition"]
+        with ZipFile(BytesIO(zip_download.content), "r") as archive:
+            assert archive.namelist() == ["page_001.png", "page_002.png"]
+            assert [member.date_time for member in archive.infolist()] == [(1980, 1, 1, 0, 0, 0)] * 2
+            assert all(not member.extra and not member.comment for member in archive.infolist())
+            for name in archive.namelist():
+                with Image.open(BytesIO(archive.read(name))) as image:
+                    assert image.format == "PNG"
+                    assert image.mode == "RGB"
+                    assert image.size == (288, 432)
+                    image.verify()
+        assert len(zip_download.content) == multi_operation["byte_size"]
+
+        detail = first.get(f"/api/v1/document-operations/{multi_operation['id']}")
+        assert [event["state"] for event in detail.json()["data"]["events"]] == ["queued", "processing", "completed"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            audit = conn.execute(
+                "SELECT detail FROM web_audit_events WHERE action='web.document_operation.pdf_to_images' AND target=?",
+                (multi_operation["id"],),
+            ).fetchone()
+            output_key = conn.execute(
+                "SELECT storage_key FROM web_document_operations WHERE id=?", (multi_operation["id"],)
+            ).fetchone()[0]
+        assert audit and audit[0].startswith("source_pages=2;output_pages=2;artifact=zip;bytes=")
+        assert multi_source["id"] not in audit[0]
+
+        with make_client(tmp_path, monkeypatch) as second:
+            csrf_second = register_and_login(second, "pdf-to-images-other@example.com")
+            assert second.get(f"/api/v1/document-operations/{multi_operation['id']}").json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            assert second.get(f"/api/v1/document-operations/{multi_operation['id']}/download").json()["error_code"] == "WEB_DOCUMENT_OPERATION_NOT_FOUND"
+            assert pdf_to_images(second, csrf_second, asset_id=multi_source["id"], key="pdf-to-images-other-0001").json()["error_code"] == "WEB_DOCUMENT_SOURCE_NOT_FOUND"
+
+        (tmp_path / "private-document-outputs" / output_key).write_bytes(b"not-a-zip")
+        unavailable = first.get(f"/api/v1/document-operations/{multi_operation['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
+        assert first.get(f"/api/v1/document-operations/{multi_operation['id']}").json()["data"]["operation"]["state"] == "unavailable"
+
+
+def test_pdf_to_images_fails_closed_for_disabled_busy_encrypted_oversize_page_and_tampered_sources(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "pdf-to-images-safety@example.com")
+        source = upload_pdf(client, csrf, key="pdf-to-images-busy-source-0001", body=pdf_bytes(1))
+        operations = importlib.import_module("copyfast_document_operations")
+        assert operations._PDF_TO_IMAGES_CAPACITY.acquire(blocking=False)
+        try:
+            busy = pdf_to_images(client, csrf, asset_id=source["id"], key="pdf-to-images-busy-0001")
+            assert busy.status_code == 429
+        finally:
+            operations._PDF_TO_IMAGES_CAPACITY.release()
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-to-images-busy-0001",),
+            ).fetchone()[0] == 0
+
+        encrypted = upload_pdf(client, csrf, key="pdf-to-images-encrypted-source-0001", body=pdf_bytes(1, encrypted=True))
+        encrypted_result = pdf_to_images(client, csrf, asset_id=encrypted["id"], key="pdf-to-images-encrypted-0001")
+        assert encrypted_result.status_code == 422
+        assert "mã hóa" in encrypted_result.json()["message"].lower()
+
+        too_many = upload_pdf(client, csrf, key="pdf-to-images-pages-source-0001", body=pdf_bytes(31))
+        page_limit = pdf_to_images(client, csrf, asset_id=too_many["id"], key="pdf-to-images-pages-0001")
+        assert page_limit.status_code == 413
+        assert "30" in page_limit.json()["message"]
+
+        tampered = upload_pdf(client, csrf, key="pdf-to-images-tamper-source-0001", body=pdf_bytes(1))
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            source_key = conn.execute("SELECT storage_key FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        (tmp_path / "private-web-assets" / source_key).write_bytes(b"%PDF-tampered")
+        tampered_result = pdf_to_images(client, csrf, asset_id=tampered["id"], key="pdf-to-images-tamper-0001")
+        assert tampered_result.status_code == 422
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            failed = conn.execute(
+                "SELECT state, failure_code, storage_key FROM web_document_operations WHERE idempotency_key=?",
+                ("pdf-to-images-tamper-0001",),
+            ).fetchone()
+            source_state = conn.execute("SELECT state FROM web_asset_files WHERE id=?", (tampered["id"],)).fetchone()[0]
+        assert failed == ("failed", "PDF_SOURCE_UNAVAILABLE", None)
+        assert source_state == "unavailable"
+        staging = tmp_path / "private-document-outputs" / ".staging"
+        assert not list(staging.iterdir())
+
+    with make_client(tmp_path, monkeypatch, pdf_to_images_enabled=False) as disabled:
+        csrf = register_and_login(disabled, "pdf-to-images-disabled@example.com")
+        response = pdf_to_images(
+            disabled,
+            csrf,
+            asset_id="11111111-1111-4111-8111-111111111111",
+            key="pdf-to-images-disabled-0001",
+        )
+        assert response.status_code == 503
+        assert "WEBAPP_PDF_TO_IMAGES_ENABLED" in response.json()["message"]
 
 
 def test_pdf_optimize_marks_no_reduction_guarded_and_rejects_unsafe_inputs_without_fake_output(tmp_path, monkeypatch):

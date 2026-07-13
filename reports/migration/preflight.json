@@ -9,14 +9,14 @@
     "baseline_sha_requested": "b29d0d474974075f4cba963d2c510f49d2d1b3e4",
     "entrypoint_present": true,
     "revision": {
-      "ahead_commits": 6,
-      "baseline_relation": "ahead_of_requested_baseline",
+      "ahead_commits": 0,
+      "baseline_relation": "exact",
       "behind_commits": 0,
-      "checkout_sha": "32d6d1bfbc8040b0632a44e6a9326ed568cb1a59"
+      "checkout_sha": "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
     },
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-bot-copyfast1-bridge"
+    "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-07-12T12:00:15+00:00",
+  "generated_at_utc": "2026-07-13T09:34:02+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -25,6 +25,6 @@
   "schema_version": "1.0",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast1"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast15-pdf-to-images"
   }
 }

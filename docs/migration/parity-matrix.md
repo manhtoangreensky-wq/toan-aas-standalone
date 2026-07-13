@@ -1,6 +1,6 @@
 # Parity matrix
 
-Safe Web surface coverage: **93.21%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). All source items are represented in the JSON matrix; this page shows the first 200 records.
+Safe Web surface coverage: **93.2%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). All source items are represented in the JSON matrix; this page shows the first 200 records.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
