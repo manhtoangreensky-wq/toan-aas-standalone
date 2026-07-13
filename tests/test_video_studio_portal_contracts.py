@@ -124,7 +124,7 @@ def test_video_studio_has_no_private_pwa_cache_or_fake_media_surface() -> None:
     assert "/api/v1/video-studio" in SERVICE_WORKER
     assert "/api/v1/video-studio" not in shell
     assert '"/video-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v11"' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v12"' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

@@ -131,7 +131,7 @@ def test_subtitle_studio_stays_text_only_and_draft_editable() -> None:
     assert "/api/v1/subtitle-studio" in SERVICE_WORKER
     assert "/api/v1/subtitle-studio" not in shell
     assert '"/subtitle-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v11"' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v12"' in SERVICE_WORKER
 
     for selector in (
         ".portal-subtitle-studio-intro",

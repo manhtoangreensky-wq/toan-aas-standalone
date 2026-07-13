@@ -230,6 +230,17 @@ def subtitle_studio_enabled() -> bool:
     return os.environ.get("WEBAPP_SUBTITLE_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_studio_enabled() -> bool:
+    """Whether the Web-native Image Creative Studio is available.
+
+    The studio owns signed-account creative directions, explicit references
+    to existing private image metadata, revisions and self-review state.  It
+    does not enable an image engine, asset upload, browser media URL,
+    provider/Bot call, job, wallet, payment or delivery capability.
+    """
+    return os.environ.get("WEBAPP_IMAGE_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1650,6 +1661,130 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_subtitle_events_account_created ON web_subtitle_workspace_events(account_id, created_at DESC, id DESC)"
+        )
+        # Image Creative Studio is a signed-account art-direction workspace.
+        # It stores only text/metadata and UUID references to already-owned
+        # Asset Vault image metadata.  There are intentionally no media
+        # bytes, browser URLs, engine/provider identifiers, jobs, wallet,
+        # payment or delivery columns in this Web-owned schema.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_artboards (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                title TEXT NOT NULL,
+                image_intent TEXT NOT NULL,
+                language TEXT NOT NULL DEFAULT 'vi',
+                aspect_ratio TEXT NOT NULL DEFAULT '1:1',
+                output_format TEXT NOT NULL DEFAULT 'png',
+                creative_brief TEXT NOT NULL DEFAULT '',
+                style_direction TEXT NOT NULL DEFAULT '',
+                negative_direction TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                lifecycle TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_artboard_versions (
+                id TEXT PRIMARY KEY,
+                artboard_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(artboard_id, revision),
+                FOREIGN KEY(artboard_id) REFERENCES web_image_artboards(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_directions (
+                id TEXT PRIMARY KEY,
+                artboard_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                operation TEXT NOT NULL,
+                prompt_text TEXT NOT NULL DEFAULT '',
+                edit_instructions TEXT NOT NULL DEFAULT '',
+                composition_notes TEXT NOT NULL DEFAULT '',
+                negative_direction TEXT NOT NULL DEFAULT '',
+                asset_id TEXT,
+                reference_asset_id TEXT,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(artboard_id, ordinal),
+                FOREIGN KEY(artboard_id) REFERENCES web_image_artboards(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(reference_asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_direction_versions (
+                id TEXT PRIMARY KEY,
+                direction_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(direction_id, revision),
+                FOREIGN KEY(direction_id) REFERENCES web_image_directions(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_image_studio_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                artboard_id TEXT NOT NULL,
+                direction_id TEXT,
+                entity_type TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(artboard_id) REFERENCES web_image_artboards(id),
+                FOREIGN KEY(direction_id) REFERENCES web_image_directions(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_artboards_account_lifecycle_updated ON web_image_artboards(account_id, lifecycle, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_artboards_project_account_updated ON web_image_artboards(project_id, account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_artboard_versions_artboard_revision ON web_image_artboard_versions(artboard_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_directions_artboard_account_ordinal ON web_image_directions(artboard_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_direction_versions_direction_revision ON web_image_direction_versions(direction_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_image_events_account_created ON web_image_studio_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

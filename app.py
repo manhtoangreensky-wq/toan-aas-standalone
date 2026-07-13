@@ -26,6 +26,7 @@ import copyfast_auth
 import copyfast_content_studio
 import copyfast_document_operations
 import copyfast_image_operations
+import copyfast_image_studio
 import copyfast_memory
 import copyfast_music_media
 import copyfast_prompt_library
@@ -115,6 +116,9 @@ VIDEO_STUDIO_BODY_MAX_BYTES = 128 * 1024
 # Subtitle Studio accepts bounded JSON/text only.  It has no multipart/raw
 # media contract, so a route-family cap runs before JSON parsing.
 SUBTITLE_STUDIO_BODY_MAX_BYTES = 128 * 1024
+# Image Creative Studio stores bounded text/UUID references only.  No
+# multipart/image-body route belongs to this API family.
+IMAGE_STUDIO_BODY_MAX_BYTES = 128 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -137,6 +141,7 @@ class PromptLibraryBodyLimitMiddleware:
         voice_studio_max_bytes: int = VOICE_STUDIO_BODY_MAX_BYTES,
         video_studio_max_bytes: int = VIDEO_STUDIO_BODY_MAX_BYTES,
         subtitle_studio_max_bytes: int = SUBTITLE_STUDIO_BODY_MAX_BYTES,
+        image_studio_max_bytes: int = IMAGE_STUDIO_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
@@ -146,6 +151,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.voice_studio_max_bytes = int(voice_studio_max_bytes)
         self.video_studio_max_bytes = int(video_studio_max_bytes)
         self.subtitle_studio_max_bytes = int(subtitle_studio_max_bytes)
+        self.image_studio_max_bytes = int(image_studio_max_bytes)
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -160,6 +166,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/voice-studio/")
                 or path.startswith("/api/v1/video-studio/")
                 or path.startswith("/api/v1/subtitle-studio/")
+                or path.startswith("/api/v1/image-studio/")
             )
         )
 
@@ -173,6 +180,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.video_studio_max_bytes
         if path.startswith("/api/v1/subtitle-studio/"):
             return self.subtitle_studio_max_bytes
+        if path.startswith("/api/v1/image-studio/"):
+            return self.image_studio_max_bytes
         if path.startswith("/api/v1/media-workspace/"):
             return self.media_max_bytes
         return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
@@ -186,6 +195,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_voice_studio = path.startswith("/api/v1/voice-studio/")
         is_video_studio = path.startswith("/api/v1/video-studio/")
         is_subtitle_studio = path.startswith("/api/v1/subtitle-studio/")
+        is_image_studio = path.startswith("/api/v1/image-studio/")
         is_media = path.startswith("/api/v1/media-workspace/")
         response = JSONResponse(
             envelope(
@@ -199,6 +209,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_video_studio
                     else "Dữ liệu Subtitle Studio vượt giới hạn kích thước an toàn."
                     if is_subtitle_studio
+                    else "Dữ liệu Image Creative Studio vượt giới hạn kích thước an toàn."
+                    if is_image_studio
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
                     if is_media
                     else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
@@ -213,6 +225,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_video_studio
                     else "WEB_SUBTITLE_STUDIO_BODY_TOO_LARGE"
                     if is_subtitle_studio
+                    else "WEB_IMAGE_STUDIO_BODY_TOO_LARGE"
+                    if is_image_studio
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
                     if is_media
                     else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
@@ -305,6 +319,7 @@ app.add_middleware(
     voice_studio_max_bytes=VOICE_STUDIO_BODY_MAX_BYTES,
     video_studio_max_bytes=VIDEO_STUDIO_BODY_MAX_BYTES,
     subtitle_studio_max_bytes=SUBTITLE_STUDIO_BODY_MAX_BYTES,
+    image_studio_max_bytes=IMAGE_STUDIO_BODY_MAX_BYTES,
 )
 
 
@@ -455,6 +470,11 @@ async def security_headers(request: Request, call_next):
     # ASR, translation, TTS, dubbing, provider or media capability.
     subtitle_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/subtitle-studio/")
     subtitle_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/subtitle-studio/")
+    # Image Creative Studio is a signed-account text/reference workspace.
+    # Its fixed family buckets prevent repeated browser authoring requests
+    # from reaching SQLite unchecked; they do not enable image processing.
+    image_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/image-studio/")
+    image_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/image-studio/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -500,6 +520,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if subtitle_studio_read:
         rate_limit = 120
+    if image_studio_write:
+        rate_limit = 40
+    if image_studio_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -524,6 +548,8 @@ async def security_headers(request: Request, call_next):
             else "video-studio-read" if video_studio_read
             else "subtitle-studio-write" if subtitle_studio_write
             else "subtitle-studio-read" if subtitle_studio_read
+            else "image-studio-write" if image_studio_write
+            else "image-studio-read" if image_studio_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
@@ -603,6 +629,7 @@ app.include_router(copyfast_content_studio.router)
 app.include_router(copyfast_voice_studio.router)
 app.include_router(copyfast_video_studio.router)
 app.include_router(copyfast_subtitle_workspace.router)
+app.include_router(copyfast_image_studio.router)
 app.include_router(copyfast_support.router)
 
 

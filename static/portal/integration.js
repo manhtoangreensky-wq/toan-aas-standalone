@@ -1536,6 +1536,127 @@
     );
   }
 
+  // Image Creative Studio is deliberately separate from `/image/*`.  It is
+  // a private art-direction workspace, not an image engine: browser input is
+  // metadata plus owned Asset Vault UUIDs only, never URLs/blobs/providers.
+  const IMAGE_STUDIO_INTENTS = new Set(["create", "edit", "upscale", "image_to_image", "remove_background"]);
+  const IMAGE_STUDIO_ASPECT_RATIOS = new Set(["1:1", "4:5", "3:4", "16:9", "9:16", "3:2", "2:3", "custom"]);
+  const IMAGE_STUDIO_OUTPUT_FORMATS = new Set(["png", "jpg", "webp"]);
+  const IMAGE_STUDIO_STATES = new Set(["draft", "review", "approved", "archived"]);
+  function validImageStudioArtboardId(value) { return validProjectId(value); }
+  function validImageStudioDirectionId(value) { return validProjectId(value); }
+  function validImageStudioRevision(value) { return validMemoryRevision(value); }
+  function imageArtboardIdFromPath(path) {
+    const match = /^\/image-studio\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validImageStudioArtboardId(id) ? id : "";
+  }
+  function isNativeImageStudioPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/image-studio" || normalized === "/image-studio/new" || Boolean(imageArtboardIdFromPath(normalized));
+  }
+  function imageStudioSecretSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Image Creative Studio không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Image Creative Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Image Creative Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    return "";
+  }
+  function imageStudioMetadataSafetyError(...values) {
+    const secret = imageStudioSecretSafetyError(...values);
+    if (secret) return secret;
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "Image Creative Studio không nhận URL hoặc scheme tệp; hãy chọn Asset Vault reference đã được kiểm tra quyền sở hữu.";
+    if (/\b(?:(?:provider|engine|image|render|preview|job|media|file)[ _-]*(?:id|ref(?:erence)?|token)|telegram[ _-]*file[ _-]*id)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Image Creative Studio không nhận provider, engine, Bot, job hoặc file handle trong metadata.";
+    return "";
+  }
+  function imageStudioLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function imageStudioBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function imageStudioTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = imageStudioLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi artboard hoặc biến thể direction.");
+    return result;
+  }
+  function imageStudioReference(value, label, allowEmpty) {
+    const id = String(value || "").trim();
+    if (!id && allowEmpty) return "";
+    if (!validImageStudioArtboardId(id)) throw new Error(label + " phải là Asset Vault/Project UUID hợp lệ do server cấp.");
+    return id;
+  }
+  function imageArtboardPayload(fields) {
+    const title = imageStudioLine(fields.title, "Tên artboard", 2, 180, false);
+    const imageIntent = imageStudioLine(fields.image_intent || "create", "Ý định direction", 1, 32, false).toLowerCase();
+    const language = imageStudioLine(fields.language || "vi", "Ngôn ngữ direction", 1, 100, false);
+    const aspectRatio = imageStudioLine(fields.aspect_ratio || "1:1", "Tỷ lệ khung hình", 1, 32, false);
+    const outputFormat = imageStudioLine(fields.output_format || "png", "Định dạng đích", 1, 16, false).toLowerCase();
+    const creativeBrief = imageStudioBody(fields.creative_brief, "Creative brief", 12000, false);
+    const styleDirection = imageStudioBody(fields.style_direction, "Style direction", 6000, true);
+    const negativeDirection = imageStudioBody(fields.negative_direction, "Điều cần tránh", 4000, true);
+    const tags = imageStudioTags(fields.tags);
+    if (!IMAGE_STUDIO_INTENTS.has(imageIntent)) throw new Error("Ý định Image Studio không hợp lệ.");
+    if (!IMAGE_STUDIO_ASPECT_RATIOS.has(aspectRatio)) throw new Error("Tỷ lệ khung hình Image Studio không hợp lệ.");
+    if (!IMAGE_STUDIO_OUTPUT_FORMATS.has(outputFormat)) throw new Error("Định dạng đích Image Studio không hợp lệ.");
+    const safety = imageStudioMetadataSafetyError(title, imageIntent, language, aspectRatio, outputFormat, creativeBrief, styleDirection, negativeDirection, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, image_intent: imageIntent, language, aspect_ratio: aspectRatio, output_format: outputFormat, creative_brief: creativeBrief, style_direction: styleDirection, negative_direction: negativeDirection, tags, project_id: imageStudioReference(fields.project_id, "Project liên kết", true) || null };
+  }
+  function imageDirectionPayload(fields) {
+    const title = imageStudioLine(fields.title, "Tên biến thể direction", 2, 180, false);
+    const operation = imageStudioLine(fields.operation || "create", "Loại biến thể", 1, 32, false).toLowerCase();
+    const promptText = imageStudioBody(fields.prompt_text, "Prompt / concept text", 12000, true);
+    const editInstructions = imageStudioBody(fields.edit_instructions, "Chỉ dẫn chỉnh sửa", 6000, true);
+    const compositionNotes = imageStudioBody(fields.composition_notes, "Bố cục & visual notes", 6000, true);
+    const negativeDirection = imageStudioBody(fields.negative_direction, "Điều cần tránh", 4000, true);
+    const assetId = imageStudioReference(fields.asset_id, "Ảnh gốc Asset Vault", true);
+    const referenceAssetId = imageStudioReference(fields.reference_asset_id, "Ảnh tham chiếu Asset Vault", true);
+    const tags = imageStudioTags(fields.tags);
+    if (!IMAGE_STUDIO_INTENTS.has(operation)) throw new Error("Loại biến thể Image Studio không hợp lệ.");
+    if (operation !== "create" && !assetId) throw new Error("Edit, Upscale, Image-to-image và Tách nền cần chọn ảnh gốc từ Asset Vault.");
+    // Keep browser validation aligned with the server's operation contract so
+    // a valid-looking form cannot turn into a preventable 422 receipt.
+    if (operation === "create" && !promptText) throw new Error("Create direction cần prompt / concept text.");
+    if (["edit", "image_to_image"].includes(operation) && !promptText && !editInstructions) throw new Error("Edit và Image-to-image cần prompt hoặc chỉ dẫn chỉnh sửa.");
+    if (["upscale", "remove_background"].includes(operation) && !promptText && !editInstructions && !compositionNotes) throw new Error("Upscale và Tách nền cần prompt, chỉ dẫn chỉnh sửa hoặc visual note.");
+    const safety = imageStudioMetadataSafetyError(title, operation, promptText, editInstructions, compositionNotes, negativeDirection, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, operation, prompt_text: promptText, edit_instructions: editInstructions, composition_notes: compositionNotes, negative_direction: negativeDirection, asset_id: assetId || null, reference_asset_id: referenceAssetId || null, tags };
+  }
+  function imageStudioBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : (source.policy && typeof source.policy === "object" ? source.policy : source);
+    return Boolean(
+      boundary.execution === "authoring_only"
+      && boundary.provider_called === false
+      && boundary.image_created === false
+      && boundary.output_created === false
+      && boundary.media_uploads === false
+      && boundary.browser_media_url === false
+      && boundary.preview_available === false
+      && boundary.job_created === false
+      && boundary.wallet_mutated === false
+      && boundary.payment_started === false
+      && boundary.payment_processed === false
+      && boundary.output_delivery === "guarded"
+    );
+  }
+
   // Subtitle & Transcript Workspace is a separate text-authoring boundary.
   // Unlike a media pipeline it accepts no upload/source/provider/job/file
   // reference.  Cue text may legitimately contain an uttered/displayed URL;
@@ -1982,6 +2103,11 @@
     // feature flag never represents ASR, translation, TTS, dubbing, upload,
     // file export, provider, job, wallet, Xu or payment availability.
     const subtitleStudioEnabled = Boolean(status.flags && status.flags.subtitle_studio_enabled === true);
+    // Image Creative Studio is deliberately fail-closed by its own feature
+    // flag.  A true flag permits private art-direction records only; it never
+    // indicates an image provider, generator, preview, job, wallet or payment
+    // capability is available.
+    const imageStudioEnabled = Boolean(status.flags && status.flags.image_studio_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -2182,6 +2308,17 @@
       "subtitle-cue-restore-version": Boolean(account && me.csrf_token && subtitleStudioEnabled),
       "subtitle-cue-reorder": Boolean(account && me.csrf_token && subtitleStudioEnabled),
       "subtitle-text-export": Boolean(account && subtitleStudioEnabled),
+      "image-studio-view": Boolean(account && imageStudioEnabled),
+      "image-studio-refresh": Boolean(account && imageStudioEnabled),
+      "image-artboard-create": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-artboard-update": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-artboard-lifecycle": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-artboard-restore-version": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-direction-create": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-direction-update": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-direction-archive": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-direction-restore": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "image-direction-restore-version": Boolean(account && me.csrf_token && imageStudioEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -2245,6 +2382,7 @@
       voiceStudioEnabled,
       videoStudioEnabled,
       subtitleStudioEnabled,
+      imageStudioEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -2321,6 +2459,17 @@
       subtitleStudioReferences: {},
       subtitleStudioEvents: [],
       subtitleStudioReadState: account && subtitleStudioEnabled ? "loading" : "guarded",
+      // Explicitly clear owner-scoped creative metadata during every session
+      // refresh. A disabled flag or failed request must not leave a prior
+      // artboard, asset reference, prompt or history visible in the browser.
+      imageStudioSummary: {},
+      imageArtboards: [],
+      imageArtboardDetail: {},
+      imageArtboardEstimate: {},
+      imageStudioReferences: {},
+      imageStudioEvents: [],
+      imageStudioPolicy: {},
+      imageStudioReadState: account && imageStudioEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -2368,6 +2517,8 @@
         "/video-studio/new": account && videoStudioEnabled ? "processing" : "guarded",
         "/subtitle-studio": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/subtitle-studio/new": account && subtitleStudioEnabled ? "processing" : "guarded",
+        "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
+        "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -2379,7 +2530,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath) || isNativeSubtitleStudioPath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -2458,6 +2609,16 @@
         videoStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
+    if (account && imageStudioEnabled && ["/image-studio", "/image-studio/new"].includes(currentPath)) await hydrateImageStudio();
+    else if (account && imageStudioEnabled && imageArtboardIdFromPath(currentPath)) await hydrateImageArtboard(imageArtboardIdFromPath(currentPath));
+    else if (isNativeImageStudioPath(currentPath)) {
+      // Never use legacy `/image/*` operation history or an untrusted browser
+      // cache as a substitute for a server-enabled, owner-scoped artboard.
+      merge({
+        imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
+        imageStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && subtitleStudioEnabled && ["/subtitle-studio", "/subtitle-studio/new"].includes(currentPath)) await hydrateSubtitleStudio();
     else if (account && subtitleStudioEnabled && subtitleProjectIdFromPath(currentPath)) await hydrateSubtitleProject(subtitleProjectIdFromPath(currentPath));
     else if (isNativeSubtitleStudioPath(currentPath)) {
@@ -2505,7 +2666,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath)) await hydrateCanonicalData();
   }
 
   async function hydrateLinkStatus() {
@@ -3094,6 +3255,90 @@
     }
   }
 
+  async function hydrateImageStudio() {
+    // Read only the private Image Studio API.  `/image`, `/image/edit` and
+    // `/image/resize` remain separate product surfaces and must never fill
+    // artboard state, references or history after this signed read fails.
+    try {
+      const [summaryResult, artboardsResult, eventsResult, referencesResult, policyResult] = await Promise.all([
+        api("/image-studio/summary"),
+        api("/image-studio/artboards"),
+        api("/image-studio/events?limit=50"),
+        api("/image-studio/references"),
+        api("/image-studio/policy")
+      ]);
+      const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
+      const references = referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {};
+      const policy = policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {};
+      if (!imageStudioBoundaryIsSafe(summary) || !imageStudioBoundaryIsSafe(references) || !imageStudioBoundaryIsSafe(policy)) throw new Error("Boundary Image Studio chưa được máy chủ xác nhận.");
+      const artboards = artboardsResult.data && Array.isArray(artboardsResult.data.items)
+        ? artboardsResult.data.items.filter((item) => item && validImageStudioArtboardId(item.id) && validImageStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validImageStudioArtboardId(item.artboard_id) && validImageStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        imageStudioSummary: summary, imageArtboards: artboards, imageStudioEvents: events, imageStudioReferences: references, imageStudioPolicy: policy,
+        imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/image-studio": "ready", "/image-studio/new": "ready" }
+      });
+      return { artboards, events };
+    } catch (_) {
+      merge({
+        imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
+        imageStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), "/image-studio": "guarded", "/image-studio/new": "guarded" }
+      });
+      return { artboards: [], events: [] };
+    }
+  }
+
+  async function hydrateImageArtboard(artboardId) {
+    if (!validImageStudioArtboardId(artboardId)) throw new Error("Mã artboard Image Studio không hợp lệ.");
+    const route = "/image-studio/" + encodeURIComponent(String(artboardId));
+    try {
+      const [detailResult, referencesResult, policyResult] = await Promise.all([
+        api("/image-studio/artboards/" + encodeURIComponent(String(artboardId))),
+        api("/image-studio/references"),
+        api("/image-studio/policy")
+      ]);
+      const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const references = referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {};
+      const policy = policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {};
+      const artboard = data.artboard && typeof data.artboard === "object" ? data.artboard : null;
+      if (!imageStudioBoundaryIsSafe(data) || !imageStudioBoundaryIsSafe(references) || !imageStudioBoundaryIsSafe(policy) || !artboard || !validImageStudioArtboardId(artboard.id) || String(artboard.id) !== String(artboardId) || !validImageStudioRevision(artboard.revision)) {
+        throw new Error("Artboard không còn khả dụng cho Web account hiện tại.");
+      }
+      const archived = String(artboard.state || "") === "archived";
+      let estimate = {};
+      if (!archived) {
+        const estimateResult = await api("/image-studio/artboards/" + encodeURIComponent(String(artboardId)) + "/estimate");
+        estimate = estimateResult.data && typeof estimateResult.data === "object" ? estimateResult.data : {};
+        if (!imageStudioBoundaryIsSafe(estimate)) throw new Error("Máy chủ chưa xác nhận review estimate Image Studio an toàn.");
+      }
+      const directions = Array.isArray(data.directions)
+        ? data.directions.filter((item) => item && validImageStudioDirectionId(item.id) && String(item.artboard_id || "") === String(artboardId) && validImageStudioRevision(item.revision)).slice(0, 250)
+        : [];
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validImageStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = Array.isArray(data.events)
+        ? data.events.filter((item) => item && typeof item === "object" && validImageStudioRevision(item.revision)).slice(0, 50)
+        : [];
+      merge({
+        imageArtboardDetail: { artboard, directions, versions, events, references: data.references && typeof data.references === "object" ? data.references : {}, estimate },
+        imageArtboardEstimate: estimate, imageStudioReferences: references, imageStudioPolicy: policy, imageStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: archived ? "archived" : "ready" }
+      });
+      return { artboard, directions, versions, estimate };
+    } catch (_) {
+      merge({
+        imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
+        imageStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
   async function hydrateSubtitleStudio() {
     // Use only the signed Web-owned Subtitle Studio API.  It must never read
     // broad legacy `/subtitle`, `/translate`, `/dubbing` or `/asr` state.
@@ -3568,7 +3813,7 @@
     // Native authoring workspaces have no generic feature/bridge projection.
     // Return before any canonical endpoint can overwrite their owner-scoped
     // state, including the similarly-prefixed `/voice-studio` route.
-    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path)) return;
+    if (isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
@@ -3991,6 +4236,36 @@
     const submission = acquireSubmission(scope, JSON.stringify(payload));
     if (!submission) {
       toast("Thao tác Video Production Studio đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
+  async function imageStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // All Image Studio writes remain server-authenticated and idempotent.
+    // The browser never reconstructs an image, preview, job, payment or
+    // success from a local form submission; it only accepts a safe receipt.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Image Creative Studio đang chờ máy chủ xác nhận.", "error");
       return null;
     }
     let acknowledged = false;
@@ -4804,6 +5079,161 @@
             if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự scene an toàn.");
             await hydrateVideoPlan(planId);
             toast(result.message || "Đã cập nhật thứ tự scene.");
+          }
+        });
+        return;
+      }
+      if (action === "image-studio-refresh") {
+        const artboardId = imageArtboardIdFromPath(route);
+        if (artboardId) await hydrateImageArtboard(artboardId);
+        else await hydrateImageStudio();
+        toast("Đã làm mới Image Creative Studio của Web account hiện tại.");
+        return;
+      }
+      if (action === "image-artboard-create") {
+        const payload = imageArtboardPayload(fields);
+        await imageStudioMutation({
+          action, route, scope: "image-studio:artboard:create", path: "/image-studio/artboards", payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.artboard && typeof data.artboard === "object" ? data.artboard : null;
+            const artboardId = receipt && validImageStudioArtboardId(receipt.id) ? String(receipt.id) : "";
+            if (!imageStudioBoundaryIsSafe(data) || !artboardId || !validImageStudioRevision(receipt.revision)) {
+              throw new Error("Máy chủ chưa trả receipt artboard Web-native hợp lệ.");
+            }
+            await hydrateImageStudio();
+            toast(result.message || "Đã tạo artboard riêng tư.");
+            window.location.assign(`/image-studio/${encodeURIComponent(artboardId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "image-artboard-update") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageArtboardRevision);
+        if (!validImageStudioArtboardId(artboardId) || !expectedRevision) throw new Error("Mã hoặc revision artboard không hợp lệ.");
+        const payload = { ...imageArtboardPayload(fields), expected_revision: expectedRevision };
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:update`, method: "PATCH",
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}`, payload,
+          onSuccess: async (result) => {
+            if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision artboard an toàn.");
+            await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã lưu revision artboard mới.");
+          }
+        });
+        return;
+      }
+      if (action === "image-artboard-state") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageArtboardRevision);
+        const state = String(detail.imageArtboardState || "").trim().toLowerCase();
+        if (!validImageStudioArtboardId(artboardId) || !expectedRevision || !IMAGE_STUDIO_STATES.has(state)) throw new Error("Trạng thái hoặc revision artboard không hợp lệ.");
+        const current = base().imageArtboardDetail && base().imageArtboardDetail.artboard;
+        const currentState = current && String(current.id || "") === artboardId ? String(current.state || "") : "";
+        if (currentState === "archived" && state !== "draft") throw new Error("Artboard đã archive chỉ có thể được khôi phục về Draft.");
+        if (currentState === "approved" && !["draft", "archived"].includes(state)) throw new Error("Artboard self-review xong cần về Draft trước khi thay đổi review.");
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:state:${state}`,
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.artboard && typeof result.data.artboard === "object" ? result.data.artboard : null;
+            if (!imageStudioBoundaryIsSafe(result.data) || !receipt || !validImageStudioRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái artboard an toàn.");
+            await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã cập nhật trạng thái self-review.");
+          }
+        });
+        return;
+      }
+      if (action === "image-artboard-restore-version") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageArtboardRevision);
+        const targetRevision = validImageStudioRevision(detail.imageArtboardVersion);
+        if (!validImageStudioArtboardId(artboardId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision artboard không hợp lệ.");
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:restore-version:${targetRevision}`,
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version artboard an toàn.");
+            await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã khôi phục version artboard thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "image-direction-create") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageArtboardRevision);
+        if (!validImageStudioArtboardId(artboardId) || !expectedRevision) throw new Error("Mã hoặc revision artboard không hợp lệ.");
+        const payload = { ...imageDirectionPayload(fields), expected_revision: expectedRevision };
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:direction:create`,
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/directions`, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.direction && typeof result.data.direction === "object" ? result.data.direction : null;
+            if (!imageStudioBoundaryIsSafe(result.data) || !receipt || !validImageStudioDirectionId(receipt.id) || String(receipt.artboard_id || "") !== artboardId) {
+              throw new Error("Máy chủ chưa trả receipt biến thể direction hợp lệ.");
+            }
+            await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã thêm biến thể direction riêng tư.");
+          }
+        });
+        return;
+      }
+      if (action === "image-direction-update") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const directionId = String(detail.imageDirectionId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageDirectionRevision);
+        if (!validImageStudioArtboardId(artboardId) || !validImageStudioDirectionId(directionId) || !expectedRevision) throw new Error("Mã hoặc revision biến thể direction không hợp lệ.");
+        const payload = { ...imageDirectionPayload(fields), expected_revision: expectedRevision };
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:direction:${directionId}:update`, method: "PATCH",
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/directions/${encodeURIComponent(directionId)}`, payload,
+          onSuccess: async (result) => {
+            if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision biến thể direction an toàn.");
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã lưu revision biến thể direction mới.");
+          }
+        });
+        return;
+      }
+      if (action === "image-direction-archive" || action === "image-direction-restore") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const directionId = String(detail.imageDirectionId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageDirectionRevision);
+        if (!validImageStudioArtboardId(artboardId) || !validImageStudioDirectionId(directionId) || !expectedRevision) throw new Error("Mã hoặc revision biến thể direction không hợp lệ.");
+        const operation = action.replace("image-direction-", "");
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:direction:${directionId}:${operation}`,
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/directions/${encodeURIComponent(directionId)}/${encodeURIComponent(operation)}`,
+          payload: { expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái biến thể direction an toàn.");
+            await hydrateImageStudio();
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã cập nhật biến thể direction.");
+          }
+        });
+        return;
+      }
+      if (action === "image-direction-restore-version") {
+        const artboardId = String(detail.imageArtboardId || "").trim();
+        const directionId = String(detail.imageDirectionId || "").trim();
+        const expectedRevision = validImageStudioRevision(detail.imageDirectionRevision);
+        const targetRevision = validImageStudioRevision(detail.imageDirectionVersion);
+        if (!validImageStudioArtboardId(artboardId) || !validImageStudioDirectionId(directionId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision biến thể direction không hợp lệ.");
+        await imageStudioMutation({
+          action, route, scope: `image-studio:artboard:${artboardId}:direction:${directionId}:restore-version:${targetRevision}`,
+          path: `/image-studio/artboards/${encodeURIComponent(artboardId)}/directions/${encodeURIComponent(directionId)}/restore-version`,
+          payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!imageStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version biến thể direction an toàn.");
+            await hydrateImageArtboard(artboardId);
+            toast(result.message || "Đã khôi phục version biến thể direction thành revision mới.");
           }
         });
         return;
