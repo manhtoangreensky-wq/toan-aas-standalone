@@ -726,7 +726,8 @@ def test_pwa_caches_only_the_fixed_public_shell() -> None:
     assert '"/api/' not in SERVICE_WORKER
     assert 'wallet, payment, admin' in SERVICE_WORKER
     assert 'fetch(request).catch(() => caches.match(url.pathname).then((cached) => cached || Response.error()))' in SERVICE_WORKER
-    assert 'portal-shell-v4' in SERVICE_WORKER
+    # A public-shell change must invalidate the prior PWA shell bundle.
+    assert 'portal-shell-v5' in SERVICE_WORKER
 
 
 def test_public_landing_hides_authenticated_shell_without_leaving_a_layout_slot() -> None:
@@ -1215,7 +1216,7 @@ def test_telegram_one_time_challenges_auto_resume_only_in_the_same_visible_brows
     assert "scheduleTelegramLoginPolling();" in INTEGRATION
     assert "scheduleTelegramLinkPolling();" in INTEGRATION
     assert 'window.addEventListener("visibilitychange"' in INTEGRATION
-    challenge_slice = INTEGRATION[INTEGRATION.index("function telegramChallengePending(flow)"):INTEGRATION.index("function looksLikePaymentCard(candidate)")]
+    challenge_slice = INTEGRATION[INTEGRATION.index("function telegramChallengePending(flow)"):INTEGRATION.index("function supportSensitiveContentKind")]
     assert "localStorage" not in challenge_slice
     assert "telegram_id" not in challenge_slice
     assert 'api("/auth/telegram/login/complete"' in INTEGRATION
@@ -1380,7 +1381,9 @@ def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_a
     assert 'layout: "campaign-planner", action: "campaign-create"' in PORTAL
     assert 'case "campaign-planner": return renderCampaignPlanner(page, context);' in PORTAL
     assert 'case "campaign-detail": return renderCampaignDetail(page, context);' in PORTAL
-    assert "const WEB_LOCAL_ACTIONS = new Set([\"campaign-create\", \"campaign-update\", \"campaign-update-status\"]);" in PORTAL
+    local_actions = PORTAL[PORTAL.index("const WEB_LOCAL_ACTIONS = new Set(["):PORTAL.index("]);", PORTAL.index("const WEB_LOCAL_ACTIONS = new Set(["))]
+    for action in ("campaign-create", "campaign-update", "campaign-update-status"):
+        assert f'"{action}"' in local_actions
     assert "function renderCampaignPlanner(page, context)" in PORTAL
     assert "function renderCampaignDetail(page, context)" in PORTAL
     assert "function campaignPlanHref(plan)" in PORTAL

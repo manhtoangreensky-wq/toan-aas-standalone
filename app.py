@@ -28,6 +28,7 @@ import copyfast_image_operations
 import copyfast_memory
 import copyfast_project_packages
 import copyfast_projects
+import copyfast_support
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
 from copyfast_db import (
     ensure_asset_vault_persistence,
@@ -183,6 +184,12 @@ async def security_headers(request: Request, call_next):
     # rate limited before SQLite work.  GET views stay unthrottled here while
     # signed-session/ownership checks remain mandatory in the router.
     memory_write = request.method == "POST" and request.url.path.startswith("/api/v1/memory/")
+    # Web Support Desk writes are durable, owner-scoped customer/operator
+    # mutations.  Keep a narrow pre-DB gate separate from generic auth and
+    # memory activity; it does not relax the router's CSRF/role/idempotency
+    # checks and does not affect the legacy Bot bridge ticket endpoint.
+    support_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/cases")
+    support_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/admin/cases")
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
     if asset_archive:
         rate_limit = 30
@@ -198,6 +205,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 10
     if memory_write:
         rate_limit = 40
+    if support_write:
+        rate_limit = 20
+    if support_admin_write:
+        rate_limit = 30
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -258,6 +269,7 @@ app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_memory.router)
+app.include_router(copyfast_support.router)
 
 
 @app.get("/health")
@@ -319,11 +331,16 @@ async def page(page_path: str, request: Request):
     # its own Web surface so it can have independent readiness and filtering.
     if normalized == "/music/library" and request.query_params.get("type") == "sfx":
         return RedirectResponse("/music/sfx-library", status_code=307)
+    # Support Desk is a separately-owned Web service: its operator screen is
+    # authorized with a server-side signed Web role and deliberately
+    # does not require a Telegram/Bot identity.  Every other Admin ERP route
+    # retains the stricter live canonical Bot-admin verification.
+    if normalized == "/admin/support" or normalized.startswith("/admin/support/"):
+        copyfast_support.require_support_staff(current_session(request)["account"])
     # The portal renderer is intentionally generic for parity routes, so this
-    # explicit guard is necessary before it can render any /admin/* surface.
-    # It verifies both the signed web session and the bot's current canonical
-    # admin role; browser-supplied IDs never influence this decision.
-    if normalized == "/admin" or normalized.startswith("/admin/"):
+    # explicit guard is necessary before it can render any remaining /admin/*
+    # surface. Browser-supplied IDs never influence this decision.
+    elif normalized == "/admin" or normalized.startswith("/admin/"):
         await require_canonical_admin(request)
     # app.toanaas.vn is an application origin, not the marketing site. A
     # signed Web account owns an independent Workspace even before it chooses

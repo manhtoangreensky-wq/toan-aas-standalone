@@ -65,9 +65,10 @@
   const CAMPAIGN_PLAN_OBJECTIVES = new Set(["affiliate", "traffic", "conversion", "revenue", "community"]);
   const CAMPAIGN_PLAN_STATUSES = new Set(["draft", "review", "approved", "scheduled", "archived"]);
   const ANALYTICS_BOT_FORMATS = new Set(["txt", "csv"]);
-  const SUPPORT_SECRET_PATTERN = /\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|client[ _-]?secret|secret(?:[ _-]?key)?|password|passphrase|authorization)\b\s*(?:[:=]|\bis\b)\s*(?:bearer\s+)?[A-Za-z0-9_./+=:-]{8,}|\bbearer\s+[A-Za-z0-9._~+/=-]{12,}|\b(?:sk|pk|rk)_[A-Za-z0-9_-]{16,}|\b(?:otp|mã\s*xác\s*thực|ma\s*xac\s*thuc|cvv|cvc)\s*[:=]?\s*\d{3,8}\b/i;
-  const SUPPORT_CARD_CANDIDATE_PATTERN = /\b(?:\d[ -]?){13,19}\b/g;
-  const SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN = /\b(?:txid|transaction(?:\s+(?:hash|id))?|mã\s*(?:giao\s*)?dịch|ma\s*(?:giao\s*)?dich|biên\s*lai|bien\s*lai|chứng\s*từ|chung\s*tu|bill|(?:số|so)\s*tài\s*khoản|bank\s*account|qr\s*(?:thanh\s*toán|payment|code)?)\b/i;
+  const SUPPORT_SECRET_PATTERN = /\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|token|client[ _-]?secret|secret(?:[ _-]?key)?|password|passphrase|authorization)\b\s*(?:[:=]|\bis\b)\s*(?:bearer\s+)?[A-Za-z0-9_./+=:-]{8,}|\bbearer\s+[A-Za-z0-9._~+/=-]{12,}|\b(?:otp|cvv|cvc|pin|mã\s*(?:xác\s*(?:minh|thực)|otp)|ma\s*(?:xac\s*(?:minh|thuc)|otp)|verification\s+(?:code|token)|one[ -]?time(?:\s+(?:pass(?:word|code)?|code))?)\b/i;
+  const SUPPORT_KNOWN_SECRET_TOKEN_PATTERN = /(?<![A-Za-z0-9_])(?:(?:sk|pk|rk)[_-][A-Za-z0-9_-]{12,}|gh(?:p|o|u|s|r)_[A-Za-z0-9]{12,}|github_pat_[A-Za-z0-9_]{12,}|xox(?:b|p|a|r|s)-[A-Za-z0-9-]{12,}|AIza[0-9A-Za-z_-]{20,}|(?:AKIA|ASIA)[0-9A-Z]{16}|eyJ[A-Za-z0-9_-]{12,}\.[A-Za-z0-9_-]{8,}\.[A-Za-z0-9_-]{8,})(?![A-Za-z0-9_])/i;
+  const SUPPORT_CARD_CANDIDATE_PATTERN = /(?<![0-9A-Za-z])[0-9](?:[\s./-]*[0-9]){12,18}(?![0-9A-Za-z])/g;
+  const SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN = /\b(?:tx(?:id|n)?|transaction\s+(?:hash|id|reference|no\.?|number)|mã\s*(?:(?:giao\s*)?(?:dịch|gd)|tham\s*chiếu|thanh\s*toán)|ma\s*(?:(?:giao\s*)?(?:dich|gd)|tham\s*chieu|thanh\s*toan)|biên\s*lai|bien\s*lai|chứng\s*từ|chung\s*tu|bill|số\s*tài\s*khoản|so\s*tai\s*khoan|stk|tài\s*khoản\s*(?:ngân\s*hàng|bank)|tai\s*khoan\s*(?:ngan\s*hang|bank)|bank\s+account|account\s+(?:number|no|id)|qr\s*(?:code|thanh\s*toán|thanh\s*toan)?)\b/i;
   let jobPollTimer = 0;
   let jobPollFailures = 0;
   let paymentPollTimer = 0;
@@ -208,26 +209,38 @@
     telegramLinkPollDeadline = 0;
   }
 
-  function looksLikePaymentCard(candidate) {
-    const digits = String(candidate || "").replace(/\D/g, "");
-    if (digits.length < 13 || digits.length > 19 || new Set(digits).size === 1) return false;
-    let total = 0;
-    for (let index = 0; index < digits.length; index += 1) {
-      let value = Number(digits[digits.length - 1 - index]);
-      if (index % 2 === 1) value = value > 4 ? (value * 2) - 9 : value * 2;
-      total += value;
-    }
-    return total % 10 === 0;
+  function supportSensitiveContentKind(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN.test(text)) return "manual-payment";
+    const candidates = text.match(SUPPORT_CARD_CANDIDATE_PATTERN) || [];
+    if (SUPPORT_SECRET_PATTERN.test(text) || SUPPORT_KNOWN_SECRET_TOKEN_PATTERN.test(text) || candidates.length) return "secret-or-card";
+    return "";
   }
 
   function validateSupportIntake(subject, detail) {
-    const text = `${String(subject || "")}\n${String(detail || "")}`;
-    const candidates = text.match(SUPPORT_CARD_CANDIDATE_PATTERN) || [];
-    if (SUPPORT_MANUAL_PAYMENT_PROOF_PATTERN.test(text)) {
+    const sensitiveKind = supportSensitiveContentKind(subject, detail);
+    if (sensitiveKind === "manual-payment") {
       return "Nạp thủ công không nhận bill, TXID, số tài khoản hoặc QR trong Web App. Hãy mở Bot đã liên kết và dùng /thucong để đối soát an toàn.";
     }
-    if (SUPPORT_SECRET_PATTERN.test(text) || candidates.some((item) => looksLikePaymentCard(item))) {
+    if (sensitiveKind) {
       return "Ticket không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ. Hãy xóa dữ liệu nhạy cảm trước khi gửi.";
+    }
+    return "";
+  }
+
+  // The native Support Desk uses the same client-side sensitive-data preflight
+  // as the legacy bridge ticket form, but it never redirects people into a
+  // Bot flow.  The server repeats this validation authoritatively.
+  function validateWebSupportText(...values) {
+    const sensitiveKind = supportSensitiveContentKind(...values);
+    if (sensitiveKind === "manual-payment") {
+      return "Web Support Desk không nhận bill, TXID, số tài khoản hoặc QR thanh toán trong nội dung hỗ trợ.";
+    }
+    // Native Support Desk intentionally follows the stricter server contract:
+    // reject any 13–19 digit card-shaped sequence, even when it does not pass
+    // Luhn, so client/server messages do not diverge around sensitive input.
+    if (sensitiveKind) {
+      return "Web Support Desk không nhận API key, token, mật khẩu, OTP/CVV hoặc số thẻ.";
     }
     return "";
   }
@@ -612,6 +625,104 @@
   function merge(next) {
     window.__TOAN_AAS_PORTAL__ = { ...base(), ...next };
     if (window.TOANAASPortal) window.TOANAASPortal.mount(window.__TOAN_AAS_PORTAL__);
+  }
+
+  // Keep the Web-native Support Desk helpers outside the job-polling region.
+  // They never read a provider/job record and remain independently available
+  // to a signed Web account without a Bot bridge.
+  const SUPPORT_CASE_STATES = new Set(["new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"]);
+  const SUPPORT_CASE_CATEGORIES = new Set([
+    "payment_topup", "image_error", "video_error", "document_pdf", "package_combo", "refund", "feature_request",
+    "lead_consulting", "general_support", "service_consulting", "premium_lead", "custom_bot_lead", "other"
+  ]);
+  const SUPPORT_CASE_PRIORITIES = new Set(["low", "normal", "high", "urgent"]);
+
+  function validSupportCaseId(value) {
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
+  }
+
+  function validSupportRevision(value) {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed >= 1 && parsed <= 1000000 ? parsed : 0;
+  }
+
+  function supportCaseIdFromPath(path) {
+    const match = /^\/tickets\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validSupportCaseId(id) ? id : "";
+  }
+
+  function supportAdminCaseIdFromPath(path) {
+    const match = /^\/admin\/support\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validSupportCaseId(id) ? id : "";
+  }
+
+  function isNativeSupportPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/support" || normalized === "/tickets" || Boolean(supportCaseIdFromPath(normalized))
+      || normalized === "/admin/support" || Boolean(supportAdminCaseIdFromPath(normalized));
+  }
+
+  function supportCaseFilterPayload(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const state = String(source.state || "all").trim().toLowerCase();
+    const category = String(source.category || "").trim().toLowerCase();
+    const q = String(source.q || "").replace(/\s+/g, " ").trim();
+    if (state !== "all" && !SUPPORT_CASE_STATES.has(state)) throw new Error("Bộ lọc trạng thái Support Desk không hợp lệ.");
+    if (category && !SUPPORT_CASE_CATEGORIES.has(category)) throw new Error("Bộ lọc nhóm Support Desk không hợp lệ.");
+    if (q.length > 80) throw new Error("Từ khóa Support Desk tối đa 80 ký tự.");
+    return { state, category, q };
+  }
+
+  function supportCasesPath(filter, admin) {
+    const query = new URLSearchParams({ limit: admin ? "50" : "30", state: filter.state || "all" });
+    if (filter.category) query.set("category", filter.category);
+    if (filter.q) query.set("q", filter.q);
+    return `${admin ? "/support/admin/cases" : "/support/cases"}?${query.toString()}`;
+  }
+
+  function supportCreatePayload(fields) {
+    const category = String(fields.category || "general_support").trim().toLowerCase();
+    const priority = String(fields.priority || "normal").trim().toLowerCase();
+    const subject = String(fields.subject || "").replace(/\s+/g, " ").trim();
+    const detail = String(fields.detail || "").trim();
+    if (!SUPPORT_CASE_CATEGORIES.has(category)) throw new Error("Hãy chọn nhóm yêu cầu hợp lệ.");
+    if (!SUPPORT_CASE_PRIORITIES.has(priority)) throw new Error("Hãy chọn mức ưu tiên hợp lệ.");
+    if (subject.length < 3 || subject.length > 180) throw new Error("Chủ đề cần từ 3 đến 180 ký tự.");
+    if (detail.length < 3 || detail.length > 4000) throw new Error("Nội dung cần từ 3 đến 4.000 ký tự.");
+    const safetyError = validateWebSupportText(subject, detail);
+    if (safetyError) throw new Error(safetyError);
+    return { category, priority, subject, detail };
+  }
+
+  function supportReplyPayload(fields) {
+    const body = String(fields.body || "").trim();
+    if (!body || body.length > 4000) throw new Error("Phản hồi cần từ 1 đến 4.000 ký tự.");
+    const safetyError = validateWebSupportText(body);
+    if (safetyError) throw new Error(safetyError);
+    return { body };
+  }
+
+  function supportAdminReplyPayload(fields) {
+    const reply = supportReplyPayload(fields);
+    const visibility = String(fields.visibility || "public").trim().toLowerCase();
+    const nextState = String(fields.next_state || "").trim().toLowerCase();
+    if (!["public", "internal"].includes(visibility)) throw new Error("Phạm vi phản hồi Support Desk không hợp lệ.");
+    if (nextState && !SUPPORT_CASE_STATES.has(nextState)) throw new Error("Trạng thái sau phản hồi không hợp lệ.");
+    return { ...reply, visibility, next_state: nextState };
+  }
+
+  function supportAdminUpdatePayload(fields) {
+    const state = String(fields.state || "").trim().toLowerCase();
+    const priority = String(fields.priority || "").trim().toLowerCase();
+    const operationNote = String(fields.operation_note || "").trim();
+    if (!SUPPORT_CASE_STATES.has(state)) throw new Error("Trạng thái Support Desk không hợp lệ.");
+    if (!SUPPORT_CASE_PRIORITIES.has(priority)) throw new Error("Ưu tiên Support Desk không hợp lệ.");
+    if (operationNote.length < 3 || operationNote.length > 360) throw new Error("Lý do thao tác cần từ 3 đến 360 ký tự.");
+    const safetyError = validateWebSupportText(operationNote);
+    if (safetyError) throw new Error(safetyError);
+    return { state, priority, operation_note: operationNote };
   }
 
   function activeJob(record) {
@@ -1057,6 +1168,10 @@
     // Memory Center is a signed-account Web-native capability. Its flag does
     // not imply Bot bridge, Telegram, wallet, payment or provider readiness.
     const memoryCenterEnabled = Boolean(status.flags && status.flags.memory_center_enabled === true);
+    // Support Desk has the same independence property: a Telegram link or a
+    // Core Bridge may be absent while a signed Web account can still use its
+    // own case store.  Its server route remains the real feature gate.
+    const supportDeskEnabled = Boolean(status.flags && status.flags.support_desk_enabled === true);
     // This native page must never display the static catalog's `ready` badge
     // while its server-side execution gate is intentionally off.
     const nativeDocumentPageStates = {
@@ -1173,6 +1288,17 @@
       "memory-reminder-pause": Boolean(account && me.csrf_token && memoryCenterEnabled),
       "memory-reminder-resume": Boolean(account && me.csrf_token && memoryCenterEnabled),
       "memory-reminder-cancel": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      // Native support reads/writes are server-authenticated Web operations.
+      // Admin support capability intentionally does not trust `account.role`
+      // here: the support endpoints check protected role_cache themselves.
+      "support-case-view": Boolean(account && supportDeskEnabled),
+      "support-case-refresh": Boolean(account && supportDeskEnabled),
+      "support-case-create": Boolean(account && me.csrf_token && supportDeskEnabled),
+      "support-case-reply": Boolean(account && me.csrf_token && supportDeskEnabled),
+      "support-case-transition": Boolean(account && me.csrf_token && supportDeskEnabled),
+      "support-admin-case-view": Boolean(account && supportDeskEnabled),
+      "support-admin-case-refresh": Boolean(account && supportDeskEnabled),
+      "support-admin-case-write": Boolean(account && me.csrf_token && supportDeskEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1219,6 +1345,7 @@
       imageResizeEnabled,
       imageEnhanceEnabled,
       memoryCenterEnabled,
+      supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
       memorySummary: {},
@@ -1228,6 +1355,20 @@
       memoryNoteDetail: {},
       memoryNoteFilter: { q: "", priority: "", state: "all" },
       memoryReadState: account && memoryCenterEnabled ? "loading" : "guarded",
+      // Clear Support Desk projections before every authenticated hydration.
+      // A signed account switch or failed read must never leave a prior
+      // customer's case/thread/role visible in the browser.
+      supportSummary: {},
+      supportCases: [],
+      supportEvents: [],
+      supportCaseDetail: {},
+      supportCaseFilter: { q: "", state: "all", category: "" },
+      supportReadState: account && supportDeskEnabled ? "loading" : "guarded",
+      supportAdminSummary: {},
+      supportAdminCases: [],
+      supportAdminCaseDetail: {},
+      supportAdminCaseFilter: { q: "", state: "all", category: "" },
+      supportAdminReadState: account && supportDeskEnabled ? "loading" : "guarded",
       // These owner-scoped reads start as loading on every signed hydration.
       // A native operation form may only become actionable after both the
       // Asset Vault source projection and its own history projection return.
@@ -1248,7 +1389,10 @@
         ...nativeDocumentPageStates,
         ...nativeImagePageStates,
         "/notes": account && memoryCenterEnabled ? "processing" : "guarded",
-        "/reminders": account && memoryCenterEnabled ? "processing" : "guarded"
+        "/reminders": account && memoryCenterEnabled ? "processing" : "guarded",
+        "/support": account && supportDeskEnabled ? "processing" : "guarded",
+        "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
+        "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
       }
     });
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
@@ -1287,6 +1431,20 @@
       memorySummary: {}, memoryNotes: [], memoryReminders: [], memoryEvents: [], memoryNoteDetail: {}, memoryReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
+    if (account && supportDeskEnabled) {
+      if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
+      else if (supportCaseIdFromPath(currentPath)) await hydrateSupportCase(supportCaseIdFromPath(currentPath));
+      else if (currentPath === "/admin/support") await hydrateSupportAdmin();
+      else if (supportAdminCaseIdFromPath(currentPath)) await hydrateSupportAdminCase(supportAdminCaseIdFromPath(currentPath));
+    } else if (isNativeSupportPath(currentPath)) {
+      // Support pages never fall back to Bot tickets, generic admin data or a
+      // stale browser cache when the local feature gate/session is unavailable.
+      merge({
+        supportSummary: {}, supportCases: [], supportEvents: [], supportCaseDetail: {}, supportReadState: "guarded",
+        supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {}, supportAdminReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1306,7 +1464,11 @@
     // provider call from the Web App, so expose its safe entry point even when
     // a private bridge data read is temporarily unavailable.
     if (account && telegramLinked && currentPath === "/wallet/topup") await hydratePaymentOptions();
-    if (bridgeAvailable) await hydrateCanonicalData();
+    // Native Support Desk routes have their own narrow API boundary.  Even if
+    // a Telegram/Core Bridge happens to be available, do not let the generic
+    // canonical hydrator overwrite their data with `/support/tickets` or an
+    // `/admin/*` bridge projection.
+    if (bridgeAvailable && !isNativeSupportPath(currentPath)) await hydrateCanonicalData();
   }
 
   async function hydrateLinkStatus() {
@@ -1433,6 +1595,135 @@
     const reminders = Array.isArray(detail.reminders) ? detail.reminders.filter((item) => item && validMemoryId(item.id)).slice(0, 20) : [];
     merge({ memoryNoteDetail: { note, versions, reminders } });
     return { note, versions, reminders };
+  }
+
+  async function hydrateSupportDesk(filterValue) {
+    // Support Desk is a signed-account Web projection, deliberately separate
+    // from `hydrateCanonicalData` and the legacy `/support/tickets` bridge.
+    const filter = supportCaseFilterPayload(filterValue === undefined ? base().supportCaseFilter : filterValue);
+    try {
+      const [summaryResult, casesResult, eventsResult] = await Promise.all([
+        api("/support/summary"),
+        api(supportCasesPath(filter, false)),
+        api("/support/events?limit=40")
+      ]);
+      const cases = casesResult.data && Array.isArray(casesResult.data.items)
+        ? casesResult.data.items.filter((item) => item && validSupportCaseId(item.id)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && typeof item === "object").slice(0, 100)
+        : [];
+      const currentPath = (base().path || window.location.pathname).split("?")[0];
+      merge({
+        supportSummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
+        supportCases: cases,
+        supportEvents: events,
+        supportCaseFilter: filter,
+        supportReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "read_only", "/support": "ready", "/tickets": "read_only" }
+      });
+      return { cases, events };
+    } catch (_) {
+      const currentPath = (base().path || window.location.pathname).split("?")[0];
+      // Never retain an old account's support content after a failed scoped
+      // read.  There is no Bot fallback and no browser-side case cache.
+      merge({
+        supportSummary: {}, supportCases: [], supportEvents: [], supportCaseDetail: {}, supportCaseFilter: filter, supportReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded", "/support": "guarded", "/tickets": "guarded" }
+      });
+      return { cases: [], events: [] };
+    }
+  }
+
+  async function hydrateSupportCase(caseId) {
+    if (!validSupportCaseId(caseId)) throw new Error("Mã yêu cầu Support Desk không hợp lệ.");
+    try {
+      const result = await api(`/support/cases/${encodeURIComponent(String(caseId))}`);
+      const detail = result.data && typeof result.data === "object" ? result.data : {};
+      const caseItem = detail.case && typeof detail.case === "object" ? detail.case : null;
+      if (!caseItem || !validSupportCaseId(caseItem.id) || String(caseItem.id) !== String(caseId)) throw new Error("Yêu cầu không còn thuộc Web account hiện tại.");
+      const messages = Array.isArray(detail.messages) ? detail.messages.filter((item) => item && typeof item === "object").slice(0, 500) : [];
+      const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 300) : [];
+      merge({
+        supportCaseDetail: { case: caseItem, messages, events, delivery: String(detail.delivery || "web_view_only") },
+        supportReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [`/tickets/${caseId}`]: "read_only" }
+      });
+      return { case: caseItem, messages, events };
+    } catch (_) {
+      merge({
+        supportCaseDetail: {}, supportReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [`/tickets/${caseId}`]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  async function hydrateSupportAdmin(filterValue) {
+    // The endpoints itself verifies role_cache (admin/support_manager/
+    // support_operator). The client never decides that a signed account is a
+    // support operator; it may only request a server-redacted projection.
+    const filter = supportCaseFilterPayload(filterValue === undefined ? base().supportAdminCaseFilter : filterValue);
+    try {
+      const [summaryResult, casesResult] = await Promise.all([
+        api("/support/admin/summary"),
+        api(supportCasesPath(filter, true))
+      ]);
+      const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
+      const role = String(summary.operator_role || "").trim();
+      if (!["manager", "operator"].includes(role)) throw new Error("Máy chủ chưa cấp role Support Desk cho account này.");
+      const cases = casesResult.data && Array.isArray(casesResult.data.items)
+        ? casesResult.data.items.filter((item) => item && validSupportCaseId(item.id)).slice(0, 100)
+        : [];
+      merge({
+        supportAdminSummary: summary,
+        supportAdminCases: cases,
+        supportAdminCaseFilter: filter,
+        supportAdminReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/admin/support": "read_only" }
+      });
+      return { summary, cases };
+    } catch (_) {
+      merge({
+        supportAdminSummary: {}, supportAdminCases: [], supportAdminCaseDetail: {}, supportAdminCaseFilter: filter, supportAdminReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/admin/support": "guarded" }
+      });
+      return null;
+    }
+  }
+
+  async function hydrateSupportAdminCase(caseId) {
+    if (!validSupportCaseId(caseId)) throw new Error("Mã yêu cầu Support Desk không hợp lệ.");
+    try {
+      // Keep the summary read as a server-side proof of the operator role;
+      // client-side role/localStorage can never unlock the case detail.
+      const [summaryResult, detailResult] = await Promise.all([
+        api("/support/admin/summary"),
+        api(`/support/admin/cases/${encodeURIComponent(String(caseId))}`)
+      ]);
+      const summary = summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {};
+      const role = String(summary.operator_role || "").trim();
+      const detail = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const caseItem = detail.case && typeof detail.case === "object" ? detail.case : null;
+      if (!["manager", "operator"].includes(role) || !caseItem || !validSupportCaseId(caseItem.id) || String(caseItem.id) !== String(caseId)) {
+        throw new Error("Case không còn khả dụng cho role Support Desk này.");
+      }
+      const messages = Array.isArray(detail.messages) ? detail.messages.filter((item) => item && typeof item === "object").slice(0, 500) : [];
+      const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 300) : [];
+      merge({
+        supportAdminSummary: summary,
+        supportAdminCaseDetail: { case: caseItem, messages, events, delivery: String(detail.delivery || "web_view_only") },
+        supportAdminReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [`/admin/support/${caseId}`]: "read_only" }
+      });
+      return { summary, case: caseItem, messages, events };
+    } catch (_) {
+      merge({
+        supportAdminCaseDetail: {}, supportAdminReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [`/admin/support/${caseId}`]: "guarded" }
+      });
+      return null;
+    }
   }
 
   function imageResizePrivateReadPageState(assetState, operationState) {
@@ -2057,6 +2348,175 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "support-cases-filter") {
+        const filter = supportCaseFilterPayload(fields);
+        await hydrateSupportDesk(filter);
+        toast("Đã cập nhật danh sách yêu cầu Web.");
+        return;
+      }
+      if (action === "support-cases-refresh") {
+        const caseId = supportCaseIdFromPath(route);
+        if (caseId) await hydrateSupportCase(caseId);
+        else await hydrateSupportDesk();
+        toast("Đã làm mới Web Support Desk.");
+        return;
+      }
+      if (action === "support-case-create") {
+        const payload = supportCreatePayload(fields);
+        const scope = "support:case:create";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Yêu cầu đang được gửi. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/support/cases", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const caseItem = result.data && result.data.case && typeof result.data.case === "object" ? result.data.case : null;
+          const caseId = caseItem && validSupportCaseId(caseItem.id) ? String(caseItem.id) : "";
+          toast(result.message || "Đã ghi nhận yêu cầu trong Web Support Desk.");
+          if (caseId) window.location.assign(`/tickets/${encodeURIComponent(caseId)}`);
+          else await hydrateSupportDesk();
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-case-reply") {
+        const caseId = String(detail.supportCaseId || "").trim();
+        const revision = validSupportRevision(detail.supportCaseRevision);
+        if (!validSupportCaseId(caseId) || !revision) throw new Error("Mã hoặc phiên bản yêu cầu Support Desk không hợp lệ.");
+        const payload = supportReplyPayload(fields);
+        const scope = `support:case:${caseId}:reply`;
+        const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/support/cases/${encodeURIComponent(caseId)}/reply`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, expected_revision: revision, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateSupportCase(caseId);
+          toast(result.message || "Đã thêm phản hồi trong Web Support Desk.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-case-close" || action === "support-case-reopen") {
+        const caseId = String(detail.supportCaseId || "").trim();
+        const revision = validSupportRevision(detail.supportCaseRevision);
+        if (!validSupportCaseId(caseId) || !revision) throw new Error("Mã hoặc phiên bản yêu cầu Support Desk không hợp lệ.");
+        const operation = action === "support-case-close" ? "close" : "reopen";
+        const scope = `support:case:${caseId}:${operation}`;
+        const submission = acquireSubmission(scope, String(revision));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/support/cases/${encodeURIComponent(caseId)}/${operation}`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ expected_revision: revision, confirm: true, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateSupportCase(caseId);
+          toast(result.message || "Đã cập nhật trạng thái yêu cầu Web.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-admin-cases-filter") {
+        const filter = supportCaseFilterPayload(fields);
+        await hydrateSupportAdmin(filter);
+        toast("Đã cập nhật hàng đợi Support Desk.");
+        return;
+      }
+      if (action === "support-admin-cases-refresh") {
+        const caseId = supportAdminCaseIdFromPath(route);
+        if (caseId) await hydrateSupportAdminCase(caseId);
+        else await hydrateSupportAdmin();
+        toast("Đã làm mới hàng đợi Support Desk.");
+        return;
+      }
+      if (action === "support-admin-case-reply") {
+        const caseId = String(detail.supportCaseId || "").trim();
+        const revision = validSupportRevision(detail.supportCaseRevision);
+        if (!validSupportCaseId(caseId) || !revision) throw new Error("Mã hoặc phiên bản case Support Desk không hợp lệ.");
+        const payload = supportAdminReplyPayload(fields);
+        const scope = `support:admin:case:${caseId}:reply`;
+        const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/support/admin/cases/${encodeURIComponent(caseId)}/reply`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, expected_revision: revision, confirm: true, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateSupportAdminCase(caseId);
+          toast(result.message || "Đã lưu phản hồi Support Desk.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "support-admin-case-update") {
+        const caseId = String(detail.supportCaseId || "").trim();
+        const revision = validSupportRevision(detail.supportCaseRevision);
+        if (!validSupportCaseId(caseId) || !revision) throw new Error("Mã hoặc phiên bản case Support Desk không hợp lệ.");
+        const payload = supportAdminUpdatePayload(fields);
+        const scope = `support:admin:case:${caseId}:update`;
+        const submission = acquireSubmission(scope, JSON.stringify({ ...payload, revision }));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/support/admin/cases/${encodeURIComponent(caseId)}/update`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, expected_revision: revision, confirm: true, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateSupportAdminCase(caseId);
+          toast(result.message || "Đã cập nhật triage Support Desk.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "memory-note-filter" || action === "memory-note-filter-clear") {
         const filter = action === "memory-note-filter-clear"
           ? { q: "", priority: "", state: "all" }

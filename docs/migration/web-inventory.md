@@ -7,6 +7,10 @@
 | /add-xu | POST | admin_add_xu |
 | /admin-app | GET | legacy_admin_redirect |
 | /admin/approve-topup | POST | approve_manual_topup |
+| /admin/cases | GET | admin_list_cases |
+| /admin/cases/{case_id} | GET | admin_get_case |
+| /admin/cases/{case_id}/reply | POST | admin_reply_case |
+| /admin/cases/{case_id}/update | POST | admin_update_case |
 | /admin/features/{feature}/freeze | POST | admin_freeze_feature |
 | /admin/jobs | GET | admin_jobs |
 | /admin/jobs/{job_id}/refund | POST | admin_refund_job |
@@ -15,6 +19,7 @@
 | /admin/modules/{module} | GET | admin_module |
 | /admin/payments | GET | admin_payments |
 | /admin/providers | GET | admin_providers |
+| /admin/summary | GET | admin_summary |
 | /admin/summary | GET | admin_summary |
 | /admin/tickets | GET | admin_tickets |
 | /admin/users | GET | admin_users |
@@ -44,6 +49,12 @@
 | /campaigns/{plan_id} | GET | get_campaign_plan |
 | /campaigns/{plan_id} | PATCH | update_campaign_plan |
 | /campaigns/{plan_id}/status | POST | update_campaign_plan_status |
+| /cases | GET | list_cases |
+| /cases | POST | create_case |
+| /cases/{case_id} | GET | get_case |
+| /cases/{case_id}/close | POST | close_case |
+| /cases/{case_id}/reopen | POST | reopen_case |
+| /cases/{case_id}/reply | POST | reply_case |
 | /catalog | GET | feature_catalog |
 | /catalog | GET | workflow_catalog |
 | /chat | POST | add_chat |
@@ -66,6 +77,7 @@
 | /employees | GET | get_employees |
 | /enhance | POST | enhance_image |
 | /events | GET | memory_events |
+| /events | GET | support_events |
 | /features/status | GET | feature_status |
 | /features/{feature}/confirm | POST | feature_confirm |
 | /features/{feature}/draft | POST | feature_draft |
@@ -150,17 +162,5 @@
 | /resize | POST | resize_image |
 | /sales | POST | add_sale |
 | /sales | GET | get_sales |
-| /social | POST | add_post |
-| /social | GET | get_posts |
-| /status | GET | control_status |
-| /storage/admin/grant | POST | admin_grant_storage |
-| /storage/packages | GET | storage_packages |
-| /storage/status/{user_id} | GET | storage_status |
-| /stt | POST | speech_to_text |
-| /suggestions | POST | workflow_suggestions |
-| /summary | GET | memory_summary |
-| /support/tickets | GET | support_tickets |
-| /support/tickets | POST | create_support_ticket |
-| /sync | POST | sync_user |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

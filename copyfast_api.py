@@ -405,6 +405,11 @@ def _flags() -> dict[str, bool]:
         # database.  This flag is intentionally independent of Bot, wallet,
         # payment, provider and persistent-file capability flags.
         "memory_center_enabled": enabled("WEBAPP_MEMORY_CENTER_ENABLED", True),
+        # Support cases/messages are owned by signed Web accounts.  The flag
+        # is independent from the Bot ticket bridge and makes a deliberate
+        # maintenance posture observable to the Portal without hiding the
+        # legacy bridge compatibility routes.
+        "support_desk_enabled": enabled("WEBAPP_SUPPORT_DESK_ENABLED", True),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 

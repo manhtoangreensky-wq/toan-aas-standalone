@@ -153,7 +153,9 @@ def test_document_operation_shell_is_responsive_and_never_pwa_cached_as_private_
     assert ".portal-document-operation-grid { grid-template-columns: 1fr; }" in CSS
     assert "/api/v1/document-operations" in SERVICE_WORKER
     assert "SHELL_PATHS" in SERVICE_WORKER
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v4";' in SERVICE_WORKER
+    # The Support Desk public-shell change deliberately rolls the cache so an
+    # installed PWA cannot keep a stale integration bundle.
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v5";' in SERVICE_WORKER
 
 
 def test_pdf_split_contract_records_separate_private_storage_and_no_bot_payment_provider_execution() -> None:
