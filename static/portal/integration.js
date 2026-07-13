@@ -3218,8 +3218,7 @@
           });
           const output = result.data && typeof result.data === "object" ? result.data : {};
           const directions = Array.isArray(output.directions) ? output.directions.filter((item) => item && typeof item.prompt === "string").slice(0, 3) : [];
-          const engineCalled = output["pro" + "vider_called"];
-          if (String(output.collection_id || "") !== collectionId || Number(output.revision || 0) !== expectedRevision || output.execution !== "local_deterministic_draft_only" || engineCalled !== false || output.charge_started !== false || directions.length !== 3) {
+          if (String(output.collection_id || "") !== collectionId || Number(output.revision || 0) !== expectedRevision || output.execution !== "local_deterministic_draft_only" || output.provider_called !== false || output.charge_started !== false || directions.length !== 3) {
             throw new Error("Máy chủ chưa trả local brief directions Audio Library hợp lệ.");
           }
           merge({ mediaComposer: { ...output, directions, collection_id: collectionId } });

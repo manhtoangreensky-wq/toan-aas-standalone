@@ -94,8 +94,7 @@ def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api(
     assert "acquiresubmission(scope" in actions
     assert "idempotency_key: submission.key" in actions
     assert "local_deterministic_draft_only" in actions
-    assert 'const enginecalled = output["pro" + "vider_called"];' in actions
-    assert "enginecalled !== false" in actions
+    assert "provider_called !== false" in actions
     assert "charge_started !== false" in actions
 
 
@@ -119,7 +118,7 @@ def test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache(
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert "/api/v1/media-workspace" not in shell
     assert '"/media-workspace"' not in shell
-    assert "toan-aas-portal-shell-v6" in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

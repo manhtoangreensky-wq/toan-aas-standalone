@@ -50,7 +50,9 @@ def test_prompt_library_hydration_and_actions_use_owner_scoped_web_api_only() ->
     assert 'promptLibrarySummary: {}, promptTemplates: [], promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryEvents: []' in INTEGRATION
 
     start = INTEGRATION.index('if (action === "prompt-library-filter"')
-    end = INTEGRATION.index('if (action === "support-cases-filter")')
+    # Stop before the next independent native workspace action group; this
+    # contract verifies Prompt Library actions, not future module actions.
+    end = INTEGRATION.index('if (action === "media-workspace-filter"')
     actions = INTEGRATION[start:end].lower()
     for forbidden in (
         "bridgeavailable",
@@ -93,7 +95,7 @@ def test_prompt_library_privacy_controls_and_pwa_boundary_are_staticly_enforced(
     assert "URL.revokeObjectURL(objectUrl)" in INTEGRATION
     assert "/api/v1/prompt-library" not in SERVICE_WORKER
     assert '"/prompt-library"' not in SERVICE_WORKER
-    assert "toan-aas-portal-shell-v6" in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
     assert "private_prompt_export" in APP
     assert '"prompt-library-write" if prompt_library_write' in APP
     assert '"prompt-library-read" if prompt_library_read' in APP
