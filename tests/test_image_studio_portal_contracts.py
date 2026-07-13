@@ -181,5 +181,7 @@ def test_image_studio_private_routes_and_api_are_not_in_pwa_shell_cache() -> Non
         ".portal-image-studio-intro, .portal-image-studio-detail-summary, .portal-image-studio-layout, .portal-image-studio-detail-grid, .portal-image-studio-history-grid { grid-template-columns: 1fr; }",
         ".portal-image-artboard-grid, .portal-image-direction-grid { grid-template-columns: 1fr; }",
         ".portal-image-studio-intro dl, .portal-image-studio-detail-summary dl, .portal-image-studio-estimate-grid, .portal-image-studio-guard-list { grid-template-columns: 1fr; }",
+        ".portal-image-direction-form .portal-fields { grid-template-columns: 1fr; }",
+        ".portal-image-version-list > article { align-items: flex-start; flex-direction: column; }",
     ):
         assert selector in CSS
