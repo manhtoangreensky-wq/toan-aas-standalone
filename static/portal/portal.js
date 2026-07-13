@@ -24,7 +24,10 @@
   }
   const ALLOWED_STATES = new Set([
     "ready", "draft", "awaiting_confirm", "queued", "processing",
-    "completed", "failed", "failed_no_charge", "cancelled", "refunded", "review", "approved", "scheduled", "archived", "unavailable", "guarded", "disabled", "read_only", "error", "empty"
+    "completed", "failed", "failed_no_charge", "cancelled", "refunded", "review", "approved", "scheduled", "archived", "unavailable", "guarded", "disabled", "read_only", "error", "empty",
+    // Web Support Desk owns its own case lifecycle.  These are not job,
+    // provider, wallet or Telegram statuses.
+    "new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"
   ]);
 
   const STATE_LABELS = Object.freeze({
@@ -39,6 +42,13 @@
     approved: "Đã sẵn sàng",
     scheduled: "Đã xếp lịch",
     archived: "Đã lưu trữ",
+    new: "Yêu cầu mới",
+    reviewing: "Đang rà soát",
+    waiting_user: "Chờ bạn phản hồi",
+    waiting_provider: "Chờ đối tác xác minh",
+    refund_pending: "Đang xem xét hoàn tiền",
+    resolved: "Đã xử lý",
+    closed: "Đã đóng",
     cancelled: "Đã hủy",
     refunded: "Đã hoàn Xu",
     read_only: "Chỉ đọc",
@@ -71,10 +81,14 @@
     reports: "◒", security: "◈", ticket: "✉", default: "·"
   });
 
-  // These actions write only Web-owned planning metadata.  They never need a
-  // provider/Core Bridge connection and must not inherit a false "Bot is
-  // running" promise from the broader feature workflow UI.
-  const WEB_LOCAL_ACTIONS = new Set(["campaign-create", "campaign-update", "campaign-update-status"]);
+  // These actions write only Web-owned data.  They never need a provider/Core
+  // Bridge connection and must not inherit a false "Bot is running" promise
+  // from the broader feature workflow UI.
+  const WEB_LOCAL_ACTIONS = new Set([
+    "campaign-create", "campaign-update", "campaign-update-status",
+    "support-case-create", "support-case-reply", "support-case-close", "support-case-reopen",
+    "support-admin-case-reply", "support-admin-case-update"
+  ]);
 
   const LANGUAGE_OPTIONS = Object.freeze([
     { value: "vi", label: "Tiếng Việt" }, { value: "en", label: "English" },
@@ -625,11 +639,19 @@
   customerPage("/assets", "Thư viện tài sản", "Tệp hoàn tất chỉ xuất hiện sau khi Core Bridge xác minh ownership và cung cấp URL ký tạm thời.", ICONS.assets, {
     layout: "assets", action: "none", status: "empty"
   });
-  customerPage("/support", "Hỗ trợ", "Tạo yêu cầu hỗ trợ không kèm secret; ticket hiện nhận nội dung văn bản cho đến khi adapter tệp ký tạm thời được xác minh.", ICONS.support, {
-    fields: copyFields(FIELD_SETS.support), action: "create-ticket", actionLabel: "Tạo ticket", status: "guarded"
+  customerPage("/support", "Web Support Desk", "Tạo và theo dõi yêu cầu trực tiếp trong Web App, với signed session, CSRF, ownership và audit riêng.", ICONS.support, {
+    layout: "support-desk", action: "support-case-create", actionLabel: "Tạo yêu cầu", status: "processing",
+    notes: [
+      "Web Support Desk là không gian độc lập: không copy lịch sử ticket Bot và không gửi Telegram, email hay thông báo ngoài Web.",
+      "Không gửi secret, token, OTP/CVV, số thẻ, bill, TXID, số tài khoản hoặc QR thanh toán vào biểu mẫu hỗ trợ."
+    ]
   });
-  customerPage("/tickets", "Ticket của tôi", "Theo dõi ticket thuộc sở hữu của bạn; nội dung được nạp từ Core Bridge khi phiên hợp lệ.", ICONS.ticket, {
-    layout: "tickets", action: "none", status: "empty"
+  customerPage("/tickets", "Yêu cầu của tôi", "Danh sách yêu cầu Web-native thuộc signed account hiện tại; không phải lịch sử ticket Telegram Bot.", ICONS.ticket, {
+    layout: "support-cases", action: "none", status: "processing",
+    notes: [
+      "Mỗi case và phản hồi chỉ hiện cho account Web sở hữu nó.",
+      "Trạng thái chờ đối tác hoặc hoàn tiền là trạng thái vận hành do nhân sự xác nhận, không phải xác nhận provider hay ledger tự động."
+    ]
   });
   customerPage("/legal", "Điều khoản sử dụng", "Khung hiển thị điều khoản. Nội dung pháp lý chính thức sẽ được máy chủ phát hành theo phiên bản.", ICONS.legal, {
     layout: "legal", access: "public", action: "none", status: "ready"
@@ -796,7 +818,13 @@
   adminPage("/admin/promos", "Khuyến mãi", "Quản lý promo phải có permission, confirmation và audit event.", ICONS.pricing);
   adminPage("/admin/leads", "Leads", "Theo dõi lead và CSKH theo quyền server-side.", ICONS.users);
   adminPage("/admin/tickets", "Tickets", "Phân luồng ticket với dữ liệu đã được kiểm soát quyền truy cập.", ICONS.ticket);
-  adminPage("/admin/support", "CSKH", "Không gian vận hành hỗ trợ, không hiển thị PII khi bridge chưa cấp quyền.", ICONS.support);
+  adminPage("/admin/support", "Web Support Desk", "Không gian CSKH Web-native được máy chủ cấp quyền support riêng; không phụ thuộc Telegram admin bridge.", ICONS.support, {
+    layout: "support-admin", action: "none", status: "processing",
+    notes: [
+      "Quyền admin, support_manager hoặc support_operator do máy chủ xác minh; browser không gửi admin ID hoặc role.",
+      "Không có thao tác ví Xu, PayOS, provider, refund ledger, job hoặc external delivery trong Support Desk."
+    ]
+  });
   adminPage("/admin/campaigns", "Campaign Center", "Campaign, brief và kết quả chỉ đọc từ Bot canonical; chưa có adapter write nào được mở từ browser.", ICONS.prompt, {}, ["/admin/campaign", "/admin/campaign_new", "/admin/campaign_preset"]);
   adminPage("/admin/calendar", "Content Calendar", "Lịch nội dung chỉ hiển thị khi Bot cấp adapter read-only có redaction; không tạo hoặc publish lịch giả.", ICONS.system, {}, ["/admin/calendar_plan"]);
   adminPage("/admin/approvals", "Approval Queue", "Duyệt job/publish cần workflow canonical, confirmation và audit; Web giữ chế độ chỉ đọc cho đến khi adapter được phê duyệt.", ICONS.security, {}, ["/admin/approve_ready", "/admin/approve_job", "/admin/approve_publish"]);
@@ -917,6 +945,45 @@
       memoryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.memoryReadState || ""))
         ? String(source.memoryReadState)
         : "guarded",
+      // Support Desk is a separate Web-native case store.  It never falls
+      // back to Bot support/ticket state, and redacted page data must survive
+      // render normalization after a successful owner-scoped hydration.
+      supportDeskEnabled: source.supportDeskEnabled === true,
+      supportSummary: source.supportSummary && typeof source.supportSummary === "object" ? source.supportSummary : {},
+      supportCases: Array.isArray(source.supportCases) ? source.supportCases.slice(0, 100) : [],
+      supportEvents: Array.isArray(source.supportEvents) ? source.supportEvents.slice(0, 100) : [],
+      supportCaseDetail: source.supportCaseDetail && typeof source.supportCaseDetail === "object" ? source.supportCaseDetail : {},
+      supportCaseFilter: {
+        q: source.supportCaseFilter && typeof source.supportCaseFilter.q === "string"
+          ? source.supportCaseFilter.q.replace(/\s+/g, " ").trim().slice(0, 80)
+          : "",
+        state: source.supportCaseFilter && ["all", "new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"].includes(String(source.supportCaseFilter.state || ""))
+          ? String(source.supportCaseFilter.state)
+          : "all",
+        category: source.supportCaseFilter && /^[a-z_]{0,48}$/.test(String(source.supportCaseFilter.category || ""))
+          ? String(source.supportCaseFilter.category || "")
+          : ""
+      },
+      supportReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.supportReadState || ""))
+        ? String(source.supportReadState)
+        : "guarded",
+      supportAdminSummary: source.supportAdminSummary && typeof source.supportAdminSummary === "object" ? source.supportAdminSummary : {},
+      supportAdminCases: Array.isArray(source.supportAdminCases) ? source.supportAdminCases.slice(0, 100) : [],
+      supportAdminCaseDetail: source.supportAdminCaseDetail && typeof source.supportAdminCaseDetail === "object" ? source.supportAdminCaseDetail : {},
+      supportAdminCaseFilter: {
+        q: source.supportAdminCaseFilter && typeof source.supportAdminCaseFilter.q === "string"
+          ? source.supportAdminCaseFilter.q.replace(/\s+/g, " ").trim().slice(0, 80)
+          : "",
+        state: source.supportAdminCaseFilter && ["all", "new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"].includes(String(source.supportAdminCaseFilter.state || ""))
+          ? String(source.supportAdminCaseFilter.state)
+          : "all",
+        category: source.supportAdminCaseFilter && /^[a-z_]{0,48}$/.test(String(source.supportAdminCaseFilter.category || ""))
+          ? String(source.supportAdminCaseFilter.category || "")
+          : ""
+      },
+      supportAdminReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.supportAdminReadState || ""))
+        ? String(source.supportAdminReadState)
+        : "guarded",
       // Document Operations output is a third, independent private surface:
       // it is neither an Asset Vault source blob nor a Bot delivery/job.
       documentOperations: Array.isArray(source.documentOperations) ? source.documentOperations.slice(0, 100) : [],
@@ -1011,6 +1078,26 @@
         recordId: jobId, notes: ["Không có preview hoặc download giả.", "Output riêng tư cần URL ký tạm thời từ Core Bridge."]
       });
     }
+    if (/^\/tickets\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const caseId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/tickets/:id", routePath: normalized, title: "Chi tiết yêu cầu", icon: ICONS.ticket, section: "Web Support Desk",
+        description: "Xem timeline và phản hồi một yêu cầu Web-native thuộc signed account hiện tại.",
+        status: "processing", access: "member", layout: "support-case-detail", action: "none", actionLabel: "", fields: [],
+        recordId: caseId,
+        notes: ["Chỉ account sở hữu case này có thể xem, phản hồi, đóng hoặc mở lại.", "Phản hồi chỉ hiển thị trong Web Support Desk; không tạo thông báo Telegram, email hay provider."]
+      });
+    }
+    if (/^\/admin\/support\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const caseId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/admin/support/:id", routePath: normalized, title: "Xử lý yêu cầu", icon: ICONS.support, section: "Web Support Desk",
+        description: "Triage một yêu cầu Web-native theo quyền Support Desk do máy chủ xác minh.",
+        status: "processing", access: "admin", layout: "support-admin-case-detail", type: "admin", action: "none", actionLabel: "", fields: [],
+        recordId: caseId,
+        notes: ["Vai trò support do máy chủ xác minh, không nhận role hoặc admin ID từ browser.", "Operator không gửi external delivery, thay đổi ví Xu/PayOS, refund ledger, provider hoặc trạng thái job từ trang này."]
+      });
+    }
     if (/^\/admin\/users\/[^/]+$/.test(normalized)) {
       const userId = normalized.split("/").pop();
       return Object.freeze({
@@ -1089,8 +1176,11 @@
     if (page.access === "admin" && !context.isAdmin) return "Cần signed admin session do máy chủ xác minh.";
     if (context.session.authenticated !== true && page.access !== "public") return "Cần signed session trước khi tạo yêu cầu.";
     if (WEB_LOCAL_ACTIONS.has(page.action)) {
-      if (context.session.csrfReady !== true && context.bridge.csrfReady !== true) return "CSRF chưa sẵn sàng; thay đổi kế hoạch Web đang được khóa an toàn.";
-      return "Khả năng lập kế hoạch Web chưa sẵn sàng cho phiên hiện tại.";
+      const supportAction = String(page.action || "").startsWith("support-");
+      if (context.session.csrfReady !== true && context.bridge.csrfReady !== true) return supportAction
+        ? "CSRF chưa sẵn sàng; thao tác Support Desk đang được khóa an toàn."
+        : "CSRF chưa sẵn sàng; thay đổi kế hoạch Web đang được khóa an toàn.";
+      return supportAction ? "Khả năng Support Desk chưa sẵn sàng cho phiên hiện tại." : "Khả năng lập kế hoạch Web chưa sẵn sàng cho phiên hiện tại.";
     }
     const linkAction = page.action === "start-telegram-link" || page.action === "refresh-link-status";
     if (page.access === "member" && !linkAction && !telegramIdentityLinked(context)) return "Cần liên kết Telegram trong Bot trước khi dùng workflow canonical.";
@@ -1163,14 +1253,22 @@
         ]
       }
     ];
-    if (context.isAdmin || currentPage.access === "admin" || currentPage.path.indexOf("/admin") === 0) {
+    const supportSummary = context.supportAdminSummary && typeof context.supportAdminSummary === "object" ? context.supportAdminSummary : {};
+    const supportRole = String(supportSummary.operator_role || "").trim();
+    const supportRouteActive = ["support-admin", "support-admin-case-detail"].includes(String(currentPage.layout || ""));
+    // A Support Desk operator is not automatically a canonical ERP admin.
+    // Give this narrowly scoped Web-native route a discoverable sidebar entry
+    // without exposing the rest of the Bot-compatible admin navigation.
+    if (context.isAdmin) {
       groups.push({
         label: "Admin ERP",
         links: [
           ["/admin", "Tất cả module", ICONS.admin], ["/admin/users", "Người dùng", ICONS.users], ["/admin/jobs", "Jobs", ICONS.jobs],
-          ["/admin/payments", "Thanh toán", ICONS.payments], ["/admin/providers", "Providers", ICONS.providers], ["/admin/audit", "Audit", ICONS.security]
+          ["/admin/payments", "Thanh toán", ICONS.payments], ["/admin/providers", "Providers", ICONS.providers], ["/admin/audit", "Audit", ICONS.security], ["/admin/support", "Web Support Desk", ICONS.support]
         ]
       });
+    } else if (supportRouteActive || ["operator", "manager"].includes(supportRole)) {
+      groups.push({ label: "Support Desk", links: [["/admin/support", "Web Support Desk", ICONS.support]] });
     }
     return groups;
   }
@@ -1263,7 +1361,11 @@
     Object.values(manifest).forEach((candidate) => {
       const path = candidate && typeof candidate.path === "string" ? candidate.path : "";
       if (!path || seen.has(path) || candidate.access === "public") return;
-      if (candidate.access === "admin" && !(context && context.isAdmin === true)) return;
+      const supportSummary = context && context.supportAdminSummary && typeof context.supportAdminSummary === "object" ? context.supportAdminSummary : {};
+      const supportRole = String(supportSummary.operator_role || "").trim();
+      const supportRoute = path === "/admin/support";
+      const supportActive = page && ["support-admin", "support-admin-case-detail"].includes(String(page.layout || ""));
+      if (candidate.access === "admin" && !(context && context.isAdmin === true) && !(supportRoute && (supportActive || ["operator", "manager"].includes(supportRole)))) return;
       seen.add(path);
       items.push({
         path,
@@ -1467,6 +1569,10 @@
   }
 
   function statusMessage(page, status, context) {
+    const webSupportDesk = ["support-desk", "support-cases", "support-case-detail", "support-admin", "support-admin-case-detail"].includes(page.layout);
+    if (webSupportDesk && status !== "guarded" && status !== "error" && status !== "failed") {
+      return { icon: "✓", title: "Web Support Desk độc lập", text: "Case, timeline và quyền truy cập do Web App kiểm tra; không tạo ticket Bot, delivery Telegram/email, payment hoặc provider call." };
+    }
     if (status === "ready") return { icon: "✓", title: "Giao diện đã sẵn sàng", text: "Chỉ các khả năng đã được máy chủ ký và cấp cho phiên mới được bật." };
     if (status === "empty") return { icon: "○", title: "Chưa có dữ liệu để hiển thị", text: "Portal không tự tạo job, số dư, file hay output. Dữ liệu chỉ xuất hiện sau phản hồi từ Engine Web hoặc integration đã được cấp quyền." };
     if (status === "error" || status === "failed") return { icon: "!", title: "Chưa thể xác thực trạng thái", text: "Không có thao tác fallback hay giả lập. Hãy đợi Engine Web hoặc integration trả trạng thái an toàn." };
@@ -3477,6 +3583,153 @@
     return `<article class="portal-page portal-asset-vault">${renderHero(page, context)}<section class="portal-vault-intro"><div><span class="portal-section-kicker">Private Web storage</span><h2>Kho tệp riêng cho Project và workflow Web</h2><p>Asset Vault dùng signed session, owner check, CSRF và private storage. Không tạo public link, preview giả, job, Xu hay PayOS.</p></div><dl><div><dt>${safeText(String(items.length))}</dt><dd>Tệp đang hoạt động</dd></div><div><dt>25 MB</dt><dd>Giới hạn mặc định mỗi tệp</dd></div></dl></section><div class="portal-vault-layout"><section class="portal-card portal-card-pad portal-vault-upload"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm tệp</h2><p class="portal-card-subtitle">Chỉ tải định dạng được kiểm tra ở máy chủ. Tệp luôn tải về dạng attachment riêng tư.</p></div>${badge(canUpload ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="asset-vault-upload" data-portal-route="/asset-vault" novalidate>${renderFields(assetVaultFormFields(), canUpload, context, formValues)}<label class="portal-vault-dropzone" for="portal-vault-file"><span class="portal-vault-dropzone-icon" aria-hidden="true">↑</span><span><strong>Chọn tệp riêng tư</strong><small>Ảnh, video, audio, PDF, TXT/SRT/VTT hoặc DOCX · tối đa 25 MB mặc định</small></span><input id="portal-vault-file" class="portal-vault-file-input" name="file" type="file" accept=".jpg,.jpeg,.png,.webp,.mp4,.mov,.webm,.mp3,.wav,.m4a,.ogg,.pdf,.txt,.srt,.vtt,.docx" required${fileDisabled}></label><div class="portal-form-footer"><span class="portal-form-note">Tệp không được gửi sang Bot, provider hoặc browser storage. Upload có idempotency và audit metadata đã sanitize.</span><button class="portal-button portal-button--primary" type="submit"${fileDisabled}>Lưu vào Asset Vault</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">Hai thư viện phục vụ hai mục đích khác nhau.</p></div></div><ul class="portal-project-steps"><li><strong>Asset Vault Web</strong><span>Tệp bạn chủ động lưu cho Project/Web workflow, owner-scoped và private.</span></li><li><strong>Tài sản Bot</strong><span>Output delivery của job canonical, có metadata/URL ký riêng ở <a href="/assets">Tài sản Bot</a>.</span></li><li><strong>Không suy diễn output</strong><span>Một tệp Vault không tự trở thành input engine hoặc kết quả đã hoàn tất.</span></li></ul></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tệp đang hoạt động</h2><p class="portal-card-subtitle">Chỉ tệp thuộc signed Web account hiện tại. Lưu trữ sẽ gỡ tệp khỏi danh sách và khóa download active.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="asset-vault-refresh" data-portal-route="/asset-vault"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${cards}</section></article>`;
   }
 
+  // Web Support Desk deliberately keeps its data model and language separate
+  // from Bot ticket compatibility.  The browser only receives an owner- or
+  // staff-scoped projection from `/api/v1/support/cases*`; it never reads the
+  // Telegram ticket history or pretends to deliver a notification elsewhere.
+  const SUPPORT_CASE_STATES = Object.freeze(["new", "reviewing", "waiting_user", "waiting_provider", "refund_pending", "resolved", "closed"]);
+  const SUPPORT_CASE_CATEGORIES = Object.freeze([
+    ["general_support", "Hỗ trợ chung"], ["image_error", "Ảnh / thiết kế"], ["video_error", "Video"],
+    ["document_pdf", "Tài liệu / PDF"], ["payment_topup", "Thanh toán / nạp Xu"], ["package_combo", "Gói dịch vụ"],
+    ["refund", "Yêu cầu hoàn tiền"], ["feature_request", "Đề xuất tính năng"], ["lead_consulting", "Tư vấn"],
+    ["service_consulting", "Tư vấn dịch vụ"], ["premium_lead", "Gói cao cấp"], ["custom_bot_lead", "Bot tùy chỉnh"], ["other", "Khác"]
+  ]);
+  const SUPPORT_CASE_PRIORITIES = Object.freeze([["low", "Thấp"], ["normal", "Bình thường"], ["high", "Cao"], ["urgent", "Khẩn"]]);
+
+  function supportCaseId(value) {
+    const raw = String(value || "").trim();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(raw) ? raw : "";
+  }
+
+  function supportCaseState(value) {
+    const state = String(value || "").trim().toLowerCase();
+    return SUPPORT_CASE_STATES.includes(state) ? state : "guarded";
+  }
+
+  function supportCaseCategoryLabel(value) {
+    const match = SUPPORT_CASE_CATEGORIES.find(([key]) => key === String(value || "").trim().toLowerCase());
+    return match ? match[1] : "Yêu cầu Web";
+  }
+
+  function supportCasePriorityLabel(value) {
+    const match = SUPPORT_CASE_PRIORITIES.find(([key]) => key === String(value || "").trim().toLowerCase());
+    return match ? match[1] : "Bình thường";
+  }
+
+  function supportCaseTimestamp(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "—";
+    const date = new Date(raw);
+    if (Number.isNaN(date.getTime())) return raw.replace("T", " · ");
+    try { return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" }).format(date); } catch (_) { return raw.replace("T", " · "); }
+  }
+
+  function supportCaseHref(item, admin) {
+    const id = supportCaseId(item && item.id);
+    if (!id) return admin ? "/admin/support" : "/tickets";
+    return `${admin ? "/admin/support" : "/tickets"}/${encodeURIComponent(id)}`;
+  }
+
+  function supportCaseItems(context, admin) {
+    const source = admin ? context.supportAdminCases : context.supportCases;
+    return Array.isArray(source) ? source.filter((item) => item && supportCaseId(item.id)).slice(0, 100) : [];
+  }
+
+  function supportDetail(context, admin) {
+    const source = admin ? context.supportAdminCaseDetail : context.supportCaseDetail;
+    return source && typeof source === "object" && source.case && supportCaseId(source.case.id) ? source : {};
+  }
+
+  function supportEventLabel(value) {
+    const labels = {
+      case_created: "Đã tạo yêu cầu", customer_replied: "Khách hàng đã phản hồi", customer_close: "Khách hàng đã đóng yêu cầu",
+      customer_reopen: "Khách hàng đã mở lại yêu cầu", operator_replied_public: "Nhân sự đã phản hồi", operator_noted_internal: "Đã thêm ghi chú nội bộ",
+      operator_updated: "Nhân sự đã cập nhật triage"
+    };
+    return labels[String(value || "")] || "Đã cập nhật yêu cầu";
+  }
+
+  function supportStateOptions(selected, allowAll) {
+    const first = allowAll ? `<option value="all"${String(selected || "all") === "all" ? " selected" : ""}>Tất cả trạng thái</option>` : "";
+    return `${first}${SUPPORT_CASE_STATES.map((state) => `<option value="${state}"${state === supportCaseState(selected) ? " selected" : ""}>${safeText(STATE_LABELS[state])}</option>`).join("")}`;
+  }
+
+  function supportCategoryOptions(selected, allowAll) {
+    const current = String(selected || "").trim().toLowerCase();
+    const first = allowAll ? `<option value=""${!current ? " selected" : ""}>Tất cả nhóm</option>` : "";
+    return `${first}${SUPPORT_CASE_CATEGORIES.map(([key, label]) => `<option value="${safeText(key)}"${key === current ? " selected" : ""}>${safeText(label)}</option>`).join("")}`;
+  }
+
+  function supportPriorityOptions(selected) {
+    const current = String(selected || "normal").trim().toLowerCase();
+    return SUPPORT_CASE_PRIORITIES.map(([key, label]) => `<option value="${safeText(key)}"${key === current ? " selected" : ""}>${safeText(label)}</option>`).join("");
+  }
+
+  function supportStateStats(summary) {
+    const states = summary && summary.states && typeof summary.states === "object" ? summary.states : {};
+    const count = (state) => Math.max(0, Number(states[state] || 0) || 0);
+    const total = SUPPORT_CASE_STATES.reduce((sum, state) => sum + count(state), 0);
+    return `<section class="portal-support-metrics" aria-label="Tóm tắt Web Support Desk"><div class="portal-metric"><span>Tổng yêu cầu</span><strong>${safeText(String(total))}</strong><em>Chỉ case Web của bạn</em></div><div class="portal-metric"><span>Đang xử lý</span><strong>${safeText(String(count("new") + count("reviewing") + count("waiting_provider") + count("refund_pending")))}</strong><em>Không phải trạng thái provider tự động</em></div><div class="portal-metric"><span>Chờ phản hồi</span><strong>${safeText(String(count("waiting_user")))}</strong><em>Chỉ hiển thị trong Web</em></div><div class="portal-metric"><span>Đã xử lý</span><strong>${safeText(String(count("resolved") + count("closed")))}</strong><em>Có thể mở lại khi cần</em></div></section>`;
+  }
+
+  function renderSupportCaseCards(items, admin) {
+    if (!items.length) return renderEmpty("Chưa có yêu cầu Web", admin ? "Chưa có case nào cần xử lý theo bộ lọc hiện tại." : "Tạo yêu cầu đầu tiên để trao đổi ngay trong Web Support Desk.", ICONS.ticket);
+    return `<div class="portal-support-case-grid">${items.map((item) => {
+      const state = supportCaseState(item.state);
+      const customer = admin && item.customer && typeof item.customer === "object" ? item.customer : {};
+      return `<article class="portal-support-case-card"><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(item.category))}</span>${badge(state)}</div><h3>${safeText(String(item.subject || "Yêu cầu Web"))}</h3><p>${safeText(String(item.excerpt || "Không có mô tả hiển thị."))}</p><dl class="portal-support-case-meta"><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(item.priority))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(item.updated_at || item.created_at))}</dd></div>${admin ? `<div><dt>Khách hàng</dt><dd>${safeText(String(customer.display_name || "Khách Web"))}${customer.email_masked ? `<small>${safeText(String(customer.email_masked))}</small>` : ""}</dd></div>` : ""}</dl><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(supportCaseHref(item, admin))}">Mở yêu cầu <span aria-hidden="true">→</span></a><span class="portal-form-note">${safeText(String(item.id).slice(0, 8))}</span></div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderSupportActivity(events) {
+    const items = Array.isArray(events) ? events.slice(0, 8) : [];
+    if (!items.length) return renderEmpty("Chưa có hoạt động", "Hoạt động sẽ xuất hiện sau khi bạn tạo hoặc cập nhật yêu cầu trong Web.", "·");
+    return `<ol class="portal-support-activity">${items.map((event) => `<li><span class="portal-support-activity-dot" aria-hidden="true"></span><div><strong>${safeText(supportEventLabel(event && event.action))}</strong><small>${safeText(supportCaseTimestamp(event && event.created_at))} · ${safeText(STATE_LABELS[supportCaseState(event && event.state)] || "Đã cập nhật")}</small></div></li>`).join("")}</ol>`;
+  }
+
+  function renderSupportDesk(page, context) {
+    const enabled = Boolean(context.capabilities && context.capabilities["support-case-create"] === true);
+    const values = transientFormValues("/support");
+    const cases = supportCaseItems(context, false).slice(0, 4);
+    const state = context.supportReadState === "ready" ? "ready" : (context.supportReadState === "loading" ? "processing" : "guarded");
+    const disabled = enabled ? "" : " disabled";
+    const reason = context.session.authenticated !== true ? "Đăng nhập bằng signed Web session để tạo yêu cầu." : (context.supportDeskEnabled ? "CSRF hoặc quyền tạo yêu cầu chưa sẵn sàng cho phiên này." : "Web Support Desk đang tạm dừng theo cấu hình máy chủ.");
+    return `<article class="portal-page portal-support-desk">${renderHero(page, context)}<section class="portal-support-intro"><div><span class="portal-section-kicker">Web-native Support Desk</span><h2>Trao đổi rõ ràng, riêng tư và có trạng thái</h2><p>Case, phản hồi và timeline được giữ trong Web App theo signed account. Đây không phải Telegram inbox và không tự gửi email, Telegram hay thông báo provider.</p></div><dl><div><dt>Web-only</dt><dd>Không sao chép lịch sử Bot</dd></div><div><dt>CSRF + audit</dt><dd>Mọi write đều được server kiểm tra</dd></div></dl></section>${supportStateStats(context.supportSummary)}<div class="portal-support-layout"><section class="portal-card portal-card-pad portal-support-intake"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo yêu cầu mới</h2><p class="portal-card-subtitle">Mô tả vấn đề, bối cảnh và kết quả bạn mong muốn. Không đính kèm dữ liệu thanh toán hoặc thông tin nhạy cảm.</p></div>${badge(enabled ? "ready" : state)}</div><form class="portal-form" data-portal-form data-portal-action="support-case-create" data-portal-route="/support" novalidate><div class="portal-fields"><div class="portal-field"><label for="support-category">Nhóm yêu cầu</label><select class="portal-select" id="support-category" name="category"${disabled}>${supportCategoryOptions(values.category || "general_support", false)}</select></div><div class="portal-field"><label for="support-priority">Mức ưu tiên</label><select class="portal-select" id="support-priority" name="priority"${disabled}>${supportPriorityOptions(values.priority || "normal")}</select></div><div class="portal-field portal-field--wide"><label for="support-subject">Chủ đề <span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="support-subject" name="subject" type="text" minlength="3" maxlength="180" required value="${safeText(String(values.subject || ""))}" placeholder="Ví dụ: Không mở được file PDF riêng tư"${disabled}></div><div class="portal-field portal-field--wide"><label for="support-detail">Nội dung <span class="portal-required-mark" aria-hidden="true">*</span></label><textarea class="portal-textarea" id="support-detail" name="detail" minlength="3" maxlength="4000" required placeholder="Nêu bước bạn đã thử, thời điểm xảy ra và kết quả mong muốn…"${disabled}>${safeText(String(values.detail || ""))}</textarea><span class="portal-field-help">Không gửi password, API key, token, OTP/CVV, số thẻ, bill/TXID, số tài khoản hoặc QR thanh toán.</span></div></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(enabled ? "Yêu cầu chỉ được ghi trong Web Support Desk; không tạo ticket Bot hoặc external delivery." : reason)}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Tạo yêu cầu</button></div></form></section><aside class="portal-card portal-card-pad portal-support-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Phạm vi an toàn</h2><p class="portal-card-subtitle">Support Desk xử lý trao đổi trong Web, không xử lý bí mật hoặc đối soát thanh toán bằng nội dung tự do.</p></div>${badge("read_only")}</div><ul class="portal-project-steps"><li><strong>Không có thông báo giả</strong><span>Trạng thái và phản hồi chỉ hiển thị khi bạn mở Web App.</span></li><li><strong>Không có ledger write</strong><span>Không cộng/trừ Xu, tạo PayOS order hay hoàn tiền từ case.</span></li><li><strong>Không có upload ngầm</strong><span>Phiên bản đầu tiên nhận văn bản; không nhận tệp Telegram hoặc proof thanh toán.</span></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/tickets">Xem tất cả yêu cầu</a></div></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu gần đây</h2><p class="portal-card-subtitle">Chỉ case thuộc Web account hiện tại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-cases-refresh" data-portal-route="/support"${context.capabilities && context.capabilities["support-case-refresh"] === true ? "" : " disabled"}>Làm mới</button></div>${renderSupportCaseCards(cases, false)}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hoạt động Web gần đây</h2><p class="portal-card-subtitle">Audit/event hiển thị không bao gồm nội dung case.</p></div>${badge("read_only")}</div>${renderSupportActivity(context.supportEvents)}</section></article>`;
+  }
+
+  function renderSupportCases(page, context) {
+    const filter = context.supportCaseFilter && typeof context.supportCaseFilter === "object" ? context.supportCaseFilter : { state: "all", category: "", q: "" };
+    const items = supportCaseItems(context, false);
+    const enabled = Boolean(context.capabilities && context.capabilities["support-case-view"] === true);
+    const state = context.supportReadState === "ready" ? "read_only" : (context.supportReadState === "loading" ? "processing" : "guarded");
+    const disabled = enabled ? "" : " disabled";
+    return `<article class="portal-page portal-support-cases">${renderHero(page, context)}${supportStateStats(context.supportSummary)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lọc yêu cầu Web</h2><p class="portal-card-subtitle">Bộ lọc chỉ truy vấn case thuộc signed account hiện tại, không tìm trong Bot ticket hoặc nội dung của account khác.</p></div>${badge(state)}</div><form class="portal-support-filter" data-portal-form data-portal-action="support-cases-filter" data-portal-route="/tickets" novalidate><label class="portal-field"><span>Trạng thái</span><select class="portal-select" name="state"${disabled}>${supportStateOptions(filter.state, true)}</select></label><label class="portal-field"><span>Nhóm</span><select class="portal-select" name="category"${disabled}>${supportCategoryOptions(filter.category, true)}</select></label><label class="portal-field portal-support-filter-search"><span>Tìm trong yêu cầu của bạn</span><input class="portal-input" name="q" type="search" maxlength="80" value="${safeText(String(filter.q || ""))}" placeholder="Chủ đề hoặc nội dung…"${disabled}></label><div class="portal-form-footer"><span class="portal-form-note">${enabled ? "Tìm kiếm không được lưu vào URL, browser storage hay Bot." : "Cần signed Web session để xem yêu cầu riêng."}</span><button class="portal-button portal-button--quiet" type="submit"${disabled}>Áp dụng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-cases-refresh" data-portal-route="/tickets"${disabled}>Làm mới</button></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu của tôi</h2><p class="portal-card-subtitle">Mở từng case để xem timeline, phản hồi hoặc đóng/mở lại theo revision server-side.</p></div><a class="portal-button portal-button--primary" href="/support">Tạo yêu cầu</a></div>${renderSupportCaseCards(items, false)}</section></article>`;
+  }
+
+  function renderSupportCaseDetail(page, context) {
+    const detail = supportDetail(context, false);
+    const caseItem = detail.case && typeof detail.case === "object" ? detail.case : null;
+    const messages = Array.isArray(detail.messages) ? detail.messages : [];
+    const events = Array.isArray(detail.events) ? detail.events : [];
+    const canReply = Boolean(caseItem && context.capabilities && context.capabilities["support-case-reply"] === true && supportCaseState(caseItem.state) !== "closed");
+    const canTransition = Boolean(caseItem && context.capabilities && context.capabilities["support-case-transition"] === true);
+    const revision = caseItem ? Number(caseItem.revision || 0) : 0;
+    if (!caseItem) {
+      const loading = context.supportReadState === "loading";
+      return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${loading ? "Đang nạp yêu cầu riêng" : "Yêu cầu không khả dụng"}</h2><p>${loading ? "Máy chủ đang kiểm tra ownership của Web case này." : "Case không tồn tại, không thuộc account hiện tại hoặc Support Desk đang bị bảo vệ."}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/tickets">Quay lại yêu cầu của tôi</a></div></section></article>`;
+    }
+    const state = supportCaseState(caseItem.state);
+    const disabledReply = canReply ? "" : " disabled";
+    const replyForm = state === "closed"
+      ? `<section class="portal-card portal-card-pad"><div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Yêu cầu đã đóng</strong><p>Mở lại yêu cầu trước khi gửi phản hồi mới. Thao tác sẽ được máy chủ kiểm tra revision và ownership.</p></div></div></section>`
+      : `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm phản hồi</h2><p class="portal-card-subtitle">Phản hồi sẽ xuất hiện trong timeline Web của case này; không gửi Telegram, email hay thông báo bên ngoài.</p></div>${badge(canReply ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="support-case-reply" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" novalidate><label class="portal-field"><span class="portal-label">Phản hồi <span class="portal-required-mark" aria-hidden="true">*</span></span><textarea class="portal-textarea" name="body" minlength="1" maxlength="4000" required placeholder="Viết thông tin bổ sung hoặc xác nhận của bạn…"${disabledReply}></textarea><span class="portal-field-help">Không gửi secret, OTP/CVV, số thẻ, bill, TXID, số tài khoản hoặc QR thanh toán.</span></label><div class="portal-form-footer"><span class="portal-form-note">${canReply ? "Server sẽ kiểm tra version trước khi lưu để không ghi đè cập nhật mới." : "CSRF hoặc quyền gửi phản hồi chưa sẵn sàng."}</span><button class="portal-button portal-button--primary" type="submit"${disabledReply}>Gửi phản hồi</button></div></form></section>`;
+    const transition = state === "closed" || state === "resolved"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-case-reopen" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Mở lại yêu cầu này để Web Support Desk tiếp tục rà soát? Không có Telegram, email hay thay đổi payment nào được gửi."${canTransition ? "" : " disabled"}>Mở lại yêu cầu</button>`
+      : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="support-case-close" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Đóng yêu cầu Web này? Bạn có thể mở lại sau; thao tác không gửi Telegram, email hay thay đổi payment."${canTransition ? "" : " disabled"}>Đóng yêu cầu</button>`;
+    const messageTimeline = messages.length ? `<ol class="portal-support-thread">${messages.map((message) => `<li class="portal-support-message portal-support-message--${safeText(String(message.author_role || "customer"))}"><div class="portal-support-message-meta"><strong>${message.author_role === "operator" ? "Web Support Desk" : "Bạn"}</strong><span>${safeText(supportCaseTimestamp(message.created_at))}</span></div><p>${safeText(String(message.body || ""))}</p></li>`).join("")}</ol>` : renderEmpty("Chưa có nội dung hiển thị", "Case này chưa có phản hồi an toàn để hiển thị.", "·");
+    return `<article class="portal-page portal-support-case-detail">${renderHero(page, context)}<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(caseItem.category))}</span>${badge(state)}</div><h2>${safeText(String(caseItem.subject || "Yêu cầu Web"))}</h2><p>${safeText(String(caseItem.excerpt || ""))}</p></div><dl><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(caseItem.priority))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(supportCaseTimestamp(caseItem.updated_at || caseItem.created_at))}</dd></div><div><dt>Phiên bản</dt><dd>${safeText(String(revision))}</dd></div></dl></section><div class="portal-support-detail-layout"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Trao đổi</h2><p class="portal-card-subtitle">Chỉ hiển thị các phản hồi public của Web Support Desk.</p></div>${badge("read_only")}</div>${messageTimeline}</section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thông tin case</h2><p class="portal-card-subtitle">Mọi trạng thái được server cập nhật theo revision.</p></div></div><dl class="portal-support-case-meta"><div><dt>Đã tạo</dt><dd>${safeText(supportCaseTimestamp(caseItem.created_at))}</dd></div><div><dt>Phản hồi public gần nhất</dt><dd>${safeText(supportCaseTimestamp(caseItem.last_public_message_at))}</dd></div><div><dt>Case ID</dt><dd><code>${safeText(String(caseItem.id).slice(0, 8))}</code></dd></div></dl><div class="portal-form-footer">${transition}<a class="portal-button portal-button--quiet" href="/tickets">Danh sách yêu cầu</a></div></aside></div>${replyForm}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Timeline trạng thái</h2><p class="portal-card-subtitle">Timeline không hiển thị nội dung audit riêng tư hoặc hoạt động ngoài Web.</p></div>${badge("read_only")}</div>${renderSupportActivity(events)}</section></article>`;
+  }
+
   function renderTickets(page, context) {
     const allTickets = Array.isArray(context.tickets) ? context.tickets : [];
     const selected = TICKET_FILTERS.some(([value]) => value === context.ticketFilter) ? context.ticketFilter : "all";
@@ -3488,6 +3741,52 @@
     const ticketBotHandoff = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Theo dõi sâu trong Bot</h2><p class="portal-card-subtitle">Thread/reply, attachment Telegram và trạng thái chi tiết tiếp tục do Bot canonical quản lý; Portal không gửi mã ticket, identity hoặc nội dung hiện có sang Bot.</p></div>${badge(botUrl ? "read_only" : "guarded")}</div>${botUrl ? `<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(botUrl)}" target="_blank" rel="noopener noreferrer">Mở Bot</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="/tickets">Sao chép /tickets</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="copy-bot-companion-command" data-copy-text="/ticket_status">Sao chép /ticket_status</button></div>` : `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Bot URL chưa sẵn sàng</strong><p>Web đang chờ <code>BOT_USERNAME</code> hợp lệ trước khi mở handoff an toàn.</p></div></div>`}</section>`;
     return `<article class="portal-page">${renderHero(page, context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Yêu cầu hỗ trợ</h2><p class="portal-card-subtitle">Nội dung chỉ được nạp cho signed session sở hữu ticket; không có inbox hay attachment provider trong browser.</p></div><a class="portal-button portal-button--quiet" href="/support">Tạo ticket →</a></div>${filters}${renderRowsTable(["Mã ticket", "Loại", "Chủ đề", "Trạng thái canonical", "Cập nhật", "Nội dung đã gửi"], tickets, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(ticketCategoryLabel(item))}</td><td>${safeText(item.subject || "—")}</td><td>${ticketStatusCell(item)}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td><td><span class="portal-ticket-preview">${shortText(item.content, 120)}</span></td>`, selected === "all" ? "Chưa có ticket được cấp" : "Không có ticket ở trạng thái này", selected === "all" ? "Core Bridge sẽ trả ticket theo signed session." : "Đổi bộ lọc hoặc quay lại sau khi Core Bridge cập nhật trạng thái.")}</section>${ticketBotHandoff}</article>`;
+  }
+
+  function renderSupportAdminSummary(summary) {
+    const states = summary && summary.states && typeof summary.states === "object" ? summary.states : {};
+    const count = (state) => Math.max(0, Number(states[state] || 0) || 0);
+    const open = SUPPORT_CASE_STATES.filter((state) => !["resolved", "closed"].includes(state)).reduce((sum, state) => sum + count(state), 0);
+    return `<section class="portal-support-metrics" aria-label="Tóm tắt vận hành Support Desk"><div class="portal-metric"><span>Đang mở</span><strong>${safeText(String(open))}</strong><em>Case Web chưa resolved/closed</em></div><div class="portal-metric"><span>Chờ khách</span><strong>${safeText(String(count("waiting_user")))}</strong><em>Chỉ public reply mới chuyển trạng thái</em></div><div class="portal-metric"><span>Chờ đối tác</span><strong>${safeText(String(count("waiting_provider")))}</strong><em>Chỉ chọn khi operator biết trạng thái</em></div><div class="portal-metric"><span>Quá SLA nội bộ</span><strong>${safeText(String(Math.max(0, Number(summary && summary.overdue || 0) || 0)))}</strong><em>24h/72h theo policy Web</em></div></section>`;
+  }
+
+  function renderSupportAdmin(page, context) {
+    const summary = context.supportAdminSummary && typeof context.supportAdminSummary === "object" ? context.supportAdminSummary : {};
+    const filter = context.supportAdminCaseFilter && typeof context.supportAdminCaseFilter === "object" ? context.supportAdminCaseFilter : { state: "all", category: "", q: "" };
+    const items = supportCaseItems(context, true);
+    const staffRole = String(summary.operator_role || "").trim();
+    const allowed = context.supportAdminReadState === "ready" && (staffRole === "operator" || staffRole === "manager");
+    const loading = context.supportAdminReadState === "loading";
+    if (!allowed && !loading) {
+      return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><h2>Quyền Support Desk chưa được cấp</h2><p>Máy chủ chỉ mở dữ liệu CSKH cho signed Web account có role server-side admin, support_manager hoặc support_operator. Browser không thể tự gán quyền bằng admin ID, Telegram ID hoặc localStorage.</p><div class="portal-state-meta"><span>Server-side role</span><span>Không gọi Bot bridge</span><span>Không có PII fallback</span></div></div></div></section></article>`;
+    }
+    if (loading) {
+      return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang kiểm tra quyền Support Desk</h2><p>Máy chủ đang xác thực signed session và role Web trước khi nạp case vận hành.</p></div></div></section></article>`;
+    }
+    return `<article class="portal-page portal-support-admin">${renderHero(page, context)}<section class="portal-support-admin-intro"><div><span class="portal-section-kicker">Web-native operations</span><h2>Hỗ trợ có triage, không có đường tắt</h2><p>Operator xử lý đúng case, đúng revision và đúng phạm vi. Mọi thay đổi cần CSRF, confirmation, idempotency và audit do server thực hiện.</p></div><dl><div><dt>${safeText(staffRole === "manager" ? "Manager" : "Operator")}</dt><dd>Role do máy chủ xác minh</dd></div><div><dt>Web-only</dt><dd>Không gửi external delivery</dd></div></dl></section>${renderSupportAdminSummary(summary)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lọc hàng đợi</h2><p class="portal-card-subtitle">Chỉ hiển thị case Web Support Desk. Email được mask; không có Bot ticket history hoặc ledger/payment data.</p></div>${badge("read_only")}</div><form class="portal-support-filter" data-portal-form data-portal-action="support-admin-cases-filter" data-portal-route="/admin/support" novalidate><label class="portal-field"><span>Trạng thái</span><select class="portal-select" name="state">${supportStateOptions(filter.state, true)}</select></label><label class="portal-field"><span>Nhóm</span><select class="portal-select" name="category">${supportCategoryOptions(filter.category, true)}</select></label><label class="portal-field portal-support-filter-search"><span>Tìm case</span><input class="portal-input" name="q" type="search" maxlength="80" value="${safeText(String(filter.q || ""))}" placeholder="Tên, chủ đề hoặc nội dung…"></label><div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm chỉ gửi query hẹp tới Web Support Desk theo quyền server-side.</span><button class="portal-button portal-button--quiet" type="submit">Áp dụng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="support-admin-cases-refresh" data-portal-route="/admin/support">Làm mới</button></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Hàng đợi yêu cầu</h2><p class="portal-card-subtitle">Sắp theo ưu tiên và cập nhật gần nhất; mở case để phản hồi public, ghi chú nội bộ hoặc cập nhật triage.</p></div><span class="portal-form-note">${safeText(String(items.length))} case hiển thị</span></div>${renderSupportCaseCards(items, true)}</section><section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Ranh giới nghiệp vụ</strong><p>Support Desk không thay đổi wallet/Xu, PayOS, refund ledger, job, provider hoặc file delivery. Nếu cần một workflow khác, case chỉ ghi nhận thông tin rõ ràng trong Web.</p></div></div></section></article>`;
+  }
+
+  function renderSupportAdminCaseDetail(page, context) {
+    const detail = supportDetail(context, true);
+    const caseItem = detail.case && typeof detail.case === "object" ? detail.case : null;
+    const summary = context.supportAdminSummary && typeof context.supportAdminSummary === "object" ? context.supportAdminSummary : {};
+    const staffRole = String(summary.operator_role || "").trim();
+    const hasRole = staffRole === "operator" || staffRole === "manager";
+    if (!caseItem || !hasRole) {
+      const loading = context.supportAdminReadState === "loading";
+      return `<article class="portal-page portal-support-admin-case-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang nạp case vận hành" : "Case không khả dụng"}</h2><p>${loading ? "Máy chủ đang kiểm tra quyền Support Desk và nạp dữ liệu đã được redaction." : "Case không tồn tại hoặc signed Web session không có quyền Support Desk."}</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/admin/support">Quay lại Support Desk</a></div></section></article>`;
+    }
+    const state = supportCaseState(caseItem.state);
+    const revision = Number(caseItem.revision || 0);
+    const customer = caseItem.customer && typeof caseItem.customer === "object" ? caseItem.customer : {};
+    const messages = Array.isArray(detail.messages) ? detail.messages : [];
+    const events = Array.isArray(detail.events) ? detail.events : [];
+    const writable = Boolean(context.capabilities && context.capabilities["support-admin-case-write"] === true);
+    const writeDisabled = writable ? "" : " disabled";
+    const publicReply = state === "closed" ? renderEmpty("Case đã đóng", "Mở lại case qua cập nhật trạng thái trước khi gửi phản hồi mới.", "·") : `<form class="portal-form" data-portal-form data-portal-action="support-admin-case-reply" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Lưu phản hồi Support Desk? Nếu chọn public, khách hàng chỉ thấy phản hồi này khi mở Web App; không có Telegram, email hay external delivery." novalidate><div class="portal-fields"><div class="portal-field"><label for="support-reply-visibility">Phạm vi</label><select class="portal-select" id="support-reply-visibility" name="visibility"${writeDisabled}><option value="public">Public · khách hàng thấy trong Web</option><option value="internal">Internal · chỉ nhân sự Support Desk thấy</option></select></div><div class="portal-field"><label for="support-reply-state">Trạng thái sau phản hồi</label><select class="portal-select" id="support-reply-state" name="next_state"${writeDisabled}><option value="" selected>Tự chọn theo phạm vi phản hồi</option>${supportStateOptions("", false)}</select></div><div class="portal-field portal-field--wide"><label for="support-reply-body">Nội dung <span class="portal-required-mark" aria-hidden="true">*</span></label><textarea class="portal-textarea" id="support-reply-body" name="body" minlength="1" maxlength="4000" required placeholder="Viết hướng dẫn, câu hỏi làm rõ hoặc ghi chú nội bộ…"${writeDisabled}></textarea><span class="portal-field-help">Không ghi secret, OTP/CVV, số thẻ, bill/TXID, số tài khoản, QR thanh toán hoặc dữ liệu provider.</span></div></div><div class="portal-form-footer"><span class="portal-form-note">${writable ? "Máy chủ kiểm tra role, CSRF, confirmation, idempotency và revision trước khi lưu." : "Quyền write Support Desk chưa sẵn sàng cho phiên này."}</span><button class="portal-button portal-button--primary" type="submit"${writeDisabled}>Lưu phản hồi</button></div></form>`;
+    const updateForm = `<form class="portal-form portal-support-admin-update" data-portal-form data-portal-action="support-admin-case-update" data-portal-route="${safeText(page.routePath || page.path)}" data-support-case-id="${safeText(caseItem.id)}" data-support-case-revision="${safeText(String(revision))}" data-portal-confirm="Cập nhật triage cho case Web này? Thao tác không gửi thông báo ngoài Web và không thay đổi Xu, PayOS, refund ledger, job hay provider." novalidate><div class="portal-fields"><div class="portal-field"><label for="support-update-state">Trạng thái</label><select class="portal-select" id="support-update-state" name="state"${writeDisabled}>${supportStateOptions(state, false)}</select></div><div class="portal-field"><label for="support-update-priority">Ưu tiên</label><select class="portal-select" id="support-update-priority" name="priority"${writeDisabled}>${supportPriorityOptions(caseItem.priority)}</select></div><div class="portal-field portal-field--wide"><label for="support-update-note">Ghi chú nội bộ <span class="portal-required-mark" aria-hidden="true">*</span></label><textarea class="portal-textarea" id="support-update-note" name="operation_note" minlength="3" maxlength="360" required placeholder="Tóm tắt lý do thay đổi trạng thái hoặc ưu tiên…"${writeDisabled}></textarea><span class="portal-field-help">Máy chủ lưu ghi chú này thành message nội bộ cho nhân sự Support Desk; nội dung không đi vào audit raw và không hiển thị cho khách hàng.</span></div></div><div class="portal-form-footer"><span class="portal-form-note">Cập nhật cần confirmation rõ ràng và revision hiện tại.</span><button class="portal-button portal-button--quiet" type="submit"${writeDisabled}>Cập nhật triage</button></div></form>`;
+    const thread = messages.length ? `<ol class="portal-support-thread">${messages.map((message) => `<li class="portal-support-message portal-support-message--${safeText(String(message.author_role || "customer"))}${message.visibility === "internal" ? " is-internal" : ""}"><div class="portal-support-message-meta"><strong>${message.author_role === "operator" ? (message.visibility === "internal" ? "Ghi chú nội bộ" : "Web Support Desk") : "Khách hàng"}</strong><span>${safeText(supportCaseTimestamp(message.created_at))}</span></div>${message.author_display_name && message.author_role === "operator" ? `<small>${safeText(String(message.author_display_name))}</small>` : ""}<p>${safeText(String(message.body || ""))}</p></li>`).join("")}</ol>` : renderEmpty("Chưa có phản hồi", "Case này chưa có message để hiển thị.", "·");
+    return `<article class="portal-page portal-support-admin-case-detail">${renderHero(page, context)}<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">${safeText(supportCaseCategoryLabel(caseItem.category))}</span>${badge(state)}</div><h2>${safeText(String(caseItem.subject || "Yêu cầu Web"))}</h2><p>${safeText(String(caseItem.excerpt || ""))}</p></div><dl><div><dt>Khách hàng</dt><dd>${safeText(String(customer.display_name || "Khách Web"))}${customer.email_masked ? `<small>${safeText(String(customer.email_masked))}</small>` : ""}</dd></div><div><dt>Ưu tiên</dt><dd>${safeText(supportCasePriorityLabel(caseItem.priority))}</dd></div><div><dt>Revision</dt><dd>${safeText(String(revision))}</dd></div></dl></section><div class="portal-support-detail-layout"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thread case</h2><p class="portal-card-subtitle">Operator thấy phản hồi public và ghi chú internal; khách hàng chỉ thấy public message.</p></div>${badge("read_only")}</div>${thread}</section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Triage</h2><p class="portal-card-subtitle">Role ${safeText(staffRole)} do máy chủ xác minh.</p></div>${badge(writable ? "ready" : "guarded")}</div><dl class="portal-support-case-meta"><div><dt>Đã tạo</dt><dd>${safeText(supportCaseTimestamp(caseItem.created_at))}</dd></div><div><dt>Public gần nhất</dt><dd>${safeText(supportCaseTimestamp(caseItem.last_public_message_at))}</dd></div><div><dt>Đã resolved</dt><dd>${safeText(supportCaseTimestamp(caseItem.resolved_at))}</dd></div></dl><a class="portal-button portal-button--quiet" href="/admin/support">Quay lại hàng đợi</a></aside></div><div class="portal-support-admin-forms"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Phản hồi hoặc ghi chú</h2><p class="portal-card-subtitle">Chọn public khi khách hàng cần thấy message trong Web; internal không hiển thị cho khách hàng.</p></div></div>${publicReply}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cập nhật trạng thái</h2><p class="portal-card-subtitle">Không suy đoán provider/refund. Chỉ đặt trạng thái mà operator có căn cứ vận hành.</p></div></div>${updateForm}</section></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Timeline hệ thống</h2><p class="portal-card-subtitle">Event không bao gồm operation note hoặc nội dung audit private.</p></div>${badge("read_only")}</div>${renderSupportActivity(events)}</section></article>`;
   }
 
   function renderAccount(page, context) {
@@ -4550,6 +4849,11 @@
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
       case "image-enhance": return renderImageEnhance(page, context);
+      case "support-desk": return renderSupportDesk(page, context);
+      case "support-cases": return renderSupportCases(page, context);
+      case "support-case-detail": return renderSupportCaseDetail(page, context);
+      case "support-admin": return renderSupportAdmin(page, context);
+      case "support-admin-case-detail": return renderSupportAdminCaseDetail(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
       case "account-activity": return renderAccountActivity(page, context);
@@ -4749,7 +5053,7 @@
     if (form && action !== "memory-note-filter") rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });

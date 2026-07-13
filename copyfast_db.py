@@ -148,6 +148,18 @@ def memory_center_enabled() -> bool:
     return os.environ.get("WEBAPP_MEMORY_CENTER_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def support_desk_enabled() -> bool:
+    """Whether the independently owned Web Support Desk is available.
+
+    The desk persists only to the signed Web application's database.  It
+    neither mirrors Bot ticket tables nor creates Telegram, email, payment,
+    wallet, provider or job activity, so it can be safely useful by default.
+    Operators may still close the complete surface during maintenance with an
+    explicit false value.
+    """
+    return os.environ.get("WEBAPP_SUPPORT_DESK_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -793,6 +805,75 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_memory_events_account_created ON web_memory_events(account_id, created_at DESC)"
+        )
+        # Support Desk is a separate, account-owned customer-service surface.
+        # These names intentionally never overlap Bot `support_tickets` /
+        # `support_ticket_messages`: a Web case cannot become a hidden Bot
+        # ticket, Telegram alert, Xu refund, PayOS action or provider task.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_cases (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                category TEXT NOT NULL,
+                priority TEXT NOT NULL DEFAULT 'normal',
+                subject TEXT NOT NULL,
+                initial_detail TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'new',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                last_public_message_at TEXT NOT NULL,
+                resolved_at TEXT,
+                closed_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_messages (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                author_account_id TEXT NOT NULL,
+                author_role TEXT NOT NULL,
+                visibility TEXT NOT NULL DEFAULT 'public',
+                body TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(author_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_events (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                actor_account_id TEXT,
+                action TEXT NOT NULL,
+                state TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_cases_account_state_updated ON web_support_cases(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_cases_state_updated ON web_support_cases(state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_messages_case_visibility_created ON web_support_messages(case_id, visibility, created_at ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_events_case_created ON web_support_events(case_id, created_at ASC, id ASC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

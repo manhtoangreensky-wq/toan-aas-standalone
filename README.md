@@ -76,6 +76,14 @@ Production Web App for `app.toanaas.vn`.
   persistent-volume contract described above; do not advertise notification
   delivery unless a separate, audited adapter is enabled. See
   [`MEMORY_CENTER_CONTRACT.md`](docs/migration/MEMORY_CENTER_CONTRACT.md).
+- `WEBAPP_SUPPORT_DESK_ENABLED` defaults to `true`. `/support` and
+  `/tickets` are a signed-account, Web-owned Support Desk for text-only case
+  intake and timeline. `/admin/support` is separately protected by a
+  server-side `role_cache` (`admin`, `support_manager` or
+  `support_operator`), never an email list or browser role. It does not read
+  Bot tickets, send notifications, accept payment proof, alter Xu/PayOS,
+  call providers, refund or create jobs. See
+  [`WEB_SUPPORT_DESK_CONTRACT.md`](docs/migration/WEB_SUPPORT_DESK_CONTRACT.md).
 
 ## Authority boundary
 
@@ -119,6 +127,12 @@ private Bot bridge.
   not mirror Bot `memory_*` tables or claim that Telegram/email/push has been
   delivered. Bot memory AI classification, storage quota/add-ons and its
   actual reminder sender remain outside this Web-only contract.
+- `/support` and `/tickets` are a separate Web-owned Support Desk. Cases,
+  public replies and staff-only notes are bound to the signed Web account and
+  server-side Support role. They never mirror Bot ticket state, create a
+  Telegram/email/push delivery, accept manual payment evidence, alter the
+  wallet/Xu/PayOS ledger, execute a refund or call a provider/job. See
+  [`WEB_SUPPORT_DESK_CONTRACT.md`](docs/migration/WEB_SUPPORT_DESK_CONTRACT.md).
 - `/project-packages` is a distinct Web-native private ZIP export of a
   Project snapshot. It does not create a Bot job, copy Asset Vault source
   blobs, change Xu, invoke PayOS or call a provider. See

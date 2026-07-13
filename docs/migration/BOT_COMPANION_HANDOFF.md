@@ -12,7 +12,7 @@ their own signed customer routes:
 | `/community` | `/community`, `/official_channels` | Bot publishes community/channel information. |
 | `/guides` | `/menu`, `/guide`, `/help` | Bot remains the current command/help authority. |
 | `/account` | `/language`, `/mode`, `/profile`, `/mydata`, `/data_delete` | Web-owned profile metadata stays separate; data-deletion policy and confirmation remain in Bot. |
-| `/tickets` | `/tickets`, `/ticket_status` | Ticket threads, Telegram attachments and detailed status remain Bot state. |
+| `/support`, `/tickets`, `/admin/support` | Bot reference: `/support`, `/tickets`, `/ticket_status`, `/support_tickets` | Web-owned Support Desk cases, private timeline and staff triage; never reads/writes Bot ticket tables, Telegram attachments or notifications. |
 | `/growth/ai` | `/growth_ai days=<1..90> [platform] [campaign_id] [goal]` | Web allows only a fixed, reviewed filter set; Bot reads performance, checks Xu and returns the canonical analysis. |
 | `/campaign/report` | `/campaign_report days=<1..90> [platform] [campaign_id] format=<txt\|csv>` | Bot creates the report/file and remains the only charge/refund authority. |
 | guarded Content routes | `/film` | Zero-argument command opens Bot's content/script usage chooser; the Portal never appends a brief. |
@@ -29,7 +29,11 @@ then offer a user-initiated `https://t.me/<BOT_USERNAME>` handoff and an
 allowlisted command copy action. `/notes` and `/reminders` are the explicit
 exception: they require a signed Web session but not a Telegram link, and they
 call only the owner-scoped Web Memory API documented in
-[`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md).
+[`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md). `/support` and
+`/tickets` are a second explicit exception: they are handled by the
+owner-scoped Web Support Desk documented in
+[`WEB_SUPPORT_DESK_CONTRACT.md`](WEB_SUPPORT_DESK_CONTRACT.md), not a Bot
+handoff or a ticket-table mirror.
 
 The two analytics handoffs use a separate closed schema rather than accepting
 arbitrary Bot text: days `1..90`, the Bot's supported manual-publish
@@ -51,9 +55,11 @@ ambiguous destination.
 This is an intentional product boundary: the Web dashboard makes all
 discoverable workflows visible, while the Telegram Bot remains the fast,
 conversation-first interface for the remaining Bot-owned operations.
-Memory Center is a feature-specific Web-native contract rather than a Bot
-handoff; its AI classification, billing quota and actual notification sender
-remain guarded until separately designed adapters exist.
+Memory Center and Support Desk are feature-specific Web-native contracts
+rather than Bot handoffs. Memory AI classification/billing quota/actual
+notification delivery remain guarded; Support Desk similarly does not send
+notifications, accept payment proofs, issue refunds or create a provider/job
+outcome until a separately designed adapter exists.
 
 ## Feature-family handoff review (frozen Bot baseline)
 
