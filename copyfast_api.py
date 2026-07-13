@@ -186,6 +186,15 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.prompt_library.restore_version": ("Khôi phục phiên bản template", "Prompt Library"),
     "web.prompt_library.duplicate": ("Nhân bản template", "Prompt Library"),
     "web.prompt_library.import": ("Import template Prompt Library", "Prompt Library"),
+    "web.media.collection.create": ("Tạo Audio Library collection", "Audio Library"),
+    "web.media.collection.update": ("Lưu phiên bản Audio Library", "Audio Library"),
+    "web.media.collection.collection_archived": ("Lưu trữ Audio Library collection", "Audio Library"),
+    "web.media.collection.collection_restored": ("Khôi phục Audio Library collection", "Audio Library"),
+    "web.media.collection.duplicate": ("Nhân bản Audio Library collection", "Audio Library"),
+    "web.media.collection.restore_version": ("Khôi phục phiên bản Audio Library", "Audio Library"),
+    "web.media.item.item_attached": ("Gắn audio Asset Vault", "Audio Library"),
+    "web.media.item.item_updated": ("Cập nhật audio reference", "Audio Library"),
+    "web.media.item.item_detached": ("Gỡ audio reference", "Audio Library"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -417,6 +426,11 @@ def _flags() -> dict[str, bool]:
         # Web account. This flag has no Bot bridge, wallet, payment, provider
         # or job-runtime implication.
         "prompt_library_enabled": enabled("WEBAPP_PROMPT_LIBRARY_ENABLED", True),
+        # Audio Library & Briefing is a Web-owned organisation surface. It
+        # stores only owner-scoped Asset Vault IDs and authored metadata;
+        # enabling it never enables provider search, AI music, a Bot job, Xu,
+        # PayOS, remote audio fetch or media delivery.
+        "music_media_workspace_enabled": enabled("WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

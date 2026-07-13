@@ -171,6 +171,18 @@ def prompt_library_enabled() -> bool:
     return os.environ.get("WEBAPP_PROMPT_LIBRARY_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def music_media_workspace_enabled() -> bool:
+    """Whether the Web-native Audio Library & Briefing workspace is available.
+
+    Collections, audio references and deterministic music-brief directions are
+    owned solely by signed Web accounts.  They deliberately never call a music
+    provider, create a Bot job, mutate Xu/PayOS, copy Telegram state, fetch a
+    remote URL or store a private file path.  The feature is useful by default
+    while retaining one explicit maintenance switch for operators.
+    """
+    return os.environ.get("WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -996,6 +1008,102 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_prompt_template_events_account_created ON web_prompt_template_events(account_id, created_at DESC, id DESC)"
+        )
+        # Audio Library & Briefing is intentionally a Web-native organizer, not
+        # a mirror of Telegram preview state or an external provider catalog.
+        # Items retain only an owner-checked Asset Vault ID plus declared
+        # attribution/rights metadata; no storage key, URL, Bot file ID,
+        # provider payload, job, wallet or payment data is persisted here.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_media_collections (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                creative_brief TEXT NOT NULL DEFAULT '',
+                prompt_mode TEXT NOT NULL DEFAULT 'background',
+                use_context TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                rights_note TEXT NOT NULL DEFAULT '',
+                policy_marker TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_media_collection_versions (
+                id TEXT PRIMARY KEY,
+                collection_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(collection_id, revision),
+                FOREIGN KEY(collection_id) REFERENCES web_media_collections(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_media_items (
+                id TEXT PRIMARY KEY,
+                collection_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                asset_id TEXT NOT NULL,
+                role TEXT NOT NULL DEFAULT 'music',
+                title_override TEXT NOT NULL DEFAULT '',
+                attribution TEXT NOT NULL DEFAULT '',
+                license_note TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                favorite INTEGER NOT NULL DEFAULT 0,
+                user_declared_duration_seconds INTEGER,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(collection_id, asset_id),
+                FOREIGN KEY(collection_id) REFERENCES web_media_collections(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_media_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                collection_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(collection_id) REFERENCES web_media_collections(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_media_collections_account_state_updated ON web_media_collections(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_media_collection_versions_collection_revision ON web_media_collection_versions(collection_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_media_items_collection_updated ON web_media_items(collection_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_media_items_asset_account ON web_media_items(asset_id, account_id, id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_media_events_account_created ON web_media_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

@@ -1069,6 +1069,128 @@
     };
   }
 
+  // Audio Library & Briefing stays outside FEATURE_BY_PATH and the generic
+  // Bot draft/estimate/confirm flow.  Its payloads describe only Web-owned
+  // collection metadata and already-owned Asset Vault references; there is
+  // deliberately no URL, provider, Telegram file ID, job, wallet or payment
+  // field anywhere in this client contract.
+  const MEDIA_PROMPT_MODES = new Set(["background", "lyrics", "script", "melody", "custom"]);
+  const MEDIA_COLLECTION_STATES = new Set(["active", "archived"]);
+  const MEDIA_ITEM_ROLES = new Set(["music", "sfx", "reference"]);
+
+  function validMediaCollectionId(value) {
+    return validProjectId(value);
+  }
+
+  function validMediaRevision(value) {
+    return validMemoryRevision(value);
+  }
+
+  function mediaWorkspaceCollectionIdFromPath(path) {
+    const match = /^\/media-workspace\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validMediaCollectionId(id) ? id : "";
+  }
+
+  function isNativeMediaWorkspacePath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/media-workspace" || normalized === "/media-workspace/new" || Boolean(mediaWorkspaceCollectionIdFromPath(normalized));
+  }
+
+  function mediaWorkspaceSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Audio Library không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Audio Library không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Audio Library không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    return "";
+  }
+
+  function mediaWorkspaceLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(`${label} cần từ ${minimum} đến ${maximum} ký tự hợp lệ.`);
+    return text;
+  }
+
+  function mediaWorkspaceContent(value, label, maximum) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || text.includes("\u0000")) throw new Error(`${label} tối đa ${maximum.toLocaleString("vi-VN")} ký tự hợp lệ.`);
+    return text;
+  }
+
+  function mediaWorkspaceTags(value, label) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const values = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = mediaWorkspaceLine(candidate, label || "Tag", 1, 48, false);
+      const key = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(key)) {
+        seen.add(key);
+        values.push(tag);
+      }
+    });
+    if (values.length > 16) throw new Error("Tối đa 16 tags cho mỗi collection hoặc audio reference.");
+    return values;
+  }
+
+  function mediaWorkspaceFilterPayload(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const q = mediaWorkspaceLine(source.q, "Từ khóa tìm kiếm", 0, 100, true);
+    const tag = mediaWorkspaceLine(source.tag, "Tag", 0, 48, true);
+    const promptMode = mediaWorkspaceLine(source.prompt_mode, "Loại brief", 0, 24, true).toLowerCase();
+    const state = String(source.state || "all").trim().toLowerCase();
+    if (promptMode && !MEDIA_PROMPT_MODES.has(promptMode)) throw new Error("Bộ lọc loại brief không hợp lệ.");
+    if (state !== "all" && !MEDIA_COLLECTION_STATES.has(state)) throw new Error("Bộ lọc trạng thái collection không hợp lệ.");
+    const safety = mediaWorkspaceSafetyError(q, tag, promptMode, state);
+    if (safety) throw new Error(safety);
+    return { q, tag, prompt_mode: promptMode, state };
+  }
+
+  function mediaWorkspaceListPath(filter) {
+    const query = new URLSearchParams({ state: filter.state || "all", limit: "100" });
+    ["q", "tag", "prompt_mode"].forEach((name) => { if (filter[name]) query.set(name, filter[name]); });
+    return `/media-workspace/collections?${query.toString()}`;
+  }
+
+  function mediaCollectionPayload(fields) {
+    const title = mediaWorkspaceLine(fields.title, "Tên collection", 3, 180, false);
+    const description = mediaWorkspaceContent(fields.description, "Mô tả", 6000);
+    const creativeBrief = mediaWorkspaceContent(fields.creative_brief, "Music brief", 6000);
+    const promptMode = mediaWorkspaceLine(fields.prompt_mode || "background", "Loại brief", 3, 24, false).toLowerCase();
+    const useContext = mediaWorkspaceLine(fields.use_context || "general", "Ngữ cảnh sử dụng", 0, 160, true) || "general";
+    const rightsNote = mediaWorkspaceLine(fields.rights_note || "", "Quyền sử dụng", 2, 800, false);
+    const projectId = String(fields.project_id || "").trim();
+    if (!MEDIA_PROMPT_MODES.has(promptMode)) throw new Error("Loại brief không hợp lệ.");
+    if (projectId && !validProjectId(projectId)) throw new Error("Project liên kết không hợp lệ.");
+    const tags = mediaWorkspaceTags(fields.tags, "Tag");
+    const safety = mediaWorkspaceSafetyError(title, description, creativeBrief, promptMode, useContext, rightsNote, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, description, creative_brief: creativeBrief, prompt_mode: promptMode, use_context: useContext, tags, rights_note: rightsNote, project_id: projectId };
+  }
+
+  function mediaItemPayload(fields, includeAsset) {
+    const role = mediaWorkspaceLine(fields.role || "music", "Vai trò audio", 3, 24, false).toLowerCase();
+    const titleOverride = mediaWorkspaceLine(fields.title_override, "Tên hiển thị", 0, 180, true);
+    const attribution = mediaWorkspaceLine(fields.attribution, "Attribution", 0, 500, true);
+    const licenseNote = mediaWorkspaceLine(fields.license_note || "", "Ghi chú license", 2, 800, false);
+    const rawDuration = String(fields.user_declared_duration_seconds || "").trim();
+    const duration = rawDuration === "" ? null : Number(rawDuration);
+    if (!MEDIA_ITEM_ROLES.has(role)) throw new Error("Vai trò audio không hợp lệ.");
+    if (duration !== null && (!Number.isInteger(duration) || duration < 1 || duration > 7200)) throw new Error("Thời lượng tự khai báo phải là số nguyên từ 1 đến 7.200 giây.");
+    const tags = mediaWorkspaceTags(fields.tags, "Tag audio");
+    const safety = mediaWorkspaceSafetyError(titleOverride, attribution, licenseNote, ...tags);
+    if (safety) throw new Error(safety);
+    const payload = { role, title_override: titleOverride, attribution, license_note: licenseNote, tags, favorite: fields.favorite === true, user_declared_duration_seconds: duration };
+    if (includeAsset) {
+      const assetId = String(fields.asset_id || "").trim();
+      if (!validVaultAssetId(assetId)) throw new Error("Hãy chọn một audio Asset Vault hợp lệ.");
+      payload.asset_id = assetId;
+    }
+    return payload;
+  }
+
   async function downloadPromptLibraryExport() {
     const context = base();
     const csrfToken = context.session && context.session.csrfToken ? String(context.session.csrfToken) : "";
@@ -1353,6 +1475,10 @@
     // dependency on Telegram identity, a Core Bridge, provider, jobs, Xu or
     // payment readiness.
     const promptLibraryEnabled = Boolean(status.flags && status.flags.prompt_library_enabled === true);
+    // Audio Library & Briefing is a distinct Web-owned metadata/Asset Vault
+    // relation.  Its flag never represents a music provider, AI generation,
+    // external preview, Bot job, wallet, Xu or payment capability.
+    const mediaWorkspaceEnabled = Boolean(status.flags && status.flags.music_media_workspace_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -1485,6 +1611,18 @@
       "prompt-library-preview": Boolean(account && me.csrf_token && promptLibraryEnabled),
       "prompt-library-import": Boolean(account && me.csrf_token && promptLibraryEnabled),
       "prompt-library-export": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "media-workspace-view": Boolean(account && mediaWorkspaceEnabled),
+      "media-workspace-refresh": Boolean(account && mediaWorkspaceEnabled),
+      "media-workspace-create": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-update": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-archive": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-restore": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-duplicate": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-restore-version": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-compose": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-item-attach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-item-update": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "media-workspace-item-detach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -1543,6 +1681,7 @@
       imageEnhanceEnabled,
       memoryCenterEnabled,
       promptLibraryEnabled,
+      mediaWorkspaceEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -1563,6 +1702,18 @@
       promptLibraryEvents: [],
       promptLibraryFilter: { q: "", category: "", platform: "", product_context: "", tag: "", state: "all" },
       promptLibraryReadState: account && promptLibraryEnabled ? "loading" : "guarded",
+      // Always clear every Audio Workspace projection before the signed
+      // owner-scoped read starts.  A session change/failure must never leave
+      // a prior user's brief, Asset Vault metadata or audit labels visible.
+      mediaWorkspaceSummary: {},
+      mediaCollections: [],
+      mediaCollectionDetail: {},
+      mediaComposer: {},
+      mediaAudioAssets: [],
+      mediaWorkspaceEvents: [],
+      mediaWorkspacePolicy: {},
+      mediaWorkspaceFilter: { q: "", tag: "", prompt_mode: "", state: "all" },
+      mediaWorkspaceReadState: account && mediaWorkspaceEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -1600,6 +1751,8 @@
         "/reminders": account && memoryCenterEnabled ? "processing" : "guarded",
         "/prompt-library": account && promptLibraryEnabled ? "processing" : "guarded",
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
+        "/media-workspace": account && mediaWorkspaceEnabled ? "processing" : "guarded",
+        "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -1611,7 +1764,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && ["/projects", "/project-packages", "/dashboard"].includes(currentPath)) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -1647,6 +1800,17 @@
       merge({
         promptLibrarySummary: {}, promptTemplates: [], promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryEvents: [],
         promptLibraryReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
+    if (account && mediaWorkspaceEnabled && ["/media-workspace", "/media-workspace/new"].includes(currentPath)) await hydrateMediaWorkspace();
+    else if (account && mediaWorkspaceEnabled && mediaWorkspaceCollectionIdFromPath(currentPath)) await hydrateMediaCollection(mediaWorkspaceCollectionIdFromPath(currentPath));
+    else if (isNativeMediaWorkspacePath(currentPath)) {
+      // Never retain a previous account's audio metadata or fall back to the
+      // Bot music bridge when the dedicated Web feature/session is guarded.
+      merge({
+        mediaWorkspaceSummary: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {}, mediaAudioAssets: [],
+        mediaWorkspaceEvents: [], mediaWorkspacePolicy: {}, mediaWorkspaceReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && supportDeskEnabled) {
@@ -1686,7 +1850,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && !isNativeSupportPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath)) await hydrateCanonicalData();
   }
 
   async function hydrateLinkStatus() {
@@ -1877,6 +2041,92 @@
     } catch (_) {
       merge({
         promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  async function hydrateMediaWorkspace(filterValue) {
+    // This is a narrow Web-native read boundary.  It must never use the
+    // legacy `/music*` paths or a generic bridge hydration as a fallback.
+    const filter = mediaWorkspaceFilterPayload(filterValue === undefined ? base().mediaWorkspaceFilter : filterValue);
+    try {
+      const [summaryResult, policyResult, collectionsResult, eventsResult] = await Promise.all([
+        api("/media-workspace/summary"),
+        api("/media-workspace/policy"),
+        api(mediaWorkspaceListPath(filter)),
+        api("/media-workspace/events?limit=50")
+      ]);
+      const collections = collectionsResult.data && Array.isArray(collectionsResult.data.items)
+        ? collectionsResult.data.items.filter((item) => item && validMediaCollectionId(item.id)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validMediaCollectionId(item.collection_id)).slice(0, 50)
+        : [];
+      merge({
+        mediaWorkspaceSummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
+        mediaWorkspacePolicy: policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {},
+        mediaCollections: collections,
+        mediaWorkspaceEvents: events,
+        mediaCollectionDetail: {},
+        mediaComposer: {},
+        mediaAudioAssets: [],
+        mediaWorkspaceFilter: filter,
+        mediaWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/media-workspace": "ready", "/media-workspace/new": "ready" }
+      });
+      return { collections, events };
+    } catch (_) {
+      // Fail closed: no stale brief/excerpt, Asset Vault name or event can
+      // survive a signed read failure or a changed account session.
+      merge({
+        mediaWorkspaceSummary: {}, mediaWorkspacePolicy: {}, mediaCollections: [], mediaCollectionDetail: {}, mediaComposer: {},
+        mediaAudioAssets: [], mediaWorkspaceEvents: [], mediaWorkspaceFilter: filter, mediaWorkspaceReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/media-workspace": "guarded", "/media-workspace/new": "guarded" }
+      });
+      return { collections: [], events: [] };
+    }
+  }
+
+  async function hydrateMediaCollection(collectionId) {
+    if (!validMediaCollectionId(collectionId)) throw new Error("Mã Audio Collection không hợp lệ.");
+    const route = `/media-workspace/${encodeURIComponent(String(collectionId))}`;
+    try {
+      const [detailResult, policyResult, assetsResult] = await Promise.all([
+        api(`/media-workspace/collections/${encodeURIComponent(String(collectionId))}`),
+        api("/media-workspace/policy"),
+        api("/media-workspace/audio-assets?limit=100")
+      ]);
+      const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const collection = data.collection && typeof data.collection === "object" ? data.collection : null;
+      if (!collection || !validMediaCollectionId(collection.id) || String(collection.id) !== String(collectionId)) {
+        throw new Error("Audio Collection không còn khả dụng cho Web account hiện tại.");
+      }
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validMediaRevision(item.revision)).slice(0, 100)
+        : [];
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => item && validMediaCollectionId(item.id) && validVaultAssetId(item.asset_id)).slice(0, 250)
+        : [];
+      const audioAssets = assetsResult.data && Array.isArray(assetsResult.data.items)
+        ? assetsResult.data.items.filter((item) => item && validVaultAssetId(item.id) && item.download_available === true).slice(0, 100)
+        : [];
+      merge({
+        mediaCollectionDetail: { collection, versions, items, item_count: Number(data.item_count || items.length), item_limit: Number(data.item_limit || 250) },
+        mediaWorkspacePolicy: policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {},
+        mediaAudioAssets: audioAssets,
+        mediaComposer: {},
+        mediaWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: "read_only" }
+      });
+      return { collection, versions, items, audioAssets };
+    } catch (_) {
+      merge({
+        // Fail closed: a failed detail request must not leave a previous
+        // account's collection list, summary, or event projection visible.
+        mediaWorkspaceSummary: {}, mediaCollections: [], mediaWorkspaceEvents: [],
+        mediaCollectionDetail: {}, mediaComposer: {}, mediaAudioAssets: [], mediaWorkspacePolicy: {}, mediaWorkspaceReadState: "failed",
         pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
       return null;
@@ -2835,6 +3085,188 @@
           if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép prompt.");
         }
         toast("Đã sao chép prompt từ template riêng tư. Chưa có AI execution nào được tạo.");
+        return;
+      }
+      if (action === "media-workspace-filter" || action === "media-workspace-filter-clear") {
+        const filter = action === "media-workspace-filter-clear"
+          ? { q: "", tag: "", prompt_mode: "", state: "all" }
+          : mediaWorkspaceFilterPayload(fields);
+        await hydrateMediaWorkspace(filter);
+        toast(filter.q || filter.tag || filter.prompt_mode || filter.state !== "all" ? "Đã áp dụng bộ lọc Audio Library." : "Đã hiển thị toàn bộ audio collection riêng tư.");
+        return;
+      }
+      if (action === "media-workspace-refresh") {
+        const collectionId = mediaWorkspaceCollectionIdFromPath(route);
+        if (collectionId) await hydrateMediaCollection(collectionId);
+        else await hydrateMediaWorkspace();
+        toast("Đã làm mới Audio Library & Briefing của Web account hiện tại.");
+        return;
+      }
+      if (action === "media-collection-create") {
+        const payload = mediaCollectionPayload(fields);
+        const scope = "media-workspace:collection:create";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Collection đang được lưu. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/media-workspace/collections", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const collection = result.data && result.data.collection && typeof result.data.collection === "object" ? result.data.collection : null;
+          const collectionId = collection && validMediaCollectionId(collection.id) ? String(collection.id) : "";
+          await hydrateMediaWorkspace();
+          toast(result.message || "Đã tạo Audio Library collection riêng tư.");
+          if (collectionId) {
+            window.location.assign(`/media-workspace/${encodeURIComponent(collectionId)}`);
+            return;
+          }
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "media-collection-update") {
+        const collectionId = String(detail.mediaCollectionId || "").trim();
+        const expectedRevision = validMediaRevision(detail.mediaCollectionRevision);
+        if (!validMediaCollectionId(collectionId) || !expectedRevision) throw new Error("Mã hoặc revision Audio Collection không hợp lệ.");
+        const payload = { ...mediaCollectionPayload(fields), expected_revision: expectedRevision };
+        const scope = `media-workspace:collection:${collectionId}:update`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/media-workspace/collections/${encodeURIComponent(collectionId)}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateMediaWorkspace();
+          await hydrateMediaCollection(collectionId);
+          toast(result.message || "Đã lưu revision Audio Collection mới.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (["media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version"].includes(action)) {
+        const collectionId = String(detail.mediaCollectionId || "").trim();
+        const expectedRevision = validMediaRevision(detail.mediaCollectionRevision);
+        if (!validMediaCollectionId(collectionId) || !expectedRevision) throw new Error("Mã hoặc revision Audio Collection không hợp lệ.");
+        const operation = action.replace("media-collection-", "");
+        const sourceRevision = action === "media-collection-restore-version" ? validMediaRevision(detail.mediaCollectionVersion) : 0;
+        if (action === "media-collection-restore-version" && !sourceRevision) throw new Error("Revision cần khôi phục không hợp lệ.");
+        const scope = `media-workspace:collection:${collectionId}:${operation}${sourceRevision ? `:${sourceRevision}` : ""}`;
+        const submission = acquireSubmission(scope, JSON.stringify({ expected_revision: expectedRevision, revision: sourceRevision }));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          let target = `/media-workspace/collections/${encodeURIComponent(collectionId)}/${encodeURIComponent(operation)}`;
+          let body = { expected_revision: expectedRevision, idempotency_key: submission.key };
+          if (action === "media-collection-restore-version") {
+            target = `/media-workspace/collections/${encodeURIComponent(collectionId)}/restore-version`;
+            body = { ...body, revision: sourceRevision };
+          }
+          const result = await api(target, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+          });
+          acknowledged = true;
+          const created = result.data && result.data.collection && typeof result.data.collection === "object" ? result.data.collection : null;
+          const createdId = action === "media-collection-duplicate" && created && validMediaCollectionId(created.id) ? String(created.id) : "";
+          await hydrateMediaWorkspace();
+          toast(result.message || "Đã cập nhật Audio Collection.");
+          if (createdId) {
+            window.location.assign(`/media-workspace/${encodeURIComponent(createdId)}`);
+            return;
+          }
+          await hydrateMediaCollection(collectionId);
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "media-collection-compose") {
+        const collectionId = String(detail.mediaCollectionId || "").trim();
+        const expectedRevision = validMediaRevision(detail.mediaCollectionRevision);
+        if (!validMediaCollectionId(collectionId) || !expectedRevision) throw new Error("Mã hoặc revision Audio Collection không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/media-workspace/collections/${encodeURIComponent(collectionId)}/compose`, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ expected_revision: expectedRevision })
+          });
+          const output = result.data && typeof result.data === "object" ? result.data : {};
+          const directions = Array.isArray(output.directions) ? output.directions.filter((item) => item && typeof item.prompt === "string").slice(0, 3) : [];
+          if (String(output.collection_id || "") !== collectionId || Number(output.revision || 0) !== expectedRevision || output.execution !== "local_deterministic_draft_only" || output.provider_called !== false || output.charge_started !== false || directions.length !== 3) {
+            throw new Error("Máy chủ chưa trả local brief directions Audio Library hợp lệ.");
+          }
+          merge({ mediaComposer: { ...output, directions, collection_id: collectionId } });
+          toast(result.message || "Đã tạo 3 hướng brief cục bộ.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (["media-item-attach", "media-item-update", "media-item-detach"].includes(action)) {
+        const collectionId = String(detail.mediaCollectionId || "").trim();
+        const expectedRevision = validMediaRevision(detail.mediaCollectionRevision);
+        const itemId = String(detail.mediaItemId || "").trim();
+        if (!validMediaCollectionId(collectionId) || !expectedRevision) throw new Error("Mã hoặc revision Audio Collection không hợp lệ.");
+        if (action !== "media-item-attach" && !validMediaCollectionId(itemId)) throw new Error("Mã audio reference không hợp lệ.");
+        const payload = action === "media-item-detach"
+          ? { expected_revision: expectedRevision, confirm: true }
+          : { ...mediaItemPayload(fields, action === "media-item-attach"), expected_revision: expectedRevision };
+        const operation = action.replace("media-item-", "");
+        const scope = `media-workspace:collection:${collectionId}:item:${action === "media-item-attach" ? "attach" : `${itemId}:${operation}`}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          let target = `/media-workspace/collections/${encodeURIComponent(collectionId)}/items`;
+          let method = "POST";
+          if (action === "media-item-update") {
+            target = `${target}/${encodeURIComponent(itemId)}`;
+            method = "PATCH";
+          } else if (action === "media-item-detach") {
+            target = `${target}/${encodeURIComponent(itemId)}/detach`;
+          }
+          const result = await api(target, {
+            method, headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydrateMediaWorkspace();
+          await hydrateMediaCollection(collectionId);
+          toast(result.message || "Đã cập nhật audio reference riêng tư.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "support-cases-filter") {

@@ -562,6 +562,14 @@
     layout: "prompt-library", type: "prompt-library", fields: [], action: "none", status: "ready",
     notes: ["Điền nguồn và quyền sử dụng rõ ràng trước khi lưu. Không gửi secret, token, OTP/CVV, số thẻ hay dữ liệu thanh toán.", "Bạn có thể sao chép template sang Prompt Studio sau khi lưu; đó không phải yêu cầu chạy AI."]
   });
+  customerPage("/media-workspace", "Audio Library & Briefing", "Tổ chức Audio Asset Vault và music/SFX brief riêng tư với version history, không chạy provider hoặc tạo audio giả.", ICONS.music, {
+    layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
+    notes: ["Workspace này chỉ quản lý metadata, creative brief và tham chiếu Asset Vault thuộc signed Web account. Nó không gọi Bot, provider, Xu, PayOS, job hay delivery.", "Music library bên ngoài, AI generation, enhance, translate, mux/render và preview provider vẫn được giữ guarded cho tới khi có adapter riêng đã được kiểm chứng."]
+  });
+  customerPage("/media-workspace/new", "Audio Collection mới", "Tạo collection riêng tư cho brief âm thanh, quyền sử dụng và tham chiếu Asset Vault đã được owner-check.", ICONS.music, {
+    layout: "media-workspace", type: "media-workspace", fields: [], action: "none", status: "guarded",
+    notes: ["Không nhập URL audio, Telegram file ID, provider preview hoặc thông tin thanh toán. Chỉ Asset Vault audio active thuộc account hiện tại có thể được gắn sau khi tạo collection.", "Duration là thông tin do bạn khai báo, không phải số liệu được parse, waveform hoặc promise render."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -971,6 +979,25 @@
         state: source.promptLibraryFilter && ["all", "active", "archived"].includes(String(source.promptLibraryFilter.state || "")) ? String(source.promptLibraryFilter.state) : "all"
       },
       promptLibraryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.promptLibraryReadState || "")) ? String(source.promptLibraryReadState) : "guarded",
+      // Audio Library & Briefing is a separate owner-scoped Web workspace.
+      // It retains only server-redacted metadata in presentation state and
+      // never falls back to Bot music data, provider results, raw URLs or a
+      // browser-side audio cache when signed hydration fails.
+      mediaWorkspaceEnabled: source.mediaWorkspaceEnabled === true,
+      mediaWorkspaceSummary: source.mediaWorkspaceSummary && typeof source.mediaWorkspaceSummary === "object" ? source.mediaWorkspaceSummary : {},
+      mediaCollections: Array.isArray(source.mediaCollections) ? source.mediaCollections.slice(0, 100) : [],
+      mediaCollectionDetail: source.mediaCollectionDetail && typeof source.mediaCollectionDetail === "object" ? source.mediaCollectionDetail : {},
+      mediaComposer: source.mediaComposer && typeof source.mediaComposer === "object" ? source.mediaComposer : {},
+      mediaAudioAssets: Array.isArray(source.mediaAudioAssets) ? source.mediaAudioAssets.slice(0, 100) : [],
+      mediaWorkspaceEvents: Array.isArray(source.mediaWorkspaceEvents) ? source.mediaWorkspaceEvents.slice(0, 50) : [],
+      mediaWorkspacePolicy: source.mediaWorkspacePolicy && typeof source.mediaWorkspacePolicy === "object" ? source.mediaWorkspacePolicy : {},
+      mediaWorkspaceFilter: {
+        q: source.mediaWorkspaceFilter && typeof source.mediaWorkspaceFilter.q === "string" ? source.mediaWorkspaceFilter.q.replace(/\s+/g, " ").trim().slice(0, 100) : "",
+        tag: source.mediaWorkspaceFilter && typeof source.mediaWorkspaceFilter.tag === "string" ? source.mediaWorkspaceFilter.tag.replace(/\s+/g, " ").trim().slice(0, 48) : "",
+        prompt_mode: source.mediaWorkspaceFilter && ["", "background", "lyrics", "script", "melody", "custom"].includes(String(source.mediaWorkspaceFilter.prompt_mode || "")) ? String(source.mediaWorkspaceFilter.prompt_mode || "") : "",
+        state: source.mediaWorkspaceFilter && ["all", "active", "archived"].includes(String(source.mediaWorkspaceFilter.state || "")) ? String(source.mediaWorkspaceFilter.state || "all") : "all"
+      },
+      mediaWorkspaceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.mediaWorkspaceReadState || "")) ? String(source.mediaWorkspaceReadState) : "guarded",
       // Support Desk is a separate Web-native case store.  It never falls
       // back to Bot support/ticket state, and redacted page data must survive
       // render normalization after a successful owner-scoped hydration.
@@ -1093,6 +1120,16 @@
         status: "read_only", access: "member", layout: "prompt-library-detail", action: "none", actionLabel: "", fields: [],
         recordId: templateId,
         notes: ["Template chỉ được nạp sau owner check ở server. Không có JSON seed/global path từ Bot, provider, job, Xu hoặc PayOS trong trang này.", "Preview thay variable đã khai báo theo dữ liệu bạn nhập; đó không phải AI execution hoặc output."]
+      });
+    }
+    if (/^\/media-workspace\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const collectionId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/media-workspace/:id", routePath: normalized, title: "Audio Collection", icon: ICONS.music, section: "Audio Library & Briefing",
+        description: "Chỉnh metadata, gắn audio Asset Vault và xem history của một collection riêng tư thuộc signed Web account hiện tại.",
+        status: "processing", access: "member", layout: "media-workspace-detail", action: "none", actionLabel: "", fields: [],
+        recordId: collectionId,
+        notes: ["Asset chỉ là tham chiếu private đến Asset Vault và tải qua attachment route hiện có; trang này không phát audio, waveform, URL provider hoặc Telegram file ID.", "Composer chỉ tạo text direction cục bộ. Nó không chạy AI, tạo job, charge Xu, output hay delivery."]
       });
     }
     if (/^\/projects\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -1255,7 +1292,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1322,6 +1359,7 @@
     if (linkPath === "/chat") return path === "/chat" || path === "/tools/chat";
     if (linkPath === "/prompt-studio") return path === "/prompt-studio" || path === "/prompts" || matchesRouteFamily(path, "/content");
     if (linkPath === "/prompt-library") return matchesRouteFamily(path, "/prompt-library");
+    if (linkPath === "/media-workspace") return matchesRouteFamily(path, "/media-workspace");
     if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");
     if (linkPath === "/video/create") return path === "/video" || matchesRouteFamily(path, "/video");
     if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");
@@ -1351,7 +1389,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/projects", "/prompt-library", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/");
+      return ["/dashboard", "/projects", "/prompt-library", "/media-workspace", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/media-workspace/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -1622,7 +1660,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "media-workspace", "media-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -2370,6 +2408,212 @@
     </article>`;
   }
 
+  // Audio Library & Briefing is intentionally an authoring workspace, not a
+  // music-generator skin.  It only renders redacted, owner-scoped Asset Vault
+  // references and local creative text; there is no audio player, waveform,
+  // provider preview, raw URL, Telegram file ID, job or delivery simulation.
+  const MEDIA_PROMPT_MODES = Object.freeze([
+    ["background", "Nhạc nền"], ["lyrics", "Bài hát có lời nguyên gốc"], ["script", "Hướng lời / kịch bản nhạc"],
+    ["melody", "Hướng giai điệu nguyên gốc"], ["custom", "Brief tùy chỉnh"]
+  ]);
+  const MEDIA_ITEM_ROLES = Object.freeze([["music", "Music"], ["sfx", "SFX"], ["reference", "Reference"]]);
+
+  function validMediaCollectionId(value) {
+    return validProjectId(value);
+  }
+
+  function mediaCollectionState(value) {
+    const state = String(value || "").toLowerCase();
+    return state === "active" ? "ready" : state === "archived" ? "read_only" : "guarded";
+  }
+
+  function mediaCollectionStateLabel(value) {
+    return String(value || "").toLowerCase() === "archived" ? "Đã archive" : "Đang hoạt động";
+  }
+
+  function mediaCollectionTags(value) {
+    return Array.isArray(value) ? value.filter((item) => typeof item === "string" && item.trim()).slice(0, 16) : [];
+  }
+
+  function renderMediaTags(value) {
+    const tags = mediaCollectionTags(value);
+    return tags.length ? `<div class="portal-media-tags">${tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>` : "";
+  }
+
+  function mediaModeLabel(value) {
+    const match = MEDIA_PROMPT_MODES.find(([key]) => key === String(value || "").toLowerCase());
+    return match ? match[1] : "Brief âm thanh";
+  }
+
+  function mediaRoleLabel(value) {
+    const match = MEDIA_ITEM_ROLES.find(([key]) => key === String(value || "").toLowerCase());
+    return match ? match[1] : "Reference";
+  }
+
+  function mediaWorkspaceFilterState(context) {
+    const source = context && context.mediaWorkspaceFilter && typeof context.mediaWorkspaceFilter === "object" ? context.mediaWorkspaceFilter : {};
+    const tidy = (value, maximum) => typeof value === "string" ? value.replace(/\s+/g, " ").trim().slice(0, maximum) : "";
+    const mode = String(source.prompt_mode || "").trim().toLowerCase();
+    const state = String(source.state || "all").trim().toLowerCase();
+    return {
+      q: tidy(source.q, 100), tag: tidy(source.tag, 48),
+      prompt_mode: MEDIA_PROMPT_MODES.some(([key]) => key === mode) ? mode : "",
+      state: ["all", "active", "archived"].includes(state) ? state : "all"
+    };
+  }
+
+  function mediaCollectionFormFields() {
+    return [
+      { name: "title", label: "Tên collection", placeholder: "Ví dụ: Âm thanh launch mùa hè", required: true, minLength: 3, maxLength: 180 },
+      { name: "creative_brief", label: "Music / SFX brief", control: "textarea", placeholder: "Mood, tempo, nhạc cụ, cảm xúc, thời lượng mục tiêu và ngữ cảnh cảnh quay…", maxLength: 6000, help: "Mô tả thuộc Web Workspace. Không nêu yêu cầu mô phỏng nghệ sĩ, bài hát, melody hoặc giọng cụ thể." },
+      { name: "description", label: "Mô tả nội bộ", control: "textarea", placeholder: "Mục đích, bối cảnh hoặc ghi chú team…", maxLength: 6000, help: "Không lưu secret, token, OTP/CVV, số thẻ hoặc chứng từ thanh toán." },
+      { name: "prompt_mode", label: "Loại brief", control: "select", required: true, options: MEDIA_PROMPT_MODES },
+      { name: "use_context", label: "Ngữ cảnh sử dụng", placeholder: "Ví dụ: video giới thiệu sản phẩm 15 giây", required: true, maxLength: 160 },
+      { name: "tags", label: "Tags", placeholder: "launch, upbeat, short-form", maxLength: 800, help: "Tối đa 16 tags, phân tách bằng dấu phẩy." },
+      { name: "project_id", label: "Liên kết planning với Project", control: "select", optionsFrom: "projects", emptyLabel: "Không liên kết Project", help: "Chỉ là liên kết planning Web-owned, không tự đưa audio vào package, job hoặc delivery." },
+      { name: "rights_note", label: "Quyền sử dụng", placeholder: "Ví dụ: Tôi có quyền sử dụng các tệp và brief này.", required: true, minLength: 2, maxLength: 800, help: "Web không tự chứng nhận bản quyền, license hoặc quyền thương mại của bạn." }
+    ];
+  }
+
+  function mediaAttachFields(context) {
+    const assets = (Array.isArray(context.mediaAudioAssets) ? context.mediaAudioAssets : [])
+      .filter((asset) => asset && validVaultAssetId(asset.id) && asset.download_available === true)
+      .slice(0, 100)
+      .map((asset) => ({ value: String(asset.id), label: `${asset.display_name || asset.original_filename || "Audio Asset Vault"} · ${String(asset.extension || "").replace(".", "").toUpperCase()} · ${vaultBytes(asset.byte_size)}` }));
+    return [
+      { name: "asset_id", label: "Audio từ Asset Vault", control: "select", required: true, options: assets, emptyLabel: assets.length ? "Chọn audio private" : "Chưa có audio Asset Vault active", help: "Chỉ audio active thuộc account hiện tại. Không nhận URL, provider preview hoặc Telegram file ID." },
+      { name: "role", label: "Vai trò", control: "select", required: true, options: MEDIA_ITEM_ROLES },
+      { name: "title_override", label: "Tên hiển thị (tùy chọn)", placeholder: "Ví dụ: Bed nhịp nhẹ", maxLength: 180 },
+      { name: "attribution", label: "Attribution (tùy chọn)", placeholder: "Ví dụ: Tên tác giả / nguồn đã kiểm tra", maxLength: 500 },
+      { name: "license_note", label: "Ghi chú license", placeholder: "Tôi chịu trách nhiệm kiểm tra license trước khi đăng.", required: true, minLength: 2, maxLength: 800 },
+      { name: "tags", label: "Tags audio", placeholder: "hook, ambient", maxLength: 800 },
+      { name: "user_declared_duration_seconds", label: "Thời lượng tự khai báo (giây)", type: "number", min: 1, max: 7200, step: 1, inputMode: "numeric", help: "Không được parse từ file và không phải duration/preview do provider xác nhận." }
+    ];
+  }
+
+  function mediaCollectionValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      title: String(source.title || ""), description: String(source.description || ""), creative_brief: String(source.creative_brief || ""),
+      prompt_mode: MEDIA_PROMPT_MODES.some(([key]) => key === String(source.prompt_mode || "")) ? String(source.prompt_mode) : "background",
+      use_context: String(source.use_context || "general"), tags: mediaCollectionTags(source.tags).join(", "),
+      project_id: String(source.project_id || ""), rights_note: String(source.rights_note || "Tôi xác nhận có quyền sử dụng các tệp và brief trong collection này.")
+    };
+  }
+
+  function mediaEventLabel(value) {
+    return ({
+      collection_created: "Đã tạo collection", collection_updated: "Đã lưu revision mới", collection_archived: "Đã archive collection",
+      collection_archived_without_snapshot: "Đã archive khi history đạt giới hạn", collection_restored: "Đã khôi phục collection",
+      collection_restored_without_snapshot: "Đã khôi phục khi history đạt giới hạn", collection_duplicated: "Đã nhân bản collection",
+      collection_version_restored: "Đã khôi phục revision metadata", item_attached: "Đã gắn audio Asset Vault",
+      item_updated: "Đã cập nhật metadata audio", item_detached: "Đã gỡ audio reference"
+    })[String(value || "")] || "Đã cập nhật Audio Library";
+  }
+
+  function mediaCollectionItems(context) {
+    return (Array.isArray(context.mediaCollections) ? context.mediaCollections : [])
+      .filter((item) => item && typeof item === "object" && validMediaCollectionId(item.id)).slice(0, 100);
+  }
+
+  function renderMediaCollectionCards(items) {
+    if (!items.length) return renderEmpty("Chưa có audio collection", "Tạo collection đầu tiên để tổ chức brief, quyền sử dụng và các audio private đã có trong Asset Vault.", ICONS.music);
+    return `<div class="portal-media-collection-grid">${items.map((item) => {
+      const id = String(item.id || "");
+      const policy = item.policy && typeof item.policy === "object" ? item.policy : {};
+      const policyBadge = policy.status === "guarded" ? `<span class="portal-media-policy-flag">Brief cần chỉnh policy</span>` : "";
+      return `<article class="portal-card portal-card-pad portal-media-collection-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(item.prompt_mode))} · ${safeText(String(item.use_context || "general"))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Audio Collection"))}</h3><p class="portal-card-subtitle">${safeText(String(item.brief_excerpt || item.description_excerpt || "Chưa có brief hiển thị."))}</p></div>${badge(mediaCollectionState(item.state))}</div><div class="portal-media-card-meta"><span>v${safeText(String(item.revision || 1))}</span><span>${safeText(mediaCollectionStateLabel(item.state))}</span><span>${safeText(String(item.updated_at || item.created_at || "—"))}</span></div>${policyBadge}${renderMediaTags(item.tags)}<div class="portal-form-footer"><span class="portal-form-note">Authoring-only · không có job, charge hoặc output.</span><a class="portal-button portal-button--quiet" href="/media-workspace/${encodeURIComponent(id)}">Mở collection <span aria-hidden="true">→</span></a></div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderMediaPolicy(context) {
+    const policy = context.mediaWorkspacePolicy && typeof context.mediaWorkspacePolicy === "object" ? context.mediaWorkspacePolicy : {};
+    const statements = Array.isArray(policy.policy) ? policy.policy.filter((item) => typeof item === "string" && item.trim()).slice(0, 6) : [];
+    const guarded = Array.isArray(policy.guarded_capabilities) ? policy.guarded_capabilities.filter((item) => typeof item === "string" && item.trim()).slice(0, 8) : [];
+    return `<aside class="portal-card portal-card-pad portal-media-policy"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới an toàn</span><h2 class="portal-card-title">Authoring sẵn sàng, engine vẫn được bảo vệ</h2><p class="portal-card-subtitle">Không có music generation, provider library, enhance, translate, mux/render, job, Xu hay payment trong workspace này.</p></div>${badge("guarded")}</div><ol class="portal-project-steps">${statements.length ? statements.map((item, index) => `<li><strong>${index + 1}.</strong><span>${safeText(item)}</span></li>`).join("") : "<li><strong>1.</strong><span>Chính sách đang được nạp an toàn từ server.</span></li>"}</ol>${guarded.length ? `<div class="portal-media-guarded-list"><span>Đang guarded</span>${guarded.map((item) => `<em>${safeText(String(item).replace(/_/g, " "))}</em>`).join("")}</div>` : ""}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><a class="portal-button portal-button--quiet" href="/projects">Mở Project Center</a></div></aside>`;
+  }
+
+  function renderMediaWorkspace(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["media-workspace-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["media-workspace-create"] === true);
+    if (!canView) return `<article class="portal-page portal-media-workspace">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Audio Library đang được bảo vệ", "Đăng nhập bằng signed session để mở workspace audio riêng tư. Web không nhận Telegram ID thô và không hiển thị data music của Bot.", ICONS.music)}</section></article>`;
+    const summary = context.mediaWorkspaceSummary && typeof context.mediaWorkspaceSummary === "object" ? context.mediaWorkspaceSummary : {};
+    const collections = summary.collections && typeof summary.collections === "object" ? summary.collections : {};
+    const items = summary.items && typeof summary.items === "object" ? summary.items : {};
+    const execution = summary.execution && typeof summary.execution === "object" ? summary.execution : {};
+    const filter = mediaWorkspaceFilterState(context);
+    const values = mediaCollectionValues({ ...transientFormValues(page.routePath || page.path), prompt_mode: transientFormValues(page.routePath || page.path).prompt_mode || "background" });
+    const filterFields = [
+      { name: "q", label: "Tìm collection", placeholder: "Tên, brief hoặc mô tả…", maxLength: 100, wide: true },
+      { name: "tag", label: "Tag", placeholder: "Ví dụ: launch", maxLength: 48 },
+      { name: "prompt_mode", label: "Loại brief", control: "select", options: MEDIA_PROMPT_MODES, emptyLabel: "Tất cả loại" },
+      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+    ];
+    const events = Array.isArray(context.mediaWorkspaceEvents) ? context.mediaWorkspaceEvents.slice(0, 8) : [];
+    const eventList = events.length ? `<div class="portal-media-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(mediaEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Timeline chỉ lưu nhãn thao tác và revision; không hiển thị brief, attribution hoặc license note.", "○");
+    return `<article class="portal-page portal-media-workspace">${renderHero(page, context)}
+      <section class="portal-media-workspace-intro"><div><span class="portal-section-kicker">Private Audio Library & Briefing</span><h2>Âm thanh được tổ chức theo ngữ cảnh, quyền sử dụng và ý định sáng tạo</h2><p>Tạo collection cho music/SFX brief, liên kết planning với Project và gắn audio đã nằm trong Asset Vault. Đây là workspace authoring; không phải generator, catalog provider hay trình phát audio.</p></div><dl><div><dt>${safeText(String(Number(collections.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(items.total || 0)))}</dt><dd>Audio references</dd></div><div><dt>${safeText(String(Number(items.favorites || 0)))}</dt><dd>Đã đánh dấu</dd></div></dl></section>
+      <div class="portal-media-workspace-layout"><section class="portal-card portal-card-pad portal-media-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo audio collection</h2><p class="portal-card-subtitle">Lưu creative brief riêng tư với owner check, CSRF, idempotency và version history. Chưa có AI request hoặc media output.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(mediaCollectionFormFields(), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Collection chỉ lưu authoring metadata. Audio được gắn riêng từ Asset Vault sau khi server owner-check.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo collection</button></div></form></section>${renderMediaPolicy(context)}</div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm và tiếp tục collection</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt thuộc signed account hiện tại; nội dung đầy đủ chỉ nạp sau owner check khi mở collection.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-refresh" data-portal-route="/media-workspace">Làm mới</button></div><form class="portal-media-filter" data-portal-form data-portal-action="media-workspace-filter" data-portal-route="/media-workspace" novalidate>${renderFields(filterFields, true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên trang hiện tại, không lưu localStorage hoặc Telegram.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="media-workspace-filter-clear" data-portal-route="/media-workspace">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm collection</button></div></div></form>${renderMediaCollectionCards(mediaCollectionItems(context))}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ có nhãn thao tác, revision và thời điểm; không có raw brief, file path, URL hoặc data provider.</p></div><span class="portal-form-note">${safeText(String(execution.authoring || "ready"))} authoring · ${safeText(String(execution.generation || "guarded"))} generation</span></div>${eventList}</section>
+    </article>`;
+  }
+
+  function mediaItemEditor(item, collection, enabled, route) {
+    const itemId = String(item.id || "");
+    const asset = item.asset && typeof item.asset === "object" ? item.asset : {};
+    const assetId = validVaultAssetId(asset.id) ? String(asset.id) : "";
+    const downloadPath = assetId && asset.download_available === true ? `/api/v1/asset-vault/${encodeURIComponent(assetId)}/download` : "";
+    const uid = itemId.replace(/[^a-zA-Z0-9_-]/g, "");
+    const editable = enabled && String(collection.state || "") === "active";
+    const disabled = editable ? "" : " disabled";
+    const selectedRole = String(item.role || "music");
+    const tags = mediaCollectionTags(item.tags).join(", ");
+    const duration = item.user_declared_duration_seconds === null || item.user_declared_duration_seconds === undefined ? "" : String(item.user_declared_duration_seconds);
+    const favorite = item.favorite === true ? " checked" : "";
+    return `<article class="portal-media-item-card"><div class="portal-media-item-head"><div><span class="portal-media-file-mark" aria-hidden="true">${safeText(String(asset.extension || "AUDIO").replace(".", "").slice(0, 5).toUpperCase())}</span><div><h3>${safeText(String(item.title_override || asset.display_name || asset.original_filename || "Audio reference"))}</h3><p>${safeText(mediaRoleLabel(item.role))} · ${safeText(vaultBytes(asset.byte_size))} · ${safeText(String(item.delivery || "guarded").replace(/_/g, " "))}</p></div></div>${item.favorite ? "<span class=\"portal-media-favorite\">★ Đã đánh dấu</span>" : ""}</div><form class="portal-form portal-media-item-form" data-portal-form data-portal-action="media-item-update" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" data-media-item-id="${safeText(itemId)}" novalidate><div class="portal-fields"><label class="portal-field"><span>Vai trò</span><select class="portal-select" id="media-role-${safeText(uid)}" name="role"${disabled}>${MEDIA_ITEM_ROLES.map(([key, label]) => `<option value="${safeText(key)}"${key === selectedRole ? " selected" : ""}>${safeText(label)}</option>`).join("")}</select></label><label class="portal-field"><span>Tên hiển thị</span><input class="portal-input" id="media-title-${safeText(uid)}" name="title_override" maxlength="180" value="${safeText(String(item.title_override || ""))}"${disabled}></label><label class="portal-field"><span>Attribution</span><input class="portal-input" id="media-attribution-${safeText(uid)}" name="attribution" maxlength="500" value="${safeText(String(item.attribution || ""))}"${disabled}></label><label class="portal-field"><span>Tags</span><input class="portal-input" id="media-tags-${safeText(uid)}" name="tags" maxlength="800" value="${safeText(tags)}"${disabled}></label><label class="portal-field"><span>Thời lượng tự khai báo (giây)</span><input class="portal-input" id="media-duration-${safeText(uid)}" name="user_declared_duration_seconds" type="number" min="1" max="7200" step="1" value="${safeText(duration)}"${disabled}></label><label class="portal-field portal-field--wide"><span>Ghi chú license <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" id="media-license-${safeText(uid)}" name="license_note" required minlength="2" maxlength="800" value="${safeText(String(item.license_note || ""))}"${disabled}><small>Thông tin do bạn khai báo; Web không chứng nhận license hoặc quyền thương mại.</small></label><label class="portal-media-checkbox"><input type="checkbox" name="favorite"${favorite}${disabled}><span>Đánh dấu reference này</span></label></div><div class="portal-form-footer"><span class="portal-form-note">Không parse, phát, render hoặc gửi audio đi nơi khác.</span><div class="portal-inline-actions">${downloadPath ? `<a class="portal-button portal-button--quiet" href="${safeText(downloadPath)}" rel="noreferrer">Tải qua Asset Vault</a>` : "<span class=\"portal-form-note\">Tệp không còn active để tải</span>"}<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-item-detach" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" data-media-item-id="${safeText(itemId)}" data-portal-confirm="Gỡ audio reference này khỏi collection? Tệp gốc vẫn nằm trong Asset Vault riêng tư."${disabled}>Gỡ reference</button><button class="portal-button portal-button--primary" type="submit"${disabled}>Lưu metadata</button></div></div></form></article>`;
+  }
+
+  function renderMediaWorkspaceDetail(page, context) {
+    const detail = context.mediaCollectionDetail && typeof context.mediaCollectionDetail === "object" ? context.mediaCollectionDetail : {};
+    const collection = detail.collection && typeof detail.collection === "object" && validMediaCollectionId(detail.collection.id) && String(detail.collection.id) === String(page.recordId || "") ? detail.collection : null;
+    const canView = Boolean(context.capabilities && context.capabilities["media-workspace-view"] === true);
+    if (!canView || !collection) return `<article class="portal-page portal-media-workspace-detail">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Không tìm thấy audio collection", "Collection có thể không thuộc Web account hiện tại, đã bị gỡ hoặc dữ liệu riêng tư chưa được server xác minh.", ICONS.music)}<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/media-workspace">Về Audio Library</a></div></section></article>`;
+    const state = String(collection.state || "active");
+    const writable = state === "active";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["media-workspace-update"] === true && writable);
+    const canArchive = Boolean(context.capabilities && context.capabilities["media-workspace-archive"] === true && writable);
+    const canRestore = Boolean(context.capabilities && context.capabilities["media-workspace-restore"] === true && !writable);
+    const canDuplicate = Boolean(context.capabilities && context.capabilities["media-workspace-duplicate"] === true);
+    const canRestoreVersion = Boolean(context.capabilities && context.capabilities["media-workspace-restore-version"] === true && writable);
+    const canCompose = Boolean(context.capabilities && context.capabilities["media-workspace-compose"] === true && writable);
+    const canAttach = Boolean(context.capabilities && context.capabilities["media-workspace-item-attach"] === true && writable);
+    const canItemUpdate = Boolean(context.capabilities && context.capabilities["media-workspace-item-update"] === true && writable);
+    const route = page.routePath || page.path;
+    const values = mediaCollectionValues(collection);
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const items = Array.isArray(detail.items) ? detail.items.filter((item) => item && validMediaCollectionId(item.id)).slice(0, 250) : [];
+    const composer = context.mediaComposer && typeof context.mediaComposer === "object" && String(context.mediaComposer.collection_id || "") === String(collection.id) ? context.mediaComposer : {};
+    const directions = Array.isArray(composer.directions) ? composer.directions.filter((item) => item && typeof item.prompt === "string").slice(0, 3) : [];
+    const policy = collection.policy && typeof collection.policy === "object" ? collection.policy : {};
+    const stateAction = writable
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-collection-archive" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" data-portal-confirm="Archive collection này? Audio reference vẫn giữ trong Asset Vault, nhưng collection sẽ khóa chỉnh sửa cho đến khi khôi phục."${canArchive ? "" : " disabled"}>Archive collection</button>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="media-collection-restore" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}"${canRestore ? "" : " disabled"}>Khôi phục collection</button>`;
+    const versionList = versions.length ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || "Collection"))} · ${safeText(mediaModeLabel(version.prompt_mode))} · ${safeText(String(version.created_at || "—"))}</small></span>${Number(version.revision) === Number(collection.revision) ? "<span class=\"portal-form-note\">Đang mở</span>" : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-collection-restore-version" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" data-media-collection-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành revision metadata mới? Audio references hiện tại không bị thay đổi."${canRestoreVersion ? "" : " disabled"}>Khôi phục</button>`}</div>`).join("")}</div>` : renderEmpty("Chưa có history", "Version đầu tiên được lưu khi collection được tạo và không bị ghi đè âm thầm.", "○");
+    const composerResult = directions.length && composer.execution === "local_deterministic_draft_only" && composer.provider_called === false && composer.charge_started === false
+      ? `<div class="portal-media-composer-result">${directions.map((direction) => `<article><span class="portal-section-kicker">${safeText(String(direction.title || "Hướng brief"))}</span><h3>${safeText(String(direction.intent || ""))}</h3><pre>${safeText(direction.prompt)}</pre></article>`).join("")}</div>`
+      : "";
+    const policyNotice = policy.status === "guarded" ? `<div class="portal-notice portal-notice--warning"><span class="portal-notice-icon" aria-hidden="true">!</span><div><strong>Brief đang bị policy guard</strong><p>Hãy bỏ yêu cầu mô phỏng nghệ sĩ, bài hát, giai điệu hoặc giọng cụ thể trước khi dùng composer. Web không đánh giá hoặc chứng nhận bản quyền.</p></div></div>` : "";
+    return `<article class="portal-page portal-media-workspace-detail">${renderHero(page, context)}
+      <section class="portal-media-detail-summary"><div><span class="portal-section-kicker">${safeText(mediaModeLabel(collection.prompt_mode))} · ${safeText(String(collection.use_context || "general"))}</span><h2>${safeText(String(collection.title || "Audio Collection"))}</h2><p>${safeText(String(collection.description_excerpt || "Collection authoring riêng tư của Web account hiện tại."))}</p>${renderMediaTags(collection.tags)}</div><dl><div><dt>Revision</dt><dd>v${safeText(String(collection.revision || 1))}</dd></div><div><dt>References</dt><dd>${safeText(String(Number(detail.item_count || items.length)))}/${safeText(String(Number(detail.item_limit || 250)))}</dd></div><div><dt>Trạng thái</dt><dd>${badge(mediaCollectionState(collection.state))}</dd></div></dl></section>
+      ${policyNotice}<div class="portal-media-detail-grid"><section class="portal-card portal-card-pad portal-media-editor"><div class="portal-card-header"><div><h2 class="portal-card-title">Collection editor</h2><p class="portal-card-subtitle">Mỗi lần lưu metadata tạo revision mới. Server kiểm tra owner, CSRF, idempotency, policy và optimistic revision trước khi ghi.</p></div>${badge(mediaCollectionState(collection.state))}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-update" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaCollectionFormFields(), canUpdate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không có provider call, job, Xu, PayOS hoặc media output khi lưu collection.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--quiet" type="button" data-portal-action="media-collection-duplicate" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}"${canDuplicate ? "" : " disabled"}>Nhân bản metadata</button><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision mới</button></div></div></form></section>
+        <aside class="portal-card portal-card-pad portal-media-composer"><div class="portal-card-header"><div><span class="portal-section-kicker">Local deterministic draft</span><h2 class="portal-card-title">3 hướng brief cục bộ</h2><p class="portal-card-subtitle">Composer chỉ sắp xếp lại brief đã lưu thành text direction. Không chạy AI, tạo audio, job, charge hoặc gọi provider.</p></div>${badge(canCompose ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="media-collection-compose" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate><div class="portal-form-footer"><span class="portal-form-note">Cần Music/SFX brief hợp lệ và không bị policy guard.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo hướng brief</button></div></form>${composerResult || "<p class=\"portal-form-note\">Kết quả chỉ tồn tại trong state phiên hiện tại, không tự lưu hoặc gửi tới engine.</p>"}</aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault references</span><h2 class="portal-card-title">Gắn audio private</h2><p class="portal-card-subtitle">Chỉ audio Asset Vault active thuộc account hiện tại. Không có URL, upload mới, player, waveform hay provider preview trong collection.</p></div>${badge(canAttach ? "ready" : "guarded")}</div><form class="portal-form portal-media-attach-form" data-portal-form data-portal-action="media-item-attach" data-portal-route="${safeText(route)}" data-media-collection-id="${safeText(String(collection.id))}" data-media-collection-revision="${safeText(String(collection.revision))}" novalidate>${renderFields(mediaAttachFields(context), canAttach, context, { role: "music", license_note: "Tôi chịu trách nhiệm kiểm tra license và quyền thương mại trước khi đăng." })}<div class="portal-form-footer"><span class="portal-form-note">Attachment chỉ tạo reference private; tệp gốc không bị copy, đổi state hoặc biến thành output.</span><button class="portal-button portal-button--primary" type="submit"${canAttach ? "" : " disabled"}>Gắn audio từ Asset Vault</button></div></form><div class="portal-media-item-grid">${items.length ? items.map((item) => mediaItemEditor(item, collection, canItemUpdate, route)).join("") : renderEmpty("Chưa có audio reference", "Chọn một tệp audio đã vào Asset Vault để gắn vào collection này. Tệp không được tạo hoặc upload lại ở đây.", ICONS.assets)}</div></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử metadata</h2><p class="portal-card-subtitle">Khôi phục luôn tạo revision mới; audio references không bị tự động đảo theo version metadata.</p></div></div>${versionList}</section>
+      <section class="portal-card portal-card-pad portal-media-detail-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Delivery boundary</span><h2 class="portal-card-title">Tệp vẫn đi qua Asset Vault</h2><p class="portal-card-subtitle">Nếu tệp còn active, nút tải dùng attachment route private đã có. Collection không tạo public URL, streaming, preview hay xác nhận output.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderStudioDocumentEditor(page, context, project) {
     const detail = context.studioDocumentDetail && typeof context.studioDocumentDetail === "object" ? context.studioDocumentDetail : {};
     const document = detail.document && typeof detail.document === "object" && validProjectId(detail.document.id) ? detail.document : null;
@@ -2695,8 +2939,9 @@
       { number: "01", icon: ICONS.prompt, title: "Brief & storyboard", text: "Bắt đầu bằng content pack hoặc storyboard để làm rõ câu chuyện, cảnh và CTA trước khi tạo media.", href: "/content/storyboard", action: "Lập storyboard" },
       { number: "02", icon: ICONS.image, title: "Visual & reference", text: "Tạo ảnh hoặc chuẩn bị image-to-image với asset được staging/ownership-check theo workflow riêng.", href: "/image/create", action: "Mở Image Studio" },
       { number: "03", icon: ICONS.video, title: "Video project", text: "Chọn video sản phẩm, quick video hoặc multiscene; estimate và số cảnh do Bot canonical xác nhận.", href: "/video/product", action: "Mở Video Studio" },
-      { number: "04", icon: ICONS.voice, title: "Voice & music", text: "Chuẩn bị TTS, Voice Vault, nhạc hoặc SFX trong các workspace có consent và policy riêng.", href: "/voice/tts", action: "Chuẩn bị voice" },
-      { number: "05", icon: ICONS.subtitle, title: "Subtitle & finalization", text: "Dùng subtitle/dubbing rồi mở finalization. Mux, watermark, export và delivery vẫn cần adapter Bot riêng.", href: "/video/add-ons", action: "Mở finalization" }
+      { number: "04", icon: ICONS.voice, title: "Voice workspace", text: "Chuẩn bị TTS hoặc Voice Vault trong workflow có consent và policy riêng.", href: "/voice/tts", action: "Chuẩn bị voice" },
+      { number: "05", icon: ICONS.music, title: "Audio Library & Briefing", text: "Tổ chức music/SFX brief và audio Asset Vault riêng tư. Đây là authoring-only, không phải music generator hoặc player.", href: "/media-workspace", action: "Mở Audio Library" },
+      { number: "06", icon: ICONS.subtitle, title: "Subtitle & finalization", text: "Dùng subtitle/dubbing rồi mở finalization. Mux, watermark, export và delivery vẫn cần adapter Bot riêng.", href: "/video/add-ons", action: "Mở finalization" }
     ];
     const cards = steps.map((step) => `<article class="portal-finalization-card"><div class="portal-finalization-card-head"><span class="portal-finalization-number">${safeText(step.number)}</span><span class="portal-module-icon" aria-hidden="true">${safeText(step.icon)}</span></div><h3>${safeText(step.title)}</h3><p>${safeText(step.text)}</p><a class="portal-button portal-button--quiet" href="${safeText(step.href)}">${safeText(step.action)} <span aria-hidden="true">→</span></a></article>`).join("");
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-media-studio-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.video)}</span><div><h2>Điều phối workflow, không giả project</h2><p>Media Studio phản chiếu các bước media factory/creative flow của Bot bằng đường đi rõ ràng giữa các workspace Web đã đăng ký. Mỗi bước vẫn tự giữ input, quote, confirmation và quyền sở hữu riêng.</p><div class="portal-state-meta"><span>Không tạo job tại browser</span><span>Không suy đoán output</span><span>Không ghép file/URL tự do</span></div></div></div></section><section class="portal-finalization-grid" aria-label="Luồng Media Studio">${cards}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Sau khi xác nhận</h2><p class="portal-card-subtitle">Job Center và Assets là nơi duy nhất theo dõi status/delivery canonical sau khi một adapter Bot đã tạo job hợp lệ.</p></div>${badge("read_only")}</div>${renderNotes(page)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center</a><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản</a><a class="portal-button portal-button--primary" href="/features">Khám phá workflow</a></div></section></article>`;
@@ -5035,6 +5280,8 @@
       case "memory-reminders": return renderMemoryReminders(page, context);
       case "prompt-library": return renderPromptLibrary(page, context);
       case "prompt-library-detail": return renderPromptLibraryDetail(page, context);
+      case "media-workspace": return renderMediaWorkspace(page, context);
+      case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "project-detail": return renderProjectDetail(page, context);
       case "project-packages": return renderProjectPackages(page, context);
       case "feature-family": return renderFeatureFamily(page, context);
@@ -5243,7 +5490,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy"].includes(action) && !form.reportValidity()) {
+    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -5254,10 +5501,10 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import"].includes(action)) rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });

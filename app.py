@@ -26,6 +26,7 @@ import copyfast_auth
 import copyfast_document_operations
 import copyfast_image_operations
 import copyfast_memory
+import copyfast_music_media
 import copyfast_prompt_library
 import copyfast_project_packages
 import copyfast_projects
@@ -93,6 +94,10 @@ RATE_WINDOW_MAX_KEYS = 4096
 # raw ASGI stream *before* FastAPI/Pydantic buffers or parses JSON.
 PROMPT_LIBRARY_BODY_MAX_BYTES = 512 * 1024
 PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES = 6 * 1024 * 1024
+# Audio Workspace only accepts bounded metadata JSON (the largest server
+# field is a 6,000-character brief).  Cap its raw stream separately before
+# FastAPI buffers/parses a potentially chunked body.
+MEDIA_WORKSPACE_BODY_MAX_BYTES = 64 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -104,32 +109,39 @@ class PromptLibraryBodyLimitMiddleware:
     narrow: uploads and other feature routes retain their own contracts.
     """
 
-    def __init__(self, app, *, max_bytes: int, import_max_bytes: int):
+    def __init__(self, app, *, max_bytes: int, import_max_bytes: int, media_max_bytes: int):
         self.app = app
         self.max_bytes = int(max_bytes)
         self.import_max_bytes = int(import_max_bytes)
+        self.media_max_bytes = int(media_max_bytes)
 
     @staticmethod
-    def _is_prompt_write(scope) -> bool:
+    def _is_bounded_write(scope) -> bool:
+        path = str(scope.get("path") or "")
         return (
             scope.get("type") == "http"
             and str(scope.get("method") or "").upper() in {"POST", "PATCH"}
-            and str(scope.get("path") or "").startswith("/api/v1/prompt-library/")
+            and (path.startswith("/api/v1/prompt-library/") or path.startswith("/api/v1/media-workspace/"))
         )
 
     def _limit_for(self, scope) -> int:
-        return self.import_max_bytes if str(scope.get("path") or "") == "/api/v1/prompt-library/import" else self.max_bytes
+        path = str(scope.get("path") or "")
+        if path.startswith("/api/v1/media-workspace/"):
+            return self.media_max_bytes
+        return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
 
     async def _reject(self, scope, receive, send) -> None:
         # This class may be the outermost application middleware, so write the
         # private API security headers directly rather than relying on a later
         # function middleware to decorate a response that it never receives.
+        is_media = str(scope.get("path") or "").startswith("/api/v1/media-workspace/")
         response = JSONResponse(
             envelope(
                 False,
-                "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn.",
+                "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
+                if is_media else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn.",
                 status_name="guarded",
-                error_code="WEB_PROMPT_LIBRARY_BODY_TOO_LARGE",
+                error_code="WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE" if is_media else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE",
             ),
             status_code=413,
             headers={
@@ -144,7 +156,7 @@ class PromptLibraryBodyLimitMiddleware:
         await response(scope, receive, send)
 
     async def __call__(self, scope, receive, send):
-        if not self._is_prompt_write(scope):
+        if not self._is_bounded_write(scope):
             await self.app(scope, receive, send)
             return
 
@@ -213,6 +225,7 @@ app.add_middleware(
     PromptLibraryBodyLimitMiddleware,
     max_bytes=PROMPT_LIBRARY_BODY_MAX_BYTES,
     import_max_bytes=PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES,
+    media_max_bytes=MEDIA_WORKSPACE_BODY_MAX_BYTES,
 )
 
 
@@ -336,6 +349,12 @@ async def security_headers(request: Request, call_next):
     # Bound them by a fixed route family too, so arbitrary template UUIDs or
     # query strings cannot bypass the pre-DB gate or grow its in-memory map.
     prompt_library_read = request.method == "GET" and request.url.path.startswith("/api/v1/prompt-library/")
+    # Audio Library & Briefing keeps owner-scoped metadata and Asset Vault
+    # references only.  Its independent route-family caps protect SQLite
+    # before CSRF/revision/idempotency/ownership work without making a music
+    # provider, Bot job or delivery capability appear available.
+    media_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/media-workspace/")
+    media_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/media-workspace/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -361,6 +380,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if prompt_library_read:
         rate_limit = 120
+    if media_workspace_write:
+        rate_limit = 40
+    if media_workspace_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -375,6 +398,8 @@ async def security_headers(request: Request, call_next):
         rate_scope = (
             "prompt-library-write" if prompt_library_write
             else "prompt-library-read" if prompt_library_read
+            else "media-workspace-write" if media_workspace_write
+            else "media-workspace-read" if media_workspace_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
@@ -449,6 +474,7 @@ app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
+app.include_router(copyfast_music_media.router)
 app.include_router(copyfast_support.router)
 
 
