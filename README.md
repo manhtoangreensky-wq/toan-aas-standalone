@@ -33,20 +33,24 @@ Production Web App for `app.toanaas.vn`.
   `/static`, Asset Vault or its parent. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 - `WEBAPP_DOCUMENT_OPERATIONS_ENABLED` defaults to `false`. PDF Split, PDF
-  Merge, PDF Optimize, Image to PDF and PDF text → Word require
+  Merge, PDF Optimize, Image to PDF, PDF → images and PDF text → Word require
   Asset Vault **and** a separate persistent
   `WEBAPP_DOCUMENT_OPERATIONS_ROOT` (for example
   `/data/toanaas_webapp_document_operations`). It may not overlap Asset Vault,
   Project Package or `/static`; startup fails closed when the parser/runtime
   or private storage boundary is absent. Image to PDF also requires the
   separate opt-in `WEBAPP_IMAGE_TO_PDF_ENABLED=true` gate and its Pillow
-  decoder runtime. PDF text → Word separately requires
+  decoder runtime. PDF → images separately requires
+  `WEBAPP_PDF_TO_IMAGES_ENABLED=true` and `pypdfium2`; it renders private
+  PDF pages at 2× to a verified PNG or PNG ZIP, not a browser/provider
+  fallback. PDF text → Word separately requires
   `WEBAPP_PDF_TO_WORD_ENABLED=true` and `python-docx`; it exports only real
   selectable text, not OCR or visual layout. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
-  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md), and
+  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
+  [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md), and
   [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
 - `WEBAPP_IMAGE_OPERATIONS_ENABLED` defaults to `false`. Resize & Aspect
   Studio additionally needs `WEBAPP_IMAGE_RESIZE_ENABLED=true`, Asset Vault,
@@ -107,19 +111,22 @@ private Bot bridge.
   blobs, change Xu, invoke PayOS or call a provider. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 - `/documents/split`, `/documents/merge`, `/documents/compress`,
-  `/documents/image-to-pdf` and `/documents/pdf-to-word` are distinct
+  `/documents/image-to-pdf`, `/documents/pdf-to-images` and
+  `/documents/pdf-to-word` are distinct
   Web-native document operations:
   the PDF tools accept only verified private Asset Vault PDFs, while Image to
   PDF accepts ordered, verified private JPEG/PNG/WebP assets. Each writes a
   separately validated private attachment and does not create a Bot job, call
   a provider, alter Xu or touch PayOS. PDF Optimize only delivers when its
-  final artifact is meaningfully smaller; PDF text → Word delivers only when
+  final artifact is meaningfully smaller; PDF → images delivers a verified
+  PNG or deterministic PNG ZIP; PDF text → Word delivers only when
   the private source contains real extractable text and its fresh DOCX passes
   verification. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
-  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md), and
+  [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
+  [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md), and
   [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially

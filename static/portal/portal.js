@@ -224,11 +224,10 @@
       { name: "duration_seconds", label: "Thời lượng (giây)", type: "number", placeholder: "Ví dụ: 75", required: true, min: 1, max: 14_400, step: 1, inputMode: "numeric" },
       { name: "output_format", label: "Định dạng phụ đề", control: "select", options: ["srt"], help: "VTT đang guarded cho tới khi canonical delivery adapter xác nhận." }
     ],
-    documentPdf: [
-      { name: "document", label: "Tài liệu PDF nguồn", type: "file", accept: "application/pdf", requiredUpload: true, help: "Tệp chỉ vào bot-owned staging sau validation; Web không giữ raw path hoặc bytes lâu dài." },
-      { name: "operation", label: "Công cụ PDF", control: "select", options: ["pdf_to_images"], help: "Ảnh sang PDF có pipeline private riêng tại /documents/image-to-pdf. PDF có text → Word dùng trích xuất Web-native riêng tại /documents/pdf-to-word; không đi qua bridge generic.", required: true },
-      { name: "page_count", label: "Số trang để báo giá", type: "number", placeholder: "Ví dụ: 3", required: true, min: 1, max: 2_000, step: 1, inputMode: "numeric" }
-    ],
+    // PDF utility routes now use owner-scoped Asset Vault sources and their
+    // own server contracts. Keep this empty legacy field set so no generic
+    // document form can accidentally revive a second bridge lifecycle.
+    documentPdf: [],
     documentOcr: [
       { name: "document", label: "Ảnh hoặc PDF nguồn", type: "file", accept: "application/pdf,image/jpeg,image/png,image/webp", requiredUpload: true, help: "OCR không trả text cho đến khi pipeline canonical tạo output đã kiểm tra." },
       { name: "operation", label: "Loại OCR", control: "select", options: ["ocr_image", "ocr_pdf"], required: true },
@@ -719,8 +718,20 @@
     "Khi Bot công bố adapter mux canonical, route này sẽ dùng chính job và asset ownership hiện có."
   ]);
 
-  featurePage("/documents", "Document Studio", "Tập hợp workflow PDF, OCR, gộp/tách/nén và dịch tài liệu. Ảnh sang PDF dùng pipeline private riêng.", ICONS.document, FIELD_SETS.documentPdf);
-  featurePage("/documents/pdf", "PDF tools", "Chuẩn bị thao tác PDF; Core Bridge kiểm tra file, path và ownership. Ảnh sang PDF dùng pipeline private riêng.", ICONS.document, FIELD_SETS.documentPdf, ["/pdf"]);
+  customerPage("/documents", "Document Studio", "Không gian xử lý PDF riêng tư: chọn workflow có contract rõ ràng thay vì một form generic hoặc output mô phỏng.", ICONS.document, {
+    layout: "document-hub", type: "document-hub", action: "none", status: "ready", fields: [],
+    notes: [
+      "Mỗi tiện ích PDF Web-native chỉ đọc source thuộc Asset Vault của signed account và tạo artifact trong storage cô lập.",
+      "Không route PDF qua Bot bridge, provider, ví Xu, PayOS hay webhook thanh toán."
+    ]
+  });
+  customerPage("/documents/pdf", "PDF tools", "Chọn công cụ PDF private có giới hạn xử lý, ownership và delivery đã xác minh.", ICONS.document, {
+    layout: "document-hub", type: "document-hub", action: "none", status: "ready", fields: [],
+    notes: [
+      "Trang legacy này là hub điều hướng; upload/path browser không được dùng để chạy PDF generic.",
+      "Mỗi output chỉ xuất hiện sau khi server kiểm tra input, renderer/parser và artifact cuối."
+    ]
+  }, ["/pdf"]);
   featurePage("/documents/ocr", "OCR", "Chuẩn bị OCR, đợi engine trả về kết quả được kiểm tra thay vì text giả.", ICONS.document, FIELD_SETS.documentOcr);
   customerPage("/documents/merge", "Gộp PDF riêng tư", "Gộp nhiều PDF theo thứ tự rõ ràng từ Asset Vault bằng Document Operations độc lập của Web.", ICONS.document, {
     layout: "pdf-merge", type: "document-operation", action: "none", status: "ready", fields: [],
@@ -748,6 +759,13 @@
     notes: [
       "Ảnh 1 → Ảnh 8 xác định thứ tự trang PDF. Web chỉ nhận JPEG, PNG hoặc WebP active thuộc signed account hiện tại; browser không gửi path, URL hoặc bytes vào thao tác.",
       "Mỗi ảnh được hash-copy vào vùng cô lập, decode/kiểm tra thật, chuẩn hóa orientation và alpha trước khi output PDF riêng được parse/hash lại. Không gọi Bot, provider, PayOS hoặc ví Xu."
+    ]
+  });
+  customerPage("/documents/pdf-to-images", "PDF sang ảnh riêng tư", "Render PDF private trong Asset Vault thành PNG hoặc ZIP ở chất lượng 2×, với kiểm tra pixel và delivery private.", ICONS.document, {
+    layout: "pdf-to-images", type: "document-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "Một PDF một trang trả PNG private; PDF nhiều trang trả ZIP chứa page_001.png… sau khi từng trang và archive được kiểm tra lại.",
+      "Không nhận URL, path hoặc bytes từ browser; không gọi Bot, provider, PayOS, ví Xu hoặc webhook."
     ]
   });
   customerPage("/documents/pdf-to-word", "PDF có text → Word riêng tư", "Trích xuất text có thể chọn thực sự từ PDF private trong Asset Vault thành DOCX; không OCR và không cam kết giữ bố cục trực quan.", ICONS.document, {
@@ -2591,7 +2609,7 @@
       .filter((item) => {
         const itemKind = String(item && item.kind || "");
         return item && typeof item === "object" && validDocumentOperationId(item.id)
-          && (kind ? itemKind === kind : ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text"].includes(itemKind));
+          && (kind ? itemKind === kind : ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text"].includes(itemKind));
       })
       .slice(0, 100);
   }
@@ -2656,6 +2674,14 @@
       name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets",
       emptyLabel: "Chọn PDF có text riêng tư", required: true,
       help: "Web chỉ trích xuất text mà parser PDF đọc được và tạo DOCX riêng tư mới. Không OCR, không đưa ảnh vào DOCX và không cam kết giữ nguyên bố cục, font hoặc định dạng thị giác."
+    }];
+  }
+
+  function pdfToImagesFormFields() {
+    return [{
+      name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets",
+      emptyLabel: "Chọn PDF riêng tư", required: true,
+      help: "Server render toàn bộ trang ở 2× như Bot. Một trang tạo PNG private; nhiều trang tạo ZIP PNG private. Browser chỉ gửi ID asset, không gửi URL, path hoặc bytes PDF."
     }];
   }
 
@@ -2888,6 +2914,7 @@
       const isMerge = kind === "pdf_merge";
       const isOptimize = kind === "pdf_optimize";
       const isImageToPdf = kind === "image_to_pdf";
+      const isPdfToImages = kind === "pdf_to_images";
       const isPdfToWord = kind === "pdf_to_word_text";
       const start = Number(item.selected_start_page);
       const end = Number(item.selected_end_page);
@@ -2898,6 +2925,8 @@
         ? `${sourceCount} PDF nguồn theo thứ tự đã chọn`
         : isImageToPdf
         ? `${sourceCount} ảnh nguồn theo thứ tự đã chọn`
+        : isPdfToImages
+        ? "Render toàn bộ trang PDF ở 2×"
         : isPdfToWord
         ? "Trích xuất text có thể chọn từ PDF"
         : (Number.isInteger(start) && Number.isInteger(end) ? (start === end ? `Trang ${start}` : `Trang ${start}–${end}`) : "Đang xác minh phạm vi");
@@ -2909,6 +2938,8 @@
         ? `${safeText(String(sourceCount))} PDF${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : ""}`
         : isImageToPdf
         ? `${safeText(String(sourceCount))} ảnh${Number.isInteger(sourcePages) ? ` · ${safeText(String(sourcePages))} trang` : ""}`
+        : isPdfToImages
+        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
         : isPdfToWord
         ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
         : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra");
@@ -2921,15 +2952,36 @@
         ? "Không có bản nhỏ hơn đạt chuẩn an toàn; file gốc không thay đổi và không có artifact tải xuống."
         : isPdfToWord && status === "guarded"
         ? "PDF không có text có thể trích xuất; Web không OCR hoặc tạo DOCX giả."
+        : isPdfToImages && (status === "failed" || status === "unavailable")
+        ? "Không có PNG/ZIP tải xuống; hãy kiểm tra PDF nguồn và chạy thao tác mới."
         : (status === "failed" || status === "unavailable" ? "Không có output tải xuống; hãy kiểm tra nguồn và chạy thao tác mới." : "Chỉ tải xuống sau khi server xác minh output.");
       const outputMetric = isPdfToWord
         ? (status === "completed" && downloadPath ? "DOCX đã xác minh" : "Chưa có")
+        : isPdfToImages
+        ? (status === "completed" && downloadPath ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG đã xác minh" : `${safeText(String(outputPages || 0))} PNG trong ZIP`) : "Chưa có")
         : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có") : (Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : "Chưa có"));
-      const artifactLabel = isPdfToWord ? "DOCX" : (isOptimize ? "Đã giảm" : "Artifact");
-      const downloadLabel = isPdfToWord ? "Tải DOCX riêng tư" : "Tải PDF riêng tư";
-      const fallbackFilename = isPdfToWord ? "DOCX riêng tư" : "PDF riêng tư";
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isPdfToWord ? "DOCX" : (isImageToPdf ? "ẢNH" : "PDF")}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+      const artifactLabel = isPdfToWord ? "DOCX" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG" : "ZIP") : (isOptimize ? "Đã giảm" : "Artifact"));
+      const downloadLabel = isPdfToWord ? "Tải DOCX riêng tư" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "Tải PNG riêng tư" : "Tải ZIP riêng tư") : "Tải PDF riêng tư");
+      const fallbackFilename = isPdfToWord ? "DOCX riêng tư" : (isPdfToImages ? "PNG / ZIP riêng tư" : "PDF riêng tư");
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isPdfToWord ? "DOCX" : (isPdfToImages ? "PNG" : (isImageToPdf ? "ẢNH" : "PDF"))}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
+  }
+
+  function renderDocumentHub(page, context) {
+    const privateReady = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
+    const cards = [
+      { href: "/documents/pdf-to-images", icon: "PNG", title: "PDF sang ảnh", text: "Render toàn bộ trang PDF ở 2×. Một trang trả PNG, nhiều trang trả ZIP private đã kiểm tra.", ready: Boolean(context.pdfToImagesEnabled) },
+      { href: "/documents/split", icon: "PDF", title: "Tách PDF", text: "Tạo một PDF mới từ một trang hoặc dải liên tiếp trong Asset Vault.", ready: true },
+      { href: "/documents/merge", icon: "PDF", title: "Gộp PDF", text: "Gộp tối đa 8 PDF private theo đúng thứ tự đã chọn.", ready: true },
+      { href: "/documents/compress", icon: "PDF", title: "Tối ưu PDF", text: "Chỉ phát một bản lossless khi kết quả nhỏ hơn đủ ý nghĩa.", ready: true },
+      { href: "/documents/image-to-pdf", icon: "ẢNH", title: "Ảnh sang PDF", text: "Tạo PDF từ JPEG/PNG/WebP private theo thứ tự trang có chủ đích.", ready: Boolean(context.imageToPdfEnabled) },
+      { href: "/documents/pdf-to-word", icon: "DOCX", title: "PDF có text → Word", text: "Trích xuất text có thể chọn thành DOCX; không OCR hoặc sao chép layout giả.", ready: Boolean(context.pdfToWordEnabled) }
+    ];
+    return `<article class="portal-page portal-document-hub">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Document Studio</span><h2>Công cụ PDF có output thật, không form generic</h2><p>Chọn workflow phù hợp cho PDF của bạn. Mỗi công cụ chỉ đọc Asset Vault của signed account, xử lý trong storage cô lập và chỉ cho tải attachment sau khi server xác minh dữ liệu đầu ra.</p></div><dl><div><dt>${safeText(String(cards.filter((item) => item.ready && privateReady).length))}</dt><dd>Tiện ích private sẵn sàng</dd></div><div><dt>0</dt><dd>Bot job / provider call</dd></div></dl></section>
+      <section class="portal-module-grid">${cards.map((item) => `<a class="portal-module-card" href="${safeText(item.href)}"><div class="portal-module-icon" aria-hidden="true">${safeText(item.icon)}</div><div class="portal-module-copy"><div class="portal-module-heading"><h2>${safeText(item.title)}</h2>${badge(privateReady && item.ready ? "ready" : "guarded")}</div><p>${safeText(item.text)}</p><span class="portal-module-link">Mở workflow <b aria-hidden="true">→</b></span></div></a>`).join("")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Biên giới dữ liệu rõ ràng</strong><p>Không có URL công khai, PWA cache, raw path browser, provider payload, Bot job, ví Xu, PayOS order hay webhook mới trong các tiện ích này. Nếu một runtime chưa bật, card giữ guarded thay vì tạo kết quả giả.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
   }
 
   function renderPdfSplit(page, context) {
@@ -3007,6 +3059,34 @@
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tối ưu PDF không resample</h2><p class="portal-card-subtitle">Một profile duy nhất, có kiểm tra thật. Không có dropdown light/medium/strong không tác động engine.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-optimize" data-portal-route="/documents/compress" data-portal-confirm="Tối ưu PDF từ Asset Vault? File gốc không bị thay đổi; output chỉ được tạo nếu máy chủ xác minh bản mới nhỏ hơn đủ ý nghĩa." novalidate>${renderFields(pdfOptimizeFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tối ưu PDF</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Kết quả trung thực</h2><p class="portal-card-subtitle">Không resample ảnh hoặc tạo output giả; annotation/action tương tác được loại bỏ để delivery an toàn.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ asset PDF private active của signed account hiện tại được sao chép/đọc.</span></li><li><strong>2. Tối ưu có giới hạn</strong><span>Tối đa 20 MB/30 trang; không PDF mã hóa, không chạy shell/command hoặc dịch vụ ngoài.</span></li><li><strong>3. Chỉ giao khi giảm thật</strong><span>Artifact phải strict-reparse, hash đúng và tiết kiệm tối thiểu 1 KiB cùng 1%; nếu không có output.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã tối ưu</h2><p class="portal-card-subtitle">Dung lượng nguồn, output và mức giảm chỉ được server công bố sau completed. Trạng thái guarded nghĩa là không có bản nhỏ hơn đạt chuẩn — không phải một download bị ẩn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/compress"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có PDF tối ưu", "Một output chỉ xuất hiện khi máy chủ xác minh bản lossless nhỏ hơn thật. File gốc trong Asset Vault luôn được giữ nguyên.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không thay thế workflow Bot</strong><p>PDF Optimize này là artifact Web-native có lifecycle riêng. Nó không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderPdfToImages(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-to-images"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true);
+    if (!canView) {
+      return `<article class="portal-page portal-pdf-to-images">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>PDF → ảnh đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi Asset Vault và storage output private persistent đã được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output mô phỏng.</p><div class="portal-state-meta"><span>Signed session</span><span>Storage riêng</span><span>Không có output giả</span></div></div></div></section></article>`;
+    }
+    const sources = pdfVaultItems(context);
+    const operations = documentOperationItems(context, "pdf_to_images");
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = transientFormValues("/documents/pdf-to-images");
+    const runReason = !canRunCapability
+      ? (context.pdfToImagesEnabled === true
+        ? "Cần signed session, CSRF và capability PDF → ảnh từ server."
+        : "PDF → ảnh đang tắt an toàn trên server; Web không fallback sang renderer browser, Bot hay provider.")
+      : sources.length === 0
+        ? "Hãy lưu một PDF private vào Asset Vault trước khi render."
+        : "Server render 2×, kiểm tra lại từng PNG/ZIP và chỉ phát attachment private khi integrity hợp lệ.";
+    const sourceSummary = sources.length === 1 ? "1 PDF đang hoạt động" : `${sources.length} PDF đang hoạt động`;
+    const completedCount = operations.filter((item) => documentOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-pdf-to-images">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native PDF renderer</span><h2>Render PDF thành ảnh riêng tư, không qua Telegram</h2><p>Chọn một PDF đã có trong Asset Vault. Máy chủ hash-copy source vào vùng cô lập, kiểm tra parser, render toàn bộ trang ở 2× như Bot rồi mở lại từng PNG. PDF một trang giao PNG; PDF nhiều trang giao ZIP với tên page_001.png, page_002.png… đã được xác minh lại.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG / ZIP sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn PDF để render</h2><p class="portal-card-subtitle">Browser chỉ gửi Asset Vault ID private. Không upload bytes, URL hay raw file path vào renderer.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-to-images" data-portal-route="/documents/pdf-to-images" data-portal-confirm="Render toàn bộ PDF thành PNG riêng tư? Một trang trả PNG; nhiều trang trả ZIP sau khi server kiểm tra từng file." novalidate>${renderFields(pdfToImagesFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Render PDF → ảnh</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Giới hạn có chủ đích</h2><p class="portal-card-subtitle">Kết quả bot-compatible, nhưng có hàng rào Web để tránh raster/ZIP amplification.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ PDF active của signed account hiện tại được hash-copy và parse lại; PDF mã hóa hoặc không hợp lệ bị từ chối.</span></li><li><strong>2. Render 2× có giới hạn</strong><span>Tối đa 20 MB/30 trang, 8.192 px mỗi cạnh, 8 MP mỗi trang và 48 MP mỗi lần. Không có renderer browser hoặc provider fallback.</span></li><li><strong>3. Delivery riêng tư</strong><span>Mỗi PNG được decoder kiểm tra; ZIP nhiều trang có manifest tên/byte/hash chính xác. Attachment tải qua signed session, không public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ảnh PDF đã render</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Trạng thái failed/unavailable nghĩa là không có PNG hay ZIP bị ẩn hoặc thay thế bằng output giả.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/pdf-to-images"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có PDF đã render", "PNG hoặc ZIP chỉ xuất hiện sau khi PDF source, pixel budget và output private đều vượt qua kiểm tra server-side.")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>PDF → ảnh có lifecycle artifact riêng, không tạo Job Bot, gọi provider, trừ/cộng Xu, tạo PayOS order hoặc dùng webhook thanh toán.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -4237,9 +4317,11 @@
       case "job-detail": return renderJobDetail(page, context);
       case "assets": return renderAssets(page, context);
       case "asset-vault": return renderAssetVault(page, context);
+      case "document-hub": return renderDocumentHub(page, context);
       case "pdf-split": return renderPdfSplit(page, context);
       case "pdf-merge": return renderPdfMerge(page, context);
       case "pdf-optimize": return renderPdfOptimize(page, context);
+      case "pdf-to-images": return renderPdfToImages(page, context);
       case "pdf-to-word": return renderPdfToWord(page, context);
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);

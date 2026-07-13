@@ -4,37 +4,37 @@
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 263,
+      "line": 394,
       "target": "_web_feature_job_adapter_keys"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2420,
+      "line": 2988,
       "target": "admin_jobs"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2483,
+      "line": 3051,
       "target": "admin_refund_job"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2457,
+      "line": 3025,
       "target": "admin_retry_job"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2224,
+      "line": 2792,
       "target": "job_detail"
     },
     {
       "file": "copyfast_api.py",
       "kind": "function",
-      "line": 2219,
+      "line": 2787,
       "target": "list_jobs"
     },
     {
@@ -54,10 +54,10 @@
     "callback_handlers": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 45,
-    "env_references": 67,
+    "database_tables": 58,
+    "env_references": 89,
     "providers": 16,
-    "routes": 150,
+    "routes": 190,
     "ui_path_references": 46
   },
   "database_references": [
@@ -81,7 +81,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2326,
+      "line": 2337,
       "operation": "UPDATE",
       "table": "any"
     },
@@ -429,7 +429,7 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1631,
+      "line": 1641,
       "operation": "UPDATE",
       "table": "only"
     },
@@ -549,73 +549,67 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2148,
+      "line": 2159,
       "operation": "DELETE FROM",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2150,
+      "line": 2161,
       "operation": "INSERT INTO",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2175,
+      "line": 2186,
       "operation": "DELETE FROM",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2414,
+      "line": 2425,
       "operation": "UPDATE",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2561,
+      "line": 2572,
       "operation": "UPDATE",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2687,
+      "line": 2698,
       "operation": "UPDATE",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_db.py",
-      "line": 131,
+      "line": 507,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "telegram_link_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2002,
+      "line": 2013,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2004,
+      "line": 2015,
       "operation": "INSERT INTO",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2062,
+      "line": 2073,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2092,
-      "operation": "DELETE FROM",
-      "table": "telegram_login_codes"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 2112,
+      "line": 2103,
       "operation": "DELETE FROM",
       "table": "telegram_login_codes"
     },
@@ -627,25 +621,31 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2353,
+      "line": 2134,
+      "operation": "DELETE FROM",
+      "table": "telegram_login_codes"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2364,
       "operation": "UPDATE",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2374,
+      "line": 2385,
       "operation": "UPDATE",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2392,
+      "line": 2403,
       "operation": "UPDATE",
       "table": "telegram_login_codes"
     },
     {
       "file": "copyfast_db.py",
-      "line": 169,
+      "line": 545,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "telegram_login_codes"
     },
@@ -722,310 +722,766 @@
       "table": "users"
     },
     {
-      "file": "copyfast_auth.py",
-      "line": 838,
-      "operation": "INSERT INTO",
-      "table": "web_account_profiles"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1449,
-      "operation": "INSERT INTO",
-      "table": "web_account_profiles"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1555,
-      "operation": "INSERT INTO",
-      "table": "web_account_profiles"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1648,
-      "operation": "INSERT INTO",
-      "table": "web_account_profiles"
-    },
-    {
-      "file": "copyfast_db.py",
-      "line": 118,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_account_profiles"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 832,
-      "operation": "INSERT INTO",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1443,
-      "operation": "INSERT INTO",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1549,
-      "operation": "INSERT INTO",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1644,
-      "operation": "UPDATE",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1708,
-      "operation": "UPDATE",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 2681,
-      "operation": "UPDATE",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_db.py",
-      "line": 82,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_accounts"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 624,
-      "operation": "INSERT INTO",
-      "table": "web_audit_events"
-    },
-    {
-      "file": "copyfast_db.py",
-      "line": 261,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_audit_events"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 2265,
-      "operation": "DELETE FROM",
-      "table": "web_bridge_callback_nonces"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 2269,
-      "operation": "INSERT INTO",
-      "table": "web_bridge_callback_nonces"
-    },
-    {
-      "file": "copyfast_db.py",
-      "line": 219,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_bridge_callback_nonces"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 1909,
-      "operation": "INSERT INTO",
-      "table": "web_campaign_plans"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 1978,
-      "operation": "UPDATE",
-      "table": "web_campaign_plans"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 2059,
-      "operation": "UPDATE",
-      "table": "web_campaign_plans"
-    },
-    {
-      "file": "copyfast_db.py",
-      "line": 281,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_campaign_plans"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1394,
-      "operation": "UPDATE",
-      "table": "web_external_identities"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1418,
-      "operation": "INSERT INTO",
-      "table": "web_external_identities"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1455,
-      "operation": "INSERT INTO",
-      "table": "web_external_identities"
-    },
-    {
-      "file": "copyfast_auth.py",
-      "line": 1499,
-      "operation": "INSERT INTO",
-      "table": "web_external_identities"
-    },
-    {
-      "file": "copyfast_db.py",
-      "line": 205,
-      "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_external_identities"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 476,
-      "operation": "DELETE FROM",
-      "table": "web_feature_quote_receipts"
-    },
-    {
-      "file": "copyfast_api.py",
+      "file": "copyfast_projects.py",
       "line": 478,
+      "operation": "UPDATE",
+      "table": "web"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 848,
       "operation": "INSERT INTO",
-      "table": "web_feature_quote_receipts"
+      "table": "web_account_profiles"
     },
     {
-      "file": "copyfast_api.py",
-      "line": 508,
-      "operation": "DELETE FROM",
-      "table": "web_feature_quote_receipts"
+      "file": "copyfast_auth.py",
+      "line": 1459,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
     },
     {
-      "file": "copyfast_api.py",
-      "line": 527,
-      "operation": "UPDATE",
-      "table": "web_feature_quote_receipts"
+      "file": "copyfast_auth.py",
+      "line": 1565,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
     },
     {
-      "file": "copyfast_api.py",
-      "line": 545,
-      "operation": "UPDATE",
-      "table": "web_feature_quote_receipts"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 551,
-      "operation": "UPDATE",
-      "table": "web_feature_quote_receipts"
+      "file": "copyfast_auth.py",
+      "line": 1658,
+      "operation": "INSERT INTO",
+      "table": "web_account_profiles"
     },
     {
       "file": "copyfast_db.py",
-      "line": 244,
+      "line": 494,
       "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_feature_quote_receipts"
+      "table": "web_account_profiles"
     },
     {
-      "file": "copyfast_api.py",
-      "line": 1600,
-      "operation": "UPDATE",
-      "table": "web_idempotency"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 1611,
-      "operation": "UPDATE",
-      "table": "web_idempotency"
-    },
-    {
-      "file": "copyfast_api.py",
-      "line": 1616,
+      "file": "copyfast_auth.py",
+      "line": 842,
       "operation": "INSERT INTO",
-      "table": "web_idempotency"
+      "table": "web_accounts"
     },
     {
-      "file": "copyfast_api.py",
-      "line": 1625,
+      "file": "copyfast_auth.py",
+      "line": 1453,
+      "operation": "INSERT INTO",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1559,
+      "operation": "INSERT INTO",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1654,
       "operation": "UPDATE",
-      "table": "web_idempotency"
+      "table": "web_accounts"
     },
     {
-      "file": "copyfast_api.py",
-      "line": 1633,
-      "operation": "DELETE FROM",
-      "table": "web_idempotency"
-    },
-    {
-      "file": "copyfast_api.py",
+      "file": "copyfast_auth.py",
       "line": 1718,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2692,
+      "operation": "UPDATE",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 458,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_accounts"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 478,
+      "operation": "UPDATE",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 601,
+      "operation": "INSERT INTO",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 714,
+      "operation": "UPDATE",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 758,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 953,
+      "operation": "UPDATE",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 809,
+      "operation": "UPDATE",
+      "table": "web_asset_files"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 634,
+      "operation": "INSERT INTO",
+      "table": "web_audit_events"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 641,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_audit_events"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2276,
+      "operation": "DELETE FROM",
+      "table": "web_bridge_callback_nonces"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 2280,
+      "operation": "INSERT INTO",
+      "table": "web_bridge_callback_nonces"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 595,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_bridge_callback_nonces"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2226,
+      "operation": "INSERT INTO",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2295,
+      "operation": "UPDATE",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2376,
+      "operation": "UPDATE",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 661,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_campaign_plans"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 871,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_document_operation_events"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 713,
+      "operation": "INSERT INTO",
+      "table": "web_document_operation_events"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 894,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_document_operation_sources"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2277,
+      "operation": "INSERT INTO",
+      "table": "web_document_operation_sources"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2437,
+      "operation": "INSERT INTO",
+      "table": "web_document_operation_sources"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 834,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 886,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 917,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 938,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 1951,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2044,
+      "operation": "INSERT INTO",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2057,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2085,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2264,
+      "operation": "INSERT INTO",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2287,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2320,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2424,
+      "operation": "INSERT INTO",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2447,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2489,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2610,
+      "operation": "INSERT INTO",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2633,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2673,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2805,
+      "operation": "INSERT INTO",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2828,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2867,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 2987,
+      "operation": "INSERT INTO",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 3000,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 3027,
+      "operation": "UPDATE",
+      "table": "web_document_operations"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1404,
+      "operation": "UPDATE",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1428,
+      "operation": "INSERT INTO",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1465,
+      "operation": "INSERT INTO",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_auth.py",
+      "line": 1509,
+      "operation": "INSERT INTO",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 581,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_external_identities"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 607,
+      "operation": "DELETE FROM",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 609,
+      "operation": "INSERT INTO",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 639,
+      "operation": "DELETE FROM",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 658,
+      "operation": "UPDATE",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 676,
+      "operation": "UPDATE",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 682,
+      "operation": "UPDATE",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 624,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_feature_quote_receipts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1872,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1883,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1888,
+      "operation": "INSERT INTO",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1897,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1905,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1720,
+      "line": 1990,
+      "operation": "DELETE FROM",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 1992,
+      "operation": "INSERT INTO",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 389,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 403,
+      "operation": "INSERT INTO",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 413,
+      "operation": "DELETE FROM",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 420,
+      "operation": "UPDATE",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 604,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_idempotency"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 88,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_db.py",
-      "line": 228,
+      "line": 958,
       "operation": "CREATE TABLE IF NOT EXISTS",
-      "table": "web_idempotency"
+      "table": "web_image_operation_events"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 749,
+      "operation": "INSERT INTO",
+      "table": "web_image_operation_events"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 914,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 787,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 825,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1370,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1548,
+      "operation": "INSERT INTO",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1575,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1620,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1843,
+      "operation": "INSERT INTO",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1871,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 1896,
+      "operation": "UPDATE",
+      "table": "web_image_operations"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 907,
+      "line": 917,
       "operation": "DELETE FROM",
       "table": "web_oauth_states"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 909,
+      "line": 919,
       "operation": "INSERT INTO",
       "table": "web_oauth_states"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 987,
+      "line": 997,
       "operation": "UPDATE",
       "table": "web_oauth_states"
     },
     {
       "file": "copyfast_db.py",
-      "line": 189,
+      "line": 565,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_oauth_states"
     },
     {
+      "file": "copyfast_db.py",
+      "line": 816,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_project_package_events"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 204,
+      "operation": "INSERT INTO",
+      "table": "web_project_package_events"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 784,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_project_packages"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 382,
+      "operation": "UPDATE",
+      "table": "web_project_packages"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 403,
+      "operation": "UPDATE",
+      "table": "web_project_packages"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 533,
+      "operation": "INSERT INTO",
+      "table": "web_project_packages"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 546,
+      "operation": "UPDATE",
+      "table": "web_project_packages"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 567,
+      "operation": "UPDATE",
+      "table": "web_project_packages"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 703,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_projects"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 260,
+      "operation": "INSERT INTO",
+      "table": "web_projects"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 492,
+      "operation": "UPDATE",
+      "table": "web_projects"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 563,
+      "operation": "UPDATE",
+      "table": "web_projects"
+    },
+    {
       "file": "copyfast_auth.py",
-      "line": 652,
+      "line": 662,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 750,
+      "line": 760,
       "operation": "INSERT INTO",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1530,
+      "line": 1540,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 1609,
+      "line": 1619,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2693,
+      "line": 2704,
       "operation": "UPDATE",
       "table": "web_sessions"
     },
     {
       "file": "copyfast_db.py",
-      "line": 101,
+      "line": 477,
       "operation": "CREATE TABLE IF NOT EXISTS",
       "table": "web_sessions"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 738,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_studio_document_versions"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 353,
+      "operation": "INSERT INTO",
+      "table": "web_studio_document_versions"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 420,
+      "operation": "INSERT INTO",
+      "table": "web_studio_document_versions"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 558,
+      "operation": "INSERT INTO",
+      "table": "web_studio_document_versions"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 718,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_studio_documents"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 348,
+      "operation": "UPDATE",
+      "table": "web_studio_documents"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 415,
+      "operation": "UPDATE",
+      "table": "web_studio_documents"
+    },
+    {
+      "file": "copyfast_projects.py",
+      "line": 552,
+      "operation": "INSERT INTO",
+      "table": "web_studio_documents"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2503,
+      "operation": "INSERT INTO",
+      "table": "web_workspace_drafts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2559,
+      "operation": "UPDATE",
+      "table": "web_workspace_drafts"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 2608,
+      "operation": "UPDATE",
+      "table": "web_workspace_drafts"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 683,
+      "operation": "CREATE TABLE IF NOT EXISTS",
+      "table": "web_workspace_drafts"
     }
   ],
   "database_tables": [
@@ -1064,16 +1520,29 @@
     "telegram_link_codes",
     "telegram_login_codes",
     "users",
+    "web",
     "web_account_profiles",
     "web_accounts",
+    "web_asset_files",
     "web_audit_events",
     "web_bridge_callback_nonces",
     "web_campaign_plans",
+    "web_document_operation_events",
+    "web_document_operation_sources",
+    "web_document_operations",
     "web_external_identities",
     "web_feature_quote_receipts",
     "web_idempotency",
+    "web_image_operation_events",
+    "web_image_operations",
     "web_oauth_states",
-    "web_sessions"
+    "web_project_package_events",
+    "web_project_packages",
+    "web_projects",
+    "web_sessions",
+    "web_studio_document_versions",
+    "web_studio_documents",
+    "web_workspace_drafts"
   ],
   "env_references": [
     {
@@ -1118,42 +1587,42 @@
     },
     {
       "file": "copyfast_auth.py",
-      "line": 166,
+      "line": 176,
       "name": "APPLE_OAUTH_KEY_ID"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 167,
+      "line": 177,
       "name": "APPLE_OAUTH_PRIVATE_KEY_BASE64"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 165,
+      "line": 175,
       "name": "APPLE_OAUTH_TEAM_ID"
     },
     {
       "file": "app.py",
-      "line": 38,
+      "line": 50,
       "name": "APP_ENV"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 98,
+      "line": 108,
       "name": "APP_ENV"
     },
     {
       "file": "copyfast_db.py",
-      "line": 23,
+      "line": 24,
       "name": "APP_ENV"
     },
     {
       "file": "copyfast_api.py",
-      "line": 319,
+      "line": 450,
       "name": "BOT_USERNAME"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 403,
+      "line": 413,
       "name": "BOT_USERNAME"
     },
     {
@@ -1178,7 +1647,7 @@
     },
     {
       "file": "app.py",
-      "line": 34,
+      "line": 46,
       "name": "CORS_ALLOW_ORIGINS"
     },
     {
@@ -1228,17 +1697,17 @@
     },
     {
       "file": "app.py",
-      "line": 38,
+      "line": 50,
       "name": "ENVIRONMENT"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 99,
+      "line": 109,
       "name": "ENVIRONMENT"
     },
     {
       "file": "copyfast_db.py",
-      "line": 24,
+      "line": 25,
       "name": "ENVIRONMENT"
     },
     {
@@ -1293,18 +1762,23 @@
     },
     {
       "file": "app.py",
-      "line": 38,
+      "line": 50,
       "name": "RAILWAY_ENVIRONMENT"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 100,
+      "line": 110,
       "name": "RAILWAY_ENVIRONMENT"
     },
     {
       "file": "copyfast_db.py",
-      "line": 25,
+      "line": 26,
       "name": "RAILWAY_ENVIRONMENT"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 39,
+      "name": "RAILWAY_VOLUME_MOUNT_PATH"
     },
     {
       "file": "config.py",
@@ -1318,72 +1792,177 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 717,
+      "line": 848,
       "name": "WEBAPP_ASSET_DELIVERY_ALLOWED_HOSTS"
     },
     {
-      "file": "copyfast_api.py",
+      "file": "copyfast_db.py",
+      "line": 60,
+      "name": "WEBAPP_ASSET_VAULT_ENABLED"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 85,
+      "name": "WEBAPP_ASSET_VAULT_MAX_FILE_MB"
+    },
+    {
+      "file": "copyfast_assets.py",
+      "line": 95,
+      "name": "WEBAPP_ASSET_VAULT_QUOTA_MB"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 160,
+      "name": "WEBAPP_ASSET_VAULT_ROOT"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 75,
+      "name": "WEBAPP_DOCUMENT_OPERATIONS_ENABLED"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 425,
+      "name": "WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB"
+    },
+    {
+      "file": "copyfast_document_operations.py",
+      "line": 434,
+      "name": "WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB"
+    },
+    {
+      "file": "copyfast_db.py",
       "line": 272,
+      "name": "WEBAPP_DOCUMENT_OPERATIONS_ROOT"
+    },
+    {
+      "file": "copyfast_api.py",
+      "line": 403,
       "name": "WEBAPP_FEATURE_JOB_ADAPTERS"
     },
     {
+      "file": "copyfast_db.py",
+      "line": 137,
+      "name": "WEBAPP_IMAGE_ENHANCE_ENABLED"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 116,
+      "name": "WEBAPP_IMAGE_OPERATIONS_ENABLED"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 294,
+      "name": "WEBAPP_IMAGE_OPERATIONS_MAX_OUTPUT_MB"
+    },
+    {
+      "file": "copyfast_image_operations.py",
+      "line": 303,
+      "name": "WEBAPP_IMAGE_OPERATIONS_QUOTA_MB"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 340,
+      "name": "WEBAPP_IMAGE_OPERATIONS_ROOT"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 126,
+      "name": "WEBAPP_IMAGE_RESIZE_ENABLED"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 85,
+      "name": "WEBAPP_IMAGE_TO_PDF_ENABLED"
+    },
+    {
       "file": "copyfast_auth.py",
-      "line": 412,
+      "line": 422,
       "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2245,
+      "line": 2256,
       "name": "WEBAPP_LINK_CALLBACK_HMAC_SECRET"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 411,
+      "line": 421,
       "name": "WEBAPP_LINK_CALLBACK_TOKEN"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 2244,
+      "line": 2255,
       "name": "WEBAPP_LINK_CALLBACK_TOKEN"
     },
     {
+      "file": "copyfast_db.py",
+      "line": 105,
+      "name": "WEBAPP_PDF_TO_IMAGES_ENABLED"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 95,
+      "name": "WEBAPP_PDF_TO_WORD_ENABLED"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 70,
+      "name": "WEBAPP_PROJECT_PACKAGE_ENABLED"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 71,
+      "name": "WEBAPP_PROJECT_PACKAGE_MAX_MB"
+    },
+    {
+      "file": "copyfast_project_packages.py",
+      "line": 80,
+      "name": "WEBAPP_PROJECT_PACKAGE_QUOTA_MB"
+    },
+    {
+      "file": "copyfast_db.py",
+      "line": 214,
+      "name": "WEBAPP_PROJECT_PACKAGE_ROOT"
+    },
+    {
       "file": "copyfast_auth.py",
-      "line": 147,
+      "line": 157,
       "name": "WEBAPP_PUBLIC_BASE_URL"
     },
     {
       "file": "copyfast_db.py",
-      "line": 32,
+      "line": 400,
       "name": "WEBAPP_SESSION_DB_PATH"
     },
     {
       "file": "copyfast_db.py",
-      "line": 49,
+      "line": 418,
       "name": "WEBAPP_SESSION_DB_PATH"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1240,
+      "line": 1401,
       "name": "WEBAPP_UPLOAD_MAX_BYTES"
     },
     {
       "file": "copyfast_api.py",
-      "line": 1241,
+      "line": 1402,
       "name": "WEBAPP_UPLOAD_MAX_MB"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 113,
+      "line": 123,
       "name": "WEB_COOKIE_SECURE"
     },
     {
       "file": "copyfast_api.py",
-      "line": 395,
+      "line": 526,
       "name": "WEB_FEATURE_QUOTE_HMAC_SECRET"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 140,
+      "line": 150,
       "name": "WEB_OAUTH_IDENTITY_HMAC_SECRET"
     },
     {
@@ -1393,12 +1972,12 @@
     },
     {
       "file": "copyfast_api.py",
-      "line": 395,
+      "line": 526,
       "name": "WEB_SESSION_SECRET"
     },
     {
       "file": "copyfast_auth.py",
-      "line": 106,
+      "line": 116,
       "name": "WEB_SESSION_SECRET"
     },
     {
@@ -1518,12 +2097,18 @@
         "copyfast_api.py",
         "copyfast_auth.py",
         "copyfast_db.py",
+        "copyfast_document_operations.py",
+        "copyfast_image_operations.py",
+        "copyfast_project_packages.py",
+        "copyfast_projects.py",
         "copyfast_registry.py",
         "customer_api.py",
         "customer_app.html",
         "customer_app.js",
+        "docs/migration/ACCOUNT_ACTIVITY_BOUNDARY.md",
         "docs/migration/ADMIN_FAILED_JOB_INCIDENTS.md",
         "docs/migration/ADMIN_WRITE_CONTRACT.md",
+        "docs/migration/ASSET_VAULT_CONTRACT.md",
         "docs/migration/BRIDGE_CONTRACT_INVENTORY.md",
         "docs/migration/CAMPAIGN_PLANNER_BOUNDARY.md",
         "docs/migration/ENGINE_DELIVERY_ADAPTER_BACKLOG.md",
@@ -1531,26 +2116,20 @@
         "docs/migration/ENV_AND_PROVIDER_MAP.md",
         "docs/migration/FEATURE_CONFIRM_CONTRACT.md",
         "docs/migration/FEATURE_FAMILY_NAVIGATION.md",
+        "docs/migration/IMAGE_ENHANCE_CONTRACT.md",
+        "docs/migration/IMAGE_RESIZE_ASPECT_CONTRACT.md",
+        "docs/migration/IMAGE_TO_PDF_CONTRACT.md",
         "docs/migration/JOB_SUPPORT_RECOVERY.md",
         "docs/migration/known-gaps.md",
         "docs/migration/KNOWN_GAPS_AND_GUARDS.md",
         "docs/migration/OAUTH_AUTH_MAP.md",
         "docs/migration/payos-wallet-jobs.md",
         "docs/migration/PAYOS_WALLET_JOB_MAP.md",
-        "docs/migration/README.md",
-        "docs/migration/state-database-map.md",
-        "docs/migration/STATE_AND_DATABASE_MAP.md",
-        "docs/migration/TELEGRAM_WEB_CONNECTION.md",
-        "docs/migration/TEST_EVIDENCE.md",
-        "docs/migration/web-inventory.md",
-        "docs/reports/TOAN_AAS_WEB_APP_CONTROL_STATUS_REPORT_20260617.md",
-        "docs/reports/TOAN_AAS_WEB_APP_PRODUCTION_PROMOTION_REPORT_20260616.md",
-        "docs/webapp/TOAN_AAS_WEB_APP_PAYOS_SINGLE_SOURCE.md",
-        "docs/webapp/TOAN_AAS_WEB_APP_PRODUCTION_ARCHITECTURE.md",
-        "docs/webapp/TOAN_AAS_WEB_APP_SECURITY_AUDIT.md",
-        "index.html"
+        "docs/migration/PDF_MERGE_CONTRACT.md",
+        "docs/migration/PDF_OPTIMIZE_CONTRACT.md",
+        "docs/migration/PDF_SPLIT_CONTRACT.md"
       ],
-      "occurrences": 195,
+      "occurrences": 256,
       "provider": "PayOS"
     },
     {
@@ -1724,10 +2303,14 @@
         "copyfast_auth.py",
         "copyfast_bridge.py",
         "copyfast_db.py",
+        "copyfast_image_operations.py",
+        "copyfast_projects.py",
         "copyfast_registry.py",
+        "docs/migration/ACCOUNT_ACTIVITY_BOUNDARY.md",
         "docs/migration/ADMIN_FAILED_JOB_INCIDENTS.md",
         "docs/migration/ADMIN_WRITE_CONTRACT.md",
         "docs/migration/ASSET_DELIVERY_CONTRACT.md",
+        "docs/migration/ASSET_VAULT_CONTRACT.md",
         "docs/migration/bot-inventory.md",
         "docs/migration/BOT_COMPANION_HANDOFF.md",
         "docs/migration/BRIDGE_CONTRACT_INVENTORY.md",
@@ -1737,33 +2320,38 @@
         "docs/migration/ENV_AND_PROVIDER_MAP.md",
         "docs/migration/FEATURE_CONFIRM_CONTRACT.md",
         "docs/migration/FEATURE_FAMILY_NAVIGATION.md",
+        "docs/migration/IMAGE_ENHANCE_CONTRACT.md",
+        "docs/migration/IMAGE_RESIZE_ASPECT_CONTRACT.md",
+        "docs/migration/IMAGE_TO_PDF_CONTRACT.md",
         "docs/migration/known-gaps.md",
         "docs/migration/KNOWN_GAPS_AND_GUARDS.md",
         "docs/migration/OAUTH_AUTH_MAP.md",
         "docs/migration/payos-wallet-jobs.md",
         "docs/migration/PAYOS_WALLET_JOB_MAP.md",
+        "docs/migration/PDF_MERGE_CONTRACT.md",
+        "docs/migration/PDF_OPTIMIZE_CONTRACT.md",
+        "docs/migration/PDF_SPLIT_CONTRACT.md",
+        "docs/migration/PDF_TO_IMAGES_CONTRACT.md",
+        "docs/migration/PDF_TO_WORD_CONTRACT.md",
+        "docs/migration/PROFESSIONAL_APP_ARCHITECTURE.md",
+        "docs/migration/PROJECT_PACKAGE_CONTRACT.md",
         "docs/migration/README.md",
-        "docs/migration/route-map.md",
-        "docs/migration/STATE_AND_DATABASE_MAP.md",
-        "docs/migration/TELEGRAM_TO_WEB_ROUTE_MAP.md",
-        "docs/migration/TELEGRAM_WEB_CONNECTION.md",
-        "docs/migration/TEST_EVIDENCE.md",
-        "docs/migration/web-inventory.md",
-        "docs/reports/TOAN_AAS_WEB_APP_CONTROL_STATUS_REPORT_20260617.md",
-        "docs/reports/TOAN_AAS_WEB_APP_PRODUCTION_PROMOTION_REPORT_20260616.md",
-        "docs/webapp/TOAN_AAS_WEB_APP_PAYOS_SINGLE_SOURCE.md",
-        "docs/webapp/TOAN_AAS_WEB_APP_PRODUCTION_ARCHITECTURE.md",
-        "login.html",
-        "README.md",
-        "reports/migration/bot_inventory.json",
-        "reports/migration/parity_gap.json",
-        "reports/migration/web_inventory.json"
+        "docs/migration/route-map.md"
       ],
-      "occurrences": 603,
+      "occurrences": 685,
       "provider": "Telegram"
     }
   ],
   "routes": [
+    {
+      "endpoint": "account_activity",
+      "file": "copyfast_api.py",
+      "line": 2645,
+      "methods": [
+        "GET"
+      ],
+      "path": "/account/activity"
+    },
     {
       "endpoint": "add_performance",
       "file": "performance.py",
@@ -1785,7 +2373,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 193,
+      "line": 262,
       "methods": [
         "GET"
       ],
@@ -1803,7 +2391,7 @@
     {
       "endpoint": "admin_freeze_feature",
       "file": "copyfast_api.py",
-      "line": 2506,
+      "line": 3074,
       "methods": [
         "POST"
       ],
@@ -1812,7 +2400,7 @@
     {
       "endpoint": "admin_jobs",
       "file": "copyfast_api.py",
-      "line": 2420,
+      "line": 2988,
       "methods": [
         "GET"
       ],
@@ -1821,7 +2409,7 @@
     {
       "endpoint": "admin_refund_job",
       "file": "copyfast_api.py",
-      "line": 2483,
+      "line": 3051,
       "methods": [
         "POST"
       ],
@@ -1830,7 +2418,7 @@
     {
       "endpoint": "admin_retry_job",
       "file": "copyfast_api.py",
-      "line": 2457,
+      "line": 3025,
       "methods": [
         "POST"
       ],
@@ -1848,7 +2436,7 @@
     {
       "endpoint": "admin_module",
       "file": "copyfast_api.py",
-      "line": 2440,
+      "line": 3008,
       "methods": [
         "GET"
       ],
@@ -1857,7 +2445,7 @@
     {
       "endpoint": "admin_payments",
       "file": "copyfast_api.py",
-      "line": 2425,
+      "line": 2993,
       "methods": [
         "GET"
       ],
@@ -1866,7 +2454,7 @@
     {
       "endpoint": "admin_providers",
       "file": "copyfast_api.py",
-      "line": 2430,
+      "line": 2998,
       "methods": [
         "GET"
       ],
@@ -1875,7 +2463,7 @@
     {
       "endpoint": "admin_summary",
       "file": "copyfast_api.py",
-      "line": 2410,
+      "line": 2978,
       "methods": [
         "GET"
       ],
@@ -1884,7 +2472,7 @@
     {
       "endpoint": "admin_tickets",
       "file": "copyfast_api.py",
-      "line": 2435,
+      "line": 3003,
       "methods": [
         "GET"
       ],
@@ -1893,7 +2481,7 @@
     {
       "endpoint": "admin_users",
       "file": "copyfast_api.py",
-      "line": 2415,
+      "line": 2983,
       "methods": [
         "GET"
       ],
@@ -1902,7 +2490,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 213,
+      "line": 282,
       "methods": [
         "GET"
       ],
@@ -1938,7 +2526,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 188,
+      "line": 257,
       "methods": [
         "GET"
       ],
@@ -1974,7 +2562,7 @@
     {
       "endpoint": "assets",
       "file": "copyfast_api.py",
-      "line": 2230,
+      "line": 2798,
       "methods": [
         "GET"
       ],
@@ -2019,7 +2607,7 @@
     {
       "endpoint": "asset_download",
       "file": "copyfast_api.py",
-      "line": 2235,
+      "line": 2803,
       "methods": [
         "GET"
       ],
@@ -2028,7 +2616,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 224,
+      "line": 293,
       "methods": [
         "GET"
       ],
@@ -2055,7 +2643,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 229,
+      "line": 298,
       "methods": [
         "GET"
       ],
@@ -2082,7 +2670,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 208,
+      "line": 277,
       "methods": [
         "GET"
       ],
@@ -2091,7 +2679,7 @@
     {
       "endpoint": "list_campaign_plans",
       "file": "copyfast_api.py",
-      "line": 1858,
+      "line": 2139,
       "methods": [
         "GET"
       ],
@@ -2100,16 +2688,25 @@
     {
       "endpoint": "create_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 1886,
+      "line": 2203,
       "methods": [
         "POST"
       ],
       "path": "/campaigns"
     },
     {
+      "endpoint": "get_campaign_plan",
+      "file": "copyfast_api.py",
+      "line": 2167,
+      "methods": [
+        "GET"
+      ],
+      "path": "/campaigns/{plan_id}"
+    },
+    {
       "endpoint": "update_campaign_plan",
       "file": "copyfast_api.py",
-      "line": 1950,
+      "line": 2267,
       "methods": [
         "PATCH"
       ],
@@ -2118,7 +2715,7 @@
     {
       "endpoint": "update_campaign_plan_status",
       "file": "copyfast_api.py",
-      "line": 2021,
+      "line": 2338,
       "methods": [
         "POST"
       ],
@@ -2127,7 +2724,7 @@
     {
       "endpoint": "feature_catalog",
       "file": "copyfast_api.py",
-      "line": 1835,
+      "line": 2107,
       "methods": [
         "GET"
       ],
@@ -2163,7 +2760,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 224,
+      "line": 293,
       "methods": [
         "GET"
       ],
@@ -2172,7 +2769,7 @@
     {
       "endpoint": "core_me",
       "file": "copyfast_api.py",
-      "line": 2092,
+      "line": 2633,
       "methods": [
         "GET"
       ],
@@ -2181,7 +2778,7 @@
     {
       "endpoint": "core_status",
       "file": "copyfast_api.py",
-      "line": 1840,
+      "line": 2121,
       "methods": [
         "GET"
       ],
@@ -2260,6 +2857,33 @@
       "path": "/dashboard-stats"
     },
     {
+      "endpoint": "get_studio_document",
+      "file": "copyfast_projects.py",
+      "line": 286,
+      "methods": [
+        "GET"
+      ],
+      "path": "/documents/{document_id}"
+    },
+    {
+      "endpoint": "update_studio_document",
+      "file": "copyfast_projects.py",
+      "line": 315,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/documents/{document_id}"
+    },
+    {
+      "endpoint": "restore_studio_document_version",
+      "file": "copyfast_projects.py",
+      "line": 374,
+      "methods": [
+        "POST"
+      ],
+      "path": "/documents/{document_id}/restore/{revision}"
+    },
+    {
       "endpoint": "add_employee",
       "file": "erp_core.py",
       "line": 87,
@@ -2278,9 +2902,18 @@
       "path": "/employees"
     },
     {
+      "endpoint": "enhance_image",
+      "file": "copyfast_image_operations.py",
+      "line": 1686,
+      "methods": [
+        "POST"
+      ],
+      "path": "/enhance"
+    },
+    {
       "endpoint": "feature_status",
       "file": "copyfast_api.py",
-      "line": 2310,
+      "line": 2878,
       "methods": [
         "GET"
       ],
@@ -2289,7 +2922,7 @@
     {
       "endpoint": "feature_confirm",
       "file": "copyfast_api.py",
-      "line": 2405,
+      "line": 2973,
       "methods": [
         "POST"
       ],
@@ -2298,7 +2931,7 @@
     {
       "endpoint": "feature_draft",
       "file": "copyfast_api.py",
-      "line": 2395,
+      "line": 2963,
       "methods": [
         "POST"
       ],
@@ -2307,7 +2940,7 @@
     {
       "endpoint": "feature_estimate",
       "file": "copyfast_api.py",
-      "line": 2400,
+      "line": 2968,
       "methods": [
         "POST"
       ],
@@ -2370,16 +3003,25 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 188,
+      "line": 257,
       "methods": [
         "GET"
       ],
       "path": "/health"
     },
     {
+      "endpoint": "image_to_pdf",
+      "file": "copyfast_document_operations.py",
+      "line": 2374,
+      "methods": [
+        "POST"
+      ],
+      "path": "/image-to-pdf"
+    },
+    {
       "endpoint": "confirm_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 2277,
+      "line": 2288,
       "methods": [
         "POST"
       ],
@@ -2388,7 +3030,7 @@
     {
       "endpoint": "confirm_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 2277,
+      "line": 2288,
       "methods": [
         "POST"
       ],
@@ -2415,7 +3057,7 @@
     {
       "endpoint": "list_jobs",
       "file": "copyfast_api.py",
-      "line": 2219,
+      "line": 2787,
       "methods": [
         "GET"
       ],
@@ -2424,7 +3066,7 @@
     {
       "endpoint": "job_detail",
       "file": "copyfast_api.py",
-      "line": 2224,
+      "line": 2792,
       "methods": [
         "GET"
       ],
@@ -2460,7 +3102,7 @@
     {
       "endpoint": "login",
       "file": "copyfast_auth.py",
-      "line": 1578,
+      "line": 1588,
       "methods": [
         "POST"
       ],
@@ -2478,7 +3120,7 @@
     {
       "endpoint": "logout",
       "file": "copyfast_auth.py",
-      "line": 1606,
+      "line": 1616,
       "methods": [
         "POST"
       ],
@@ -2496,7 +3138,7 @@
     {
       "endpoint": "me",
       "file": "copyfast_auth.py",
-      "line": 1616,
+      "line": 1626,
       "methods": [
         "GET"
       ],
@@ -2523,7 +3165,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 218,
+      "line": 287,
       "methods": [
         "GET"
       ],
@@ -2532,7 +3174,7 @@
     {
       "endpoint": "apple_oauth_callback",
       "file": "copyfast_auth.py",
-      "line": 1930,
+      "line": 1941,
       "methods": [
         "POST"
       ],
@@ -2541,7 +3183,7 @@
     {
       "endpoint": "oauth_callback",
       "file": "copyfast_auth.py",
-      "line": 1912,
+      "line": 1923,
       "methods": [
         "GET"
       ],
@@ -2550,7 +3192,7 @@
     {
       "endpoint": "start_oauth_link",
       "file": "copyfast_auth.py",
-      "line": 1772,
+      "line": 1782,
       "methods": [
         "POST"
       ],
@@ -2559,7 +3201,7 @@
     {
       "endpoint": "start_oauth",
       "file": "copyfast_auth.py",
-      "line": 1790,
+      "line": 1800,
       "methods": [
         "GET"
       ],
@@ -2586,7 +3228,7 @@
     {
       "endpoint": "packages",
       "file": "copyfast_api.py",
-      "line": 2120,
+      "line": 2688,
       "methods": [
         "GET"
       ],
@@ -2595,7 +3237,7 @@
     {
       "endpoint": "create_payment",
       "file": "copyfast_api.py",
-      "line": 2186,
+      "line": 2754,
       "methods": [
         "POST"
       ],
@@ -2604,7 +3246,7 @@
     {
       "endpoint": "payment_options",
       "file": "copyfast_api.py",
-      "line": 2125,
+      "line": 2693,
       "methods": [
         "GET"
       ],
@@ -2613,7 +3255,7 @@
     {
       "endpoint": "payment_status",
       "file": "copyfast_api.py",
-      "line": 2213,
+      "line": 2781,
       "methods": [
         "GET"
       ],
@@ -2627,6 +3269,51 @@
         "POST"
       ],
       "path": "/payos/create-link"
+    },
+    {
+      "endpoint": "merge_pdf",
+      "file": "copyfast_document_operations.py",
+      "line": 2225,
+      "methods": [
+        "POST"
+      ],
+      "path": "/pdf-merge"
+    },
+    {
+      "endpoint": "optimize_pdf",
+      "file": "copyfast_document_operations.py",
+      "line": 2941,
+      "methods": [
+        "POST"
+      ],
+      "path": "/pdf-optimize"
+    },
+    {
+      "endpoint": "split_pdf",
+      "file": "copyfast_document_operations.py",
+      "line": 2000,
+      "methods": [
+        "POST"
+      ],
+      "path": "/pdf-split"
+    },
+    {
+      "endpoint": "pdf_to_images",
+      "file": "copyfast_document_operations.py",
+      "line": 2555,
+      "methods": [
+        "POST"
+      ],
+      "path": "/pdf-to-images"
+    },
+    {
+      "endpoint": "pdf_to_word",
+      "file": "copyfast_document_operations.py",
+      "line": 2749,
+      "methods": [
+        "POST"
+      ],
+      "path": "/pdf-to-word"
     },
     {
       "endpoint": "customer_affiliates",
@@ -2658,7 +3345,7 @@
     {
       "endpoint": "pricing",
       "file": "copyfast_api.py",
-      "line": 2115,
+      "line": 2683,
       "methods": [
         "GET"
       ],
@@ -2685,11 +3372,38 @@
     {
       "endpoint": "update_profile",
       "file": "copyfast_auth.py",
-      "line": 1630,
+      "line": 1640,
       "methods": [
         "POST"
       ],
       "path": "/profile"
+    },
+    {
+      "endpoint": "list_all_project_packages",
+      "file": "copyfast_project_packages.py",
+      "line": 461,
+      "methods": [
+        "GET"
+      ],
+      "path": "/project-packages"
+    },
+    {
+      "endpoint": "get_project_package",
+      "file": "copyfast_project_packages.py",
+      "line": 641,
+      "methods": [
+        "GET"
+      ],
+      "path": "/project-packages/{package_id}"
+    },
+    {
+      "endpoint": "download_project_package",
+      "file": "copyfast_project_packages.py",
+      "line": 602,
+      "methods": [
+        "GET"
+      ],
+      "path": "/project-packages/{package_id}/download"
     },
     {
       "endpoint": "create_project",
@@ -2728,9 +3442,27 @@
       "path": "/projects"
     },
     {
+      "endpoint": "list_project_packages",
+      "file": "copyfast_project_packages.py",
+      "line": 442,
+      "methods": [
+        "GET"
+      ],
+      "path": "/projects/{project_id}/packages"
+    },
+    {
+      "endpoint": "create_project_package",
+      "file": "copyfast_project_packages.py",
+      "line": 476,
+      "methods": [
+        "POST"
+      ],
+      "path": "/projects/{project_id}/packages"
+    },
+    {
       "endpoint": "oauth_providers",
       "file": "copyfast_auth.py",
-      "line": 1736,
+      "line": 1746,
       "methods": [
         "GET"
       ],
@@ -2766,7 +3498,7 @@
     {
       "endpoint": "register",
       "file": "copyfast_auth.py",
-      "line": 1535,
+      "line": 1545,
       "methods": [
         "POST"
       ],
@@ -2780,6 +3512,15 @@
         "POST"
       ],
       "path": "/remove-bg"
+    },
+    {
+      "endpoint": "resize_image",
+      "file": "copyfast_image_operations.py",
+      "line": 1458,
+      "methods": [
+        "POST"
+      ],
+      "path": "/resize"
     },
     {
       "endpoint": "add_sale",
@@ -2874,7 +3615,7 @@
     {
       "endpoint": "support_tickets",
       "file": "copyfast_api.py",
-      "line": 2287,
+      "line": 2855,
       "methods": [
         "GET"
       ],
@@ -2883,7 +3624,7 @@
     {
       "endpoint": "create_support_ticket",
       "file": "copyfast_api.py",
-      "line": 2292,
+      "line": 2860,
       "methods": [
         "POST"
       ],
@@ -2901,7 +3642,7 @@
     {
       "endpoint": "upgrade_telegram_account",
       "file": "copyfast_auth.py",
-      "line": 1666,
+      "line": 1676,
       "methods": [
         "POST"
       ],
@@ -2910,7 +3651,7 @@
     {
       "endpoint": "telegram_connection_status",
       "file": "copyfast_auth.py",
-      "line": 1742,
+      "line": 1752,
       "methods": [
         "GET"
       ],
@@ -2919,7 +3660,7 @@
     {
       "endpoint": "complete_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 2583,
+      "line": 2594,
       "methods": [
         "POST"
       ],
@@ -2928,7 +3669,7 @@
     {
       "endpoint": "start_telegram_link",
       "file": "copyfast_auth.py",
-      "line": 2131,
+      "line": 2142,
       "methods": [
         "POST"
       ],
@@ -2937,7 +3678,7 @@
     {
       "endpoint": "telegram_link_status",
       "file": "copyfast_auth.py",
-      "line": 2160,
+      "line": 2171,
       "methods": [
         "GET"
       ],
@@ -2946,7 +3687,7 @@
     {
       "endpoint": "complete_telegram_login",
       "file": "copyfast_auth.py",
-      "line": 2079,
+      "line": 2090,
       "methods": [
         "POST"
       ],
@@ -2955,7 +3696,7 @@
     {
       "endpoint": "start_telegram_login",
       "file": "copyfast_auth.py",
-      "line": 1983,
+      "line": 1994,
       "methods": [
         "POST"
       ],
@@ -2964,7 +3705,7 @@
     {
       "endpoint": "telegram_login_status",
       "file": "copyfast_auth.py",
-      "line": 2050,
+      "line": 2061,
       "methods": [
         "GET"
       ],
@@ -2980,9 +3721,18 @@
       "path": "/tts"
     },
     {
+      "endpoint": "upload_asset",
+      "file": "copyfast_assets.py",
+      "line": 555,
+      "methods": [
+        "POST"
+      ],
+      "path": "/upload"
+    },
+    {
       "endpoint": "upload_to_canonical_staging",
       "file": "copyfast_api.py",
-      "line": 2249,
+      "line": 2817,
       "methods": [
         "POST"
       ],
@@ -3009,7 +3759,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 203,
+      "line": 272,
       "methods": [
         "GET"
       ],
@@ -3018,7 +3768,7 @@
     {
       "endpoint": "voice_profiles",
       "file": "copyfast_api.py",
-      "line": 2244,
+      "line": 2812,
       "methods": [
         "GET"
       ],
@@ -3027,7 +3777,7 @@
     {
       "endpoint": "wallet",
       "file": "copyfast_api.py",
-      "line": 2104,
+      "line": 2672,
       "methods": [
         "GET"
       ],
@@ -3036,7 +3786,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 198,
+      "line": 267,
       "methods": [
         "GET"
       ],
@@ -3045,7 +3795,7 @@
     {
       "endpoint": "wallet_history",
       "file": "copyfast_api.py",
-      "line": 2109,
+      "line": 2677,
       "methods": [
         "GET"
       ],
@@ -3079,13 +3829,157 @@
       "path": "/workloads"
     },
     {
+      "endpoint": "list_workspace_drafts",
+      "file": "copyfast_api.py",
+      "line": 2409,
+      "methods": [
+        "GET"
+      ],
+      "path": "/workspace/drafts"
+    },
+    {
+      "endpoint": "create_workspace_draft",
+      "file": "copyfast_api.py",
+      "line": 2472,
+      "methods": [
+        "POST"
+      ],
+      "path": "/workspace/drafts"
+    },
+    {
+      "endpoint": "get_workspace_draft",
+      "file": "copyfast_api.py",
+      "line": 2445,
+      "methods": [
+        "GET"
+      ],
+      "path": "/workspace/drafts/{draft_id}"
+    },
+    {
+      "endpoint": "update_workspace_draft",
+      "file": "copyfast_api.py",
+      "line": 2530,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/workspace/drafts/{draft_id}"
+    },
+    {
+      "endpoint": "archive_workspace_draft",
+      "file": "copyfast_api.py",
+      "line": 2584,
+      "methods": [
+        "POST"
+      ],
+      "path": "/workspace/drafts/{draft_id}/archive"
+    },
+    {
+      "endpoint": "get_asset",
+      "file": "copyfast_assets.py",
+      "line": 543,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{asset_id}"
+    },
+    {
+      "endpoint": "archive_asset",
+      "file": "copyfast_assets.py",
+      "line": 690,
+      "methods": [
+        "POST"
+      ],
+      "path": "/{asset_id}/archive"
+    },
+    {
+      "endpoint": "download_asset",
+      "file": "copyfast_assets.py",
+      "line": 658,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{asset_id}/download"
+    },
+    {
+      "endpoint": "get_document_operation",
+      "file": "copyfast_document_operations.py",
+      "line": 3131,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{operation_id}"
+    },
+    {
+      "endpoint": "get_image_operation",
+      "file": "copyfast_image_operations.py",
+      "line": 2013,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{operation_id}"
+    },
+    {
+      "endpoint": "download_document_operation",
+      "file": "copyfast_document_operations.py",
+      "line": 3083,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{operation_id}/download"
+    },
+    {
+      "endpoint": "download_image_operation",
+      "file": "copyfast_image_operations.py",
+      "line": 1965,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{operation_id}/download"
+    },
+    {
       "endpoint": "page",
       "file": "app.py",
-      "line": 234,
+      "line": 303,
       "methods": [
         "GET"
       ],
       "path": "/{page_path:path}"
+    },
+    {
+      "endpoint": "get_project",
+      "file": "copyfast_projects.py",
+      "line": 441,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{project_id}"
+    },
+    {
+      "endpoint": "update_project",
+      "file": "copyfast_projects.py",
+      "line": 472,
+      "methods": [
+        "PATCH"
+      ],
+      "path": "/{project_id}"
+    },
+    {
+      "endpoint": "list_project_documents",
+      "file": "copyfast_projects.py",
+      "line": 513,
+      "methods": [
+        "GET"
+      ],
+      "path": "/{project_id}/documents"
+    },
+    {
+      "endpoint": "create_studio_document",
+      "file": "copyfast_projects.py",
+      "line": 531,
+      "methods": [
+        "POST"
+      ],
+      "path": "/{project_id}/documents"
     },
     {
       "endpoint": "get_campaigns",
@@ -3113,13 +4007,58 @@
         "GET"
       ],
       "path": "/{user_id}"
+    },
+    {
+      "endpoint": "list_assets",
+      "file": "copyfast_assets.py",
+      "line": 520,
+      "methods": [
+        "GET"
+      ],
+      "path": "<dynamic-route>"
+    },
+    {
+      "endpoint": "list_document_operations",
+      "file": "copyfast_document_operations.py",
+      "line": 1976,
+      "methods": [
+        "GET"
+      ],
+      "path": "<dynamic-route>"
+    },
+    {
+      "endpoint": "list_image_operations",
+      "file": "copyfast_image_operations.py",
+      "line": 1429,
+      "methods": [
+        "GET"
+      ],
+      "path": "<dynamic-route>"
+    },
+    {
+      "endpoint": "list_projects",
+      "file": "copyfast_projects.py",
+      "line": 225,
+      "methods": [
+        "GET"
+      ],
+      "path": "<dynamic-route>"
+    },
+    {
+      "endpoint": "create_project",
+      "file": "copyfast_projects.py",
+      "line": 251,
+      "methods": [
+        "POST"
+      ],
+      "path": "<dynamic-route>"
     }
   ],
   "schema_version": "1.0",
-  "source_files_discovered": 103,
-  "source_files_scanned": 103,
-  "source_fingerprint_sha256": "c8ec39f906e330b5522062089ff3121af802671bfc16c931682e1a6530cfd95d",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast1",
+  "source_files_discovered": 122,
+  "source_files_scanned": 122,
+  "source_fingerprint_sha256": "4f77e87e8ecd9eabb2a8902ea22629f36c3bc3e71d1ee7650a2c6d8b63af0d2d",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast15-pdf-to-images",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

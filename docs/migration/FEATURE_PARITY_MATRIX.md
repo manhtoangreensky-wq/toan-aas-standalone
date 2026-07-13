@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Safe Web surface coverage: **93.21%**. This is an actionable migration baseline, not a LIVE or engine-success claim.
+Safe Web surface coverage: **93.2%**. This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |

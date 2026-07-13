@@ -1,6 +1,6 @@
 # Telegram bot inventory
 
-Discovered `774` registered commands, `54` callback handlers, and `1925` callback-data values from static source.
+Discovered `773` registered commands, `54` callback handlers, and `1925` callback-data values from static source.
 
 Excluded clearly named Bot drafts: `code hoàn chỉnh của claude.py`, `config/pricing_matrix_draft.json`, `docs/BACKUP_AND_RECOVERY.md`, `nháp 2.py`.
 

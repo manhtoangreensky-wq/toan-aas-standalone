@@ -13,6 +13,7 @@ MERGE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_MERGE_CONTRACT.md").read_te
 OPTIMIZE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OPTIMIZE_CONTRACT.md").read_text(encoding="utf-8")
 IMAGE_TO_PDF_CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_TO_PDF_CONTRACT.md").read_text(encoding="utf-8")
 PDF_TO_WORD_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_WORD_CONTRACT.md").read_text(encoding="utf-8")
+PDF_TO_IMAGES_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_IMAGES_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
@@ -91,7 +92,7 @@ def test_pdf_merge_replaces_the_generic_bot_feature_form_with_an_ordered_native_
 def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
     assert '"document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
     assert '"/documents/merge"' in INTEGRATION
-    assert '["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text"].includes(String(item.kind || ""))' in INTEGRATION
+    assert '["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text"].includes(String(item.kind || ""))' in INTEGRATION
     assert 'api("/document-operations/pdf-merge"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-merge")'):
@@ -220,11 +221,9 @@ def test_image_to_pdf_replaces_the_generic_form_with_a_native_ordered_private_su
     assert 'data-portal-action="document-operation-image-to-pdf"' in PORTAL
     assert 'data-portal-route="/documents/image-to-pdf"' in PORTAL
     assert "Ảnh 1 → Ảnh 8" in PORTAL
-    document_pdf = PORTAL[PORTAL.index("documentPdf: ["):PORTAL.index("documentOcr: [")]
-    assert 'options: ["pdf_to_images"]' in document_pdf
-    assert "pdf_to_word" not in document_pdf
-    assert "image_to_pdf" not in document_pdf
-    assert 'accept: "application/pdf"' in document_pdf
+    document_pdf = PORTAL[PORTAL.index("documentPdf:"):PORTAL.index("documentOcr: [")]
+    assert "documentPdf: []" in document_pdf
+    assert 'options: ["pdf_to_images"]' not in document_pdf
     pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
     assert 'if normalized == "/documents/image-to-pdf":' in pages
     assert 'return "Ảnh sang PDF riêng tư"' in pages
@@ -352,3 +351,76 @@ def test_pdf_to_word_contract_records_text_only_guarded_delivery_and_no_bot_paym
     assert "web_native_pdf_to_word_required" in api_source
     assert '"pdf_to_word_enabled": enabled("WEBAPP_PDF_TO_WORD_ENABLED", False)' in api_source
     assert "bridge_request(" not in operation_source
+
+
+def test_pdf_to_images_replaces_the_generic_pdf_feature_with_a_private_native_surface() -> None:
+    assert 'customerPage("/documents/pdf-to-images", "PDF sang ảnh riêng tư"' in PORTAL
+    assert 'layout: "pdf-to-images", type: "document-operation", action: "none"' in PORTAL
+    assert 'featurePage("/documents/pdf-to-images"' not in PORTAL
+    assert 'customerPage("/documents", "Document Studio"' in PORTAL
+    assert 'layout: "document-hub", type: "document-hub", action: "none"' in PORTAL
+    assert "function renderDocumentHub(page, context)" in PORTAL
+    assert "function renderPdfToImages(page, context)" in PORTAL
+    assert 'case "pdf-to-images": return renderPdfToImages(page, context);' in PORTAL
+    assert "function pdfToImagesFormFields()" in PORTAL
+    assert 'documentOperationItems(context, "pdf_to_images")' in PORTAL
+    assert 'data-portal-action="document-operation-pdf-to-images"' in PORTAL
+    assert 'data-portal-route="/documents/pdf-to-images"' in PORTAL
+    surface = PORTAL[PORTAL.index("function renderPdfToImages(page, context)"):PORTAL.index("function renderPdfToWord(page, context)")]
+    for phrase in ("Asset Vault", "2×", "page_001.png", "PNG", "ZIP", "không fallback", "Bot job", "PayOS", "Không upload bytes"):
+        assert phrase in surface
+    assert "fetch(" not in surface
+    assert "api(" not in surface
+    assert "localStorage" not in surface
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/documents/pdf-to-images":' in pages
+    assert 'return "PDF sang ảnh riêng tư"' in pages
+    assert 'WebFeature("documents_pdf_to_images"' in registry
+
+
+def test_pdf_to_images_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
+    assert "const pdfToImagesEnabled" in INTEGRATION
+    assert '"document-operation-pdf-to-images": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled)' in INTEGRATION
+    assert '"/documents/pdf-to-images"' in INTEGRATION
+    assert '"/documents/pdf-to-images": base().pdfToImagesEnabled === true ? "ready" : "guarded"' in INTEGRATION
+    assert '"/document-operations?kind=pdf_to_images&limit=100"' in INTEGRATION
+    assert 'api("/document-operations/pdf-to-images"' in INTEGRATION
+    action = INTEGRATION[
+        INTEGRATION.index('if (action === "document-operation-pdf-to-images")'):
+        INTEGRATION.index('if (action === "document-operation-pdf-to-word")')
+    ]
+    assert "source_asset_id: sourceAssetId" in action
+    assert "idempotency_key: submission.key" in action
+    assert "hydrateDocumentOperations" in action
+    assert "hydrateAssetVault" in action
+    assert "bridge_request" not in action
+    assert "CORE_BRIDGE" not in action
+
+
+def test_pdf_to_images_contract_records_renderer_bounds_private_delivery_and_no_bot_payment_provider_execution() -> None:
+    for phrase in (
+        "pdf_to_images",
+        "2×",
+        "20 MiB",
+        "30 pages",
+        "8,192",
+        "8 MP",
+        "48 MP",
+        "pypdfium2==5.11.0",
+        "WEBAPP_PDF_TO_IMAGES_ENABLED",
+        "No Bot bridge",
+        "PayOS",
+    ):
+        assert phrase in PDF_TO_IMAGES_CONTRACT
+    app_source = (ROOT / "app.py").read_text(encoding="utf-8")
+    operation_source = (ROOT / "copyfast_document_operations.py").read_text(encoding="utf-8")
+    api_source = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
+    assert '"/api/v1/document-operations/pdf-to-images"' in app_source
+    assert "PDF_TO_IMAGES_KIND" in operation_source
+    assert "PDF_TO_IMAGES_MAX_CONCURRENT = 1" in operation_source
+    assert "_verify_pdf_to_images_zip" in operation_source
+    assert "_verify_pdf_to_images_png_bytes" in operation_source
+    assert "bridge_request(" not in operation_source
+    assert "web_native_pdf_to_images_required" in api_source
+    assert '"pdf_to_images_enabled": enabled("WEBAPP_PDF_TO_IMAGES_ENABLED", False)' in api_source

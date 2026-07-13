@@ -95,6 +95,16 @@ def pdf_to_word_enabled() -> bool:
     return os.environ.get("WEBAPP_PDF_TO_WORD_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def pdf_to_images_enabled() -> bool:
+    """Whether the private PDFium-backed PDF-to-images renderer is enabled.
+
+    Rendering is a decoder and disk-amplification boundary distinct from PDF
+    parsing or DOCX export.  Keep it independently fail-closed so enabling
+    Document Operations never silently enables rasterization work.
+    """
+    return os.environ.get("WEBAPP_PDF_TO_IMAGES_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def image_operations_enabled() -> bool:
     """Whether bounded, Web-native private image operations are enabled.
 

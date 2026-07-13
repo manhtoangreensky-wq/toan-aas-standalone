@@ -90,7 +90,7 @@
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
     "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
-    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
+    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
     "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
@@ -553,12 +553,13 @@
       if (["subtitle_translate", "video_dub"].includes(feature) && !CANONICAL_TARGET_LANGUAGE_CODES.has(language)) return "Hãy chọn ngôn ngữ đích canonical từ danh sách Bot P0 hỗ trợ.";
     }
     if (["documents", "documents_pdf", "documents_ocr", "documents_merge", "documents_split", "documents_compress", "documents_translate"].includes(feature)) {
+      if (["documents", "documents_pdf"].includes(feature)) return "Document Studio dùng workflow PDF Web-native riêng; hãy chọn công cụ trong /documents.";
       if (!fileCount) return "Workflow tài liệu cần tệp đã vào staging canonical.";
       const operationByFeature = {
         documents_ocr: String(scalarField(fields, route, "operation") || "ocr_image"),
         documents_merge: "merge_pdf", documents_split: "split_pdf", documents_compress: "compress_pdf", documents_translate: "translate_document"
       };
-      const operation = operationByFeature[feature] || String(scalarField(fields, route, "operation") || "pdf_to_images");
+      const operation = operationByFeature[feature] || String(scalarField(fields, route, "operation") || "");
       if (operation === "image_to_pdf" && files.length && !allExtensionsMatch(files, images)) return "Image-to-PDF chỉ nhận JPG, PNG hoặc WebP.";
       if (["pdf_to_images", "merge_pdf", "split_pdf", "compress_pdf", "ocr_pdf"].includes(operation) && files.length && !allExtensionsMatch(files, pdf)) return "Thao tác này chỉ nhận tệp PDF.";
       if (operation === "ocr_image" && files.length && !anyExtensionMatches(files, images)) return "OCR ảnh chỉ nhận JPG, PNG hoặc WebP.";
@@ -976,6 +977,7 @@
     const projectPackageEnabled = Boolean(status.flags && status.flags.project_package_enabled === true);
     const documentOperationsEnabled = Boolean(status.flags && status.flags.document_operations_enabled === true);
     const imageToPdfEnabled = Boolean(status.flags && status.flags.image_to_pdf_enabled === true);
+    const pdfToImagesEnabled = Boolean(status.flags && status.flags.pdf_to_images_enabled === true);
     const pdfToWordEnabled = Boolean(status.flags && status.flags.pdf_to_word_enabled === true);
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
@@ -984,6 +986,7 @@
     // while its server-side execution gate is intentionally off.
     const nativeDocumentPageStates = {
       "/documents/image-to-pdf": account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled ? "ready" : "guarded",
+      "/documents/pdf-to-images": account && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled ? "ready" : "guarded",
       "/documents/pdf-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled ? "ready" : "guarded"
     };
     const nativeImagePageStates = {
@@ -1068,6 +1071,7 @@
       "document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-pdf-optimize": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled),
       "document-operation-image-to-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled),
+      "document-operation-pdf-to-images": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled),
       "document-operation-pdf-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       // Resize & Aspect Studio is a separate Web-native image contract. It
@@ -1118,6 +1122,7 @@
       projectPackageEnabled,
       documentOperationsEnabled,
       imageToPdfEnabled,
+      pdfToImagesEnabled,
       pdfToWordEnabled,
       imageOperationsEnabled,
       imageResizeEnabled,
@@ -1154,14 +1159,14 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word", "/image/resize", "/image/edit"].includes(currentPath)) await hydrateAssetVault();
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/image/resize", "/image/edit"].includes(currentPath)) await hydrateAssetVault();
     else if (account && ["/asset-vault", "/image/resize", "/image/edit"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
-    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word"].includes(currentPath)) await hydrateDocumentOperations();
-    else if (account && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
+    if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word"].includes(currentPath)) await hydrateDocumentOperations();
+    else if (account && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
     if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/resize") await hydrateImageOperations();
     else if (account && currentPath === "/image/resize") merge({
       imageOperations: [],
@@ -1319,6 +1324,7 @@
   function documentOperationKindForCurrentRoute() {
     const currentPath = String(base().path || window.location.pathname || "").split("?")[0];
     if (currentPath === "/documents/image-to-pdf") return "image_to_pdf";
+    if (currentPath === "/documents/pdf-to-images") return "pdf_to_images";
     if (currentPath === "/documents/pdf-to-word") return "pdf_to_word_text";
     return "";
   }
@@ -1328,12 +1334,14 @@
     try {
       const result = kind === "image_to_pdf"
         ? await api("/document-operations?kind=image_to_pdf&limit=100")
+        : kind === "pdf_to_images"
+        ? await api("/document-operations?kind=pdf_to_images&limit=100")
         : kind === "pdf_to_word_text"
         ? await api("/document-operations?kind=pdf_to_word_text&limit=100")
         : await api("/document-operations");
       const items = result.data && Array.isArray(result.data.items)
         ? result.data.items
-          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_word_text"].includes(String(item.kind || "")))
+          .filter((item) => item && validDocumentOperationId(item.id) && ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text"].includes(String(item.kind || "")))
           .slice(0, 100)
         : [];
       merge({
@@ -1344,6 +1352,7 @@
           "/documents/merge": "ready",
           "/documents/compress": "ready",
           "/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded",
+          "/documents/pdf-to-images": base().pdfToImagesEnabled === true ? "ready" : "guarded",
           "/documents/pdf-to-word": base().pdfToWordEnabled === true ? "ready" : "guarded"
         }
       });
@@ -1360,6 +1369,7 @@
           "/documents/merge": "guarded",
           "/documents/compress": "guarded",
           "/documents/image-to-pdf": "guarded",
+          "/documents/pdf-to-images": "guarded",
           "/documents/pdf-to-word": "guarded"
         }
       });
@@ -2070,6 +2080,44 @@
           // A guarded no-reduction response is a deliberate honest result,
           // not a missing client-side preview. Re-read only owner-scoped
           // operations and Vault state so the source always remains clear.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-pdf-to-images") {
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF riêng tư hợp lệ từ Asset Vault.");
+        const scope = `document-operation:pdf-to-images:${sourceAssetId}`;
+        const submission = acquireSubmission(scope, sourceAssetId);
+        if (!submission) {
+          toast("PDF → ảnh đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/pdf-to-images", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_id: sourceAssetId, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_to_images") {
+            throw new Error("Máy chủ chưa trả metadata PDF → ảnh hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã render và xác minh PNG riêng tư từ PDF.");
+        } catch (error) {
+          // Preserve only the server-recorded lifecycle when parsing, render,
+          // pixel or ZIP verification rejects the source. There is never a
+          // browser-produced fallback image or synthetic download.
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
           throw error;

@@ -104,6 +104,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("documents_split", "Tách PDF", "documents", "/documents/split", description="Tách PDF private từ Asset Vault qua Web-native operation có output attachment được kiểm tra; không tạo Bot job hoặc charge."),
     WebFeature("documents_compress", "Tối ưu PDF", "documents", "/documents/compress", description="Tối ưu cấu trúc PDF private từ Asset Vault bằng Web-native lossless operation; chỉ phát output khi artifact cuối cùng nhỏ hơn thật, không tạo Bot job hoặc charge."),
     WebFeature("documents_image_to_pdf", "Ảnh sang PDF", "documents", "/documents/image-to-pdf", description="Chuyển ảnh private từ Asset Vault thành PDF Web-native theo thứ tự rõ ràng, với decoder và output attachment được kiểm tra; không tạo Bot job hoặc charge."),
+    WebFeature("documents_pdf_to_images", "PDF sang ảnh", "documents", "/documents/pdf-to-images", description="Render PDF private trong Asset Vault thành PNG hoặc ZIP Web-native với kiểm tra pixel, output và private delivery; không tạo Bot job hoặc charge."),
     WebFeature("documents_pdf_to_word", "PDF có text → Word", "documents", "/documents/pdf-to-word", description="Trích xuất text có thể chọn thực sự từ PDF private trong Asset Vault thành DOCX Web-native; không OCR và không cam kết giữ bố cục trực quan."),
     WebFeature("documents_translate", "Dịch tài liệu", "documents", "/documents/translate"),
     WebFeature("support", "Hỗ trợ", "support", "/support"),
