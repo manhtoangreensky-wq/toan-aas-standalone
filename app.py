@@ -26,6 +26,7 @@ import copyfast_auth
 import copyfast_document_operations
 import copyfast_image_operations
 import copyfast_memory
+import copyfast_prompt_library
 import copyfast_project_packages
 import copyfast_projects
 import copyfast_support
@@ -81,16 +82,138 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="TOAN AAS Web App", version="P0.WEBAPP.COPYFAST1", lifespan=lifespan)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=_origins(),
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "X-CSRF-Token", "X-Request-ID", "Idempotency-Key"],
-)
 
 
 _auth_rate_windows: dict[str, list[float]] = {}
+RATE_WINDOW_SECONDS = 60.0
+RATE_WINDOW_PRUNE_THRESHOLD = 512
+RATE_WINDOW_MAX_KEYS = 4096
+# Prompt recipes remain intentionally small, but imports can contain a
+# bounded batch of Unicode-rich templates.  These limits are enforced on the
+# raw ASGI stream *before* FastAPI/Pydantic buffers or parses JSON.
+PROMPT_LIBRARY_BODY_MAX_BYTES = 512 * 1024
+PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES = 6 * 1024 * 1024
+
+
+class PromptLibraryBodyLimitMiddleware:
+    """Reject oversized Prompt Library JSON before it reaches request parsing.
+
+    A ``Content-Length`` check alone is not a complete boundary because a
+    chunked client can omit or lie about that header.  Wrapping ``receive``
+    therefore counts every ASGI body chunk too.  The middleware is kept
+    narrow: uploads and other feature routes retain their own contracts.
+    """
+
+    def __init__(self, app, *, max_bytes: int, import_max_bytes: int):
+        self.app = app
+        self.max_bytes = int(max_bytes)
+        self.import_max_bytes = int(import_max_bytes)
+
+    @staticmethod
+    def _is_prompt_write(scope) -> bool:
+        return (
+            scope.get("type") == "http"
+            and str(scope.get("method") or "").upper() in {"POST", "PATCH"}
+            and str(scope.get("path") or "").startswith("/api/v1/prompt-library/")
+        )
+
+    def _limit_for(self, scope) -> int:
+        return self.import_max_bytes if str(scope.get("path") or "") == "/api/v1/prompt-library/import" else self.max_bytes
+
+    async def _reject(self, scope, receive, send) -> None:
+        # This class may be the outermost application middleware, so write the
+        # private API security headers directly rather than relying on a later
+        # function middleware to decorate a response that it never receives.
+        response = JSONResponse(
+            envelope(
+                False,
+                "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn.",
+                status_name="guarded",
+                error_code="WEB_PROMPT_LIBRARY_BODY_TOO_LARGE",
+            ),
+            status_code=413,
+            headers={
+                "X-Request-ID": str(uuid.uuid4()),
+                "X-Content-Type-Options": "nosniff",
+                "Cache-Control": "no-store, private",
+                "Referrer-Policy": "same-origin",
+                "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
+            },
+        )
+        await response(scope, receive, send)
+
+    async def __call__(self, scope, receive, send):
+        if not self._is_prompt_write(scope):
+            await self.app(scope, receive, send)
+            return
+
+        maximum = self._limit_for(scope)
+        content_lengths = [
+            value
+            for name, value in (scope.get("headers") or [])
+            if (name.lower() if isinstance(name, bytes) else str(name).encode("latin-1", "ignore").lower()) == b"content-length"
+        ]
+        if len(content_lengths) > 1:
+            await self._reject(scope, receive, send)
+            return
+        if content_lengths:
+            try:
+                raw_value = content_lengths[0]
+                raw_bytes = raw_value if isinstance(raw_value, bytes) else str(raw_value).encode("latin-1", "ignore")
+                declared = int(raw_bytes.strip() or b"0")
+            except (TypeError, ValueError):
+                declared = maximum + 1
+            if declared < 0 or declared > maximum:
+                await self._reject(scope, receive, send)
+                return
+
+        # FastAPI converts exceptions raised from its request ``receive``
+        # callback into a generic 400.  Read and count this one bounded
+        # feature stream ourselves, then replay a single safe request event.
+        # This handles absent/chunked Content-Length without permitting JSON
+        # parsing to start until the entire raw body is within the contract.
+        chunks: list[bytes] = []
+        received = 0
+        disconnected = False
+        while True:
+            message = await receive()
+            message_type = message.get("type")
+            if message_type == "http.disconnect":
+                disconnected = True
+                break
+            if message_type != "http.request":
+                continue
+            chunk = message.get("body") or b""
+            received += len(chunk)
+            if received > maximum:
+                await self._reject(scope, receive, send)
+                return
+            chunks.append(chunk)
+            if not message.get("more_body", False):
+                break
+
+        replayed = False
+        body = b"".join(chunks)
+
+        async def bounded_receive():
+            nonlocal replayed
+            if replayed or disconnected:
+                return {"type": "http.disconnect"}
+            replayed = True
+            return {"type": "http.request", "body": body, "more_body": False}
+
+        await self.app(scope, bounded_receive, send)
+
+
+# Register before the function middleware below. FastAPI's middleware stack
+# then lets the standard security/rate/header layer wrap an early 413 just as
+# it wraps every other private API response.
+app.add_middleware(
+    PromptLibraryBodyLimitMiddleware,
+    max_bytes=PROMPT_LIBRARY_BODY_MAX_BYTES,
+    import_max_bytes=PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES,
+)
 
 
 # These files belonged to the first static prototype.  The production
@@ -132,6 +255,27 @@ def _safe_onboarding_next(value: str | None) -> str:
     if path in {"/login", "/register", "/onboarding"}:
         return ""
     return path
+
+
+def _prune_rate_windows(now: float) -> None:
+    """Keep the in-process pre-DB limiter bounded under path/IP churn."""
+    if len(_auth_rate_windows) < RATE_WINDOW_PRUNE_THRESHOLD:
+        return
+    for key, values in list(_auth_rate_windows.items()):
+        active = [value for value in values if now - value < RATE_WINDOW_SECONDS]
+        if active:
+            _auth_rate_windows[key] = active
+        else:
+            _auth_rate_windows.pop(key, None)
+    if len(_auth_rate_windows) < RATE_WINDOW_MAX_KEYS:
+        return
+    overflow = len(_auth_rate_windows) - RATE_WINDOW_MAX_KEYS + 1
+    oldest_keys = sorted(
+        _auth_rate_windows,
+        key=lambda key: _auth_rate_windows[key][-1] if _auth_rate_windows[key] else float("-inf"),
+    )[:overflow]
+    for key in oldest_keys:
+        _auth_rate_windows.pop(key, None)
 
 
 @app.middleware("http")
@@ -184,6 +328,14 @@ async def security_headers(request: Request, call_next):
     # rate limited before SQLite work.  GET views stay unthrottled here while
     # signed-session/ownership checks remain mandatory in the router.
     memory_write = request.method == "POST" and request.url.path.startswith("/api/v1/memory/")
+    # Prompt Library writes are owner-scoped text/template mutations.  Keep an
+    # early independent limit before SQLite work; this does not replace the
+    # router's signed session, CSRF, revision, idempotency or ownership checks.
+    prompt_library_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/prompt-library/")
+    # Prompt Library reads include text search over a private SQLite vault.
+    # Bound them by a fixed route family too, so arbitrary template UUIDs or
+    # query strings cannot bypass the pre-DB gate or grow its in-memory map.
+    prompt_library_read = request.method == "GET" and request.url.path.startswith("/api/v1/prompt-library/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -205,6 +357,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 10
     if memory_write:
         rate_limit = 40
+    if prompt_library_write:
+        rate_limit = 40
+    if prompt_library_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -212,8 +368,17 @@ async def security_headers(request: Request, call_next):
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
-        rate_key = f"{request.url.path}:{client_ip}"
-        window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < 60]
+        _prune_rate_windows(now)
+        # Template actions include an opaque UUID in the path. A fixed
+        # family bucket prevents arbitrary 404/405 suffixes from bypassing
+        # the gate or allocating one in-memory key per requested path.
+        rate_scope = (
+            "prompt-library-write" if prompt_library_write
+            else "prompt-library-read" if prompt_library_read
+            else request.url.path
+        )
+        rate_key = f"{rate_scope}:{client_ip}"
+        window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < RATE_WINDOW_SECONDS]
         if len(window) >= rate_limit:
             response = JSONResponse(envelope(False, "Vui lòng thử lại sau ít phút.", status_name="guarded", error_code="AUTH_RATE_LIMITED"), status_code=429)
             response.headers["X-Request-ID"] = request_id
@@ -230,13 +395,27 @@ async def security_headers(request: Request, call_next):
     private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
     private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
-    private_download = private_asset_download or private_package_download or private_document_download or private_image_download
+    private_prompt_export = request.method == "POST" and request.url.path == "/api/v1/prompt-library/export"
+    private_download = private_asset_download or private_package_download or private_document_download or private_image_download or private_prompt_export
     response.headers["Referrer-Policy"] = "no-referrer" if private_download else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = "sandbox" if private_download else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     if request.url.path.startswith("/api/v1/") or request.url.path.startswith("/internal/"):
         response.headers["Cache-Control"] = "no-store, private"
     return response
+
+
+# Keep CORS outermost among application middleware. In particular, a request
+# rejected by the raw Prompt Library body cap still receives the configured
+# credentialed CORS headers instead of becoming an opaque browser network
+# failure for an explicitly allowed origin.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_origins(),
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "PATCH", "OPTIONS"],
+    allow_headers=["Content-Type", "X-CSRF-Token", "X-Request-ID", "Idempotency-Key"],
+)
 
 
 @app.exception_handler(HTTPException)
@@ -269,6 +448,7 @@ app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_memory.router)
+app.include_router(copyfast_prompt_library.router)
 app.include_router(copyfast_support.router)
 
 

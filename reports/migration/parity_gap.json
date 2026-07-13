@@ -15,7 +15,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3114,
+        "line": 3126,
         "method": "POST",
         "path": "/internal/v1/admin/features/{*}/freeze",
         "static": true
@@ -23,7 +23,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3012,
+        "line": 3024,
         "method": "GET",
         "path": "/internal/v1/admin/jobs",
         "static": true
@@ -31,7 +31,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3090,
+        "line": 3102,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/refund",
         "static": true
@@ -39,7 +39,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3067,
+        "line": 3079,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/retry",
         "static": true
@@ -47,7 +47,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3037,
+        "line": 3049,
         "method": "GET",
         "path": "/internal/v1/admin/modules/{*}",
         "static": true
@@ -55,7 +55,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3017,
+        "line": 3029,
         "method": "GET",
         "path": "/internal/v1/admin/payments",
         "static": true
@@ -63,7 +63,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3022,
+        "line": 3034,
         "method": "GET",
         "path": "/internal/v1/admin/providers",
         "static": true
@@ -71,7 +71,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3002,
+        "line": 3014,
         "method": "GET",
         "path": "/internal/v1/admin/summary",
         "static": true
@@ -79,7 +79,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3027,
+        "line": 3039,
         "method": "GET",
         "path": "/internal/v1/admin/tickets",
         "static": true
@@ -87,7 +87,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3007,
+        "line": 3019,
         "method": "GET",
         "path": "/internal/v1/admin/users",
         "static": true
@@ -95,7 +95,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2822,
+        "line": 2834,
         "method": "GET",
         "path": "/internal/v1/assets",
         "static": true
@@ -103,7 +103,7 @@
       {
         "call": "bridge_request",
         "file": "copyfast_api.py",
-        "line": 2097,
+        "line": 2109,
         "method": "GET",
         "path": "/internal/v1/assets/{*}/download",
         "static": true
@@ -111,7 +111,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2902,
+        "line": 2914,
         "method": "GET",
         "path": "/internal/v1/features/status",
         "static": true
@@ -119,7 +119,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2944,
+        "line": 2956,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -127,7 +127,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2965,
+        "line": 2977,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -135,7 +135,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2811,
+        "line": 2823,
         "method": "GET",
         "path": "/internal/v1/jobs",
         "static": true
@@ -143,7 +143,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2817,
+        "line": 2829,
         "method": "GET",
         "path": "/internal/v1/jobs/{*}",
         "static": true
@@ -159,7 +159,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2712,
+        "line": 2724,
         "method": "GET",
         "path": "/internal/v1/packages",
         "static": true
@@ -167,7 +167,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2796,
+        "line": 2808,
         "method": "POST",
         "path": "/internal/v1/payments/create",
         "static": true
@@ -175,7 +175,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2806,
+        "line": 2818,
         "method": "GET",
         "path": "/internal/v1/payments/{*}",
         "static": true
@@ -183,7 +183,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2707,
+        "line": 2719,
         "method": "GET",
         "path": "/internal/v1/pricing",
         "static": true
@@ -191,7 +191,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2879,
+        "line": 2891,
         "method": "GET",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -199,7 +199,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2890,
+        "line": 2902,
         "method": "POST",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -207,7 +207,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2861,
+        "line": 2873,
         "method": "POST",
         "path": "/internal/v1/uploads",
         "static": true
@@ -215,7 +215,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2836,
+        "line": 2848,
         "method": "GET",
         "path": "/internal/v1/voice/profiles",
         "static": true
@@ -223,7 +223,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2696,
+        "line": 2708,
         "method": "GET",
         "path": "/internal/v1/wallet",
         "static": true
@@ -231,7 +231,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 2701,
+        "line": 2713,
         "method": "GET",
         "path": "/internal/v1/wallet/history",
         "static": true

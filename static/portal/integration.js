@@ -917,6 +917,187 @@
     return { title, content, tags: memoryTagsFromInput(fields.tags), category, priority };
   }
 
+  // Prompt Library is a private Web-native recipe store. These helpers keep
+  // browser validation aligned with its narrow server contract and never
+  // invoke a remote generation service, Bot bridge action, job, wallet mutation or
+  // payment request.
+  const PROMPT_LIBRARY_STATES = new Set(["active", "archived"]);
+  const PROMPT_VARIABLE_NAME_PATTERN = /^[A-Za-z_][A-Za-z0-9_]{0,63}$/;
+  const PROMPT_FORBIDDEN_VARIABLE_NAMES = new Set(["__proto__", "constructor", "prototype"]);
+  const PROMPT_QUOTED_SECRET_PATTERN = /\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|token|client[ _-]?secret|aws[ _-]?secret[ _-]?access[ _-]?key|secret(?:[ _-]?(?:key|access[ _-]?key))?|password|passphrase|authorization)\b\s*(?:['"]\s*)?(?:[:=]|\bis\b)\s*(?:['"]\s*)?(?:(?:bearer|basic)\s+)?[A-Za-z0-9_./+=:-]{8,}/i;
+  const PROMPT_PRIVATE_KEY_PATTERN = /-----BEGIN(?: [A-Z0-9]+)? PRIVATE KEY-----|-----BEGIN OPENSSH PRIVATE KEY-----|\bssh-(?:rsa|ed25519|ecdsa)\s+[A-Za-z0-9+/]{32,}/i;
+  const PROMPT_UNSAFE_CONTROL_PATTERN = /[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/;
+  const PROMPT_LIBRARY_IMPORT_MAX_CHARS = 1400000;
+  const PROMPT_IMPORT_KEYS = new Set([
+    "title", "category", "product_context", "platform", "style", "language", "prompt_text", "negative_prompt",
+    "variables", "tags", "source", "license_note", "quality_score", "state"
+  ]);
+
+  function validPromptTemplateId(value) {
+    return validProjectId(value);
+  }
+
+  function validPromptTemplateRevision(value) {
+    return validMemoryRevision(value);
+  }
+
+  function promptTemplateIdFromPath(path) {
+    const match = /^\/prompt-library\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validPromptTemplateId(id) ? id : "";
+  }
+
+  function promptLibrarySafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Prompt Library không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Prompt Library không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Prompt Library không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    return "";
+  }
+
+  function promptLibrarySingleLine(value, label, minimum, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length < minimum || text.length > maximum || text.includes("\u0000")) throw new Error(`${label} cần từ ${minimum} đến ${maximum} ký tự hợp lệ.`);
+    return text;
+  }
+
+  function promptLibraryOptionalLine(value, label, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || text.includes("\u0000")) throw new Error(`${label} tối đa ${maximum} ký tự hợp lệ.`);
+    return text;
+  }
+
+  function promptLibraryContent(value, label, minimum, maximum) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length < minimum || text.length > maximum || text.includes("\u0000")) throw new Error(`${label} cần từ ${minimum} đến ${maximum} ký tự hợp lệ.`);
+    return text;
+  }
+
+  function promptLibraryList(value, label, maximumItems, maximumItemLength) {
+    const candidates = Array.isArray(value) ? value : String(value || "").split(",");
+    const items = [];
+    const seen = new Set();
+    candidates.forEach((candidate) => {
+      const item = String(candidate || "").replace(/\s+/g, " ").trim();
+      if (!item) return;
+      if (item.length > maximumItemLength || item.includes("\u0000")) throw new Error(`${label} tối đa ${maximumItemLength} ký tự mỗi mục.`);
+      const key = item.toLocaleLowerCase("vi-VN");
+      if (!seen.has(key)) {
+        seen.add(key);
+        items.push(item);
+      }
+    });
+    if (items.length > maximumItems) throw new Error(`Tối đa ${maximumItems} ${label.toLowerCase()} cho một template.`);
+    return items;
+  }
+
+  function promptTemplateVariables(value) {
+    const variables = promptLibraryList(value, "variables", 24, 64);
+    variables.forEach((name) => {
+      if (!PROMPT_VARIABLE_NAME_PATTERN.test(name)) throw new Error("Tên variable chỉ dùng chữ, số và gạch dưới; bắt đầu bằng chữ hoặc gạch dưới.");
+      if (PROMPT_FORBIDDEN_VARIABLE_NAMES.has(name.toLowerCase())) throw new Error("Tên variable này được dành riêng và không thể dùng trong preview.");
+    });
+    return variables;
+  }
+
+  function promptTemplateTags(value) {
+    return promptLibraryList(value, "tags", 16, 48);
+  }
+
+  function promptLibraryFilterPayload(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const q = promptLibraryOptionalLine(source.q, "Từ khóa tìm kiếm", 100);
+    const category = promptLibraryOptionalLine(source.category, "Danh mục", 100);
+    const platform = promptLibraryOptionalLine(source.platform, "Nền tảng", 100);
+    const productContext = promptLibraryOptionalLine(source.product_context, "Ngữ cảnh", 100);
+    const tag = promptLibraryOptionalLine(source.tag, "Tag", 48);
+    const state = String(source.state || "all").trim().toLowerCase();
+    if (state !== "all" && !PROMPT_LIBRARY_STATES.has(state)) throw new Error("Bộ lọc trạng thái Prompt Library không hợp lệ.");
+    const safetyError = promptLibrarySafetyError(q, category, platform, productContext, tag);
+    if (safetyError) throw new Error(safetyError);
+    return { q, category, platform, product_context: productContext, tag, state };
+  }
+
+  function promptLibraryListPath(filter) {
+    const query = new URLSearchParams({ state: filter.state || "all", limit: "100" });
+    ["q", "category", "platform", "product_context", "tag"].forEach((name) => {
+      if (filter[name]) query.set(name, filter[name]);
+    });
+    return `/prompt-library/templates?${query.toString()}`;
+  }
+
+  function promptTemplatePayload(fields) {
+    const title = promptLibrarySingleLine(fields.title, "Tên template", 3, 180);
+    const category = promptLibraryOptionalLine(fields.category || "General", "Danh mục", 100) || "General";
+    const productContext = promptLibraryOptionalLine(fields.product_context || "general", "Ngữ cảnh", 100) || "general";
+    const platform = promptLibraryOptionalLine(fields.platform || "general", "Nền tảng", 100) || "general";
+    const style = promptLibraryOptionalLine(fields.style, "Phong cách", 100);
+    const language = promptLibraryOptionalLine(fields.language || "vi", "Ngôn ngữ", 100) || "vi";
+    const promptText = promptLibraryContent(fields.prompt_text, "Prompt", 1, 16000);
+    const negativePrompt = promptLibraryContent(fields.negative_prompt, "Negative prompt", 0, 8000);
+    const source = promptLibrarySingleLine(fields.source || "Tự soạn", "Nguồn", 2, 600);
+    const licenseNote = promptLibrarySingleLine(fields.license_note || "Tôi có quyền sử dụng nội dung này.", "Quyền sử dụng", 2, 600);
+    const qualityScore = Number(fields.quality_score);
+    if (!Number.isInteger(qualityScore) || qualityScore < 0 || qualityScore > 100) throw new Error("Mức hoàn thiện cần là số nguyên từ 0 đến 100.");
+    const variables = promptTemplateVariables(fields.variables);
+    const tags = promptTemplateTags(fields.tags);
+    const safetyError = promptLibrarySafetyError(title, category, productContext, platform, style, language, promptText, negativePrompt, source, licenseNote, ...variables, ...tags);
+    if (safetyError) throw new Error(safetyError);
+    return {
+      title, category, product_context: productContext, platform, style, language, prompt_text: promptText,
+      negative_prompt: negativePrompt, variables, tags, source, license_note: licenseNote, quality_score: qualityScore
+    };
+  }
+
+  function promptLibraryImportPayload(fields) {
+    const raw = String(fields.templates_json || "").trim();
+    if (raw.length < 2 || raw.length > PROMPT_LIBRARY_IMPORT_MAX_CHARS) throw new Error("JSON import cần từ 2 đến 1.400.000 ký tự.");
+    let decoded;
+    try { decoded = JSON.parse(raw); } catch (_) { throw new Error("JSON template không hợp lệ."); }
+    const templates = Array.isArray(decoded) ? decoded : (decoded && typeof decoded === "object" && Array.isArray(decoded.templates) ? decoded.templates : null);
+    if (!templates || templates.length < 1 || templates.length > 50) throw new Error("Import cần từ 1 đến 50 template JSON.");
+    return {
+      templates: templates.map((item) => {
+        if (!item || typeof item !== "object" || Array.isArray(item)) throw new Error("Mỗi template import phải là JSON object.");
+        const unknown = Object.keys(item).filter((key) => !PROMPT_IMPORT_KEYS.has(key));
+        if (unknown.length) throw new Error("JSON import có trường không được chấp nhận.");
+        const state = String(item.state || "active").trim().toLowerCase();
+        if (!PROMPT_LIBRARY_STATES.has(state)) throw new Error("Trạng thái template import không hợp lệ.");
+        return { ...promptTemplatePayload(item), state };
+      })
+    };
+  }
+
+  async function downloadPromptLibraryExport() {
+    const context = base();
+    const csrfToken = context.session && context.session.csrfToken ? String(context.session.csrfToken) : "";
+    if (!csrfToken) throw new Error("Phiên signed session đã hết hạn; hãy đăng nhập lại trước khi export.");
+    const headers = new Headers({ Accept: "application/json", "X-Request-ID": randomKey("web") });
+    headers.set("X-CSRF-Token", csrfToken);
+    const response = await fetch(`${API}/prompt-library/export`, { method: "POST", credentials: "same-origin", headers });
+    if (!response.ok) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* generic error below */ }
+      const error = new Error(payload.message || "Export Prompt Library chưa được máy chủ xác nhận.");
+      error.payload = payload;
+      error.status = response.status;
+      throw error;
+    }
+    const blob = await response.blob();
+    if (!blob.size) throw new Error("Máy chủ chưa trả JSON export hợp lệ.");
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = "toan-aas-prompt-library.json";
+    anchor.hidden = true;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return { message: "Đã chuẩn bị JSON export riêng tư từ Prompt Library." };
+  }
+
   function memoryReminderPayload(fields) {
     const title = String(fields.title || "").replace(/\s+/g, " ").trim();
     const body = String(fields.body || "").trim();
@@ -1168,6 +1349,10 @@
     // Memory Center is a signed-account Web-native capability. Its flag does
     // not imply Bot bridge, Telegram, wallet, payment or provider readiness.
     const memoryCenterEnabled = Boolean(status.flags && status.flags.memory_center_enabled === true);
+    // Prompt Library is another signed-account Web-native boundary. It has no
+    // dependency on Telegram identity, a Core Bridge, provider, jobs, Xu or
+    // payment readiness.
+    const promptLibraryEnabled = Boolean(status.flags && status.flags.prompt_library_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -1288,6 +1473,18 @@
       "memory-reminder-pause": Boolean(account && me.csrf_token && memoryCenterEnabled),
       "memory-reminder-resume": Boolean(account && me.csrf_token && memoryCenterEnabled),
       "memory-reminder-cancel": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "prompt-library-view": Boolean(account && promptLibraryEnabled),
+      "prompt-library-refresh": Boolean(account && promptLibraryEnabled),
+      "prompt-library-create": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-update": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-archive": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-restore": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-purge": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-duplicate": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-restore-version": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-preview": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-import": Boolean(account && me.csrf_token && promptLibraryEnabled),
+      "prompt-library-export": Boolean(account && me.csrf_token && promptLibraryEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -1345,6 +1542,7 @@
       imageResizeEnabled,
       imageEnhanceEnabled,
       memoryCenterEnabled,
+      promptLibraryEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -1355,6 +1553,16 @@
       memoryNoteDetail: {},
       memoryNoteFilter: { q: "", priority: "", state: "all" },
       memoryReadState: account && memoryCenterEnabled ? "loading" : "guarded",
+      // Clear every Prompt Library projection before an account-scoped read.
+      // A signed account change or a failed API request must never show a
+      // previous owner's recipe, preview, version metadata or event stream.
+      promptLibrarySummary: {},
+      promptTemplates: [],
+      promptTemplateDetail: {},
+      promptTemplatePreview: {},
+      promptLibraryEvents: [],
+      promptLibraryFilter: { q: "", category: "", platform: "", product_context: "", tag: "", state: "all" },
+      promptLibraryReadState: account && promptLibraryEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -1390,6 +1598,8 @@
         ...nativeImagePageStates,
         "/notes": account && memoryCenterEnabled ? "processing" : "guarded",
         "/reminders": account && memoryCenterEnabled ? "processing" : "guarded",
+        "/prompt-library": account && promptLibraryEnabled ? "processing" : "guarded",
+        "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -1431,6 +1641,14 @@
       memorySummary: {}, memoryNotes: [], memoryReminders: [], memoryEvents: [], memoryNoteDetail: {}, memoryReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
+    if (account && promptLibraryEnabled && ["/prompt-library", "/prompt-library/new"].includes(currentPath)) await hydratePromptLibrary();
+    else if (account && promptLibraryEnabled && promptTemplateIdFromPath(currentPath)) await hydratePromptTemplate(promptTemplateIdFromPath(currentPath));
+    else if (currentPath === "/prompt-library" || currentPath === "/prompt-library/new" || promptTemplateIdFromPath(currentPath)) {
+      merge({
+        promptLibrarySummary: {}, promptTemplates: [], promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryEvents: [],
+        promptLibraryReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
       else if (supportCaseIdFromPath(currentPath)) await hydrateSupportCase(supportCaseIdFromPath(currentPath));
@@ -1595,6 +1813,74 @@
     const reminders = Array.isArray(detail.reminders) ? detail.reminders.filter((item) => item && validMemoryId(item.id)).slice(0, 20) : [];
     merge({ memoryNoteDetail: { note, versions, reminders } });
     return { note, versions, reminders };
+  }
+
+  async function hydratePromptLibrary(filterValue) {
+    // Keep this owner-scoped native data boundary independent from the
+    // generic canonical/bridge hydrator. A Bot link cannot unlock or replace
+    // a Prompt Library response.
+    const filter = promptLibraryFilterPayload(filterValue === undefined ? base().promptLibraryFilter : filterValue);
+    try {
+      const [summaryResult, templatesResult, eventsResult] = await Promise.all([
+        api("/prompt-library/summary"),
+        api(promptLibraryListPath(filter)),
+        api("/prompt-library/events?limit=50")
+      ]);
+      const templates = templatesResult.data && Array.isArray(templatesResult.data.items)
+        ? templatesResult.data.items.filter((item) => item && validPromptTemplateId(item.id)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validPromptTemplateId(item.template_id)).slice(0, 50)
+        : [];
+      merge({
+        promptLibrarySummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
+        promptTemplates: templates,
+        promptLibraryEvents: events,
+        promptLibraryFilter: filter,
+        promptTemplatePreview: {},
+        promptLibraryReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/prompt-library": "ready", "/prompt-library/new": "ready" }
+      });
+      return { templates, events };
+    } catch (_) {
+      // Do not retain a prompt excerpt, title, tag, event, detail or preview
+      // from a prior account if any owner-scoped request fails.
+      merge({
+        promptLibrarySummary: {}, promptTemplates: [], promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryEvents: [],
+        promptLibraryFilter: filter, promptLibraryReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/prompt-library": "guarded", "/prompt-library/new": "guarded" }
+      });
+      return { templates: [], events: [] };
+    }
+  }
+
+  async function hydratePromptTemplate(templateId) {
+    if (!validPromptTemplateId(templateId)) throw new Error("Mã template Prompt Library không hợp lệ.");
+    const route = `/prompt-library/${encodeURIComponent(String(templateId))}`;
+    try {
+      const result = await api(`/prompt-library/templates/${encodeURIComponent(String(templateId))}`);
+      const detail = result.data && typeof result.data === "object" ? result.data : {};
+      const template = detail.template && typeof detail.template === "object" ? detail.template : null;
+      if (!template || !validPromptTemplateId(template.id) || String(template.id) !== String(templateId)) {
+        throw new Error("Template Prompt Library không còn khả dụng cho Web account hiện tại.");
+      }
+      const versions = Array.isArray(detail.versions)
+        ? detail.versions.filter((item) => item && validPromptTemplateRevision(item.revision)).slice(0, 100)
+        : [];
+      merge({
+        promptTemplateDetail: { template, versions },
+        promptTemplatePreview: {},
+        promptLibraryReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: "read_only" }
+      });
+      return { template, versions };
+    } catch (_) {
+      merge({
+        promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
   }
 
   async function hydrateSupportDesk(filterValue) {
@@ -2348,6 +2634,209 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "prompt-library-filter" || action === "prompt-library-filter-clear") {
+        const filter = action === "prompt-library-filter-clear"
+          ? { q: "", category: "", platform: "", product_context: "", tag: "", state: "all" }
+          : promptLibraryFilterPayload(fields);
+        await hydratePromptLibrary(filter);
+        toast(filter.q || filter.category || filter.platform || filter.product_context || filter.tag || filter.state !== "all" ? "Đã áp dụng bộ lọc Prompt Library." : "Đã hiển thị toàn bộ template Web riêng tư.");
+        return;
+      }
+      if (action === "prompt-library-refresh") {
+        await hydratePromptLibrary();
+        toast("Đã làm mới Prompt Library của Web account hiện tại.");
+        return;
+      }
+      if (action === "prompt-library-export") {
+        setActionBusy(action, route, true);
+        try {
+          const result = await downloadPromptLibraryExport();
+          toast(result.message);
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "prompt-template-create") {
+        const payload = promptTemplatePayload(fields);
+        const scope = "prompt-library:template:create";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Template đang được lưu. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/prompt-library/templates", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydratePromptLibrary();
+          toast(result.message || "Đã lưu template vào Prompt Library.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "prompt-template-update") {
+        const templateId = String(detail.promptTemplateId || "").trim();
+        const expectedRevision = validPromptTemplateRevision(detail.promptTemplateRevision);
+        if (!validPromptTemplateId(templateId) || !expectedRevision) throw new Error("Mã hoặc revision template Prompt Library không hợp lệ.");
+        const payload = { ...promptTemplatePayload(fields), expected_revision: expectedRevision };
+        const scope = `prompt-library:template:${templateId}:update`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/prompt-library/templates/${encodeURIComponent(templateId)}`, {
+            method: "PATCH", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydratePromptLibrary();
+          await hydratePromptTemplate(templateId);
+          toast(result.message || "Đã lưu revision template mới.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (["prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-duplicate", "prompt-template-restore-version"].includes(action)) {
+        const templateId = String(detail.promptTemplateId || "").trim();
+        const expectedRevision = validPromptTemplateRevision(detail.promptTemplateRevision);
+        if (!validPromptTemplateId(templateId) || !expectedRevision) throw new Error("Mã hoặc revision template Prompt Library không hợp lệ.");
+        const operation = action.replace("prompt-template-", "");
+        const version = action === "prompt-template-restore-version" ? validPromptTemplateRevision(detail.promptTemplateVersion) : 0;
+        if (action === "prompt-template-restore-version" && !version) throw new Error("Revision cần khôi phục không hợp lệ.");
+        const scope = `prompt-library:template:${templateId}:${operation}${version ? `:${version}` : ""}`;
+        const submission = acquireSubmission(scope, JSON.stringify({ expected_revision: expectedRevision, version }));
+        if (!submission) return;
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          let target = `/prompt-library/templates/${encodeURIComponent(templateId)}/${encodeURIComponent(operation)}`;
+          let body = { expected_revision: expectedRevision, idempotency_key: submission.key };
+          if (action === "prompt-template-restore-version") {
+            target = `/prompt-library/templates/${encodeURIComponent(templateId)}/restore-version`;
+            body = { ...body, revision: version };
+          }
+          if (action === "prompt-template-purge") body = { ...body, confirm: true };
+          const result = await api(target, {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body)
+          });
+          acknowledged = true;
+          await hydratePromptLibrary();
+          if (action === "prompt-template-purge") {
+            toast(result.message || "Đã xóa vĩnh viễn template đã archive.");
+            window.location.assign("/prompt-library");
+            return;
+          }
+          await hydratePromptTemplate(templateId);
+          toast(result.message || "Đã cập nhật template Prompt Library.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "prompt-template-preview") {
+        const templateId = String(detail.promptTemplateId || "").trim();
+        const expectedRevision = validPromptTemplateRevision(detail.promptTemplateRevision);
+        if (!validPromptTemplateId(templateId) || !expectedRevision) throw new Error("Mã hoặc revision template Prompt Library không hợp lệ.");
+        const template = base().promptTemplateDetail && base().promptTemplateDetail.template;
+        const variables = template && Array.isArray(template.variables) ? template.variables : [];
+        const values = Object.create(null);
+        variables.forEach((name) => {
+          if (!PROMPT_VARIABLE_NAME_PATTERN.test(String(name || "")) || PROMPT_FORBIDDEN_VARIABLE_NAMES.has(String(name).toLowerCase())) return;
+          const value = promptLibraryContent(fields[`variable_${name}`], "Giá trị preview", 0, 600);
+          values[name] = value;
+        });
+        const safetyError = promptLibrarySafetyError(...Object.values(values));
+        if (safetyError) throw new Error(safetyError);
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/prompt-library/templates/${encodeURIComponent(templateId)}/preview`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ expected_revision: expectedRevision, values })
+          });
+          const preview = result.data && typeof result.data === "object" ? result.data : {};
+          if (preview.execution !== "local_preview_only" || typeof preview.prompt_text !== "string") throw new Error("Máy chủ chưa trả preview Prompt Library cục bộ hợp lệ.");
+          merge({ promptTemplatePreview: { ...preview, template_id: templateId } });
+          toast(result.message || "Đã tạo preview cục bộ.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "prompt-library-import") {
+        const payload = promptLibraryImportPayload(fields);
+        const scope = "prompt-library:import";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("JSON template đang được import. Vui lòng chờ máy chủ xác nhận.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/prompt-library/import", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          await hydratePromptLibrary();
+          toast(result.message || "Đã import template vào Prompt Library.");
+        } catch (error) {
+          acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "prompt-template-copy") {
+        const templateId = String(detail.promptTemplateId || "").trim();
+        const template = base().promptTemplateDetail && base().promptTemplateDetail.template;
+        if (!validPromptTemplateId(templateId) || !template || String(template.id || "") !== templateId || String(template.state || "") !== "active" || typeof template.prompt_text !== "string") {
+          throw new Error("Nội dung template Prompt Library chưa được nạp an toàn.");
+        }
+        const text = template.prompt_text;
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const field = document.createElement("textarea");
+          field.value = text;
+          field.setAttribute("readonly", "");
+          field.style.position = "fixed";
+          field.style.opacity = "0";
+          document.body.appendChild(field);
+          field.select();
+          const copied = document.execCommand("copy");
+          field.remove();
+          if (!copied) throw new Error("Trình duyệt chưa cho phép sao chép prompt.");
+        }
+        toast("Đã sao chép prompt từ template riêng tư. Chưa có AI execution nào được tạo.");
+        return;
+      }
       if (action === "support-cases-filter") {
         const filter = supportCaseFilterPayload(fields);
         await hydrateSupportDesk(filter);
