@@ -1,10 +1,11 @@
 /* Only public portal shell assets are cached. API, wallet, payment, admin,
    Support Desk cases/messages, Prompt Library templates/previews/exports,
-   Audio Library & Briefing collections/briefs/Asset Vault references, uploads,
+   Audio Library & Briefing collections/briefs/Asset Vault references, Creative
+   Content Studio briefs/content pieces/history, uploads,
    /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
-   /api/v1/image-operations, /api/v1/media-workspace and private delivery
+   /api/v1/image-operations, /api/v1/media-workspace, /api/v1/content-studio and private delivery
    URLs are intentionally never cached. */
-const CACHE_NAME = "toan-aas-portal-shell-v7";
+const CACHE_NAME = "toan-aas-portal-shell-v8";
 const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal.js",

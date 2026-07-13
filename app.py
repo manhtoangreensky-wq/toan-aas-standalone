@@ -23,6 +23,7 @@ from fastapi.staticfiles import StaticFiles
 import copyfast_api
 import copyfast_assets
 import copyfast_auth
+import copyfast_content_studio
 import copyfast_document_operations
 import copyfast_image_operations
 import copyfast_memory
@@ -98,6 +99,10 @@ PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES = 6 * 1024 * 1024
 # field is a 6,000-character brief).  Cap its raw stream separately before
 # FastAPI buffers/parses a potentially chunked body.
 MEDIA_WORKSPACE_BODY_MAX_BYTES = 64 * 1024
+# Content Studio accepts authored metadata and text only.  Enforce a bounded
+# raw JSON stream before FastAPI/Pydantic can parse a potentially chunked
+# request; media/file uploads remain outside this route family.
+CONTENT_STUDIO_BODY_MAX_BYTES = 128 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -116,11 +121,13 @@ class PromptLibraryBodyLimitMiddleware:
         max_bytes: int,
         import_max_bytes: int,
         media_max_bytes: int = MEDIA_WORKSPACE_BODY_MAX_BYTES,
+        content_studio_max_bytes: int = CONTENT_STUDIO_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
         self.import_max_bytes = int(import_max_bytes)
         self.media_max_bytes = int(media_max_bytes)
+        self.content_studio_max_bytes = int(content_studio_max_bytes)
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -128,11 +135,17 @@ class PromptLibraryBodyLimitMiddleware:
         return (
             scope.get("type") == "http"
             and str(scope.get("method") or "").upper() in {"POST", "PATCH"}
-            and (path.startswith("/api/v1/prompt-library/") or path.startswith("/api/v1/media-workspace/"))
+            and (
+                path.startswith("/api/v1/prompt-library/")
+                or path.startswith("/api/v1/media-workspace/")
+                or path.startswith("/api/v1/content-studio/")
+            )
         )
 
     def _limit_for(self, scope) -> int:
         path = str(scope.get("path") or "")
+        if path.startswith("/api/v1/content-studio/"):
+            return self.content_studio_max_bytes
         if path.startswith("/api/v1/media-workspace/"):
             return self.media_max_bytes
         return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
@@ -141,14 +154,27 @@ class PromptLibraryBodyLimitMiddleware:
         # This class may be the outermost application middleware, so write the
         # private API security headers directly rather than relying on a later
         # function middleware to decorate a response that it never receives.
-        is_media = str(scope.get("path") or "").startswith("/api/v1/media-workspace/")
+        path = str(scope.get("path") or "")
+        is_content_studio = path.startswith("/api/v1/content-studio/")
+        is_media = path.startswith("/api/v1/media-workspace/")
         response = JSONResponse(
             envelope(
                 False,
-                "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
-                if is_media else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn.",
+                (
+                    "Dữ liệu Creative Content Studio vượt giới hạn kích thước an toàn."
+                    if is_content_studio
+                    else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
+                    if is_media
+                    else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
+                ),
                 status_name="guarded",
-                error_code="WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE" if is_media else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE",
+                error_code=(
+                    "WEB_CONTENT_STUDIO_BODY_TOO_LARGE"
+                    if is_content_studio
+                    else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
+                    if is_media
+                    else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
+                ),
             ),
             status_code=413,
             headers={
@@ -233,6 +259,7 @@ app.add_middleware(
     max_bytes=PROMPT_LIBRARY_BODY_MAX_BYTES,
     import_max_bytes=PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES,
     media_max_bytes=MEDIA_WORKSPACE_BODY_MAX_BYTES,
+    content_studio_max_bytes=CONTENT_STUDIO_BODY_MAX_BYTES,
 )
 
 
@@ -362,6 +389,12 @@ async def security_headers(request: Request, call_next):
     # provider, Bot job or delivery capability appear available.
     media_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/media-workspace/")
     media_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/media-workspace/")
+    # Creative Content Studio persists owner-scoped authored text and version
+    # snapshots. Keep fixed route-family buckets before SQLite/CSRF work so
+    # arbitrary UUIDs/query strings cannot bypass the pre-DB limit. This does
+    # not imply an AI/provider, Bot, payment, job or publishing capability.
+    content_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/content-studio/")
+    content_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/content-studio/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -391,6 +424,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if media_workspace_read:
         rate_limit = 120
+    if content_studio_write:
+        rate_limit = 40
+    if content_studio_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -407,6 +444,8 @@ async def security_headers(request: Request, call_next):
             else "prompt-library-read" if prompt_library_read
             else "media-workspace-write" if media_workspace_write
             else "media-workspace-read" if media_workspace_read
+            else "content-studio-write" if content_studio_write
+            else "content-studio-read" if content_studio_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
@@ -482,6 +521,7 @@ app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
 app.include_router(copyfast_music_media.router)
+app.include_router(copyfast_content_studio.router)
 app.include_router(copyfast_support.router)
 
 

@@ -1191,6 +1191,117 @@
     return payload;
   }
 
+  // Creative Content Studio is a strict Web-native authoring boundary. It
+  // never passes free text to generic feature execution, Bot bridge, provider,
+  // payment or browser storage. These client checks mirror, but never replace,
+  // server-side Pydantic, CSRF, owner and revision validation.
+  const CONTENT_STUDIO_KINDS = new Set(["caption_hashtag", "content_ideas", "hook_script", "content_pack", "storyboard"]);
+  const CONTENT_STUDIO_VARIANT_KINDS = new Set(["caption", "hashtag_set", "hook", "script", "storyboard", "content_pack", "content_ideas", "custom"]);
+  const CONTENT_STUDIO_STATES = new Set(["active", "archived"]);
+
+  function validContentBriefId(value) { return validProjectId(value); }
+  function validContentStudioRevision(value) { return validMemoryRevision(value); }
+  function contentBriefIdFromPath(path) {
+    const match = /^\/content-studio\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validContentBriefId(id) ? id : "";
+  }
+  function isNativeContentStudioPath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/content-studio" || normalized === "/content-studio/new" || Boolean(contentBriefIdFromPath(normalized));
+  }
+  function contentStudioSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Content Studio không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Content Studio không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Content Studio không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    return "";
+  }
+  function contentStudioLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function contentStudioBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function contentStudioTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = contentStudioLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi content brief hoặc content piece.");
+    return result;
+  }
+  function contentStudioReference(value, label) {
+    const id = String(value || "").trim();
+    if (id && !validContentBriefId(id)) throw new Error(label + " không hợp lệ.");
+    return id;
+  }
+  function contentBriefPayload(fields) {
+    const title = contentStudioLine(fields.title, "Tên brief", 2, 180, false);
+    const contentKind = contentStudioLine(fields.content_kind, "Loại nội dung", 1, 32, false).toLowerCase();
+    const subject = contentStudioLine(fields.subject, "Chủ đề", 2, 700, false);
+    const objective = contentStudioLine(fields.objective, "Mục tiêu", 0, 500, true);
+    const audience = contentStudioLine(fields.audience, "Đối tượng", 0, 500, true);
+    const platform = contentStudioLine(fields.platform, "Nền tảng", 0, 100, true);
+    const tone = contentStudioLine(fields.tone, "Giọng điệu", 0, 160, true);
+    const language = contentStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 100, false);
+    const callToAction = contentStudioBody(fields.call_to_action, "CTA", 600, true);
+    const briefText = contentStudioBody(fields.brief_text, "Nội dung brief", 12000, false);
+    const constraints = contentStudioBody(fields.constraints, "Ràng buộc", 6000, true);
+    const rightsNote = contentStudioBody(fields.rights_note, "Ghi chú quyền sử dụng", 1000, true);
+    const tags = contentStudioTags(fields.tags);
+    if (!CONTENT_STUDIO_KINDS.has(contentKind)) throw new Error("Loại Content Studio không hợp lệ.");
+    const values = [title, contentKind, subject, objective, audience, platform, tone, language, callToAction, briefText, constraints, rightsNote, ...tags];
+    const safety = contentStudioSafetyError(...values);
+    if (safety) throw new Error(safety);
+    return {
+      title, content_kind: contentKind, subject, objective, audience, platform, tone, language,
+      call_to_action: callToAction, brief_text: briefText, constraints, tags, rights_note: rightsNote,
+      project_id: contentStudioReference(fields.project_id, "Project liên kết"),
+      campaign_plan_id: contentStudioReference(fields.campaign_plan_id, "Campaign liên kết"),
+      prompt_template_id: contentStudioReference(fields.prompt_template_id, "Prompt template liên kết"),
+      media_collection_id: contentStudioReference(fields.media_collection_id, "Audio collection liên kết")
+    };
+  }
+  function contentVariantPayload(fields) {
+    const kind = contentStudioLine(fields.kind || "custom", "Loại content piece", 1, 32, false).toLowerCase();
+    const title = contentStudioLine(fields.title, "Tiêu đề content piece", 2, 180, false);
+    const contentText = contentStudioBody(fields.content_text, "Nội dung content piece", 20000, false);
+    const note = contentStudioBody(fields.note, "Ghi chú content piece", 2000, true);
+    const tags = contentStudioTags(fields.tags);
+    if (!CONTENT_STUDIO_VARIANT_KINDS.has(kind)) throw new Error("Loại content piece không hợp lệ.");
+    const safety = contentStudioSafetyError(kind, title, contentText, note, ...tags);
+    if (safety) throw new Error(safety);
+    return { kind, title, content_text: contentText, note, tags };
+  }
+  function contentStudioFilterPayload(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const q = contentStudioLine(source.q, "Từ khóa tìm kiếm", 0, 100, true);
+    const tag = contentStudioLine(source.tag, "Tag", 0, 48, true);
+    const kind = contentStudioLine(source.content_kind, "Loại nội dung", 0, 32, true).toLowerCase();
+    const state = String(source.state || "all").trim().toLowerCase();
+    if (kind && !CONTENT_STUDIO_KINDS.has(kind)) throw new Error("Bộ lọc loại Content Studio không hợp lệ.");
+    if (state !== "all" && !CONTENT_STUDIO_STATES.has(state)) throw new Error("Bộ lọc trạng thái Content Studio không hợp lệ.");
+    const safety = contentStudioSafetyError(q, tag, kind, state);
+    if (safety) throw new Error(safety);
+    return { q, tag, content_kind: kind, state };
+  }
+  function contentStudioListPath(filter) {
+    const query = new URLSearchParams({ state: filter.state || "all", limit: "100" });
+    ["q", "tag", "content_kind"].forEach((key) => { if (filter[key]) query.set(key, filter[key]); });
+    return "/content-studio/briefs?" + query.toString();
+  }
+
   async function downloadPromptLibraryExport() {
     const context = base();
     const csrfToken = context.session && context.session.csrfToken ? String(context.session.csrfToken) : "";
@@ -1479,6 +1590,10 @@
     // relation.  Its flag never represents a music provider, AI generation,
     // external preview, Bot job, wallet, Xu or payment capability.
     const mediaWorkspaceEnabled = Boolean(status.flags && status.flags.music_media_workspace_enabled === true);
+    // Content Studio is a signed-account authoring workspace only. Its flag
+    // deliberately has no Bot bridge, Telegram, provider, payment, Xu, job
+    // or publishing implication.
+    const contentStudioEnabled = Boolean(status.flags && status.flags.content_studio_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -1623,6 +1738,20 @@
       "media-workspace-item-attach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-item-update": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
       "media-workspace-item-detach": Boolean(account && me.csrf_token && mediaWorkspaceEnabled),
+      "content-studio-view": Boolean(account && contentStudioEnabled),
+      "content-studio-refresh": Boolean(account && contentStudioEnabled),
+      "content-studio-create": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-update": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-archive": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-restore": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-duplicate": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-restore-version": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-compose": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-variant-create": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-variant-update": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-variant-archive": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-variant-restore": Boolean(account && me.csrf_token && contentStudioEnabled),
+      "content-studio-variant-select": Boolean(account && me.csrf_token && contentStudioEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -1682,6 +1811,7 @@
       memoryCenterEnabled,
       promptLibraryEnabled,
       mediaWorkspaceEnabled,
+      contentStudioEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -1714,6 +1844,18 @@
       mediaWorkspacePolicy: {},
       mediaWorkspaceFilter: { q: "", tag: "", prompt_mode: "", state: "all" },
       mediaWorkspaceReadState: account && mediaWorkspaceEnabled ? "loading" : "guarded",
+      // Fail closed across account/session transitions. Content Studio never
+      // uses a prior owner's projection or generic canonical feature data.
+      contentStudioSummary: {},
+      contentBriefs: [],
+      contentBriefDetail: {},
+      contentVariantHistory: {},
+      contentStudioComposer: {},
+      contentStudioReferences: {},
+      contentStudioEvents: [],
+      contentStudioPolicy: {},
+      contentStudioFilter: { q: "", tag: "", content_kind: "", state: "all" },
+      contentStudioReadState: account && contentStudioEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -1753,6 +1895,8 @@
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
         "/media-workspace": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
+        "/content-studio": account && contentStudioEnabled ? "processing" : "guarded",
+        "/content-studio/new": account && contentStudioEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -1764,7 +1908,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -1813,6 +1957,15 @@
         pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
+    if (account && contentStudioEnabled && ["/content-studio", "/content-studio/new"].includes(currentPath)) await hydrateContentStudio();
+    else if (account && contentStudioEnabled && contentBriefIdFromPath(currentPath)) await hydrateContentBrief(contentBriefIdFromPath(currentPath));
+    else if (isNativeContentStudioPath(currentPath)) {
+      merge({
+        contentStudioSummary: {}, contentBriefs: [], contentBriefDetail: {}, contentStudioComposer: {},
+        contentStudioReferences: {}, contentStudioEvents: [], contentStudioPolicy: {}, contentStudioReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
       else if (supportCaseIdFromPath(currentPath)) await hydrateSupportCase(supportCaseIdFromPath(currentPath));
@@ -1850,7 +2003,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && !isNativeSupportPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativeContentStudioPath(currentPath)) await hydrateCanonicalData();
   }
 
   async function hydrateLinkStatus() {
@@ -2131,6 +2284,103 @@
       });
       return null;
     }
+  }
+
+  async function hydrateContentStudio(filterValue) {
+    const filter = contentStudioFilterPayload(filterValue === undefined ? base().contentStudioFilter : filterValue);
+    try {
+      const [summaryResult, policyResult, briefsResult, eventsResult, referencesResult] = await Promise.all([
+        api("/content-studio/summary"),
+        api("/content-studio/policy"),
+        api(contentStudioListPath(filter)),
+        api("/content-studio/events?limit=50"),
+        api("/content-studio/references")
+      ]);
+      const briefs = briefsResult.data && Array.isArray(briefsResult.data.items)
+        ? briefsResult.data.items.filter((item) => item && validContentBriefId(item.id)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validContentBriefId(item.brief_id)).slice(0, 50)
+        : [];
+      merge({
+        contentStudioSummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
+        contentStudioPolicy: policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {},
+        contentBriefs: briefs,
+        contentStudioEvents: events,
+        contentStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        contentBriefDetail: {},
+        contentStudioComposer: {}, contentVariantHistory: {},
+        contentStudioFilter: filter,
+        contentStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/content-studio": "ready", "/content-studio/new": "ready" }
+      });
+      return { briefs, events };
+    } catch (_) {
+      merge({
+        contentStudioSummary: {}, contentStudioPolicy: {}, contentBriefs: [], contentBriefDetail: {}, contentVariantHistory: {}, contentStudioComposer: {},
+        contentStudioReferences: {}, contentStudioEvents: [], contentStudioFilter: filter, contentStudioReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/content-studio": "guarded", "/content-studio/new": "guarded" }
+      });
+      return { briefs: [], events: [] };
+    }
+  }
+
+  async function hydrateContentBrief(briefId) {
+    if (!validContentBriefId(briefId)) throw new Error("Mã Content brief không hợp lệ.");
+    const route = "/content-studio/" + encodeURIComponent(String(briefId));
+    try {
+      const [detailResult, policyResult, referencesResult] = await Promise.all([
+        api("/content-studio/briefs/" + encodeURIComponent(String(briefId))),
+        api("/content-studio/policy"),
+        api("/content-studio/references")
+      ]);
+      const data = detailResult.data && typeof detailResult.data === "object" ? detailResult.data : {};
+      const brief = data.brief && typeof data.brief === "object" ? data.brief : null;
+      if (!brief || !validContentBriefId(brief.id) || String(brief.id) !== String(briefId) || !validContentStudioRevision(brief.revision)) throw new Error("Content brief không còn khả dụng.");
+      const variants = Array.isArray(data.variants)
+        ? data.variants.filter((item) => item && validContentBriefId(item.id) && validContentStudioRevision(item.revision)).slice(0, 250)
+        : [];
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validContentStudioRevision(item.revision)).slice(0, 100)
+        : [];
+      const events = Array.isArray(data.events)
+        ? data.events.filter((item) => item && typeof item === "object").slice(0, 50)
+        : [];
+      merge({
+        contentBriefDetail: { brief, variants, versions, events, variant_count: Number(data.variant_count || variants.length), variant_limit: Number(data.variant_limit || 250), references: data.references && typeof data.references === "object" ? data.references : {} },
+        contentVariantHistory: {},
+        contentStudioPolicy: policyResult.data && typeof policyResult.data === "object" ? policyResult.data : {},
+        contentStudioReferences: referencesResult.data && typeof referencesResult.data === "object" ? referencesResult.data : {},
+        contentStudioComposer: {},
+        contentStudioReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: "read_only" }
+      });
+      return { brief, variants, versions };
+    } catch (_) {
+      merge({
+        contentStudioSummary: {}, contentBriefs: [], contentBriefDetail: {}, contentVariantHistory: {}, contentStudioComposer: {},
+        contentStudioReferences: {}, contentStudioEvents: [], contentStudioPolicy: {}, contentStudioReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  async function hydrateContentVariantHistory(briefId, variantId) {
+    if (!validContentBriefId(briefId) || !validContentBriefId(variantId)) {
+      throw new Error("Mã Content Studio không hợp lệ.");
+    }
+    const result = await api(`/content-studio/briefs/${encodeURIComponent(String(briefId))}/variants/${encodeURIComponent(String(variantId))}`);
+    const data = result.data && typeof result.data === "object" ? result.data : {};
+    const variant = data.variant && typeof data.variant === "object" ? data.variant : null;
+    if (!variant || String(variant.id || "") !== String(variantId) || String(variant.brief_id || "") !== String(briefId) || !validContentStudioRevision(variant.revision)) {
+      throw new Error("History content piece chưa được máy chủ xác nhận.");
+    }
+    const versions = Array.isArray(data.versions)
+      ? data.versions.filter((item) => item && validContentStudioRevision(item.revision)).slice(0, 100)
+      : [];
+    merge({ contentVariantHistory: { variant_id: String(variantId), revision: Number(variant.revision), versions } });
+    return { variant, versions };
   }
 
   async function hydrateSupportDesk(filterValue) {
@@ -2525,6 +2775,9 @@
   async function hydrateCanonicalData() {
     const context = base();
     const path = (context.path || window.location.pathname).split("?")[0];
+    // Native Content Studio has no generic feature/bridge projection. Return
+    // before any canonical endpoint can overwrite its owner-scoped state.
+    if (isNativeContentStudioPath(path)) return;
     try {
       if (path === "/dashboard") {
         const [wallet, jobs, assets, readiness, tickets] = await Promise.all([
@@ -2873,6 +3126,33 @@
         scheduleTelegramLinkPolling(retryDelay);
       }
     }, delay);
+  }
+
+  async function contentStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Content Studio đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
   }
 
   async function handleAction(event) {
@@ -3265,6 +3545,195 @@
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "content-studio-filter" || action === "content-studio-filter-clear") {
+        const filter = action === "content-studio-filter-clear"
+          ? { q: "", tag: "", content_kind: "", state: "all" }
+          : contentStudioFilterPayload(fields);
+        await hydrateContentStudio(filter);
+        toast(filter.q || filter.tag || filter.content_kind || filter.state !== "all" ? "Đã áp dụng bộ lọc Content Studio." : "Đã hiển thị tất cả content brief riêng tư.");
+        return;
+      }
+      if (action === "content-studio-refresh") {
+        const briefId = contentBriefIdFromPath(route);
+        if (briefId) await hydrateContentBrief(briefId);
+        else await hydrateContentStudio();
+        toast("Đã làm mới Creative Content Studio của Web account hiện tại.");
+        return;
+      }
+      if (action === "content-brief-create") {
+        const payload = contentBriefPayload(fields);
+        const scope = "content-studio:brief:create";
+        await contentStudioMutation({
+          action, route, scope, path: "/content-studio/briefs", payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.brief && typeof result.data.brief === "object" ? result.data.brief : null;
+            const briefId = receipt && validContentBriefId(receipt.id) ? String(receipt.id) : "";
+            if (!briefId || !validContentStudioRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt Content Studio brief hợp lệ.");
+            await hydrateContentStudio();
+            toast(result.message || "Đã tạo Content Studio brief riêng tư.");
+            window.location.assign(`/content-studio/${encodeURIComponent(briefId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "content-brief-update") {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentBriefRevision);
+        if (!validContentBriefId(briefId) || !expectedRevision) throw new Error("Mã hoặc revision Content Studio brief không hợp lệ.");
+        const payload = { ...contentBriefPayload(fields), expected_revision: expectedRevision };
+        await contentStudioMutation({
+          action, route, scope: `content-studio:brief:${briefId}:update`, method: "PATCH",
+          path: `/content-studio/briefs/${encodeURIComponent(briefId)}`, payload,
+          onSuccess: async (result) => {
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã lưu revision Content Studio brief mới.");
+          }
+        });
+        return;
+      }
+      if (["content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version"].includes(action)) {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentBriefRevision);
+        if (!validContentBriefId(briefId) || !expectedRevision) throw new Error("Mã hoặc revision Content Studio brief không hợp lệ.");
+        const operation = action.replace("content-brief-", "");
+        const targetRevision = action === "content-brief-restore-version" ? validContentStudioRevision(detail.contentBriefVersion) : 0;
+        if (action === "content-brief-restore-version" && !targetRevision) throw new Error("Phiên bản brief cần khôi phục không hợp lệ.");
+        const payload = action === "content-brief-restore-version"
+          ? { expected_revision: expectedRevision, target_revision: targetRevision }
+          : { expected_revision: expectedRevision };
+        const path = action === "content-brief-restore-version"
+          ? `/content-studio/briefs/${encodeURIComponent(briefId)}/restore-version`
+          : `/content-studio/briefs/${encodeURIComponent(briefId)}/${encodeURIComponent(operation)}`;
+        const scope = `content-studio:brief:${briefId}:${operation}${targetRevision ? `:${targetRevision}` : ""}`;
+        await contentStudioMutation({
+          action, route, scope, path, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.brief && typeof result.data.brief === "object" ? result.data.brief : null;
+            const createdId = action === "content-brief-duplicate" && receipt && validContentBriefId(receipt.id) ? String(receipt.id) : "";
+            if (action === "content-brief-duplicate" && !createdId) throw new Error("Máy chủ chưa trả bản sao Content Studio brief hợp lệ.");
+            if (createdId) {
+              await hydrateContentStudio();
+              toast(result.message || "Đã nhân bản Content Studio brief.");
+              window.location.assign(`/content-studio/${encodeURIComponent(createdId)}`);
+              return;
+            }
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã cập nhật Content Studio brief.");
+          }
+        });
+        return;
+      }
+      if (action === "content-brief-compose") {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentBriefRevision);
+        if (!validContentBriefId(briefId) || !expectedRevision) throw new Error("Mã hoặc revision Content Studio brief không hợp lệ.");
+        await contentStudioMutation({
+          action, route, scope: `content-studio:brief:${briefId}:compose`,
+          path: `/content-studio/briefs/${encodeURIComponent(briefId)}/compose`, payload: { expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const output = result.data && typeof result.data === "object" ? result.data : {};
+            const ids = Array.isArray(output.variant_ids) ? output.variant_ids.filter(validContentBriefId) : [];
+            if (output.execution !== "local_deterministic_draft_only" || output.provider_called !== false || output.charge_started !== false || Number(output.variant_count || 0) !== 3 || ids.length !== 3) {
+              throw new Error("Máy chủ chưa trả local deterministic Content Studio draft hợp lệ.");
+            }
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã tạo 3 khung nháp cục bộ để bạn biên tập.");
+          }
+        });
+        return;
+      }
+      if (action === "content-variant-create") {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentBriefRevision);
+        if (!validContentBriefId(briefId) || !expectedRevision) throw new Error("Mã hoặc revision Content Studio brief không hợp lệ.");
+        const payload = { ...contentVariantPayload(fields), expected_revision: expectedRevision };
+        await contentStudioMutation({
+          action, route, scope: `content-studio:brief:${briefId}:variant:create`,
+          path: `/content-studio/briefs/${encodeURIComponent(briefId)}/variants`, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.variant && typeof result.data.variant === "object" ? result.data.variant : null;
+            if (!receipt || !validContentBriefId(receipt.id) || String(receipt.brief_id || "") !== briefId || receipt.source_kind !== "manual") {
+              throw new Error("Máy chủ chưa trả receipt content piece thủ công hợp lệ.");
+            }
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã thêm content piece vào brief.");
+          }
+        });
+        return;
+      }
+      if (action === "content-variant-update") {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const variantId = String(detail.contentVariantId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentVariantRevision);
+        if (!validContentBriefId(briefId) || !validContentBriefId(variantId) || !expectedRevision) throw new Error("Mã hoặc revision content piece không hợp lệ.");
+        const payload = { ...contentVariantPayload(fields), expected_revision: expectedRevision };
+        await contentStudioMutation({
+          action, route, scope: `content-studio:brief:${briefId}:variant:${variantId}:update`, method: "PATCH",
+          path: `/content-studio/briefs/${encodeURIComponent(briefId)}/variants/${encodeURIComponent(variantId)}`, payload,
+          onSuccess: async (result) => {
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã lưu revision content piece mới.");
+          }
+        });
+        return;
+      }
+      if (["content-variant-archive", "content-variant-restore", "content-variant-duplicate", "content-variant-restore-version"].includes(action)) {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const variantId = String(detail.contentVariantId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentVariantRevision);
+        if (!validContentBriefId(briefId) || !validContentBriefId(variantId) || !expectedRevision) throw new Error("Mã hoặc revision content piece không hợp lệ.");
+        const operation = action.replace("content-variant-", "");
+        const targetRevision = action === "content-variant-restore-version" ? validContentStudioRevision(detail.contentVariantVersion) : 0;
+        if (action === "content-variant-restore-version" && !targetRevision) throw new Error("Phiên bản content piece cần khôi phục không hợp lệ.");
+        const payload = action === "content-variant-restore-version"
+          ? { expected_revision: expectedRevision, target_revision: targetRevision }
+          : { expected_revision: expectedRevision };
+        const path = action === "content-variant-restore-version"
+          ? `/content-studio/briefs/${encodeURIComponent(briefId)}/variants/${encodeURIComponent(variantId)}/restore-version`
+          : `/content-studio/briefs/${encodeURIComponent(briefId)}/variants/${encodeURIComponent(variantId)}/${encodeURIComponent(operation)}`;
+        const scope = `content-studio:brief:${briefId}:variant:${variantId}:${operation}${targetRevision ? `:${targetRevision}` : ""}`;
+        await contentStudioMutation({
+          action, route, scope, path, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.variant && typeof result.data.variant === "object" ? result.data.variant : null;
+            if (action === "content-variant-duplicate" && (!receipt || !validContentBriefId(receipt.id) || String(receipt.brief_id || "") !== briefId)) {
+              throw new Error("Máy chủ chưa trả bản sao content piece hợp lệ.");
+            }
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã cập nhật content piece.");
+          }
+        });
+        return;
+      }
+      if (action === "content-variant-select") {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const variantId = String(detail.contentVariantId || "").trim();
+        const expectedRevision = validContentStudioRevision(detail.contentBriefRevision);
+        if (!validContentBriefId(briefId) || !validContentBriefId(variantId) || !expectedRevision) throw new Error("Mã hoặc revision chọn content piece không hợp lệ.");
+        await contentStudioMutation({
+          action, route, scope: `content-studio:brief:${briefId}:select:${variantId}`,
+          path: `/content-studio/briefs/${encodeURIComponent(briefId)}/select-variant`,
+          payload: { expected_revision: expectedRevision, variant_id: variantId },
+          onSuccess: async (result) => {
+            await hydrateContentBrief(briefId);
+            toast(result.message || "Đã chọn content piece cho brief.");
+          }
+        });
+        return;
+      }
+      if (action === "content-variant-history") {
+        const briefId = String(detail.contentBriefId || "").trim();
+        const variantId = String(detail.contentVariantId || "").trim();
+        if (!validContentBriefId(briefId) || !validContentBriefId(variantId)) throw new Error("Mã content piece không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await hydrateContentVariantHistory(briefId, variantId);
+          toast("Đã tải lịch sử content piece riêng tư.");
+        } finally {
           setActionBusy(action, route, false);
         }
         return;

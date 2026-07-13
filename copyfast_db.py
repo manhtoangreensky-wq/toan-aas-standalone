@@ -183,6 +183,18 @@ def music_media_workspace_enabled() -> bool:
     return os.environ.get("WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def content_studio_enabled() -> bool:
+    """Whether the independently owned Creative Content Studio is available.
+
+    Briefs, content pieces, revisions and reference snapshots remain in the
+    signed Web account database.  They do not call the Bot, a provider,
+    payments, Xu, jobs, Telegram, publishing or delivery systems, so the
+    authoring workspace is useful by default while retaining one deliberate
+    maintenance switch for operators.
+    """
+    return os.environ.get("WEBAPP_CONTENT_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1104,6 +1116,140 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_media_events_account_created ON web_media_events(account_id, created_at DESC, id DESC)"
+        )
+        # Creative Content Studio is a signed-account authoring surface.  Its
+        # records are deliberately separate from Bot feature forms, jobs,
+        # provider calls, payments and output delivery.  Reference IDs point
+        # only to existing Web-owned metadata; snapshot JSON stores the
+        # authoring fields and reference labels needed for immutable history,
+        # never a campaign destination, media storage key, URL or provider
+        # data.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_content_briefs (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                campaign_plan_id TEXT,
+                prompt_template_id TEXT,
+                media_collection_id TEXT,
+                title TEXT NOT NULL,
+                content_kind TEXT NOT NULL,
+                subject TEXT NOT NULL,
+                objective TEXT NOT NULL DEFAULT '',
+                audience TEXT NOT NULL DEFAULT '',
+                platform TEXT NOT NULL DEFAULT '',
+                tone TEXT NOT NULL DEFAULT '',
+                language TEXT NOT NULL DEFAULT 'vi',
+                call_to_action TEXT NOT NULL DEFAULT '',
+                brief_text TEXT NOT NULL,
+                constraints TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                rights_note TEXT NOT NULL DEFAULT '',
+                policy_marker TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                selected_variant_id TEXT,
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id),
+                FOREIGN KEY(campaign_plan_id) REFERENCES web_campaign_plans(id),
+                FOREIGN KEY(prompt_template_id) REFERENCES web_prompt_templates(id),
+                FOREIGN KEY(media_collection_id) REFERENCES web_media_collections(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_content_brief_versions (
+                id TEXT PRIMARY KEY,
+                brief_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(brief_id, revision),
+                FOREIGN KEY(brief_id) REFERENCES web_content_briefs(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_content_variants (
+                id TEXT PRIMARY KEY,
+                brief_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content_text TEXT NOT NULL,
+                note TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                source_kind TEXT NOT NULL DEFAULT 'manual',
+                source_brief_revision INTEGER NOT NULL DEFAULT 1,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(brief_id, ordinal),
+                FOREIGN KEY(brief_id) REFERENCES web_content_briefs(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_content_variant_versions (
+                id TEXT PRIMARY KEY,
+                variant_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(variant_id, revision),
+                FOREIGN KEY(variant_id) REFERENCES web_content_variants(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_content_studio_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                brief_id TEXT NOT NULL,
+                variant_id TEXT,
+                entity_type TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(brief_id) REFERENCES web_content_briefs(id),
+                FOREIGN KEY(variant_id) REFERENCES web_content_variants(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_content_briefs_account_state_updated ON web_content_briefs(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_content_briefs_project_account_updated ON web_content_briefs(project_id, account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_content_brief_versions_brief_revision ON web_content_brief_versions(brief_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_content_variants_brief_account_updated ON web_content_variants(brief_id, account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_content_variant_versions_variant_revision ON web_content_variant_versions(variant_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_content_events_account_created ON web_content_studio_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the
