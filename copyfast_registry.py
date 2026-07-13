@@ -61,6 +61,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("campaign_report", "Báo cáo campaign", "content", "/campaign/report", description="Báo cáo campaign/text/CSV tiếp tục được Bot canonical tạo và gửi trong Telegram."),
     WebFeature("image_create", "Tạo ảnh", "image", "/image/create", input_hint="Prompt ảnh và tỉ lệ khung hình."),
     WebFeature("image_edit", "Chỉnh sửa ảnh", "image", "/image/edit", input_hint="Tải ảnh và mô tả chỉnh sửa."),
+    WebFeature("image_resize", "Resize & Aspect Studio", "image", "/image/resize", description="Tạo PNG private từ Asset Vault bằng crop, pad hoặc blur nền có kiểm tra; không phải AI upscale, Bot job hay provider call."),
     WebFeature("image_upscale", "Nâng cấp ảnh", "image", "/image/upscale", input_hint="Tải ảnh cần upscale."),
     WebFeature("image_transform", "Image-to-image", "image", "/image/transform", input_hint="Ảnh nguồn và mô tả biến thể."),
     WebFeature("image_remove_background", "Xóa nền", "image", "/image/remove-background", input_hint="Tải ảnh cần xử lý."),

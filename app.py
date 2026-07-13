@@ -24,6 +24,7 @@ import copyfast_api
 import copyfast_assets
 import copyfast_auth
 import copyfast_document_operations
+import copyfast_image_operations
 import copyfast_project_packages
 import copyfast_projects
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
@@ -32,6 +33,7 @@ from copyfast_db import (
     ensure_copyfast_persistence,
     ensure_copyfast_schema,
     ensure_document_operations_persistence,
+    ensure_image_operations_persistence,
     ensure_project_package_persistence,
 )
 from copyfast_pages import ROOT, render_portal
@@ -66,10 +68,13 @@ async def lifespan(_: FastAPI):
     ensure_asset_vault_persistence()
     ensure_project_package_persistence()
     ensure_document_operations_persistence()
+    ensure_image_operations_persistence()
     copyfast_document_operations.ensure_document_operations_runtime()
+    copyfast_image_operations.ensure_image_operations_runtime()
     copyfast_assets.reconcile_asset_vault_storage()
     copyfast_project_packages.reconcile_project_package_storage()
     copyfast_document_operations.reconcile_document_operation_storage()
+    copyfast_image_operations.reconcile_image_operation_storage()
     yield
 
 
@@ -168,6 +173,7 @@ async def security_headers(request: Request, call_next):
             "/api/v1/document-operations/pdf-optimize",
             "/api/v1/document-operations/image-to-pdf",
             "/api/v1/document-operations/pdf-to-word",
+            "/api/v1/image-operations/resize",
         }
     )
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
@@ -203,7 +209,8 @@ async def security_headers(request: Request, call_next):
     private_asset_download = request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/download")
     private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
-    private_download = private_asset_download or private_package_download or private_document_download
+    private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
+    private_download = private_asset_download or private_package_download or private_document_download or private_image_download
     response.headers["Referrer-Policy"] = "no-referrer" if private_download else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
     response.headers["Content-Security-Policy"] = "sandbox" if private_download else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
@@ -240,6 +247,7 @@ app.include_router(copyfast_projects.router)
 app.include_router(copyfast_assets.router)
 app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
+app.include_router(copyfast_image_operations.router)
 
 
 @app.get("/health")

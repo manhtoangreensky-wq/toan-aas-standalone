@@ -29,6 +29,7 @@ from pydantic import BaseModel, Field, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
+from copyfast_image_runtime import image_decoder_capacity
 from copyfast_db import (
     asset_vault_directory,
     asset_vault_enabled,
@@ -83,7 +84,11 @@ MAX_IMAGE_PIXELS_TOTAL = 32 * 1024 * 1024
 MAX_IMAGE_DIMENSION = 7_680
 MAX_IMAGE_ASPECT_RATIO = 12
 IMAGE_TO_PDF_MAX_CONCURRENT = 1
-_IMAGE_TO_PDF_CAPACITY = threading.BoundedSemaphore(value=IMAGE_TO_PDF_MAX_CONCURRENT)
+# Keep this legacy-named alias for the documented Image → PDF contract and
+# tests, but back it with the process-wide Pillow gate shared with Resize &
+# Aspect Studio. Separate per-feature semaphores would allow two 16 MP decodes
+# to run together and defeat the memory boundary.
+_IMAGE_TO_PDF_CAPACITY = image_decoder_capacity()
 PDF_TO_WORD_MAX_CONCURRENT = 1
 _PDF_TO_WORD_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_WORD_MAX_CONCURRENT)
 # Text extraction is bounded independently of PDF byte/page limits.  Text can

@@ -377,6 +377,10 @@ def _flags() -> dict[str, bool]:
         # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
         # PDF layout converter.
         "pdf_to_word_enabled": enabled("WEBAPP_PDF_TO_WORD_ENABLED", False),
+        # Image transforms have their own private output root and bounded
+        # decoder runtime. Neither flag grants generic image/bridge execution.
+        "image_operations_enabled": enabled("WEBAPP_IMAGE_OPERATIONS_ENABLED", False),
+        "image_resize_enabled": enabled("WEBAPP_IMAGE_RESIZE_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
@@ -1297,6 +1301,15 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "web_native_image_to_pdf_required"
     if feature in {"documents", "documents_pdf"} and document_operation == "pdf_to_word":
         return "web_native_pdf_to_word_required"
+    # Resize & Aspect Studio owns an immutable Asset Vault → private PNG
+    # contract. Never route a crafted generic image request to the bridge: it
+    # would create a second lifecycle and could make a Bot/provider artifact
+    # look like the bounded local Web-native resize operation.
+    if feature == "image_resize" or (
+        feature in {"image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background"}
+        and document_operation in {"image_resize", "resize", "aspect_resize"}
+    ):
+        return "web_native_image_resize_required"
     if feature in {"documents", "documents_pdf"} and document_operation not in {"pdf_to_images"}:
         return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
@@ -1346,6 +1359,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "upload_ids_invalid": "Tham chiếu tệp staging không hợp lệ. Hãy chọn lại tệp để Web gửi qua luồng canonical.",
         "web_native_image_to_pdf_required": "Ảnh sang PDF là tiện ích Web-native riêng tư. Hãy dùng /documents/image-to-pdf để tạo output đã được kiểm tra.",
         "web_native_pdf_to_word_required": "PDF có text → Word là tiện ích Web-native riêng tư. Hãy dùng /documents/pdf-to-word; PDF scan hoặc layout ảnh không được giả OCR.",
+        "web_native_image_resize_required": "Resize & Aspect Studio là tiện ích Web-native riêng tư. Hãy dùng /image/resize để tạo PNG đã được kiểm tra; không gọi Bot, provider hoặc AI upscale.",
         "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF canonical hoặc tiện ích private tại /documents/image-to-pdf hay /documents/pdf-to-word.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",

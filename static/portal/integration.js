@@ -85,7 +85,7 @@
     "/chat": "chat", "/prompt-studio": "prompt_studio", "/content/caption": "caption",
     "/content/hashtag": "hashtag", "/content/hook": "hook", "/content/script": "script",
     "/content/storyboard": "storyboard", "/content/pack": "content_pack",
-    "/image": "image_create", "/image/create": "image_create", "/image/edit": "image_edit", "/image/upscale": "image_upscale", "/image/transform": "image_transform", "/image/remove-background": "image_remove_background", "/image/history": "image_history",
+    "/image": "image_create", "/image/create": "image_create", "/image/edit": "image_edit", "/image/resize": "image_resize", "/image/upscale": "image_upscale", "/image/transform": "image_transform", "/image/remove-background": "image_remove_background", "/image/history": "image_history",
     "/video": "video_single", "/video/create": "video_single", "/video/long": "video_long", "/video/image-to-video": "video_image_to_video",
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
@@ -737,6 +737,10 @@
     return validVaultAssetId(value);
   }
 
+  function validImageOperationId(value) {
+    return validVaultAssetId(value);
+  }
+
   function validProjectPackageId(value) {
     return validProjectId(value);
   }
@@ -973,11 +977,18 @@
     const documentOperationsEnabled = Boolean(status.flags && status.flags.document_operations_enabled === true);
     const imageToPdfEnabled = Boolean(status.flags && status.flags.image_to_pdf_enabled === true);
     const pdfToWordEnabled = Boolean(status.flags && status.flags.pdf_to_word_enabled === true);
+    const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
+    const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     // This native page must never display the static catalog's `ready` badge
     // while its server-side execution gate is intentionally off.
     const nativeDocumentPageStates = {
       "/documents/image-to-pdf": account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled ? "ready" : "guarded",
       "/documents/pdf-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled ? "ready" : "guarded"
+    };
+    const nativeImagePageStates = {
+      // The private source/history reads still need to complete before a
+      // server-enabled native page can truthfully show a ready badge.
+      "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded"
     };
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
@@ -1057,6 +1068,12 @@
       "document-operation-image-to-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled),
       "document-operation-pdf-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
+      // Resize & Aspect Studio is a separate Web-native image contract. It
+      // needs no Telegram link/Core Bridge/provider/wallet, but remains
+      // guarded until its own isolated storage and narrow decoder flag exist.
+      "image-operation-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-operation-resize": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled),
+      "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1098,13 +1115,22 @@
       documentOperationsEnabled,
       imageToPdfEnabled,
       pdfToWordEnabled,
+      imageOperationsEnabled,
+      imageResizeEnabled,
+      // These owner-scoped reads start as loading on every signed hydration.
+      // A native operation form may only become actionable after both the
+      // Asset Vault source projection and its own history projection return.
+      assetVaultReadState: account && assetVaultEnabled ? "loading" : "guarded",
+      imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: account && Array.isArray(context.documentOperations) ? context.documentOperations : [],
+      imageOperations: account && Array.isArray(context.imageOperations) ? context.imageOperations : [],
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
       pageStates: {
         ...featurePageStates(catalog, {}, webFeatureExecutionFeatures, webWorkspaceDraftFeatures, Boolean(account && me.csrf_token)),
-        ...nativeDocumentPageStates
+        ...nativeDocumentPageStates,
+        ...nativeImagePageStates
       }
     });
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
@@ -1118,10 +1144,20 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word"].includes(currentPath)) await hydrateAssetVault();
-    else if (account && currentPath === "/asset-vault") merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word", "/image/resize"].includes(currentPath)) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/image/resize"].includes(currentPath)) merge({
+      vaultItems: [],
+      assetVaultReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
     if (account && assetVaultEnabled && documentOperationsEnabled && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word"].includes(currentPath)) await hydrateDocumentOperations();
     else if (account && ["/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word"].includes(currentPath)) merge({ documentOperations: [], pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" } });
+    if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/resize") await hydrateImageOperations();
+    else if (account && currentPath === "/image/resize") merge({
+      imageOperations: [],
+      imageOperationsReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
@@ -1216,18 +1252,41 @@
     }
   }
 
+  function imageResizePrivateReadPageState(assetState, operationState) {
+    if (base().imageResizeEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading") return "processing";
+    return "guarded";
+  }
+
   async function hydrateAssetVault() {
     try {
       const result = await api("/asset-vault");
       const items = result.data && Array.isArray(result.data.items)
         ? result.data.items.filter((item) => item && validVaultAssetId(item.id) && String(item.state || "") === "active").slice(0, 100)
         : [];
-      merge({ vaultItems: items, pageStates: { ...(base().pageStates || {}), "/asset-vault": "ready" } });
+      merge({
+        vaultItems: items,
+        assetVaultReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/asset-vault": "ready",
+          "/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading"))
+        }
+      });
       return items;
     } catch (_) {
       // A failed private read must clear the previous account projection. The
       // UI never falls back to Bot assets or browser storage.
-      merge({ vaultItems: [], pageStates: { ...(base().pageStates || {}), "/asset-vault": "guarded" } });
+      merge({
+        vaultItems: [],
+        assetVaultReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/asset-vault": "guarded",
+          "/image/resize": imageResizePrivateReadPageState("failed", String(base().imageOperationsReadState || "loading"))
+        }
+      });
       return [];
     }
   }
@@ -1277,6 +1336,38 @@
           "/documents/compress": "guarded",
           "/documents/image-to-pdf": "guarded",
           "/documents/pdf-to-word": "guarded"
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageOperations() {
+    try {
+      const result = await api("/image-operations?kind=image_resize&limit=100");
+      const items = result.data && Array.isArray(result.data.items)
+        ? result.data.items
+          .filter((item) => item && validImageOperationId(item.id) && String(item.kind || "") === "image_resize")
+          .slice(0, 100)
+        : [];
+      merge({
+        imageOperations: items,
+        imageOperationsReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/resize": imageResizePrivateReadPageState(String(base().assetVaultReadState || "loading"), "ready")
+        }
+      });
+      return items;
+    } catch (_) {
+      // Never substitute stale, Bot-owned or browser-generated output when a
+      // private read fails. The server-side history remains the only source.
+      merge({
+        imageOperations: [],
+        imageOperationsReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/resize": imageResizePrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
         }
       });
       return [];
@@ -1445,6 +1536,10 @@
         const items = jobs.data && jobs.data.items ? jobs.data.items : [];
         merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
         scheduleJobPolling(path, items);
+      } else if (path === "/image/resize") {
+        // Native image operations hydrate separately from Asset Vault. Do not
+        // request pricing/readiness from the bridge or overwrite the strict
+        // server-side guarded/ready state with a generic image feature badge.
       } else if ((path === "/image" || (path.startsWith("/image/") && path !== "/image/history")) || (path === "/video" || (path.startsWith("/video/") && !["/video/progress", "/video/preview", "/video/export"].includes(path)))) {
         const [pricing, readiness] = await Promise.all([api("/pricing"), api("/features/status")]);
         merge({
@@ -2007,6 +2102,76 @@
           if (acknowledged) discardSubmission(scope, submission);
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "image-operation-resize") {
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const preset = String(fields.preset || "custom").trim();
+        const fitMode = String(fields.fit_mode || "pad").trim();
+        const widthText = String(fields.target_width || "").trim();
+        const heightText = String(fields.target_height || "").trim();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một ảnh private hợp lệ từ Asset Vault.");
+        if (!["custom", "1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"].includes(preset)) throw new Error("Canvas / tỷ lệ chưa hợp lệ.");
+        if (!["crop", "pad", "blur"].includes(fitMode)) throw new Error("Cách đặt ảnh chưa hợp lệ.");
+        const parseDimension = (value, label) => {
+          if (!value) return null;
+          if (!/^\d{1,4}$/.test(value)) throw new Error(`${label} phải là số nguyên từ 128 đến 4096 px.`);
+          const parsed = Number(value);
+          if (!Number.isInteger(parsed) || parsed < 128 || parsed > 4096) throw new Error(`${label} phải là số nguyên từ 128 đến 4096 px.`);
+          return parsed;
+        };
+        // Pixel fields are meaningful only for Custom. A stale browser field
+        // after switching to a preset must never manufacture a contradictory
+        // request for the server to reject.
+        const targetWidth = preset === "custom" ? parseDimension(widthText, "Chiều rộng") : null;
+        const targetHeight = preset === "custom" ? parseDimension(heightText, "Chiều cao") : null;
+        if (preset === "custom" && (targetWidth === null || targetHeight === null)) {
+          throw new Error("Canvas Tùy chỉnh cần đủ chiều rộng và chiều cao.");
+        }
+        const scope = `image-operation:resize:${sourceAssetId}:${preset}:${targetWidth || ""}x${targetHeight || ""}:${fitMode}`;
+        const submission = acquireSubmission(scope, sourceAssetId);
+        if (!submission) {
+          toast("Resize Studio đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/image-operations/resize", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              preset,
+              target_width: targetWidth,
+              target_height: targetHeight,
+              fit_mode: fitMode,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validImageOperationId(operation.id) || String(operation.kind || "") !== "image_resize") {
+            throw new Error("Máy chủ chưa trả metadata Resize Studio hợp lệ.");
+          }
+          await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã resize và xác minh PNG riêng tư.");
+        } catch (error) {
+          // A rejected/corrupt/animated input has no browser-side fallback.
+          // Re-read only the server-owned private state after acknowledgment.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "image-operation-refresh") {
+        await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
+        toast("Đã làm mới Resize & Aspect Studio.");
         return;
       }
       if (action === "document-operation-refresh") {

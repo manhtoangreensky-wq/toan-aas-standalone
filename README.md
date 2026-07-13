@@ -48,6 +48,15 @@ Production Web App for `app.toanaas.vn`.
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
   [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md), and
   [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
+- `WEBAPP_IMAGE_OPERATIONS_ENABLED` defaults to `false`. Resize & Aspect
+  Studio additionally needs `WEBAPP_IMAGE_RESIZE_ENABLED=true`, Asset Vault,
+  Pillow and its own separate persistent
+  `WEBAPP_IMAGE_OPERATIONS_ROOT` (for example
+  `/data/toanaas_webapp_image_operations`). The root must not overlap Asset
+  Vault, Project Package, Document Operations or `/static`. The feature emits
+  only verified private PNG artifacts from crop/pad/blur processing; it is not
+  AI upscale, a Bot job, provider request or payment path. See
+  [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](docs/migration/IMAGE_RESIZE_ASPECT_CONTRACT.md).
 
 ## Authority boundary
 
