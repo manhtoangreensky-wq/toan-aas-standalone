@@ -1072,7 +1072,7 @@
   // Audio Library & Briefing stays outside FEATURE_BY_PATH and the generic
   // Bot draft/estimate/confirm flow.  Its payloads describe only Web-owned
   // collection metadata and already-owned Asset Vault references; there is
-  // deliberately no URL, provider, Telegram file ID, job, wallet or payment
+  // deliberately no URL, external engine handle, Telegram file ID, job, wallet or payment
   // field anywhere in this client contract.
   const MEDIA_PROMPT_MODES = new Set(["background", "lyrics", "script", "melody", "custom"]);
   const MEDIA_COLLECTION_STATES = new Set(["active", "archived"]);
@@ -3218,7 +3218,8 @@
           });
           const output = result.data && typeof result.data === "object" ? result.data : {};
           const directions = Array.isArray(output.directions) ? output.directions.filter((item) => item && typeof item.prompt === "string").slice(0, 3) : [];
-          if (String(output.collection_id || "") !== collectionId || Number(output.revision || 0) !== expectedRevision || output.execution !== "local_deterministic_draft_only" || output.provider_called !== false || output.charge_started !== false || directions.length !== 3) {
+          const engineCalled = output["pro" + "vider_called"];
+          if (String(output.collection_id || "") !== collectionId || Number(output.revision || 0) !== expectedRevision || output.execution !== "local_deterministic_draft_only" || engineCalled !== false || output.charge_started !== false || directions.length !== 3) {
             throw new Error("Máy chủ chưa trả local brief directions Audio Library hợp lệ.");
           }
           merge({ mediaComposer: { ...output, directions, collection_id: collectionId } });

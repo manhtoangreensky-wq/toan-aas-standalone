@@ -4,7 +4,7 @@
    /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
    /api/v1/image-operations, /api/v1/media-workspace and private delivery
    URLs are intentionally never cached. */
-const CACHE_NAME = "toan-aas-portal-shell-v7";
+const CACHE_NAME = "toan-aas-portal-shell-v6";
 const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal.js",

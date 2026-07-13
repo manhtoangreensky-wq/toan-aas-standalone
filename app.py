@@ -109,7 +109,14 @@ class PromptLibraryBodyLimitMiddleware:
     narrow: uploads and other feature routes retain their own contracts.
     """
 
-    def __init__(self, app, *, max_bytes: int, import_max_bytes: int, media_max_bytes: int):
+    def __init__(
+        self,
+        app,
+        *,
+        max_bytes: int,
+        import_max_bytes: int,
+        media_max_bytes: int = MEDIA_WORKSPACE_BODY_MAX_BYTES,
+    ):
         self.app = app
         self.max_bytes = int(max_bytes)
         self.import_max_bytes = int(import_max_bytes)
