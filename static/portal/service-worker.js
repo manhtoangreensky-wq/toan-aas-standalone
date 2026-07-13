@@ -5,9 +5,9 @@
    scripts/cue sheets/history, uploads,
    /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
    /api/v1/image-operations, /api/v1/media-workspace, /api/v1/content-studio,
-   /api/v1/voice-studio, /api/v1/video-studio and private delivery
+   /api/v1/voice-studio, /api/v1/video-studio, /api/v1/subtitle-studio and private delivery
    URLs are intentionally never cached. */
-const CACHE_NAME = "toan-aas-portal-shell-v10";
+const CACHE_NAME = "toan-aas-portal-shell-v11";
 const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal.js",

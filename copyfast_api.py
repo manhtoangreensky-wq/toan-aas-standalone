@@ -461,6 +461,7 @@ def _flags() -> dict[str, bool]:
         # switch never enables an execution engine, external runtime, wallet
         # or payment action.
         "video_studio_enabled": enabled("WEBAPP_VIDEO_STUDIO_ENABLED", True),
+        "subtitle_studio_enabled": enabled("WEBAPP_SUBTITLE_STUDIO_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

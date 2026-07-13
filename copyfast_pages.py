@@ -22,6 +22,7 @@ MEDIA_WORKSPACE_PATH = re.compile(r"^/media-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1
 CONTENT_STUDIO_PATH = re.compile(r"^/content-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 VOICE_STUDIO_PATH = re.compile(r"^/voice-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 VIDEO_STUDIO_PATH = re.compile(r"^/video-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+SUBTITLE_STUDIO_PATH = re.compile(r"^/subtitle-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 
 
 def _portal_asset_version() -> str:
@@ -65,6 +66,8 @@ def _title_for(path: str) -> str:
         return "Voice direction mới"
     if normalized == "/video-studio/new":
         return "Video plan mới"
+    if normalized == "/subtitle-studio/new":
+        return "Transcript project mới"
     if PROMPT_LIBRARY_PATH.fullmatch(normalized):
         return "Prompt Library"
     if CONTENT_STUDIO_PATH.fullmatch(normalized):
@@ -73,6 +76,8 @@ def _title_for(path: str) -> str:
         return "Voice Studio"
     if VIDEO_STUDIO_PATH.fullmatch(normalized):
         return "Video Production Studio"
+    if SUBTITLE_STUDIO_PATH.fullmatch(normalized):
+        return "Subtitle & Transcript Workspace"
     if MEDIA_WORKSPACE_PATH.fullmatch(normalized):
         return "Audio Library & Briefing"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
@@ -85,7 +90,7 @@ def _title_for(path: str) -> str:
     aliases = {
         "/welcome": "Giới thiệu TOAN AAS", "/login": "Đăng nhập", "/register": "Tạo tài khoản", "/onboarding": "Bắt đầu với TOAN AAS",
         "/campaigns": "Campaign Planner", "/calendar": "Content Calendar", "/approvals": "Self-review Queue", "/projects": "Project Center",
-        "/image": "Studio ảnh", "/video": "Studio video", "/video-studio": "Video Production Studio", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
+        "/image": "Studio ảnh", "/video": "Studio video", "/video-studio": "Video Production Studio", "/subtitle-studio": "Subtitle & Transcript Workspace", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
         "/features/content": "Content & Chat", "/features/image": "Image Studio", "/features/video": "Video Studio",
         "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & ngôn ngữ",
         "/features/documents": "Documents & PDF",
@@ -102,7 +107,7 @@ def _fallback_template() -> str:
 def render_portal(path: str) -> HTMLResponse:
     normalized = ("/" + path.lstrip("/")) if path else "/"
     normalized = normalized.rstrip("/") or "/"
-    if normalized not in allowed_paths() and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/support", "/tickets", "/admin", "/features", "/content", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/support", "/tickets", "/admin", "/features", "/content", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     template = TEMPLATE.read_text(encoding="utf-8") if TEMPLATE.exists() else _fallback_template()
     payload = {
