@@ -457,6 +457,10 @@ def _flags() -> dict[str, bool]:
         # sheets only.  This switch never enables bridge TTS/clone/preview,
         # provider calls, Bot jobs, Xu, PayOS or output delivery.
         "voice_studio_enabled": enabled("WEBAPP_VOICE_STUDIO_ENABLED", True),
+        # Video Production Studio is a signed-account planning surface. This
+        # switch never enables an execution engine, external runtime, wallet
+        # or payment action.
+        "video_studio_enabled": enabled("WEBAPP_VIDEO_STUDIO_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the
