@@ -32,6 +32,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.
 - [`MUSIC_MEDIA_WORKSPACE_CONTRACT.md`](MUSIC_MEDIA_WORKSPACE_CONTRACT.md) — private Audio Library collections, Asset Vault references and local-only music/SFX briefing.
 - [`CONTENT_STUDIO_CONTRACT.md`](CONTENT_STUDIO_CONTRACT.md) — private content briefs, versioned content pieces and local-only authoring scaffolds.
+- [`VOICE_STUDIO_CONTRACT.md`](VOICE_STUDIO_CONTRACT.md) — private voice direction, consent metadata, scripts, revision history and deterministic cue sheets without TTS/clone/provider execution.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.

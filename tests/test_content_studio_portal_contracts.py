@@ -114,7 +114,10 @@ def test_content_studio_keeps_private_authoring_out_of_bot_and_pwa_paths() -> No
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert "/api/v1/content-studio" not in shell
     assert '"/content-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v8"' in SERVICE_WORKER
+    # A private Workspace route changed the public shell bundle, so the
+    # service worker intentionally moved from v8 to v9.  Private API/routes
+    # remain outside the shell cache checks above.
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v9"' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

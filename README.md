@@ -7,7 +7,7 @@ Production Web App for `app.toanaas.vn`.
 - Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
-- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/wallet`, `/jobs`, `/assets`
+- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/voice-studio`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
 ## Required Railway production configuration
@@ -76,6 +76,12 @@ Production Web App for `app.toanaas.vn`.
   persistent-volume contract described above; do not advertise notification
   delivery unless a separate, audited adapter is enabled. See
   [`MEMORY_CENTER_CONTRACT.md`](docs/migration/MEMORY_CENTER_CONTRACT.md).
+- `WEBAPP_VOICE_STUDIO_ENABLED` defaults to `true`. `/voice-studio` is a
+  signed-account authoring workspace for voice direction, consent metadata,
+  scripts, local cue-sheet estimates and revision history. It never stores
+  audio/provider IDs, invokes TTS or clone, creates an audio preview/output,
+  changes Xu/PayOS, or mutates Bot state. See
+  [`VOICE_STUDIO_CONTRACT.md`](docs/migration/VOICE_STUDIO_CONTRACT.md).
 - `WEBAPP_SUPPORT_DESK_ENABLED` defaults to `true`. `/support` and
   `/tickets` are a signed-account, Web-owned Support Desk for text-only case
   intake and timeline. `/admin/support` is separately protected by a

@@ -32,6 +32,7 @@ import copyfast_prompt_library
 import copyfast_project_packages
 import copyfast_projects
 import copyfast_support
+import copyfast_voice_studio
 from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
 from copyfast_db import (
     ensure_asset_vault_persistence,
@@ -103,6 +104,9 @@ MEDIA_WORKSPACE_BODY_MAX_BYTES = 64 * 1024
 # raw JSON stream before FastAPI/Pydantic can parse a potentially chunked
 # request; media/file uploads remain outside this route family.
 CONTENT_STUDIO_BODY_MAX_BYTES = 128 * 1024
+# Voice Studio accepts only bounded scripts/metadata; it has no audio-upload
+# or provider payload contract.
+VOICE_STUDIO_BODY_MAX_BYTES = 128 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -122,12 +126,14 @@ class PromptLibraryBodyLimitMiddleware:
         import_max_bytes: int,
         media_max_bytes: int = MEDIA_WORKSPACE_BODY_MAX_BYTES,
         content_studio_max_bytes: int = CONTENT_STUDIO_BODY_MAX_BYTES,
+        voice_studio_max_bytes: int = VOICE_STUDIO_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
         self.import_max_bytes = int(import_max_bytes)
         self.media_max_bytes = int(media_max_bytes)
         self.content_studio_max_bytes = int(content_studio_max_bytes)
+        self.voice_studio_max_bytes = int(voice_studio_max_bytes)
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -139,6 +145,7 @@ class PromptLibraryBodyLimitMiddleware:
                 path.startswith("/api/v1/prompt-library/")
                 or path.startswith("/api/v1/media-workspace/")
                 or path.startswith("/api/v1/content-studio/")
+                or path.startswith("/api/v1/voice-studio/")
             )
         )
 
@@ -146,6 +153,8 @@ class PromptLibraryBodyLimitMiddleware:
         path = str(scope.get("path") or "")
         if path.startswith("/api/v1/content-studio/"):
             return self.content_studio_max_bytes
+        if path.startswith("/api/v1/voice-studio/"):
+            return self.voice_studio_max_bytes
         if path.startswith("/api/v1/media-workspace/"):
             return self.media_max_bytes
         return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
@@ -156,6 +165,7 @@ class PromptLibraryBodyLimitMiddleware:
         # function middleware to decorate a response that it never receives.
         path = str(scope.get("path") or "")
         is_content_studio = path.startswith("/api/v1/content-studio/")
+        is_voice_studio = path.startswith("/api/v1/voice-studio/")
         is_media = path.startswith("/api/v1/media-workspace/")
         response = JSONResponse(
             envelope(
@@ -163,6 +173,8 @@ class PromptLibraryBodyLimitMiddleware:
                 (
                     "Dữ liệu Creative Content Studio vượt giới hạn kích thước an toàn."
                     if is_content_studio
+                    else "Dữ liệu Voice Studio vượt giới hạn kích thước an toàn."
+                    if is_voice_studio
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
                     if is_media
                     else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
@@ -171,6 +183,8 @@ class PromptLibraryBodyLimitMiddleware:
                 error_code=(
                     "WEB_CONTENT_STUDIO_BODY_TOO_LARGE"
                     if is_content_studio
+                    else "WEB_VOICE_STUDIO_BODY_TOO_LARGE"
+                    if is_voice_studio
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
                     if is_media
                     else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
@@ -260,6 +274,7 @@ app.add_middleware(
     import_max_bytes=PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES,
     media_max_bytes=MEDIA_WORKSPACE_BODY_MAX_BYTES,
     content_studio_max_bytes=CONTENT_STUDIO_BODY_MAX_BYTES,
+    voice_studio_max_bytes=VOICE_STUDIO_BODY_MAX_BYTES,
 )
 
 
@@ -395,6 +410,11 @@ async def security_headers(request: Request, call_next):
     # not imply an AI/provider, Bot, payment, job or publishing capability.
     content_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/content-studio/")
     content_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/content-studio/")
+    # Voice Studio persists only owner-scoped text/metadata and immutable
+    # versions.  These fixed route-family buckets do not imply TTS, clone,
+    # preview, provider, Bot, wallet or payment execution.
+    voice_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/voice-studio/")
+    voice_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/voice-studio/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -428,6 +448,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if content_studio_read:
         rate_limit = 120
+    if voice_studio_write:
+        rate_limit = 40
+    if voice_studio_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -446,6 +470,8 @@ async def security_headers(request: Request, call_next):
             else "media-workspace-read" if media_workspace_read
             else "content-studio-write" if content_studio_write
             else "content-studio-read" if content_studio_read
+            else "voice-studio-write" if voice_studio_write
+            else "voice-studio-read" if voice_studio_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
@@ -522,6 +548,7 @@ app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
 app.include_router(copyfast_music_media.router)
 app.include_router(copyfast_content_studio.router)
+app.include_router(copyfast_voice_studio.router)
 app.include_router(copyfast_support.router)
 
 

@@ -453,6 +453,10 @@ def _flags() -> dict[str, bool]:
         # enable Bot execution, an AI/provider, payments, Xu, jobs, publish
         # automation or external delivery.
         "content_studio_enabled": enabled("WEBAPP_CONTENT_STUDIO_ENABLED", True),
+        # Voice Studio stores Web-owned profile/script metadata and local cue
+        # sheets only.  This switch never enables bridge TTS/clone/preview,
+        # provider calls, Bot jobs, Xu, PayOS or output delivery.
+        "voice_studio_enabled": enabled("WEBAPP_VOICE_STUDIO_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

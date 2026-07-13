@@ -195,6 +195,18 @@ def content_studio_enabled() -> bool:
     return os.environ.get("WEBAPP_CONTENT_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def voice_studio_enabled() -> bool:
+    """Whether the Web-native Voice Studio & Consent Vault is available.
+
+    The vault persists only signed-account authoring metadata, explicit
+    self-attestation notes, scripts and deterministic cue sheets.  It does
+    not create or retain audio, provider voice IDs, Telegram state, jobs, Xu,
+    PayOS or delivery records, so it can remain useful by default while an
+    operator retains one deliberate maintenance switch.
+    """
+    return os.environ.get("WEBAPP_VOICE_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1250,6 +1262,133 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_content_events_account_created ON web_content_studio_events(account_id, created_at DESC, id DESC)"
+        )
+        # Voice Studio is an independently owned authoring surface.  The
+        # tables intentionally store only text/metadata, version snapshots
+        # and audit-friendly state.  They must never grow Bot voice profile
+        # IDs, provider references, raw audio, preview URLs, jobs, Xu, PayOS
+        # or payment columns without a separate reviewed integration.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_voice_vaults (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                content_brief_id TEXT,
+                title TEXT NOT NULL,
+                vault_kind TEXT NOT NULL,
+                language TEXT NOT NULL DEFAULT 'vi',
+                style_notes TEXT NOT NULL DEFAULT '',
+                use_context TEXT NOT NULL DEFAULT '',
+                consent_status TEXT NOT NULL DEFAULT 'not_required',
+                consent_note TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                policy_marker TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                is_default INTEGER NOT NULL DEFAULT 0,
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id),
+                FOREIGN KEY(content_brief_id) REFERENCES web_content_briefs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_voice_vault_versions (
+                id TEXT PRIMARY KEY,
+                vault_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(vault_id, revision),
+                FOREIGN KEY(vault_id) REFERENCES web_voice_vaults(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_voice_scripts (
+                id TEXT PRIMARY KEY,
+                vault_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                script_kind TEXT NOT NULL,
+                language TEXT NOT NULL DEFAULT 'vi',
+                audience TEXT NOT NULL DEFAULT '',
+                pace_wpm INTEGER NOT NULL DEFAULT 145,
+                script_text TEXT NOT NULL,
+                delivery_notes TEXT NOT NULL DEFAULT '',
+                pronunciation_notes TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                policy_marker TEXT NOT NULL DEFAULT '',
+                source_kind TEXT NOT NULL DEFAULT 'manual',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(vault_id, ordinal),
+                FOREIGN KEY(vault_id) REFERENCES web_voice_vaults(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_voice_script_versions (
+                id TEXT PRIMARY KEY,
+                script_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(script_id, revision),
+                FOREIGN KEY(script_id) REFERENCES web_voice_scripts(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_voice_studio_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                vault_id TEXT NOT NULL,
+                script_id TEXT,
+                entity_type TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(vault_id) REFERENCES web_voice_vaults(id),
+                FOREIGN KEY(script_id) REFERENCES web_voice_scripts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_voice_vaults_account_state_updated ON web_voice_vaults(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_voice_vaults_project_account_updated ON web_voice_vaults(project_id, account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_voice_vault_versions_vault_revision ON web_voice_vault_versions(vault_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_voice_scripts_vault_account_updated ON web_voice_scripts(vault_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_voice_script_versions_script_revision ON web_voice_script_versions(script_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_voice_events_account_created ON web_voice_studio_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the
