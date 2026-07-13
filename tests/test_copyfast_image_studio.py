@@ -154,6 +154,11 @@ def test_image_studio_owner_assets_markup_and_child_cas(tmp_path, monkeypatch):
     db_path = tmp_path / "image-studio-test.db"
     with make_client(tmp_path, monkeypatch) as client:
         csrf = login(client, "image-owner@example.com")
+        unsafe_artboard = client.post(
+            "/api/v1/image-studio/artboards", headers={"X-CSRF-Token": csrf},
+            json=artboard_payload("image-artboard-markup-0001", creative_brief="<img src=x onerror=alert(1)>"),
+        )
+        assert unsafe_artboard.status_code == 422
         artboard = create_artboard(client, csrf, "image-owner-artboard-0001")
         image_asset = insert_image_asset(db_path, "image-owner@example.com")
         ignored_asset = insert_image_asset(db_path, "image-owner@example.com", extension="gif", content_type="image/gif")
