@@ -33,14 +33,14 @@
   // a future route cannot accidentally turn a draft into a browser-side
   // pricing decision.
   const TIERED_IMAGE_FEATURES = new Set([
-    "image_create", "image_edit", "image_upscale", "image_transform", "image_remove_background"
+    "image_create", "image_upscale", "image_transform", "image_remove_background"
   ]);
   const TIERED_VIDEO_FEATURES = new Set([
     "video_single", "video_product", "video_trend", "video_text_to_video", "video_quick",
     "video_image_to_video", "video_multiscene", "video_long"
   ]);
   const SINGLE_IMAGE_SOURCE_FEATURES = new Set([
-    "image_edit", "image_upscale", "image_transform", "image_remove_background"
+    "image_upscale", "image_transform", "image_remove_background"
   ]);
   // These are Bot-owned quick commands with no browser-supplied arguments.
   // Keep the copy action allowlisted so a page/data attribute cannot turn the
@@ -85,7 +85,7 @@
     "/chat": "chat", "/prompt-studio": "prompt_studio", "/content/caption": "caption",
     "/content/hashtag": "hashtag", "/content/hook": "hook", "/content/script": "script",
     "/content/storyboard": "storyboard", "/content/pack": "content_pack",
-    "/image": "image_create", "/image/create": "image_create", "/image/edit": "image_edit", "/image/resize": "image_resize", "/image/upscale": "image_upscale", "/image/transform": "image_transform", "/image/remove-background": "image_remove_background", "/image/history": "image_history",
+    "/image": "image_create", "/image/create": "image_create", "/image/resize": "image_resize", "/image/upscale": "image_upscale", "/image/transform": "image_transform", "/image/remove-background": "image_remove_background", "/image/history": "image_history",
     "/video": "video_single", "/video/create": "video_single", "/video/long": "video_long", "/video/image-to-video": "video_image_to_video",
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
@@ -979,6 +979,7 @@
     const pdfToWordEnabled = Boolean(status.flags && status.flags.pdf_to_word_enabled === true);
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
+    const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
     // This native page must never display the static catalog's `ready` badge
     // while its server-side execution gate is intentionally off.
     const nativeDocumentPageStates = {
@@ -988,7 +989,8 @@
     const nativeImagePageStates = {
       // The private source/history reads still need to complete before a
       // server-enabled native page can truthfully show a ready badge.
-      "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded"
+      "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded",
+      "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded"
     };
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
@@ -1074,6 +1076,8 @@
       "image-operation-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-resize": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled),
       "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-operation-enhance": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled),
+      "image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1117,13 +1121,19 @@
       pdfToWordEnabled,
       imageOperationsEnabled,
       imageResizeEnabled,
+      imageEnhanceEnabled,
       // These owner-scoped reads start as loading on every signed hydration.
       // A native operation form may only become actionable after both the
       // Asset Vault source projection and its own history projection return.
       assetVaultReadState: account && assetVaultEnabled ? "loading" : "guarded",
       imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
+      imageEnhanceOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: account && Array.isArray(context.documentOperations) ? context.documentOperations : [],
       imageOperations: account && Array.isArray(context.imageOperations) ? context.imageOperations : [],
+      // Do not retain a previous signed projection while the new owner-scoped
+      // Enhance history is loading. The UI deliberately renders no form or
+      // artifact until both private reads settle.
+      imageEnhanceOperations: [],
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
@@ -1144,8 +1154,8 @@
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
     else if (account && currentPath === "/project-packages") merge({ projectPackages: [], pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" } });
-    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word", "/image/resize"].includes(currentPath)) await hydrateAssetVault();
-    else if (account && ["/asset-vault", "/image/resize"].includes(currentPath)) merge({
+    if (account && assetVaultEnabled && ["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-word", "/image/resize", "/image/edit"].includes(currentPath)) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/image/resize", "/image/edit"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
@@ -1156,6 +1166,12 @@
     else if (account && currentPath === "/image/resize") merge({
       imageOperations: [],
       imageOperationsReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/edit") await hydrateImageEnhanceOperations();
+    else if (account && currentPath === "/image/edit") merge({
+      imageEnhanceOperations: [],
+      imageEnhanceOperationsReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
@@ -1259,6 +1275,13 @@
     return "guarded";
   }
 
+  function imageEnhancePrivateReadPageState(assetState, operationState) {
+    if (base().imageEnhanceEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading") return "processing";
+    return "guarded";
+  }
+
   async function hydrateAssetVault() {
     try {
       const result = await api("/asset-vault");
@@ -1271,7 +1294,8 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/asset-vault": "ready",
-          "/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading"))
+          "/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading")),
+          "/image/edit": imageEnhancePrivateReadPageState("ready", String(base().imageEnhanceOperationsReadState || "loading"))
         }
       });
       return items;
@@ -1284,7 +1308,8 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/asset-vault": "guarded",
-          "/image/resize": imageResizePrivateReadPageState("failed", String(base().imageOperationsReadState || "loading"))
+          "/image/resize": imageResizePrivateReadPageState("failed", String(base().imageOperationsReadState || "loading")),
+          "/image/edit": imageEnhancePrivateReadPageState("failed", String(base().imageEnhanceOperationsReadState || "loading"))
         }
       });
       return [];
@@ -1368,6 +1393,38 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/image/resize": imageResizePrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageEnhanceOperations() {
+    try {
+      const result = await api("/image-operations?kind=image_enhance&limit=100");
+      const items = result.data && Array.isArray(result.data.items)
+        ? result.data.items
+          .filter((item) => item && validImageOperationId(item.id) && String(item.kind || "") === "image_enhance")
+          .slice(0, 100)
+        : [];
+      merge({
+        imageEnhanceOperations: items,
+        imageEnhanceOperationsReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/edit": imageEnhancePrivateReadPageState(String(base().assetVaultReadState || "loading"), "ready")
+        }
+      });
+      return items;
+    } catch (_) {
+      // Never substitute stale resize records, Bot assets or browser-created
+      // output when the owner-scoped Enhance history cannot be read.
+      merge({
+        imageEnhanceOperations: [],
+        imageEnhanceOperationsReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/edit": imageEnhancePrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
         }
       });
       return [];
@@ -1536,7 +1593,7 @@
         const items = jobs.data && jobs.data.items ? jobs.data.items : [];
         merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
         scheduleJobPolling(path, items);
-      } else if (path === "/image/resize") {
+      } else if (path === "/image/resize" || path === "/image/edit") {
         // Native image operations hydrate separately from Asset Vault. Do not
         // request pricing/readiness from the bridge or overwrite the strict
         // server-side guarded/ready state with a generic image feature badge.
@@ -2104,6 +2161,75 @@
         }
         return;
       }
+      if (action === "image-operation-enhance") {
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const preset = String(fields.preset || "photo_clear_detail").trim();
+        const basicUpscaleText = String(fields.basic_upscale || "false").trim();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một ảnh private hợp lệ từ Asset Vault.");
+        if (!["photo_clear_detail", "product_clean", "cinematic_warm", "fresh_blue", "food_vivid", "custom"].includes(preset)) {
+          throw new Error("Công thức Image Enhance chưa hợp lệ.");
+        }
+        if (!["true", "false"].includes(basicUpscaleText)) throw new Error("Tùy chọn nâng kích thước cơ bản chưa hợp lệ.");
+        const basicUpscale = basicUpscaleText === "true";
+        const body = {
+          source_asset_id: sourceAssetId,
+          preset,
+          basic_upscale: basicUpscale
+        };
+        let settingsScope = "preset";
+        if (preset === "custom") {
+          const parseFactor = (value, label) => {
+            const text = String(value || "").trim();
+            if (!/^(?:0\.[5-9]\d?|1(?:\.\d{1,2})?|2(?:\.0{1,2})?)$/.test(text)) {
+              throw new Error(`${label} phải là số từ 0,50 đến 2,00.`);
+            }
+            const number = Number(text);
+            if (!Number.isFinite(number) || number < 0.5 || number > 2) throw new Error(`${label} phải là số từ 0,50 đến 2,00.`);
+            return Number(number.toFixed(2));
+          };
+          const tone = String(fields.tone || "neutral").trim();
+          if (!["neutral", "warm", "cool", "clean"].includes(tone)) throw new Error("Tone tùy chỉnh chưa hợp lệ.");
+          body.brightness = parseFactor(fields.brightness, "Độ sáng");
+          body.contrast = parseFactor(fields.contrast, "Tương phản");
+          body.saturation = parseFactor(fields.saturation, "Bão hòa màu");
+          body.sharpness = parseFactor(fields.sharpness, "Độ nét");
+          body.tone = tone;
+          settingsScope = `${body.brightness}:${body.contrast}:${body.saturation}:${body.sharpness}:${tone}`;
+        }
+        const scope = `image-operation:enhance:${sourceAssetId}:${preset}:${settingsScope}:${basicUpscale ? "2x" : "1x"}`;
+        const submission = acquireSubmission(scope, scope);
+        if (!submission) {
+          toast("Image Enhance Studio đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/image-operations/enhance", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...body, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validImageOperationId(operation.id) || String(operation.kind || "") !== "image_enhance") {
+            throw new Error("Máy chủ chưa trả metadata Image Enhance Studio hợp lệ.");
+          }
+          await Promise.all([hydrateImageEnhanceOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã tạo và xác minh PNG private đã chỉnh.");
+        } catch (error) {
+          // A malformed/animated/tampered source must remain an honest
+          // server-recorded result. No browser processing or fallback output.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateImageEnhanceOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-resize") {
         const sourceAssetId = String(fields.source_asset_id || "").trim();
         const preset = String(fields.preset || "custom").trim();
@@ -2172,6 +2298,11 @@
       if (action === "image-operation-refresh") {
         await Promise.all([hydrateImageOperations(), hydrateAssetVault()]);
         toast("Đã làm mới Resize & Aspect Studio.");
+        return;
+      }
+      if (action === "image-enhance-refresh") {
+        await Promise.all([hydrateImageEnhanceOperations(), hydrateAssetVault()]);
+        toast("Đã làm mới Image Enhance Studio.");
         return;
       }
       if (action === "document-operation-refresh") {
@@ -2827,6 +2958,9 @@
           releaseSubmission(submission);
         }
         return;
+      }
+      if (route === "/image/edit" && ["feature-draft", "feature-estimate", "feature-confirm"].includes(action)) {
+        throw new Error("Image Enhance Studio chỉ dùng thao tác private native; không tạo draft, quote hay Job bridge.");
       }
       if (action === "feature-draft" || action === "feature-estimate" || action === "feature-confirm") {
         const feature = FEATURE_BY_PATH[route];

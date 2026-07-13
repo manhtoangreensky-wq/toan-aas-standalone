@@ -381,6 +381,9 @@ def _flags() -> dict[str, bool]:
         # decoder runtime. Neither flag grants generic image/bridge execution.
         "image_operations_enabled": enabled("WEBAPP_IMAGE_OPERATIONS_ENABLED", False),
         "image_resize_enabled": enabled("WEBAPP_IMAGE_RESIZE_ENABLED", False),
+        # Local Image Enhance uses the same private output boundary but remains
+        # independently guarded; it never implies provider-backed AI editing.
+        "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
@@ -1310,6 +1313,8 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         and document_operation in {"image_resize", "resize", "aspect_resize"}
     ):
         return "web_native_image_resize_required"
+    if feature == "image_edit":
+        return "web_native_image_enhance_required"
     if feature in {"documents", "documents_pdf"} and document_operation not in {"pdf_to_images"}:
         return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
@@ -1360,6 +1365,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "web_native_image_to_pdf_required": "Ảnh sang PDF là tiện ích Web-native riêng tư. Hãy dùng /documents/image-to-pdf để tạo output đã được kiểm tra.",
         "web_native_pdf_to_word_required": "PDF có text → Word là tiện ích Web-native riêng tư. Hãy dùng /documents/pdf-to-word; PDF scan hoặc layout ảnh không được giả OCR.",
         "web_native_image_resize_required": "Resize & Aspect Studio là tiện ích Web-native riêng tư. Hãy dùng /image/resize để tạo PNG đã được kiểm tra; không gọi Bot, provider hoặc AI upscale.",
+        "web_native_image_enhance_required": "Image Enhance Studio là tiện ích Web-native riêng tư. Hãy dùng /image/edit để chỉnh màu/làm nét cơ bản trên Asset Vault; không gọi Bot, provider hoặc AI edit.",
         "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF canonical hoặc tiện ích private tại /documents/image-to-pdf hay /documents/pdf-to-word.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
