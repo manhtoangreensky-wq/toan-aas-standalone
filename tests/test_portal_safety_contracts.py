@@ -318,7 +318,11 @@ def test_command_palette_is_session_scoped_navigation_without_data_actions() -> 
 def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> None:
     assert "function matchesRouteFamily(path, root)" in PORTAL
     assert 'if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");' in PORTAL
-    assert 'if (linkPath === "/video/create") return path === "/video" || matchesRouteFamily(path, "/video");' in PORTAL
+    # `/video-studio` is a separate native workspace, not a legacy `/video/*`
+    # child.  Keep the historical Video nav matcher exact so it cannot claim
+    # the new route merely because both names share the `video` prefix.
+    assert 'if (linkPath === "/video/create") return path === "/video" || path.startsWith("/video/");' in PORTAL
+    assert 'if (linkPath === "/video-studio") return matchesRouteFamily(path, "/video-studio");' in PORTAL
     assert 'if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");' in PORTAL
     assert 'if (linkPath === "/subtitle") return matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path);' in PORTAL
     assert 'if (linkPath === "/admin") {' in PORTAL
