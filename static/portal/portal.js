@@ -548,15 +548,14 @@
     layout: "asset-vault", type: "asset-vault", fields: [], action: "none", status: "ready",
     notes: ["Asset Vault là storage Web-owned, tách biệt hoàn toàn với Tài sản Bot và output job canonical.", "Tệp không có URL công khai, không nằm trong static/PWA cache và chỉ tải dạng attachment sau owner check."]
   });
-  botCompanionPage("/notes", "Ghi chú & Memory", "Mở nhanh các ghi chú, memory và plan cá nhân trong Bot canonical; Web không tạo một kho dữ liệu thứ hai.", ICONS.prompt, [
-    { command: "/notes", title: "Danh sách ghi chú", text: "Xem ghi chú do Bot quản lý trong đúng cuộc hội thoại Telegram của bạn." },
-    { command: "/note", title: "Tạo ghi chú", text: "Bắt đầu luồng tạo hoặc cập nhật note trong Bot; không gửi nội dung note qua Web." },
-    { command: "/memory", title: "Memory & plan", text: "Mở memory/plan cá nhân theo state canonical của Bot." }
-  ]);
-  botCompanionPage("/reminders", "Nhắc việc", "Nhắc việc, lặp lại, pause/resume và hoàn tất cần Bot giữ state thời gian canonical.", ICONS.jobs, [
-    { command: "/reminders", title: "Danh sách nhắc việc", text: "Xem reminder thuộc đúng tài khoản Telegram đã xác minh." },
-    { command: "/remind", title: "Tạo nhắc việc", text: "Tạo reminder trong Bot để lịch và callback không bị tách khỏi state canonical." }
-  ]);
+  customerPage("/notes", "Memory Center", "Ghi chú riêng, tag, ưu tiên, tìm kiếm, archive và lịch sử phiên bản thuộc signed Web account.", ICONS.prompt, {
+    type: "memory-center", layout: "memory-notes", fields: [], action: "none", status: "ready",
+    notes: ["Memory Center là dữ liệu Web-owned, không đọc/ghi bảng memory của Bot.", "Ghi chú có optimistic versioning, CSRF, owner check và audit; không lưu secret, token, mật khẩu hoặc số thẻ."]
+  });
+  customerPage("/reminders", "Nhắc việc", "Quản lý reminder một lần hoặc lặp lại, pause/resume/complete/cancel theo signed Web account.", ICONS.jobs, {
+    type: "memory-center", layout: "memory-reminders", fields: [], action: "none", status: "ready",
+    notes: ["Reminder chỉ hiển thị trong Web Workspace; chưa gửi Telegram, email hoặc push notification.", "Mỗi thay đổi dùng CSRF, optimistic revision, idempotency và audit; Bot state không bị sửa."]
+  });
   botCompanionPage("/referrals", "Giới thiệu", "Referral, link mời và thống kê chỉ được Bot canonical xác minh để tránh gán nhầm quyền lợi.", ICONS.users, [
     { command: "/referral", title: "Referral của tôi", text: "Mở hub referral và trạng thái canonical trong Bot." },
     { command: "/ref", title: "Link mời", text: "Lấy hoặc quản lý link giới thiệu trong Bot thay vì tự tạo link ở browser." }
@@ -892,6 +891,32 @@
       projectPackages: Array.isArray(source.projectPackages) ? source.projectPackages.slice(0, 100) : [],
       projectPackageEvents: source.projectPackageEvents && typeof source.projectPackageEvents === "object" ? source.projectPackageEvents : {},
       projectPackageEnabled: source.projectPackageEnabled === true,
+      // Memory Center has its own signed-account data model, version history
+      // and reminder lifecycle. It never falls back to Bot note/reminder
+      // state or browser persistence when an owner-scoped API read fails.
+      memorySummary: source.memorySummary && typeof source.memorySummary === "object" ? source.memorySummary : {},
+      memoryNotes: Array.isArray(source.memoryNotes) ? source.memoryNotes.slice(0, 100) : [],
+      memoryReminders: Array.isArray(source.memoryReminders) ? source.memoryReminders.slice(0, 100) : [],
+      memoryEvents: Array.isArray(source.memoryEvents) ? source.memoryEvents.slice(0, 50) : [],
+      memoryNoteDetail: source.memoryNoteDetail && typeof source.memoryNoteDetail === "object" ? source.memoryNoteDetail : {},
+      // Search/filter state stays only in the mounted page state. It is not
+      // written to localStorage, the customer-visible page URL or a Bot hand-off.
+      // The integration layer may send a transient owner-scoped API query.
+      memoryNoteFilter: {
+        q: source.memoryNoteFilter && typeof source.memoryNoteFilter.q === "string"
+          ? source.memoryNoteFilter.q.replace(/\s+/g, " ").trim().slice(0, 80)
+          : "",
+        priority: source.memoryNoteFilter && ["", "low", "normal", "important", "urgent"].includes(String(source.memoryNoteFilter.priority || ""))
+          ? String(source.memoryNoteFilter.priority || "")
+          : "",
+        state: source.memoryNoteFilter && ["all", "active", "archived"].includes(String(source.memoryNoteFilter.state || ""))
+          ? String(source.memoryNoteFilter.state || "all")
+          : "all"
+      },
+      memoryCenterEnabled: source.memoryCenterEnabled === true,
+      memoryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.memoryReadState || ""))
+        ? String(source.memoryReadState)
+        : "guarded",
       // Document Operations output is a third, independent private surface:
       // it is neither an Asset Vault source blob nor a Bot delivery/job.
       documentOperations: Array.isArray(source.documentOperations) ? source.documentOperations.slice(0, 100) : [],
@@ -1104,7 +1129,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1134,7 +1159,7 @@
       {
         label: "Bot companion",
         links: [
-          ["/notes", "Ghi chú", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/referrals", "Giới thiệu", ICONS.support], ["/rewards", "Ưu đãi", ICONS.pricing], ["/community", "Cộng đồng", ICONS.support], ["/guides", "Hướng dẫn Bot", ICONS.legal]
+          ["/referrals", "Giới thiệu", ICONS.support], ["/rewards", "Ưu đãi", ICONS.pricing], ["/community", "Cộng đồng", ICONS.support], ["/guides", "Hướng dẫn Bot", ICONS.legal]
         ]
       }
     ];
@@ -1378,6 +1403,12 @@
             .filter((project) => project && validProjectId(project.id) && String(project.state || "active") === "active")
             .map((project) => ({ value: String(project.id), label: String(project.title || "Project Web") }));
         }
+        if (field.optionsFrom === "memoryNotes") {
+          const notes = context && Array.isArray(context.memoryNotes) ? context.memoryNotes : [];
+          options = notes
+            .filter((note) => note && validMemoryId(note.id) && String(note.state || "active") === "active")
+            .map((note) => ({ value: String(note.id), label: String(note.title || "Ghi chú Web") }));
+        }
         if (field.optionsFrom === "pdfVaultAssets") {
           const assets = context && Array.isArray(context.vaultItems) ? context.vaultItems : [];
           options = assets
@@ -1408,8 +1439,11 @@
         }
         const empty = field.emptyLabel ? `<option value=""${value === "" ? " selected" : ""}>${safeText(field.emptyLabel)}</option>` : "";
         const optionMarkup = options.map((option) => {
-          const value = option && typeof option === "object" ? option.value : option;
-          const label = option && typeof option === "object" ? option.label : option;
+          // Most catalog options are objects, while compact fixed options
+          // deliberately use [value, label] tuples. Support both shapes so a
+          // select never renders an accidental `undefined` option.
+          const value = Array.isArray(option) ? option[0] : (option && typeof option === "object" ? option.value : option);
+          const label = Array.isArray(option) ? option[1] : (option && typeof option === "object" ? option.label : option);
           const selected = String(value) === String(rawValue) ? " selected" : "";
           return `<option value="${safeText(value)}"${selected}>${safeText(label)}</option>`;
         }).join("");
@@ -1418,7 +1452,7 @@
         const checked = rawValue === true || rawValue === "true" || rawValue === 1 || rawValue === "1" ? " checked" : "";
         control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${required}${ariaRequired}${describedBy}${disabled}><span>Tôi xác nhận</span></label>`;
       } else {
-        const type = ["email", "password", "file", "number", "text"].includes(field.type) ? field.type : "text";
+        const type = ["email", "password", "file", "number", "text", "datetime-local"].includes(field.type) ? field.type : "text";
         const autocomplete = field.autocomplete ? ` autocomplete="${safeText(field.autocomplete)}"` : "";
         const multiple = type === "file" && field.multiple ? " multiple" : "";
         const accept = type === "file" && field.accept ? ` accept="${safeText(field.accept)}"` : "";
@@ -1445,7 +1479,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -1838,6 +1872,194 @@
       ? `<div class="portal-project-grid">${projects.map((project) => `<article class="portal-card portal-card-pad portal-project-card"><div class="portal-card-header"><div><span class="portal-eyebrow">Web-owned Project</span><h2 class="portal-card-title">${safeText(String(project.title || "Project"))}</h2><p class="portal-card-subtitle">${safeText(String(project.summary || project.objective || "Chưa có mô tả"))}</p></div>${badge(projectState(project.state))}</div><div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Mục tiêu</span><span class="portal-summary-value">${safeText(String(project.objective || "Chưa đặt"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Studio Documents</span><span class="portal-summary-value">${safeText(String(Number(project.document_count || 0)))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Cập nhật</span><span class="portal-summary-value">${safeText(String(project.updated_at || "—"))}</span></div></div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(project.id))}">Mở Project <span aria-hidden="true">→</span></a></div></article>`).join("")}</div>`
       : renderEmpty("Chưa có Project", "Tạo Project đầu tiên để gom brief, prompt, caption, kịch bản và storyboard vào một lịch sử version riêng của Web.", "✦");
     return `<article class="portal-page portal-project-center">${renderHero(page, context)}<section class="portal-project-intro"><div><span class="portal-section-kicker">Independent Web Workspace</span><h2>Biến ý tưởng thành hệ thống tài liệu có thể tiếp tục</h2><p>Project Center là không gian Web-owned: không cần Telegram, không gọi Bot, provider, PayOS hoặc Xu để tạo và version hóa tài liệu sáng tạo.</p></div><dl><div><dt>${safeText(String(active.length))}</dt><dd>Project đang hoạt động</dd></div><div><dt>${safeText(String(projects.reduce((total, item) => total + Number(item.document_count || 0), 0)))}</dt><dd>Studio Documents</dd></div></dl></section><div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo Project mới</h2><p class="portal-card-subtitle">Bắt đầu bằng brief, sau đó thêm prompt, caption, script hoặc storyboard có history rõ ràng.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form id="${formId}" class="portal-form" data-portal-form data-portal-action="project-create" data-portal-route="/projects" novalidate>${renderFields(projectFormFields(), canCreate, context, transientFormValues("/projects"))}<div class="portal-form-footer"><span class="portal-form-note">Chỉ signed session + CSRF được tạo Project. Không có Bot/bridge/provider call trong thao tác này.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo Project</button></div></form></section><aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Cách hoạt động</h2><p class="portal-card-subtitle">Một lớp authoring riêng trước khi bạn chọn bất kỳ engine hay integration nào.</p></div></div><ol class="portal-project-steps"><li><strong>1. Đặt brief</strong><span>Tạo Project với mục tiêu và bối cảnh.</span></li><li><strong>2. Xây tài liệu</strong><span>Thêm prompt, caption, script hoặc storyboard.</span></li><li><strong>3. Version rõ ràng</strong><span>Mỗi lần lưu Studio Document tạo một revision bất biến.</span></li></ol></aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Project gần đây</h2><p class="portal-card-subtitle">Chỉ Project thuộc signed account hiện tại được hiển thị.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="projects-refresh" data-portal-route="/projects">Làm mới</button></div>${cards}</section></article>`;
+  }
+
+  // Memory Center mirrors the useful organization flow from the Bot while
+  // keeping a deliberately separate, signed Web-owned record set.  It is not
+  // a UI proxy for Telegram messages: notes, versions and reminders remain
+  // private to the current browser account and delivery is Web-view-only.
+  const MEMORY_PRIORITIES = Object.freeze([
+    ["low", "Thấp"], ["normal", "Bình thường"], ["important", "Quan trọng"], ["urgent", "Khẩn"]
+  ]);
+  const MEMORY_REPEAT_RULES = Object.freeze([
+    ["none", "Một lần"], ["daily", "Mỗi ngày"], ["weekly", "Mỗi tuần"], ["monthly", "Mỗi tháng"], ["yearly", "Mỗi năm"]
+  ]);
+
+  function validMemoryId(value) {
+    return validProjectId(value);
+  }
+
+  function memoryItems(context, key) {
+    const rows = Array.isArray(context && context[key]) ? context[key] : [];
+    return rows.filter((item) => item && typeof item === "object" && validMemoryId(item.id)).slice(0, 100);
+  }
+
+  function memoryPriorityLabel(value) {
+    return ({ low: "Thấp", normal: "Bình thường", important: "Quan trọng", urgent: "Khẩn" })[String(value || "")] || "Bình thường";
+  }
+
+  function memoryRepeatLabel(value) {
+    return ({ none: "Một lần", daily: "Mỗi ngày", weekly: "Mỗi tuần", monthly: "Mỗi tháng", yearly: "Mỗi năm" })[String(value || "")] || "Một lần";
+  }
+
+  function memoryEventLabel(value) {
+    return ({
+      note_created: "Đã tạo ghi chú", note_updated: "Đã lưu phiên bản ghi chú", note_archived: "Đã archive ghi chú",
+      note_restored: "Đã khôi phục ghi chú", note_version_restored: "Đã khôi phục phiên bản ghi chú",
+      reminder_created: "Đã tạo reminder", reminder_updated: "Đã cập nhật reminder", reminder_complete: "Đã hoàn tất reminder",
+      reminder_pause: "Đã tạm dừng reminder", reminder_resume: "Đã tiếp tục reminder", reminder_cancel: "Đã hủy reminder"
+    })[String(value || "")] || "Đã cập nhật Memory Center";
+  }
+
+  function memoryTags(tags) {
+    return Array.isArray(tags) ? tags.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 12) : [];
+  }
+
+  function renderMemoryTagList(tags) {
+    const values = memoryTags(tags);
+    return values.length ? `<div class="portal-memory-tags">${values.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div>` : "";
+  }
+
+  function memoryNoteFormFields() {
+    return [
+      { name: "title", label: "Tiêu đề", placeholder: "Ví dụ: Ý tưởng video tháng 8", required: true, minLength: 3, maxLength: 160 },
+      { name: "content", label: "Nội dung", control: "textarea", placeholder: "Viết nội dung cần nhớ, quyết định, bối cảnh hoặc checklist…", required: true, minLength: 1, maxLength: 12000, help: "Không lưu API key, token, mật khẩu hoặc số thẻ." },
+      { name: "tags", label: "Tags", placeholder: "Ví dụ: launch, video, ưu tiên", maxLength: 520, help: "Phân tách bằng dấu phẩy; tối đa 12 tags." },
+      { name: "category", label: "Danh mục", placeholder: "Ví dụ: Marketing", maxLength: 80 },
+      { name: "priority", label: "Ưu tiên", control: "select", options: MEMORY_PRIORITIES }
+    ];
+  }
+
+  function memoryNoteFilterState(context) {
+    const source = context && context.memoryNoteFilter && typeof context.memoryNoteFilter === "object"
+      ? context.memoryNoteFilter
+      : {};
+    const priority = String(source.priority || "");
+    const state = String(source.state || "all");
+    return {
+      q: typeof source.q === "string" ? source.q.replace(/\s+/g, " ").trim().slice(0, 80) : "",
+      priority: MEMORY_PRIORITIES.some(([value]) => value === priority) ? priority : "",
+      state: ["all", "active", "archived"].includes(state) ? state : "all"
+    };
+  }
+
+  function memoryNoteFilterFields() {
+    return [
+      { name: "q", label: "Tìm ghi chú", placeholder: "Tiêu đề, tag, danh mục hoặc nội dung…", maxLength: 80, wide: true },
+      { name: "priority", label: "Ưu tiên", control: "select", options: MEMORY_PRIORITIES, emptyLabel: "Mọi mức ưu tiên" },
+      { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả"], ["active", "Đang hoạt động"], ["archived", "Đã archive"]] }
+    ];
+  }
+
+  function memoryReminderFormFields() {
+    return [
+      { name: "title", label: "Tiêu đề reminder", placeholder: "Ví dụ: Rà soát storyboard", required: true, minLength: 3, maxLength: 160 },
+      { name: "body", label: "Ghi chú", control: "textarea", placeholder: "Bối cảnh hoặc checklist ngắn (tùy chọn)", maxLength: 2000 },
+      { name: "due_at", label: "Thời điểm", type: "datetime-local", required: true, help: "Reminder chỉ hiện trong Web Workspace; chưa gửi Telegram, email hoặc push." },
+      { name: "timezone", label: "Múi giờ", control: "select", options: [["Asia/Ho_Chi_Minh", "Asia/Ho_Chi_Minh (GMT+7)"], ["UTC", "UTC"]] },
+      { name: "repeat_rule", label: "Lặp lại", control: "select", options: MEMORY_REPEAT_RULES },
+      { name: "note_id", label: "Liên kết ghi chú", control: "select", optionsFrom: "memoryNotes", emptyLabel: "Không liên kết ghi chú" }
+    ];
+  }
+
+  function memoryNoteEditor(page, context) {
+    const detail = context.memoryNoteDetail && typeof context.memoryNoteDetail === "object" ? context.memoryNoteDetail : {};
+    const note = detail.note && typeof detail.note === "object" && validMemoryId(detail.note.id) ? detail.note : null;
+    if (!note) {
+      return `<section class="portal-card portal-card-pad portal-memory-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Mở một ghi chú</h2><p class="portal-card-subtitle">Nội dung đầy đủ chỉ được nạp sau owner check ở server.</p></div>${badge("read_only")}</div>${renderEmpty("Chưa chọn ghi chú", "Chọn một ghi chú ở danh sách để xem, chỉnh sửa hoặc khôi phục phiên bản. Web không đọc Memory của Bot.", "◇")}</section>`;
+    }
+    const state = String(note.state || "active");
+    const canWrite = Boolean(context.capabilities && context.capabilities["memory-note-update"] === true && state === "active");
+    const canArchive = Boolean(context.capabilities && context.capabilities["memory-note-archive"] === true && state === "active");
+    const canRestore = Boolean(context.capabilities && context.capabilities["memory-note-restore"] === true && state === "archived");
+    const canRestoreVersion = Boolean(context.capabilities && context.capabilities["memory-note-restore-version"] === true && state === "active");
+    const route = page.routePath || page.path;
+    const values = { ...note, tags: memoryTags(note.tags).join(", ") };
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 50) : [];
+    const related = Array.isArray(detail.reminders) ? detail.reminders.filter((item) => item && validMemoryId(item.id)).slice(0, 20) : [];
+    const stateAction = state === "active"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-archive" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" data-portal-confirm="Archive ghi chú này? Reminder liên kết sẽ không bị thay đổi tự động."${canArchive ? "" : " disabled"}>${canArchive ? "Archive" : "Archive đang khóa"}</button>`
+      : `<button class="portal-button portal-button--primary" type="button" data-portal-action="memory-note-restore" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}"${canRestore ? "" : " disabled"}>Khôi phục ghi chú</button>`;
+    const versionList = versions.length
+      ? `<div class="portal-version-list">${versions.map((version) => `<div class="portal-version-row"><span><strong>v${safeText(String(version.revision))}</strong><small>${safeText(String(version.title || "Ghi chú"))} · ${safeText(String(version.created_at || "—"))}</small></span>${Number(version.revision) === Number(note.revision) ? `<span class="portal-form-note">Đang mở</span>` : `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-restore-version" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" data-memory-note-version="${safeText(String(version.revision))}" data-portal-confirm="Khôi phục v${safeText(String(version.revision))} thành một phiên bản mới? Phiên bản hiện tại vẫn còn trong history."${canRestoreVersion ? "" : " disabled"}>Khôi phục</button>`}</div>`).join("")}</div>`
+      : renderEmpty("Chưa có version history", "Version đầu tiên được lưu cùng ghi chú và không bị xóa khi cập nhật.", "○");
+    const linked = related.length ? `<div class="portal-memory-linked-list">${related.map((item) => `<a href="/reminders" class="portal-memory-linked"><span><strong>${safeText(String(item.title || "Reminder"))}</strong><small>${safeText(memoryRepeatLabel(item.repeat_rule))} · ${safeText(String(item.next_run_at || item.due_at || "—"))}</small></span>${badge(String(item.state || "read_only"))}</a>`).join("")}</div>` : renderEmpty("Chưa có reminder liên kết", "Bạn có thể tạo reminder từ tab Nhắc việc và liên kết lại với ghi chú này.", "○");
+    return `<section class="portal-card portal-card-pad portal-memory-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryPriorityLabel(note.priority))} · v${safeText(String(note.revision))}</span><h2 class="portal-card-title">${safeText(String(note.title || "Ghi chú"))}</h2><p class="portal-card-subtitle">${state === "archived" ? "Ghi chú đang archive và giữ nguyên history." : "Mỗi lần lưu tạo phiên bản bất biến; không có ghi đè âm thầm."}</p></div>${badge(state === "archived" ? "read_only" : "ready")}</div><form class="portal-form" data-portal-form data-portal-action="memory-note-update" data-portal-route="${safeText(route)}" data-memory-note-id="${safeText(String(note.id))}" data-memory-note-revision="${safeText(String(note.revision))}" novalidate>${renderFields(memoryNoteFormFields(), canWrite, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Optimistic revision bảo vệ thay đổi đang mở. Server luôn kiểm tra ownership, CSRF và idempotency.</span><div class="portal-inline-actions">${stateAction}<button class="portal-button portal-button--primary" type="submit"${canWrite ? "" : " disabled"}>Lưu phiên bản mới</button></div></div></form><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">Version history</span><h3>Lịch sử phiên bản</h3><p>Khôi phục luôn tạo một revision mới, không sửa version cũ.</p></div></div>${versionList}</section><section class="portal-project-history"><div class="portal-section-heading"><div><span class="portal-section-kicker">Linked reminders</span><h3>Nhắc việc liên kết</h3><p>Trạng thái reminder luôn explicit; archive ghi chú không tự tắt reminder.</p></div></div>${linked}</section></section>`;
+  }
+
+  function renderMemoryNotes(page, context) {
+    const notes = memoryItems(context, "memoryNotes");
+    const summary = context.memorySummary && typeof context.memorySummary === "object" ? context.memorySummary : {};
+    const noteSummary = summary.notes && typeof summary.notes === "object" ? summary.notes : {};
+    const canView = Boolean(context.capabilities && context.capabilities["memory-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["memory-note-create"] === true);
+    if (!canView) return `<article class="portal-page portal-memory-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Memory Center đang được bảo vệ", "Đăng nhập bằng signed session để nạp ghi chú riêng tư. Web không dùng Telegram ID thô hoặc fallback sang Bot state.", "⌁")}</section></article>`;
+    const filter = memoryNoteFilterState(context);
+    const cards = notes.length
+      ? `<div class="portal-memory-note-list">${notes.map((note) => `<button type="button" class="portal-memory-note" data-portal-action="memory-note-open" data-portal-route="/notes" data-memory-note-id="${safeText(String(note.id))}"><span class="portal-memory-note-head"><span><strong>${safeText(String(note.title || "Ghi chú"))}</strong><small>${safeText(String(note.category || "Chưa phân loại"))} · cập nhật ${safeText(String(note.updated_at || note.created_at || "—"))}</small></span>${badge(String(note.state || "read_only"))}</span><span class="portal-memory-note-excerpt">${safeText(String(note.excerpt || ""))}</span><span class="portal-memory-note-footer"><span class="portal-memory-priority" data-priority="${safeText(String(note.priority || "normal"))}">${safeText(memoryPriorityLabel(note.priority))}</span>${renderMemoryTagList(note.tags)}<b aria-hidden="true">→</b></span></button>`).join("")}</div>`
+      : renderEmpty(filter.q || filter.priority || filter.state !== "all" ? "Không có ghi chú phù hợp" : "Chưa có ghi chú", filter.q || filter.priority || filter.state !== "all" ? "Điều chỉnh từ khóa hoặc bộ lọc để xem các ghi chú Web-owned khác." : "Tạo ghi chú đầu tiên để lưu bối cảnh, checklist và quyết định trong một Web Workspace riêng tư.", "◇");
+    const filterForm = `<form class="portal-memory-filter" data-portal-form data-portal-action="memory-note-filter" data-portal-route="/notes" novalidate>${renderFields(memoryNoteFilterFields(), true, context, filter)}<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm thực hiện trên API owner-scoped, không tạo Bot hand-off hoặc lưu query vào URL.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-note-filter-clear" data-portal-route="/notes">Xóa lọc</button><button class="portal-button portal-button--primary" type="submit">Tìm kiếm</button></div></div></form>`;
+    return `<article class="portal-page portal-memory-center">${renderHero(page, context)}
+      <section class="portal-memory-intro"><div><span class="portal-section-kicker">Private Web memory</span><h2>Giữ ý tưởng, quyết định và việc cần làm ở đúng ngữ cảnh</h2><p>Memory Center hoạt động độc lập trên Web với tag, ưu tiên, archive và revision history. Nó không gửi nội dung sang Bot hay provider.</p></div><dl><div><dt>${safeText(String(Number(noteSummary.active || 0)))}</dt><dd>Ghi chú đang hoạt động</dd></div><div><dt>${safeText(String(Number(noteSummary.archived || 0)))}</dt><dd>Đã archive</dd></div><div><dt>v∞</dt><dd>Lịch sử phiên bản bất biến</dd></div></dl></section>
+      <div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo ghi chú</h2><p class="portal-card-subtitle">Dùng tag và ưu tiên để biến một ý tưởng rời rạc thành bối cảnh có thể tiếp tục.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="memory-note-create" data-portal-route="/notes" novalidate>${renderFields(memoryNoteFormFields(), canCreate, context, transientFormValues("/notes"))}<div class="portal-form-footer"><span class="portal-form-note">Không tạo job, charge, output hoặc notification. Dữ liệu chỉ thuộc signed Web account hiện tại.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Lưu ghi chú</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Privacy boundary</span><h2 class="portal-card-title">Web-owned, không giả delivery</h2><p class="portal-card-subtitle">Reminder chỉ hiển thị trong app. Nếu cần Telegram/email/push, đó là adapter riêng và sẽ không được tự nhận là đã gửi.</p></div></div>${renderNotes(page)}</aside></div>
+      <section class="portal-memory-content"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Ghi chú của tôi</h2><p class="portal-card-subtitle">Tìm theo nội dung, tag hoặc danh mục; chọn một ghi chú để mở nội dung đầy đủ cùng history.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="/notes">Làm mới</button></div>${filterForm}${cards}</section>${memoryNoteEditor(page, context)}</section>
+    </article>`;
+  }
+
+  function memoryDateInputValue(value, timezoneName) {
+    const source = String(value || "").trim();
+    if (!source) return "";
+    const date = new Date(source);
+    if (Number.isNaN(date.getTime())) return "";
+    try {
+      const parts = new Intl.DateTimeFormat("en-CA", {
+        timeZone: timezoneName === "UTC" ? "UTC" : "Asia/Ho_Chi_Minh",
+        year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23"
+      }).formatToParts(date).reduce((result, item) => ({ ...result, [item.type]: item.value }), {});
+      return `${parts.year || ""}-${parts.month || ""}-${parts.day || ""}T${parts.hour || ""}:${parts.minute || ""}`;
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function renderMemoryReminderEdit(item, context, route) {
+    const id = String(item.id || "");
+    const state = String(item.state || "active");
+    const canEdit = Boolean(context.capabilities && context.capabilities["memory-reminder-update"] === true && ["active", "paused"].includes(state));
+    const linkedNotes = memoryItems(context, "memoryNotes").filter((note) => String(note.state || "active") === "active");
+    const noteOptions = `<option value=""${item.note_id ? "" : " selected"}>Không liên kết ghi chú</option>${linkedNotes.map((note) => `<option value="${safeText(String(note.id))}"${String(note.id) === String(item.note_id || "") ? " selected" : ""}>${safeText(String(note.title || "Ghi chú Web"))}</option>`).join("")}`;
+    return `<details class="portal-memory-reminder-edit"><summary>Chỉnh sửa reminder</summary><form class="portal-form" data-portal-form data-portal-action="memory-reminder-update" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(String(item.revision || 1))}" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="memory-reminder-title-${safeText(id)}">Tiêu đề<span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="memory-reminder-title-${safeText(id)}" name="title" value="${safeText(String(item.title || ""))}" minlength="3" maxlength="160" required${canEdit ? "" : " disabled"}></div><div class="portal-field portal-field--wide"><label for="memory-reminder-body-${safeText(id)}">Ghi chú</label><textarea class="portal-textarea" id="memory-reminder-body-${safeText(id)}" name="body" maxlength="2000"${canEdit ? "" : " disabled"}>${safeText(String(item.body || ""))}</textarea></div><div class="portal-field"><label for="memory-reminder-due-${safeText(id)}">Thời điểm<span class="portal-required-mark" aria-hidden="true">*</span></label><input class="portal-input" id="memory-reminder-due-${safeText(id)}" name="due_at" type="datetime-local" value="${safeText(memoryDateInputValue(item.next_run_at || item.due_at, item.timezone))}" required${canEdit ? "" : " disabled"}></div><div class="portal-field"><label for="memory-reminder-timezone-${safeText(id)}">Múi giờ</label><select class="portal-select" id="memory-reminder-timezone-${safeText(id)}" name="timezone"${canEdit ? "" : " disabled"}><option value="Asia/Ho_Chi_Minh"${String(item.timezone || "") === "Asia/Ho_Chi_Minh" ? " selected" : ""}>Asia/Ho_Chi_Minh (GMT+7)</option><option value="UTC"${String(item.timezone || "") === "UTC" ? " selected" : ""}>UTC</option></select></div><div class="portal-field"><label for="memory-reminder-repeat-${safeText(id)}">Lặp lại</label><select class="portal-select" id="memory-reminder-repeat-${safeText(id)}" name="repeat_rule"${canEdit ? "" : " disabled"}>${MEMORY_REPEAT_RULES.map(([value, label]) => `<option value="${safeText(value)}"${String(item.repeat_rule || "none") === value ? " selected" : ""}>${safeText(label)}</option>`).join("")}</select></div><div class="portal-field"><label for="memory-reminder-note-${safeText(id)}">Ghi chú liên kết</label><select class="portal-select" id="memory-reminder-note-${safeText(id)}" name="note_id"${canEdit ? "" : " disabled"}>${noteOptions}</select></div></div><div class="portal-form-footer"><span class="portal-form-note">Lưu lại yêu cầu revision hiện tại để tránh ghi đè một thay đổi ở tab khác.</span><button class="portal-button portal-button--primary" type="submit"${canEdit ? "" : " disabled"}>Lưu thay đổi</button></div></form></details>`;
+  }
+
+  function renderMemoryReminderCard(item, context, route) {
+    const id = String(item.id || "");
+    const state = String(item.state || "read_only");
+    const revision = String(item.revision || 1);
+    const canComplete = Boolean(context.capabilities && context.capabilities["memory-reminder-complete"] === true && state === "active");
+    const canPause = Boolean(context.capabilities && context.capabilities["memory-reminder-pause"] === true && state === "active");
+    const canResume = Boolean(context.capabilities && context.capabilities["memory-reminder-resume"] === true && state === "paused");
+    const canCancel = Boolean(context.capabilities && context.capabilities["memory-reminder-cancel"] === true && ["active", "paused"].includes(state));
+    const stateActions = state === "active"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-complete" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canComplete ? "" : " disabled"}>Hoàn tất</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-pause" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canPause ? "" : " disabled"}>Tạm dừng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-cancel" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}" data-portal-confirm="Hủy reminder này? Hành động không gửi notification và không thể tự đảo ngược."${canCancel ? "" : " disabled"}>Hủy</button>`
+      : state === "paused"
+        ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="memory-reminder-resume" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}"${canResume ? "" : " disabled"}>Tiếp tục</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-reminder-cancel" data-portal-route="${safeText(route)}" data-memory-reminder-id="${safeText(id)}" data-memory-reminder-revision="${safeText(revision)}" data-portal-confirm="Hủy reminder này? Hành động không gửi notification và không thể tự đảo ngược."${canCancel ? "" : " disabled"}>Hủy</button>`
+        : `<span class="portal-form-note">${state === "completed" ? "Reminder đã hoàn tất." : "Reminder đã hủy."}</span>`;
+    const due = String(item.next_run_at || item.due_at || "—");
+    return `<article class="portal-card portal-card-pad portal-memory-reminder-card"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(memoryRepeatLabel(item.repeat_rule))}</span><h3 class="portal-card-title">${safeText(String(item.title || "Reminder"))}</h3><p class="portal-card-subtitle">${safeText(String(item.body || "Không có ghi chú bổ sung."))}</p></div>${badge(state)}</div><dl class="portal-memory-reminder-meta"><div><dt>Lần chạy</dt><dd>${safeText(due)}</dd></div><div><dt>Múi giờ</dt><dd>${safeText(String(item.timezone || "—"))}</dd></div><div><dt>Liên kết</dt><dd>${safeText(String(item.note_title || "Không có ghi chú"))}</dd></div></dl>${item.overdue === true && state === "active" ? `<p class="portal-memory-overdue" role="status">Đã quá thời điểm; Web chỉ đánh dấu để bạn chủ động xử lý, không tuyên bố đã gửi thông báo.</p>` : ""}<div class="portal-form-footer"><div class="portal-inline-actions">${stateActions}</div></div>${renderMemoryReminderEdit(item, context, route)}</article>`;
+  }
+
+  function renderMemoryReminders(page, context) {
+    const reminders = memoryItems(context, "memoryReminders");
+    const summary = context.memorySummary && typeof context.memorySummary === "object" ? context.memorySummary : {};
+    const reminderSummary = summary.reminders && typeof summary.reminders === "object" ? summary.reminders : {};
+    const canView = Boolean(context.capabilities && context.capabilities["memory-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["memory-reminder-create"] === true);
+    const route = page.routePath || page.path;
+    if (!canView) return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Reminder đang được bảo vệ", "Đăng nhập bằng signed session để xem hoặc quản lý reminder riêng tư. Bot reminder không được đưa sang Web bằng raw Telegram ID.", "⌁")}</section></article>`;
+    const cards = reminders.length ? `<div class="portal-memory-reminder-grid">${reminders.map((item) => renderMemoryReminderCard(item, context, route)).join("")}</div>` : renderEmpty("Chưa có reminder", "Tạo mốc đầu tiên để theo dõi việc cần làm trong Web Workspace. Web sẽ không giả lập Telegram/email/push delivery.", "◷");
+    const events = memoryItems(context, "memoryEvents");
+    const eventList = events.length ? `<div class="portal-memory-event-list">${events.map((item) => `<div class="portal-memory-event"><span aria-hidden="true">•</span><span><strong>${safeText(memoryEventLabel(item.action))}</strong><small>${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : renderEmpty("Chưa có hoạt động", "Các cập nhật note/reminder của Web account sẽ xuất hiện tại đây sau khi server ghi audit event.", "○");
+    return `<article class="portal-page portal-memory-reminders">${renderHero(page, context)}<section class="portal-memory-intro"><div><span class="portal-section-kicker">Web view-only delivery</span><h2>Quản lý nhịp công việc mà không đánh đồng với thông báo đã gửi</h2><p>Reminder giữ lịch một lần hoặc lặp lại, pause/resume và complete. Web chỉ hiển thị trạng thái trong account của bạn; Telegram, email và push cần adapter riêng.</p></div><dl><div><dt>${safeText(String(Number(reminderSummary.active || 0)))}</dt><dd>Đang hoạt động</dd></div><div><dt>${safeText(String(Number(reminderSummary.due_soon || 0)))}</dt><dd>Đến hạn trong 24h</dd></div><div><dt>${safeText(String(Number(reminderSummary.overdue || 0)))}</dt><dd>Cần xem lại</dd></div></dl></section><div class="portal-memory-layout"><section class="portal-card portal-card-pad portal-memory-create"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo reminder</h2><p class="portal-card-subtitle">Chọn mốc, múi giờ, lịch lặp và tùy chọn liên kết một ghi chú đang active.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="memory-reminder-create" data-portal-route="${safeText(route)}" novalidate>${renderFields(memoryReminderFormFields(), canCreate, context, transientFormValues(route))}<div class="portal-form-footer"><span class="portal-form-note">Không tạo Bot job, Xu, PayOS, provider call hay notification delivery.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo reminder</button></div></form></section><aside class="portal-card portal-card-pad portal-memory-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Explicit status</span><h2 class="portal-card-title">Không có thông báo giả</h2><p class="portal-card-subtitle">Quá hạn chỉ là state để bạn xem lại. Việc complete reminder lặp lại tính mốc tiếp theo ở server theo đúng múi giờ đã chọn.</p></div></div>${renderNotes(page)}</aside></div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Reminder của tôi</h2><p class="portal-card-subtitle">Mọi thay đổi phải có CSRF, revision và idempotency. Các trạng thái terminal không thể chỉnh sửa.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="memory-refresh" data-portal-route="${safeText(route)}">Làm mới</button></div>${cards}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Chỉ hiển thị nhãn thao tác đã sanitize, không lộ nội dung ghi chú hoặc request detail.</p></div></div>${eventList}</section></article>`;
   }
 
   function renderStudioDocumentEditor(page, context, project) {
@@ -4308,6 +4530,8 @@
       case "feature-catalog": return renderFeatureCatalog(page, context);
       case "workspace-drafts": return renderWorkspaceDrafts(page, context);
       case "project-center": return renderProjectCenter(page, context);
+      case "memory-notes": return renderMemoryNotes(page, context);
+      case "memory-reminders": return renderMemoryReminders(page, context);
       case "project-detail": return renderProjectDetail(page, context);
       case "project-packages": return renderProjectPackages(page, context);
       case "feature-family": return renderFeatureFamily(page, context);
@@ -4511,7 +4735,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update"].includes(action) && !form.reportValidity()) {
+    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -4520,10 +4744,12 @@
     // Validate before asking for a destructive/financial confirmation so the
     // modal always describes the values that will actually be submitted.
     if (confirmation && !window.confirm(confirmation)) return;
-    if (form) rememberTransientFormDraft(form);
+    // Search/filter text is intentionally ephemeral. Unlike an authoring
+    // draft, it must not be copied into the generic transient form cache.
+    if (form && action !== "memory-note-filter") rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });

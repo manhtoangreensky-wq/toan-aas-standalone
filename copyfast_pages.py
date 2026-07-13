@@ -48,6 +48,10 @@ def _title_for(path: str) -> str:
         return "PDF sang ảnh riêng tư"
     if normalized == "/documents/pdf-to-word":
         return "PDF có text → Word riêng tư"
+    if normalized == "/notes":
+        return "Memory Center"
+    if normalized == "/reminders":
+        return "Nhắc việc"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
         return "Chi tiết kế hoạch"
     if PROJECT_PATH.fullmatch(normalized):

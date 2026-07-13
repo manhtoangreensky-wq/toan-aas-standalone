@@ -822,11 +822,16 @@ def test_content_operations_admin_modules_are_explicit_navigation_not_browser_au
     assert "provider" not in section.lower()
 
 
-def test_bot_companion_preserves_telegram_first_personal_workflows_without_mirroring_state() -> None:
+def test_personal_web_memory_is_native_while_bot_companions_preserve_telegram_first_workflows() -> None:
     registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    for route, title in (
+        ("/notes", "Memory Center"),
+        ("/reminders", "Nhắc việc"),
+    ):
+        assert f'customerPage("{route}", "{title}"' in PORTAL
+        assert f'botCompanionPage("{route}", ' not in PORTAL
+
     for route, key, title in (
-        ("/notes", "notes", "Ghi chú & Memory"),
-        ("/reminders", "reminders", "Nhắc việc"),
         ("/referrals", "referrals", "Giới thiệu"),
         ("/rewards", "rewards", "Ưu đãi & quà"),
         ("/community", "community", "Cộng đồng"),

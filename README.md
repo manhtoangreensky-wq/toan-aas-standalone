@@ -7,7 +7,7 @@ Production Web App for `app.toanaas.vn`.
 - Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
-- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/wallet`, `/jobs`, `/assets`
+- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
 ## Required Railway production configuration
@@ -68,6 +68,14 @@ Production Web App for `app.toanaas.vn`.
   local colour/detail adjustments (and optional deterministic basic upscale),
   never AI edit/upscale, a Bot job, provider request or payment path. See
   [`IMAGE_ENHANCE_CONTRACT.md`](docs/migration/IMAGE_ENHANCE_CONTRACT.md).
+- `WEBAPP_MEMORY_CENTER_ENABLED` defaults to `true`. `/notes` and
+  `/reminders` are a signed-account, Web-owned workspace for private notes,
+  version history and view-only reminders. It does not read or mutate Bot
+  memory, Telegram, wallet/Xu, PayOS, provider or job state. For durable
+  production history, the Web-owned session database must use the same
+  persistent-volume contract described above; do not advertise notification
+  delivery unless a separate, audited adapter is enabled. See
+  [`MEMORY_CENTER_CONTRACT.md`](docs/migration/MEMORY_CENTER_CONTRACT.md).
 
 ## Authority boundary
 
@@ -106,6 +114,11 @@ private Bot bridge.
   Bot output library, provider staging area, wallet/PayOS surface, or proof
   that an engine generated an artifact. See
   [`ASSET_VAULT_CONTRACT.md`](docs/migration/ASSET_VAULT_CONTRACT.md).
+- `/notes` and `/reminders` are a separate Web-owned Memory Center. They use
+  the signed Web account, CSRF, owner checks, idempotency and audit, but do
+  not mirror Bot `memory_*` tables or claim that Telegram/email/push has been
+  delivered. Bot memory AI classification, storage quota/add-ons and its
+  actual reminder sender remain outside this Web-only contract.
 - `/project-packages` is a distinct Web-native private ZIP export of a
   Project snapshot. It does not create a Bot job, copy Asset Vault source
   blobs, change Xu, invoke PayOS or call a provider. See

@@ -164,6 +164,20 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.document_operation.pdf_optimize": ("Tối ưu PDF riêng tư", "Web Workspace"),
     "web.document_operation.pdf_optimize_failed": ("Tối ưu PDF chưa hoàn tất", "Web Workspace"),
     "web.document_operation.pdf_optimize_guarded": ("PDF không có bản lossless nhỏ hơn", "Web Workspace"),
+    # Memory Center is explicitly Web-owned.  Keep its customer-facing audit
+    # labels separate from Bot `/note`/`/remind` state so activity history can
+    # never imply that Telegram delivered or owns the Web record.
+    "web.memory.note.create": ("Tạo ghi chú Memory Center", "Memory Center"),
+    "web.memory.note.update": ("Lưu phiên bản ghi chú", "Memory Center"),
+    "web.memory.note.archive": ("Lưu trữ ghi chú", "Memory Center"),
+    "web.memory.note.restore": ("Khôi phục ghi chú", "Memory Center"),
+    "web.memory.note.restore_version": ("Khôi phục phiên bản ghi chú", "Memory Center"),
+    "web.memory.reminder.create": ("Tạo nhắc việc Web", "Memory Center"),
+    "web.memory.reminder.update": ("Cập nhật nhắc việc Web", "Memory Center"),
+    "web.memory.reminder.complete": ("Hoàn tất nhắc việc Web", "Memory Center"),
+    "web.memory.reminder.pause": ("Tạm dừng nhắc việc Web", "Memory Center"),
+    "web.memory.reminder.resume": ("Tiếp tục nhắc việc Web", "Memory Center"),
+    "web.memory.reminder.cancel": ("Hủy nhắc việc Web", "Memory Center"),
     "asset.delivery": ("Kiểm tra delivery tài sản", "Tài sản"),
 }
 
@@ -387,6 +401,10 @@ def _flags() -> dict[str, bool]:
         # Local Image Enhance uses the same private output boundary but remains
         # independently guarded; it never implies provider-backed AI editing.
         "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
+        # Notes, versions and reminders live in the signed Web session
+        # database.  This flag is intentionally independent of Bot, wallet,
+        # payment, provider and persistent-file capability flags.
+        "memory_center_enabled": enabled("WEBAPP_MEMORY_CENTER_ENABLED", True),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 

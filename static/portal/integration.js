@@ -750,6 +750,78 @@
     return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(String(value || "").trim());
   }
 
+  function validMemoryId(value) {
+    return validProjectId(value);
+  }
+
+  function validMemoryRevision(value) {
+    const parsed = Number(value);
+    return Number.isInteger(parsed) && parsed >= 1 && parsed <= 1000000 ? parsed : 0;
+  }
+
+  function memoryNoteFilterPayload(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const q = String(source.q || "").replace(/\s+/g, " ").trim();
+    const priority = String(source.priority || "").trim().toLowerCase();
+    const state = String(source.state || "all").trim().toLowerCase();
+    if (q.length > 80) throw new Error("Từ khóa tìm ghi chú tối đa 80 ký tự.");
+    if (priority && !["low", "normal", "important", "urgent"].includes(priority)) throw new Error("Bộ lọc ưu tiên ghi chú không hợp lệ.");
+    if (!["all", "active", "archived"].includes(state)) throw new Error("Bộ lọc trạng thái ghi chú không hợp lệ.");
+    return { q, priority, state };
+  }
+
+  function memoryNoteListPath(filter) {
+    const query = new URLSearchParams({ state: filter.state || "all", limit: "100" });
+    if (filter.q) query.set("q", filter.q);
+    if (filter.priority) query.set("priority", filter.priority);
+    return `/memory/notes?${query.toString()}`;
+  }
+
+  function memoryTagsFromInput(value) {
+    const tags = [];
+    const seen = new Set();
+    String(value || "").split(",").forEach((candidate) => {
+      const tag = candidate.replace(/\s+/g, " ").trim();
+      if (!tag) return;
+      if (tag.length > 40) throw new Error("Mỗi tag tối đa 40 ký tự.");
+      const key = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(key)) {
+        seen.add(key);
+        tags.push(tag);
+      }
+    });
+    if (tags.length > 12) throw new Error("Tối đa 12 tags cho một ghi chú.");
+    return tags;
+  }
+
+  function memoryNotePayload(fields) {
+    const title = String(fields.title || "").replace(/\s+/g, " ").trim();
+    const content = String(fields.content || "").trim();
+    const category = String(fields.category || "").replace(/\s+/g, " ").trim();
+    const priority = String(fields.priority || "normal").trim().toLowerCase();
+    if (title.length < 3 || title.length > 160) throw new Error("Tiêu đề ghi chú cần từ 3 đến 160 ký tự.");
+    if (!content || content.length > 12000) throw new Error("Nội dung ghi chú cần từ 1 đến 12.000 ký tự.");
+    if (category.length > 80) throw new Error("Danh mục tối đa 80 ký tự.");
+    if (!["low", "normal", "important", "urgent"].includes(priority)) throw new Error("Ưu tiên ghi chú không hợp lệ.");
+    return { title, content, tags: memoryTagsFromInput(fields.tags), category, priority };
+  }
+
+  function memoryReminderPayload(fields) {
+    const title = String(fields.title || "").replace(/\s+/g, " ").trim();
+    const body = String(fields.body || "").trim();
+    const dueAt = String(fields.due_at || "").trim();
+    const timezone = String(fields.timezone || "Asia/Ho_Chi_Minh").trim();
+    const repeatRule = String(fields.repeat_rule || "none").trim().toLowerCase();
+    const noteId = String(fields.note_id || "").trim();
+    if (title.length < 3 || title.length > 160) throw new Error("Tiêu đề reminder cần từ 3 đến 160 ký tự.");
+    if (body.length > 2000) throw new Error("Ghi chú reminder tối đa 2.000 ký tự.");
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(?::\d{2})?$/.test(dueAt)) throw new Error("Hãy chọn một thời điểm reminder hợp lệ.");
+    if (!["Asia/Ho_Chi_Minh", "UTC"].includes(timezone)) throw new Error("Múi giờ reminder không hợp lệ.");
+    if (!["none", "daily", "weekly", "monthly", "yearly"].includes(repeatRule)) throw new Error("Chu kỳ lặp reminder không hợp lệ.");
+    if (noteId && !validMemoryId(noteId)) throw new Error("Ghi chú liên kết không hợp lệ.");
+    return { note_id: noteId || null, title, body, due_at: dueAt, timezone, repeat_rule: repeatRule };
+  }
+
   function workspaceDraftFeatureForRoute(route) {
     const normalized = String(route || "").split("?")[0].replace(/\/+$/, "") || "/";
     const catalog = Array.isArray(base().catalog) ? base().catalog : [];
@@ -982,6 +1054,9 @@
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
+    // Memory Center is a signed-account Web-native capability. Its flag does
+    // not imply Bot bridge, Telegram, wallet, payment or provider readiness.
+    const memoryCenterEnabled = Boolean(status.flags && status.flags.memory_center_enabled === true);
     // This native page must never display the static catalog's `ready` badge
     // while its server-side execution gate is intentionally off.
     const nativeDocumentPageStates = {
@@ -1082,6 +1157,22 @@
       "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-enhance": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled),
       "image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      // Notes and reminders are private browser-account data, protected by
+      // server-side session/CSRF/ownership/revision checks. They must remain
+      // usable without a Telegram link and never announce external delivery.
+      "memory-view": Boolean(account && memoryCenterEnabled),
+      "memory-refresh": Boolean(account && memoryCenterEnabled),
+      "memory-note-create": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-note-update": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-note-archive": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-note-restore": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-note-restore-version": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-reminder-create": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-reminder-update": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-reminder-complete": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-reminder-pause": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-reminder-resume": Boolean(account && me.csrf_token && memoryCenterEnabled),
+      "memory-reminder-cancel": Boolean(account && me.csrf_token && memoryCenterEnabled),
       "refresh-jobs": Boolean(bridgeAvailable),
       "refresh-assets": Boolean(bridgeAvailable),
       "refresh-payment": Boolean(bridgeAvailable),
@@ -1127,6 +1218,16 @@
       imageOperationsEnabled,
       imageResizeEnabled,
       imageEnhanceEnabled,
+      memoryCenterEnabled,
+      // Clear every account-scoped projection while hydration starts. A failed
+      // request must never render the previous account's note/reminder data.
+      memorySummary: {},
+      memoryNotes: [],
+      memoryReminders: [],
+      memoryEvents: [],
+      memoryNoteDetail: {},
+      memoryNoteFilter: { q: "", priority: "", state: "all" },
+      memoryReadState: account && memoryCenterEnabled ? "loading" : "guarded",
       // These owner-scoped reads start as loading on every signed hydration.
       // A native operation form may only become actionable after both the
       // Asset Vault source projection and its own history projection return.
@@ -1145,7 +1246,9 @@
       pageStates: {
         ...featurePageStates(catalog, {}, webFeatureExecutionFeatures, webWorkspaceDraftFeatures, Boolean(account && me.csrf_token)),
         ...nativeDocumentPageStates,
-        ...nativeImagePageStates
+        ...nativeImagePageStates,
+        "/notes": account && memoryCenterEnabled ? "processing" : "guarded",
+        "/reminders": account && memoryCenterEnabled ? "processing" : "guarded"
       }
     });
     if (status.flags && status.flags.pwa_enabled && "serviceWorker" in navigator) {
@@ -1177,6 +1280,11 @@
     else if (account && currentPath === "/image/edit") merge({
       imageEnhanceOperations: [],
       imageEnhanceOperationsReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && memoryCenterEnabled && ["/notes", "/reminders"].includes(currentPath)) await hydrateMemoryCenter();
+    else if (account && ["/notes", "/reminders"].includes(currentPath)) merge({
+      memorySummary: {}, memoryNotes: [], memoryReminders: [], memoryEvents: [], memoryNoteDetail: {}, memoryReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
@@ -1271,6 +1379,60 @@
       // signed read. Project Center has no Bot/bridge fallback by design.
       merge({ projects: [], pageStates: { ...(base().pageStates || {}), "/projects": "guarded" } });
     }
+  }
+
+  async function hydrateMemoryCenter(filterValue) {
+    // These are four owner-scoped reads from one Web-native boundary.  Keep
+    // them independent from `hydrateCanonicalData`: neither a Bot bridge nor
+    // a Telegram link can make Memory Center data available or unavailable.
+    const filter = memoryNoteFilterPayload(filterValue === undefined ? base().memoryNoteFilter : filterValue);
+    try {
+      const [summaryResult, notesResult, remindersResult, eventsResult] = await Promise.all([
+        api("/memory/summary"),
+        api(memoryNoteListPath(filter)),
+        api("/memory/reminders?state=all&limit=100"),
+        api("/memory/events?limit=50")
+      ]);
+      const notes = notesResult.data && Array.isArray(notesResult.data.items)
+        ? notesResult.data.items.filter((item) => item && validMemoryId(item.id)).slice(0, 100)
+        : [];
+      const reminders = remindersResult.data && Array.isArray(remindersResult.data.items)
+        ? remindersResult.data.items.filter((item) => item && validMemoryId(item.id)).slice(0, 100)
+        : [];
+      const events = eventsResult.data && Array.isArray(eventsResult.data.items)
+        ? eventsResult.data.items.filter((item) => item && validMemoryId(item.id)).slice(0, 50)
+        : [];
+      merge({
+        memorySummary: summaryResult.data && typeof summaryResult.data === "object" ? summaryResult.data : {},
+        memoryNotes: notes,
+        memoryReminders: reminders,
+        memoryEvents: events,
+        memoryReadState: "ready",
+        memoryNoteFilter: filter,
+        pageStates: { ...(base().pageStates || {}), "/notes": "ready", "/reminders": "ready" }
+      });
+      return { notes, reminders, events };
+    } catch (_) {
+      // Never retain stale note text, reminder body, event metadata or a
+      // previously selected detail after an account-scoped read fails.
+      merge({
+        memorySummary: {}, memoryNotes: [], memoryReminders: [], memoryEvents: [], memoryNoteDetail: {}, memoryNoteFilter: filter, memoryReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/notes": "guarded", "/reminders": "guarded" }
+      });
+      return { notes: [], reminders: [], events: [] };
+    }
+  }
+
+  async function hydrateMemoryNote(noteId) {
+    if (!validMemoryId(noteId)) throw new Error("Mã ghi chú Memory Center không hợp lệ.");
+    const result = await api(`/memory/notes/${encodeURIComponent(String(noteId))}`);
+    const detail = result.data && typeof result.data === "object" ? result.data : {};
+    const note = detail.note && typeof detail.note === "object" ? detail.note : null;
+    if (!note || !validMemoryId(note.id) || String(note.id) !== String(noteId)) throw new Error("Ghi chú không còn khả dụng cho Web account hiện tại.");
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 50) : [];
+    const reminders = Array.isArray(detail.reminders) ? detail.reminders.filter((item) => item && validMemoryId(item.id)).slice(0, 20) : [];
+    merge({ memoryNoteDetail: { note, versions, reminders } });
+    return { note, versions, reminders };
   }
 
   function imageResizePrivateReadPageState(assetState, operationState) {
@@ -1895,6 +2057,171 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "memory-note-filter" || action === "memory-note-filter-clear") {
+        const filter = action === "memory-note-filter-clear"
+          ? { q: "", priority: "", state: "all" }
+          : memoryNoteFilterPayload(fields);
+        await hydrateMemoryCenter(filter);
+        toast(filter.q || filter.priority || filter.state !== "all" ? "Đã áp dụng bộ lọc ghi chú." : "Đã hiển thị toàn bộ ghi chú Web.");
+        return;
+      }
+      if (action === "memory-refresh") {
+        await hydrateMemoryCenter();
+        toast("Đã làm mới Memory Center từ Web account hiện tại.");
+        return;
+      }
+      if (action === "memory-note-open") {
+        const noteId = String(detail.memoryNoteId || "").trim();
+        if (!validMemoryId(noteId)) throw new Error("Mã ghi chú Memory Center không hợp lệ.");
+        await hydrateMemoryNote(noteId);
+        return;
+      }
+      if (action === "memory-note-create") {
+        const payload = memoryNotePayload(fields);
+        const scope = "memory:note:create";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Ghi chú đang được lưu. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/memory/notes", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          const note = result.data && result.data.note && typeof result.data.note === "object" ? result.data.note : null;
+          if (!note || !validMemoryId(note.id)) throw new Error("Máy chủ chưa trả ghi chú Memory Center hợp lệ.");
+          await hydrateMemoryCenter();
+          await hydrateMemoryNote(note.id);
+          toast(result.message || "Đã lưu ghi chú trong Memory Center.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "memory-note-update") {
+        const noteId = String(detail.memoryNoteId || "").trim();
+        const expectedRevision = validMemoryRevision(detail.memoryNoteRevision);
+        if (!validMemoryId(noteId) || !expectedRevision) throw new Error("Phiên bản ghi chú không hợp lệ.");
+        const payload = { ...memoryNotePayload(fields), expected_revision: expectedRevision };
+        const scope = `memory:note:${noteId}:update`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/memory/notes/${encodeURIComponent(noteId)}/update`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          await hydrateMemoryCenter();
+          await hydrateMemoryNote(noteId);
+          toast(result.message || "Đã lưu phiên bản ghi chú mới.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (["memory-note-archive", "memory-note-restore", "memory-note-restore-version"].includes(action)) {
+        const noteId = String(detail.memoryNoteId || "").trim();
+        const expectedRevision = validMemoryRevision(detail.memoryNoteRevision);
+        if (!validMemoryId(noteId) || !expectedRevision) throw new Error("Phiên bản ghi chú không hợp lệ.");
+        const operation = action === "memory-note-archive" ? "archive" : action === "memory-note-restore" ? "restore" : "restore-version";
+        const version = action === "memory-note-restore-version" ? validMemoryRevision(detail.memoryNoteVersion) : 0;
+        if (action === "memory-note-restore-version" && !version) throw new Error("Phiên bản cần khôi phục không hợp lệ.");
+        const payload = { expected_revision: expectedRevision };
+        const scope = `memory:note:${noteId}:${operation}${version ? `:${version}` : ""}`;
+        const submission = acquireSubmission(scope, JSON.stringify({ ...payload, version }));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const target = operation === "restore-version"
+            ? `/memory/notes/${encodeURIComponent(noteId)}/restore-version/${encodeURIComponent(String(version))}`
+            : `/memory/notes/${encodeURIComponent(noteId)}/${operation}`;
+          const result = await api(target, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          await hydrateMemoryCenter();
+          await hydrateMemoryNote(noteId);
+          toast(result.message || "Đã cập nhật ghi chú Memory Center.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "memory-reminder-create") {
+        const payload = memoryReminderPayload(fields);
+        const scope = "memory:reminder:create";
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Reminder đang được tạo. Vui lòng chờ phản hồi từ máy chủ.", "error");
+          return;
+        }
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/memory/reminders", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          const reminder = result.data && result.data.reminder && typeof result.data.reminder === "object" ? result.data.reminder : null;
+          if (!reminder || !validMemoryId(reminder.id)) throw new Error("Máy chủ chưa trả reminder hợp lệ.");
+          await hydrateMemoryCenter();
+          toast(result.message || "Đã tạo reminder trong Web Memory Center.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "memory-reminder-update") {
+        const reminderId = String(detail.memoryReminderId || "").trim();
+        const expectedRevision = validMemoryRevision(detail.memoryReminderRevision);
+        if (!validMemoryId(reminderId) || !expectedRevision) throw new Error("Phiên bản reminder không hợp lệ.");
+        const payload = { ...memoryReminderPayload(fields), expected_revision: expectedRevision };
+        const scope = `memory:reminder:${reminderId}:update`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/memory/reminders/${encodeURIComponent(reminderId)}/update`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          await hydrateMemoryCenter();
+          toast(result.message || "Đã cập nhật reminder.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (["memory-reminder-complete", "memory-reminder-pause", "memory-reminder-resume", "memory-reminder-cancel"].includes(action)) {
+        const reminderId = String(detail.memoryReminderId || "").trim();
+        const expectedRevision = validMemoryRevision(detail.memoryReminderRevision);
+        if (!validMemoryId(reminderId) || !expectedRevision) throw new Error("Phiên bản reminder không hợp lệ.");
+        const operation = action.replace("memory-reminder-", "");
+        const payload = { expected_revision: expectedRevision };
+        const scope = `memory:reminder:${reminderId}:${operation}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) return;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api(`/memory/reminders/${encodeURIComponent(reminderId)}/${encodeURIComponent(operation)}`, {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+          });
+          await hydrateMemoryCenter();
+          toast(result.message || "Đã cập nhật trạng thái reminder.");
+        } finally {
+          releaseSubmission(submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "asset-vault-upload") {
         const file = fields.file;
         if (!file || typeof file !== "object" || typeof file.name !== "string" || !Number.isFinite(Number(file.size)) || Number(file.size) < 1) {

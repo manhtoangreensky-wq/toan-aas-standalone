@@ -65,6 +65,7 @@
 | /employees | POST | add_employee |
 | /employees | GET | get_employees |
 | /enhance | POST | enhance_image |
+| /events | GET | memory_events |
 | /features/status | GET | feature_status |
 | /features/{feature}/confirm | POST | feature_confirm |
 | /features/{feature}/draft | POST | feature_draft |
@@ -94,6 +95,13 @@
 | /me/{user_id} | GET | get_my_profile |
 | /me/{user_id} | GET | me |
 | /media-app | GET | legacy_media_redirect |
+| /notes | GET | list_notes |
+| /notes | POST | create_note |
+| /notes/{note_id} | GET | get_note |
+| /notes/{note_id}/archive | POST | archive_note |
+| /notes/{note_id}/restore | POST | restore_note |
+| /notes/{note_id}/restore-version/{revision} | POST | restore_note_version |
+| /notes/{note_id}/update | POST | update_note |
 | /oauth/apple/callback | POST | apple_oauth_callback |
 | /oauth/{provider}/callback | GET | oauth_callback |
 | /oauth/{provider}/link/start | POST | start_oauth_link |
@@ -131,6 +139,13 @@
 | /purchases | GET | get_purchases |
 | /register | POST | register |
 | /register | POST | register |
+| /reminders | GET | list_reminders |
+| /reminders | POST | create_reminder |
+| /reminders/{reminder_id}/cancel | POST | cancel_reminder |
+| /reminders/{reminder_id}/complete | POST | complete_reminder |
+| /reminders/{reminder_id}/pause | POST | pause_reminder |
+| /reminders/{reminder_id}/resume | POST | resume_reminder |
+| /reminders/{reminder_id}/update | POST | update_reminder |
 | /remove-bg | POST | remove_background |
 | /resize | POST | resize_image |
 | /sales | POST | add_sale |
@@ -143,24 +158,9 @@
 | /storage/status/{user_id} | GET | storage_status |
 | /stt | POST | speech_to_text |
 | /suggestions | POST | workflow_suggestions |
+| /summary | GET | memory_summary |
 | /support/tickets | GET | support_tickets |
 | /support/tickets | POST | create_support_ticket |
 | /sync | POST | sync_user |
-| /telegram-account/upgrade | POST | upgrade_telegram_account |
-| /telegram/connection/status | GET | telegram_connection_status |
-| /telegram/link/complete | POST | complete_telegram_link |
-| /telegram/link/start | POST | start_telegram_link |
-| /telegram/link/status | GET | telegram_link_status |
-| /telegram/login/complete | POST | complete_telegram_login |
-| /telegram/login/start | POST | start_telegram_login |
-| /telegram/login/status | GET | telegram_login_status |
-| /tts | POST | text_to_speech |
-| /upload | POST | upload_asset |
-| /uploads | POST | upload_to_canonical_staging |
-| /users | GET | get_all_users |
-| /verify | POST | verify_login |
-| /video-app | GET | legacy_video_redirect |
-| /voice/profiles | GET | voice_profiles |
-| /wallet | GET | wallet |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.
