@@ -146,6 +146,14 @@ def test_subtitle_import_replaces_active_cues_and_vtt_metadata_is_safe(tmp_path,
         assert exported.headers["Cache-Control"] == "no-store, private"
         assert "WEBVTT" in exported.json()["data"]["text"]
         assert exported.json()["data"]["output_created"] is False
+        # The text-only surface also has an explicit response budget.  Lower
+        # it in this isolated process to cover the guard without constructing
+        # an unnecessarily huge subtitle fixture.
+        workspace = importlib.import_module("copyfast_subtitle_workspace")
+        monkeypatch.setattr(workspace, "MAX_EXPORT_UTF8_BYTES", 1)
+        oversized = client.get(f"/api/v1/subtitle-studio/projects/{project['id']}/export?format=vtt")
+        assert oversized.status_code == 200 and oversized.json()["ok"] is False
+        assert oversized.json()["error_code"] == "WEB_SUBTITLE_EXPORT_TOO_LARGE"
         assert exported.json()["data"]["asr_called"] is False
         assert exported.json()["data"]["translation_called"] is False
         assert exported.json()["data"]["tts_called"] is False

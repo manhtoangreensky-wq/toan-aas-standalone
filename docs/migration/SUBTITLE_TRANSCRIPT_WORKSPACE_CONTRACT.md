@@ -155,8 +155,9 @@ it must never mark a project completed or claim media delivery.
 - Every mutation requires CSRF, request ID, account-scoped 24-hour idempotency
   key and optimistic `expected_revision`. Reusing a key with another payload is
   `409`; receipts retain only replay-safe IDs/state/revision/boundary flags.
-- Enforce a raw ASGI JSON body cap of 128 KiB before parser, independent read/
-  write rate scopes, `no-store` for all private API/export responses and
+- Enforce a raw ASGI JSON body cap of 128 KiB before parser, a 96 KiB UTF-8
+  bound for both pasted import text and generated private export text,
+  independent read/write rate scopes, `no-store` for all private API/export responses and
   `WEBAPP_SUBTITLE_STUDIO_ENABLED=true` (default enabled only for
   authoring). PWA caches public shell only and excludes both route/API/export.
 - Reject unsafe control characters, raw URLs/paths/data URIs and provider/Bot/job

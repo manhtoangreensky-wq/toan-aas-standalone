@@ -72,6 +72,7 @@ MAX_EVENT_LIMIT = 50
 MAX_LIST_LIMIT = 100
 MAX_IMPORT_CHARS = 120_000
 MAX_IMPORT_UTF8_BYTES = 96 * 1024
+MAX_EXPORT_UTF8_BYTES = 96 * 1024
 MAX_CUE_TEXT = 5_000
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1024
@@ -1380,6 +1381,8 @@ async def subtitle_export(
             if not str(project[4]).strip() or any(not str(row[7]).strip() for row in rows):
                 return _guarded("Bản dịch vẫn là draft thủ công và chưa đủ cue để export track dịch.", "WEB_SUBTITLE_TRANSLATION_DRAFT_INCOMPLETE")
         text = _export_caption_text(normalized_format, rows, track=normalized_track)
+        if len(text.encode("utf-8")) > MAX_EXPORT_UTF8_BYTES:
+            return _guarded("Văn bản export vượt giới hạn an toàn; hãy chia nhỏ subtitle project trước khi export.", "WEB_SUBTITLE_EXPORT_TOO_LARGE")
         return envelope(True, "Đã tạo văn bản SRT/VTT từ cues do bạn soạn. Đây không phải output ASR, dịch, TTS hoặc dubbing.", data={
             "project_id": resolved, "format": normalized_format, "track": normalized_track, "cue_count": len(rows),
             "text": text, "notice": "Nội dung chỉ là export text riêng tư; browser phải render escaped plain text, không tạo media hay delivery.",
