@@ -25,6 +25,7 @@ import copyfast_assets
 import copyfast_auth
 import copyfast_content_studio
 import copyfast_document_operations
+import copyfast_document_workspace
 import copyfast_image_operations
 import copyfast_image_studio
 import copyfast_memory
@@ -119,6 +120,10 @@ SUBTITLE_STUDIO_BODY_MAX_BYTES = 128 * 1024
 # Image Creative Studio stores bounded text/UUID references only.  No
 # multipart/image-body route belongs to this API family.
 IMAGE_STUDIO_BODY_MAX_BYTES = 128 * 1024
+# Document & PDF Workspace accepts authored metadata and opaque UUID
+# references only.  Cap the raw body before Pydantic/SQLite handling; this
+# does not cover or enable the separate Document Operations executor.
+DOCUMENT_WORKSPACE_BODY_MAX_BYTES = 128 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -142,6 +147,7 @@ class PromptLibraryBodyLimitMiddleware:
         video_studio_max_bytes: int = VIDEO_STUDIO_BODY_MAX_BYTES,
         subtitle_studio_max_bytes: int = SUBTITLE_STUDIO_BODY_MAX_BYTES,
         image_studio_max_bytes: int = IMAGE_STUDIO_BODY_MAX_BYTES,
+        document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
@@ -152,6 +158,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.video_studio_max_bytes = int(video_studio_max_bytes)
         self.subtitle_studio_max_bytes = int(subtitle_studio_max_bytes)
         self.image_studio_max_bytes = int(image_studio_max_bytes)
+        self.document_workspace_max_bytes = int(document_workspace_max_bytes)
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -167,6 +174,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/video-studio/")
                 or path.startswith("/api/v1/subtitle-studio/")
                 or path.startswith("/api/v1/image-studio/")
+                or path.startswith("/api/v1/document-workspace/")
             )
         )
 
@@ -182,6 +190,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.subtitle_studio_max_bytes
         if path.startswith("/api/v1/image-studio/"):
             return self.image_studio_max_bytes
+        if path.startswith("/api/v1/document-workspace/"):
+            return self.document_workspace_max_bytes
         if path.startswith("/api/v1/media-workspace/"):
             return self.media_max_bytes
         return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
@@ -196,7 +206,11 @@ class PromptLibraryBodyLimitMiddleware:
         is_video_studio = path.startswith("/api/v1/video-studio/")
         is_subtitle_studio = path.startswith("/api/v1/subtitle-studio/")
         is_image_studio = path.startswith("/api/v1/image-studio/")
+        is_document_workspace = path.startswith("/api/v1/document-workspace/")
         is_media = path.startswith("/api/v1/media-workspace/")
+        # This route family is authoring-only.  Include the explicit boundary
+        # even on an early raw-body rejection, before its router can run.
+        boundary = copyfast_document_workspace._boundary() if is_document_workspace else None
         response = JSONResponse(
             envelope(
                 False,
@@ -211,10 +225,13 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_studio
                     else "Dữ liệu Image Creative Studio vượt giới hạn kích thước an toàn."
                     if is_image_studio
+                    else "Dữ liệu Document & PDF Workspace vượt giới hạn kích thước an toàn."
+                    if is_document_workspace
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
                     if is_media
                     else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
                 ),
+                data=boundary,
                 status_name="guarded",
                 error_code=(
                     "WEB_CONTENT_STUDIO_BODY_TOO_LARGE"
@@ -227,6 +244,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_studio
                     else "WEB_IMAGE_STUDIO_BODY_TOO_LARGE"
                     if is_image_studio
+                    else "WEB_DOCUMENT_WORKSPACE_BODY_TOO_LARGE"
+                    if is_document_workspace
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
                     if is_media
                     else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
@@ -320,6 +339,7 @@ app.add_middleware(
     video_studio_max_bytes=VIDEO_STUDIO_BODY_MAX_BYTES,
     subtitle_studio_max_bytes=SUBTITLE_STUDIO_BODY_MAX_BYTES,
     image_studio_max_bytes=IMAGE_STUDIO_BODY_MAX_BYTES,
+    document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
 )
 
 
@@ -475,6 +495,11 @@ async def security_headers(request: Request, call_next):
     # from reaching SQLite unchecked; they do not enable image processing.
     image_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/image-studio/")
     image_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/image-studio/")
+    # Document & PDF Workspace stores only owner-scoped authored text and
+    # opaque reference UUIDs.  Its fixed pre-DB rate bucket does not enable
+    # upload, parsing, OCR, translation, provider/Bot or output execution.
+    document_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/document-workspace/")
+    document_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/document-workspace/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -524,6 +549,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if image_studio_read:
         rate_limit = 120
+    if document_workspace_write:
+        rate_limit = 40
+    if document_workspace_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -550,12 +579,31 @@ async def security_headers(request: Request, call_next):
             else "subtitle-studio-read" if subtitle_studio_read
             else "image-studio-write" if image_studio_write
             else "image-studio-read" if image_studio_read
+            else "document-workspace-write" if document_workspace_write
+            else "document-workspace-read" if document_workspace_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
         window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < RATE_WINDOW_SECONDS]
         if len(window) >= rate_limit:
-            response = JSONResponse(envelope(False, "Vui lòng thử lại sau ít phút.", status_name="guarded", error_code="AUTH_RATE_LIMITED"), status_code=429)
+            is_document_workspace_request = document_workspace_write or document_workspace_read
+            response = JSONResponse(
+                envelope(
+                    False,
+                    "Vui lòng thử lại sau ít phút.",
+                    data=copyfast_document_workspace._boundary() if is_document_workspace_request else None,
+                    status_name="guarded",
+                    error_code="AUTH_RATE_LIMITED",
+                ),
+                status_code=429,
+                headers={
+                    "Cache-Control": "no-store, private",
+                    "X-Content-Type-Options": "nosniff",
+                    "Referrer-Policy": "same-origin",
+                    "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
+                    "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
+                },
+            )
             response.headers["X-Request-ID"] = request_id
             return response
         window.append(now)
@@ -597,7 +645,17 @@ app.add_middleware(
 async def copyfast_http_exception(request: Request, exc: HTTPException):
     if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/") or request.url.path == "/admin" or request.url.path.startswith("/admin/"):
         error = "REQUEST_DENIED" if exc.status_code in {401, 403} else "REQUEST_INVALID"
-        return JSONResponse(envelope(False, str(exc.detail), status_name="failed", error_code=error), status_code=exc.status_code)
+        is_document_workspace = request.url.path.startswith("/api/v1/document-workspace/")
+        return JSONResponse(
+            envelope(
+                False,
+                str(exc.detail),
+                data=copyfast_document_workspace._boundary() if is_document_workspace else None,
+                status_name="failed",
+                error_code=error,
+            ),
+            status_code=exc.status_code,
+        )
     return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
 
@@ -605,7 +663,13 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
 async def copyfast_validation_exception(request: Request, _exc: RequestValidationError):
     if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/"):
         return JSONResponse(
-            envelope(False, "Dữ liệu yêu cầu không hợp lệ", status_name="failed", error_code="REQUEST_INVALID"),
+            envelope(
+                False,
+                "Dữ liệu yêu cầu không hợp lệ",
+                data=copyfast_document_workspace._boundary() if request.url.path.startswith("/api/v1/document-workspace/") else None,
+                status_name="failed",
+                error_code="REQUEST_INVALID",
+            ),
             status_code=422,
         )
     return JSONResponse({"detail": "Dữ liệu yêu cầu không hợp lệ"}, status_code=422)
@@ -630,6 +694,7 @@ app.include_router(copyfast_voice_studio.router)
 app.include_router(copyfast_video_studio.router)
 app.include_router(copyfast_subtitle_workspace.router)
 app.include_router(copyfast_image_studio.router)
+app.include_router(copyfast_document_workspace.router)
 app.include_router(copyfast_support.router)
 
 

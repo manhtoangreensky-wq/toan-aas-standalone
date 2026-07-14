@@ -466,6 +466,11 @@ def _flags() -> dict[str, bool]:
         # safe Asset Vault UUID references, never an image operation or
         # external execution capability.
         "image_studio_enabled": enabled("WEBAPP_IMAGE_STUDIO_ENABLED", True),
+        # Document & PDF Workspace is authoring-only: it holds signed-account
+        # briefs, plan metadata and safe Asset Vault UUID references.  This
+        # flag never enables the separate document executor, OCR/translation,
+        # Bot/provider calls, jobs, wallet, payment or output delivery.
+        "document_workspace_enabled": enabled("WEBAPP_DOCUMENT_WORKSPACE_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

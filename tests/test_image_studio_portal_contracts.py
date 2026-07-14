@@ -169,7 +169,7 @@ def test_image_studio_private_routes_and_api_are_not_in_pwa_shell_cache() -> Non
     assert "private `/image-studio/*` routes" in SERVICE_WORKER
     assert "/api/v1/image-studio" not in shell
     assert '"/image-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v12"' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v13"' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

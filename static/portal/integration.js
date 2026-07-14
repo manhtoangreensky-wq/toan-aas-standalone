@@ -1657,6 +1657,112 @@
     );
   }
 
+  // Document & PDF Workspace holds signed-account briefs and plan metadata
+  // only.  It never turns an Asset Vault UUID into an upload/source read,
+  // OCR/translation/conversion request, job, output or payment action.
+  const DOCUMENT_WORKSPACE_TYPES = new Set(["mixed", "pdf", "office", "text", "image", "scan"]);
+  const DOCUMENT_WORKSPACE_OPERATIONS = new Set([
+    "organize", "split", "merge", "optimize", "image_to_pdf", "pdf_to_images",
+    "pdf_to_word", "ocr", "translate", "convert", "other"
+  ]);
+  const DOCUMENT_WORKSPACE_STATES = new Set(["draft", "review", "approved", "archived"]);
+  function validDocumentWorkspaceId(value) { return validProjectId(value); }
+  function validDocumentPlanId(value) { return validProjectId(value); }
+  function validDocumentWorkspaceRevision(value) { return validMemoryRevision(value); }
+  function documentWorkspaceIdFromPath(path) {
+    const match = /^\/document-workspace\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validDocumentWorkspaceId(id) ? id : "";
+  }
+  function isNativeDocumentWorkspacePath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/document-workspace" || normalized === "/document-workspace/new" || Boolean(documentWorkspaceIdFromPath(normalized));
+  }
+  function documentWorkspaceSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Document & PDF Workspace không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Document & PDF Workspace không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Document & PDF Workspace không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    if (/(?:file|javascript|data):|https?:\/\/|\bwww\./i.test(text)) return "Document & PDF Workspace không nhận URL hoặc scheme tệp; hãy chọn Asset Vault reference đã được kiểm tra quyền sở hữu.";
+    if (/\b(?:(?:provider|engine|telegram|bot|job|worker)[ _-]*(?:id|ref(?:erence)?|token|handle)|storage[ _-]*key)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Document & PDF Workspace không nhận provider, Bot, job, worker hoặc file handle trong metadata.";
+    return "";
+  }
+  function documentWorkspaceLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function documentWorkspaceBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function documentWorkspaceTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = documentWorkspaceLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi document brief hoặc processing plan.");
+    return result;
+  }
+  function documentWorkspaceReference(value, label, allowEmpty) {
+    const id = String(value || "").trim();
+    if (!id && allowEmpty) return "";
+    if (!validDocumentWorkspaceId(id)) throw new Error(label + " phải là Project/Asset Vault UUID hợp lệ do server cấp.");
+    return id;
+  }
+  function documentWorkspacePayload(fields) {
+    const title = documentWorkspaceLine(fields.title, "Tên document brief", 2, 180, false);
+    const documentType = documentWorkspaceLine(fields.document_type || "mixed", "Loại tài liệu", 1, 32, false).toLowerCase();
+    const sourceSummary = documentWorkspaceBody(fields.source_summary, "Scope, nguồn & trang dự kiến", 8000, false);
+    const objective = documentWorkspaceBody(fields.objective, "Mục tiêu, target format & QA checklist", 8000, false);
+    const language = documentWorkspaceLine(fields.language || "vi", "Ngôn ngữ nguồn", 1, 100, false);
+    const targetLanguage = documentWorkspaceLine(fields.target_language, "Ngôn ngữ đích", 1, 100, true);
+    const tags = documentWorkspaceTags(fields.tags);
+    if (!DOCUMENT_WORKSPACE_TYPES.has(documentType)) throw new Error("Loại tài liệu Document Workspace không hợp lệ.");
+    const safety = documentWorkspaceSafetyError(title, documentType, sourceSummary, objective, language, targetLanguage, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, document_type: documentType, source_summary: sourceSummary, objective, language, target_language: targetLanguage, tags, project_id: documentWorkspaceReference(fields.project_id, "Project liên kết", true) || null };
+  }
+  function documentPlanPayload(fields) {
+    const title = documentWorkspaceLine(fields.title, "Tên processing plan", 2, 180, false);
+    const operation = documentWorkspaceLine(fields.operation || "organize", "Intent / planned operation", 1, 32, false).toLowerCase();
+    const instructions = documentWorkspaceBody(fields.instructions, "Scope, pages & kiểm tra dự kiến", 12000, true);
+    const sourceAssetId = documentWorkspaceReference(fields.source_asset_id, "Source Asset Vault", true);
+    const referenceAssetId = documentWorkspaceReference(fields.reference_asset_id, "Reference Asset Vault", true);
+    const tags = documentWorkspaceTags(fields.tags);
+    if (!DOCUMENT_WORKSPACE_OPERATIONS.has(operation)) throw new Error("Intent Document Workspace không hợp lệ.");
+    if (sourceAssetId && sourceAssetId === referenceAssetId) throw new Error("Source Asset Vault và Reference Asset Vault phải khác nhau.");
+    const safety = documentWorkspaceSafetyError(title, operation, instructions, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, operation, instructions, source_asset_id: sourceAssetId || null, reference_asset_id: referenceAssetId || null, tags };
+  }
+  function documentWorkspaceBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : (source.policy && typeof source.policy === "object" ? source.policy : source);
+    return Boolean(
+      boundary.execution === "authoring_only"
+      && boundary.provider_called === false
+      && boundary.ocr_called === false
+      && boundary.translation_called === false
+      && boundary.output_created === false
+      && boundary.job_created === false
+      && boundary.payment_started === false
+      && boundary.wallet_mutated === false
+      && boundary.payment_processed === false
+      && boundary.browser_file_upload === false
+      && boundary.browser_media_url === false
+      && boundary.preview_available === false
+      && boundary.output_delivery === "guarded"
+    );
+  }
+
   // Subtitle & Transcript Workspace is a separate text-authoring boundary.
   // Unlike a media pipeline it accepts no upload/source/provider/job/file
   // reference.  Cue text may legitimately contain an uttered/displayed URL;
@@ -2108,6 +2214,10 @@
     // indicates an image provider, generator, preview, job, wallet or payment
     // capability is available.
     const imageStudioEnabled = Boolean(status.flags && status.flags.image_studio_enabled === true);
+    // Document & PDF Workspace is a harmless authoring-only signed-account
+    // surface. Its flag never enables document operations, OCR, translation,
+    // a provider, Bot bridge, job, wallet, payment or delivery.
+    const documentWorkspaceEnabled = Boolean(status.flags && status.flags.document_workspace_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -2319,6 +2429,18 @@
       "image-direction-archive": Boolean(account && me.csrf_token && imageStudioEnabled),
       "image-direction-restore": Boolean(account && me.csrf_token && imageStudioEnabled),
       "image-direction-restore-version": Boolean(account && me.csrf_token && imageStudioEnabled),
+      "document-workspace-view": Boolean(account && documentWorkspaceEnabled),
+      "document-workspace-refresh": Boolean(account && documentWorkspaceEnabled),
+      "document-workspace-create": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-workspace-update": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-workspace-lifecycle": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-workspace-restore-version": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-plan-create": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-plan-update": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-plan-archive": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-plan-restore": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-plan-restore-version": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "document-plan-reorder": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -2383,6 +2505,7 @@
       videoStudioEnabled,
       subtitleStudioEnabled,
       imageStudioEnabled,
+      documentWorkspaceEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -2470,6 +2593,17 @@
       imageStudioEvents: [],
       imageStudioPolicy: {},
       imageStudioReadState: account && imageStudioEnabled ? "loading" : "guarded",
+      // Document Workspace data is owner-scoped. Clear it before every
+      // session refresh so a failed read can never reveal another account's
+      // brief, plan, Asset Vault metadata or version/event history.
+      documentWorkspaceSummary: {},
+      documentWorkspaces: [],
+      documentWorkspaceDetail: {},
+      documentWorkspaceEstimate: {},
+      documentWorkspaceReferences: {},
+      documentWorkspaceEvents: [],
+      documentWorkspacePolicy: {},
+      documentWorkspaceReadState: account && documentWorkspaceEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -2519,6 +2653,8 @@
         "/subtitle-studio/new": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
+        "/document-workspace": account && documentWorkspaceEnabled ? "processing" : "guarded",
+        "/document-workspace/new": account && documentWorkspaceEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -2530,7 +2666,7 @@
     const currentPath = (context.path || window.location.pathname).split("?")[0];
     if (account && ["/campaigns", "/calendar", "/approvals"].includes(currentPath)) await hydrateCampaignPlans();
     else if (account && campaignPlanIdFromPath(currentPath)) await hydrateCampaignPlanDetail(currentPath);
-    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath))) await hydrateProjects();
+    if (account && (["/projects", "/project-packages", "/dashboard", "/media-workspace", "/media-workspace/new", "/content-studio", "/content-studio/new", "/voice-studio", "/voice-studio/new", "/video-studio", "/video-studio/new", "/subtitle-studio", "/subtitle-studio/new", "/image-studio", "/image-studio/new", "/document-workspace", "/document-workspace/new"].includes(currentPath) || isNativeMediaWorkspacePath(currentPath) || isNativeContentStudioPath(currentPath) || isNativeVoiceStudioPath(currentPath) || isNativeVideoStudioPath(currentPath) || isNativeSubtitleStudioPath(currentPath) || isNativeImageStudioPath(currentPath) || isNativeDocumentWorkspacePath(currentPath))) await hydrateProjects();
     else if (account && projectIdFromPath(currentPath)) await hydrateProjectDetail(currentPath);
     if (account && projectPackageEnabled && currentPath === "/project-packages") await hydrateProjectPackages();
     else if (account && projectPackageEnabled && projectIdFromPath(currentPath)) await hydrateProjectPackages(projectIdFromPath(currentPath));
@@ -2617,6 +2753,17 @@
       merge({
         imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
         imageStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
+    if (account && documentWorkspaceEnabled && ["/document-workspace", "/document-workspace/new"].includes(currentPath)) await hydrateDocumentWorkspace();
+    else if (account && documentWorkspaceEnabled && documentWorkspaceIdFromPath(currentPath)) await hydrateDocumentWorkspaceDetail(documentWorkspaceIdFromPath(currentPath));
+    else if (isNativeDocumentWorkspacePath(currentPath)) {
+      // Never fall back to document-operation records, local form caches or a
+      // prior account projection when the dedicated native route is guarded.
+      merge({
+        documentWorkspaceSummary: {}, documentWorkspaces: [], documentWorkspaceDetail: {}, documentWorkspaceEstimate: {},
+        documentWorkspaceReferences: {}, documentWorkspaceEvents: [], documentWorkspacePolicy: {},
+        documentWorkspaceReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && subtitleStudioEnabled && ["/subtitle-studio", "/subtitle-studio/new"].includes(currentPath)) await hydrateSubtitleStudio();
@@ -3334,6 +3481,91 @@
       merge({
         imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
         imageStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  async function hydrateDocumentWorkspace() {
+    // This is intentionally isolated from legacy document operations. A
+    // failed private read must never repurpose output/history from /documents.
+    try {
+      const results = await Promise.all([
+        api("/document-workspace/summary"),
+        api("/document-workspace/workspaces"),
+        api("/document-workspace/events?limit=50"),
+        api("/document-workspace/references"),
+        api("/document-workspace/policy")
+      ]);
+      const summary = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
+      const references = results[3].data && typeof results[3].data === "object" ? results[3].data : {};
+      const policy = results[4].data && typeof results[4].data === "object" ? results[4].data : {};
+      if (!documentWorkspaceBoundaryIsSafe(summary) || !documentWorkspaceBoundaryIsSafe(references) || !documentWorkspaceBoundaryIsSafe(policy)) {
+        throw new Error("Boundary Document & PDF Workspace chưa được máy chủ xác nhận.");
+      }
+      const workspaces = results[1].data && Array.isArray(results[1].data.items)
+        ? results[1].data.items.filter((item) => item && validDocumentWorkspaceId(item.id) && validDocumentWorkspaceRevision(item.revision)).slice(0, 100) : [];
+      const events = results[2].data && Array.isArray(results[2].data.items)
+        ? results[2].data.items.filter((item) => item && validDocumentWorkspaceId(item.workspace_id) && validDocumentWorkspaceRevision(item.revision)).slice(0, 50) : [];
+      merge({
+        documentWorkspaceSummary: summary, documentWorkspaces: workspaces, documentWorkspaceEvents: events,
+        documentWorkspaceReferences: references, documentWorkspacePolicy: policy,
+        documentWorkspaceDetail: {}, documentWorkspaceEstimate: {}, documentWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/document-workspace": "ready", "/document-workspace/new": "ready" }
+      });
+      return { workspaces, events };
+    } catch (_) {
+      merge({
+        documentWorkspaceSummary: {}, documentWorkspaces: [], documentWorkspaceEvents: [],
+        documentWorkspaceReferences: {}, documentWorkspacePolicy: {}, documentWorkspaceDetail: {}, documentWorkspaceEstimate: {},
+        documentWorkspaceReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/document-workspace": "guarded", "/document-workspace/new": "guarded" }
+      });
+      return { workspaces: [], events: [] };
+    }
+  }
+
+  async function hydrateDocumentWorkspaceDetail(workspaceId) {
+    if (!validDocumentWorkspaceId(workspaceId)) throw new Error("Mã Document Workspace không hợp lệ.");
+    const route = "/document-workspace/" + encodeURIComponent(String(workspaceId));
+    try {
+      const results = await Promise.all([
+        api("/document-workspace/workspaces/" + encodeURIComponent(String(workspaceId))),
+        api("/document-workspace/references"),
+        api("/document-workspace/policy")
+      ]);
+      const data = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
+      const references = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
+      const policy = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const workspace = data.workspace && typeof data.workspace === "object" ? data.workspace : null;
+      if (!documentWorkspaceBoundaryIsSafe(data) || !documentWorkspaceBoundaryIsSafe(references) || !documentWorkspaceBoundaryIsSafe(policy) || !workspace || !validDocumentWorkspaceId(workspace.id) || String(workspace.id) !== String(workspaceId) || !validDocumentWorkspaceRevision(workspace.revision)) {
+        throw new Error("Document workspace không còn khả dụng cho Web account hiện tại.");
+      }
+      const writable = String(workspace.state || workspace.lifecycle || "") === "draft";
+      let estimate = {};
+      if (writable) {
+        const estimateResult = await api("/document-workspace/workspaces/" + encodeURIComponent(String(workspaceId)) + "/estimate");
+        estimate = estimateResult.data && typeof estimateResult.data === "object" ? estimateResult.data : {};
+        if (!documentWorkspaceBoundaryIsSafe(estimate)) throw new Error("Máy chủ chưa xác nhận document plan checklist an toàn.");
+      }
+      const plans = Array.isArray(data.plans)
+        ? data.plans.filter((item) => item && validDocumentPlanId(item.id) && String(item.workspace_id || "") === String(workspaceId) && validDocumentWorkspaceRevision(item.revision)).slice(0, 250) : [];
+      const versions = Array.isArray(data.versions)
+        ? data.versions.filter((item) => item && validDocumentWorkspaceRevision(item.revision)).slice(0, 100) : [];
+      const events = Array.isArray(data.events)
+        ? data.events.filter((item) => item && typeof item === "object" && validDocumentWorkspaceRevision(item.revision)).slice(0, 50) : [];
+      merge({
+        documentWorkspaceDetail: { workspace, plans, versions, events, references: data.references && typeof data.references === "object" ? data.references : {}, estimate },
+        documentWorkspaceEstimate: estimate, documentWorkspaceReferences: references, documentWorkspacePolicy: policy,
+        documentWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: writable ? "ready" : String(workspace.state || workspace.lifecycle || "guarded") }
+      });
+      return { workspace, plans, versions, estimate };
+    } catch (_) {
+      merge({
+        documentWorkspaceSummary: {}, documentWorkspaces: [], documentWorkspaceEvents: [],
+        documentWorkspaceReferences: {}, documentWorkspacePolicy: {}, documentWorkspaceDetail: {}, documentWorkspaceEstimate: {},
+        documentWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
       return null;
     }
@@ -4259,6 +4491,35 @@
     }
   }
 
+  async function documentWorkspaceMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // CSRF is injected by api(), and each write has an account-scoped
+    // idempotency key. No client-side response synthesizes a file/result.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Document & PDF Workspace đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
   async function imageStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
     // All Image Studio writes remain server-authenticated and idempotent.
     // The browser never reconstructs an image, preview, job, payment or
@@ -5079,6 +5340,186 @@
             if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự scene an toàn.");
             await hydrateVideoPlan(planId);
             toast(result.message || "Đã cập nhật thứ tự scene.");
+          }
+        });
+        return;
+      }
+      if (action === "document-workspace-refresh") {
+        const workspaceId = documentWorkspaceIdFromPath(route);
+        if (workspaceId) await hydrateDocumentWorkspaceDetail(workspaceId);
+        else await hydrateDocumentWorkspace();
+        toast("Đã làm mới Document & PDF Workspace của Web account hiện tại.");
+        return;
+      }
+      if (action === "document-workspace-create") {
+        const payload = documentWorkspacePayload(fields);
+        await documentWorkspaceMutation({
+          action, route, scope: "document-workspace:create", path: "/document-workspace/workspaces", payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.workspace && typeof data.workspace === "object" ? data.workspace : null;
+            const workspaceId = receipt && validDocumentWorkspaceId(receipt.id) ? String(receipt.id) : "";
+            if (!documentWorkspaceBoundaryIsSafe(data) || !workspaceId || !validDocumentWorkspaceRevision(receipt.revision)) {
+              throw new Error("Máy chủ chưa trả receipt document brief Web-native hợp lệ.");
+            }
+            await hydrateDocumentWorkspace();
+            toast(result.message || "Đã tạo document brief riêng tư.");
+            window.location.assign(`/document-workspace/${encodeURIComponent(workspaceId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "document-workspace-update") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision) throw new Error("Mã hoặc revision document brief không hợp lệ.");
+        const payload = { ...documentWorkspacePayload(fields), expected_revision: expectedRevision };
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:update`, method: "PATCH",
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}`, payload,
+          onSuccess: async (result) => {
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision document brief an toàn.");
+            await hydrateDocumentWorkspace();
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã lưu revision document brief mới.");
+          }
+        });
+        return;
+      }
+      if (action === "document-workspace-state") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
+        const state = String(fields.__documentWorkspaceState || "").trim().toLowerCase();
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !DOCUMENT_WORKSPACE_STATES.has(state)) throw new Error("Trạng thái hoặc revision document brief không hợp lệ.");
+        const current = base().documentWorkspaceDetail && base().documentWorkspaceDetail.workspace;
+        const currentState = current && String(current.id || "") === workspaceId ? String(current.state || current.lifecycle || "") : "";
+        if (currentState === "archived" && state !== "draft") throw new Error("Document brief đã archive chỉ có thể được khôi phục về Draft.");
+        if (currentState === "approved" && !["draft", "archived"].includes(state)) throw new Error("Document brief đã approved cần về Draft trước khi thay đổi review.");
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:state:${state}`,
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.workspace && typeof result.data.workspace === "object" ? result.data.workspace : null;
+            if (!documentWorkspaceBoundaryIsSafe(result.data) || !receipt || !validDocumentWorkspaceRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái document brief an toàn.");
+            await hydrateDocumentWorkspace();
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã cập nhật trạng thái self-review.");
+          }
+        });
+        return;
+      }
+      if (action === "document-workspace-restore-version") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
+        const targetRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceVersion);
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision document brief không hợp lệ.");
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:restore-version:${targetRevision}`,
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version document brief an toàn.");
+            await hydrateDocumentWorkspace();
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã khôi phục version brief thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "document-plan-create") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision) throw new Error("Mã hoặc revision document brief không hợp lệ.");
+        const payload = { ...documentPlanPayload(fields), expected_revision: expectedRevision };
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:plan:create`,
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans`, payload,
+          onSuccess: async (result) => {
+            const receipt = result.data && result.data.plan && typeof result.data.plan === "object" ? result.data.plan : null;
+            if (!documentWorkspaceBoundaryIsSafe(result.data) || !receipt || !validDocumentPlanId(receipt.id) || String(receipt.workspace_id || "") !== workspaceId) {
+              throw new Error("Máy chủ chưa trả receipt processing plan hợp lệ.");
+            }
+            await hydrateDocumentWorkspace();
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã thêm processing plan riêng tư.");
+          }
+        });
+        return;
+      }
+      if (action === "document-plan-update") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const planId = String(fields.__documentPlanId || "").trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentPlanRevision);
+        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision) throw new Error("Mã hoặc revision processing plan không hợp lệ.");
+        const payload = { ...documentPlanPayload(fields), expected_revision: expectedRevision };
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:plan:${planId}:update`, method: "PATCH",
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/${encodeURIComponent(planId)}`, payload,
+          onSuccess: async (result) => {
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision processing plan an toàn.");
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã lưu revision processing plan mới.");
+          }
+        });
+        return;
+      }
+      if (action === "document-plan-archive" || action === "document-plan-restore") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const planId = String(fields.__documentPlanId || "").trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentPlanRevision);
+        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision) throw new Error("Mã hoặc revision processing plan không hợp lệ.");
+        const operation = action.replace("document-plan-", "");
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:plan:${planId}:${operation}`,
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/${encodeURIComponent(planId)}/${encodeURIComponent(operation)}`,
+          payload: { expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái processing plan an toàn.");
+            await hydrateDocumentWorkspace();
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã cập nhật processing plan.");
+          }
+        });
+        return;
+      }
+      if (action === "document-plan-restore-version") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const planId = String(fields.__documentPlanId || "").trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentPlanRevision);
+        const targetRevision = validDocumentWorkspaceRevision(fields.__documentPlanVersion);
+        if (!validDocumentWorkspaceId(workspaceId) || !validDocumentPlanId(planId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision processing plan không hợp lệ.");
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:plan:${planId}:restore-version:${targetRevision}`,
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/${encodeURIComponent(planId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version processing plan an toàn.");
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã khôi phục version processing plan thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "document-plan-reorder") {
+        const workspaceId = String(fields.__documentWorkspaceId || documentWorkspaceIdFromPath(route)).trim();
+        const expectedRevision = validDocumentWorkspaceRevision(fields.__documentWorkspaceRevision);
+        const planId = String(fields.__documentPlanId || "").trim();
+        const direction = String(fields.__documentPlanDirection || "").trim().toLowerCase();
+        if (!validDocumentWorkspaceId(workspaceId) || !expectedRevision || !validDocumentPlanId(planId) || !["up", "down"].includes(direction)) throw new Error("Yêu cầu sắp xếp processing plan không hợp lệ.");
+        const workspaceDetail = base().documentWorkspaceDetail && typeof base().documentWorkspaceDetail === "object" ? base().documentWorkspaceDetail : {};
+        const activePlans = Array.isArray(workspaceDetail.plans)
+          ? workspaceDetail.plans.filter((item) => item && String(item.workspace_id || "") === workspaceId && String(item.state || "active") === "active" && validDocumentPlanId(item.id))
+          : [];
+        const index = activePlans.findIndex((item) => String(item.id) === planId);
+        const target = direction === "up" ? index - 1 : index + 1;
+        if (index < 0 || target < 0 || target >= activePlans.length) throw new Error("Không thể đổi thứ tự processing plan ở vị trí này.");
+        const planIds = activePlans.map((item) => String(item.id));
+        [planIds[index], planIds[target]] = [planIds[target], planIds[index]];
+        await documentWorkspaceMutation({
+          action, route, scope: `document-workspace:${workspaceId}:plans:reorder`,
+          path: `/document-workspace/workspaces/${encodeURIComponent(workspaceId)}/plans/reorder`, payload: { expected_revision: expectedRevision, plan_ids: planIds },
+          onSuccess: async (result) => {
+            if (!documentWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự processing plan an toàn.");
+            await hydrateDocumentWorkspaceDetail(workspaceId);
+            toast(result.message || "Đã cập nhật thứ tự processing plan.");
           }
         });
         return;
