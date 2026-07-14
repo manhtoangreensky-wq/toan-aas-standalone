@@ -475,6 +475,11 @@ def _flags() -> dict[str, bool]:
         # and revision metadata. This flag never exposes legacy Gemini, a
         # Bot/Core Bridge chat, provider stream, Xu, payment, job or output.
         "chat_workspace_enabled": enabled("WEBAPP_CHAT_WORKSPACE_ENABLED", True),
+        # Analytics Workspace owns only signed-account, manually entered
+        # observations and deterministic local comparisons. This independent
+        # maintenance flag never enables platform data, Bot/provider calls,
+        # wallet, PayOS, jobs, publishing, AI insight or report delivery.
+        "analytics_workspace_enabled": enabled("WEBAPP_ANALYTICS_WORKSPACE_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

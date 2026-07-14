@@ -162,7 +162,7 @@ def test_chat_library_filter_and_pagination_keep_private_state_consistent() -> N
 
 def test_chat_private_cache_and_responsive_ui_contract() -> None:
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v14"' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v15"' in SERVICE_WORKER
     assert "api/v1/chat-workspace" in SERVICE_WORKER
     assert '"/chat"' in SERVICE_WORKER
     assert "private `/chat/*` routes" in SERVICE_WORKER

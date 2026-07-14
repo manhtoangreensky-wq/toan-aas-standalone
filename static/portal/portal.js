@@ -649,6 +649,18 @@
     layout: "chat-workspace", type: "chat-workspace", fields: [], action: "none", status: "ready",
     notes: ["Không nhập URL/path/blob, secret, OTP/CVV, chứng từ thanh toán, provider/job handle hoặc Telegram/Bot ID.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
   });
+  // Analytics Workspace is deliberately separate from the historical Bot
+  // report and Growth AI routes below.  It records only measurements entered
+  // by the signed Web account and deterministic comparisons returned by its
+  // own server-side store; it never claims a social-platform connection.
+  customerPage("/analytics", "Analytics Workspace", "Ghi nhận số liệu tự nhập, so sánh xác định và nhận định do người dùng biên soạn trong Web Workspace riêng tư.", ICONS.reports, {
+    layout: "analytics-workspace", type: "analytics-workspace", fields: [], action: "none", status: "ready",
+    notes: ["Mọi số liệu ở đây do bạn tự nhập. Web không kết nối hoặc xác minh TikTok, Facebook, YouTube, Google Analytics hay bất kỳ nền tảng nào.", "Không có Bot report, AI insight, doanh thu canonical, ví Xu, PayOS, job, publish, file export hoặc provider analytics trong workspace này."]
+  });
+  customerPage("/analytics/new", "Báo cáo thủ công mới", "Tạo một report có khoảng thời gian, metric tự định nghĩa, snapshot quan sát và nhận định do chính bạn ghi.", ICONS.reports, {
+    layout: "analytics-workspace", type: "analytics-workspace", fields: [], action: "none", status: "ready",
+    notes: ["Không nhập URL/đường dẫn, secret, token, OTP/CVV, chứng từ thanh toán, Bot/provider/job handle hoặc dữ liệu nhạy cảm vào metadata.", "Mỗi lần ghi cần signed session, CSRF, ownership, idempotency và optimistic revision do server xác minh."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -1139,6 +1151,17 @@
       chatWorkspaceEvents: Array.isArray(source.chatWorkspaceEvents) ? source.chatWorkspaceEvents.slice(0, 50) : [],
       chatWorkspacePolicy: source.chatWorkspacePolicy && typeof source.chatWorkspacePolicy === "object" ? source.chatWorkspacePolicy : {},
       chatWorkspaceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.chatWorkspaceReadState || "")) ? String(source.chatWorkspaceReadState) : "guarded",
+      // Analytics Workspace is a manual-only owner-scoped projection.  Its
+      // records must never be reconstructed from Bot reports, platform APIs,
+      // browser storage, live counters or a prior signed account's data.
+      analyticsWorkspaceEnabled: source.analyticsWorkspaceEnabled === true,
+      analyticsWorkspaceSummary: source.analyticsWorkspaceSummary && typeof source.analyticsWorkspaceSummary === "object" ? source.analyticsWorkspaceSummary : {},
+      analyticsReports: Array.isArray(source.analyticsReports) ? source.analyticsReports.slice(0, 100) : [],
+      analyticsReportDetail: source.analyticsReportDetail && typeof source.analyticsReportDetail === "object" ? source.analyticsReportDetail : {},
+      analyticsWorkspaceReferences: source.analyticsWorkspaceReferences && typeof source.analyticsWorkspaceReferences === "object" ? source.analyticsWorkspaceReferences : {},
+      analyticsWorkspacePolicy: source.analyticsWorkspacePolicy && typeof source.analyticsWorkspacePolicy === "object" ? source.analyticsWorkspacePolicy : {},
+      analyticsWorkspaceListing: source.analyticsWorkspaceListing && typeof source.analyticsWorkspaceListing === "object" ? source.analyticsWorkspaceListing : {},
+      analyticsWorkspaceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.analyticsWorkspaceReadState || "")) ? String(source.analyticsWorkspaceReadState) : "guarded",
       // Support Desk is a separate Web-native case store.  It never falls
       // back to Bot support/ticket state, and redacted page data must survive
       // render normalization after a successful owner-scoped hydration.
@@ -1333,6 +1356,16 @@
         notes: ["Thread chỉ là authoring metadata Web-owned. Không có model, assistant reply, provider stream, Bot transcript, Xu, PayOS, job, output hoặc delivery.", "Context và lượt ghi chú được owner-check trên server; không được truyền URL/path/blob, secret hoặc external handle."]
       });
     }
+    if (/^\/analytics\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const reportId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/analytics/:id", routePath: normalized, title: "Analytics Workspace", icon: ICONS.reports, section: "Analytics Workspace",
+        description: "Biên tập report thủ công, metric, snapshot, nhận định và version history thuộc signed Web account hiện tại.",
+        status: "processing", access: "member", layout: "analytics-workspace-detail", action: "none", actionLabel: "", fields: [],
+        recordId: reportId,
+        notes: ["Mọi metric và snapshot là dữ liệu do người dùng tự nhập; platform data không được kết nối hoặc xác minh.", "Chênh lệch hiển thị chỉ được tính xác định từ snapshot đã lưu. Không có AI insight, Bot report, revenue canonical, wallet, payment, job, publish, file export hoặc provider analytics."]
+      });
+    }
     if (/^\/subtitle-studio\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
       const transcriptProjectId = normalized.split("/").pop();
       return Object.freeze({
@@ -1503,7 +1536,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/video-studio", "Video Studio", ICONS.video], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/video-studio", "Video Studio", ICONS.video], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/analytics", "Analytics Workspace", ICONS.reports], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1574,6 +1607,7 @@
     if (linkPath === "/content-studio") return matchesRouteFamily(path, "/content-studio");
     if (linkPath === "/image-studio") return matchesRouteFamily(path, "/image-studio");
     if (linkPath === "/document-workspace") return matchesRouteFamily(path, "/document-workspace");
+    if (linkPath === "/analytics") return matchesRouteFamily(path, "/analytics");
     if (linkPath === "/video-studio") return matchesRouteFamily(path, "/video-studio");
     if (linkPath === "/subtitle-studio") return matchesRouteFamily(path, "/subtitle-studio");
     if (linkPath === "/voice-studio") return matchesRouteFamily(path, "/voice-studio");
@@ -1608,7 +1642,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/projects", "/prompt-library", "/content-studio", "/document-workspace", "/video-studio", "/subtitle-studio", "/voice-studio", "/media-workspace", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/document-workspace/") || path.startsWith("/video-studio/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/");
+      return ["/dashboard", "/projects", "/prompt-library", "/content-studio", "/document-workspace", "/video-studio", "/subtitle-studio", "/voice-studio", "/media-workspace", "/analytics", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/document-workspace/") || path.startsWith("/video-studio/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -3867,6 +3901,280 @@
     const canRestore = Boolean(context.capabilities && context.capabilities["chat-thread-restore-version"] === true && writable);
     const history = '<div class="portal-chat-workspace-history"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử thread</h2><p class="portal-card-subtitle">Khôi phục metadata của một version tạo revision mới; context và lượt ghi chú vẫn giữ nguyên.</p></div></div>' + (versions.length ? '<div class="portal-chat-version-list">' + versions.map((item) => '<article><div><strong>v' + safeText(String(item.revision)) + ' · ' + safeText(String(item.title || "Hội thoại")) + '</strong><p>' + safeText(chatWorkspaceModeLabel(item.mode)) + ' · ' + safeText(CHAT_WORKSPACE_STATES[chatWorkspaceState(item.state)] || "Được bảo vệ") + '</p><small>' + safeText(String(item.created_at || "—")) + '</small></div>' + (Number(item.revision) === Number(thread.revision) ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-restore-version" data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-chat-thread-version="' + safeText(String(item.revision)) + '" data-portal-confirm="Khôi phục v' + safeText(String(item.revision)) + ' thành revision mới?"' + (canRestore ? "" : " disabled") + '>Khôi phục v' + safeText(String(item.revision)) + '</button>') + '</article>').join("") + '</div>' : '<p class="portal-form-note">Chưa có history hiển thị.</p>') + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ có nhãn, revision và thời gian; không hiển thị body, path, URL, provider hoặc payment data.</p></div></div>' + (events.length ? '<div class="portal-chat-event-list">' + events.map((item) => '<div><span aria-hidden="true">•</span><span><strong>' + safeText(String(item.action || "chat_workspace_updated").replace(/_/g, " ")) + '</strong><small>v' + safeText(String(item.revision || 1)) + ' · ' + safeText(String(item.created_at || "—")) + '</small></span></div>').join("") + '</div>' : '<p class="portal-form-note">Chưa có hoạt động được ghi nhận.</p>') + '</section></div>';
     return '<article class="portal-page portal-chat-workspace-detail">' + renderHero(page, context) + summary + '<div class="portal-chat-workspace-detail-grid">' + editor + contextCreate + '</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Context library</span><h2 class="portal-card-title">Context cards</h2><p class="portal-card-subtitle">Các card chỉ thuộc thread này và signed Web account hiện tại.</p></div></div>' + contextCards + '</section>' + turnCreate + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Conversation record</span><h2 class="portal-card-title">Lượt do bạn soạn</h2><p class="portal-card-subtitle">Không có assistant output hoặc trạng thái xử lý giả trong timeline.</p></div></div>' + turnList + '</section>' + history + renderChatWorkspaceBoundary() + '</article>';
+  }
+
+  // Analytics Workspace is a manual measurement ledger for the signed Web
+  // account.  Its visualisation is intentionally made from API-returned
+  // observations only—never from a social API, Bot report, live counter or
+  // an inferred AI conclusion.
+  const ANALYTICS_REPORT_STATES = Object.freeze({
+    draft: "Bản nháp", review: "Đang self-review", finalized: "Đã chốt nội bộ", archived: "Đã archive"
+  });
+  const ANALYTICS_REPORT_FILTERS = Object.freeze([
+    ["all", "Tất cả trạng thái"], ["draft", "Bản nháp"], ["review", "Đang self-review"], ["finalized", "Đã chốt nội bộ"], ["archived", "Đã archive"]
+  ]);
+  const ANALYTICS_METRIC_UNITS = Object.freeze([
+    ["count", "Số lượng"], ["percent", "Phần trăm (%)"], ["duration", "Thời lượng"], ["custom", "Đơn vị tự quy ước"]
+  ]);
+  const ANALYTICS_METRIC_DIRECTIONS = Object.freeze([
+    ["up", "Ưu tiên tăng"], ["down", "Ưu tiên giảm"], ["neutral", "Theo dõi trung tính"]
+  ]);
+  const ANALYTICS_FINDING_KINDS = Object.freeze([
+    ["finding", "Nhận định do người viết"], ["decision", "Quyết định nội bộ"], ["action", "Việc cần làm"]
+  ]);
+  function validAnalyticsReportId(value) { return validProjectId(value); }
+  function validAnalyticsMetricId(value) { return validProjectId(value); }
+  function validAnalyticsSnapshotId(value) { return validProjectId(value); }
+  function validAnalyticsFindingId(value) { return validProjectId(value); }
+  function validAnalyticsRevision(value) { return Number.isInteger(Number(value)) && Number(value) >= 1 && Number(value) <= 1000000000 ? Number(value) : 0; }
+  function analyticsReportState(value) {
+    const state = String(value || "").toLowerCase();
+    return Object.prototype.hasOwnProperty.call(ANALYTICS_REPORT_STATES, state) ? state : "guarded";
+  }
+  function analyticsWorkspaceBadge(value) {
+    const state = analyticsReportState(value);
+    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(ANALYTICS_REPORT_STATES[state] || "Được bảo vệ") + '</span>';
+  }
+  function analyticsWorkspaceTags(value) {
+    return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 20) : [];
+  }
+  function renderAnalyticsWorkspaceTags(value) {
+    const tags = analyticsWorkspaceTags(value);
+    return tags.length ? '<div class="portal-analytics-tags">' + tags.map((tag) => '<span>' + safeText(tag) + '</span>').join("") + '</div>' : "";
+  }
+  function analyticsWorkspaceListing(context) {
+    const source = context && context.analyticsWorkspaceListing && typeof context.analyticsWorkspaceListing === "object" ? context.analyticsWorkspaceListing : {};
+    const state = Object.prototype.hasOwnProperty.call(ANALYTICS_REPORT_STATES, String(source.state || "")) || String(source.state || "") === "all" ? String(source.state || "all") : "all";
+    const q = String(source.q || "").replace(/\s+/g, " ").trim().slice(0, 100);
+    const raw = source.pagination && typeof source.pagination === "object" ? source.pagination : {};
+    const integer = (value, fallback, maximum) => {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= maximum ? parsed : fallback;
+    };
+    const total = integer(raw.total, 0, 500);
+    const limit = integer(raw.limit, 50, 100) || 50;
+    const offset = integer(raw.offset, 0, Math.max(0, total));
+    const returned = integer(raw.returned, 0, limit);
+    const next = raw.next_offset === null || raw.next_offset === undefined ? null : integer(raw.next_offset, -1, Math.max(0, total));
+    const previous = raw.previous_offset === null || raw.previous_offset === undefined ? null : integer(raw.previous_offset, -1, Math.max(0, total));
+    return { state, q, pagination: { total, limit, offset, returned, has_more: raw.has_more === true && next !== -1, next_offset: next === -1 ? null : next, previous_offset: previous === -1 ? null : previous } };
+  }
+  function analyticsWorkspaceFilterFields() {
+    return [
+      { name: "state", label: "Trạng thái", control: "select", options: ANALYTICS_REPORT_FILTERS },
+      { name: "q", label: "Tìm trong báo cáo", placeholder: "Tìm theo tên, mục tiêu hoặc tag", maxLength: 100 }
+    ];
+  }
+  function renderAnalyticsWorkspacePagination(listing, enabled) {
+    const pagination = listing && listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    const total = Number(pagination.total || 0);
+    if (!total) return "";
+    const offset = Number(pagination.offset || 0);
+    const returned = Number(pagination.returned || 0);
+    const from = Math.min(total, offset + 1);
+    const to = Math.min(total, offset + Math.max(returned, 0));
+    const previous = pagination.previous_offset === null || pagination.previous_offset === undefined ? null : (Number.isInteger(Number(pagination.previous_offset)) && Number(pagination.previous_offset) >= 0 ? Number(pagination.previous_offset) : null);
+    const next = pagination.next_offset === null || pagination.next_offset === undefined ? null : (Number.isInteger(Number(pagination.next_offset)) && Number(pagination.next_offset) >= 0 ? Number(pagination.next_offset) : null);
+    const disabled = enabled ? "" : " disabled";
+    return '<div class="portal-analytics-pagination" aria-label="Phân trang báo cáo"><span>Hiển thị ' + safeText(String(from)) + '–' + safeText(String(to)) + ' / ' + safeText(String(total)) + ' báo cáo</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-workspace-page" data-portal-route="/analytics" data-analytics-workspace-offset="' + safeText(String(previous === null ? 0 : previous)) + '"' + (previous === null ? " disabled" : disabled) + '>← Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-workspace-page" data-portal-route="/analytics" data-analytics-workspace-offset="' + safeText(String(next === null ? 0 : next)) + '"' + (next === null ? " disabled" : disabled) + '>Sau →</button></div></div>';
+  }
+  function analyticsWorkspaceReferences(context) {
+    return context && context.analyticsWorkspaceReferences && typeof context.analyticsWorkspaceReferences === "object" ? context.analyticsWorkspaceReferences : {};
+  }
+  function analyticsProjectOptions(context) {
+    const refs = analyticsWorkspaceReferences(context);
+    return (Array.isArray(refs.projects) ? refs.projects : []).filter((item) => item && validAnalyticsReportId(item.id)).slice(0, 100)
+      .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
+  }
+  function analyticsCampaignOptions(context) {
+    const refs = analyticsWorkspaceReferences(context);
+    return (Array.isArray(refs.campaign_plans) ? refs.campaign_plans : []).filter((item) => item && validAnalyticsReportId(item.id)).slice(0, 100)
+      .map((item) => ({ value: String(item.id), label: String(item.title || "Campaign Planner riêng tư") }));
+  }
+  function analyticsReportFields(context) {
+    return [
+      { name: "title", label: "Tên báo cáo", placeholder: "Ví dụ: Theo dõi nội dung tuần 3", required: true, minLength: 3, maxLength: 180 },
+      { name: "objective", label: "Mục tiêu đo lường", control: "textarea", placeholder: "Bạn muốn quan sát điều gì, trong phạm vi nào và không suy diễn điều gì?", required: true, minLength: 3, maxLength: 2000, wide: true },
+      { name: "context_label", label: "Nhãn bối cảnh (tùy chọn)", placeholder: "Ví dụ: dữ liệu do đội content tổng hợp", maxLength: 160 },
+      { name: "period_start", label: "Bắt đầu kỳ", type: "date", required: true },
+      { name: "period_end", label: "Kết thúc kỳ", type: "date", required: true },
+      { name: "project_id", label: "Project Web liên kết (tùy chọn)", control: "select", options: analyticsProjectOptions(context), emptyLabel: "Không liên kết Project" },
+      { name: "campaign_plan_id", label: "Campaign Planner liên kết (tùy chọn)", control: "select", options: analyticsCampaignOptions(context), emptyLabel: "Không liên kết Campaign Planner" },
+      { name: "tags", label: "Tags", placeholder: "content, weekly, review", maxLength: 1000 },
+      { name: "summary_note", label: "Ghi chú tổng quan (tùy chọn)", control: "textarea", placeholder: "Ghi rõ điều kiện thu thập thủ công, hạn chế và ngữ cảnh cần nhớ…", maxLength: 6000, wide: true }
+    ];
+  }
+  function analyticsReportValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return {
+      title: String(source.title || ""), objective: String(source.objective || source.objective_excerpt || ""),
+      context_label: String(source.context_label || ""), period_start: String(source.period_start || ""), period_end: String(source.period_end || ""),
+      project_id: String(source.project_id || ""), campaign_plan_id: String(source.campaign_plan_id || ""),
+      tags: analyticsWorkspaceTags(source.tags).join(", "), summary_note: String(source.summary_note || "")
+    };
+  }
+  function analyticsMetricFields() {
+    return [
+      { name: "name", label: "Tên metric", placeholder: "Ví dụ: Lượt xem do bạn ghi nhận", required: true, minLength: 2, maxLength: 120 },
+      { name: "unit", label: "Đơn vị", control: "select", required: true, options: ANALYTICS_METRIC_UNITS },
+      { name: "direction", label: "Chiều theo dõi", control: "select", required: true, options: ANALYTICS_METRIC_DIRECTIONS },
+      { name: "description", label: "Cách hiểu metric (tùy chọn)", control: "textarea", placeholder: "Nêu cách bạn tự ghi nhận và giới hạn diễn giải…", maxLength: 1200, wide: true }
+    ];
+  }
+  function analyticsMetricValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const unit = String(source.unit || "");
+    const direction = String(source.direction || "");
+    return { name: String(source.name || ""), unit: ANALYTICS_METRIC_UNITS.some((item) => item[0] === unit) ? unit : "count", direction: ANALYTICS_METRIC_DIRECTIONS.some((item) => item[0] === direction) ? direction : "neutral", description: String(source.description || "") };
+  }
+  function analyticsSnapshotFields() {
+    return [
+      { name: "observed_on", label: "Ngày quan sát", type: "date", required: true },
+      { name: "value", label: "Giá trị tự nhập", placeholder: "Ví dụ: 1250 hoặc 8.5", required: true, maxLength: 40 },
+      { name: "source_label", label: "Nhãn nguồn tự khai (tùy chọn)", placeholder: "Ví dụ: số bạn ghi từ bảng theo dõi nội bộ", maxLength: 160 },
+      { name: "note", label: "Ghi chú snapshot (tùy chọn)", control: "textarea", placeholder: "Giới hạn, bối cảnh hoặc thao tác ghi nhận cần nhớ…", maxLength: 1800, wide: true }
+    ];
+  }
+  function analyticsSnapshotValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    return { observed_on: String(source.observed_on || ""), value: String(source.value || ""), source_label: String(source.source_label || ""), note: String(source.note || "") };
+  }
+  function analyticsFindingFields() {
+    return [
+      { name: "kind", label: "Loại ghi chú", control: "select", required: true, options: ANALYTICS_FINDING_KINDS },
+      { name: "body", label: "Nội dung do người viết", control: "textarea", placeholder: "Viết nhận định, quyết định hoặc việc cần làm dựa trên số liệu bạn đã tự nhập…", required: true, maxLength: 6000, wide: true }
+    ];
+  }
+  function analyticsFindingValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const kind = String(source.kind || "");
+    return { kind: ANALYTICS_FINDING_KINDS.some((item) => item[0] === kind) ? kind : "finding", body: String(source.body || "") };
+  }
+  function analyticsLabel(options, value, fallback) {
+    const found = options.find((item) => item[0] === String(value || ""));
+    return found ? found[1] : fallback;
+  }
+  function analyticsMetricValueText(value, unit) {
+    const text = value === null || value === undefined || String(value).trim() === "" ? "—" : String(value);
+    return String(unit || "") === "percent" && text !== "—" ? text + "%" : text;
+  }
+  function analyticsDataAttrs(report, metric, snapshot, finding) {
+    let attrs = ' data-analytics-report-id="' + safeText(String(report && report.id || "")) + '" data-analytics-report-revision="' + safeText(String(report && report.revision || "")) + '"';
+    if (metric) attrs += ' data-analytics-metric-id="' + safeText(String(metric.id || "")) + '" data-analytics-metric-revision="' + safeText(String(metric.revision || "")) + '"';
+    if (snapshot) attrs += ' data-analytics-snapshot-id="' + safeText(String(snapshot.id || "")) + '" data-analytics-snapshot-revision="' + safeText(String(snapshot.revision || "")) + '"';
+    if (finding) attrs += ' data-analytics-finding-id="' + safeText(String(finding.id || "")) + '" data-analytics-finding-revision="' + safeText(String(finding.revision || "")) + '"';
+    return attrs;
+  }
+  function renderAnalyticsWorkspaceBoundary() {
+    return '<aside class="portal-card portal-card-pad portal-analytics-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual-only boundary</span><h2 class="portal-card-title">Ghi nhận có trách nhiệm, không giả analytics</h2><p class="portal-card-subtitle">Chỉ lưu metric, snapshot và nhận định do Web account tự nhập. Không kết nối/đọc nền tảng, không tạo AI insight hoặc báo cáo canonical, và không tạo thao tác vận hành bên ngoài.</p></div>' + badge("guarded") + '</div><div class="portal-analytics-guard-list"><span><strong>Platform / live API</strong><em>guarded</em></span><span><strong>Bot / provider report</strong><em>guarded</em></span><span><strong>AI insight / revenue</strong><em>guarded</em></span><span><strong>Wallet / publish / export</strong><em>guarded</em></span></div></aside>';
+  }
+  function renderAnalyticsReportCards(items, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["analytics-workspace-view"] === true);
+    if (!items.length) return renderEmpty("Chưa có báo cáo thủ công", "Tạo report đầu tiên để lưu metric, snapshot và nhận định do bạn tự biên soạn. Workspace không kết nối dữ liệu nền tảng hoặc tạo báo cáo giả.", ICONS.reports);
+    return '<div class="portal-analytics-report-grid">' + items.map((item) => {
+      const id = String(item.id || "");
+      const state = analyticsReportState(item.state);
+      const button = canView && validAnalyticsReportId(id) ? '<a class="portal-button portal-button--quiet" href="/analytics/' + encodeURIComponent(id) + '">Mở report <span aria-hidden="true">→</span></a>' : "";
+      const counts = safeText(String(Number(item.metric_count || 0))) + ' metrics · ' + safeText(String(Number(item.snapshot_count || 0))) + ' snapshot · ' + safeText(String(Number(item.finding_count || 0))) + ' ghi chú';
+      return '<article class="portal-card portal-card-pad portal-analytics-report-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(String(item.period_start || "—")) + ' → ' + safeText(String(item.period_end || "—")) + '</span><h3 class="portal-card-title">' + safeText(String(item.title || "Báo cáo thủ công")) + '</h3><p class="portal-card-subtitle">' + safeText(String(item.objective_excerpt || "Chưa có mục tiêu hiển thị.")) + '</p></div>' + analyticsWorkspaceBadge(state) + '</div><div class="portal-analytics-meta"><span>' + counts + '</span><span>v' + safeText(String(item.revision || 1)) + '</span><span>' + safeText(String(item.updated_at || "—")) + '</span></div>' + renderAnalyticsWorkspaceTags(item.tags) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(state === "finalized" ? "Đã chốt nội bộ · vẫn không phải report canonical" : state === "archived" ? "Đã archive · chỉ đọc" : "Dữ liệu do bạn tự nhập") + '</span>' + button + '</div></article>';
+    }).join("") + '</div>';
+  }
+  function renderAnalyticsWorkspace(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["analytics-workspace-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["analytics-report-create"] === true);
+    const enabled = context.analyticsWorkspaceEnabled === true;
+    if (!canView) {
+      const copy = enabled ? "Đăng nhập bằng signed session để xem các report thủ công thuộc Web account hiện tại." : "Analytics Workspace đang được server giữ ở chế độ guarded. Portal không thay thế bằng live metrics, Bot report, dashboard giả hoặc dữ liệu browser cũ.";
+      return '<article class="portal-page portal-analytics-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("Analytics Workspace đang được bảo vệ", copy, ICONS.reports) + '</section></article>';
+    }
+    const summary = context.analyticsWorkspaceSummary && typeof context.analyticsWorkspaceSummary === "object" ? context.analyticsWorkspaceSummary : {};
+    const reportsSummary = summary.reports && typeof summary.reports === "object" ? summary.reports : {};
+    const listing = analyticsWorkspaceListing(context);
+    const reports = Array.isArray(context.analyticsReports) ? context.analyticsReports.filter((item) => item && validAnalyticsReportId(item.id)).slice(0, 100) : [];
+    const values = analyticsReportValues(transientFormValues(page.routePath || page.path));
+    const intro = '<section class="portal-analytics-intro"><div><span class="portal-section-kicker">Manual measurement workspace</span><h2>Biến ghi chép thủ công thành một báo cáo có ngữ cảnh, history và trách nhiệm rõ ràng.</h2><p>Mỗi con số được bạn tự nhập; mọi chênh lệch được máy chủ tính xác định từ snapshot đã lưu. Không có kết nối nền tảng, dữ liệu live, AI insight hoặc doanh thu canonical.</p></div><dl><div><dt>' + safeText(String(Number(reportsSummary.total || reports.length))) + '</dt><dd>Reports</dd></div><div><dt>' + safeText(String(Number(reportsSummary.review || 0))) + '</dt><dd>Đang review</dd></div><div><dt>' + safeText(String(Number(reportsSummary.finalized || 0))) + '</dt><dd>Đã chốt nội bộ</dd></div></dl></section>';
+    const form = '<section class="portal-card portal-card-pad portal-analytics-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New manual report</span><h2 class="portal-card-title">Tạo khung báo cáo</h2><p class="portal-card-subtitle">Đặt mục tiêu, kỳ quan sát và liên kết Web nội bộ tùy chọn. Server kiểm tra session, CSRF, ownership, idempotency và optimistic revision cho mỗi lần ghi.</p></div>' + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="analytics-report-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(analyticsReportFields(context), canCreate, context, values, "analytics-report-create") + '<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL/path, secret, Bot/provider handle, chứng từ thanh toán hoặc khẳng định dữ liệu nền tảng đã được xác minh.</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + '>Tạo report thủ công</button></div></form></section>';
+    const library = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Report library</span><h2 class="portal-card-title">Báo cáo của bạn</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata/excerpt do signed Web account sở hữu. Tìm, lọc hoặc chuyển trang để mở report và history riêng tư.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-workspace-refresh" data-portal-route="/analytics">Làm mới</button></div><form class="portal-form portal-analytics-filters" data-portal-form data-portal-no-transient data-portal-action="analytics-workspace-filter" data-portal-route="/analytics" novalidate>' + renderFields(analyticsWorkspaceFilterFields(), canView, context, { state: listing.state, q: listing.q }, "analytics-report-filter") + '<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc chỉ tồn tại trong phiên hiển thị, không được lưu sang browser hoặc gửi tới Bot/platform.</span><button class="portal-button portal-button--quiet" type="submit"' + (canView ? "" : " disabled") + '>Áp dụng bộ lọc</button></div></form>' + renderAnalyticsReportCards(reports, context) + renderAnalyticsWorkspacePagination(listing, canView) + '</section>';
+    return '<article class="portal-page portal-analytics-workspace">' + renderHero(page, context) + intro + '<div class="portal-analytics-layout">' + form + renderAnalyticsWorkspaceBoundary() + '</div>' + library + '</article>';
+  }
+  function analyticsReportLifecycleActions(report, state, context, route) {
+    const canLifecycle = Boolean(context.capabilities && context.capabilities["analytics-report-lifecycle"] === true);
+    const attrs = analyticsDataAttrs(report, null, null, null) + ' data-portal-route="' + safeText(route) + '"';
+    const button = (target, label, confirm, extra) => '<button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-report-lifecycle" data-analytics-report-state="' + safeText(target) + '"' + attrs + ' data-portal-confirm="' + safeText(confirm) + '"' + (canLifecycle && (!extra || extra) ? "" : " disabled") + '>' + safeText(label) + '</button>';
+    if (state === "archived") return button("draft", "Khôi phục về Draft", "Khôi phục report về Draft để tiếp tục biên tập dữ liệu thủ công?");
+    if (state === "draft") return button("review", "Bắt đầu self-review", "Chuyển report sang Self-review? Việc này không kết nối platform hoặc tạo báo cáo canonical.") + button("archived", "Archive report", "Archive report? Metric, snapshot, finding và history riêng tư vẫn được giữ.");
+    if (state === "review") return button("draft", "Trả về Draft", "Trả report về Draft để tiếp tục biên tập?") + button("finalized", "Chốt nội bộ", "Đánh dấu report đã chốt nội bộ? Đây không phải báo cáo platform hoặc canonical.") + button("archived", "Archive report", "Archive report? Dữ liệu thủ công và history vẫn được giữ.");
+    return button("draft", "Mở lại Draft", "Trả report về Draft để tiếp tục biên tập?") + button("review", "Quay lại review", "Đưa report trở lại Self-review?") + button("archived", "Archive report", "Archive report? Dữ liệu thủ công và history vẫn được giữ.");
+  }
+  function renderAnalyticsComparison(metric, rawComparison) {
+    const comparison = rawComparison && typeof rawComparison === "object" ? rawComparison : {};
+    const sampleCount = Number.isInteger(Number(comparison.sample_count)) && Number(comparison.sample_count) >= 0 ? Number(comparison.sample_count) : 0;
+    const latest = analyticsMetricValueText(comparison.latest_value, metric.unit);
+    const previous = analyticsMetricValueText(comparison.previous_value, metric.unit);
+    const delta = comparison.delta === null || comparison.delta === undefined ? "Chưa đủ 2 snapshot" : (String(comparison.delta).startsWith("-") ? "Δ " : "Δ +") + analyticsMetricValueText(comparison.delta, metric.unit);
+    const change = comparison.change_percent === null || comparison.change_percent === undefined ? "—" : String(comparison.change_percent) + "%";
+    return '<section class="portal-analytics-comparison"><div><span>Giá trị mới nhất</span><strong>' + safeText(latest) + '</strong></div><div><span>Quan sát trước</span><strong>' + safeText(previous) + '</strong></div><div><span>Chênh lệch máy chủ</span><strong>' + safeText(delta) + '</strong></div><div><span>% thay đổi</span><strong>' + safeText(change) + '</strong></div><p>' + safeText(sampleCount ? ('Tính xác định từ ' + sampleCount + ' snapshot active do bạn tự nhập; không suy luận nguyên nhân.') : 'Chưa có snapshot active để so sánh.') + '</p></section>';
+  }
+  function renderAnalyticsSnapshotCard(snapshot, report, metric, context, route, writable) {
+    const active = String(snapshot.state || "active") === "active";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["analytics-snapshot-update"] === true && writable && active);
+    const canState = Boolean(context.capabilities && context.capabilities["analytics-snapshot-state"] === true && writable);
+    const attrs = analyticsDataAttrs(report, metric, snapshot, null) + ' data-portal-route="' + safeText(route) + '"';
+    const stateButton = '<button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-snapshot-state" data-analytics-snapshot-state="' + (active ? "archived" : "active") + '"' + attrs + ' data-portal-confirm="' + (active ? "Archive snapshot này? History vẫn được giữ." : "Khôi phục snapshot này? Máy chủ sẽ kiểm tra trùng ngày quan sát.") + '"' + (canState ? "" : " disabled") + '>' + (active ? "Archive" : "Khôi phục") + '</button>';
+    return '<article class="portal-analytics-snapshot-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(String(snapshot.observed_on || "—")) + '</span><h4>' + safeText(analyticsMetricValueText(snapshot.value, metric.unit)) + '</h4><p class="portal-card-subtitle">' + safeText(String(snapshot.source_label || "Không có nhãn nguồn tự khai")) + '</p></div><span class="portal-badge" data-status="' + (active ? "ready" : "archived") + '">' + (active ? "Active" : "Archived") + '</span></div>' + (snapshot.note ? '<p class="portal-analytics-snapshot-note">' + safeText(String(snapshot.note)) + '</p>' : '') + '<form class="portal-form portal-analytics-snapshot-form" data-portal-form data-portal-action="analytics-snapshot-update"' + attrs + ' novalidate>' + renderFields(analyticsSnapshotFields(), canUpdate, context, analyticsSnapshotValues(snapshot), 'analytics-snapshot-' + String(snapshot.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Snapshot chỉ là dữ liệu thủ công; không có platform sync hoặc xác minh nguồn.</span><div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + '>Lưu revision</button>' + stateButton + '</div></div></form></article>';
+  }
+  function renderAnalyticsMetricCard(metric, report, detail, context, route, writable) {
+    const active = String(metric.state || "active") === "active";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["analytics-metric-update"] === true && writable && active);
+    const canState = Boolean(context.capabilities && context.capabilities["analytics-metric-state"] === true && writable);
+    const canSnapshotCreate = Boolean(context.capabilities && context.capabilities["analytics-snapshot-create"] === true && writable && active);
+    const attrs = analyticsDataAttrs(report, metric, null, null) + ' data-portal-route="' + safeText(route) + '"';
+    const rawSnapshots = Array.isArray(detail.snapshots) ? detail.snapshots.filter((item) => item && validAnalyticsSnapshotId(item.id) && String(item.metric_id || "") === String(metric.id)).slice(0, 120) : [];
+    const comparison = detail.comparisons && typeof detail.comparisons === "object" ? detail.comparisons[String(metric.id)] : {};
+    const stateButton = '<button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-metric-state" data-analytics-metric-state="' + (active ? "archived" : "active") + '"' + attrs + ' data-portal-confirm="' + (active ? "Archive metric này? Snapshot và history riêng tư vẫn được giữ." : "Khôi phục metric này để tiếp tục ghi nhận snapshot?") + '"' + (canState ? "" : " disabled") + '>' + (active ? "Archive metric" : "Khôi phục metric") + '</button>';
+    const metricForm = '<form class="portal-form portal-analytics-metric-form" data-portal-form data-portal-action="analytics-metric-update"' + attrs + ' novalidate>' + renderFields(analyticsMetricFields(), canUpdate, context, analyticsMetricValues(metric), 'analytics-metric-' + String(metric.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Cách hiểu metric là do bạn định nghĩa; portal không tự suy ra dữ liệu nền tảng.</span><div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + '>Lưu metric</button>' + stateButton + '</div></div></form>';
+    const createSnapshot = '<form class="portal-form portal-analytics-snapshot-create" data-portal-form data-portal-action="analytics-snapshot-create"' + attrs + ' novalidate><div class="portal-card-header"><div><span class="portal-section-kicker">Manual observation</span><h4>Thêm snapshot</h4><p class="portal-card-subtitle">Mỗi metric chỉ có một snapshot active cho một ngày. Máy chủ xác minh kỳ quan sát và chống trùng dữ liệu.</p></div>' + badge(canSnapshotCreate ? "ready" : "guarded") + '</div>' + renderFields(analyticsSnapshotFields(), canSnapshotCreate, context, {}, 'analytics-snapshot-create-' + String(metric.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Không upload CSV, không import URL và không gọi API nền tảng trong phiên bản này.</span><button class="portal-button portal-button--primary" type="submit"' + (canSnapshotCreate ? "" : " disabled") + '>Lưu snapshot</button></div></form>';
+    const snapshotList = rawSnapshots.length ? '<div class="portal-analytics-snapshot-list">' + rawSnapshots.map((item) => renderAnalyticsSnapshotCard(item, report, metric, context, route, writable)).join("") + '</div>' : renderEmpty("Chưa có snapshot", "Ghi nhận một quan sát thủ công trong khoảng thời gian của report để bắt đầu so sánh xác định.", ICONS.reports);
+    const displayedNotice = rawSnapshots.length >= 120 ? '<p class="portal-form-note">Màn hình hiển thị tối đa 120 snapshot gần nhất của metric này để bảo vệ hiệu năng; không suy diễn hoặc thay thế dữ liệu chưa hiển thị.</p>' : "";
+    return '<article class="portal-analytics-metric-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(analyticsLabel(ANALYTICS_METRIC_UNITS, metric.unit, "Đơn vị tự quy ước")) + ' · ' + safeText(analyticsLabel(ANALYTICS_METRIC_DIRECTIONS, metric.direction, "Theo dõi trung tính")) + '</span><h3 class="portal-card-title">' + safeText(String(metric.name || "Metric")) + '</h3><p class="portal-card-subtitle">' + safeText(String(metric.description || "Chưa có cách hiểu metric hiển thị.")) + '</p></div><span class="portal-badge" data-status="' + (active ? "ready" : "archived") + '">' + (active ? "Active" : "Archived") + '</span></div>' + renderAnalyticsComparison(metric, comparison) + metricForm + '<section class="portal-analytics-snapshot-section">' + createSnapshot + '<div class="portal-card-header"><div><span class="portal-section-kicker">Observation history</span><h4>Snapshot đã lưu</h4><p class="portal-card-subtitle">Mỗi row là một giá trị do bạn nhập, có revision và state riêng.</p></div></div>' + snapshotList + displayedNotice + '</section></article>';
+  }
+  function renderAnalyticsFindingCard(finding, report, context, route, writable) {
+    const active = String(finding.state || "active") === "active";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["analytics-finding-update"] === true && writable && active);
+    const canState = Boolean(context.capabilities && context.capabilities["analytics-finding-state"] === true && writable);
+    const attrs = analyticsDataAttrs(report, null, null, finding) + ' data-portal-route="' + safeText(route) + '"';
+    const stateButton = '<button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-finding-state" data-analytics-finding-state="' + (active ? "archived" : "active") + '"' + attrs + ' data-portal-confirm="' + (active ? "Archive ghi chú này? History vẫn được giữ." : "Khôi phục ghi chú này?") + '"' + (canState ? "" : " disabled") + '>' + (active ? "Archive" : "Khôi phục") + '</button>';
+    return '<article class="portal-analytics-finding-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(analyticsLabel(ANALYTICS_FINDING_KINDS, finding.kind, "Ghi chú")) + '</span><h3 class="portal-card-title">Ghi chú #' + safeText(String(finding.ordinal || "—")) + '</h3></div><span class="portal-badge" data-status="' + (active ? "ready" : "archived") + '">' + (active ? "Active" : "Archived") + '</span></div><p class="portal-analytics-finding-body">' + safeText(String(finding.body || "")) + '</p><form class="portal-form portal-analytics-finding-form" data-portal-form data-portal-action="analytics-finding-update"' + attrs + ' novalidate>' + renderFields(analyticsFindingFields(), canUpdate, context, analyticsFindingValues(finding), 'analytics-finding-' + String(finding.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Đây là ghi chú của người dùng; portal không tạo AI insight hay khẳng định quan hệ nhân quả.</span><div class="portal-inline-actions"><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + '>Lưu revision</button>' + stateButton + '</div></div></form></article>';
+  }
+  function renderAnalyticsWorkspaceDetail(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["analytics-workspace-view"] === true);
+    const detail = context.analyticsReportDetail && typeof context.analyticsReportDetail === "object" ? context.analyticsReportDetail : {};
+    const report = detail.report && typeof detail.report === "object" && validAnalyticsReportId(detail.report.id) && String(detail.report.id) === String(page.recordId || "") ? detail.report : null;
+    const route = String(page.routePath || page.path || "/analytics");
+    if (!canView || !report) {
+      const copy = !canView ? "Đăng nhập bằng signed session và chờ feature flag server-side để mở report thuộc Web account hiện tại." : "Server cần xác minh owner trước khi hiển thị report, metric, snapshot, finding và history; portal không dùng cache/browser fallback.";
+      return '<article class="portal-page portal-analytics-workspace-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("Report chưa khả dụng", copy, ICONS.reports) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/analytics">Về Analytics Workspace</a></div></section></article>';
+    }
+    const state = analyticsReportState(report.state);
+    const writable = state === "draft";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["analytics-report-update"] === true && writable);
+    const canMetricCreate = Boolean(context.capabilities && context.capabilities["analytics-metric-create"] === true && writable);
+    const canFindingCreate = Boolean(context.capabilities && context.capabilities["analytics-finding-create"] === true && writable);
+    const metrics = Array.isArray(detail.metrics) ? detail.metrics.filter((item) => item && validAnalyticsMetricId(item.id) && String(item.report_id || "") === String(report.id)).slice(0, 120) : [];
+    const findings = Array.isArray(detail.findings) ? detail.findings.filter((item) => item && validAnalyticsFindingId(item.id) && String(item.report_id || "") === String(report.id)).slice(0, 320) : [];
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && validAnalyticsRevision(item.revision)).slice(0, 100) : [];
+    const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 60) : [];
+    const refs = detail.references && typeof detail.references === "object" ? detail.references : {};
+    const referenceLabels = [refs.project && refs.project.title ? 'Project: ' + String(refs.project.title) : '', refs.campaign_plan && refs.campaign_plan.title ? 'Campaign Planner: ' + String(refs.campaign_plan.title) : ''].filter(Boolean);
+    const summary = '<section class="portal-analytics-detail-summary"><div><span class="portal-section-kicker">' + safeText(String(report.period_start || "—")) + ' → ' + safeText(String(report.period_end || "—")) + '</span><h2>' + safeText(String(report.title || "Báo cáo thủ công")) + '</h2><p>' + safeText(String(report.objective || report.objective_excerpt || "Chưa có mục tiêu hiển thị.")) + '</p>' + renderAnalyticsWorkspaceTags(report.tags) + (referenceLabels.length ? '<div class="portal-analytics-references">' + referenceLabels.map((label) => '<span>' + safeText(label) + '</span>').join("") + '</div>' : '') + '</div><dl><div><dt>Trạng thái</dt><dd>' + safeText(ANALYTICS_REPORT_STATES[state] || "Được bảo vệ") + '</dd></div><div><dt>Revision</dt><dd>v' + safeText(String(report.revision || 1)) + '</dd></div><div><dt>Metric / snapshot</dt><dd>' + safeText(String(Number(report.metric_count || 0))) + ' / ' + safeText(String(Number(report.snapshot_count || 0))) + '</dd></div></dl></section>';
+    const editor = '<section class="portal-card portal-card-pad portal-analytics-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Report editor</span><h2 class="portal-card-title">Kỳ quan sát & ngữ cảnh</h2><p class="portal-card-subtitle">Chỉ Draft có thể biên tập metadata. Mỗi lần lưu tạo revision server-side với optimistic concurrency; thay đổi metric/snapshot không tự ghi đè metadata report.</p></div>' + analyticsWorkspaceBadge(state) + '</div><form class="portal-form" data-portal-form data-portal-action="analytics-report-update" data-portal-route="' + safeText(route) + '"' + analyticsDataAttrs(report, null, null, null) + ' novalidate>' + renderFields(analyticsReportFields(context), canUpdate, context, analyticsReportValues(report), 'analytics-report-editor-' + String(report.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Review, finalized và archived được server khóa cho đến khi đưa về Draft.</span><div class="portal-inline-actions">' + analyticsReportLifecycleActions(report, state, context, route) + '<button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + '>Lưu revision report</button></div></div></form></section>';
+    const metricCreate = '<section class="portal-card portal-card-pad portal-analytics-metric-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Metric definition</span><h2 class="portal-card-title">Thêm metric tự định nghĩa</h2><p class="portal-card-subtitle">Chọn đơn vị và chiều theo dõi để đọc ghi chép nhất quán. Đây không phải schema từ TikTok/Facebook/YouTube hoặc provider.</p></div>' + badge(canMetricCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="analytics-metric-create" data-portal-route="' + safeText(route) + '"' + analyticsDataAttrs(report, null, null, null) + ' novalidate>' + renderFields(analyticsMetricFields(), canMetricCreate, context, {}, 'analytics-metric-create-' + String(report.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Không có import CSV, social API hoặc mapping revenue trong module này.</span><button class="portal-button portal-button--primary" type="submit"' + (canMetricCreate ? "" : " disabled") + '>Thêm metric</button></div></form></section>';
+    const metricList = metrics.length ? '<div class="portal-analytics-metric-grid">' + metrics.map((metric) => renderAnalyticsMetricCard(metric, report, detail, context, route, writable)).join("") + '</div>' : renderEmpty("Chưa có metric", "Thêm một metric để ghi snapshot thủ công theo kỳ quan sát. Portal không tạo số liệu mẫu hoặc chart giả.", ICONS.reports);
+    const findingCreate = '<section class="portal-card portal-card-pad portal-analytics-finding-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Human-authored record</span><h2 class="portal-card-title">Thêm nhận định hoặc hành động</h2><p class="portal-card-subtitle">Ghi rõ điều bạn quan sát, quyết định nội bộ hoặc việc cần làm. Không có đề xuất AI hoặc suy luận tự động.</p></div>' + badge(canFindingCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="analytics-finding-create" data-portal-route="' + safeText(route) + '"' + analyticsDataAttrs(report, null, null, null) + ' novalidate>' + renderFields(analyticsFindingFields(), canFindingCreate, context, {}, 'analytics-finding-create-' + String(report.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Mọi nội dung là do người viết chịu trách nhiệm; không được gán là phân tích xác minh từ nền tảng.</span><button class="portal-button portal-button--primary" type="submit"' + (canFindingCreate ? "" : " disabled") + '>Lưu ghi chú</button></div></form></section>';
+    const findingList = findings.length ? '<div class="portal-analytics-finding-grid">' + findings.map((finding) => renderAnalyticsFindingCard(finding, report, context, route, writable)).join("") + '</div>' : renderEmpty("Chưa có nhận định", "Khi đã có snapshot, bạn có thể ghi nhận observation, decision hoặc action bằng lời của chính mình.", ICONS.reports);
+    const canRestore = Boolean(context.capabilities && context.capabilities["analytics-report-restore-version"] === true && writable);
+    const history = '<div class="portal-analytics-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử metadata report</h2><p class="portal-card-subtitle">Khôi phục metadata của một version sẽ tạo revision mới; metric, snapshot và finding không bị quay lùi hoặc xóa.</p></div></div>' + (versions.length ? '<div class="portal-analytics-version-list">' + versions.map((version) => '<article><div><strong>v' + safeText(String(version.revision)) + ' · ' + safeText(String(version.title || "Báo cáo")) + '</strong><p>' + safeText(ANALYTICS_REPORT_STATES[analyticsReportState(version.state)] || "Được bảo vệ") + ' · metadata only</p><small>' + safeText(String(version.created_at || "—")) + '</small></div>' + (Number(version.revision) === Number(report.revision) ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="analytics-report-restore-version" data-portal-route="' + safeText(route) + '"' + analyticsDataAttrs(report, null, null, null) + ' data-analytics-report-version="' + safeText(String(version.revision)) + '" data-portal-confirm="Khôi phục v' + safeText(String(version.revision)) + ' thành revision metadata mới? Metric, snapshot và finding vẫn giữ nguyên."' + (canRestore ? "" : " disabled") + '>Khôi phục v' + safeText(String(version.revision)) + '</button>') + '</article>').join("") + '</div>' : '<p class="portal-form-note">Chưa có history metadata hiển thị.</p>') + '</section><section class="portal-card portal-card-pad portal-analytics-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị action, loại record, revision và thời gian; không tạo nhận định, không đọc nền tảng và không tiết lộ secret/path/payment data.</p></div></div>' + (events.length ? '<div class="portal-analytics-event-list">' + events.map((event) => '<div><span aria-hidden="true">•</span><span><strong>' + safeText(String(event.action || "analytics_updated").replace(/_/g, " ")) + '</strong><small>' + safeText(String(event.entity_type || "record")) + ' · v' + safeText(String(event.revision || 1)) + ' · ' + safeText(String(event.created_at || "—")) + '</small></span></div>').join("") + '</div>' : '<p class="portal-form-note">Chưa có hoạt động được ghi nhận.</p>') + '</section></div>';
+    return '<article class="portal-page portal-analytics-workspace-detail">' + renderHero(page, context) + summary + '<div class="portal-analytics-detail-grid">' + editor + metricCreate + '</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual metric register</span><h2 class="portal-card-title">Metric & snapshot</h2><p class="portal-card-subtitle">Số liệu chỉ là quan sát tự khai. Chênh lệch mỗi metric được server tính từ các snapshot active đã lưu, không có biểu đồ hoặc inference giả.</p></div></div>' + metricList + '</section><div class="portal-analytics-detail-grid">' + findingCreate + renderAnalyticsWorkspaceBoundary() + '</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Human review record</span><h2 class="portal-card-title">Nhận định, quyết định & hành động</h2><p class="portal-card-subtitle">Các entry là văn bản do người dùng biên soạn; không phải AI insight hoặc claim được nền tảng xác minh.</p></div></div>' + findingList + '</section>' + history + '</article>';
   }
 
   // This is a private authoring surface. It deliberately does not reuse the
@@ -7021,6 +7329,8 @@
       case "image-studio-detail": return renderImageStudioDetail(page, context);
       case "chat-workspace": return renderChatWorkspace(page, context);
       case "chat-workspace-detail": return renderChatWorkspaceDetail(page, context);
+      case "analytics-workspace": return renderAnalyticsWorkspace(page, context);
+      case "analytics-workspace-detail": return renderAnalyticsWorkspaceDetail(page, context);
       case "document-workspace": return renderDocumentWorkspace(page, context);
       case "document-workspace-detail": return renderDocumentWorkspaceDetail(page, context);
       case "video-studio": return renderVideoStudio(page, context);
@@ -7235,10 +7545,11 @@
     const route = source.getAttribute("data-portal-route") || context.path;
     const formId = source.getAttribute("data-portal-form-id") || "";
     const form = source.matches("form") ? source : (source.closest("form") || (formId ? document.getElementById(formId) : null));
+    const analyticsNoNativeValidity = ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["chat-workspace-refresh", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-state", "chat-turn-state", "workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
+    if (form && !analyticsNoNativeValidity && !["chat-workspace-refresh", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-state", "chat-turn-state", "workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -7249,7 +7560,7 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter" && !["chat-workspace-refresh", "chat-thread-create", "chat-thread-update", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-create", "chat-context-update", "chat-context-state", "chat-turn-create", "chat-turn-state", "prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !String(action || "").startsWith("analytics-") && !["chat-workspace-refresh", "chat-thread-create", "chat-thread-update", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-create", "chat-context-update", "chat-context-state", "chat-turn-create", "chat-turn-state", "prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     // Document Workspace mutations deliberately use the same explicit
     // owner-scoped IDs/revisions rendered by the server. Keep them inside
@@ -7283,6 +7594,27 @@
         __chatTurnRevision: source.getAttribute("data-chat-turn-revision") || "",
         __chatTurnState: source.getAttribute("data-chat-turn-state") || "",
         __chatWorkspaceOffset: source.getAttribute("data-chat-workspace-offset") || ""
+      });
+    }
+    // Analytics Workspace IDs/revisions are returned by the owner-scoped API
+    // and copied only into this action request. They are never recovered from
+    // browser storage, a Bot report or a platform connection.
+    if (String(action || "").startsWith("analytics-")) {
+      Object.assign(fields, {
+        __analyticsReportId: source.getAttribute("data-analytics-report-id") || "",
+        __analyticsReportRevision: source.getAttribute("data-analytics-report-revision") || "",
+        __analyticsReportVersion: source.getAttribute("data-analytics-report-version") || "",
+        __analyticsReportState: source.getAttribute("data-analytics-report-state") || "",
+        __analyticsMetricId: source.getAttribute("data-analytics-metric-id") || "",
+        __analyticsMetricRevision: source.getAttribute("data-analytics-metric-revision") || "",
+        __analyticsMetricState: source.getAttribute("data-analytics-metric-state") || "",
+        __analyticsSnapshotId: source.getAttribute("data-analytics-snapshot-id") || "",
+        __analyticsSnapshotRevision: source.getAttribute("data-analytics-snapshot-revision") || "",
+        __analyticsSnapshotState: source.getAttribute("data-analytics-snapshot-state") || "",
+        __analyticsFindingId: source.getAttribute("data-analytics-finding-id") || "",
+        __analyticsFindingRevision: source.getAttribute("data-analytics-finding-revision") || "",
+        __analyticsFindingState: source.getAttribute("data-analytics-finding-state") || "",
+        __analyticsWorkspaceOffset: source.getAttribute("data-analytics-workspace-offset") || ""
       });
     }
     const event = new CustomEvent(ACTION_EVENT, {
