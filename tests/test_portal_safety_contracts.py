@@ -149,8 +149,12 @@ def test_feature_flow_keeps_sanitized_form_values_and_staged_upload_ids() -> Non
     assert "tệp đã vào staging canonical" in PORTAL
 
 
-def test_quote_capable_workflows_can_estimate_directly_and_confirm_only_a_fresh_quote() -> None:
-    assert 'featurePage("/chat"' in PORTAL
+def test_quote_capable_workflows_keep_fresh_receipts_while_chat_workspace_is_guarded() -> None:
+    # `/chat` is now a signed, Web-native authoring workspace. It must never
+    # be silently routed back through the generic quote/confirm Core Bridge.
+    assert 'customerPage("/chat"' in PORTAL
+    assert 'featurePage("/chat"' not in PORTAL
+    assert "Lưu hội thoại, không chạy AI" in PORTAL
     assert 'action: "feature-estimate"' in PORTAL
     assert 'featurePage("/voice/tts"' in PORTAL
     assert "function flowHasFreshEstimate(flow)" in PORTAL
