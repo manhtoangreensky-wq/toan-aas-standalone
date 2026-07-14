@@ -471,6 +471,10 @@ def _flags() -> dict[str, bool]:
         # flag never enables the separate document executor, OCR/translation,
         # Bot/provider calls, jobs, wallet, payment or output delivery.
         "document_workspace_enabled": enabled("WEBAPP_DOCUMENT_WORKSPACE_ENABLED", True),
+        # Conversation Workspace persists only customer-authored local text
+        # and revision metadata. This flag never exposes legacy Gemini, a
+        # Bot/Core Bridge chat, provider stream, Xu, payment, job or output.
+        "chat_workspace_enabled": enabled("WEBAPP_CHAT_WORKSPACE_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the

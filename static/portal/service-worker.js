@@ -6,10 +6,10 @@
    /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
    /api/v1/image-operations, /api/v1/media-workspace, /api/v1/content-studio,
    /api/v1/voice-studio, /api/v1/video-studio, /api/v1/image-studio, /api/v1/subtitle-studio,
-   /api/v1/document-workspace, private `/image-studio/*` routes,
-   private `/document-workspace/*` routes and private delivery URLs are
+   /api/v1/document-workspace, /api/v1/chat-workspace, private `/image-studio/*` routes,
+   private `/document-workspace/*` routes, private `/chat/*` routes and private delivery URLs are
    intentionally never cached. */
-const CACHE_NAME = "toan-aas-portal-shell-v13";
+const CACHE_NAME = "toan-aas-portal-shell-v14";
 const SHELL = Object.freeze([
   "/static/portal/portal.css",
   "/static/portal/portal.js",
@@ -23,7 +23,9 @@ const SHELL_PATHS = new Set(SHELL);
 // returned from Cache Storage after a user signs out or switches accounts.
 const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/" + "api/v1/document-workspace",
-  "/document-workspace"
+  "/document-workspace",
+  "/" + "api/v1/chat-workspace",
+  "/chat"
 ]);
 
 self.addEventListener("install", (event) => {

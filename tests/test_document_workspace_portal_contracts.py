@@ -151,7 +151,7 @@ def test_document_workspace_private_routes_are_explicitly_outside_pwa_cache() ->
     assert "isPrivatePath" in SERVICE_WORKER
     assert "/api/v1/document-workspace" not in shell
     assert '"/document-workspace"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v13"' in SERVICE_WORKER
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v14"' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

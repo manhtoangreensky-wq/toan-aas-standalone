@@ -638,6 +638,17 @@
     layout: "document-workspace", type: "document-workspace", fields: [], action: "none", status: "ready",
     notes: ["Không nhập URL, provider/job/file handle, secret, OTP/CVV, chứng từ thanh toán hoặc dữ liệu nhạy cảm vào metadata.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
   });
+  // `/chat` is deliberately Web-native.  It replaces the earlier generic
+  // Core Bridge estimate form with a private conversation authoring surface;
+  // it does not invoke Chat Pro/Deep, a model, Bot, provider, wallet or job.
+  customerPage("/chat", "AI Chat Workspace", "Tổ chức hội thoại, context card, ghi chú và lịch sử revision trong không gian riêng tư của Web account.", ICONS.chat, {
+    layout: "chat-workspace", type: "chat-workspace", fields: [], action: "none", status: "ready",
+    notes: ["Focus, Deep và Pro là profile biên tập cục bộ, không phải model, quota hoặc quyền Bot.", "Workspace không gọi AI, provider, Bot, ví Xu, PayOS, job, output hay delivery."]
+  });
+  customerPage("/chat/new", "Hội thoại mới", "Tạo một conversation thread có mục tiêu, context và tài liệu tham chiếu nội bộ an toàn.", ICONS.chat, {
+    layout: "chat-workspace", type: "chat-workspace", fields: [], action: "none", status: "ready",
+    notes: ["Không nhập URL/path/blob, secret, OTP/CVV, chứng từ thanh toán, provider/job handle hoặc Telegram/Bot ID.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -745,7 +756,8 @@
   });
 
   // Content, image, video, voice, music, language and document feature routes.
-  featurePage("/chat", "AI Chat", "Chuẩn bị hội thoại có ngữ cảnh; Core Bridge quyết định provider, quota và lưu lịch sử.", ICONS.chat, FIELD_SETS.prompt, ["/tools/chat"], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
+  // `/chat` is registered above as a dedicated Web-native workspace.  Never
+  // reintroduce it here as a generic Core Bridge/provider estimate flow.
   featurePage("/prompt-studio", "Prompt Studio", "Soạn và tinh chỉnh prompt thành bản nháp an toàn trước khi xác nhận.", ICONS.prompt, FIELD_SETS.prompt, ["/prompts"]);
   featurePage("/content/caption", "Caption", "Chuẩn bị caption theo brief, giọng điệu và kênh phát hành.", ICONS.prompt, FIELD_SETS.prompt, ["/caption"]);
   featurePage("/content/hashtag", "Hashtag", "Tạo bản nháp hashtag theo nội dung và nền tảng.", ICONS.prompt, FIELD_SETS.prompt, ["/hashtag"]);
@@ -1116,6 +1128,17 @@
       imageStudioEvents: Array.isArray(source.imageStudioEvents) ? source.imageStudioEvents.slice(0, 50) : [],
       imageStudioPolicy: source.imageStudioPolicy && typeof source.imageStudioPolicy === "object" ? source.imageStudioPolicy : {},
       imageStudioReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageStudioReadState || "")) ? String(source.imageStudioReadState) : "guarded",
+      // AI Chat Workspace is an owner-scoped, no-engine authoring surface.
+      // Retain only bounded API projections across view renders; never refill
+      // this state from a Bot transcript, generic feature bridge or storage.
+      chatWorkspaceEnabled: source.chatWorkspaceEnabled === true,
+      chatWorkspaceSummary: source.chatWorkspaceSummary && typeof source.chatWorkspaceSummary === "object" ? source.chatWorkspaceSummary : {},
+      chatThreads: Array.isArray(source.chatThreads) ? source.chatThreads.slice(0, 100) : [],
+      chatThreadDetail: source.chatThreadDetail && typeof source.chatThreadDetail === "object" ? source.chatThreadDetail : {},
+      chatWorkspaceReferences: source.chatWorkspaceReferences && typeof source.chatWorkspaceReferences === "object" ? source.chatWorkspaceReferences : {},
+      chatWorkspaceEvents: Array.isArray(source.chatWorkspaceEvents) ? source.chatWorkspaceEvents.slice(0, 50) : [],
+      chatWorkspacePolicy: source.chatWorkspacePolicy && typeof source.chatWorkspacePolicy === "object" ? source.chatWorkspacePolicy : {},
+      chatWorkspaceReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.chatWorkspaceReadState || "")) ? String(source.chatWorkspaceReadState) : "guarded",
       // Support Desk is a separate Web-native case store.  It never falls
       // back to Bot support/ticket state, and redacted page data must survive
       // render normalization after a successful owner-scoped hydration.
@@ -1298,6 +1321,16 @@
         status: "processing", access: "member", layout: "document-workspace-detail", action: "none", actionLabel: "", fields: [],
         recordId: workspaceId,
         notes: ["Workspace và plan chỉ là authoring metadata Web-owned. Không upload/đọc source file, OCR, dịch, convert, preview, output, job hoặc delivery.", "Asset Vault reference chỉ là metadata đã qua owner check. Các PDF utility deterministic là route riêng, không nhận lifecycle hay output từ workspace này."]
+      });
+    }
+    if (/^\/chat\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const threadId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/chat/:id", routePath: normalized, title: "AI Chat Workspace", icon: ICONS.chat, section: "AI Chat Workspace",
+        description: "Biên tập thread, context card, lượt ghi chú và version history thuộc signed Web account hiện tại.",
+        status: "processing", access: "member", layout: "chat-workspace-detail", action: "none", actionLabel: "", fields: [],
+        recordId: threadId,
+        notes: ["Thread chỉ là authoring metadata Web-owned. Không có model, assistant reply, provider stream, Bot transcript, Xu, PayOS, job, output hoặc delivery.", "Context và lượt ghi chú được owner-check trên server; không được truyền URL/path/blob, secret hoặc external handle."]
       });
     }
     if (/^\/subtitle-studio\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -1534,7 +1567,7 @@
     if (linkPath === "/features") return matchesRouteFamily(path, "/features");
     if (linkPath === "/tools") return path === "/tools";
     if (linkPath === "/studio") return path === "/studio";
-    if (linkPath === "/chat") return path === "/chat" || path === "/tools/chat";
+    if (linkPath === "/chat") return matchesRouteFamily(path, "/chat") || path === "/tools/chat";
     if (linkPath === "/prompt-studio") return path === "/prompt-studio" || path === "/prompts" || matchesRouteFamily(path, "/content");
     if (linkPath === "/prompt-library") return matchesRouteFamily(path, "/prompt-library");
     if (linkPath === "/media-workspace") return matchesRouteFamily(path, "/media-workspace");
@@ -1705,12 +1738,13 @@
       </div>`;
   }
 
-  function renderFields(fields, enabled, context, fieldValues) {
+  function renderFields(fields, enabled, context, fieldValues, idNamespace) {
     if (!fields || !fields.length) return "";
     const values = fieldValues && typeof fieldValues === "object" ? fieldValues : {};
+    const namespace = String(idNamespace || "").replace(/[^a-zA-Z0-9_-]/g, "-").replace(/^-+|-+$/g, "");
     return `<div class="portal-fields">${fields.map((field) => {
       const wide = field.control === "textarea" || field.type === "file" || field.wide;
-      const id = `portal-field-${safeText(field.name || "input").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
+      const id = `portal-field-${namespace ? `${namespace}-` : ""}${safeText(field.name || "input").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
       const disabled = enabled && field.disabled !== true ? "" : " disabled";
       const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
       const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
@@ -1846,7 +1880,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !context.isAdmin;
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "content-studio", "content-studio-detail", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "content-studio", "content-studio-detail", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-resize", "image-enhance"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -3618,6 +3652,221 @@
       <div class="portal-image-studio-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử artboard</h2><p class="portal-card-subtitle">Khôi phục version tạo revision mới, không xóa history cũ.</p></div></div>${versionMarkup}</section><section class="portal-card portal-card-pad portal-image-studio-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn, revision và thời điểm; không chứa prompt, asset path, URL, provider hay payment data.</p></div></div>${events.length ? `<div class="portal-image-studio-events">${events.map((item) => `<div><span aria-hidden="true">•</span><span><strong>${safeText(imageStudioEventLabel(item.action))}</strong><small>v${safeText(String(item.revision || 1))} · ${safeText(String(item.created_at || "—"))}</small></span></div>`).join("")}</div>` : "<p class=\"portal-form-note\">Chưa có hoạt động được ghi nhận.</p>"}</section></div>
       ${renderImageStudioBoundary()}
     </article>`;
+  }
+
+  // AI Chat Workspace is a private Web-authoring surface. It deliberately
+  // does not reuse historical Bot Chat Pro/Deep state or a provider bridge.
+  const CHAT_WORKSPACE_MODES = Object.freeze([
+    ["focus", "Focus · cấu trúc nhanh"], ["deep", "Deep · đào sâu bối cảnh"], ["pro", "Pro · rà soát kỹ"]
+  ]);
+  const CHAT_WORKSPACE_STATES = Object.freeze({
+    draft: "Bản nháp", review: "Đang self-review", ready: "Sẵn sàng handoff", archived: "Đã archive"
+  });
+  const CHAT_WORKSPACE_FILTERS = Object.freeze([
+    ["all", "Tất cả trạng thái"], ["draft", "Bản nháp"], ["review", "Đang self-review"], ["ready", "Sẵn sàng handoff"], ["archived", "Đã archive"]
+  ]);
+  const CHAT_CONTEXT_KINDS = Object.freeze([
+    ["brief", "Brief"], ["constraint", "Ràng buộc"], ["reference", "Ghi chú tham chiếu"], ["instruction", "Hướng dẫn biên tập"]
+  ]);
+  const CHAT_TURN_KINDS = Object.freeze([
+    ["prompt", "Prompt do bạn soạn"], ["note", "Ghi chú"], ["decision", "Quyết định"]
+  ]);
+  function validChatThreadId(value) { return validProjectId(value); }
+  function validChatContextId(value) { return validProjectId(value); }
+  function validChatTurnId(value) { return validProjectId(value); }
+  function chatWorkspaceState(value) {
+    const state = String(value || "").toLowerCase();
+    return Object.prototype.hasOwnProperty.call(CHAT_WORKSPACE_STATES, state) ? state : "guarded";
+  }
+  function chatWorkspaceBadge(value) {
+    const state = chatWorkspaceState(value);
+    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(CHAT_WORKSPACE_STATES[state] || "Được bảo vệ") + "</span>";
+  }
+  function chatWorkspaceTags(value) {
+    return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 20) : [];
+  }
+  function chatWorkspaceListing(context) {
+    const source = context && context.chatWorkspaceListing && typeof context.chatWorkspaceListing === "object" ? context.chatWorkspaceListing : {};
+    const state = Object.prototype.hasOwnProperty.call(CHAT_WORKSPACE_STATES, String(source.state || "")) || String(source.state || "") === "all" ? String(source.state || "all") : "all";
+    const q = String(source.q || "").replace(/\s+/g, " ").trim().slice(0, 100);
+    const raw = source.pagination && typeof source.pagination === "object" ? source.pagination : {};
+    const integer = (value, fallback, maximum) => {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= maximum ? parsed : fallback;
+    };
+    const total = integer(raw.total, 0, 500);
+    const limit = integer(raw.limit, 50, 100) || 50;
+    const offset = integer(raw.offset, 0, Math.max(0, total));
+    const returned = integer(raw.returned, 0, limit);
+    const next = raw.next_offset === null || raw.next_offset === undefined ? null : integer(raw.next_offset, -1, Math.max(0, total));
+    const previous = raw.previous_offset === null || raw.previous_offset === undefined ? null : integer(raw.previous_offset, -1, Math.max(0, total));
+    return { state, q, pagination: { total, limit, offset, returned, has_more: raw.has_more === true && next !== -1, next_offset: next === -1 ? null : next, previous_offset: previous === -1 ? null : previous } };
+  }
+  function chatWorkspaceFilterFields() {
+    return [
+      { name: "state", label: "Trạng thái", control: "select", options: CHAT_WORKSPACE_FILTERS },
+      { name: "q", label: "Tìm trong thread", placeholder: "Tìm theo tên, mục tiêu hoặc tag", maxLength: 100 }
+    ];
+  }
+  function renderChatWorkspacePagination(listing, enabled) {
+    const pagination = listing && listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    const total = Number(pagination.total || 0);
+    if (!total) return "";
+    const offset = Number(pagination.offset || 0);
+    const returned = Number(pagination.returned || 0);
+    const from = Math.min(total, offset + 1);
+    const to = Math.min(total, offset + Math.max(returned, 0));
+    const previous = pagination.previous_offset === null || pagination.previous_offset === undefined ? null : (Number.isInteger(Number(pagination.previous_offset)) && Number(pagination.previous_offset) >= 0 ? Number(pagination.previous_offset) : null);
+    const next = pagination.next_offset === null || pagination.next_offset === undefined ? null : (Number.isInteger(Number(pagination.next_offset)) && Number(pagination.next_offset) >= 0 ? Number(pagination.next_offset) : null);
+    const disabled = enabled ? "" : " disabled";
+    return '<div class="portal-chat-workspace-pagination" aria-label="Phân trang hội thoại"><span>Hiển thị ' + safeText(String(from)) + '–' + safeText(String(to)) + ' / ' + safeText(String(total)) + ' hội thoại</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-workspace-page" data-portal-route="/chat" data-chat-workspace-offset="' + safeText(String(previous === null ? 0 : previous)) + '"' + (previous === null ? " disabled" : disabled) + '>← Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-workspace-page" data-portal-route="/chat" data-chat-workspace-offset="' + safeText(String(next === null ? 0 : next)) + '"' + (next === null ? " disabled" : disabled) + '>Sau →</button></div></div>';
+  }
+  function renderChatWorkspaceTags(value) {
+    const tags = chatWorkspaceTags(value);
+    return tags.length ? '<div class="portal-chat-workspace-tags">' + tags.map((tag) => "<span>" + safeText(tag) + "</span>").join("") + "</div>" : "";
+  }
+  function chatWorkspaceModeLabel(value) {
+    const item = CHAT_WORKSPACE_MODES.find((entry) => entry[0] === String(value || ""));
+    return item ? item[1] : "Focus · cấu trúc nhanh";
+  }
+  function chatWorkspaceContextLabel(value) {
+    const item = CHAT_CONTEXT_KINDS.find((entry) => entry[0] === String(value || ""));
+    return item ? item[1] : "Context";
+  }
+  function renderChatContextKindOptions(value) {
+    const selected = String(value || "brief");
+    return CHAT_CONTEXT_KINDS.map((entry) => '<option value="' + safeText(entry[0]) + '"' + (entry[0] === selected ? " selected" : "") + '>' + safeText(entry[1]) + "</option>").join("");
+  }
+  function chatWorkspaceTurnLabel(value) {
+    const item = CHAT_TURN_KINDS.find((entry) => entry[0] === String(value || ""));
+    return item ? item[1] : "Ghi chú";
+  }
+  function chatWorkspaceReferences(context) {
+    return context && context.chatWorkspaceReferences && typeof context.chatWorkspaceReferences === "object" ? context.chatWorkspaceReferences : {};
+  }
+  function chatWorkspaceProjectOptions(context) {
+    const refs = chatWorkspaceReferences(context);
+    return (Array.isArray(refs.projects) ? refs.projects : []).filter((item) => item && validChatThreadId(item.id)).slice(0, 100)
+      .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
+  }
+  function chatWorkspaceTemplateOptions(context) {
+    const refs = chatWorkspaceReferences(context);
+    return (Array.isArray(refs.prompt_templates) ? refs.prompt_templates : []).filter((item) => item && validChatThreadId(item.id)).slice(0, 100)
+      .map((item) => ({ value: String(item.id), label: String(item.title || "Prompt template riêng tư") }));
+  }
+  function chatThreadFields(context) {
+    return [
+      { name: "title", label: "Tên hội thoại", placeholder: "Ví dụ: Chuẩn bị nội dung launch tháng 7", required: true, minLength: 3, maxLength: 180 },
+      { name: "mode", label: "Cách biên tập cục bộ", control: "select", required: true, options: CHAT_WORKSPACE_MODES, help: "Chỉ là profile authoring Web, không phải model, quota hoặc Bot mode." },
+      { name: "objective", label: "Mục tiêu", control: "textarea", placeholder: "Kết quả muốn tự soạn, câu hỏi cần làm rõ, phạm vi và điều không được suy diễn…", required: true, minLength: 3, maxLength: 8000, wide: true },
+      { name: "system_context", label: "Ngữ cảnh làm việc (tùy chọn)", control: "textarea", placeholder: "Bối cảnh nội bộ, giọng điệu, giới hạn và tiêu chí tự rà soát…", maxLength: 12000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "launch, brief, review", maxLength: 1000 },
+      { name: "project_id", label: "Project liên kết (tùy chọn)", control: "select", options: chatWorkspaceProjectOptions(context), emptyLabel: "Không liên kết Project" },
+      { name: "prompt_template_id", label: "Prompt Library (tùy chọn)", control: "select", options: chatWorkspaceTemplateOptions(context), emptyLabel: "Không liên kết Prompt Library" },
+      { name: "pinned", label: "Giữ hội thoại nổi bật", type: "checkbox", help: "Chỉ thay đổi thứ tự hiển thị của Web account hiện tại." }
+    ];
+  }
+  function chatThreadValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const mode = String(source.mode || "");
+    return {
+      title: String(source.title || ""), objective: String(source.objective || source.objective_excerpt || ""),
+      mode: CHAT_WORKSPACE_MODES.some((entry) => entry[0] === mode) ? mode : "focus",
+      system_context: String(source.system_context || ""), tags: chatWorkspaceTags(source.tags).join(", "),
+      project_id: String(source.project_id || ""), prompt_template_id: String(source.prompt_template_id || ""),
+      pinned: Boolean(source.pinned)
+    };
+  }
+  function chatContextFields() {
+    return [
+      { name: "kind", label: "Loại context", control: "select", required: true, options: CHAT_CONTEXT_KINDS },
+      { name: "title", label: "Tiêu đề context", placeholder: "Ví dụ: Điều không được khẳng định", required: true, minLength: 2, maxLength: 180 },
+      { name: "body", label: "Nội dung do bạn soạn", control: "textarea", placeholder: "Viết constraint, reference note hoặc chỉ dẫn biên tập…", required: true, maxLength: 12000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "policy, factual", maxLength: 1000 }
+    ];
+  }
+  function chatTurnFields() {
+    return [
+      { name: "kind", label: "Loại lượt", control: "select", required: true, options: CHAT_TURN_KINDS },
+      { name: "body", label: "Prompt / ghi chú do bạn soạn", control: "textarea", placeholder: "Ghi prompt, câu hỏi cần tự rà soát hoặc quyết định của bạn…", required: true, maxLength: 16000, wide: true }
+    ];
+  }
+  function renderChatWorkspaceBoundary() {
+    return '<aside class="portal-card portal-card-pad portal-chat-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Lưu hội thoại, không chạy AI</h2><p class="portal-card-subtitle">Thread, context card và lượt ghi chú là dữ liệu do bạn biên tập. Không gọi model, tạo assistant reply, stream provider, Bot transcript, Xu, PayOS, job, file output hoặc delivery.</p></div>' + badge("guarded") + '</div><div class="portal-chat-workspace-guard-list"><span><strong>Model / assistant</strong><em>guarded</em></span><span><strong>Provider / Bot</strong><em>guarded</em></span><span><strong>Wallet / payment</strong><em>guarded</em></span><span><strong>Job / output</strong><em>guarded</em></span></div></aside>';
+  }
+  function renderChatWorkspaceCards(items, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["chat-workspace-view"] === true);
+    if (!items.length) return renderEmpty("Chưa có hội thoại", "Tạo thread đầu tiên để gom mục tiêu, context và các ghi chú do bạn tự soạn. Workspace không tạo câu trả lời AI thay bạn.", ICONS.chat);
+    return '<div class="portal-chat-workspace-grid">' + items.map((item) => {
+      const id = String(item.id || "");
+      const state = chatWorkspaceState(item.state);
+      const href = "/chat/" + encodeURIComponent(id);
+      const button = canView && validChatThreadId(id) ? '<a class="portal-button portal-button--quiet" href="' + safeText(href) + '">Mở thread <span aria-hidden="true">→</span></a>' : "";
+      const counts = safeText(String(Number(item.context_count || 0))) + " context · " + safeText(String(Number(item.turn_count || 0))) + " lượt";
+      return '<article class="portal-card portal-card-pad portal-chat-thread-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(chatWorkspaceModeLabel(item.mode)) + (item.pinned ? " · Đã ghim" : "") + '</span><h3 class="portal-card-title">' + safeText(String(item.title || "Hội thoại")) + '</h3><p class="portal-card-subtitle">' + safeText(String(item.objective_excerpt || "Chưa có mục tiêu hiển thị.")) + '</p></div>' + chatWorkspaceBadge(state) + '</div><div class="portal-chat-workspace-meta"><span>' + counts + '</span><span>v' + safeText(String(item.revision || 1)) + '</span><span>' + safeText(String(item.updated_at || "—")) + '</span></div>' + renderChatWorkspaceTags(item.tags) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(state === "ready" ? "Sẵn sàng handoff · AI execution vẫn guarded" : state === "archived" ? "Đã archive · chỉ đọc" : "Đang biên tập") + '</span>' + button + '</div></article>';
+    }).join("") + "</div>";
+  }
+  function renderChatWorkspace(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["chat-workspace-view"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["chat-thread-create"] === true);
+    const enabled = context.chatWorkspaceEnabled === true;
+    if (!canView) {
+      const copy = enabled ? "Đăng nhập bằng signed session để xem thread thuộc Web account hiện tại." : "AI Chat Workspace đang được server giữ ở chế độ guarded. Web không gọi model hoặc bridge thay thế.";
+      return '<article class="portal-page portal-chat-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("AI Chat Workspace đang được bảo vệ", copy, ICONS.chat) + '</section></article>';
+    }
+    const summary = context.chatWorkspaceSummary && typeof context.chatWorkspaceSummary === "object" ? context.chatWorkspaceSummary : {};
+    const counts = summary.threads && typeof summary.threads === "object" ? summary.threads : {};
+    const listing = chatWorkspaceListing(context);
+    const threads = Array.isArray(context.chatThreads) ? context.chatThreads.filter((item) => item && validChatThreadId(item.id)).slice(0, 50) : [];
+    const values = chatThreadValues(transientFormValues(page.routePath || page.path));
+    const intro = '<section class="portal-chat-workspace-intro"><div><span class="portal-section-kicker">Web-native conversation vault</span><h2>Giữ bối cảnh rõ ràng trước khi bất kỳ engine nào được cấp riêng.</h2><p>Soạn thread, context card, prompt và quyết định bằng signed Web account. Mọi nội dung là private authoring, không phải output AI.</p></div><dl><div><dt>' + safeText(String(Number(counts.total || threads.length))) + '</dt><dd>Threads</dd></div><div><dt>' + safeText(String(Number(counts.review || 0))) + '</dt><dd>Đang review</dd></div><div><dt>' + safeText(String(Number(counts.ready || 0))) + '</dt><dd>Sẵn sàng handoff</dd></div></dl></section>';
+    const form = '<section class="portal-card portal-card-pad portal-chat-workspace-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New conversation</span><h2 class="portal-card-title">Tạo thread riêng tư</h2><p class="portal-card-subtitle">Server kiểm tra session, CSRF, owner reference, idempotency và revision. Lưu thread không gọi AI hoặc trừ Xu.</p></div>' + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="chat-thread-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(chatThreadFields(context), canCreate, context, values, "chat-thread-create") + '<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL/path/blob, secret, OTP/CVV, payment reference, Bot/provider/job handle.</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + '>Tạo thread</button></div></form></section>';
+    const library = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Conversation library</span><h2 class="portal-card-title">Threads của bạn</h2><p class="portal-card-subtitle">Danh sách chỉ có metadata/excerpt thuộc signed Web account. Tìm, lọc hoặc chuyển trang để mở mọi thread trong giới hạn lưu trữ của account.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-workspace-refresh" data-portal-route="/chat">Làm mới</button></div><form class="portal-form portal-chat-workspace-filters" data-portal-form data-portal-no-transient data-portal-action="chat-workspace-filter" data-portal-route="/chat" novalidate>' + renderFields(chatWorkspaceFilterFields(), canView, context, { state: listing.state, q: listing.q }, "chat-thread-filter") + '<div class="portal-form-footer"><span class="portal-form-note">Tìm kiếm không lưu vào browser, không nhận URL/path/secret hoặc handle external.</span><button class="portal-button portal-button--quiet" type="submit"' + (canView ? "" : " disabled") + '>Áp dụng bộ lọc</button></div></form>' + renderChatWorkspaceCards(threads, context) + renderChatWorkspacePagination(listing, canView) + '</section>';
+    return '<article class="portal-page portal-chat-workspace">' + renderHero(page, context) + intro + '<div class="portal-chat-workspace-layout">' + form + renderChatWorkspaceBoundary() + '</div>' + library + '</article>';
+  }
+  function chatWorkspaceLifecycleActions(thread, state, context, route) {
+    const canLifecycle = Boolean(context.capabilities && context.capabilities["chat-thread-lifecycle"] === true);
+    const attrs = ' data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-portal-route="' + safeText(route) + '"';
+    if (state === "archived") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="Khôi phục thread về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + '>Khôi phục về Draft</button>';
+    if (state === "draft") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="review"' + attrs + ' data-portal-confirm="Bắt đầu self-review thread này?"' + (canLifecycle ? "" : " disabled") + '>Bắt đầu self-review</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="Archive thread? Context, ghi chú và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + '>Archive thread</button>';
+    if (state === "review") return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="Trả thread về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + '>Trả về Draft</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="ready"' + attrs + ' data-portal-confirm="Đánh dấu sẵn sàng handoff? AI execution vẫn không được gọi."' + (canLifecycle ? "" : " disabled") + '>Đánh dấu sẵn sàng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="Archive thread? Context, ghi chú và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + '>Archive thread</button>';
+    return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="draft"' + attrs + ' data-portal-confirm="Trả thread về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + '>Trả về Draft</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-lifecycle" data-chat-thread-state="archived"' + attrs + ' data-portal-confirm="Archive thread? Context, ghi chú và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + '>Archive thread</button>';
+  }
+  function renderChatWorkspaceDetail(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["chat-workspace-view"] === true);
+    const detail = context.chatThreadDetail && typeof context.chatThreadDetail === "object" ? context.chatThreadDetail : {};
+    const thread = detail.thread && typeof detail.thread === "object" ? detail.thread : null;
+    const route = String(page.routePath || page.path || "/chat");
+    if (!canView || !thread || !validChatThreadId(thread.id)) return '<article class="portal-page portal-chat-workspace-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("Thread chưa khả dụng", "Thread có thể không thuộc account hiện tại, đã bị guard hoặc chưa được tải. Portal không dùng cache/browser fallback.", ICONS.chat) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/chat">Về AI Chat Workspace</a></div></section></article>';
+    const state = chatWorkspaceState(thread.state);
+    const writable = state === "draft";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["chat-thread-update"] === true && writable);
+    const canContextCreate = Boolean(context.capabilities && context.capabilities["chat-context-create"] === true && writable);
+    const canTurnCreate = Boolean(context.capabilities && context.capabilities["chat-turn-create"] === true && writable);
+    const contexts = Array.isArray(detail.contexts) ? detail.contexts.filter((item) => item && validChatContextId(item.id)).slice(0, 80) : [];
+    const turns = Array.isArray(detail.turns) ? detail.turns.filter((item) => item && validChatTurnId(item.id)).slice(0, 400) : [];
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 50) : [];
+    const summary = '<section class="portal-chat-thread-summary"><div><span class="portal-section-kicker">' + safeText(chatWorkspaceModeLabel(thread.mode)) + (thread.pinned ? " · Đã ghim" : "") + '</span><h2>' + safeText(String(thread.title || "Hội thoại")) + '</h2><p>' + safeText(String(thread.objective || thread.objective_excerpt || "Chưa có mục tiêu hiển thị.")) + '</p>' + renderChatWorkspaceTags(thread.tags) + '</div><dl><div><dt>Trạng thái</dt><dd>' + safeText(CHAT_WORKSPACE_STATES[state] || "Được bảo vệ") + '</dd></div><div><dt>Revision</dt><dd>v' + safeText(String(thread.revision || 1)) + '</dd></div><div><dt>Context / lượt</dt><dd>' + safeText(String(Number(thread.context_count || 0))) + ' / ' + safeText(String(Number(thread.turn_count || 0))) + '</dd></div></dl></section>';
+    const editor = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Thread editor</span><h2 class="portal-card-title">Mục tiêu & bối cảnh</h2><p class="portal-card-subtitle">Chỉ Draft có thể biên tập. Mỗi lần lưu tạo revision server-side với optimistic concurrency.</p></div>' + chatWorkspaceBadge(state) + '</div><form class="portal-form" data-portal-form data-portal-action="chat-thread-update" data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" novalidate>' + renderFields(chatThreadFields(context), canUpdate, context, chatThreadValues(thread), "chat-thread-editor-" + String(thread.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Review, ready và archived được server khóa cho đến khi trả về Draft.</span><div class="portal-inline-actions">' + chatWorkspaceLifecycleActions(thread, state, context, route) + '<button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + '>Lưu revision</button></div></div></form></section>';
+    const contextCreate = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Private context cards</span><h2 class="portal-card-title">Thêm bối cảnh có cấu trúc</h2><p class="portal-card-subtitle">Context được ghi bởi bạn, không phải system prompt hoặc dữ liệu model. Không có URL, file/path/blob hay external handle.</p></div>' + badge(canContextCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="chat-context-create" data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" novalidate>' + renderFields(chatContextFields(), canContextCreate, context, {}, "chat-context-create-" + String(thread.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Lưu context không gọi AI hoặc truyền content đến provider.</span><button class="portal-button portal-button--primary" type="submit"' + (canContextCreate ? "" : " disabled") + '>Thêm context</button></div></form></section>';
+    const contextCards = contexts.length ? '<div class="portal-chat-context-grid">' + contexts.map((item) => {
+      const active = String(item.state) === "active";
+      const canUpdateContext = Boolean(context.capabilities && context.capabilities["chat-context-update"] === true && writable && active);
+      const canState = Boolean(context.capabilities && context.capabilities["chat-context-state"] === true && writable);
+      const attrs = ' data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-chat-context-id="' + safeText(String(item.id)) + '" data-chat-context-revision="' + safeText(String(item.revision)) + '"';
+      return '<article class="portal-chat-context-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(chatWorkspaceContextLabel(item.kind)) + '</span><h3 class="portal-card-title">' + safeText(String(item.title || "Context")) + '</h3></div><span class="portal-badge" data-status="' + (active ? "ready" : "archived") + '">' + (active ? "Active" : "Archived") + '</span></div><p>' + safeText(String(item.body || "")) + '</p>' + renderChatWorkspaceTags(item.tags) + '<form class="portal-form portal-chat-context-edit" data-portal-form data-portal-action="chat-context-update"' + attrs + ' novalidate><label class="portal-field"><span>Loại context</span><select class="portal-select" name="kind"' + (canUpdateContext ? "" : " disabled") + '>' + renderChatContextKindOptions(item.kind) + '</select></label><input class="portal-input" name="title" value="' + safeText(String(item.title || "")) + '" maxlength="180" required' + (canUpdateContext ? "" : " disabled") + '><textarea class="portal-textarea" name="body" maxlength="12000" required' + (canUpdateContext ? "" : " disabled") + '>' + safeText(String(item.body || "")) + '</textarea><input class="portal-input" name="tags" value="' + safeText(chatWorkspaceTags(item.tags).join(", ")) + '" maxlength="1000"' + (canUpdateContext ? "" : " disabled") + '><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="submit"' + (canUpdateContext ? "" : " disabled") + '>Lưu context</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-context-state" data-chat-context-state="' + (active ? "archived" : "active") + '"' + attrs + ' data-portal-confirm="' + (active ? "Archive context card?" : "Khôi phục context card?") + '"' + (canState ? "" : " disabled") + '>' + (active ? "Archive" : "Khôi phục") + '</button></div></form></article>';
+    }).join("") + '</div>' : renderEmpty("Chưa có context card", "Thêm brief, ràng buộc, reference note hoặc hướng dẫn biên tập cho thread này.", ICONS.chat);
+    const turnCreate = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Human-authored turns</span><h2 class="portal-card-title">Prompt, note & quyết định</h2><p class="portal-card-subtitle">Chỉ có nội dung bạn tự soạn. UI không có assistant role, typing state hoặc AI reply giả.</p></div>' + badge(canTurnCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="chat-turn-create" data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" novalidate>' + renderFields(chatTurnFields(), canTurnCreate, context, {}, "chat-turn-create-" + String(thread.id)) + '<div class="portal-form-footer"><span class="portal-form-note">Lưu lượt không gửi prompt tới model hoặc provider.</span><button class="portal-button portal-button--primary" type="submit"' + (canTurnCreate ? "" : " disabled") + '>Thêm lượt</button></div></form></section>';
+    const turnList = turns.length ? '<div class="portal-chat-turn-list">' + turns.map((item) => {
+      const active = String(item.state) === "active";
+      const canState = Boolean(context.capabilities && context.capabilities["chat-turn-state"] === true && writable);
+      const attrs = ' data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-chat-turn-id="' + safeText(String(item.id)) + '" data-chat-turn-revision="' + safeText(String(item.revision)) + '"';
+      return '<article class="portal-chat-turn' + (active ? "" : " is-archived") + '"><div><span class="portal-section-kicker">' + safeText(chatWorkspaceTurnLabel(item.kind)) + ' · lượt ' + safeText(String(item.ordinal || "—")) + '</span><p>' + safeText(String(item.body || "")) + '</p><small>v' + safeText(String(item.revision || 1)) + ' · ' + safeText(String(item.updated_at || item.created_at || "—")) + '</small></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-turn-state" data-chat-turn-state="' + (active ? "archived" : "active") + '"' + attrs + ' data-portal-confirm="' + (active ? "Archive lượt ghi chú này?" : "Khôi phục lượt ghi chú này?") + '"' + (canState ? "" : " disabled") + '>' + (active ? "Archive" : "Khôi phục") + '</button></article>';
+    }).join("") + '</div>' : renderEmpty("Chưa có lượt ghi chú", "Thêm prompt, note hoặc decision do bạn tự soạn. Không có phản hồi assistant ở workspace này.", ICONS.chat);
+    const canRestore = Boolean(context.capabilities && context.capabilities["chat-thread-restore-version"] === true && writable);
+    const history = '<div class="portal-chat-workspace-history"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử thread</h2><p class="portal-card-subtitle">Khôi phục metadata của một version tạo revision mới; context và lượt ghi chú vẫn giữ nguyên.</p></div></div>' + (versions.length ? '<div class="portal-chat-version-list">' + versions.map((item) => '<article><div><strong>v' + safeText(String(item.revision)) + ' · ' + safeText(String(item.title || "Hội thoại")) + '</strong><p>' + safeText(chatWorkspaceModeLabel(item.mode)) + ' · ' + safeText(CHAT_WORKSPACE_STATES[chatWorkspaceState(item.state)] || "Được bảo vệ") + '</p><small>' + safeText(String(item.created_at || "—")) + '</small></div>' + (Number(item.revision) === Number(thread.revision) ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="chat-thread-restore-version" data-portal-route="' + safeText(route) + '" data-chat-thread-id="' + safeText(String(thread.id)) + '" data-chat-thread-revision="' + safeText(String(thread.revision)) + '" data-chat-thread-version="' + safeText(String(item.revision)) + '" data-portal-confirm="Khôi phục v' + safeText(String(item.revision)) + ' thành revision mới?"' + (canRestore ? "" : " disabled") + '>Khôi phục v' + safeText(String(item.revision)) + '</button>') + '</article>').join("") + '</div>' : '<p class="portal-form-note">Chưa có history hiển thị.</p>') + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ có nhãn, revision và thời gian; không hiển thị body, path, URL, provider hoặc payment data.</p></div></div>' + (events.length ? '<div class="portal-chat-event-list">' + events.map((item) => '<div><span aria-hidden="true">•</span><span><strong>' + safeText(String(item.action || "chat_workspace_updated").replace(/_/g, " ")) + '</strong><small>v' + safeText(String(item.revision || 1)) + ' · ' + safeText(String(item.created_at || "—")) + '</small></span></div>').join("") + '</div>' : '<p class="portal-form-note">Chưa có hoạt động được ghi nhận.</p>') + '</section></div>';
+    return '<article class="portal-page portal-chat-workspace-detail">' + renderHero(page, context) + summary + '<div class="portal-chat-workspace-detail-grid">' + editor + contextCreate + '</div><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Context library</span><h2 class="portal-card-title">Context cards</h2><p class="portal-card-subtitle">Các card chỉ thuộc thread này và signed Web account hiện tại.</p></div></div>' + contextCards + '</section>' + turnCreate + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Conversation record</span><h2 class="portal-card-title">Lượt do bạn soạn</h2><p class="portal-card-subtitle">Không có assistant output hoặc trạng thái xử lý giả trong timeline.</p></div></div>' + turnList + '</section>' + history + renderChatWorkspaceBoundary() + '</article>';
   }
 
   // This is a private authoring surface. It deliberately does not reuse the
@@ -6770,6 +7019,8 @@
       case "content-studio-detail": return renderContentStudioDetail(page, context);
       case "image-studio": return renderImageStudio(page, context);
       case "image-studio-detail": return renderImageStudioDetail(page, context);
+      case "chat-workspace": return renderChatWorkspace(page, context);
+      case "chat-workspace-detail": return renderChatWorkspaceDetail(page, context);
       case "document-workspace": return renderDocumentWorkspace(page, context);
       case "document-workspace-detail": return renderDocumentWorkspaceDetail(page, context);
       case "video-studio": return renderVideoStudio(page, context);
@@ -6830,6 +7081,7 @@
 
   function rememberTransientFormDraft(form) {
     if (!form) return;
+    if (form.hasAttribute("data-portal-no-transient")) return;
     const route = form.getAttribute("data-portal-route") || "";
     if (!route) return;
     const values = {};
@@ -6986,7 +7238,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
+    if (form && !["chat-workspace-refresh", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-state", "chat-turn-state", "workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -6997,7 +7249,7 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !["chat-workspace-refresh", "chat-thread-create", "chat-thread-update", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-create", "chat-context-update", "chat-context-state", "chat-turn-create", "chat-turn-state", "prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
     // Document Workspace mutations deliberately use the same explicit
     // owner-scoped IDs/revisions rendered by the server. Keep them inside
@@ -7013,6 +7265,24 @@
         __documentPlanRevision: source.getAttribute("data-document-plan-revision") || "",
         __documentPlanVersion: source.getAttribute("data-document-plan-version") || "",
         __documentPlanDirection: source.getAttribute("data-document-plan-direction") || ""
+      });
+    }
+    // Chat Workspace IDs/revisions are rendered only from the signed API.
+    // Keep them in the action payload: the server remains the authority and
+    // no browser transcript, generic bridge state or storage is consulted.
+    if (String(action || "").startsWith("chat-")) {
+      Object.assign(fields, {
+        __chatThreadId: source.getAttribute("data-chat-thread-id") || "",
+        __chatThreadRevision: source.getAttribute("data-chat-thread-revision") || "",
+        __chatThreadVersion: source.getAttribute("data-chat-thread-version") || "",
+        __chatThreadState: source.getAttribute("data-chat-thread-state") || "",
+        __chatContextId: source.getAttribute("data-chat-context-id") || "",
+        __chatContextRevision: source.getAttribute("data-chat-context-revision") || "",
+        __chatContextState: source.getAttribute("data-chat-context-state") || "",
+        __chatTurnId: source.getAttribute("data-chat-turn-id") || "",
+        __chatTurnRevision: source.getAttribute("data-chat-turn-revision") || "",
+        __chatTurnState: source.getAttribute("data-chat-turn-state") || "",
+        __chatWorkspaceOffset: source.getAttribute("data-chat-workspace-offset") || ""
       });
     }
     const event = new CustomEvent(ACTION_EVENT, {
