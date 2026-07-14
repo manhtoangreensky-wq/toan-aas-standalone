@@ -83,7 +83,7 @@
   let telegramLinkResumeProbeInFlight = false;
   const submissions = new Map();
   const FEATURE_BY_PATH = {
-    "/chat": "chat", "/prompt-studio": "prompt_studio", "/content/caption": "caption",
+    "/prompt-studio": "prompt_studio", "/content/caption": "caption",
     "/content/hashtag": "hashtag", "/content/hook": "hook", "/content/script": "script",
     "/content/storyboard": "storyboard", "/content/pack": "content_pack",
     "/image": "image_create", "/image/create": "image_create", "/image/resize": "image_resize", "/image/upscale": "image_upscale", "/image/transform": "image_transform", "/image/remove-background": "image_remove_background", "/image/history": "image_history",
@@ -1657,6 +1657,113 @@
     );
   }
 
+  // AI Chat Workspace is a deliberately no-engine authoring boundary. It
+  // accepts only owner-scoped conversation metadata and human-authored text;
+  // no model/system prompt/provider/Bot/wallet/job field exists in this API.
+  const CHAT_WORKSPACE_MODES = new Set(["focus", "deep", "pro"]);
+  const CHAT_WORKSPACE_STATES = new Set(["draft", "review", "ready", "archived"]);
+  const CHAT_CONTEXT_KINDS = new Set(["brief", "constraint", "reference", "instruction"]);
+  const CHAT_TURN_KINDS = new Set(["prompt", "note", "decision"]);
+  function validChatWorkspaceId(value) { return validProjectId(value); }
+  function validChatWorkspaceRevision(value) { return validMemoryRevision(value); }
+  function chatThreadIdFromPath(path) {
+    const match = /^\/chat\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validChatWorkspaceId(id) ? id : "";
+  }
+  function isNativeChatWorkspacePath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/chat" || normalized === "/chat/new" || Boolean(chatThreadIdFromPath(normalized));
+  }
+  function chatWorkspaceSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "AI Chat Workspace không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "AI Chat Workspace không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "AI Chat Workspace không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    if (/(?:file|javascript|data|blob):|https?:\/\/|\bwww\.|(?:^|[\s\"'(])(?:[A-Za-z]:[\\/]|\\\\[^\s]+|\/[^\s]+)/i.test(text)) return "AI Chat Workspace không nhận URL, path, blob hoặc scheme tệp.";
+    if (/\b(?:(?:provider|engine|telegram|bot|job|worker|media|asset|file)[ _-]*(?:id|ref(?:erence)?|token|handle)|storage[ _-]*key)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "AI Chat Workspace không nhận provider, Bot, job, worker hoặc file handle trong metadata.";
+    return "";
+  }
+  function chatWorkspaceLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    return text;
+  }
+  function chatWorkspaceBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function chatWorkspaceTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = chatWorkspaceLine(candidate, "Tag", 1, 48, false);
+      const fingerprint = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(fingerprint)) { seen.add(fingerprint); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi thread hoặc context card.");
+    return result;
+  }
+  function chatWorkspaceReference(value, label) {
+    const id = String(value || "").trim();
+    if (!id) return null;
+    if (!validChatWorkspaceId(id)) throw new Error(label + " phải là UUID owner-scoped do server cấp.");
+    return id;
+  }
+  function chatThreadPayload(fields) {
+    const title = chatWorkspaceLine(fields.title, "Tên hội thoại", 3, 180, false);
+    const objective = chatWorkspaceBody(fields.objective, "Mục tiêu", 8000, false);
+    const mode = chatWorkspaceLine(fields.mode || "focus", "Cách biên tập", 1, 24, false).toLowerCase();
+    const systemContext = chatWorkspaceBody(fields.system_context, "Ngữ cảnh làm việc", 12000, true);
+    const tags = chatWorkspaceTags(fields.tags);
+    if (!CHAT_WORKSPACE_MODES.has(mode)) throw new Error("Cách biên tập cục bộ không hợp lệ.");
+    const safety = chatWorkspaceSafetyError(title, objective, systemContext, mode, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, objective, mode, system_context: systemContext, tags, project_id: chatWorkspaceReference(fields.project_id, "Project liên kết"), prompt_template_id: chatWorkspaceReference(fields.prompt_template_id, "Prompt Library liên kết"), pinned: fields.pinned === true || fields.pinned === "true" };
+  }
+  function chatContextPayload(fields) {
+    const kind = chatWorkspaceLine(fields.kind || "brief", "Loại context", 1, 32, false).toLowerCase();
+    const title = chatWorkspaceLine(fields.title, "Tiêu đề context", 2, 180, false);
+    const body = chatWorkspaceBody(fields.body, "Nội dung context", 12000, false);
+    const tags = chatWorkspaceTags(fields.tags);
+    if (!CHAT_CONTEXT_KINDS.has(kind)) throw new Error("Loại context không hợp lệ.");
+    const safety = chatWorkspaceSafetyError(kind, title, body, ...tags);
+    if (safety) throw new Error(safety);
+    return { kind, title, body, tags };
+  }
+  function chatTurnPayload(fields) {
+    const kind = chatWorkspaceLine(fields.kind || "prompt", "Loại lượt", 1, 32, false).toLowerCase();
+    const body = chatWorkspaceBody(fields.body, "Nội dung lượt", 16000, false);
+    if (!CHAT_TURN_KINDS.has(kind)) throw new Error("Loại lượt không hợp lệ.");
+    const safety = chatWorkspaceSafetyError(kind, body);
+    if (safety) throw new Error(safety);
+    return { kind, body };
+  }
+  function chatWorkspaceBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : (source.policy && typeof source.policy === "object" ? source.policy : source);
+    return Boolean(
+      boundary.execution === "authoring_only"
+      && boundary.ai_execution_available === false
+      && boundary.provider_called === false
+      && boundary.bot_called === false
+      && boundary.assistant_reply_created === false
+      && boundary.output_created === false
+      && boundary.job_created === false
+      && boundary.payment_started === false
+      && boundary.wallet_mutated === false
+      && boundary.payment_processed === false
+      && boundary.browser_file_upload === false
+      && boundary.browser_media_url === false
+      && boundary.stream_available === false
+      && boundary.output_delivery === "guarded"
+    );
+  }
+
   // Document & PDF Workspace holds signed-account briefs and plan metadata
   // only.  It never turns an Asset Vault UUID into an upload/source read,
   // OCR/translation/conversion request, job, output or payment action.
@@ -2218,6 +2325,10 @@
     // surface. Its flag never enables document operations, OCR, translation,
     // a provider, Bot bridge, job, wallet, payment or delivery.
     const documentWorkspaceEnabled = Boolean(status.flags && status.flags.document_workspace_enabled === true);
+    // AI Chat Workspace only unlocks signed Web-owned authoring records. It
+    // never enables a model, assistant reply, provider stream, Bot mode,
+    // wallet, payment, job, output or delivery path.
+    const chatWorkspaceEnabled = Boolean(status.flags && status.flags.chat_workspace_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -2441,6 +2552,19 @@
       "document-plan-restore": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
       "document-plan-restore-version": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
       "document-plan-reorder": Boolean(account && me.csrf_token && documentWorkspaceEnabled),
+      "chat-workspace-view": Boolean(account && chatWorkspaceEnabled),
+      "chat-workspace-refresh": Boolean(account && chatWorkspaceEnabled),
+      "chat-workspace-filter": Boolean(account && chatWorkspaceEnabled),
+      "chat-workspace-page": Boolean(account && chatWorkspaceEnabled),
+      "chat-thread-create": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-thread-update": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-thread-lifecycle": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-thread-restore-version": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-context-create": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-context-update": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-context-state": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-turn-create": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "chat-turn-state": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -2506,6 +2630,7 @@
       subtitleStudioEnabled,
       imageStudioEnabled,
       documentWorkspaceEnabled,
+      chatWorkspaceEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -2604,6 +2729,17 @@
       documentWorkspaceEvents: [],
       documentWorkspacePolicy: {},
       documentWorkspaceReadState: account && documentWorkspaceEnabled ? "loading" : "guarded",
+      // Chat threads can contain private authoring text. Clear every signed
+      // projection first so a session change or failed read cannot reveal a
+      // prior account's context card, turn or version history.
+      chatWorkspaceSummary: {},
+      chatThreads: [],
+      chatThreadDetail: {},
+      chatWorkspaceReferences: {},
+      chatWorkspaceEvents: [],
+      chatWorkspacePolicy: {},
+      chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      chatWorkspaceReadState: account && chatWorkspaceEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -2655,6 +2791,8 @@
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
         "/document-workspace": account && documentWorkspaceEnabled ? "processing" : "guarded",
         "/document-workspace/new": account && documentWorkspaceEnabled ? "processing" : "guarded",
+        "/chat": account && chatWorkspaceEnabled ? "processing" : "guarded",
+        "/chat/new": account && chatWorkspaceEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -2764,6 +2902,16 @@
         documentWorkspaceSummary: {}, documentWorkspaces: [], documentWorkspaceDetail: {}, documentWorkspaceEstimate: {},
         documentWorkspaceReferences: {}, documentWorkspaceEvents: [], documentWorkspacePolicy: {},
         documentWorkspaceReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
+    if (account && chatWorkspaceEnabled && ["/chat", "/chat/new"].includes(currentPath)) await hydrateChatWorkspace();
+    else if (account && chatWorkspaceEnabled && chatThreadIdFromPath(currentPath)) await hydrateChatThread(chatThreadIdFromPath(currentPath));
+    else if (isNativeChatWorkspacePath(currentPath)) {
+      // Never fall back to the old generic `/chat` feature estimate, Bot
+      // transcript or a browser draft when this native route is guarded.
+      merge({
+        chatWorkspaceSummary: {}, chatThreads: [], chatThreadDetail: {}, chatWorkspaceReferences: {}, chatWorkspaceEvents: [], chatWorkspacePolicy: {}, chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+        chatWorkspaceReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && subtitleStudioEnabled && ["/subtitle-studio", "/subtitle-studio/new"].includes(currentPath)) await hydrateSubtitleStudio();
@@ -3481,6 +3629,141 @@
       merge({
         imageStudioSummary: {}, imageArtboards: [], imageArtboardDetail: {}, imageArtboardEstimate: {}, imageStudioReferences: {}, imageStudioEvents: [], imageStudioPolicy: {},
         imageStudioReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  const CHAT_WORKSPACE_LIST_LIMIT = 50;
+  // A slow prior filter/page read must never overwrite the most recent
+  // signed library view. This is an in-memory ordering guard only; no
+  // conversation metadata or query is persisted in the browser.
+  let chatWorkspaceHydrationEpoch = 0;
+  function chatWorkspaceListOptions(overrides) {
+    const saved = base().chatWorkspaceListing && typeof base().chatWorkspaceListing === "object" ? base().chatWorkspaceListing : {};
+    const requested = { ...saved, ...(overrides && typeof overrides === "object" ? overrides : {}) };
+    const state = CHAT_WORKSPACE_STATES.has(String(requested.state || "")) || String(requested.state || "") === "all"
+      ? String(requested.state || "all") : "all";
+    const q = String(requested.q || "").replace(/\s+/g, " ").trim();
+    const safeQuery = q.length <= 100 && !chatWorkspaceSafetyError(q) ? q : "";
+    const savedPagination = saved.pagination && typeof saved.pagination === "object" ? saved.pagination : {};
+    const rawOffset = Number(Object.prototype.hasOwnProperty.call(requested, "offset") ? requested.offset : savedPagination.offset);
+    const offset = Number.isInteger(rawOffset) && rawOffset > 0 ? rawOffset : 0;
+    return { state, q: safeQuery, offset, limit: CHAT_WORKSPACE_LIST_LIMIT };
+  }
+  function chatWorkspaceThreadsPath(options) {
+    const query = [
+      "state=" + encodeURIComponent(options.state),
+      "limit=" + encodeURIComponent(String(options.limit)),
+      "offset=" + encodeURIComponent(String(options.offset))
+    ];
+    if (options.q) query.push("q=" + encodeURIComponent(options.q));
+    return "/chat-workspace/threads?" + query.join("&");
+  }
+  function chatWorkspacePagination(data, requested) {
+    const raw = data && data.pagination && typeof data.pagination === "object" ? data.pagination : {};
+    const number = (value, fallback, maximum) => {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= maximum ? parsed : fallback;
+    };
+    const total = number(raw.total, 0, 500);
+    const limit = number(raw.limit, requested.limit, 100) || requested.limit;
+    const offset = number(raw.offset, requested.offset, Math.max(0, total));
+    const returned = number(raw.returned, 0, limit);
+    const nextOffset = raw.next_offset === null || raw.next_offset === undefined ? null : number(raw.next_offset, -1, Math.max(0, total));
+    const previousOffset = raw.previous_offset === null || raw.previous_offset === undefined ? null : number(raw.previous_offset, -1, Math.max(0, total));
+    return {
+      total, limit, offset, returned,
+      has_more: raw.has_more === true && nextOffset !== -1,
+      next_offset: nextOffset === -1 ? null : nextOffset,
+      previous_offset: previousOffset === -1 ? null : previousOffset
+    };
+  }
+
+  async function hydrateChatWorkspace(overrides) {
+    // Only use the signed, Web-native API. A failed read must never be
+    // replaced by a legacy Bot transcript, generic feature bridge or cache.
+    const requestEpoch = ++chatWorkspaceHydrationEpoch;
+    try {
+      const requested = chatWorkspaceListOptions(overrides);
+      const results = await Promise.all([
+        api("/chat-workspace/summary"),
+        api(chatWorkspaceThreadsPath(requested)),
+        api("/chat-workspace/events?limit=50"),
+        api("/chat-workspace/references"),
+        api("/chat-workspace/policy")
+      ]);
+      const summary = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
+      const threadListing = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
+      const eventListing = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const references = results[3].data && typeof results[3].data === "object" ? results[3].data : {};
+      const policy = results[4].data && typeof results[4].data === "object" ? results[4].data : {};
+      if (!chatWorkspaceBoundaryIsSafe(summary) || !chatWorkspaceBoundaryIsSafe(threadListing) || !chatWorkspaceBoundaryIsSafe(eventListing) || !chatWorkspaceBoundaryIsSafe(references) || !chatWorkspaceBoundaryIsSafe(policy)) throw new Error("Boundary AI Chat Workspace chưa được máy chủ xác nhận.");
+      const threads = Array.isArray(threadListing.items)
+        ? threadListing.items.filter((item) => item && validChatWorkspaceId(item.id) && validChatWorkspaceRevision(item.revision) && CHAT_WORKSPACE_MODES.has(String(item.mode || "")) && CHAT_WORKSPACE_STATES.has(String(item.state || ""))).slice(0, CHAT_WORKSPACE_LIST_LIMIT)
+        : [];
+      const events = Array.isArray(eventListing.items)
+        ? eventListing.items.filter((item) => item && validChatWorkspaceId(item.thread_id) && validChatWorkspaceRevision(item.revision)).slice(0, 50)
+        : [];
+      const serverFilter = threadListing.filter && typeof threadListing.filter === "object" ? threadListing.filter : {};
+      const serverQuery = String(serverFilter.q || "").replace(/\s+/g, " ").trim();
+      if (serverQuery.length > 100 || chatWorkspaceSafetyError(serverQuery)) throw new Error("Máy chủ trả bộ lọc Chat Workspace không an toàn.");
+      const pagination = chatWorkspacePagination(threadListing, requested);
+      if (pagination.returned !== threads.length) throw new Error("Máy chủ trả số lượng hội thoại không nhất quán.");
+      const listing = {
+        state: CHAT_WORKSPACE_STATES.has(String(serverFilter.state || "")) || String(serverFilter.state || "") === "all" ? String(serverFilter.state || "all") : requested.state,
+        q: serverQuery,
+        pagination
+      };
+      if (requestEpoch !== chatWorkspaceHydrationEpoch) return { stale: true };
+      merge({
+        chatWorkspaceSummary: summary, chatThreads: threads, chatWorkspaceEvents: events,
+        chatWorkspaceReferences: references, chatWorkspacePolicy: policy, chatWorkspaceListing: listing,
+        chatThreadDetail: {}, chatWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/chat": "ready", "/chat/new": "ready" }
+      });
+      return { threads, events, listing };
+    } catch (_) {
+      if (requestEpoch !== chatWorkspaceHydrationEpoch) return { stale: true };
+      merge({
+        chatWorkspaceSummary: {}, chatThreads: [], chatWorkspaceEvents: [], chatWorkspaceReferences: {}, chatWorkspacePolicy: {}, chatThreadDetail: {},
+        chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: CHAT_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+        chatWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), "/chat": "guarded", "/chat/new": "guarded" }
+      });
+      return { threads: [], events: [], listing: {} };
+    }
+  }
+
+  async function hydrateChatThread(threadId) {
+    if (!validChatWorkspaceId(threadId)) throw new Error("Mã hội thoại AI Chat Workspace không hợp lệ.");
+    const route = "/chat/" + encodeURIComponent(String(threadId));
+    try {
+      const results = await Promise.all([
+        api("/chat-workspace/threads/" + encodeURIComponent(String(threadId))),
+        api("/chat-workspace/references"),
+        api("/chat-workspace/policy")
+      ]);
+      const data = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
+      const references = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
+      const policy = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const thread = data.thread && typeof data.thread === "object" ? data.thread : null;
+      if (!chatWorkspaceBoundaryIsSafe(data) || !chatWorkspaceBoundaryIsSafe(references) || !chatWorkspaceBoundaryIsSafe(policy) || !thread || !validChatWorkspaceId(thread.id) || String(thread.id) !== String(threadId) || !validChatWorkspaceRevision(thread.revision) || !CHAT_WORKSPACE_MODES.has(String(thread.mode || "")) || !CHAT_WORKSPACE_STATES.has(String(thread.state || ""))) {
+        throw new Error("Thread AI Chat Workspace không còn khả dụng cho Web account hiện tại.");
+      }
+      const contexts = Array.isArray(data.contexts) ? data.contexts.filter((item) => item && validChatWorkspaceId(item.id) && String(item.thread_id || "") === String(threadId) && validChatWorkspaceRevision(item.revision) && CHAT_CONTEXT_KINDS.has(String(item.kind || "")) && ["active", "archived"].includes(String(item.state || ""))).slice(0, 80) : [];
+      const turns = Array.isArray(data.turns) ? data.turns.filter((item) => item && validChatWorkspaceId(item.id) && String(item.thread_id || "") === String(threadId) && validChatWorkspaceRevision(item.revision) && CHAT_TURN_KINDS.has(String(item.kind || "")) && ["active", "archived"].includes(String(item.state || ""))).slice(0, 99) : [];
+      const versions = Array.isArray(data.versions) ? data.versions.filter((item) => item && validChatWorkspaceRevision(item.revision) && CHAT_WORKSPACE_MODES.has(String(item.mode || "")) && CHAT_WORKSPACE_STATES.has(String(item.state || ""))).slice(0, 100) : [];
+      const events = Array.isArray(data.events) ? data.events.filter((item) => item && typeof item === "object" && validChatWorkspaceRevision(item.revision)).slice(0, 50) : [];
+      merge({
+        chatThreadDetail: { thread, contexts, turns, versions, events, references: data.references && typeof data.references === "object" ? data.references : {} },
+        chatWorkspaceReferences: references, chatWorkspacePolicy: policy, chatWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: String(thread.state || "guarded") === "draft" ? "ready" : String(thread.state || "guarded") }
+      });
+      return { thread, contexts, turns, versions };
+    } catch (_) {
+      merge({
+        chatWorkspaceSummary: {}, chatThreads: [], chatWorkspaceEvents: [], chatWorkspaceReferences: {}, chatWorkspacePolicy: {}, chatThreadDetail: {}, chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: CHAT_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+        chatWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
       return null;
     }
@@ -4520,6 +4803,36 @@
     }
   }
 
+  async function chatWorkspaceMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // Each Chat write is CSRF-protected and idempotent. Receipts are redacted,
+    // so successful mutations must hydrate from the signed server API instead
+    // of patching or retaining private prompt/context text in the browser.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác AI Chat Workspace đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
   async function imageStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
     // All Image Studio writes remain server-authenticated and idempotent.
     // The browser never reconstructs an image, preview, job, payment or
@@ -5340,6 +5653,191 @@
             if (!videoStudioBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận thứ tự scene an toàn.");
             await hydrateVideoPlan(planId);
             toast(result.message || "Đã cập nhật thứ tự scene.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-workspace-refresh") {
+        const threadId = chatThreadIdFromPath(route);
+        if (threadId) await hydrateChatThread(threadId);
+        else await hydrateChatWorkspace();
+        toast("Đã làm mới AI Chat Workspace của Web account hiện tại.");
+        return;
+      }
+      if (action === "chat-workspace-filter") {
+        const state = String(fields.state || "all").trim().toLowerCase();
+        const q = String(fields.q || "").replace(/\s+/g, " ").trim();
+        if (!(state === "all" || CHAT_WORKSPACE_STATES.has(state))) throw new Error("Bộ lọc trạng thái hội thoại không hợp lệ.");
+        if (q.length > 100 || chatWorkspaceSafetyError(q)) throw new Error("Từ khoá tìm kiếm hội thoại không hợp lệ.");
+        const result = await hydrateChatWorkspace({ state, q, offset: 0 });
+        if (!result || result.stale) return;
+        const total = result && result.listing && result.listing.pagination ? Number(result.listing.pagination.total || 0) : 0;
+        toast(total ? `Đã áp dụng bộ lọc: ${total} hội thoại phù hợp.` : "Không có hội thoại phù hợp với bộ lọc.");
+        return;
+      }
+      if (action === "chat-workspace-page") {
+        const offset = Number(fields.__chatWorkspaceOffset);
+        if (!Number.isInteger(offset) || offset < 0 || offset > 500) throw new Error("Trang hội thoại không hợp lệ.");
+        await hydrateChatWorkspace({ offset });
+        return;
+      }
+      if (action === "chat-thread-create") {
+        const payload = chatThreadPayload(fields);
+        await chatWorkspaceMutation({
+          action, route, scope: "chat-workspace:thread:create", path: "/chat-workspace/threads", payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.thread && typeof data.thread === "object" ? data.thread : null;
+            const threadId = receipt && validChatWorkspaceId(receipt.id) ? String(receipt.id) : "";
+            if (!chatWorkspaceBoundaryIsSafe(data) || !threadId || !validChatWorkspaceRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt thread AI Chat Workspace hợp lệ.");
+            await hydrateChatWorkspace();
+            toast(result.message || "Đã tạo thread Web-native. AI chưa được gọi.");
+            window.location.assign(`/chat/${encodeURIComponent(threadId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "chat-thread-update") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        if (!validChatWorkspaceId(threadId) || !expectedRevision) throw new Error("Mã hoặc revision thread không hợp lệ.");
+        const payload = { ...chatThreadPayload(fields), expected_revision: expectedRevision };
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:update`, method: "PATCH",
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}`, payload,
+          onSuccess: async (result) => {
+            if (!chatWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision thread an toàn.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã lưu revision thread mới.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-thread-lifecycle") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        const state = String(fields.__chatThreadState || "").trim().toLowerCase();
+        if (!validChatWorkspaceId(threadId) || !expectedRevision || !CHAT_WORKSPACE_STATES.has(state)) throw new Error("Trạng thái hoặc revision thread không hợp lệ.");
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:lifecycle:${state}`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.thread && typeof data.thread === "object" ? data.thread : null;
+            if (!chatWorkspaceBoundaryIsSafe(data) || !receipt || !validChatWorkspaceRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận lifecycle thread an toàn.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã cập nhật lifecycle thread.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-thread-restore-version") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        const targetRevision = validChatWorkspaceRevision(fields.__chatThreadVersion);
+        if (!validChatWorkspaceId(threadId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision thread không hợp lệ.");
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:restore:${targetRevision}`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            if (!chatWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận version thread an toàn.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã khôi phục version thread thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-context-create") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        if (!validChatWorkspaceId(threadId) || !expectedRevision) throw new Error("Mã hoặc revision thread không hợp lệ.");
+        const payload = { ...chatContextPayload(fields), expected_revision: expectedRevision };
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:context:create`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/contexts`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.context && typeof data.context === "object" ? data.context : null;
+            if (!chatWorkspaceBoundaryIsSafe(data) || !receipt || !validChatWorkspaceId(receipt.id) || String(receipt.thread_id || "") !== threadId || !validChatWorkspaceRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt context hợp lệ.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã thêm context card riêng tư.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-context-update") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const contextId = String(fields.__chatContextId || "").trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        if (!validChatWorkspaceId(threadId) || !validChatWorkspaceId(contextId) || !expectedRevision) throw new Error("Mã hoặc revision context không hợp lệ.");
+        const payload = { ...chatContextPayload(fields), expected_revision: expectedRevision };
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:context:${contextId}:update`, method: "PATCH",
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/contexts/${encodeURIComponent(contextId)}`, payload,
+          onSuccess: async (result) => {
+            if (!chatWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận revision context an toàn.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã lưu revision context mới.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-context-state") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const contextId = String(fields.__chatContextId || "").trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        const state = String(fields.__chatContextState || "").trim().toLowerCase();
+        if (!validChatWorkspaceId(threadId) || !validChatWorkspaceId(contextId) || !expectedRevision || !["active", "archived"].includes(state)) throw new Error("Trạng thái hoặc revision context không hợp lệ.");
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:context:${contextId}:${state}`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/contexts/${encodeURIComponent(contextId)}/state`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            if (!chatWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái context an toàn.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã cập nhật context card.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-turn-create") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        if (!validChatWorkspaceId(threadId) || !expectedRevision) throw new Error("Mã hoặc revision thread không hợp lệ.");
+        const payload = { ...chatTurnPayload(fields), expected_revision: expectedRevision };
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:turn:create`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/turns`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.turn && typeof data.turn === "object" ? data.turn : null;
+            if (!chatWorkspaceBoundaryIsSafe(data) || !receipt || !validChatWorkspaceId(receipt.id) || String(receipt.thread_id || "") !== threadId || !validChatWorkspaceRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt lượt ghi chú hợp lệ.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã thêm lượt ghi chú do bạn soạn.");
+          }
+        });
+        return;
+      }
+      if (action === "chat-turn-state") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const turnId = String(fields.__chatTurnId || "").trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        const state = String(fields.__chatTurnState || "").trim().toLowerCase();
+        if (!validChatWorkspaceId(threadId) || !validChatWorkspaceId(turnId) || !expectedRevision || !["active", "archived"].includes(state)) throw new Error("Trạng thái hoặc revision lượt ghi chú không hợp lệ.");
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:turn:${turnId}:${state}`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/turns/${encodeURIComponent(turnId)}/state`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            if (!chatWorkspaceBoundaryIsSafe(result.data)) throw new Error("Máy chủ chưa xác nhận trạng thái lượt ghi chú an toàn.");
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã cập nhật lượt ghi chú.");
           }
         });
         return;

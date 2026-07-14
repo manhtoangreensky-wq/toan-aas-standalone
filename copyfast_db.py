@@ -254,6 +254,17 @@ def document_workspace_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def chat_workspace_enabled() -> bool:
+    """Whether the Web-native Conversation Workspace is available.
+
+    This switch only allows private, signed-account conversation planning
+    records: human-authored prompts, context cards, decisions and metadata
+    revisions. It does *not* enable a model, Gemini, Bot/Core Bridge,
+    provider stream, wallet/Xu, PayOS, job, upload, output or delivery.
+    """
+    return os.environ.get("WEBAPP_CHAT_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1917,6 +1928,126 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_document_workspace_events_account_created ON web_document_workspace_events(account_id, created_at DESC, id DESC)"
+        )
+        # Conversation Workspace is a private Web-owned planning surface.
+        # It stores only human-authored prompt/context/decision text and
+        # compact metadata history.  Do not reuse Telegram conversations or
+        # Bot modes, provider transcripts, tool calls, jobs, output, wallet,
+        # payment, attachment or delivery state here.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_threads (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                prompt_template_id TEXT,
+                title TEXT NOT NULL,
+                objective TEXT NOT NULL DEFAULT '',
+                mode TEXT NOT NULL DEFAULT 'focus',
+                system_context TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                state TEXT NOT NULL DEFAULT 'draft',
+                pinned INTEGER NOT NULL DEFAULT 0,
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id),
+                FOREIGN KEY(prompt_template_id) REFERENCES web_prompt_templates(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_thread_versions (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(thread_id, revision),
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_context_cards (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                title TEXT NOT NULL,
+                body TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(thread_id, ordinal),
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_turns (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                body TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(thread_id, ordinal),
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_workspace_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                thread_id TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_threads_account_state_updated ON web_chat_threads(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_threads_account_pinned_updated ON web_chat_threads(account_id, pinned DESC, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_thread_versions_thread_revision ON web_chat_thread_versions(thread_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_context_cards_thread_ordinal ON web_chat_context_cards(thread_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_turns_thread_ordinal ON web_chat_turns(thread_id, account_id, state, ordinal ASC, created_at ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_workspace_events_account_created ON web_chat_workspace_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the
