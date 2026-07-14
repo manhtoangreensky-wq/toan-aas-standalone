@@ -76,6 +76,13 @@ Production Web App for `app.toanaas.vn`.
   persistent-volume contract described above; do not advertise notification
   delivery unless a separate, audited adapter is enabled. See
   [`MEMORY_CENTER_CONTRACT.md`](docs/migration/MEMORY_CENTER_CONTRACT.md).
+- `WEBAPP_ANALYTICS_WORKSPACE_ENABLED` defaults to `true`. `/analytics` is a
+  signed-account workspace for reports, metric definitions, manual snapshots
+  and human-authored findings. It calculates only from numbers the account
+  saved with server-side `Decimal`; it never connects a social platform,
+  reads Bot/provider reports, creates AI insight, handles revenue/Xu/PayOS,
+  starts jobs, publishes or exports a report file. See
+  [`ANALYTICS_WORKSPACE_CONTRACT.md`](docs/migration/ANALYTICS_WORKSPACE_CONTRACT.md).
 - `WEBAPP_VOICE_STUDIO_ENABLED` defaults to `true`. `/voice-studio` is a
   signed-account authoring workspace for voice direction, consent metadata,
   scripts, local cue-sheet estimates and revision history. It never stores

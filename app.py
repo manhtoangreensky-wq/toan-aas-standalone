@@ -21,6 +21,7 @@ from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
+import copyfast_analytics_workspace
 import copyfast_assets
 import copyfast_auth
 import copyfast_content_studio
@@ -129,6 +130,10 @@ DOCUMENT_WORKSPACE_BODY_MAX_BYTES = 128 * 1024
 # raw JSON cap deliberately small before Pydantic or SQLite sees a request;
 # it does not permit model streaming, file upload or provider input.
 CHAT_WORKSPACE_BODY_MAX_BYTES = 64 * 1024
+# Analytics Workspace accepts only bounded manual metric/report JSON.  This
+# cap runs before Pydantic/SQLite and deliberately does not permit CSV/file
+# import, platform connectors, Bot/provider traffic, payments or jobs.
+ANALYTICS_WORKSPACE_BODY_MAX_BYTES = 128 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -154,6 +159,7 @@ class PromptLibraryBodyLimitMiddleware:
         image_studio_max_bytes: int = IMAGE_STUDIO_BODY_MAX_BYTES,
         document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
         chat_workspace_max_bytes: int = CHAT_WORKSPACE_BODY_MAX_BYTES,
+        analytics_workspace_max_bytes: int = ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
@@ -166,6 +172,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.image_studio_max_bytes = int(image_studio_max_bytes)
         self.document_workspace_max_bytes = int(document_workspace_max_bytes)
         self.chat_workspace_max_bytes = int(chat_workspace_max_bytes)
+        self.analytics_workspace_max_bytes = int(analytics_workspace_max_bytes)
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -183,6 +190,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/image-studio/")
                 or path.startswith("/api/v1/document-workspace/")
                 or path.startswith("/api/v1/chat-workspace/")
+                or path.startswith("/api/v1/analytics-workspace/")
             )
         )
 
@@ -202,6 +210,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.document_workspace_max_bytes
         if path.startswith("/api/v1/chat-workspace/"):
             return self.chat_workspace_max_bytes
+        if path.startswith("/api/v1/analytics-workspace/"):
+            return self.analytics_workspace_max_bytes
         if path.startswith("/api/v1/media-workspace/"):
             return self.media_max_bytes
         return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
@@ -218,12 +228,15 @@ class PromptLibraryBodyLimitMiddleware:
         is_image_studio = path.startswith("/api/v1/image-studio/")
         is_document_workspace = path.startswith("/api/v1/document-workspace/")
         is_chat_workspace = path.startswith("/api/v1/chat-workspace/")
+        is_analytics_workspace = path.startswith("/api/v1/analytics-workspace/")
         is_media = path.startswith("/api/v1/media-workspace/")
         # This route family is authoring-only.  Include the explicit boundary
         # even on an early raw-body rejection, before its router can run.
         boundary = (
             copyfast_chat_workspace._boundary()
             if is_chat_workspace
+            else copyfast_analytics_workspace._boundary()
+            if is_analytics_workspace
             else copyfast_document_workspace._boundary() if is_document_workspace else None
         )
         response = JSONResponse(
@@ -244,6 +257,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_workspace
                     else "Dữ liệu AI Chat Workspace vượt giới hạn kích thước an toàn."
                     if is_chat_workspace
+                    else "Dữ liệu Analytics Workspace vượt giới hạn kích thước an toàn."
+                    if is_analytics_workspace
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
                     if is_media
                     else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
@@ -265,6 +280,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_workspace
                     else "WEB_CHAT_WORKSPACE_BODY_TOO_LARGE"
                     if is_chat_workspace
+                    else "WEB_ANALYTICS_WORKSPACE_BODY_TOO_LARGE"
+                    if is_analytics_workspace
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
                     if is_media
                     else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
@@ -360,6 +377,7 @@ app.add_middleware(
     image_studio_max_bytes=IMAGE_STUDIO_BODY_MAX_BYTES,
     document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
     chat_workspace_max_bytes=CHAT_WORKSPACE_BODY_MAX_BYTES,
+    analytics_workspace_max_bytes=ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
 )
 
 
@@ -526,6 +544,13 @@ async def security_headers(request: Request, call_next):
     # payment capability.
     chat_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/chat-workspace/")
     chat_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/chat-workspace/")
+    # Analytics Workspace stores only signed-account, human-entered metrics,
+    # observations and findings. These fixed family buckets protect its
+    # private SQLite data before CSRF/revision/idempotency work; they never
+    # enable platform analytics, Bot/provider calls, wallet, PayOS, jobs,
+    # publishing or generated reports.
+    analytics_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/analytics-workspace/")
+    analytics_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/analytics-workspace/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
@@ -583,6 +608,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if chat_workspace_read:
         rate_limit = 120
+    if analytics_workspace_write:
+        rate_limit = 40
+    if analytics_workspace_read:
+        rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
@@ -613,6 +642,8 @@ async def security_headers(request: Request, call_next):
             else "document-workspace-read" if document_workspace_read
             else "chat-workspace-write" if chat_workspace_write
             else "chat-workspace-read" if chat_workspace_read
+            else "analytics-workspace-write" if analytics_workspace_write
+            else "analytics-workspace-read" if analytics_workspace_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
@@ -620,6 +651,7 @@ async def security_headers(request: Request, call_next):
         if len(window) >= rate_limit:
             is_document_workspace_request = document_workspace_write or document_workspace_read
             is_chat_workspace_request = chat_workspace_write or chat_workspace_read
+            is_analytics_workspace_request = analytics_workspace_write or analytics_workspace_read
             response = JSONResponse(
                 envelope(
                     False,
@@ -627,6 +659,8 @@ async def security_headers(request: Request, call_next):
                     data=(
                         copyfast_chat_workspace._boundary()
                         if is_chat_workspace_request
+                        else copyfast_analytics_workspace._boundary()
+                        if is_analytics_workspace_request
                         else copyfast_document_workspace._boundary() if is_document_workspace_request else None
                     ),
                     status_name="guarded",
@@ -684,6 +718,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         error = "REQUEST_DENIED" if exc.status_code in {401, 403} else "REQUEST_INVALID"
         is_document_workspace = request.url.path.startswith("/api/v1/document-workspace/")
         is_chat_workspace = request.url.path.startswith("/api/v1/chat-workspace/")
+        is_analytics_workspace = request.url.path.startswith("/api/v1/analytics-workspace/")
         return JSONResponse(
             envelope(
                 False,
@@ -691,6 +726,8 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                 data=(
                     copyfast_chat_workspace._boundary()
                     if is_chat_workspace
+                    else copyfast_analytics_workspace._boundary()
+                    if is_analytics_workspace
                     else copyfast_document_workspace._boundary() if is_document_workspace else None
                 ),
                 status_name="failed",
@@ -711,6 +748,8 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                 data=(
                     copyfast_chat_workspace._boundary()
                     if request.url.path.startswith("/api/v1/chat-workspace/")
+                    else copyfast_analytics_workspace._boundary()
+                    if request.url.path.startswith("/api/v1/analytics-workspace/")
                     else copyfast_document_workspace._boundary() if request.url.path.startswith("/api/v1/document-workspace/") else None
                 ),
                 status_name="failed",
@@ -742,6 +781,7 @@ app.include_router(copyfast_subtitle_workspace.router)
 app.include_router(copyfast_image_studio.router)
 app.include_router(copyfast_document_workspace.router)
 app.include_router(copyfast_chat_workspace.router)
+app.include_router(copyfast_analytics_workspace.router)
 app.include_router(copyfast_support.router)
 
 

@@ -265,6 +265,17 @@ def chat_workspace_enabled() -> bool:
     return os.environ.get("WEBAPP_CHAT_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def analytics_workspace_enabled() -> bool:
+    """Whether the Web-native manual Analytics Workspace is available.
+
+    This only enables owner-scoped, user-supplied metric records and local
+    arithmetic.  It never enables a social/platform API, Bot/Core Bridge,
+    provider, AI recommendation, revenue ledger, wallet/Xu, PayOS, job,
+    publishing, upload or report-file delivery integration.
+    """
+    return os.environ.get("WEBAPP_ANALYTICS_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -2048,6 +2059,212 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_chat_workspace_events_account_created ON web_chat_workspace_events(account_id, created_at DESC, id DESC)"
+        )
+        # Analytics Workspace is an independent signed-account surface for
+        # user-supplied metrics and deterministic local comparisons.  These
+        # tables deliberately exclude social/platform API identifiers,
+        # provider/Bot state, revenue, wallet/Xu, payment, job, publish,
+        # attachment and delivery fields.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_reports (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                campaign_plan_id TEXT,
+                title TEXT NOT NULL,
+                objective TEXT NOT NULL DEFAULT '',
+                context_label TEXT NOT NULL DEFAULT '',
+                period_start TEXT NOT NULL,
+                period_end TEXT NOT NULL,
+                summary_note TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                state TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id),
+                FOREIGN KEY(campaign_plan_id) REFERENCES web_campaign_plans(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_report_versions (
+                id TEXT PRIMARY KEY,
+                report_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(report_id, revision),
+                FOREIGN KEY(report_id) REFERENCES web_analytics_reports(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_metrics (
+                id TEXT PRIMARY KEY,
+                report_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                unit TEXT NOT NULL DEFAULT 'count',
+                direction TEXT NOT NULL DEFAULT 'neutral',
+                description TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(report_id, ordinal),
+                FOREIGN KEY(report_id) REFERENCES web_analytics_reports(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_metric_versions (
+                id TEXT PRIMARY KEY,
+                metric_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(metric_id, revision),
+                FOREIGN KEY(metric_id) REFERENCES web_analytics_metrics(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_snapshots (
+                id TEXT PRIMARY KEY,
+                report_id TEXT NOT NULL,
+                metric_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                observed_on TEXT NOT NULL,
+                value_decimal TEXT NOT NULL,
+                source_label TEXT NOT NULL DEFAULT '',
+                note TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(report_id) REFERENCES web_analytics_reports(id),
+                FOREIGN KEY(metric_id) REFERENCES web_analytics_metrics(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_snapshot_versions (
+                id TEXT PRIMARY KEY,
+                snapshot_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(snapshot_id, revision),
+                FOREIGN KEY(snapshot_id) REFERENCES web_analytics_snapshots(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_findings (
+                id TEXT PRIMARY KEY,
+                report_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                body TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(report_id, ordinal),
+                FOREIGN KEY(report_id) REFERENCES web_analytics_reports(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_finding_versions (
+                id TEXT PRIMARY KEY,
+                finding_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(finding_id, revision),
+                FOREIGN KEY(finding_id) REFERENCES web_analytics_findings(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_analytics_workspace_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                report_id TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(report_id) REFERENCES web_analytics_reports(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_reports_account_state_updated ON web_analytics_reports(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_reports_project_account_updated ON web_analytics_reports(project_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_reports_campaign_account_updated ON web_analytics_reports(campaign_plan_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_report_versions_report_revision ON web_analytics_report_versions(report_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_metrics_report_ordinal ON web_analytics_metrics(report_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_metric_versions_metric_revision ON web_analytics_metric_versions(metric_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_snapshots_report_metric_date ON web_analytics_snapshots(report_id, metric_id, account_id, state, observed_on DESC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS idx_web_analytics_snapshots_active_metric_date ON web_analytics_snapshots(metric_id, observed_on) WHERE state='active'"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_snapshot_versions_snapshot_revision ON web_analytics_snapshot_versions(snapshot_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_findings_report_ordinal ON web_analytics_findings(report_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_finding_versions_finding_revision ON web_analytics_finding_versions(finding_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_analytics_workspace_events_account_created ON web_analytics_workspace_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

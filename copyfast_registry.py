@@ -50,6 +50,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("assets", "Tài sản Bot", "jobs", "/assets", description="Tệp đầu ra đã được Bot canonical xác thực ownership và delivery."),
     WebFeature("asset_vault", "Asset Vault", "jobs", "/asset-vault", description="Kho tệp riêng do Web Workspace sở hữu; không phải output, job hay storage của Bot."),
     WebFeature("chat", "AI Chat Workspace", "content", "/chat", description="Workspace hội thoại riêng tư: context, prompt/decision do bạn soạn và revision history. Chưa gọi model, Bot, provider, Xu hay job."),
+    WebFeature("analytics_workspace", "Analytics Workspace", "content", "/analytics", description="Báo cáo, metric, snapshot và nhận định do chính tài khoản Web nhập; chỉ so sánh xác định từ dữ liệu đã lưu, không kết nối platform/Bot/provider, không tạo AI insight, Xu, PayOS, job hay publish."),
     WebFeature("prompt_studio", "Prompt Studio", "content", "/prompt-studio", input_hint="Mô tả mục tiêu nội dung."),
     WebFeature("prompt_library", "Prompt Library", "content", "/prompt-library", description="Kho template prompt riêng tư có tag, metadata, version history và preview cục bộ; không gọi AI engine hoặc Bot."),
     WebFeature("content_studio", "Creative Content Studio", "content", "/content-studio", description="Workspace brief, caption, hook, script, storyboard và content pack có version/review riêng tư; chỉ tạo khung nháp cục bộ, không gọi Bot, provider, job, ví Xu, PayOS hoặc publish."),

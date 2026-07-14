@@ -1764,6 +1764,149 @@
     );
   }
 
+  // Analytics Workspace is intentionally limited to manual measurements
+  // written by the signed Web account.  It never accepts a platform URL,
+  // provider/Bot handle, payment reference or a browser-imported dataset.
+  const ANALYTICS_REPORT_STATES = new Set(["draft", "review", "finalized", "archived"]);
+  const ANALYTICS_METRIC_STATES = new Set(["active", "archived"]);
+  const ANALYTICS_METRIC_UNITS = new Set(["count", "percent", "duration", "custom"]);
+  const ANALYTICS_METRIC_DIRECTIONS = new Set(["up", "down", "neutral"]);
+  const ANALYTICS_FINDING_KINDS = new Set(["finding", "decision", "action"]);
+  const ANALYTICS_FINDING_STATES = new Set(["active", "archived"]);
+  function validAnalyticsWorkspaceId(value) { return validProjectId(value); }
+  function validAnalyticsRevision(value) { return validMemoryRevision(value); }
+  function analyticsReportIdFromPath(path) {
+    const match = /^\/analytics\/([^/]+)$/.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "") : "";
+    return validAnalyticsWorkspaceId(id) ? id : "";
+  }
+  function isNativeAnalyticsWorkspacePath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/analytics" || normalized === "/analytics/new" || Boolean(analyticsReportIdFromPath(normalized));
+  }
+  function analyticsWorkspaceSafetyError(...values) {
+    const text = values.map((value) => String(value || "")).join("\n");
+    if (PROMPT_UNSAFE_CONTROL_PATTERN.test(text)) return "Analytics Workspace không nhận ký tự điều khiển không an toàn.";
+    const sensitiveKind = supportSensitiveContentKind(text);
+    if (sensitiveKind === "manual-payment") return "Analytics Workspace không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thanh toán.";
+    if (sensitiveKind || PROMPT_QUOTED_SECRET_PATTERN.test(text) || PROMPT_PRIVATE_KEY_PATTERN.test(text)) return "Analytics Workspace không nhận API key, khóa riêng, token, mật khẩu, OTP/CVV hoặc số thẻ.";
+    if (/(?:file|javascript|data|blob):|https?:\/\/|\bwww\.|(?:^|[\s\"'(])(?:[A-Za-z]:[\\/]|\\\\[^\s]+|\/[^\s]+)/i.test(text)) return "Analytics Workspace không nhận URL, path, blob hoặc scheme tệp.";
+    if (/\b(?:(?:provider|engine|telegram|bot|job|worker|media|asset|file|platform|channel)[ _-]*(?:id|ref(?:erence)?|token|handle)|storage[ _-]*key)\b\s*(?::|=|\bis\b)\s*\S+/i.test(text)) return "Analytics Workspace không nhận provider, Bot, job, worker, nền tảng hoặc file handle trong metadata.";
+    if (/<\s*\/?\s*(?:script|svg|img|iframe|object|embed|style|link|meta|base|form|input|video|audio)\b|\bon[a-z]+\s*=/i.test(text)) return "Analytics Workspace không nhận markup hoặc lệnh thực thi.";
+    return "";
+  }
+  function analyticsWorkspaceLine(value, label, minimum, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    if (text.length > maximum || (!allowEmpty && text.length < minimum) || text.includes("\u0000")) throw new Error(label + " cần từ " + minimum + " đến " + maximum + " ký tự hợp lệ.");
+    if (text && /^\s*[=+@]/.test(text)) throw new Error(label + " không nhận công thức hoặc biểu thức xuất dữ liệu.");
+    return text;
+  }
+  function analyticsWorkspaceBody(value, label, maximum, allowEmpty) {
+    const text = String(value || "").replace(/\r\n/g, "\n").replace(/\r/g, "\n").trim();
+    if (text.length > maximum || (!allowEmpty && !text) || text.includes("\u0000")) throw new Error(label + " tối đa " + maximum.toLocaleString("vi-VN") + " ký tự hợp lệ.");
+    return text;
+  }
+  function analyticsWorkspaceTags(value) {
+    const raw = Array.isArray(value) ? value : String(value || "").split(",");
+    const result = [];
+    const seen = new Set();
+    raw.forEach((candidate) => {
+      if (!String(candidate || "").trim()) return;
+      const tag = analyticsWorkspaceLine(candidate, "Tag", 1, 48, false);
+      const safety = analyticsWorkspaceSafetyError(tag);
+      if (safety) throw new Error(safety);
+      const marker = tag.toLocaleLowerCase("vi-VN");
+      if (!seen.has(marker)) { seen.add(marker); result.push(tag); }
+    });
+    if (result.length > 20) throw new Error("Tối đa 20 tags cho mỗi report.");
+    return result;
+  }
+  function analyticsWorkspaceReference(value, label) {
+    const id = String(value || "").trim();
+    if (!id) return null;
+    if (!validAnalyticsWorkspaceId(id)) throw new Error(label + " phải là UUID owner-scoped do server cấp.");
+    return id;
+  }
+  function analyticsWorkspaceDate(value, label) {
+    const text = String(value || "").trim();
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new Error(label + " phải có dạng YYYY-MM-DD.");
+    const parsed = new Date(text + "T00:00:00.000Z");
+    if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== text) throw new Error(label + " không hợp lệ.");
+    return { text, time: parsed.getTime() };
+  }
+  function analyticsWorkspaceDecimal(value) {
+    const text = String(value || "").trim();
+    if (!/^\d+(?:\.\d+)?$/.test(text) || text.length > 40) throw new Error("Giá trị metric phải là số thập phân không âm theo dạng thường.");
+    const parsed = Number(text);
+    if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1000000000000) throw new Error("Giá trị metric nằm ngoài giới hạn an toàn.");
+    return text;
+  }
+  function analyticsReportPayload(fields) {
+    const title = analyticsWorkspaceLine(fields.title, "Tên báo cáo", 3, 180, false);
+    const objective = analyticsWorkspaceBody(fields.objective, "Mục tiêu đo lường", 2000, false);
+    const contextLabel = analyticsWorkspaceLine(fields.context_label, "Nhãn bối cảnh", 0, 160, true);
+    const start = analyticsWorkspaceDate(fields.period_start, "Bắt đầu kỳ");
+    const end = analyticsWorkspaceDate(fields.period_end, "Kết thúc kỳ");
+    if (end.time < start.time || (end.time - start.time) / 86400000 > 366) throw new Error("Khoảng thời gian phải theo thứ tự hợp lệ và không quá 366 ngày.");
+    const summaryNote = analyticsWorkspaceBody(fields.summary_note, "Ghi chú tổng quan", 6000, true);
+    const tags = analyticsWorkspaceTags(fields.tags);
+    const safety = analyticsWorkspaceSafetyError(title, objective, contextLabel, summaryNote, ...tags);
+    if (safety) throw new Error(safety);
+    return { title, objective, context_label: contextLabel, period_start: start.text, period_end: end.text, project_id: analyticsWorkspaceReference(fields.project_id, "Project liên kết"), campaign_plan_id: analyticsWorkspaceReference(fields.campaign_plan_id, "Campaign Planner liên kết"), tags, summary_note: summaryNote };
+  }
+  function analyticsMetricPayload(fields) {
+    const name = analyticsWorkspaceLine(fields.name, "Tên metric", 2, 120, false);
+    const unit = analyticsWorkspaceLine(fields.unit || "count", "Đơn vị metric", 1, 20, false).toLowerCase();
+    const direction = analyticsWorkspaceLine(fields.direction || "neutral", "Chiều đánh giá", 1, 20, false).toLowerCase();
+    const description = analyticsWorkspaceBody(fields.description, "Ghi chú metric", 1200, true);
+    if (!ANALYTICS_METRIC_UNITS.has(unit) || !ANALYTICS_METRIC_DIRECTIONS.has(direction)) throw new Error("Đơn vị hoặc chiều theo dõi metric không hợp lệ.");
+    const safety = analyticsWorkspaceSafetyError(name, unit, direction, description);
+    if (safety) throw new Error(safety);
+    return { name, unit, direction, description };
+  }
+  function analyticsSnapshotPayload(fields) {
+    const observed = analyticsWorkspaceDate(fields.observed_on, "Ngày quan sát");
+    const value = analyticsWorkspaceDecimal(fields.value);
+    const sourceLabel = analyticsWorkspaceLine(fields.source_label, "Nhãn nguồn tự khai", 0, 160, true);
+    const note = analyticsWorkspaceBody(fields.note, "Ghi chú snapshot", 1800, true);
+    const safety = analyticsWorkspaceSafetyError(sourceLabel, note);
+    if (safety) throw new Error(safety);
+    return { observed_on: observed.text, value, source_label: sourceLabel, note };
+  }
+  function analyticsFindingPayload(fields) {
+    const kind = analyticsWorkspaceLine(fields.kind || "finding", "Loại nhận định", 1, 20, false).toLowerCase();
+    const body = analyticsWorkspaceBody(fields.body, "Nội dung nhận định", 6000, false);
+    if (!ANALYTICS_FINDING_KINDS.has(kind)) throw new Error("Loại nhận định không hợp lệ.");
+    const safety = analyticsWorkspaceSafetyError(kind, body);
+    if (safety) throw new Error(safety);
+    return { kind, body };
+  }
+  function analyticsWorkspaceBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : (source.policy && typeof source.policy === "object" ? source.policy : source);
+    return Boolean(
+      boundary.execution === "manual_measurement_only"
+      && boundary.data_origin === "user_supplied_only"
+      && boundary.local_calculation === true
+      && boundary.bot_called === false
+      && boundary.provider_called === false
+      && boundary.social_api_called === false
+      && boundary.platform_data_connected === false
+      && boundary.platform_data_verified === false
+      && boundary.ai_recommendation_created === false
+      && boundary.canonical_revenue === false
+      && boundary.wallet_mutated === false
+      && boundary.payment_started === false
+      && boundary.payment_processed === false
+      && boundary.job_created === false
+      && boundary.publish_action_created === false
+      && boundary.browser_file_upload === false
+      && boundary.external_url_import === false
+      && boundary.report_file_created === false
+      && boundary.output_delivery === "not_applicable"
+    );
+  }
+
   // Document & PDF Workspace holds signed-account briefs and plan metadata
   // only.  It never turns an Asset Vault UUID into an upload/source read,
   // OCR/translation/conversion request, job, output or payment action.
@@ -2329,6 +2472,11 @@
     // never enables a model, assistant reply, provider stream, Bot mode,
     // wallet, payment, job, output or delivery path.
     const chatWorkspaceEnabled = Boolean(status.flags && status.flags.chat_workspace_enabled === true);
+    // Analytics Workspace owns only manual observations entered by the
+    // signed Web account.  Its flag never means that a platform connection,
+    // Bot report, provider analytics, AI insight, revenue, wallet, payment,
+    // job, publish action or export is available.
+    const analyticsWorkspaceEnabled = Boolean(status.flags && status.flags.analytics_workspace_enabled === true);
     // Support Desk has the same independence property: a Telegram link or a
     // Core Bridge may be absent while a signed Web account can still use its
     // own case store.  Its server route remains the real feature gate.
@@ -2565,6 +2713,23 @@
       "chat-context-state": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
       "chat-turn-create": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
       "chat-turn-state": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      "analytics-workspace-view": Boolean(account && analyticsWorkspaceEnabled),
+      "analytics-workspace-refresh": Boolean(account && analyticsWorkspaceEnabled),
+      "analytics-workspace-filter": Boolean(account && analyticsWorkspaceEnabled),
+      "analytics-workspace-page": Boolean(account && analyticsWorkspaceEnabled),
+      "analytics-report-create": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-report-update": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-report-lifecycle": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-report-restore-version": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-metric-create": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-metric-update": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-metric-state": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-snapshot-create": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-snapshot-update": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-snapshot-state": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-finding-create": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-finding-update": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
+      "analytics-finding-state": Boolean(account && me.csrf_token && analyticsWorkspaceEnabled),
       // Native support reads/writes are server-authenticated Web operations.
       // Admin support capability intentionally does not trust `account.role`
       // here: the support endpoints check protected role_cache themselves.
@@ -2631,6 +2796,7 @@
       imageStudioEnabled,
       documentWorkspaceEnabled,
       chatWorkspaceEnabled,
+      analyticsWorkspaceEnabled,
       supportDeskEnabled,
       // Clear every account-scoped projection while hydration starts. A failed
       // request must never render the previous account's note/reminder data.
@@ -2740,6 +2906,17 @@
       chatWorkspacePolicy: {},
       chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
       chatWorkspaceReadState: account && chatWorkspaceEnabled ? "loading" : "guarded",
+      // Manual Analytics reports can include private internal observation
+      // notes. Clear every owner-scoped projection before a signed read so a
+      // failed request or account switch cannot reveal a previous account's
+      // report, snapshot, finding, comparison or history.
+      analyticsWorkspaceSummary: {},
+      analyticsReports: [],
+      analyticsReportDetail: {},
+      analyticsWorkspaceReferences: {},
+      analyticsWorkspacePolicy: {},
+      analyticsWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      analyticsWorkspaceReadState: account && analyticsWorkspaceEnabled ? "loading" : "guarded",
       // Clear Support Desk projections before every authenticated hydration.
       // A signed account switch or failed read must never leave a prior
       // customer's case/thread/role visible in the browser.
@@ -2793,6 +2970,8 @@
         "/document-workspace/new": account && documentWorkspaceEnabled ? "processing" : "guarded",
         "/chat": account && chatWorkspaceEnabled ? "processing" : "guarded",
         "/chat/new": account && chatWorkspaceEnabled ? "processing" : "guarded",
+        "/analytics": account && analyticsWorkspaceEnabled ? "processing" : "guarded",
+        "/analytics/new": account && analyticsWorkspaceEnabled ? "processing" : "guarded",
         "/support": account && supportDeskEnabled ? "processing" : "guarded",
         "/tickets": account && supportDeskEnabled ? "processing" : "guarded",
         "/admin/support": account && supportDeskEnabled ? "processing" : "guarded"
@@ -2912,6 +3091,17 @@
       merge({
         chatWorkspaceSummary: {}, chatThreads: [], chatThreadDetail: {}, chatWorkspaceReferences: {}, chatWorkspaceEvents: [], chatWorkspacePolicy: {}, chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         chatWorkspaceReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
+    if (account && analyticsWorkspaceEnabled && ["/analytics", "/analytics/new"].includes(currentPath)) await hydrateAnalyticsWorkspace();
+    else if (account && analyticsWorkspaceEnabled && analyticsReportIdFromPath(currentPath)) await hydrateAnalyticsReport(analyticsReportIdFromPath(currentPath));
+    else if (isNativeAnalyticsWorkspacePath(currentPath)) {
+      // Never replace a guarded signed report with a Bot report, live social
+      // metric, platform API result, inferred chart or browser cache.
+      merge({
+        analyticsWorkspaceSummary: {}, analyticsReports: [], analyticsReportDetail: {}, analyticsWorkspaceReferences: {}, analyticsWorkspacePolicy: {},
+        analyticsWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+        analyticsWorkspaceReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && subtitleStudioEnabled && ["/subtitle-studio", "/subtitle-studio/new"].includes(currentPath)) await hydrateSubtitleStudio();
@@ -3764,6 +3954,129 @@
       merge({
         chatWorkspaceSummary: {}, chatThreads: [], chatWorkspaceEvents: [], chatWorkspaceReferences: {}, chatWorkspacePolicy: {}, chatThreadDetail: {}, chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: CHAT_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         chatWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+      });
+      return null;
+    }
+  }
+
+  const ANALYTICS_WORKSPACE_LIST_LIMIT = 50;
+  // A stale search/page response must never replace the last signed report
+  // library. This ordering guard is memory-only: query values are not stored
+  // in the URL, localStorage or any Bot-facing state.
+  let analyticsWorkspaceHydrationEpoch = 0;
+  function analyticsWorkspaceListOptions(overrides) {
+    const saved = base().analyticsWorkspaceListing && typeof base().analyticsWorkspaceListing === "object" ? base().analyticsWorkspaceListing : {};
+    const requested = { ...saved, ...(overrides && typeof overrides === "object" ? overrides : {}) };
+    const state = ANALYTICS_REPORT_STATES.has(String(requested.state || "")) || String(requested.state || "") === "all" ? String(requested.state || "all") : "all";
+    const q = String(requested.q || "").replace(/\s+/g, " ").trim();
+    const safeQuery = q.length <= 100 && !analyticsWorkspaceSafetyError(q) && !/^\s*[=+@]/.test(q) ? q : "";
+    const savedPagination = saved.pagination && typeof saved.pagination === "object" ? saved.pagination : {};
+    const rawOffset = Number(Object.prototype.hasOwnProperty.call(requested, "offset") ? requested.offset : savedPagination.offset);
+    const offset = Number.isInteger(rawOffset) && rawOffset > 0 ? rawOffset : 0;
+    return { state, q: safeQuery, offset, limit: ANALYTICS_WORKSPACE_LIST_LIMIT };
+  }
+  function analyticsWorkspaceReportsPath(options) {
+    const query = [
+      "state=" + encodeURIComponent(options.state),
+      "limit=" + encodeURIComponent(String(options.limit)),
+      "offset=" + encodeURIComponent(String(options.offset))
+    ];
+    if (options.q) query.push("q=" + encodeURIComponent(options.q));
+    return "/analytics-workspace/reports?" + query.join("&");
+  }
+  function analyticsWorkspacePagination(data, requested) {
+    const raw = data && data.pagination && typeof data.pagination === "object" ? data.pagination : {};
+    const number = (value, fallback, maximum) => {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= maximum ? parsed : fallback;
+    };
+    const total = number(raw.total, 0, 500);
+    const limit = number(raw.limit, requested.limit, 100) || requested.limit;
+    const offset = number(raw.offset, requested.offset, Math.max(0, total));
+    const returned = number(raw.returned, 0, limit);
+    const nextOffset = raw.next_offset === null || raw.next_offset === undefined ? null : number(raw.next_offset, -1, Math.max(0, total));
+    const previousOffset = raw.previous_offset === null || raw.previous_offset === undefined ? null : number(raw.previous_offset, -1, Math.max(0, total));
+    return { total, limit, offset, returned, has_more: raw.has_more === true && nextOffset !== -1, next_offset: nextOffset === -1 ? null : nextOffset, previous_offset: previousOffset === -1 ? null : previousOffset };
+  }
+  function analyticsReportListingIsSafe(item) {
+    return Boolean(item && validAnalyticsWorkspaceId(item.id) && validAnalyticsRevision(item.revision) && ANALYTICS_REPORT_STATES.has(String(item.state || ""))
+      && /^\d{4}-\d{2}-\d{2}$/.test(String(item.period_start || "")) && /^\d{4}-\d{2}-\d{2}$/.test(String(item.period_end || ""))
+      && item.data_origin === "user_supplied_only" && item.platform_data_verified === false);
+  }
+  async function hydrateAnalyticsWorkspace(overrides) {
+    // Only the signed Web-native manual analytics API can hydrate this page.
+    // A failed request is never substituted with Bot reports, social data or
+    // an optimistic browser chart.
+    const requestEpoch = ++analyticsWorkspaceHydrationEpoch;
+    try {
+      const requested = analyticsWorkspaceListOptions(overrides);
+      const results = await Promise.all([
+        api("/analytics-workspace/summary"),
+        api(analyticsWorkspaceReportsPath(requested)),
+        api("/analytics-workspace/references"),
+        api("/analytics-workspace/policy")
+      ]);
+      const summary = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
+      const listingData = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
+      const references = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const policy = results[3].data && typeof results[3].data === "object" ? results[3].data : {};
+      if (!analyticsWorkspaceBoundaryIsSafe(summary) || !analyticsWorkspaceBoundaryIsSafe(listingData) || !analyticsWorkspaceBoundaryIsSafe(references) || !analyticsWorkspaceBoundaryIsSafe(policy)) throw new Error("Boundary Analytics Workspace chưa được máy chủ xác nhận.");
+      const reports = Array.isArray(listingData.items) ? listingData.items.filter(analyticsReportListingIsSafe).slice(0, ANALYTICS_WORKSPACE_LIST_LIMIT) : [];
+      const serverFilter = listingData.filter && typeof listingData.filter === "object" ? listingData.filter : {};
+      const serverQuery = String(serverFilter.q || "").replace(/\s+/g, " ").trim();
+      if (serverQuery.length > 100 || analyticsWorkspaceSafetyError(serverQuery) || /^\s*[=+@]/.test(serverQuery)) throw new Error("Máy chủ trả bộ lọc Analytics Workspace không an toàn.");
+      const pagination = analyticsWorkspacePagination(listingData, requested);
+      if (pagination.returned !== reports.length) throw new Error("Máy chủ trả số lượng report không nhất quán.");
+      const listing = { state: ANALYTICS_REPORT_STATES.has(String(serverFilter.state || "")) || String(serverFilter.state || "") === "all" ? String(serverFilter.state || "all") : requested.state, q: serverQuery, pagination };
+      if (requestEpoch !== analyticsWorkspaceHydrationEpoch) return { stale: true };
+      merge({
+        analyticsWorkspaceSummary: summary, analyticsReports: reports, analyticsWorkspaceReferences: references, analyticsWorkspacePolicy: policy,
+        analyticsWorkspaceListing: listing, analyticsReportDetail: {}, analyticsWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/analytics": "ready", "/analytics/new": "ready" }
+      });
+      return { reports, listing };
+    } catch (_) {
+      if (requestEpoch !== analyticsWorkspaceHydrationEpoch) return { stale: true };
+      merge({
+        analyticsWorkspaceSummary: {}, analyticsReports: [], analyticsReportDetail: {}, analyticsWorkspaceReferences: {}, analyticsWorkspacePolicy: {},
+        analyticsWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: ANALYTICS_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+        analyticsWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), "/analytics": "guarded", "/analytics/new": "guarded" }
+      });
+      return { reports: [], listing: {} };
+    }
+  }
+  async function hydrateAnalyticsReport(reportId) {
+    if (!validAnalyticsWorkspaceId(reportId)) throw new Error("Mã report Analytics Workspace không hợp lệ.");
+    const route = "/analytics/" + encodeURIComponent(String(reportId));
+    try {
+      const results = await Promise.all([
+        api("/analytics-workspace/reports/" + encodeURIComponent(String(reportId))),
+        api("/analytics-workspace/references"),
+        api("/analytics-workspace/policy")
+      ]);
+      const data = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
+      const references = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
+      const policy = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const report = data.report && typeof data.report === "object" ? data.report : null;
+      if (!analyticsWorkspaceBoundaryIsSafe(data) || !analyticsWorkspaceBoundaryIsSafe(references) || !analyticsWorkspaceBoundaryIsSafe(policy) || !analyticsReportListingIsSafe(report) || String(report.id) !== String(reportId)) throw new Error("Report Analytics Workspace không còn khả dụng cho Web account hiện tại.");
+      const metrics = Array.isArray(data.metrics) ? data.metrics.filter((item) => item && validAnalyticsWorkspaceId(item.id) && String(item.report_id || "") === String(reportId) && validAnalyticsRevision(item.revision) && ANALYTICS_METRIC_UNITS.has(String(item.unit || "")) && ANALYTICS_METRIC_DIRECTIONS.has(String(item.direction || "")) && ANALYTICS_METRIC_STATES.has(String(item.state || ""))).slice(0, 120) : [];
+      const metricIds = new Set(metrics.map((item) => String(item.id)));
+      const snapshots = Array.isArray(data.snapshots) ? data.snapshots.filter((item) => item && validAnalyticsWorkspaceId(item.id) && String(item.report_id || "") === String(reportId) && metricIds.has(String(item.metric_id || "")) && validAnalyticsRevision(item.revision) && ANALYTICS_METRIC_STATES.has(String(item.state || "")) && /^\d{4}-\d{2}-\d{2}$/.test(String(item.observed_on || "")) && item.source_kind === "manual_entry" && item.platform_data_verified === false).slice(0, 12000) : [];
+      const findings = Array.isArray(data.findings) ? data.findings.filter((item) => item && validAnalyticsWorkspaceId(item.id) && String(item.report_id || "") === String(reportId) && validAnalyticsRevision(item.revision) && ANALYTICS_FINDING_KINDS.has(String(item.kind || "")) && ANALYTICS_FINDING_STATES.has(String(item.state || "")) && item.ai_recommendation_created === false).slice(0, 320) : [];
+      const comparisons = data.comparisons && typeof data.comparisons === "object" ? Object.fromEntries(Object.entries(data.comparisons).filter(([metricId, item]) => metricIds.has(String(metricId)) && item && typeof item === "object")) : {};
+      const versions = Array.isArray(data.versions) ? data.versions.filter((item) => item && validAnalyticsRevision(item.revision) && ANALYTICS_REPORT_STATES.has(String(item.state || "")) && item.restore_scope === "metadata_only").slice(0, 100) : [];
+      const events = Array.isArray(data.events) ? data.events.filter((item) => item && typeof item === "object" && validAnalyticsRevision(item.revision)).slice(0, 60) : [];
+      merge({
+        analyticsReportDetail: { report, metrics, snapshots, findings, comparisons, versions, events, references: data.references && typeof data.references === "object" ? data.references : {} },
+        analyticsWorkspaceReferences: references, analyticsWorkspacePolicy: policy, analyticsWorkspaceReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [route]: String(report.state || "guarded") === "draft" ? "ready" : String(report.state || "guarded") }
+      });
+      return { report, metrics, snapshots, findings };
+    } catch (_) {
+      merge({
+        analyticsWorkspaceSummary: {}, analyticsReports: [], analyticsReportDetail: {}, analyticsWorkspaceReferences: {}, analyticsWorkspacePolicy: {},
+        analyticsWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: ANALYTICS_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+        analyticsWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
       return null;
     }
@@ -4833,6 +5146,45 @@
     }
   }
 
+  async function analyticsWorkspaceMutation({ action, route, scope, path, method, payload, onSuccess }) {
+    // Manual Analytics writes are CSRF-protected and idempotent. Mutation
+    // receipts are intentionally privacy-preserving, so callers must reload
+    // signed list/detail projections rather than patching report text,
+    // snapshot values or human-authored findings in the browser.
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác Analytics Workspace đang chờ máy chủ xác nhận.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (typeof onSuccess === "function") await onSuccess(result);
+      return result;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+  async function refreshAnalyticsWorkspaceAfterMutation(reportId) {
+    // Keep list/detail refresh ordered. The list loader deliberately clears
+    // private detail state before its signed request, therefore running both
+    // concurrently could let an older list refresh blank a newly loaded
+    // report. No mutation receipt is used as browser state.
+    await hydrateAnalyticsWorkspace();
+    if (validAnalyticsWorkspaceId(reportId)) await hydrateAnalyticsReport(reportId);
+  }
+
   async function imageStudioMutation({ action, route, scope, path, method, payload, onSuccess }) {
     // All Image Studio writes remain server-authenticated and idempotent.
     // The browser never reconstructs an image, preview, job, payment or
@@ -5838,6 +6190,265 @@
             await hydrateChatWorkspace();
             await hydrateChatThread(threadId);
             toast(result.message || "Đã cập nhật lượt ghi chú.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-workspace-refresh") {
+        const reportId = analyticsReportIdFromPath(route);
+        if (reportId) await hydrateAnalyticsReport(reportId);
+        else await hydrateAnalyticsWorkspace();
+        toast("Đã làm mới Analytics Workspace của Web account hiện tại.");
+        return;
+      }
+      if (action === "analytics-workspace-filter") {
+        const state = String(fields.state || "all").trim().toLowerCase();
+        const q = String(fields.q || "").replace(/\s+/g, " ").trim();
+        if (!(state === "all" || ANALYTICS_REPORT_STATES.has(state))) throw new Error("Bộ lọc trạng thái report không hợp lệ.");
+        if (q.length > 100 || analyticsWorkspaceSafetyError(q) || /^\s*[=+@]/.test(q)) throw new Error("Từ khoá tìm kiếm report không hợp lệ.");
+        const result = await hydrateAnalyticsWorkspace({ state, q, offset: 0 });
+        if (!result || result.stale) return;
+        const total = result.listing && result.listing.pagination ? Number(result.listing.pagination.total || 0) : 0;
+        toast(total ? `Đã áp dụng bộ lọc: ${total} report phù hợp.` : "Không có report phù hợp với bộ lọc.");
+        return;
+      }
+      if (action === "analytics-workspace-page") {
+        const offset = Number(fields.__analyticsWorkspaceOffset);
+        if (!Number.isInteger(offset) || offset < 0 || offset > 500) throw new Error("Trang report không hợp lệ.");
+        await hydrateAnalyticsWorkspace({ offset });
+        return;
+      }
+      if (action === "analytics-report-create") {
+        const payload = analyticsReportPayload(fields);
+        await analyticsWorkspaceMutation({
+          action, route, scope: "analytics-workspace:report:create", path: "/analytics-workspace/reports", payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.report && typeof data.report === "object" ? data.report : null;
+            const reportId = receipt && validAnalyticsWorkspaceId(receipt.id) ? String(receipt.id) : "";
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !reportId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt report Analytics Workspace hợp lệ.");
+            await hydrateAnalyticsWorkspace();
+            toast(result.message || "Đã tạo report thủ công riêng tư.");
+            window.location.assign(`/analytics/${encodeURIComponent(reportId)}`);
+          }
+        });
+        return;
+      }
+      if (action === "analytics-report-update") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !expectedRevision) throw new Error("Mã hoặc revision report không hợp lệ.");
+        const payload = { ...analyticsReportPayload(fields), expected_revision: expectedRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:update`, method: "PATCH", path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.report && typeof data.report === "object" ? data.report : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== reportId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận revision report an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã lưu revision report mới.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-report-lifecycle") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const state = String(fields.__analyticsReportState || "").trim().toLowerCase();
+        if (!validAnalyticsWorkspaceId(reportId) || !expectedRevision || !ANALYTICS_REPORT_STATES.has(state)) throw new Error("Trạng thái hoặc revision report không hợp lệ.");
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:lifecycle:${state}`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/lifecycle`, payload: { state, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.report && typeof data.report === "object" ? data.report : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== reportId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận lifecycle report an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã cập nhật trạng thái report.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-report-restore-version") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const targetRevision = validAnalyticsRevision(fields.__analyticsReportVersion);
+        if (!validAnalyticsWorkspaceId(reportId) || !expectedRevision || !targetRevision) throw new Error("Version hoặc revision report không hợp lệ.");
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:restore:${targetRevision}`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/restore-version`, payload: { expected_revision: expectedRevision, target_revision: targetRevision },
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.report && typeof data.report === "object" ? data.report : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== reportId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận version report an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã khôi phục metadata report thành revision mới.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-metric-create") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !expectedReportRevision) throw new Error("Mã hoặc revision report không hợp lệ.");
+        const payload = { ...analyticsMetricPayload(fields), expected_report_revision: expectedReportRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:metric:create`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/metrics`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.metric && typeof data.metric === "object" ? data.metric : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.report_id || "") !== reportId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt metric hợp lệ.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã thêm metric tự định nghĩa.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-metric-update") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const metricId = String(fields.__analyticsMetricId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsMetricRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(metricId) || !expectedReportRevision || !expectedRevision) throw new Error("Mã hoặc revision metric không hợp lệ.");
+        const payload = { ...analyticsMetricPayload(fields), expected_report_revision: expectedReportRevision, expected_revision: expectedRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:metric:${metricId}:update`, method: "PATCH", path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/metrics/${encodeURIComponent(metricId)}`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.metric && typeof data.metric === "object" ? data.metric : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== metricId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận revision metric an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã lưu revision metric mới.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-metric-state") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const metricId = String(fields.__analyticsMetricId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsMetricRevision);
+        const state = String(fields.__analyticsMetricState || "").trim().toLowerCase();
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(metricId) || !expectedReportRevision || !expectedRevision || !ANALYTICS_METRIC_STATES.has(state)) throw new Error("Trạng thái hoặc revision metric không hợp lệ.");
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:metric:${metricId}:state:${state}`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/metrics/${encodeURIComponent(metricId)}/state`, payload: { state, expected_report_revision: expectedReportRevision, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.metric && typeof data.metric === "object" ? data.metric : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== metricId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái metric an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã cập nhật metric.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-snapshot-create") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const metricId = String(fields.__analyticsMetricId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(metricId) || !expectedReportRevision) throw new Error("Mã hoặc revision report/metric không hợp lệ.");
+        const payload = { ...analyticsSnapshotPayload(fields), expected_report_revision: expectedReportRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:metric:${metricId}:snapshot:create`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/metrics/${encodeURIComponent(metricId)}/snapshots`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.snapshot && typeof data.snapshot === "object" ? data.snapshot : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.report_id || "") !== reportId || String(receipt.metric_id || "") !== metricId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt snapshot hợp lệ.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã lưu snapshot tự nhập.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-snapshot-update") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const metricId = String(fields.__analyticsMetricId || "").trim();
+        const snapshotId = String(fields.__analyticsSnapshotId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsSnapshotRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(metricId) || !validAnalyticsWorkspaceId(snapshotId) || !expectedReportRevision || !expectedRevision) throw new Error("Mã hoặc revision snapshot không hợp lệ.");
+        const payload = { ...analyticsSnapshotPayload(fields), expected_report_revision: expectedReportRevision, expected_revision: expectedRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:metric:${metricId}:snapshot:${snapshotId}:update`, method: "PATCH", path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/metrics/${encodeURIComponent(metricId)}/snapshots/${encodeURIComponent(snapshotId)}`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.snapshot && typeof data.snapshot === "object" ? data.snapshot : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== snapshotId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận revision snapshot an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã lưu revision snapshot mới.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-snapshot-state") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const metricId = String(fields.__analyticsMetricId || "").trim();
+        const snapshotId = String(fields.__analyticsSnapshotId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsSnapshotRevision);
+        const state = String(fields.__analyticsSnapshotState || "").trim().toLowerCase();
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(metricId) || !validAnalyticsWorkspaceId(snapshotId) || !expectedReportRevision || !expectedRevision || !ANALYTICS_METRIC_STATES.has(state)) throw new Error("Trạng thái hoặc revision snapshot không hợp lệ.");
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:metric:${metricId}:snapshot:${snapshotId}:state:${state}`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/metrics/${encodeURIComponent(metricId)}/snapshots/${encodeURIComponent(snapshotId)}/state`, payload: { state, expected_report_revision: expectedReportRevision, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.snapshot && typeof data.snapshot === "object" ? data.snapshot : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== snapshotId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái snapshot an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã cập nhật snapshot.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-finding-create") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !expectedReportRevision) throw new Error("Mã hoặc revision report không hợp lệ.");
+        const payload = { ...analyticsFindingPayload(fields), expected_report_revision: expectedReportRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:finding:create`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/findings`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.finding && typeof data.finding === "object" ? data.finding : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.report_id || "") !== reportId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa trả receipt ghi chú hợp lệ.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã lưu ghi chú do người viết.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-finding-update") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const findingId = String(fields.__analyticsFindingId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsFindingRevision);
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(findingId) || !expectedReportRevision || !expectedRevision) throw new Error("Mã hoặc revision ghi chú không hợp lệ.");
+        const payload = { ...analyticsFindingPayload(fields), expected_report_revision: expectedReportRevision, expected_revision: expectedRevision };
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:finding:${findingId}:update`, method: "PATCH", path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/findings/${encodeURIComponent(findingId)}`, payload,
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.finding && typeof data.finding === "object" ? data.finding : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== findingId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận revision ghi chú an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã lưu revision ghi chú mới.");
+          }
+        });
+        return;
+      }
+      if (action === "analytics-finding-state") {
+        const reportId = String(fields.__analyticsReportId || analyticsReportIdFromPath(route)).trim();
+        const findingId = String(fields.__analyticsFindingId || "").trim();
+        const expectedReportRevision = validAnalyticsRevision(fields.__analyticsReportRevision);
+        const expectedRevision = validAnalyticsRevision(fields.__analyticsFindingRevision);
+        const state = String(fields.__analyticsFindingState || "").trim().toLowerCase();
+        if (!validAnalyticsWorkspaceId(reportId) || !validAnalyticsWorkspaceId(findingId) || !expectedReportRevision || !expectedRevision || !ANALYTICS_FINDING_STATES.has(state)) throw new Error("Trạng thái hoặc revision ghi chú không hợp lệ.");
+        await analyticsWorkspaceMutation({
+          action, route, scope: `analytics-workspace:report:${reportId}:finding:${findingId}:state:${state}`, path: `/analytics-workspace/reports/${encodeURIComponent(reportId)}/findings/${encodeURIComponent(findingId)}/state`, payload: { state, expected_report_revision: expectedReportRevision, expected_revision: expectedRevision },
+          onSuccess: async (result) => {
+            const data = result.data && typeof result.data === "object" ? result.data : {};
+            const receipt = data.finding && typeof data.finding === "object" ? data.finding : null;
+            if (!analyticsWorkspaceBoundaryIsSafe(data) || !receipt || !validAnalyticsWorkspaceId(receipt.id) || String(receipt.id) !== findingId || !validAnalyticsRevision(receipt.revision)) throw new Error("Máy chủ chưa xác nhận trạng thái ghi chú an toàn.");
+            await refreshAnalyticsWorkspaceAfterMutation(reportId);
+            toast(result.message || "Đã cập nhật ghi chú.");
           }
         });
         return;
