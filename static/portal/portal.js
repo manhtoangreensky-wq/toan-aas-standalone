@@ -625,6 +625,19 @@
     layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
     notes: ["Chỉ chọn reference thuộc Asset Vault của signed account; không nhập URL, provider/job/file handle, secret, OTP/CVV hoặc chứng từ thanh toán.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
   });
+  // Document & PDF Workspace intentionally has a separate native route family.
+  // Historical `/documents/*` pages continue to own narrowly scoped,
+  // deterministic file operations.  This workspace stores a signed user's
+  // document brief and processing plans only; it never uploads, parses, OCRs,
+  // translates, converts, creates, previews or delivers a file.
+  customerPage("/document-workspace", "Document & PDF Workspace", "Tổ chức brief tài liệu, processing plan, Asset Vault metadata và self-review trong workspace riêng tư.", ICONS.document, {
+    layout: "document-workspace", type: "document-workspace", fields: [], action: "none", status: "ready",
+    notes: ["Document & PDF Workspace chỉ lưu authoring metadata thuộc signed Web account. OCR, dịch, converter, provider, Bot job, Xu, PayOS, upload, file preview và delivery đều không chạy tại đây.", "Kế hoạch có thể liên kết metadata Asset Vault đã owner-check; đó không phải source blob, path, URL, file output hoặc yêu cầu thực thi."]
+  });
+  customerPage("/document-workspace/new", "Document brief mới", "Tạo brief tài liệu có scope, target format, checklist và processing plan để self-review nội bộ.", ICONS.document, {
+    layout: "document-workspace", type: "document-workspace", fields: [], action: "none", status: "ready",
+    notes: ["Không nhập URL, provider/job/file handle, secret, OTP/CVV, chứng từ thanh toán hoặc dữ liệu nhạy cảm vào metadata.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
+  });
   customerPage("/project-packages", "Project Packages", "Xuất snapshot ZIP bất biến từ Project và Studio Document do Web App tự xác minh riêng tư.", ICONS.package, {
     layout: "project-packages", type: "project-packages", fields: [], action: "none", status: "ready",
     notes: ["Project Package là output Web-native riêng tư; không phải Gói dịch vụ, Job Bot hay Tài sản Bot.", "ZIP chỉ chứa snapshot Project và metadata tham chiếu; không chứa source blob, storage path, URL ký, identity, Xu, PayOS hay provider data."]
@@ -1277,6 +1290,16 @@
         notes: ["Artboard và direction chỉ là authoring metadata Web-owned. Không tạo ảnh, thumbnail, preview, URL media, job hay delivery.", "Reference chỉ là metadata Asset Vault đã qua owner check; Resize/Enhance Web-native là utility riêng, không phải provider image engine."]
       });
     }
+    if (/^\/document-workspace\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const workspaceId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/document-workspace/:id", routePath: normalized, title: "Document & PDF Workspace", icon: ICONS.document, section: "Document & PDF Workspace",
+        description: "Biên tập document brief, processing plan, self-review và version history thuộc signed Web account hiện tại.",
+        status: "processing", access: "member", layout: "document-workspace-detail", action: "none", actionLabel: "", fields: [],
+        recordId: workspaceId,
+        notes: ["Workspace và plan chỉ là authoring metadata Web-owned. Không upload/đọc source file, OCR, dịch, convert, preview, output, job hoặc delivery.", "Asset Vault reference chỉ là metadata đã qua owner check. Các PDF utility deterministic là route riêng, không nhận lifecycle hay output từ workspace này."]
+      });
+    }
     if (/^\/subtitle-studio\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
       const transcriptProjectId = normalized.split("/").pop();
       return Object.freeze({
@@ -1447,7 +1470,7 @@
       {
         label: "Workspace",
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image], ["/video-studio", "Video Studio", ICONS.video], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets], ["/workspace", "Bản nháp", ICONS.prompt], ["/prompt-library", "Prompt Library", ICONS.prompt], ["/content-studio", "Content Studio", ICONS.prompt], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/video-studio", "Video Studio", ICONS.video], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/notes", "Memory Center", ICONS.prompt], ["/reminders", "Nhắc việc", ICONS.jobs], ["/campaigns", "Kế hoạch nội dung", ICONS.prompt], ["/calendar", "Lịch nội dung", ICONS.system], ["/approvals", "Tự rà soát", ICONS.security]
         ]
       },
       {
@@ -1517,6 +1540,7 @@
     if (linkPath === "/media-workspace") return matchesRouteFamily(path, "/media-workspace");
     if (linkPath === "/content-studio") return matchesRouteFamily(path, "/content-studio");
     if (linkPath === "/image-studio") return matchesRouteFamily(path, "/image-studio");
+    if (linkPath === "/document-workspace") return matchesRouteFamily(path, "/document-workspace");
     if (linkPath === "/video-studio") return matchesRouteFamily(path, "/video-studio");
     if (linkPath === "/subtitle-studio") return matchesRouteFamily(path, "/subtitle-studio");
     if (linkPath === "/voice-studio") return matchesRouteFamily(path, "/voice-studio");
@@ -1551,7 +1575,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/projects", "/prompt-library", "/content-studio", "/video-studio", "/subtitle-studio", "/voice-studio", "/media-workspace", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/video-studio/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/");
+      return ["/dashboard", "/projects", "/prompt-library", "/content-studio", "/document-workspace", "/video-studio", "/subtitle-studio", "/voice-studio", "/media-workspace", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/document-workspace/") || path.startsWith("/video-studio/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -3595,6 +3619,267 @@
       ${renderImageStudioBoundary()}
     </article>`;
   }
+
+  // This is a private authoring surface. It deliberately does not reuse the
+  // historical document-operation history, which owns real deterministic
+  // file work and delivery behind an independent contract.
+  const DOCUMENT_WORKSPACE_TYPES = Object.freeze([
+    ["pdf", "PDF"], ["office", "Office document"], ["text", "Text document"],
+    ["image", "Ảnh / scan"], ["scan", "Tài liệu scan"], ["mixed", "Nhiều loại tài liệu"]
+  ]);
+  const DOCUMENT_WORKSPACE_OPERATIONS = Object.freeze([
+    ["organize", "Tổ chức / QA"], ["split", "Tách PDF · planned"], ["merge", "Gộp PDF · planned"],
+    ["optimize", "Tối ưu PDF · planned"], ["image_to_pdf", "Ảnh → PDF · planned"],
+    ["pdf_to_images", "PDF → ảnh · planned"], ["pdf_to_word", "PDF text → Word · planned"],
+    ["ocr", "OCR intent · guarded"], ["translate", "Dịch intent · guarded"],
+    ["convert", "Convert intent · guarded"], ["other", "Khác"]
+  ]);
+  const DOCUMENT_WORKSPACE_STATES = Object.freeze({
+    draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
+  });
+
+  function validDocumentWorkspaceId(value) { return validProjectId(value); }
+  function validDocumentPlanId(value) { return validProjectId(value); }
+  function documentWorkspaceState(value) {
+    const state = String(value || "").toLowerCase();
+    return Object.prototype.hasOwnProperty.call(DOCUMENT_WORKSPACE_STATES, state) ? state : "guarded";
+  }
+  function documentWorkspaceStateBadge(value) {
+    const state = documentWorkspaceState(value);
+    return '<span class="portal-badge" data-status="' + safeText(state) + '">' + safeText(DOCUMENT_WORKSPACE_STATES[state] || "Được bảo vệ") + "</span>";
+  }
+  function documentWorkspaceTags(value) {
+    return Array.isArray(value) ? value.filter((tag) => typeof tag === "string" && tag.trim()).slice(0, 20) : [];
+  }
+  function renderDocumentWorkspaceTags(value) {
+    const tags = documentWorkspaceTags(value);
+    return tags.length ? '<div class="portal-document-workspace-tags">' + tags.map((tag) => "<span>" + safeText(tag) + "</span>").join("") + "</div>" : "";
+  }
+  function documentWorkspaceTypeLabel(value) {
+    const item = DOCUMENT_WORKSPACE_TYPES.find((entry) => entry[0] === String(value || ""));
+    return item ? item[1] : "Tài liệu";
+  }
+  function documentWorkspaceOperationLabel(value) {
+    const item = DOCUMENT_WORKSPACE_OPERATIONS.find((entry) => entry[0] === String(value || ""));
+    return item ? item[1] : "Processing plan";
+  }
+  function documentWorkspaceReferences(context) {
+    return context && context.documentWorkspaceReferences && typeof context.documentWorkspaceReferences === "object" ? context.documentWorkspaceReferences : {};
+  }
+  function documentWorkspaceProjectOptions(context) {
+    const refs = documentWorkspaceReferences(context);
+    return (Array.isArray(refs.projects) ? refs.projects : []).filter((item) => item && validDocumentWorkspaceId(item.id)).slice(0, 100)
+      .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
+  }
+  function documentWorkspaceAssetOptions(context) {
+    const refs = documentWorkspaceReferences(context);
+    const assets = Array.isArray(refs.document_assets) ? refs.document_assets : [];
+    // The API intentionally returns owner-scoped display metadata only. No
+    // filename/path/blob/url fallback is acceptable in this selector.
+    return assets.filter((item) => item && validDocumentWorkspaceId(item.id)).slice(0, 100).map((item) => {
+      const label = String(item.display_name || "Asset Vault document").replace(/\s+/g, " ").trim().slice(0, 160);
+      const extension = String(item.extension || "").replace(/^\./, "").toUpperCase();
+      return { value: String(item.id), label: extension ? label + " · " + extension : label };
+    });
+  }
+  function documentWorkspaceAssetName(context, assetId) {
+    const id = String(assetId || "");
+    const assets = documentWorkspaceAssetOptions(context);
+    const asset = assets.find((item) => item.value === id);
+    return asset ? asset.label : (id ? "Asset Vault reference đã chọn" : "Không gắn asset");
+  }
+  function documentWorkspaceFields(context) {
+    return [
+      { name: "title", label: "Tên document brief", placeholder: "Ví dụ: Hồ sơ sản phẩm tháng 7", required: true, minLength: 2, maxLength: 180 },
+      { name: "document_type", label: "Loại tài liệu", control: "select", required: true, options: DOCUMENT_WORKSPACE_TYPES },
+      { name: "language", label: "Ngôn ngữ nguồn / review", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
+      { name: "target_language", label: "Ngôn ngữ đích (tùy chọn)", placeholder: "en", maxLength: 100, help: "Chỉ là metadata review, không gọi dịch máy hoặc tạo bản dịch." },
+      { name: "source_summary", label: "Scope, nguồn & trang dự kiến", control: "textarea", placeholder: "Mô tả phạm vi, loại trang, giới hạn đầu vào và những điều cần kiểm tra…", required: true, minLength: 3, maxLength: 6000, wide: true },
+      { name: "objective", label: "Mục tiêu, target format & QA checklist", control: "textarea", placeholder: "Mục tiêu xử lý, định dạng dự kiến, tiêu chí QA và điều không được tự suy diễn…", required: true, minLength: 3, maxLength: 6000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "contract, pdf, qa", maxLength: 1000 },
+      { name: "project_id", label: "Project (tùy chọn)", control: "select", options: documentWorkspaceProjectOptions(context), emptyLabel: "Không liên kết Project" }
+    ];
+  }
+  function documentWorkspaceValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const type = String(source.document_type || "");
+    return {
+      title: String(source.title || ""),
+      document_type: DOCUMENT_WORKSPACE_TYPES.some((entry) => entry[0] === type) ? type : "mixed",
+      language: String(source.language || "vi"),
+      target_language: String(source.target_language || ""),
+      source_summary: String(source.source_summary || source.source_excerpt || ""),
+      objective: String(source.objective || source.objective_excerpt || ""),
+      tags: documentWorkspaceTags(source.tags).join(", "),
+      project_id: String(source.project_id || "")
+    };
+  }
+  function documentPlanFields(context) {
+    return [
+      { name: "title", label: "Tên processing plan", placeholder: "Ví dụ: Rà soát trước khi tách trang", required: true, minLength: 2, maxLength: 180 },
+      { name: "operation", label: "Intent / planned operation", control: "select", required: true, options: DOCUMENT_WORKSPACE_OPERATIONS, help: "Lưu intent để review; không gọi utility, OCR, converter, dịch, provider hoặc job." },
+      { name: "source_asset_id", label: "Asset Vault source metadata", control: "select", options: documentWorkspaceAssetOptions(context), emptyLabel: "Không gắn source metadata", help: "Chỉ gửi UUID owner-scoped; workspace không đọc file, blob, path hoặc preview." },
+      { name: "reference_asset_id", label: "Asset Vault reference metadata", control: "select", options: documentWorkspaceAssetOptions(context), emptyLabel: "Không gắn reference metadata" },
+      { name: "instructions", label: "Scope, pages & kiểm tra dự kiến", control: "textarea", placeholder: "Phạm vi trang, thứ tự, tiêu chí QA và fallback cần tự review…", maxLength: 6000, wide: true },
+      { name: "tags", label: "Tags", placeholder: "pages, legal, review", maxLength: 1000 }
+    ];
+  }
+  function documentPlanValues(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const operation = String(source.operation || "");
+    return {
+      title: String(source.title || ""),
+      operation: DOCUMENT_WORKSPACE_OPERATIONS.some((entry) => entry[0] === operation) ? operation : "organize",
+      source_asset_id: String(source.source_asset_id || ""),
+      reference_asset_id: String(source.reference_asset_id || ""),
+      instructions: String(source.instructions || source.instructions_excerpt || ""),
+      tags: documentWorkspaceTags(source.tags).join(", ")
+    };
+  }
+  function documentWorkspaceEventLabel(value) {
+    const labels = {
+      workspace_created: "Đã tạo document brief", workspace_updated: "Đã lưu document brief",
+      workspace_state_changed: "Đã đổi trạng thái self-review", workspace_version_restored: "Đã khôi phục version brief",
+      workspace_review: "Đã bắt đầu self-review", workspace_approved: "Đã hoàn tất self-review",
+      workspace_archived: "Đã archive brief", workspace_draft: "Đã trả brief về Draft",
+      plan_created: "Đã thêm processing plan", plan_updated: "Đã lưu processing plan",
+      plan_archived: "Đã archive processing plan", plan_restored: "Đã khôi phục processing plan",
+      plan_version_restored: "Đã khôi phục version processing plan", plans_reordered: "Đã đổi thứ tự processing plan"
+    };
+    return labels[String(value || "")] || String(value || "document_workspace_updated").replace(/_/g, " ");
+  }
+  function renderDocumentWorkspaceBoundary() {
+    return '<aside class="portal-card portal-card-pad portal-document-workspace-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Authoring boundary</span><h2 class="portal-card-title">Brief & processing plan, không xử lý file</h2><p class="portal-card-subtitle">Workspace chỉ lưu metadata review và opaque Asset Vault reference. Không upload/đọc file, tạo preview/output, gọi OCR/dịch/provider/Bot job hay trừ Xu/khởi tạo thanh toán.</p></div>' + badge("guarded") + '</div><div class="portal-document-workspace-guard-list"><span><strong>OCR / translation</strong><em>guarded</em></span><span><strong>Convert / output</strong><em>guarded</em></span><span><strong>Provider / Bot job</strong><em>guarded</em></span><span><strong>Wallet / payment</strong><em>guarded</em></span></div></aside>';
+  }
+  function renderDocumentWorkspaceCards(items, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
+    if (!items.length) return renderEmpty("Chưa có document brief", "Tạo brief đầu tiên để tổ chức scope, target format, QA checklist và processing plan. Workspace không tạo file hoặc output thay thế.", ICONS.document);
+    return '<div class="portal-document-workspace-grid">' + items.map((item) => {
+      const id = String(item.id || "");
+      const state = documentWorkspaceState(item.lifecycle || item.state);
+      const planCount = Number(item.plan_count || 0);
+      const href = "/document-workspace/" + encodeURIComponent(id);
+      const button = canView && validDocumentWorkspaceId(id)
+        ? '<a class="portal-button portal-button--quiet" href="' + safeText(href) + '">Mở brief <span aria-hidden="true">→</span></a>' : "";
+      return '<article class="portal-card portal-card-pad portal-document-workspace-card"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceTypeLabel(item.document_type)) + "</span><h3 class=\"portal-card-title\">" + safeText(String(item.title || "Document brief")) + "</h3><p class=\"portal-card-subtitle\">" + safeText(String(item.objective_excerpt || item.objective || item.source_excerpt || item.source_summary || "Chưa có scope hiển thị.")) + "</p></div>" + documentWorkspaceStateBadge(state) + '</div><div class="portal-document-workspace-meta"><span>' + safeText(String(planCount)) + " plans</span><span>" + safeText(String(item.language || "—")) + "</span><span>v" + safeText(String(item.revision || 1)) + "</span></div>" + renderDocumentWorkspaceTags(item.tags) + '<div class="portal-form-footer"><span class="portal-form-note">' + safeText(state === "approved" ? "Self-review đã đánh dấu" : state === "archived" ? "Đã archive · chỉ đọc" : "Đang biên tập") + "</span>" + button + "</div></article>";
+    }).join("") + "</div>";
+  }
+  function renderDocumentWorkspace(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
+    const enabled = context.documentWorkspaceEnabled === true;
+    if (!canView) {
+      const copy = enabled
+        ? "Đăng nhập bằng signed session để mở document brief thuộc account hiện tại. Route native này không đọc legacy document-operation history."
+        : "Document & PDF Workspace đang được server giữ ở chế độ guarded. Khi feature flag chưa bật, Web không hiển thị converter, OCR, file preview hay output giả.";
+      return '<article class="portal-page portal-document-workspace">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty("Document & PDF Workspace đang được bảo vệ", copy, ICONS.document) + "</section></article>";
+    }
+    const summary = context.documentWorkspaceSummary && typeof context.documentWorkspaceSummary === "object" ? context.documentWorkspaceSummary : {};
+    const workspaceSummary = summary.workspaces && typeof summary.workspaces === "object" ? summary.workspaces : {};
+    const workspaces = Array.isArray(context.documentWorkspaces) ? context.documentWorkspaces.filter((item) => item && validDocumentWorkspaceId(item.id)).slice(0, 100) : [];
+    const values = documentWorkspaceValues(transientFormValues(page.routePath || page.path));
+    const canCreate = Boolean(context.capabilities && context.capabilities["document-workspace-create"] === true);
+    const intro = '<section class="portal-document-workspace-intro"><div><span class="portal-section-kicker">Web-native document planning</span><h2>Rõ scope, target format và QA trước khi chọn công cụ phù hợp.</h2><p>Quản lý document brief, processing plan và Asset Vault metadata theo signed account. Các số liệu là metadata review; không phải file, trang, preview hay output đã được tạo.</p></div><dl><div><dt>' + safeText(String(Number(workspaceSummary.total || workspaces.length))) + '</dt><dd>Document briefs</dd></div><div><dt>' + safeText(String(Number(workspaceSummary.review || 0))) + '</dt><dd>Đang review</dd></div><div><dt>' + safeText(String(Number(workspaceSummary.approved || 0))) + "</dt><dd>Self-review xong</dd></div></dl></section>";
+    const form = '<section class="portal-card portal-card-pad portal-document-workspace-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New document brief</span><h2 class="portal-card-title">Lập scope & QA checklist</h2><p class="portal-card-subtitle">Bắt đầu bằng loại tài liệu, scope, target format, language và checklist review. Server kiểm tra session, CSRF, ownership, revision và idempotency cho mỗi lần ghi.</p></div>' + badge(canCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="document-workspace-create" data-portal-route="' + safeText(page.routePath || page.path) + '" novalidate>' + renderFields(documentWorkspaceFields(context), canCreate, context, values) + '<div class="portal-form-footer"><span class="portal-form-note">Không nhập URL, file/path/blob, provider/job ID, secret, OTP/CVV hoặc chứng từ thanh toán.</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? "" : " disabled") + ">Tạo document brief</button></div></form></section>";
+    const library = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Brief library</span><h2 class="portal-card-title">Tiếp tục self-review</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở brief để server owner-check processing plan, history và Asset Vault reference an toàn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-refresh" data-portal-route="/document-workspace">Làm mới</button></div>' + renderDocumentWorkspaceCards(workspaces, context) + "</section>";
+    return '<article class="portal-page portal-document-workspace">' + renderHero(page, context) + intro + '<div class="portal-document-workspace-layout">' + form + renderDocumentWorkspaceBoundary() + "</div>" + library + "</article>";
+  }
+  function documentWorkspaceEstimateMarkup(estimate, plans) {
+    const source = estimate && typeof estimate === "object" ? estimate : {};
+    const active = Number(source.active_plan_count ?? source.plan_count ?? plans.length);
+    const withAsset = Number(source.asset_reference_count ?? source.referenced_asset_count ?? plans.filter((item) => String(item.source_asset_id || item.reference_asset_id || "")).length);
+    const guarded = Number(source.guarded_intent_count ?? plans.filter((item) => ["ocr", "translate", "convert"].includes(String(item.operation || ""))).length);
+    return '<section class="portal-card portal-card-pad portal-document-workspace-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Review estimate</span><h2 class="portal-card-title">Tổng hợp plan để rà soát</h2><p class="portal-card-subtitle">Estimate chỉ đếm metadata plan/reference. Nó không đọc file, đếm trang, chạy OCR/dịch, gọi provider, tạo output hoặc xác nhận delivery.</p></div>' + badge("read_only") + '</div><div class="portal-document-workspace-estimate-grid"><span><strong>' + safeText(String(active)) + "</strong> plans active</span><span><strong>" + safeText(String(withAsset)) + "</strong> Asset Vault refs</span><span><strong>" + safeText(String(guarded)) + "</strong> guarded intents</span></div></section>";
+  }
+  function documentWorkspaceDataAttrs(workspace, plan) {
+    const baseAttrs = ' data-document-workspace-id="' + safeText(String(workspace.id)) + '" data-document-workspace-revision="' + safeText(String(workspace.revision)) + '"';
+    if (!plan) return baseAttrs;
+    return baseAttrs + ' data-document-plan-id="' + safeText(String(plan.id)) + '" data-document-plan-revision="' + safeText(String(plan.revision)) + '"';
+  }
+  function renderDocumentPlanCard(plan, workspace, context, route, position, total) {
+    const active = String(plan.state || "active") === "active";
+    const writable = documentWorkspaceState(workspace.lifecycle || workspace.state) === "draft";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["document-plan-update"] === true && active && writable);
+    const canArchive = Boolean(context.capabilities && context.capabilities["document-plan-archive"] === true && active && writable);
+    const canRestore = Boolean(context.capabilities && context.capabilities["document-plan-restore"] === true && !active && writable);
+    const canReorder = Boolean(context.capabilities && context.capabilities["document-plan-reorder"] === true && active && writable);
+    const attrs = documentWorkspaceDataAttrs(workspace, plan);
+    const routeAttr = ' data-portal-route="' + safeText(route) + '"';
+    const archiveButton = active
+      ? '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-archive"' + routeAttr + attrs + ' data-portal-confirm="Archive processing plan này? Metadata và history riêng tư vẫn được giữ."' + (canArchive ? "" : " disabled") + ">Archive</button>"
+      : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-restore"' + routeAttr + attrs + (canRestore ? "" : " disabled") + ">Khôi phục</button>";
+    const moves = active ? '<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-reorder" data-document-plan-direction="up"' + routeAttr + attrs + (canReorder && position > 0 ? "" : " disabled") + '>Lên</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-reorder" data-document-plan-direction="down"' + routeAttr + attrs + (canReorder && position < total - 1 ? "" : " disabled") + ">Xuống</button></div>" : "";
+    const sources = '<div class="portal-document-plan-meta"><span>Source: ' + safeText(documentWorkspaceAssetName(context, plan.source_asset_id)) + "</span><span>Ref: " + safeText(documentWorkspaceAssetName(context, plan.reference_asset_id)) + "</span><span>v" + safeText(String(plan.revision || 1)) + "</span></div>";
+    const versions = Array.isArray(plan.versions) ? plan.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 20) : [];
+    const canRestoreVersion = Boolean(context.capabilities && context.capabilities["document-plan-restore-version"] === true && active && writable);
+    const history = versions.length ? '<div class="portal-document-plan-version-list">' + versions.map((version) => {
+      const current = Number(version.revision) === Number(plan.revision);
+      const restore = current ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-plan-restore-version" data-document-plan-version="' + safeText(String(version.revision)) + '"' + routeAttr + attrs + ' data-portal-confirm="Khôi phục v' + safeText(String(version.revision)) + ' thành revision plan mới?"' + (canRestoreVersion ? "" : " disabled") + '>Khôi phục v' + safeText(String(version.revision)) + '</button>';
+      return '<article><span><strong>v' + safeText(String(version.revision)) + '</strong><small>' + safeText(String(version.instructions_excerpt || "")) + '</small></span>' + restore + '</article>';
+    }).join("") + '</div>' : "";
+    const form = '<form class="portal-form portal-document-plan-form" data-portal-form data-portal-action="document-plan-update"' + routeAttr + attrs + " novalidate>" + renderFields(documentPlanFields(context), canUpdate, context, documentPlanValues(plan)) + '<div class="portal-form-footer"><span class="portal-form-note">Lưu plan không đọc Asset Vault blob, không chạy utility/OCR/dịch và không tạo output.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision plan</button></div></form>";
+    return '<article class="portal-document-plan-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceOperationLabel(plan.operation)) + "</span><h3 class=\"portal-card-title\">" + safeText(String(plan.title || "Processing plan")) + "</h3><p class=\"portal-card-subtitle\">" + safeText(String(plan.instructions_excerpt || plan.instructions || "Chưa có scope plan hiển thị.")) + "</p></div>" + badge(active ? "ready" : "archived") + "</div>" + sources + renderDocumentWorkspaceTags(plan.tags) + '<div class="portal-inline-actions">' + archiveButton + moves + "</div>" + history + form + "</article>";
+  }
+
+  function documentWorkspaceStateActions(workspace, state, context, route) {
+    const canLifecycle = Boolean(context.capabilities && context.capabilities["document-workspace-lifecycle"] === true);
+    const attrs = documentWorkspaceDataAttrs(workspace, null);
+    const routeAttr = ' data-portal-route="' + safeText(route) + '"';
+    if (state === "archived") {
+      return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="draft"' + routeAttr + attrs + ' data-portal-confirm="Khôi phục document brief về Draft để tiếp tục biên tập?"' + (canLifecycle ? "" : " disabled") + ">Khôi phục về Draft</button>";
+    }
+    const reviewTarget = state === "draft" ? "review" : "draft";
+    const reviewLabel = state === "draft" ? "Bắt đầu self-review" : "Trả về Draft";
+    const reviewConfirm = state === "draft" ? "Chuyển document brief sang Self-review?" : "Trả document brief về Draft để tiếp tục biên tập?";
+    return '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="' + reviewTarget + '"' + routeAttr + attrs + ' data-portal-confirm="' + reviewConfirm + '"' + (canLifecycle ? "" : " disabled") + ">" + reviewLabel + '</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="approved"' + routeAttr + attrs + ' data-portal-confirm="Đánh dấu self-review hoàn tất? Điều này không đọc file, tạo output, job hoặc delivery."' + (canLifecycle && state === "review" ? "" : " disabled") + '>Đánh dấu review xong</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-state" data-document-workspace-state="archived"' + routeAttr + attrs + ' data-portal-confirm="Archive document brief? Processing plan và history riêng tư vẫn được giữ."' + (canLifecycle ? "" : " disabled") + ">Archive brief</button>";
+  }
+  function renderDocumentWorkspaceVersions(workspace, versions, context, route) {
+    if (!versions.length) return renderEmpty("Chưa có history", "Version đầu tiên xuất hiện khi document brief được lưu.", "↺");
+    const canRestore = Boolean(context.capabilities && context.capabilities["document-workspace-restore-version"] === true && documentWorkspaceState(workspace.lifecycle || workspace.state) === "draft");
+    const attrs = documentWorkspaceDataAttrs(workspace, null);
+    return '<div class="portal-document-version-list">' + versions.map((version) => {
+      const current = Number(version.revision) === Number(workspace.revision);
+      const restore = current ? '<span class="portal-form-note">Đang mở</span>' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="document-workspace-restore-version" data-portal-route="' + safeText(route) + '"' + attrs + ' data-document-workspace-version="' + safeText(String(version.revision)) + '" data-portal-confirm="Khôi phục revision này thành một version mới?"' + (canRestore ? "" : " disabled") + ">Khôi phục v" + safeText(String(version.revision)) + "</button>";
+      return "<article><div><strong>v" + safeText(String(version.revision)) + " · " + safeText(String(version.title || "Document brief")) + "</strong><p>" + safeText(String(version.objective_excerpt || version.objective || version.source_excerpt || version.source_summary || "")) + "</p><small>" + safeText(String(version.created_at || "—")) + "</small></div>" + restore + "</article>";
+    }).join("") + "</div>";
+  }
+  function renderDocumentWorkspaceEvents(events) {
+    if (!events.length) return '<p class="portal-form-note">Chưa có hoạt động được ghi nhận.</p>';
+    return '<div class="portal-document-workspace-events">' + events.map((item) => '<div><span aria-hidden="true">•</span><span><strong>' + safeText(documentWorkspaceEventLabel(item.action)) + "</strong><small>v" + safeText(String(item.revision || 1)) + " · " + safeText(String(item.created_at || "—")) + "</small></span></div>").join("") + "</div>";
+  }
+  function renderDocumentWorkspaceDetail(page, context) {
+    const detail = context.documentWorkspaceDetail && typeof context.documentWorkspaceDetail === "object" ? context.documentWorkspaceDetail : {};
+    const workspace = detail.workspace && typeof detail.workspace === "object" && validDocumentWorkspaceId(detail.workspace.id) && String(detail.workspace.id) === String(page.recordId || "") ? detail.workspace : null;
+    const canView = Boolean(context.capabilities && context.capabilities["document-workspace-view"] === true);
+    if (!canView || !workspace) {
+      const title = canView ? "Không tìm thấy document brief" : "Document & PDF Workspace đang được bảo vệ";
+      const copy = canView ? "Server cần xác minh owner trước khi hiển thị brief, processing plan và history; dữ liệu cũ không được giữ trong browser." : "Đăng nhập bằng signed session và chờ feature flag server-side để mở brief của account hiện tại.";
+      return '<article class="portal-page portal-document-workspace-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad">' + renderEmpty(title, copy, ICONS.document) + '<div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/document-workspace">Về Document Workspace</a></div></section></article>';
+    }
+    const route = page.routePath || page.path;
+    const state = documentWorkspaceState(workspace.lifecycle || workspace.state);
+    const writable = state === "draft";
+    const canUpdate = Boolean(context.capabilities && context.capabilities["document-workspace-update"] === true && writable);
+    const canPlanCreate = Boolean(context.capabilities && context.capabilities["document-plan-create"] === true && writable);
+    const plans = Array.isArray(detail.plans) ? detail.plans.filter((item) => item && validDocumentPlanId(item.id) && String(item.workspace_id || "") === String(workspace.id)).slice(0, 250) : [];
+    const activePlans = plans.filter((item) => String(item.state || "active") === "active");
+    const versions = Array.isArray(detail.versions) ? detail.versions.filter((item) => item && Number.isInteger(Number(item.revision))).slice(0, 100) : [];
+    const events = Array.isArray(detail.events) ? detail.events.filter((item) => item && typeof item === "object").slice(0, 24) : [];
+    const estimate = detail.estimate && typeof detail.estimate === "object" ? detail.estimate : (context.documentWorkspaceEstimate && typeof context.documentWorkspaceEstimate === "object" ? context.documentWorkspaceEstimate : {});
+    const attrs = documentWorkspaceDataAttrs(workspace, null);
+    const summary = '<section class="portal-document-workspace-detail-summary"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceTypeLabel(workspace.document_type)) + " · " + safeText(String(workspace.language || "—")) + "</span><h2>" + safeText(String(workspace.title || "Document brief")) + "</h2><p>" + safeText(String(workspace.objective || workspace.objective_excerpt || workspace.source_summary || workspace.source_excerpt || "Chưa có mục tiêu hiển thị.")) + "</p>" + renderDocumentWorkspaceTags(workspace.tags) + "</div><dl><div><dt>Trạng thái</dt><dd>" + safeText(DOCUMENT_WORKSPACE_STATES[state] || "Được bảo vệ") + "</dd></div><div><dt>Revision</dt><dd>v" + safeText(String(workspace.revision || 1)) + "</dd></div><div><dt>Plans</dt><dd>" + safeText(String(activePlans.length)) + "</dd></div></dl></section>";
+    const editor = '<section class="portal-card portal-card-pad portal-document-workspace-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Document brief editor</span><h2 class="portal-card-title">Scope, target format & QA</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không do browser tự suy diễn.</p></div>' + documentWorkspaceStateBadge(state) + '</div><form class="portal-form" data-portal-form data-portal-action="document-workspace-update" data-portal-route="' + safeText(route) + '"' + attrs + " novalidate>" + renderFields(documentWorkspaceFields(context), canUpdate, context, documentWorkspaceValues(workspace)) + '<div class="portal-form-footer"><span class="portal-form-note">Chỉ Draft có thể biên tập. Review, approved hoặc archived khóa plan và brief cho đến khi server trả về Draft.</span><div class="portal-inline-actions">' + documentWorkspaceStateActions(workspace, state, context, route) + '<button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision brief</button></div></div></form></section>";
+    const estimateCard = state !== "draft"
+      ? '<section class="portal-card portal-card-pad portal-document-workspace-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Review estimate</span><h2 class="portal-card-title">Estimate đã được khóa</h2><p class="portal-card-subtitle">Document brief đang ở trạng thái self-review hoặc archive nên server không tính checklist lại. Trả về Draft khi bạn muốn tiếp tục chỉnh plan và review.</p></div>' + documentWorkspaceStateBadge(state) + "</div></section>"
+      : documentWorkspaceEstimateMarkup(estimate, activePlans);
+    const planCreate = '<section class="portal-card portal-card-pad portal-document-plan-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Processing plan board</span><h2 class="portal-card-title">Thêm processing plan</h2><p class="portal-card-subtitle">Mỗi plan có intent, scope, Asset Vault metadata và history riêng. OCR, dịch và convert chỉ được ghi intent guarded, không chạy engine.</p></div>' + badge(canPlanCreate ? "ready" : "guarded") + '</div><form class="portal-form" data-portal-form data-portal-action="document-plan-create" data-portal-route="' + safeText(route) + '"' + attrs + " novalidate>" + renderFields(documentPlanFields(context), canPlanCreate, context, { operation: "organize" }) + '<div class="portal-form-footer"><span class="portal-form-note">Chỉ Asset Vault UUID metadata được gửi. Không có raw upload, file path, preview, provider/OCR/translation call hoặc output.</span><button class="portal-button portal-button--primary" type="submit"' + (canPlanCreate ? "" : " disabled") + ">Thêm processing plan</button></div></form></section>";
+    const tools = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Separate deterministic utilities</span><h2 class="portal-card-title">Cần xử lý file đã được kiểm chứng?</h2><p class="portal-card-subtitle">Các utility PDF dưới đây là workflow Web-native riêng với input/output, history và policy riêng. Chúng không khởi chạy từ plan, không chia sẻ lifecycle và không biến brief thành output.</p></div>' + badge("read_only") + '</div><div class="portal-document-workspace-tool-links"><a class="portal-button portal-button--quiet" href="/documents/split">Tách PDF</a><a class="portal-button portal-button--quiet" href="/documents/merge">Gộp PDF</a><a class="portal-button portal-button--quiet" href="/documents/compress">Tối ưu PDF</a><a class="portal-button portal-button--quiet" href="/documents/image-to-pdf">Ảnh → PDF</a><a class="portal-button portal-button--quiet" href="/documents/pdf-to-images">PDF → ảnh</a><a class="portal-button portal-button--quiet" href="/documents/pdf-to-word">PDF text → Word</a></div></section>';
+    const planCards = plans.length ? plans.map((plan, index) => renderDocumentPlanCard(plan, workspace, context, route, index, plans.length)).join("") : renderEmpty("Chưa có processing plan", "Thêm plan thủ công để tách scope và thứ tự review. Workspace không tự chạy tiện ích hoặc tạo file.", ICONS.document);
+    const planLibrary = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Plan library</span><h2 class="portal-card-title">Thứ tự & review notes</h2><p class="portal-card-subtitle">Mọi card là metadata authoring. Asset name được hiển thị từ owner-scoped metadata, không phải file preview, path hay URL.</p></div></div><div class="portal-document-plan-grid">' + planCards + "</div></section>";
+    const history = '<div class="portal-document-workspace-history-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Version history</span><h2 class="portal-card-title">Lịch sử document brief</h2><p class="portal-card-subtitle">Khôi phục version tạo revision mới, không xóa history cũ.</p></div></div>' + renderDocumentWorkspaceVersions(workspace, versions, context, route) + '</section><section class="portal-card portal-card-pad portal-document-workspace-activity"><div class="portal-card-header"><div><span class="portal-section-kicker">Audit-safe feed</span><h2 class="portal-card-title">Hoạt động gần đây</h2><p class="portal-card-subtitle">Feed chỉ hiển thị nhãn, revision và thời điểm; không chứa source text, asset path, URL, provider hay payment data.</p></div></div>' + renderDocumentWorkspaceEvents(events) + "</section></div>";
+    return '<article class="portal-page portal-document-workspace-detail">' + renderHero(page, context) + summary + '<div class="portal-document-workspace-detail-grid">' + editor + estimateCard + "</div>" + planCreate + tools + planLibrary + history + renderDocumentWorkspaceBoundary() + "</article>";
+  }
+
+  // Subtitle & Transcript Workspace remains a text-only authoring boundary.
 
   // Subtitle & Transcript Workspace remains a text-only authoring boundary.
   // The preview below serializes user-authored cue metadata for review only;
@@ -6485,6 +6770,8 @@
       case "content-studio-detail": return renderContentStudioDetail(page, context);
       case "image-studio": return renderImageStudio(page, context);
       case "image-studio-detail": return renderImageStudioDetail(page, context);
+      case "document-workspace": return renderDocumentWorkspace(page, context);
+      case "document-workspace-detail": return renderDocumentWorkspaceDetail(page, context);
       case "video-studio": return renderVideoStudio(page, context);
       case "video-studio-detail": return renderVideoStudioDetail(page, context);
       case "subtitle-studio": return renderSubtitleStudio(page, context);
@@ -6699,7 +6986,7 @@
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
-    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
+    if (form && !["workspace-draft-save", "workspace-draft-update", "memory-note-archive", "memory-note-restore", "memory-note-restore-version", "prompt-library-filter", "prompt-template-archive", "prompt-template-restore", "prompt-template-purge", "prompt-template-restore-version", "prompt-template-duplicate", "prompt-template-copy", "media-workspace-filter", "media-collection-archive", "media-collection-restore", "media-collection-duplicate", "media-collection-restore-version", "media-item-detach", "content-studio-filter", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-brief-compose", "content-variant-select", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action) && !form.reportValidity()) {
       const invalid = form.querySelector(":invalid");
       if (invalid && typeof invalid.focus === "function") invalid.focus();
       showToast("Hãy hoàn tất các trường bắt buộc trước khi tiếp tục.", "warning");
@@ -6710,8 +6997,24 @@
     if (confirmation && !window.confirm(confirmation)) return;
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
-    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-studio-refresh", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
+    if (form && action !== "memory-note-filter" && !["prompt-library-filter", "prompt-library-import", "media-workspace-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-restore-version", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
     const fields = collectFormFields(form);
+    // Document Workspace mutations deliberately use the same explicit
+    // owner-scoped IDs/revisions rendered by the server. Keep them inside
+    // the action field payload rather than teaching the generic event shape
+    // about another private surface; the backend remains the authority.
+    if (String(action || "").startsWith("document-")) {
+      Object.assign(fields, {
+        __documentWorkspaceId: source.getAttribute("data-document-workspace-id") || "",
+        __documentWorkspaceRevision: source.getAttribute("data-document-workspace-revision") || "",
+        __documentWorkspaceVersion: source.getAttribute("data-document-workspace-version") || "",
+        __documentWorkspaceState: source.getAttribute("data-document-workspace-state") || "",
+        __documentPlanId: source.getAttribute("data-document-plan-id") || "",
+        __documentPlanRevision: source.getAttribute("data-document-plan-revision") || "",
+        __documentPlanVersion: source.getAttribute("data-document-plan-version") || "",
+        __documentPlanDirection: source.getAttribute("data-document-plan-direction") || ""
+      });
+    }
     const event = new CustomEvent(ACTION_EVENT, {
       detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", contentBriefId: source.getAttribute("data-content-brief-id") || "", contentBriefRevision: source.getAttribute("data-content-brief-revision") || "", contentBriefVersion: source.getAttribute("data-content-brief-version") || "", contentVariantId: source.getAttribute("data-content-variant-id") || "", contentVariantRevision: source.getAttribute("data-content-variant-revision") || "", imageArtboardId: source.getAttribute("data-image-artboard-id") || "", imageArtboardRevision: source.getAttribute("data-image-artboard-revision") || "", imageArtboardVersion: source.getAttribute("data-image-artboard-version") || "", imageArtboardState: source.getAttribute("data-image-artboard-state") || "", imageDirectionId: source.getAttribute("data-image-direction-id") || "", imageDirectionRevision: source.getAttribute("data-image-direction-revision") || "", imageDirectionVersion: source.getAttribute("data-image-direction-version") || "", videoPlanId: source.getAttribute("data-video-plan-id") || "", videoPlanRevision: source.getAttribute("data-video-plan-revision") || "", videoPlanVersion: source.getAttribute("data-video-plan-version") || "", videoPlanState: source.getAttribute("data-video-plan-state") || "", videoSceneId: source.getAttribute("data-video-scene-id") || "", videoSceneRevision: source.getAttribute("data-video-scene-revision") || "", videoSceneVersion: source.getAttribute("data-video-scene-version") || "", videoSceneDirection: source.getAttribute("data-video-scene-direction") || "", subtitleProjectId: source.getAttribute("data-subtitle-project-id") || "", subtitleProjectRevision: source.getAttribute("data-subtitle-project-revision") || "", subtitleProjectVersion: source.getAttribute("data-subtitle-project-version") || "", subtitleProjectState: source.getAttribute("data-subtitle-project-state") || "", subtitleCueId: source.getAttribute("data-subtitle-cue-id") || "", subtitleCueRevision: source.getAttribute("data-subtitle-cue-revision") || "", subtitleCueVersion: source.getAttribute("data-subtitle-cue-version") || "", subtitleCueDirection: source.getAttribute("data-subtitle-cue-direction") || "", subtitleExportFormat: source.getAttribute("data-subtitle-export-format") || "", voiceVaultId: source.getAttribute("data-voice-vault-id") || "", voiceVaultRevision: source.getAttribute("data-voice-vault-revision") || "", voiceVaultVersion: source.getAttribute("data-voice-vault-version") || "", voiceScriptId: source.getAttribute("data-voice-script-id") || "", voiceScriptRevision: source.getAttribute("data-voice-script-revision") || "", voiceScriptVersion: source.getAttribute("data-voice-script-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
       bubbles: false,

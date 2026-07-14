@@ -241,6 +241,19 @@ def image_studio_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def document_workspace_enabled() -> bool:
+    """Whether the Web-native Document & PDF Workspace is available.
+
+    This flag exposes only signed-account authoring records: document briefs,
+    planned workflows, revision snapshots and opaque references to existing
+    private Asset Vault metadata.  It does *not* enable a document provider,
+    OCR, translation, Bot bridge, job, wallet, payment or output-delivery
+    capability.  The harmless planning surface is useful by default while an
+    explicit false value keeps a single maintenance switch.
+    """
+    return os.environ.get("WEBAPP_DOCUMENT_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def _is_within(path: Path, parent: Path) -> bool:
     try:
         path.resolve().relative_to(parent.resolve())
@@ -1785,6 +1798,125 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_image_events_account_created ON web_image_studio_events(account_id, created_at DESC, id DESC)"
+        )
+        # Document & PDF Workspace is an authoring-only signed-account
+        # surface.  It records customer planning text and opaque UUID
+        # references to existing Asset Vault metadata; it never stores source
+        # blobs, file paths, provider/Bot handles, OCR/translation payloads,
+        # jobs, wallet/PayOS state or generated-output data.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_workspaces (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                project_id TEXT,
+                title TEXT NOT NULL,
+                document_type TEXT NOT NULL DEFAULT 'mixed',
+                source_summary TEXT NOT NULL DEFAULT '',
+                objective TEXT NOT NULL DEFAULT '',
+                language TEXT NOT NULL DEFAULT 'vi',
+                target_language TEXT NOT NULL DEFAULT '',
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                lifecycle TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_workspace_versions (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(workspace_id, revision),
+                FOREIGN KEY(workspace_id) REFERENCES web_document_workspaces(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_plans (
+                id TEXT PRIMARY KEY,
+                workspace_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                operation TEXT NOT NULL,
+                instructions TEXT NOT NULL DEFAULT '',
+                source_asset_id TEXT,
+                reference_asset_id TEXT,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(workspace_id, ordinal),
+                FOREIGN KEY(workspace_id) REFERENCES web_document_workspaces(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(reference_asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_plan_versions (
+                id TEXT PRIMARY KEY,
+                plan_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(plan_id, revision),
+                FOREIGN KEY(plan_id) REFERENCES web_document_plans(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_document_workspace_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                workspace_id TEXT NOT NULL,
+                plan_id TEXT,
+                entity_type TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(workspace_id) REFERENCES web_document_workspaces(id),
+                FOREIGN KEY(plan_id) REFERENCES web_document_plans(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_workspaces_account_lifecycle_updated ON web_document_workspaces(account_id, lifecycle, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_workspaces_project_account_updated ON web_document_workspaces(project_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_workspace_versions_workspace_revision ON web_document_workspace_versions(workspace_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_plans_workspace_account_ordinal ON web_document_plans(workspace_id, account_id, state, ordinal ASC, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_plan_versions_plan_revision ON web_document_plan_versions(plan_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_document_workspace_events_account_created ON web_document_workspace_events(account_id, created_at DESC, id DESC)"
         )
         # Project Center is a first-class, Web-owned work surface.  It holds
         # customer-authored briefs and Studio Documents independently from the

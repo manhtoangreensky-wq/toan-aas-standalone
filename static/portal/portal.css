@@ -1393,6 +1393,69 @@ a { color: inherit; text-decoration: none; }
 .portal-image-studio-events strong { color: #fff0e0; font-size: 11px; text-transform: capitalize; }
 .portal-image-studio-events small { margin-top: 3px; color: #cfad98; font-size: 9px; }
 
+/* Document & PDF Workspace: a calm review board for briefs and plan metadata.
+   This is deliberately not styled as a file preview, converter or output
+   gallery; native deterministic PDF tools retain their own separate surface. */
+.portal-document-workspace, .portal-document-workspace-detail { display: grid; gap: 18px; min-width: 0; }
+.portal-document-workspace-intro, .portal-document-workspace-detail-summary { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(268px, .78fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid rgba(109, 219, 207, .23); border-radius: 22px; background: radial-gradient(circle at 88% 12%, rgba(68, 197, 182, .18), transparent 18rem), radial-gradient(circle at 13% 93%, rgba(101, 161, 255, .12), transparent 17rem), linear-gradient(145deg, rgba(13, 55, 62, .97), rgba(7, 18, 31, .99)); box-shadow: 0 19px 47px rgba(0, 0, 0, .17); }
+.portal-document-workspace-intro h2, .portal-document-workspace-detail-summary h2 { margin: 7px 0 8px; color: #eafffb; font-size: clamp(26px, 3vw, 39px); letter-spacing: -.047em; }
+.portal-document-workspace-intro p, .portal-document-workspace-detail-summary p { max-width: 770px; margin: 0; color: #b8d6d5; line-height: 1.72; }
+.portal-document-workspace-intro dl, .portal-document-workspace-detail-summary dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-document-workspace-intro dl > div, .portal-document-workspace-detail-summary dl > div { min-width: 0; min-height: 106px; padding: 15px; border: 1px solid rgba(155, 241, 226, .15); border-radius: 15px; background: rgba(5, 29, 38, .48); }
+.portal-document-workspace-intro dt { color: #94f2e2; font-size: 25px; font-weight: 840; letter-spacing: -.045em; }
+.portal-document-workspace-intro dd, .portal-document-workspace-detail-summary dt { margin: 7px 0 0; color: #9dbdbc; font-size: 11px; line-height: 1.45; }
+.portal-document-workspace-detail-summary dt { margin: 0; color: #a4c5c4; font-size: 9px; font-weight: 780; letter-spacing: .06em; text-transform: uppercase; }
+.portal-document-workspace-detail-summary dd { margin: 5px 0 0; overflow-wrap: anywhere; color: #e6fffa; font-size: 13px; font-weight: 760; }
+.portal-document-workspace-layout, .portal-document-workspace-detail-grid, .portal-document-workspace-history-grid { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
+.portal-document-workspace-create, .portal-document-workspace-editor, .portal-document-plan-create { background: linear-gradient(150deg, rgba(12, 54, 61, .95), rgba(7, 17, 31, .99)); }
+.portal-document-workspace-boundary, .portal-document-workspace-estimate, .portal-document-workspace-activity { background: linear-gradient(150deg, rgba(15, 44, 57, .91), rgba(7, 17, 31, .99)); }
+.portal-document-workspace-boundary { display: grid; gap: 14px; }
+.portal-document-workspace-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.portal-document-workspace-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid rgba(139, 230, 215, .16); border-radius: 11px; background: rgba(6, 30, 41, .45); }
+.portal-document-workspace-guard-list strong { overflow: hidden; color: #d7f5ef; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
+.portal-document-workspace-guard-list em { padding: 3px 6px; border: 1px solid rgba(143, 239, 222, .22); border-radius: 999px; background: rgba(74, 195, 179, .1); color: #a8f5e6; font-size: 8px; font-style: normal; font-weight: 760; letter-spacing: .045em; text-transform: uppercase; }
+.portal-document-workspace-grid, .portal-document-plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; margin-top: 14px; }
+.portal-document-workspace-card { display: flex; flex-direction: column; gap: 12px; min-width: 0; min-height: 238px; border-color: rgba(121, 223, 208, .19); background: linear-gradient(150deg, rgba(10, 49, 59, .97), rgba(7, 17, 31, .99)); transition: border-color .16s ease, transform .16s ease, background .16s ease; }
+.portal-document-workspace-card:hover { border-color: rgba(154, 246, 231, .52); background: linear-gradient(150deg, rgba(14, 65, 72, .99), rgba(8, 19, 34, 1)); transform: translateY(-1px); }
+.portal-document-workspace-card .portal-card-header, .portal-document-plan-card .portal-card-header { align-items: flex-start; }
+.portal-document-workspace-card .portal-card-subtitle { display: -webkit-box; min-height: 49px; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.portal-document-workspace-card .portal-form-footer { margin-top: auto; padding-top: 1px; }
+.portal-document-workspace-meta, .portal-document-plan-meta, .portal-document-workspace-tags, .portal-document-workspace-tool-links { display: flex; flex-wrap: wrap; gap: 7px; }
+.portal-document-workspace-meta span, .portal-document-plan-meta span, .portal-document-workspace-tags span { display: inline-flex; min-height: 23px; align-items: center; max-width: 100%; padding: 4px 8px; overflow: hidden; border: 1px solid rgba(142, 232, 216, .2); border-radius: 999px; background: rgba(67, 188, 173, .1); color: #bcefe7; font-size: 9px; font-weight: 720; text-overflow: ellipsis; white-space: nowrap; }
+.portal-document-workspace-tags span { border-color: rgba(142, 187, 255, .21); background: rgba(91, 138, 235, .1); color: #cbdcff; }
+.portal-document-workspace-tool-links { margin-top: 15px; }
+.portal-document-workspace-estimate-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin-top: 4px; }
+.portal-document-workspace-estimate-grid span { display: grid; gap: 5px; min-width: 0; padding: 13px; border: 1px solid rgba(141, 231, 216, .15); border-radius: 13px; background: rgba(6, 31, 42, .45); color: #a9cbc8; font-size: 9px; font-weight: 730; letter-spacing: .05em; text-transform: uppercase; }
+.portal-document-workspace-estimate-grid strong { overflow-wrap: anywhere; color: #e8fffb; font-size: 16px; letter-spacing: -.03em; }
+.portal-document-plan-card { display: grid; gap: 13px; min-width: 0; padding: 16px; border: 1px solid rgba(124, 221, 206, .18); border-radius: 17px; background: linear-gradient(145deg, rgba(10, 48, 58, .96), rgba(7, 17, 31, .99)); }
+.portal-document-plan-card.is-archived { border-color: rgba(154, 173, 190, .19); background: linear-gradient(145deg, rgba(25, 33, 46, .92), rgba(7, 17, 31, .99)); }
+.portal-document-plan-card .portal-card-subtitle { display: -webkit-box; min-height: 42px; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+.portal-document-plan-meta span { max-width: min(100%, 360px); }
+.portal-document-plan-form { padding-top: 13px; border-top: 1px solid rgba(140, 229, 215, .14); }
+.portal-document-plan-form .portal-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.portal-document-plan-form .portal-field--wide { grid-column: 1 / -1; }
+.portal-document-plan-version-list { display: grid; gap: 0; padding-top: 12px; border-top: 1px solid rgba(140, 229, 215, .12); }
+.portal-document-plan-version-list > article { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 9px 0; border-top: 1px solid rgba(140, 229, 215, .09); }
+.portal-document-plan-version-list > article:first-child { border-top: 0; }
+.portal-document-plan-version-list strong, .portal-document-plan-version-list small { display: block; }
+.portal-document-plan-version-list strong { color: #e1fffa; font-size: 10px; }
+.portal-document-plan-version-list small { max-width: 440px; margin-top: 3px; overflow-wrap: anywhere; color: #9bbcb9; font-size: 9px; line-height: 1.45; }
+.portal-document-version-list { display: grid; gap: 0; }
+.portal-document-version-list > article { display: flex; flex-wrap: wrap; gap: 13px; align-items: center; justify-content: space-between; padding: 14px 0; border-top: 1px solid rgba(140, 229, 215, .12); }
+.portal-document-version-list > article:first-child { border-top: 0; }
+.portal-document-version-list > article > div { min-width: 0; }
+.portal-document-version-list strong, .portal-document-version-list p, .portal-document-version-list small { display: block; }
+.portal-document-version-list strong { color: #e9fffb; font-size: 12px; }
+.portal-document-version-list p { max-width: 630px; margin: 4px 0 0; color: #b6d3d1; font-size: 10px; line-height: 1.55; }
+.portal-document-version-list small { margin-top: 4px; color: #90aaa9; font-size: 9px; }
+.portal-document-workspace-events { display: grid; gap: 0; }
+.portal-document-workspace-events > div { display: grid; grid-template-columns: 15px minmax(0, 1fr); gap: 9px; padding: 11px 0; border-top: 1px solid rgba(140, 229, 215, .11); }
+.portal-document-workspace-events > div:first-child { border-top: 0; }
+.portal-document-workspace-events > div > span:first-child { width: 7px; height: 7px; margin-top: 5px; border-radius: 50%; background: #8eeede; box-shadow: 0 0 0 4px rgba(76, 194, 178, .11); color: transparent; }
+.portal-document-workspace-events strong, .portal-document-workspace-events small { display: block; }
+.portal-document-workspace-events strong { color: #e6fffa; font-size: 11px; text-transform: capitalize; }
+.portal-document-workspace-events small { margin-top: 3px; color: #aac8c5; font-size: 9px; }
+
 /* Subtitle & Transcript Workspace: calm editorial tooling, not a faux media
    player.  Accent colors distinguish timing/text work while the layout keeps
    long cue text legible on desktop and small screens. */
@@ -1477,6 +1540,7 @@ a { color: inherit; text-decoration: none; }
   .portal-voice-studio-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .portal-video-studio-intro, .portal-video-studio-detail-summary, .portal-video-studio-layout, .portal-video-studio-detail-grid, .portal-video-studio-history-grid { grid-template-columns: 1fr; }
   .portal-image-studio-intro, .portal-image-studio-detail-summary, .portal-image-studio-layout, .portal-image-studio-detail-grid, .portal-image-studio-history-grid { grid-template-columns: 1fr; }
+  .portal-document-workspace-intro, .portal-document-workspace-detail-summary, .portal-document-workspace-layout, .portal-document-workspace-detail-grid, .portal-document-workspace-history-grid { grid-template-columns: 1fr; }
   .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-studio-layout, .portal-subtitle-studio-detail-grid, .portal-subtitle-studio-history-grid, .portal-subtitle-preview-grid { grid-template-columns: 1fr; }
   .portal-media-workspace-intro, .portal-media-detail-summary, .portal-media-workspace-layout, .portal-media-detail-grid { grid-template-columns: 1fr; }
   .portal-media-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -1577,6 +1641,7 @@ a { color: inherit; text-decoration: none; }
   .portal-voice-studio-intro dl, .portal-voice-studio-detail-summary dl { grid-template-columns: 1fr; }
   .portal-video-plan-grid, .portal-video-scene-grid { grid-template-columns: 1fr; }
   .portal-image-artboard-grid, .portal-image-direction-grid { grid-template-columns: 1fr; }
+  .portal-document-workspace-grid, .portal-document-plan-grid { grid-template-columns: 1fr; }
   .portal-subtitle-project-grid, .portal-subtitle-cue-grid { grid-template-columns: 1fr; }
   .portal-video-studio-intro, .portal-video-studio-detail-summary { padding: 20px; border-radius: 18px; }
   .portal-video-studio-intro dl, .portal-video-studio-detail-summary dl, .portal-video-runtime-grid, .portal-video-studio-guard-list { grid-template-columns: 1fr; }
@@ -1585,6 +1650,12 @@ a { color: inherit; text-decoration: none; }
   .portal-image-direction-form .portal-fields { grid-template-columns: 1fr; }
   .portal-image-direction-form .portal-field--wide { grid-column: auto; }
   .portal-image-version-list > article { align-items: flex-start; flex-direction: column; }
+  .portal-document-workspace-intro, .portal-document-workspace-detail-summary { padding: 20px; border-radius: 18px; }
+  .portal-document-workspace-intro dl, .portal-document-workspace-detail-summary dl, .portal-document-workspace-estimate-grid, .portal-document-workspace-guard-list { grid-template-columns: 1fr; }
+  .portal-document-plan-form .portal-fields { grid-template-columns: 1fr; }
+  .portal-document-plan-form .portal-field--wide { grid-column: auto; }
+  .portal-document-plan-version-list > article { align-items: flex-start; flex-direction: column; }
+  .portal-document-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary { padding: 20px; border-radius: 18px; }
   .portal-subtitle-studio-intro dl, .portal-subtitle-studio-detail-summary dl, .portal-subtitle-estimate-grid, .portal-subtitle-studio-guard-list { grid-template-columns: 1fr; }
   .portal-subtitle-cue-form .portal-fields { grid-template-columns: 1fr; }
