@@ -154,7 +154,11 @@ def test_quote_capable_workflows_keep_fresh_receipts_while_chat_workspace_is_gua
     # be silently routed back through the generic quote/confirm Core Bridge.
     assert 'customerPage("/chat"' in PORTAL
     assert 'featurePage("/chat"' not in PORTAL
-    assert "Lưu hội thoại, không chạy AI" in PORTAL
+    # Chat now exposes an honest server-confirmed guarded receipt, so retain
+    # the stronger current boundary rather than the retired authoring-only
+    # wording.  Neither phrase may imply generic Bridge/model execution.
+    assert "Workspace không gọi AI, provider, Bot, ví Xu, PayOS, job, output hay delivery." in PORTAL
+    assert "Lưu thread không gọi AI hoặc trừ Xu." in PORTAL
     assert 'action: "feature-estimate"' in PORTAL
     assert 'featurePage("/voice/tts"' in PORTAL
     assert "function flowHasFreshEstimate(flow)" in PORTAL
