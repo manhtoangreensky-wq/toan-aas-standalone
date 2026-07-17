@@ -122,6 +122,10 @@ a { color: inherit; text-decoration: none; }
 .portal-sidebar-create:hover, .portal-sidebar-create:focus-visible { border-color: rgba(154, 255, 238, .7); background: linear-gradient(135deg, rgba(67, 211, 184, .3), rgba(38, 128, 151, .23)); transform: translateY(-1px); outline: 0; }
 .portal-sidebar-create > span:first-child { display: grid; width: 18px; height: 18px; place-items: center; border-radius: 6px; background: rgba(218, 255, 248, .16); color: #9effed; font-size: 17px; line-height: 1; }
 .portal-sidebar-create > b { margin-left: auto; color: #91eadc; font-size: 15px; }
+.portal-sidebar-action-row { display: grid; grid-template-columns: minmax(0, 1fr) 40px; gap: 7px; margin: 0 8px 18px; }
+.portal-sidebar-action-row .portal-sidebar-create { margin: 0; }
+.portal-sidebar-focus-toggle { display: grid; width: 40px; min-height: 42px; place-items: center; border: 1px solid rgba(126, 180, 202, .24); border-radius: 12px; background: rgba(13, 36, 53, .58); color: #a5d9de; font: inherit; font-size: 16px; transition: border-color .16s ease, background .16s ease, color .16s ease, transform .16s ease; }
+.portal-sidebar-focus-toggle:hover, .portal-sidebar-focus-toggle:focus-visible { border-color: rgba(116, 239, 218, .55); background: rgba(65, 204, 188, .13); color: #dffefa; outline: 0; transform: translateY(-1px); }
 
 .portal-nav { display: grid; gap: 6px; }
 .portal-nav-group { display: block; }
@@ -243,6 +247,18 @@ a { color: inherit; text-decoration: none; }
 
 .portal-main { max-width: 1680px; margin: 0 auto; padding: clamp(22px, 3.6vw, 52px); }
 .portal-mobile-nav { display: none; }
+
+/* Desktop focus mode is deliberately visual-only. The ordinary sidebar stays
+   available as the same keyboard-safe drawer; no route, account data, action
+   capability, browser storage or server state changes when it is toggled. */
+@media (min-width: 981px) {
+  .portal-shell--focus { grid-template-columns: minmax(0, 1fr); }
+  .portal-shell--focus .portal-sidebar { position: fixed; z-index: 100; top: 0; left: 0; width: min(304px, calc(100vw - 46px)); height: 100vh; height: 100dvh; padding-top: calc(20px + var(--portal-safe-top)); padding-bottom: calc(16px + var(--portal-safe-bottom)); transform: translateX(-105%); transition: transform .2s ease; box-shadow: 18px 0 40px rgba(0, 0, 0, .3); }
+  .portal-shell--focus .portal-sidebar.is-open { transform: translateX(0); }
+  .portal-shell--focus .portal-backdrop { position: fixed; z-index: 90; inset: 0; background: rgba(0, 7, 13, .66); backdrop-filter: blur(2px); }
+  .portal-shell--focus .portal-menu-button { display: grid; place-items: center; flex: 0 0 auto; }
+  .portal-shell--focus .portal-sidebar-close { display: grid; }
+}
 .portal-command-palette { position: fixed; z-index: 130; inset: 0; display: grid; place-items: start center; padding: min(11vh, 106px) 20px 24px; overflow-y: auto; }
 .portal-command-palette-backdrop { position: absolute; inset: 0; background: rgba(0, 8, 15, .72); backdrop-filter: blur(5px); }
 .portal-command-dialog { position: relative; z-index: 1; display: grid; width: min(680px, 100%); max-height: min(690px, calc(100vh - 42px)); overflow: hidden; border: 1px solid rgba(135, 218, 210, .25); border-radius: 18px; background: linear-gradient(160deg, rgba(18, 39, 52, .98), rgba(7, 18, 29, .99)); box-shadow: 0 28px 90px rgba(0, 0, 0, .46); }
@@ -2050,6 +2066,8 @@ a { color: inherit; text-decoration: none; }
 
 @media (max-width: 980px) {
   .portal-shell { display: block; }
+  .portal-sidebar-action-row { grid-template-columns: minmax(0, 1fr); }
+  .portal-sidebar-focus-toggle { display: none; }
   .portal-sidebar { position: fixed; z-index: 100; top: 0; left: 0; width: min(290px, calc(100vw - 46px)); height: 100vh; height: 100dvh; padding-top: calc(20px + var(--portal-safe-top)); padding-bottom: calc(16px + var(--portal-safe-bottom)); transform: translateX(-105%); transition: transform .2s ease; box-shadow: 18px 0 40px rgba(0, 0, 0, .3); }
   .portal-sidebar.is-open { transform: translateX(0); }
   .portal-backdrop { position: fixed; z-index: 90; inset: 0; background: rgba(0, 7, 13, .66); backdrop-filter: blur(2px); }

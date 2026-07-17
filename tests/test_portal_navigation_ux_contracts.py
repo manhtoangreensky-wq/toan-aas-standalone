@@ -68,3 +68,25 @@ def test_sidebar_uses_progressive_disclosure_without_hiding_the_active_workflow(
     assert 'class="portal-nav-summary"' in sidebar
     assert ".portal-nav-summary" in css
     assert ".portal-nav-group[open] .portal-nav-summary::before" in css
+
+
+def test_desktop_focus_navigation_is_ephemeral_accessible_and_keeps_the_same_menu() -> None:
+    css = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    interactions = _section("function bindInteractions()", "function mountPortal(override)")
+    focus_mode = _section("function desktopFocusNavigationSupported()", "function closeSidebar(options)")
+
+    # Focus mode only changes the desktop presentation. It must not introduce
+    # a second route model, storage-backed profile preference, or browser-side
+    # authority. The existing drawer/menu control remains the way back.
+    assert "let desktopNavigationFocusEnabled = false;" in PORTAL
+    assert "data-portal-focus-navigation" in PORTAL
+    assert "function toggleDesktopFocusNavigation()" in PORTAL
+    assert 'window.matchMedia("(min-width: 981px)")' in PORTAL
+    assert 'event.target.closest("[data-portal-focus-navigation]")' in interactions
+    assert 'closeSidebar({ restoreFocus: false });' in PORTAL
+    assert 'document.querySelector("[data-portal-menu]")' in PORTAL
+    assert "sessionStorage" not in focus_mode
+    assert "localStorage" not in focus_mode
+    assert ".portal-shell--focus" in css
+    assert ".portal-shell--focus .portal-sidebar.is-open" in css
+    assert ".portal-shell--focus .portal-menu-button" in css

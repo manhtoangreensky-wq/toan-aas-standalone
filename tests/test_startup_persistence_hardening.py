@@ -117,6 +117,7 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
     started = threading.Event()
     release = threading.Event()
     reconciled: list[str] = []
+    image_reconciliation_fences: list[str | None] = []
 
     def slow_asset_reconcile() -> None:
         started.set()
@@ -130,8 +131,9 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
         reconciled.append("document_operations")
         raise RuntimeError("private filesystem failure")
 
-    def image_reconcile() -> None:
+    def image_reconcile(*, interrupted_before: str | None = None) -> None:
         reconciled.append("image_operations")
+        image_reconciliation_fences.append(interrupted_before)
 
     monkeypatch.setattr(
         application_module,
@@ -163,6 +165,7 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
                 "image_runtime",
             ]
             assert application.state.copyfast_startup_reconciliation["status"] in {"scheduled", "running"}
+            assert application.state.copyfast_startup_reconciliation["interrupted_before"]
             assert await asyncio.to_thread(started.wait, 1.0)
             assert application.state.copyfast_startup_reconciliation["status"] == "running"
             release.set()
@@ -172,3 +175,5 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
 
     asyncio.run(exercise_lifespan())
     assert reconciled == ["asset_vault", "project_packages", "document_operations", "image_operations"]
+    assert len(image_reconciliation_fences) == 1
+    assert image_reconciliation_fences[0]

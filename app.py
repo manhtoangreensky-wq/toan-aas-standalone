@@ -78,6 +78,7 @@ from copyfast_db import (
     ensure_image_operations_persistence,
     ensure_project_package_persistence,
     is_production_like_environment,
+    utc_now,
 )
 from copyfast_pages import ROOT, render_portal
 
@@ -124,10 +125,19 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     status = application.state.copyfast_startup_reconciliation
     status["status"] = "running"
     status["started_at_epoch"] = time.time()
+    interrupted_before = str(status.get("interrupted_before") or "")
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            await asyncio.to_thread(reconcile)
+            if name == "image_operations" and interrupted_before:
+                # Image transforms run synchronously in a request and have no
+                # worker to resume them.  The deferred scan must only recover
+                # work that predates readiness; otherwise a request accepted
+                # while earlier private roots are being scanned can be
+                # mistaken for restart debris and fail mid-render.
+                await asyncio.to_thread(reconcile, interrupted_before=interrupted_before)
+            else:
+                await asyncio.to_thread(reconcile)
         except asyncio.CancelledError:
             status["status"] = "cancelled"
             status["current_step"] = None
@@ -157,6 +167,10 @@ def _start_startup_reconciliation(application: FastAPI) -> asyncio.Task[None]:
     """Schedule volume scans after readiness without exposing a public API."""
     application.state.copyfast_startup_reconciliation = {
         "status": "scheduled",
+        # Capture the fence before the app begins serving. Deferred storage
+        # scans may begin after the first signed request, so they must not
+        # classify that fresh request as an interrupted pre-startup operation.
+        "interrupted_before": utc_now(),
         "current_step": None,
         "completed_steps": [],
         "failed_steps": [],
