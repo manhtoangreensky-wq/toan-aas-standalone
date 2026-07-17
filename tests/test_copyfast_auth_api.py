@@ -2247,13 +2247,16 @@ def test_registration_does_not_disclose_that_an_email_already_exists(tmp_path, m
             json={"email": "existing@example.com", "password": "different-correct-horse-battery"},
         )
         assert duplicate.status_code == 200
-        assert first.json() == duplicate.json() == {
-            "ok": True,
-            "status": "awaiting_confirm",
-            "message": "Nếu email chưa có tài khoản, yêu cầu đăng ký đã được tiếp nhận. Hãy đăng nhập để tiếp tục hoặc dùng chức năng khôi phục mật khẩu khi được phát hành.",
-            "data": {},
-            "error_code": None,
-        }
+        # Public wording may evolve with the account-verification flow, but
+        # an existing email must remain indistinguishable from a new one.
+        assert first.json() == duplicate.json()
+        response = first.json()
+        assert set(response) == {"ok", "status", "message", "data", "error_code"}
+        assert response["ok"] is True
+        assert response["status"] == "awaiting_confirm"
+        assert response["data"] == {}
+        assert response["error_code"] is None
+        assert "email" in response["message"].lower()
         assert "set-cookie" not in first.headers
         assert "set-cookie" not in duplicate.headers
 

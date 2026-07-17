@@ -79,7 +79,15 @@ def test_shortcut_paths_are_not_generic_bridge_features_or_canonical_hydration_t
 
     assert "...contentPromptPackRouteStates(Boolean(account && contentPromptPackEnabled))" in INTEGRATION
     assert "!isNativeContentPromptPackPath(currentPath)" in INTEGRATION
-    assert "if (isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path)" in INTEGRATION
+    canonical_start = INTEGRATION.index("async function hydrateCanonicalData()")
+    canonical_end = INTEGRATION.index("const canonicalBotVoiceRoute", canonical_start)
+    canonical_hydrator = INTEGRATION[canonical_start:canonical_end]
+    # Prompt Pack and Content Studio are both Web-native authoring surfaces.
+    # The canonical Bot hydrator must leave before it can read or overwrite
+    # either private projection; the surrounding list can grow safely.
+    assert "isNativeContentPromptPackPath(path)" in canonical_hydrator
+    assert "isNativeContentStudioPath(path)" in canonical_hydrator
+    assert "return;" in canonical_hydrator
 
     action_start = INTEGRATION.index('if (action === "content-prompt-pack-compose")')
     action_end = INTEGRATION.index('if (action === "publish-review-pack-compose")', action_start)

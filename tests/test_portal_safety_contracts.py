@@ -423,7 +423,15 @@ def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:
 def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation() -> None:
     assert "const linkPending = page.action === \"start-telegram-link\"" in PORTAL
     assert 'data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị.' in PORTAL
-    assert "if (confirmation && !window.confirm(confirmation)) return;" in PORTAL
+    # The confirmation branch also clears password fields for the one
+    # sensitive form that can reach it, so it is deliberately block-shaped
+    # rather than the former one-line early return.
+    confirmation_guard = PORTAL[
+        PORTAL.index("const confirmation = source.getAttribute(\"data-portal-confirm\") || \"\";"):
+        PORTAL.index("// Search/filter text is intentionally ephemeral.")
+    ]
+    assert "if (confirmation && !window.confirm(confirmation)) {" in confirmation_guard
+    assert "return;" in confirmation_guard
 
 
 def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
@@ -1056,7 +1064,9 @@ def test_account_exposes_bot_preferences_only_as_safe_handoffs() -> None:
     assert 'command: "/data_delete"' in account
     assert 'data-portal-action="copy-bot-companion-command"' in account
     assert "Web không giả đồng bộ" in account
-    assert "Xóa dữ liệu, đổi quyền hay thay Telegram identity" in account
+    assert "gửi Telegram ID sang Bot" in account
+    assert "không mang theo session, identity, token hoặc dữ liệu riêng tư từ Web" in account
+    assert "Web không tự xóa account hay dữ liệu Telegram" in account
     assert "fetch(" not in account
     assert '"/language", "/mode", "/profile", "/mydata"' in INTEGRATION
     assert '"/tickets", "/ticket_status", "/data_delete"' in INTEGRATION
@@ -1403,7 +1413,9 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert 'if normalized in {"/", "/app"}:' in app
     assert 'return RedirectResponse("/login", status_code=307)' in app
     assert 'return RedirectResponse("/dashboard", status_code=307)' in app
-    assert 'public_pages = {"/welcome", "/legal", "/privacy"}' in app
+    # Password recovery intentionally remains an explicit public route; its
+    # one-time proof is protected by the narrower no-referrer route boundary.
+    assert 'public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery"}' in app
     railway = (ROOT / "railway.json").read_text(encoding="utf-8")
     assert '"healthcheckPath": "/health"' in railway
 

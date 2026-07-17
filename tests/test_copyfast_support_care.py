@@ -196,7 +196,11 @@ def test_customer_care_triage_and_escalation_are_private_revisioned_and_server_a
         triaged_case = triage.json()["data"]["case"]
         assert triaged_case["revision"] == 3
         assert triaged_case["care"]["team_queue"] == "technical"
-        assert triaged_case["care"]["assignee"]["id"] == operator_id
+        # Mutation receipts name the assignee but deliberately do not echo a
+        # cross-account identifier.  The signed manager may use the guarded
+        # staff directory/detail surface when an ID is genuinely required.
+        assert triaged_case["care"]["assignee"]["display_name"] == "Điều phối viên"
+        assert "id" not in triaged_case["care"]["assignee"]
         assert triaged_case["care"]["sla"]["class"] == "priority"
         assert triaged_case["care"]["sla"]["scope"] == "internal_triage_only"
 

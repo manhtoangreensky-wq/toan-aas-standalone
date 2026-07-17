@@ -27,7 +27,10 @@ def test_private_routes_are_mounted_flagged_bounded_and_never_pwa_cached() -> No
     assert '"partner_crm_enabled": enabled("WEBAPP_PARTNER_CRM_ENABLED", True)' in api
     for value in ('"/" + "api/v1/content-handoffs"', '"/content/handoffs"', '"/" + "api/v1/partner-crm"', '"/crm"'):
         assert value in worker
-    assert 'CACHE_NAME = "toan-aas-portal-shell-v43"' in worker
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in worker
+    assert "const BUILD_ID = workerBuildId();" in worker
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in worker
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in worker
 
 
 def test_integration_uses_owner_scoped_contracts_with_csrf_revision_and_idempotency() -> None:

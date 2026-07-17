@@ -120,9 +120,12 @@ def test_content_studio_keeps_private_authoring_out_of_bot_and_pwa_paths() -> No
     assert "/api/v1/content-studio" not in shell
     assert '"/content-studio"' not in shell
     # Private workspace additions may intentionally invalidate the public
-    # shell cache, but the cache name must remain versioned while private
-    # API/routes stay outside the shell checks above.
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    # Dynamic generations only clear this worker's obsolete public-shell cache;
+    # private API/routes remain outside the shell checks above.
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

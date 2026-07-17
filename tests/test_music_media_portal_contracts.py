@@ -143,7 +143,10 @@ def test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache(
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert "/api/v1/media-workspace" not in shell
     assert '"/media-workspace"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (

@@ -99,4 +99,7 @@ def test_contextual_ad_prompt_private_route_and_api_are_never_pwa_cached() -> No
     assert '"/content/contextual-prompt"' not in shell
     assert '"/content/contextual-prompt"' in private_paths
     assert '"/" + "api/v1/content-studio"' in private_paths
-    assert "toan-aas-portal-shell-v36" in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER

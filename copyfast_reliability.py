@@ -769,13 +769,13 @@ async def support_handoff(followup_id: str, request: Request, account: dict = De
         row = conn.execute(
             f"""SELECT followup.required_role, followup.source_revision,
                       support_case.id, support_case.revision, support_case.state,
-                      triage.source_revision, triage.disposition, triage.required_role, triage.sla_status
+                      triage.source_revision, triage.disposition, triage.required_role, triage.sla_status,
+                      followup.state
                FROM web_ops_followups AS followup
                JOIN web_support_cases AS support_case ON support_case.id=followup.source_id
                JOIN web_support_triage AS triage ON triage.case_id=support_case.id
                WHERE followup.id=?
                  AND followup.source_kind='support_triage'
-                 AND followup.state IN ('open', 'acknowledged')
                  AND {visibility}""",
             (followup_id,),
         ).fetchone()
@@ -796,6 +796,18 @@ async def support_handoff(followup_id: str, request: Request, account: dict = De
                 data=_boundary(),
                 status_name="guarded",
                 error_code="OPS_RELIABILITY_FOLLOWUP_ROLE_REQUIRED",
+            )
+        # The signed staff member can already see this follow-up in their
+        # role-scoped queue.  Return an honest guarded state for a closed or
+        # superseded item, but still reveal no source metadata or target
+        # route.  Unseen/cross-role IDs remain indistinguishable above.
+        if str(current[9]) not in {"open", "acknowledged"}:
+            return envelope(
+                False,
+                "Follow-up này không còn mở để bàn giao. Hãy làm mới hàng chờ Reliability.",
+                data=_boundary(),
+                status_name="guarded",
+                error_code="OPS_RELIABILITY_HANDOFF_UNAVAILABLE",
             )
         case_id = str(current[2])
         source_revision = int(current[1])

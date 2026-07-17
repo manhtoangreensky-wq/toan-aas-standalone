@@ -27,4 +27,7 @@ def test_source_rights_guide_is_private_read_only_and_derives_the_bot_guardrails
 def test_source_rights_guide_requires_signed_context_and_never_enters_pwa_cache() -> None:
     assert '"/guides/source-rights": account && contentStudioEnabled ? "ready" : "guarded"' in INTEGRATION
     assert '"/guides/source-rights"' in WORKER
-    assert "toan-aas-portal-shell-v36" in WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in WORKER
+    assert "const BUILD_ID = workerBuildId();" in WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in WORKER

@@ -94,5 +94,7 @@ def test_video_idea_planner_keeps_the_no_execution_boundary_explicit() -> None:
 def test_video_idea_planner_is_included_in_the_compact_mobile_workspace_scope() -> None:
     mobile_nav = _section(PORTAL, "function isMobileNavCurrent(key, page)", "function renderMobileNav(page)")
 
-    assert '"/video-studio/idea-planner"' in mobile_nav
-    assert 'path.startsWith("/video-studio/")' in mobile_nav
+    # The compact Studio tab uses one exact route-family matcher for every
+    # Video Studio child, including this planner; it is safer than maintaining
+    # a stale leaf list or a loose string prefix.
+    assert 'matchesRouteFamily(path, "/video-studio")' in mobile_nav

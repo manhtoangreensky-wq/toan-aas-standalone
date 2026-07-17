@@ -196,7 +196,10 @@ def test_chat_hydration_fences_session_list_detail_and_current_signed_path() -> 
 
 def test_chat_private_cache_and_responsive_ui_contract() -> None:
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v16"' in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "api/v1/chat-workspace" in SERVICE_WORKER
     assert '"/chat"' in SERVICE_WORKER
     assert "private `/chat/*` routes" in SERVICE_WORKER

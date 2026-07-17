@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pathlib import Path
-import re
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -27,6 +26,9 @@ def test_video_factory_workflow_is_private_navigation_not_execution() -> None:
 def test_video_factory_workflow_has_ready_gate_and_never_enters_pwa_cache() -> None:
     assert '"/video-studio/workflow": account && videoStudioEnabled ? "ready" : "guarded"' in INTEGRATION
     assert '"/video-studio/workflow"' in WORKER
-    # Generation is intentionally bumped as public shell assets change.  The
-    # workflow's no-cache boundary must not be coupled to a stale version.
-    assert re.search(r'const CACHE_NAME = "toan-aas-portal-shell-v\d+";', WORKER)
+    # Build-scoped generations clear only stale public shell caches.  The
+    # workflow's private no-cache boundary is independent of each build ID.
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in WORKER
+    assert "const BUILD_ID = workerBuildId();" in WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in WORKER

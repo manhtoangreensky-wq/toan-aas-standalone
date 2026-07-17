@@ -44,7 +44,9 @@ def test_self_shot_scene_planner_is_a_private_route_with_desktop_and_mobile_navi
     assert 'data-portal-action="self-shot-scene-planner-save-plan"' in PORTAL
     assert route in desktop_nav
     assert f'if (linkPath === "{route}") return path === "{route}";' in current_nav
-    assert f'"{route}"' in mobile_nav
+    # The compact dock deliberately groups every nested Video Studio planner
+    # under the signed Studio tab instead of duplicating each leaf route.
+    assert 'matchesRouteFamily(path, "/video-studio")' in mobile_nav
     assert 'botCompanionPage("/video-studio/self-shot-planner"' not in PORTAL
 
 

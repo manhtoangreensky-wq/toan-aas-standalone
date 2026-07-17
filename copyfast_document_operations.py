@@ -2319,16 +2319,21 @@ async def list_document_operations(
         raise HTTPException(status_code=422, detail="Loại Document Operation không hợp lệ")
     ensure_copyfast_schema()
     with transaction() as conn:
+        # ``utc_now`` intentionally has second precision.  Keep a monotonic
+        # SQLite insertion-order tie-breaker so two operations accepted in
+        # the same second still appear newest-first instead of being ordered
+        # by their random UUIDs.  This is a read-only presentation detail;
+        # it does not affect an operation's state, ownership, or output.
         if requested_kind:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, rowid DESC LIMIT ? OFFSET ?""",
                 (str(account["id"]), requested_kind, bounded_limit + 1, int(offset)),
             ).fetchall()
         else:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                    WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+                    WHERE account_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ? OFFSET ?""",
                 (str(account["id"]), bounded_limit + 1, int(offset)),
             ).fetchall()
     has_more = len(rows) > bounded_limit

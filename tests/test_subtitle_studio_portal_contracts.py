@@ -191,10 +191,12 @@ def test_subtitle_studio_stays_text_only_and_draft_editable() -> None:
     assert "/api/v1/subtitle-studio" in SERVICE_WORKER
     assert "/api/v1/subtitle-studio" not in shell
     assert '"/subtitle-studio"' not in shell
-    # Cache versions intentionally advance whenever the public shell changes;
-    # this contract is about keeping private Subtitle routes out of it, not a
-    # stale version literal.
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    # The build-scoped cache must retire only obsolete portal shell generations;
+    # private Subtitle routes remain outside it.
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
 
     for selector in (
         ".portal-subtitle-studio-intro",

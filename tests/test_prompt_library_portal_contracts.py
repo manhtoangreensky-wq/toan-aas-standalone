@@ -102,7 +102,10 @@ def test_prompt_library_privacy_controls_and_pwa_boundary_are_staticly_enforced(
     assert "URL.revokeObjectURL(objectUrl)" in INTEGRATION
     assert "/api/v1/prompt-library" not in SERVICE_WORKER
     assert '"/prompt-library"' not in SERVICE_WORKER
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "private_prompt_export" in APP
     assert '"prompt-library-write" if prompt_library_write' in APP
     assert '"prompt-library-read" if prompt_library_read' in APP

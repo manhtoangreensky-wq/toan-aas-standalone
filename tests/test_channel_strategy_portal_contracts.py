@@ -130,7 +130,10 @@ def test_channel_strategy_validates_non_execution_boundary_and_never_caches_priv
     assert "data.strategy_persisted !== false" in preview
     assert '"/" + "api/v1/channel-strategy"' in SERVICE_WORKER
     assert '"/content/channel-strategy"' in SERVICE_WORKER
-    assert "CACHE_NAME = \"toan-aas-portal-shell-v43\"" in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
 
 
 def test_channel_strategy_bootstrap_keeps_the_current_signed_projection() -> None:

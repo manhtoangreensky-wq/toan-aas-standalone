@@ -132,4 +132,7 @@ def test_publish_review_pack_private_ui_and_api_are_never_pwa_cached() -> None:
     assert '"/content/publish-review"' in private_paths
     assert '"/" + "api/v1/content-studio"' in private_paths
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
-    assert "toan-aas-portal-shell-v36" in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER

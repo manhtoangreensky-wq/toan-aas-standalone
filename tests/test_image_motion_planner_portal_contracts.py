@@ -44,9 +44,21 @@ def test_image_motion_ui_accepts_only_owner_scoped_metadata_and_content_free_sav
         "imageMotionPlannerSaveReceipt: normalizeImageMotionSaveReceipt(source.imageMotionPlannerSaveReceipt)",
     ):
         assert state in PORTAL
+    result_renderer = PORTAL[
+        PORTAL.index("function renderImageMotionPlannerResult"):
+        PORTAL.index("function renderImageMotionPlannerSavePanel")
+    ]
+    save_panel = PORTAL[
+        PORTAL.index("function renderImageMotionPlannerSavePanel"):
+        PORTAL.index("function renderImageMotionPlanner(page, context)")
+    ]
+    # Keep the scope to Image Motion.  The old end marker crossed into the
+    # unrelated Reference Format planner, whose private owner reference has a
+    # legitimate `asset_id` field.  Image Motion exposes only its direction
+    # metadata and its save receipt remains content-free.
     for forbidden in ("asset_id", "storage_key", "source_url", "preview_url", "video_url", "output_url", "payment_url"):
-        renderer = PORTAL[PORTAL.index("function renderImageMotionPlannerResult"):PORTAL.index("function renderCinematicConceptResult")]
-        assert forbidden not in renderer
+        assert forbidden not in result_renderer
+        assert forbidden not in save_panel
 
 
 def test_image_motion_uses_csrf_native_apis_and_recomputes_on_save() -> None:

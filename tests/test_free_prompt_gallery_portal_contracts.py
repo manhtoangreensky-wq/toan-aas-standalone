@@ -8,7 +8,6 @@ state.
 """
 
 from pathlib import Path
-import re
 
 
 ROOT = Path(__file__).parents[1]
@@ -155,4 +154,7 @@ def test_gallery_route_and_api_are_private_and_not_part_of_shell_cache() -> None
     # The shell cache must remain versioned so a deploy can invalidate only
     # public assets; its exact revision legitimately changes as new private
     # no-cache boundaries are added.
-    assert re.search(r'const CACHE_NAME = "toan-aas-portal-shell-v\d+";', SERVICE_WORKER)
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
