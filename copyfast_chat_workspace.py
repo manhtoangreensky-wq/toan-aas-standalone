@@ -23,7 +23,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import chat_workspace_enabled, ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_db import chat_execution_enabled, chat_workspace_enabled, ensure_copyfast_schema, read_transaction, transaction, utc_now
 
 
 router = APIRouter(prefix="/api/v1/chat-workspace", tags=["Web Conversation Workspace"])
@@ -85,6 +85,24 @@ MAX_EVENT_LIMIT = 60
 MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1_024
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 ARCHIVED_ORDINAL_BASE = 1_000_000
+MAX_RUNS_PER_THREAD = 500
+MAX_RUN_LIST_LIMIT = 100
+MAX_RUN_EVENT_LIMIT = 100
+
+# A run has an explicit state vocabulary so a future reviewed adapter can
+# report its real lifecycle.  The standalone application deliberately does
+# not transition into ``processing`` until such an adapter exists.
+RUN_STATES = frozenset({"draft", "queued", "processing", "completed", "failed", "guarded", "cancelled"})
+RUN_TRANSITIONS = {
+    "draft": frozenset({"queued", "failed", "guarded", "cancelled"}),
+    "queued": frozenset({"processing", "failed", "guarded", "cancelled"}),
+    "processing": frozenset({"completed", "failed", "guarded", "cancelled"}),
+    "completed": frozenset(),
+    "failed": frozenset(),
+    "guarded": frozenset(),
+    "cancelled": frozenset(),
+}
+MESSAGE_ROLES = frozenset({"user", "assistant"})
 
 
 def _require_enabled() -> None:
@@ -357,6 +375,23 @@ class TurnCreateRequest(RevisionRequest):
         return _body(value, label="Nội dung lượt", maximum=16_000)
 
 
+class ChatRunRequest(RevisionRequest):
+    """A customer-authored message submitted to the Web-native run contract.
+
+    The field is intentionally named ``client_message`` rather than prompt so
+    the browser cannot infer that submitting it creates a model invocation.
+    It is stored as the signed user's own message even when the run is
+    guarded; assistant text is never accepted from the browser.
+    """
+
+    client_message: str
+
+    @field_validator("client_message")
+    @classmethod
+    def _message(cls, value: str) -> str:
+        return _body(value, label="Tin nhắn", maximum=16_000)
+
+
 def _boundary(**extra: Any) -> dict[str, Any]:
     """Make the no-engine authoring boundary explicit in every response."""
     return {
@@ -378,6 +413,46 @@ def _boundary(**extra: Any) -> dict[str, Any]:
     }
 
 
+def _run_guard_code() -> str:
+    """Return the truthful failure-closed reason without exposing config."""
+    return "WEB_CHAT_EXECUTION_ADAPTER_UNAVAILABLE" if chat_execution_enabled() else "WEB_CHAT_EXECUTION_GUARDED"
+
+
+def _run_boundary(*, guard_code: str | None = None) -> dict[str, Any]:
+    """Public capability record for a persisted Web-native Chat Run.
+
+    ``WEBAPP_CHAT_EXECUTION_ENABLED`` is only an operator intent switch.  No
+    reviewed adapter lives in this module, so a true setting must never turn
+    into a provider call or a fabricated assistant reply.
+    """
+    code = guard_code or _run_guard_code()
+    return _boundary(
+        execution={
+            "mode": "web_native_chat_run",
+            "run_submission_available": True,
+            "provider_execution_available": False,
+            "assistant_reply_available": False,
+            "cancel_available": False,
+            "provider_called": False,
+            "bot_called": False,
+            "wallet_mutated": False,
+            "payment_started": False,
+            "job_created": False,
+            "output_created": False,
+            "stream_available": False,
+            "output_delivery": "guarded",
+            "guard_code": code,
+        },
+        execution_mode="web_native_chat_run",
+        run_submission_available=True,
+        provider_execution_available=False,
+        assistant_reply_available=False,
+        cancel_available=False,
+        execution_requested=chat_execution_enabled(),
+        guard_code=code,
+    )
+
+
 def _guarded(message: str, code: str) -> dict[str, Any]:
     return envelope(False, message, data=_boundary(), status_name="guarded", error_code=code)
 
@@ -387,7 +462,8 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(response, dict) or response.get("ok") is not True:
         return response
     source = response.get("data") if isinstance(response.get("data"), dict) else {}
-    data = _boundary()
+    is_chat_run = isinstance(source.get("execution"), dict) and source["execution"].get("mode") == "web_native_chat_run"
+    data = _run_boundary(guard_code=str(source.get("guard_code") or _run_guard_code())) if is_chat_run else _boundary()
     thread = source.get("thread")
     if isinstance(thread, dict) and isinstance(thread.get("id"), str):
         data["thread"] = {
@@ -406,6 +482,28 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
             }
             if name == "turn":
                 data[name]["assistant_reply_created"] = False
+    run = source.get("run")
+    if isinstance(run, dict) and isinstance(run.get("id"), str):
+        data["run"] = {
+            "id": str(run["id"]),
+            "thread_id": str(run.get("thread_id") or ""),
+            "request_message_id": str(run.get("request_message_id") or ""),
+            "assistant_message_id": None,
+            "state": str(run.get("state") or "guarded"),
+            "revision": int(run.get("revision") or 0),
+            "execution_requested": bool(run.get("execution_requested")),
+            "error_code": str(run.get("error_code") or "") or None,
+        }
+    request_message = source.get("request_message")
+    if isinstance(request_message, dict) and isinstance(request_message.get("id"), str):
+        data["request_message"] = {
+            "id": str(request_message["id"]),
+            "thread_id": str(request_message.get("thread_id") or ""),
+            "run_id": str(request_message.get("run_id") or ""),
+            "role": "user",
+            "state": str(request_message.get("state") or "active"),
+            "ordinal": int(request_message.get("ordinal") or 0),
+        }
     for name in ("history_snapshot_recorded", "context_count", "turn_count"):
         if name in source:
             data[name] = source[name]
@@ -414,6 +512,7 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
         str(response.get("message") or "Đã lưu AI Chat Workspace."),
         data=data,
         status_name=str(response.get("status") or "draft"),
+        error_code=str(response.get("error_code") or "") or None,
     )
 
 
@@ -458,7 +557,11 @@ def _idempotent(
                 "INSERT INTO web_idempotency (scope, key, response_json, request_fingerprint, created_at) VALUES (?, ?, ?, ?, ?)",
                 (scope, key, json.dumps(receipt, ensure_ascii=False, separators=(",", ":")), request_fingerprint, utc_now()),
             )
-            return receipt
+            # The first response travels only over the caller's signed
+            # request and may include their own just-submitted text.  The
+            # durable replay receipt above remains redacted, so neither a
+            # later retry nor the database becomes a transcript store.
+            return response
         return response
 
 
@@ -526,6 +629,24 @@ def _turn_row(conn: Any, *, thread_id: str, turn_id: str, account_id: str) -> tu
         """SELECT id, thread_id, ordinal, kind, body, state, revision, created_at, updated_at, archived_at
            FROM web_chat_turns WHERE id=? AND thread_id=? AND account_id=?""",
         (turn_id, thread_id, account_id),
+    ).fetchone()
+
+
+def _message_row(conn: Any, *, thread_id: str, message_id: str, account_id: str) -> tuple[Any, ...] | None:
+    return conn.execute(
+        """SELECT id, thread_id, run_id, ordinal, role, body, state, created_at, updated_at
+           FROM web_chat_messages WHERE id=? AND thread_id=? AND account_id=?""",
+        (message_id, thread_id, account_id),
+    ).fetchone()
+
+
+def _run_row(conn: Any, *, thread_id: str, run_id: str, account_id: str) -> tuple[Any, ...] | None:
+    return conn.execute(
+        """SELECT id, thread_id, request_message_id, assistant_message_id, state, revision,
+                  provider_execution_enabled, error_code, requested_at, queued_at, processing_at,
+                  completed_at, failed_at, guarded_at, cancelled_at, created_at, updated_at
+           FROM web_chat_runs WHERE id=? AND thread_id=? AND account_id=?""",
+        (run_id, thread_id, account_id),
     ).fetchone()
 
 
@@ -651,6 +772,49 @@ def _turn_public(row: tuple[Any, ...], *, include_content: bool = True) -> dict[
     return item
 
 
+def _message_public(row: tuple[Any, ...], *, include_content: bool = False) -> dict[str, Any]:
+    """Return an owner-scoped run message without inventing assistant text."""
+    item = {
+        "id": str(row[0]),
+        "thread_id": str(row[1]),
+        "run_id": str(row[2]) if row[2] else None,
+        "ordinal": int(row[3]),
+        "role": str(row[4]),
+        "state": str(row[6]),
+        "created_at": str(row[7]),
+        "updated_at": str(row[8]),
+    }
+    if include_content:
+        item["body"] = str(row[5])
+    return item
+
+
+def _run_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Expose a minimal execution receipt; never a provider payload or URL."""
+    return {
+        "id": str(row[0]),
+        "thread_id": str(row[1]),
+        "request_message_id": str(row[2]),
+        "assistant_message_id": str(row[3]) if row[3] else None,
+        "state": str(row[4]),
+        "revision": int(row[5]),
+        # This is only the local operator intent captured at submission; it
+        # cannot advertise an available adapter, model or provider.
+        "execution_requested": bool(row[6]),
+        "error_code": str(row[7]) if row[7] else None,
+        "requested_at": str(row[8]),
+        "queued_at": str(row[9]) if row[9] else None,
+        "processing_at": str(row[10]) if row[10] else None,
+        "completed_at": str(row[11]) if row[11] else None,
+        "failed_at": str(row[12]) if row[12] else None,
+        "guarded_at": str(row[13]) if row[13] else None,
+        "cancelled_at": str(row[14]) if row[14] else None,
+        "created_at": str(row[15]),
+        "updated_at": str(row[16]),
+        "assistant_reply_available": False,
+    }
+
+
 def _version_public(row: tuple[Any, ...]) -> dict[str, Any]:
     try:
         snapshot = json.loads(str(row[1]))
@@ -720,6 +884,116 @@ def _next_ordinal(conn: Any, *, table: str, thread_id: str, account_id: str, arc
     ).fetchone()
     value = int(row[0] or 0) + 1
     return max(ARCHIVED_ORDINAL_BASE, value) if archived else value
+
+
+def _next_message_ordinal(conn: Any, *, thread_id: str, account_id: str) -> int:
+    row = conn.execute(
+        "SELECT COALESCE(MAX(ordinal), 0) FROM web_chat_messages WHERE thread_id=? AND account_id=?",
+        (thread_id, account_id),
+    ).fetchone()
+    return int(row[0] or 0) + 1
+
+
+def _insert_run(
+    conn: Any,
+    *,
+    run_id: str,
+    thread_id: str,
+    account_id: str,
+    request_message_id: str,
+    revision: int,
+    execution_requested: bool,
+    now: str,
+) -> None:
+    conn.execute(
+        """INSERT INTO web_chat_runs
+           (id, thread_id, account_id, request_message_id, assistant_message_id, state, revision,
+            provider_execution_enabled, error_code, requested_at, queued_at, processing_at,
+            completed_at, failed_at, guarded_at, cancelled_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, NULL, 'draft', ?, ?, NULL, ?, NULL, NULL, NULL, NULL, NULL, NULL, ?, ?)""",
+        (run_id, thread_id, account_id, request_message_id, revision, int(execution_requested), now, now, now),
+    )
+
+
+def _run_event(
+    conn: Any,
+    *,
+    run_id: str,
+    thread_id: str,
+    account_id: str,
+    state: str,
+    action: str,
+    now: str | None = None,
+) -> None:
+    sequence_row = conn.execute(
+        "SELECT COALESCE(MAX(sequence), 0) FROM web_chat_run_events WHERE run_id=? AND account_id=?",
+        (run_id, account_id),
+    ).fetchone()
+    sequence = int(sequence_row[0] or 0) + 1
+    conn.execute(
+        """INSERT INTO web_chat_run_events (id, run_id, thread_id, account_id, sequence, state, action, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+        (str(uuid.uuid4()), run_id, thread_id, account_id, sequence, state, action, now or utc_now()),
+    )
+
+
+def _transition_run(
+    conn: Any,
+    *,
+    run: tuple[Any, ...],
+    account_id: str,
+    target: str,
+    action: str,
+    error_code: str | None = None,
+    now: str,
+) -> tuple[Any, ...]:
+    """Record only a valid, durable run state transition.
+
+    The caller passes constants for ``action`` and ``error_code``.  This keeps
+    a browser message or future provider exception out of the audit/event
+    surfaces and makes terminal guarded state explicit rather than pretending
+    a model processed anything.
+    """
+    current = str(run[4])
+    if target not in RUN_STATES or target not in RUN_TRANSITIONS.get(current, frozenset()):
+        raise HTTPException(status_code=409, detail="Chuyển trạng thái Chat Run không hợp lệ")
+    timestamp_column = {
+        "queued": "queued_at",
+        "processing": "processing_at",
+        "completed": "completed_at",
+        "failed": "failed_at",
+        "guarded": "guarded_at",
+        "cancelled": "cancelled_at",
+    }.get(target)
+    if not timestamp_column:
+        raise HTTPException(status_code=409, detail="Trạng thái Chat Run không hỗ trợ")
+    next_error_code = error_code if error_code is not None else (str(run[7]) if run[7] else None)
+    conn.execute(
+        f"UPDATE web_chat_runs SET state=?, error_code=?, {timestamp_column}=?, updated_at=? WHERE id=? AND account_id=?",
+        (target, next_error_code, now, now, str(run[0]), account_id),
+    )
+    changed = _run_row(conn, thread_id=str(run[1]), run_id=str(run[0]), account_id=account_id)
+    if not changed:
+        raise HTTPException(status_code=500, detail="Không thể đọc lại Chat Run")
+    _run_event(
+        conn,
+        run_id=str(changed[0]),
+        thread_id=str(changed[1]),
+        account_id=account_id,
+        state=target,
+        action=action,
+        now=now,
+    )
+    return changed
+
+
+def _run_events(conn: Any, *, thread_id: str, run_id: str, account_id: str) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        """SELECT state, action, created_at FROM web_chat_run_events
+           WHERE run_id=? AND thread_id=? AND account_id=? ORDER BY sequence ASC LIMIT ?""",
+        (run_id, thread_id, account_id, MAX_RUN_EVENT_LIMIT),
+    ).fetchall()
+    return [{"state": str(row[0]), "action": str(row[1]), "created_at": str(row[2])} for row in rows]
 
 
 def _event(
@@ -974,7 +1248,280 @@ async def chat_workspace_execution_status(thread_id: str, account: dict = Depend
         thread = _thread_row(conn, thread_id=resolved, account_id=str(account["id"]))
     if not thread:
         return _thread_not_found()
-    return _guarded("AI execution chưa được cấu hình cho Web App. Thread vẫn có thể được biên tập và rà soát cục bộ.", "WEB_CHAT_EXECUTION_GUARDED")
+    # This is a capability read, not an attempt to invoke a model.  Return
+    # the same fail-closed run boundary as the signed run endpoints so Web
+    # clients can show the one truthful action available today: submit a
+    # customer message for a durable guarded receipt.  It never advertises
+    # provider/assistant availability or turns the feature flag into a live
+    # execution path.
+    guard_code = _run_guard_code()
+    return envelope(
+        True,
+        "Chat Run có thể ghi receipt Web-native; AI execution vẫn đang được bảo vệ cho đến khi có adapter đã kiểm định.",
+        data=_run_boundary(guard_code=guard_code),
+        status_name="guarded",
+        error_code=guard_code,
+    )
+
+
+def _run_not_found() -> dict[str, Any]:
+    # Match the workspace's existing owner-isolation posture.  A different
+    # signed account must not learn whether a run ID exists.
+    return _guarded("Không tìm thấy Chat Run thuộc hội thoại hiện tại.", "WEB_CHAT_RUN_NOT_FOUND")
+
+
+def _run_detail_data(conn: Any, *, thread_id: str, run: tuple[Any, ...], account_id: str) -> dict[str, Any]:
+    request_message = _message_row(
+        conn,
+        thread_id=thread_id,
+        message_id=str(run[2]),
+        account_id=account_id,
+    )
+    assistant_message = (
+        _message_row(conn, thread_id=thread_id, message_id=str(run[3]), account_id=account_id)
+        if run[3]
+        else None
+    )
+    return {
+        "run": _run_public(run),
+        "request_message": _message_public(request_message, include_content=True) if request_message else None,
+        # This module has no execution adapter.  Never manufacture content to
+        # fill a visual assistant bubble when the reference is absent.
+        "assistant_message": _message_public(assistant_message, include_content=True) if assistant_message else None,
+        "events": _run_events(conn, thread_id=thread_id, run_id=str(run[0]), account_id=account_id),
+        **_run_boundary(guard_code=str(run[7]) if run[7] else _run_guard_code()),
+    }
+
+
+@router.get("/threads/{thread_id}/runs")
+async def chat_workspace_runs(
+    thread_id: str,
+    limit: int = 50,
+    offset: int = 0,
+    account: dict = Depends(require_account),
+):
+    _require_enabled()
+    try:
+        resolved = _uuid(thread_id, label="Thread ID")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    account_id = str(account["id"])
+    safe_limit = min(max(int(limit or 50), 1), MAX_RUN_LIST_LIMIT)
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        if not _thread_row(conn, thread_id=resolved, account_id=account_id):
+            return _thread_not_found()
+        total_row = conn.execute(
+            "SELECT COUNT(*) FROM web_chat_runs WHERE thread_id=? AND account_id=?",
+            (resolved, account_id),
+        ).fetchone()
+        total = int(total_row[0] or 0)
+        requested_offset = max(int(offset or 0), 0)
+        last_page_offset = max(0, ((total - 1) // safe_limit) * safe_limit) if total else 0
+        safe_offset = min(requested_offset, last_page_offset)
+        rows = conn.execute(
+            """SELECT id, thread_id, request_message_id, assistant_message_id, state, revision,
+                      provider_execution_enabled, error_code, requested_at, queued_at, processing_at,
+                      completed_at, failed_at, guarded_at, cancelled_at, created_at, updated_at
+               FROM web_chat_runs WHERE thread_id=? AND account_id=?
+               -- ``updated_at`` is second-granularity.  ``rowid`` preserves
+               -- actual insertion order when two receipts share a timestamp;
+               -- UUID text order would make newest-first history arbitrary.
+               ORDER BY updated_at DESC, rowid DESC LIMIT ? OFFSET ?""",
+            (resolved, account_id, safe_limit, safe_offset),
+        ).fetchall()
+    returned = len(rows)
+    has_more = safe_offset + returned < total
+    return envelope(
+        True,
+        "Đã tải lịch sử Chat Run thuộc hội thoại hiện tại.",
+        data={
+            "items": [_run_public(row) for row in rows],
+            "pagination": {
+                "total": total,
+                "limit": safe_limit,
+                "offset": safe_offset,
+                "returned": returned,
+                "has_more": has_more,
+                "next_offset": safe_offset + returned if has_more else None,
+                "previous_offset": max(0, safe_offset - safe_limit) if safe_offset > 0 else None,
+            },
+            **_run_boundary(),
+        },
+        status_name="read_only",
+    )
+
+
+@router.get("/threads/{thread_id}/runs/{run_id}")
+async def chat_workspace_run_detail(thread_id: str, run_id: str, account: dict = Depends(require_account)):
+    _require_enabled()
+    try:
+        resolved_thread = _uuid(thread_id, label="Thread ID")
+        resolved_run = _uuid(run_id, label="Run ID")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    account_id = str(account["id"])
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        if not _thread_row(conn, thread_id=resolved_thread, account_id=account_id):
+            return _thread_not_found()
+        run = _run_row(conn, thread_id=resolved_thread, run_id=resolved_run, account_id=account_id)
+        if not run:
+            return _run_not_found()
+        data = _run_detail_data(conn, thread_id=resolved_thread, run=run, account_id=account_id)
+    return envelope(True, "Đã tải trạng thái Chat Run.", data=data, status_name="read_only")
+
+
+@router.post("/threads/{thread_id}/runs")
+async def chat_workspace_run_create(
+    thread_id: str,
+    payload: ChatRunRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist a customer message and an honest, fail-closed execution receipt.
+
+    A future adapter may implement the queued/processing/completed branch in
+    a separately reviewed worker.  This request intentionally takes the
+    guarded branch today: it creates no assistant message, no provider call,
+    no Bot/bridge action, no wallet/payment/job mutation and no output.
+    """
+    _require_enabled()
+    try:
+        resolved = _uuid(thread_id, label="Thread ID")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    account_id = str(account["id"])
+    fingerprint = _fingerprint(
+        {
+            "action": "chat_run_create",
+            "thread_id": resolved,
+            "expected_revision": payload.expected_revision,
+            "client_message": payload.client_message,
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        thread = _thread_row(conn, thread_id=resolved, account_id=account_id)
+        if not thread:
+            return _thread_not_found()
+        blocked = _thread_writable(thread)
+        if blocked:
+            return blocked
+        if int(thread[10]) != payload.expected_revision:
+            return _revision_conflict()
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_chat_runs WHERE thread_id=? AND account_id=?",
+            (resolved, account_id),
+        ).fetchone()
+        if int(count[0] or 0) >= MAX_RUNS_PER_THREAD:
+            return _guarded("Đã đạt giới hạn lịch sử Chat Run của hội thoại.", "WEB_CHAT_RUN_LIMIT")
+
+        now = utc_now()
+        run_id = str(uuid.uuid4())
+        request_message_id = str(uuid.uuid4())
+        message_ordinal = _next_message_ordinal(conn, thread_id=resolved, account_id=account_id)
+        # The row is expressly the signed user's own input.  The browser may
+        # never submit an assistant role or a prefilled assistant response.
+        conn.execute(
+            """INSERT INTO web_chat_messages
+               (id, thread_id, account_id, run_id, ordinal, role, body, state, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, 'user', ?, 'active', ?, ?)""",
+            (request_message_id, resolved, account_id, run_id, message_ordinal, payload.client_message, now, now),
+        )
+        _insert_run(
+            conn,
+            run_id=run_id,
+            thread_id=resolved,
+            account_id=account_id,
+            request_message_id=request_message_id,
+            revision=int(thread[10]) + 1,
+            execution_requested=chat_execution_enabled(),
+            now=now,
+        )
+        draft = _run_row(conn, thread_id=resolved, run_id=run_id, account_id=account_id)
+        if not draft:
+            raise HTTPException(status_code=500, detail="Không thể tạo Chat Run")
+        _run_event(
+            conn,
+            run_id=run_id,
+            thread_id=resolved,
+            account_id=account_id,
+            state="draft",
+            action="run_created",
+            now=now,
+        )
+        queued = _transition_run(
+            conn,
+            run=draft,
+            account_id=account_id,
+            target="queued",
+            action="run_queued",
+            now=now,
+        )
+        guard_code = _run_guard_code()
+        guarded = _transition_run(
+            conn,
+            run=queued,
+            account_id=account_id,
+            target="guarded",
+            action="execution_guarded",
+            error_code=guard_code,
+            now=now,
+        )
+        changed_thread = _advance_thread(
+            conn,
+            thread=thread,
+            account_id=account_id,
+            now=now,
+            action="chat_run_guarded",
+            entity_type="run",
+            entity_id=run_id,
+        )
+        conn.execute(
+            "UPDATE web_chat_runs SET revision=?, updated_at=? WHERE id=? AND account_id=?",
+            (int(changed_thread[10]), now, run_id, account_id),
+        )
+        final_run = _run_row(conn, thread_id=resolved, run_id=run_id, account_id=account_id)
+        request_message = _message_row(
+            conn,
+            thread_id=resolved,
+            message_id=request_message_id,
+            account_id=account_id,
+        )
+        if not final_run or not request_message:
+            raise HTTPException(status_code=500, detail="Không thể đọc lại Chat Run")
+        contexts, turns = _thread_counts(conn, thread_id=resolved, account_id=account_id)
+        _audit(
+            conn,
+            request=request,
+            account=account,
+            action="chat_run_guarded",
+            target=run_id,
+            detail="Stored Web-native chat run; no reviewed execution adapter is available.",
+        )
+        return envelope(
+            True,
+            "Đã lưu tin nhắn và Chat Run. AI execution đang được bảo vệ vì Web App chưa có adapter đã kiểm định.",
+            data={
+                "thread": _thread_public(changed_thread, context_count=contexts, turn_count=turns),
+                "run": _run_public(final_run),
+                "request_message": _message_public(request_message, include_content=True),
+                "assistant_message": None,
+                "events": _run_events(conn, thread_id=resolved, run_id=run_id, account_id=account_id),
+                **_run_boundary(guard_code=guard_code),
+            },
+            status_name="guarded",
+            error_code=guard_code,
+        )
+
+    return _idempotent(
+        f"web-chat-workspace:{account_id}:thread:{resolved}:run:create",
+        account_id,
+        payload.idempotency_key,
+        fingerprint,
+        operation,
+    )
 
 
 @router.post("/threads")

@@ -163,21 +163,26 @@ def test_project_package_is_immutable_private_and_owner_scoped(tmp_path, monkeyp
         assert "Kịch bản" not in audit[0]
         assert "Cảnh" not in audit[0]
 
-        with make_client(tmp_path, monkeypatch) as second:
-            csrf_second = register_and_login(second, "package-other@example.com")
-            hidden = second.get(f"/api/v1/project-packages/{package['id']}")
-            assert hidden.json()["error_code"] == "WEB_PROJECT_PACKAGE_NOT_FOUND"
-            assert "Ra mắt mùa hè" not in hidden.text
-            blocked = second.get(f"/api/v1/project-packages/{package['id']}/download")
-            assert blocked.json()["error_code"] == "WEB_PROJECT_PACKAGE_NOT_FOUND"
-            hidden_history = second.get(f"/api/v1/projects/{project['id']}/packages")
-            assert hidden_history.json()["error_code"] == "WEB_PROJECT_NOT_FOUND"
-            rejected = second.post(
-                f"/api/v1/projects/{project['id']}/packages",
-                headers={"X-CSRF-Token": csrf_second},
-                json={"idempotency_key": "project-package-other-export-0001"},
-            )
-            assert rejected.json()["error_code"] == "WEB_PROJECT_NOT_FOUND"
+    # Close the first app lifespan before opening another application instance
+    # against the same SQLite test database.  The production throttle correctly
+    # fails closed on a concurrent writer; keeping two TestClients alive here
+    # made this owner-isolation assertion timing-dependent instead of testing
+    # the intended cross-account boundary.
+    with make_client(tmp_path, monkeypatch) as second:
+        csrf_second = register_and_login(second, "package-other@example.com")
+        hidden = second.get(f"/api/v1/project-packages/{package['id']}")
+        assert hidden.json()["error_code"] == "WEB_PROJECT_PACKAGE_NOT_FOUND"
+        assert "Ra mắt mùa hè" not in hidden.text
+        blocked = second.get(f"/api/v1/project-packages/{package['id']}/download")
+        assert blocked.json()["error_code"] == "WEB_PROJECT_PACKAGE_NOT_FOUND"
+        hidden_history = second.get(f"/api/v1/projects/{project['id']}/packages")
+        assert hidden_history.json()["error_code"] == "WEB_PROJECT_NOT_FOUND"
+        rejected = second.post(
+            f"/api/v1/projects/{project['id']}/packages",
+            headers={"X-CSRF-Token": csrf_second},
+            json={"idempotency_key": "project-package-other-export-0001"},
+        )
+        assert rejected.json()["error_code"] == "WEB_PROJECT_NOT_FOUND"
 
 
 def test_project_package_marks_tampered_artifact_unavailable(tmp_path, monkeypatch):
