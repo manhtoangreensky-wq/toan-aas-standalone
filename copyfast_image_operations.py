@@ -1345,8 +1345,17 @@ def _build_enhance_output(
     return final_path, storage_key, output_bytes, output_digest, target_width, target_height
 
 
-def reconcile_image_operation_storage() -> None:
-    """Fail closed for interrupted work, retained artifacts and old orphan files."""
+def reconcile_image_operation_storage(*, interrupted_before: str | None = None) -> None:
+    """Fail closed for interrupted work, retained artifacts and old orphan files.
+
+    ``interrupted_before`` is an internal startup fence captured before the
+    ASGI app accepts requests.  Deferred reconciliation can otherwise reach
+    this module after a new synchronous render has entered ``processing`` and
+    falsely mark it as leftover work from a previous process.  The strict
+    comparison deliberately leaves a one-second grace window because database
+    lifecycle timestamps are stored at second precision; protecting live work
+    is safer than eagerly failing a just-pre-startup row.
+    """
     if not image_operations_enabled():
         return
     ensure_copyfast_schema()
@@ -1354,17 +1363,28 @@ def reconcile_image_operation_storage() -> None:
     outputs = _private_operation_directory(root, "outputs")
     staging = _private_operation_directory(root, ".staging")
     now = utc_now()
+    interrupted_cutoff = ""
+    if interrupted_before is not None:
+        try:
+            parsed_cutoff = datetime.fromisoformat(str(interrupted_before).strip().replace("Z", "+00:00"))
+        except ValueError as exc:
+            raise RuntimeError("Startup Image Operation reconciliation fence không hợp lệ") from exc
+        if parsed_cutoff.tzinfo is None:
+            raise RuntimeError("Startup Image Operation reconciliation fence phải có timezone")
+        interrupted_cutoff = parsed_cutoff.astimezone(timezone.utc).isoformat(timespec="seconds")
     with transaction() as conn:
         # This feature performs work in-request and has no background worker
         # that can resume after a process restart. Never leave a stale row in
         # queued/processing: its idempotency key would otherwise replay a job
         # that no worker owns any more.
         placeholders = ", ".join("?" for _ in SUPPORTED_KINDS)
-        interrupted = conn.execute(
-            f"""SELECT id FROM web_image_operations
-                WHERE kind IN ({placeholders}) AND state IN ('queued', 'processing')""",
-            tuple(sorted(SUPPORTED_KINDS)),
-        ).fetchall()
+        interrupted_sql = f"""SELECT id FROM web_image_operations
+                WHERE kind IN ({placeholders}) AND state IN ('queued', 'processing')"""
+        interrupted_parameters: tuple[str, ...] = tuple(sorted(SUPPORTED_KINDS))
+        if interrupted_cutoff:
+            interrupted_sql += " AND COALESCE(started_at, queued_at, created_at, updated_at) < ?"
+            interrupted_parameters += (interrupted_cutoff,)
+        interrupted = conn.execute(interrupted_sql, interrupted_parameters).fetchall()
         for interrupted_row in interrupted:
             operation_id = str(interrupted_row[0])
             conn.execute(

@@ -455,6 +455,43 @@ def test_resize_replay_survives_archived_source_and_restart_reconciliation(tmp_p
         assert retry.json()["data"]["operation"]["state"] == "failed"
 
 
+def test_startup_reconciliation_fence_keeps_post_startup_image_work_processing(tmp_path, monkeypatch):
+    """A deferred startup scan must never cancel a live in-request render."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "resize-startup-fence@example.com")
+        source = upload_image(client, csrf, key="resize-startup-fence-source-0001", body=image_bytes("JPEG"))
+        created = resize(client, csrf, asset_id=source["id"], key="resize-startup-fence-create-0001", fit_mode="crop")
+        assert created.status_code == 200
+        operation_id = created.json()["data"]["operation"]["id"]
+        database_path = tmp_path / "copyfast-image-operations-test.db"
+        with sqlite3.connect(database_path) as conn:
+            conn.execute(
+                """UPDATE web_image_operations
+                   SET state='processing', failure_code=NULL,
+                       started_at='2099-01-01T00:00:01+00:00',
+                       updated_at='2099-01-01T00:00:01+00:00'
+                   WHERE id=?""",
+                (operation_id,),
+            )
+            conn.commit()
+        operations = importlib.import_module("copyfast_image_operations")
+
+        # The operation began after the captured startup fence and therefore
+        # remains owned by its active request, not by restart recovery.
+        operations.reconcile_image_operation_storage(interrupted_before="2099-01-01T00:00:00+00:00")
+        with sqlite3.connect(database_path) as conn:
+            state = conn.execute("SELECT state FROM web_image_operations WHERE id=?", (operation_id,)).fetchone()[0]
+        assert state == "processing"
+
+        # Old pre-startup work still fails closed instead of being replayable.
+        operations.reconcile_image_operation_storage(interrupted_before="2099-01-01T00:00:02+00:00")
+        with sqlite3.connect(database_path) as conn:
+            state, failure_code = conn.execute(
+                "SELECT state, failure_code FROM web_image_operations WHERE id=?", (operation_id,)
+            ).fetchone()
+        assert (state, failure_code) == ("failed", "IMAGE_OPERATION_INTERRUPTED")
+
+
 def test_startup_reconcile_revokes_tampered_completed_output_and_releases_quota(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         csrf = register_and_login(client, "resize-corrupt-reconcile@example.com")
