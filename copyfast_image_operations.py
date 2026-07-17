@@ -1349,7 +1349,7 @@ def reconcile_image_operation_storage(*, interrupted_before: str | None = None) 
     """Fail closed for interrupted work, retained artifacts and old orphan files.
 
     ``interrupted_before`` is an internal startup fence captured before the
-    ASGI app accepts requests.  Deferred reconciliation can otherwise reach
+    ASGI app begins serving.  Deferred reconciliation can otherwise reach
     this module after a new synchronous render has entered ``processing`` and
     falsely mark it as leftover work from a previous process.  The strict
     comparison deliberately leaves a one-second grace window because database
