@@ -368,6 +368,18 @@ def chat_workspace_enabled() -> bool:
     return os.environ.get("WEBAPP_CHAT_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def chat_execution_enabled() -> bool:
+    """Whether a reviewed Web-native Chat execution adapter is enabled.
+
+    This is deliberately off by default.  It is only an operator intent flag:
+    the standalone Web App must still fail closed until a separately reviewed
+    adapter is present.  Reading this switch never enables a Bot/Core Bridge,
+    provider/model call, wallet/Xu mutation, PayOS action, job, output or
+    delivery by itself.
+    """
+    return os.environ.get("WEBAPP_CHAT_EXECUTION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def analytics_workspace_enabled() -> bool:
     """Whether the Web-native manual Analytics Workspace is available.
 
@@ -2786,6 +2798,89 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_chat_workspace_events_account_created ON web_chat_workspace_events(account_id, created_at DESC, id DESC)"
+        )
+        # Chat Runs represent a Web-native execution request contract.  They
+        # are intentionally separate from the authoring turns above: a run
+        # can truthfully be guarded before any model/provider is contacted,
+        # and an assistant message is impossible to create without a future
+        # reviewed adapter.  Do not put provider payloads, credentials,
+        # wallet/payment/job fields or delivery URLs in these tables.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_messages (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                run_id TEXT,
+                ordinal INTEGER NOT NULL,
+                role TEXT NOT NULL,
+                body TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'active',
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                UNIQUE(thread_id, ordinal),
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_runs (
+                id TEXT PRIMARY KEY,
+                thread_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                request_message_id TEXT NOT NULL,
+                assistant_message_id TEXT,
+                state TEXT NOT NULL DEFAULT 'draft',
+                revision INTEGER NOT NULL,
+                provider_execution_enabled INTEGER NOT NULL DEFAULT 0,
+                error_code TEXT,
+                requested_at TEXT NOT NULL,
+                queued_at TEXT,
+                processing_at TEXT,
+                completed_at TEXT,
+                failed_at TEXT,
+                guarded_at TEXT,
+                cancelled_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(request_message_id) REFERENCES web_chat_messages(id),
+                FOREIGN KEY(assistant_message_id) REFERENCES web_chat_messages(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_chat_run_events (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                thread_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                sequence INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                action TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(run_id, sequence),
+                FOREIGN KEY(run_id) REFERENCES web_chat_runs(id),
+                FOREIGN KEY(thread_id) REFERENCES web_chat_threads(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_messages_thread_account_ordinal ON web_chat_messages(thread_id, account_id, ordinal ASC, created_at ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_runs_thread_account_updated ON web_chat_runs(thread_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_runs_account_state_updated ON web_chat_runs(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_chat_run_events_run_sequence ON web_chat_run_events(run_id, account_id, sequence ASC)"
         )
         # Analytics Workspace is an independent signed-account surface for
         # user-supplied metrics and deterministic local comparisons.  These

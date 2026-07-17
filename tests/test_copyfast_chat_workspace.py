@@ -202,8 +202,26 @@ def test_chat_workspace_lifecycle_freezes_execution_and_rejects_untrusted_conten
         assert frozen.json()["error_code"] == "WEB_CHAT_WORKSPACE_REVIEW_LOCKED"
         execution = client.get(f"/api/v1/chat-workspace/threads/{thread['id']}/execution-status")
         assert execution.status_code == 200
-        assert execution.json()["error_code"] == "WEB_CHAT_EXECUTION_GUARDED"
-        assert_authoring_only(execution.json()["data"])
+        execution_body = execution.json()
+        assert execution_body["ok"] is True
+        assert execution_body["status"] == "guarded"
+        assert execution_body["error_code"] == "WEB_CHAT_EXECUTION_GUARDED"
+        assert execution_body["data"]["execution"] == {
+            "mode": "web_native_chat_run",
+            "run_submission_available": True,
+            "provider_execution_available": False,
+            "assistant_reply_available": False,
+            "cancel_available": False,
+            "provider_called": False,
+            "bot_called": False,
+            "wallet_mutated": False,
+            "payment_started": False,
+            "job_created": False,
+            "output_created": False,
+            "stream_available": False,
+            "output_delivery": "guarded",
+            "guard_code": "WEB_CHAT_EXECUTION_GUARDED",
+        }
 
 
 def test_chat_workspace_disable_and_never_imports_legacy_engine(tmp_path, monkeypatch):

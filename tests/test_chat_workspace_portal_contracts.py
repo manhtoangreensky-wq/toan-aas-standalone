@@ -76,9 +76,11 @@ def test_chat_authoring_boundary_is_explicit_in_ui_and_client_validation() -> No
         assert boundary_flag in helpers
 
     surface = _chat_surface()
-    assert "Lưu hội thoại, không chạy AI" in surface
+    # The authoring surface is explicit that a thread is not model execution.
+    # The wording can evolve, but it must retain this visible boundary.
+    assert "Lưu thread không gọi AI hoặc trừ Xu." in surface
     assert "không phải model" in surface
-    assert "assistant role" in surface
+    assert "không tạo câu trả lời giả" in surface
     for forbidden in (
         "fetch(",
         "api(",
@@ -87,7 +89,9 @@ def test_chat_authoring_boundary_is_explicit_in_ui_and_client_validation() -> No
         'data-portal-action="chat-workspace-estimate"',
         'data-portal-action="chat-workspace-confirm"',
         'data-portal-action="chat-workspace-download"',
-        "assistant_reply",
+        'data-chat-role="assistant"',
+        "data-chat-typing",
+        "portal-chat-assistant",
     ):
         assert forbidden not in surface
 
@@ -126,6 +130,106 @@ def test_chat_mutations_are_signed_redacted_and_rehydrate_after_receipts() -> No
         "__chatWorkspaceOffset",
     ):
         assert attr in PORTAL
+
+
+def test_chat_run_is_a_server_confirmed_guarded_receipt_not_fake_ai() -> None:
+    """Chat Run may persist a user message, never browser-synthesized AI output.
+
+    The execution feature flag is deliberately only a UI label.  Whether it
+    is true or false, the signed server contract currently returns a guarded
+    receipt with no provider, assistant, Bot, ledger, payment, job, file,
+    stream, or delivery behavior.
+    """
+    helpers = _chat_helpers()
+    for helper in (
+        "chatRunPayload",
+        "chatExecutionBoundaryIsSafe",
+        "chatRunIsSafe",
+        "chatRunSubmissionReceipt",
+    ):
+        assert f"function {helper}" in helpers
+    # Hydration lives with the signed-path orchestration below the individual
+    # workspace payload helpers.  Keep the assertion global rather than
+    # accidentally cutting it out at the next module's constants.
+    for helper in (
+        "chatExecutionRequestIsCurrent",
+        "hydrateChatExecution",
+        "emptyChatRunListing",
+    ):
+        assert f"function {helper}" in INTEGRATION
+    for boundary_flag in (
+        'boundary.mode === "web_native_chat_run"',
+        "boundary.run_submission_available === \"boolean\"",
+        "boundary.provider_execution_available === false",
+        "boundary.assistant_reply_available === false",
+        "boundary.cancel_available === false",
+        "boundary.provider_called === false",
+        "boundary.bot_called === false",
+        "boundary.wallet_mutated === false",
+        "boundary.payment_started === false",
+        "boundary.job_created === false",
+        "boundary.output_created === false",
+        "boundary.stream_available === false",
+        'boundary.output_delivery === "guarded"',
+    ):
+        assert boundary_flag in helpers
+
+    assert '"chat-run-submit": Boolean(account && me.csrf_token && chatWorkspaceEnabled)' in INTEGRATION
+    assert '"chat-run-refresh": Boolean(account && chatWorkspaceEnabled)' in INTEGRATION
+    assert 'path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/runs`' in INTEGRATION
+    assert 'action === "chat-run-submit"' in INTEGRATION
+    assert 'action === "chat-run-refresh"' in INTEGRATION
+    assert "idempotency_key: submission.key" in INTEGRATION
+    assert "await hydrateChatThread(threadId);" in INTEGRATION
+    assert "if (!chatExecutionBoundaryIsSafe({ execution })) throw" in INTEGRATION
+    assert "chatExecution: {}, chatRuns: []" in INTEGRATION
+    assert "let chatExecutionHydrationEpoch = 0" in INTEGRATION
+    assert "++chatExecutionHydrationEpoch" in INTEGRATION
+
+    # The UI has a confirmation composer and a receipt timeline, but no
+    # cancel button: guarded runs resolve synchronously and have no worker to
+    # stop.  It also must not retain the composed private message in a generic
+    # browser draft after submit.
+    for needle in (
+        "function chatRunFields()",
+        "function renderChatExecutionPanel(",
+        "function renderChatRunTimeline(",
+        'data-portal-action="chat-run-submit"',
+        'data-portal-action="chat-run-refresh"',
+        "data-portal-confirm=\"Gửi tin nhắn này thành Chat Run Web-native?",
+        'action === "chat-run-submit") clearTransientFormDraft(route);',
+        "chatExecutionEnabled: source.chatExecutionEnabled === true",
+        "chatExecutionReadState:",
+    ):
+        assert needle in PORTAL
+    for forbidden in (
+        'data-portal-action="chat-run-cancel"',
+        "action === \"chat-run-cancel\"",
+        'data-chat-role="assistant"',
+        "data-chat-typing",
+        "portal-chat-assistant",
+        "localStorage",
+        "sessionStorage",
+        "indexedDB",
+        '"/internal/',
+        '"/wallet',
+        '"/payments',
+        '"/payos',
+        '"/bridge',
+    ):
+        assert forbidden not in _chat_surface()
+
+    for selector in (
+        ".portal-chat-execution",
+        ".portal-chat-execution-status",
+        ".portal-chat-execution-layout",
+        ".portal-chat-run-composer",
+        ".portal-chat-run-timeline",
+        ".portal-chat-run-card",
+    ):
+        assert selector in CSS
+    assert re.search(r"\.portal-chat-execution-layout[^{}]*\{ grid-template-columns: 1fr; \}", CSS)
+    assert re.search(r"\.portal-chat-execution-status[^{}]*\{ grid-template-columns: 1fr; \}", CSS)
 
 
 def test_chat_library_filter_and_pagination_keep_private_state_consistent() -> None:
@@ -187,7 +291,7 @@ def test_chat_hydration_fences_session_list_detail_and_current_signed_path() -> 
     # Presentation normalization must retain the signed list projection. If it
     # drops this field, a correct API response is silently rendered as page 0
     # and a refresh can reuse an unsafe/default filter instead.
-    start = PORTAL.index("// AI Chat Workspace is an owner-scoped")
+    start = PORTAL.index("// AI Chat Workspace is owner-scoped.")
     end = PORTAL.index("// Analytics Workspace is a manual-only", start)
     normalizer = PORTAL[start:end]
     assert "chatWorkspaceListing:" in normalizer
@@ -213,10 +317,19 @@ def test_chat_private_cache_and_responsive_ui_contract() -> None:
         ".portal-chat-context-grid",
         ".portal-chat-turn-list",
         ".portal-chat-workspace-history",
-        ".portal-chat-workspace-intro, .portal-chat-thread-summary, .portal-chat-workspace-layout, .portal-chat-workspace-detail-grid, .portal-chat-workspace-history { grid-template-columns: 1fr; }",
-        ".portal-chat-workspace-grid, .portal-chat-context-grid { grid-template-columns: 1fr; }",
     ):
         assert selector in CSS
+    # The execution panel participates in the same mobile breakpoint.  Match
+    # the responsive rule semantically so adding another chat surface to the
+    # shared selector cannot silently remove this requirement.
+    assert re.search(
+        r"\.portal-chat-workspace-intro[^{}]*\.portal-chat-workspace-history[^{}]*\.portal-chat-execution-layout\s*\{\s*grid-template-columns:\s*1fr;\s*\}",
+        CSS,
+    )
+    assert re.search(
+        r"\.portal-chat-workspace-grid[^{}]*\.portal-chat-context-grid\s*\{\s*grid-template-columns:\s*1fr;\s*\}",
+        CSS,
+    )
 
 
 def test_chat_composer_fields_keep_unique_accessible_ids() -> None:

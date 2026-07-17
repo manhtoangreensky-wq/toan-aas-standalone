@@ -566,6 +566,10 @@ def _flags() -> dict[str, bool]:
         # and revision metadata. This flag never exposes legacy Gemini, a
         # Bot/Core Bridge chat, provider stream, Xu, payment, job or output.
         "chat_workspace_enabled": enabled("WEBAPP_CHAT_WORKSPACE_ENABLED", True),
+        # This is only the operator intent for a future reviewed Web-native
+        # Chat adapter.  The Chat Run route still fails closed and records a
+        # guarded receipt until such an adapter is separately implemented.
+        "chat_execution_enabled": enabled("WEBAPP_CHAT_EXECUTION_ENABLED", False),
         # Analytics Workspace owns only signed-account, manually entered
         # observations and deterministic local comparisons. This independent
         # maintenance flag never enables platform data, Bot/provider calls,

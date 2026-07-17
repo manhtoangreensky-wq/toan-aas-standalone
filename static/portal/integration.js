@@ -155,6 +155,10 @@
   let chatWorkspaceSessionEpoch = 0;
   let chatWorkspaceListHydrationEpoch = 0;
   let chatWorkspaceDetailHydrationEpoch = 0;
+  // Chat Runs are a separate, owner-scoped execution receipt.  Keep their
+  // read sequence independent so a late run timeline can never refill a
+  // different signed account or a thread that has already been replaced.
+  let chatExecutionHydrationEpoch = 0;
   let analyticsWorkspaceSessionEpoch = 0;
   let analyticsWorkspaceListHydrationEpoch = 0;
   let analyticsWorkspaceDetailHydrationEpoch = 0;
@@ -6714,6 +6718,12 @@
   const CHAT_WORKSPACE_STATES = new Set(["draft", "review", "ready", "archived"]);
   const CHAT_CONTEXT_KINDS = new Set(["brief", "constraint", "reference", "instruction"]);
   const CHAT_TURN_KINDS = new Set(["prompt", "note", "decision"]);
+  // A Chat Run is intentionally not a generic feature job.  Its bounded
+  // state vocabulary makes the default guarded receipt visible without
+  // inventing a provider stream, assistant response, file, delivery or
+  // payment transition in the browser.
+  const CHAT_RUN_STATES = new Set(["draft", "queued", "processing", "completed", "failed", "guarded", "cancelled"]);
+  const CHAT_RUN_LIST_LIMIT = 50;
   function validChatWorkspaceId(value) { return validProjectId(value); }
   function validChatWorkspaceRevision(value) { return validMemoryRevision(value); }
   function chatThreadIdFromPath(path) {
@@ -6793,6 +6803,12 @@
     if (safety) throw new Error(safety);
     return { kind, body };
   }
+  function chatRunPayload(fields) {
+    const clientMessage = chatWorkspaceBody(fields.client_message, "Tin nhắn", 16000, false);
+    const safety = chatWorkspaceSafetyError(clientMessage);
+    if (safety) throw new Error(safety);
+    return { client_message: clientMessage };
+  }
   function chatWorkspaceBoundaryIsSafe(value) {
     const source = value && typeof value === "object" ? value : {};
     const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : (source.policy && typeof source.policy === "object" ? source.policy : source);
@@ -6812,6 +6828,83 @@
       && boundary.stream_available === false
       && boundary.output_delivery === "guarded"
     );
+  }
+  function chatExecutionBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const boundary = source.execution && typeof source.execution === "object" ? source.execution : source;
+    return Boolean(
+      boundary.mode === "web_native_chat_run"
+      && typeof boundary.run_submission_available === "boolean"
+      && boundary.provider_execution_available === false
+      && boundary.assistant_reply_available === false
+      && boundary.cancel_available === false
+      && boundary.provider_called === false
+      && boundary.bot_called === false
+      && boundary.wallet_mutated === false
+      && boundary.payment_started === false
+      && boundary.job_created === false
+      && boundary.output_created === false
+      && boundary.stream_available === false
+      && boundary.output_delivery === "guarded"
+    );
+  }
+  function chatRunIsSafe(value, threadId) {
+    const run = value && typeof value === "object" ? value : {};
+    const state = String(run.state || "").trim().toLowerCase();
+    const createdAt = String(run.created_at || "").trim();
+    const updatedAt = String(run.updated_at || run.created_at || "").trim();
+    return Boolean(
+      validChatWorkspaceId(run.id)
+      && String(run.thread_id || "") === String(threadId || "")
+      && validChatWorkspaceId(run.request_message_id)
+      && run.assistant_message_id === null
+      && CHAT_RUN_STATES.has(state)
+      && createdAt.length > 0 && createdAt.length <= 80 && !/[\u0000-\u001f\u007f]/.test(createdAt)
+      && updatedAt.length > 0 && updatedAt.length <= 80 && !/[\u0000-\u001f\u007f]/.test(updatedAt)
+    );
+  }
+  function chatRunPagination(data, requested) {
+    const raw = data && data.pagination && typeof data.pagination === "object" ? data.pagination : {};
+    const number = (value, fallback, maximum) => {
+      const parsed = Number(value);
+      return Number.isInteger(parsed) && parsed >= 0 && parsed <= maximum ? parsed : fallback;
+    };
+    const total = number(raw.total, 0, 500);
+    const limit = number(raw.limit, requested.limit, 100) || requested.limit;
+    const offset = number(raw.offset, requested.offset, Math.max(0, total));
+    const returned = number(raw.returned, 0, limit);
+    const nextOffset = raw.next_offset === null || raw.next_offset === undefined ? null : number(raw.next_offset, -1, Math.max(0, total));
+    const previousOffset = raw.previous_offset === null || raw.previous_offset === undefined ? null : number(raw.previous_offset, -1, Math.max(0, total));
+    return {
+      total, limit, offset, returned,
+      has_more: raw.has_more === true && nextOffset !== -1,
+      next_offset: nextOffset === -1 ? null : nextOffset,
+      previous_offset: previousOffset === -1 ? null : previousOffset
+    };
+  }
+  function chatRunSubmissionReceipt(value, threadId) {
+    const data = value && typeof value === "object" ? value : {};
+    const thread = data.thread && typeof data.thread === "object" ? data.thread : null;
+    const run = data.run && typeof data.run === "object" ? data.run : null;
+    const request = data.request_message && typeof data.request_message === "object" ? data.request_message : null;
+    const replayHasBody = Object.prototype.hasOwnProperty.call(request || {}, "body");
+    if (!chatExecutionBoundaryIsSafe(data) || !thread || !run || !request
+      || !validChatWorkspaceId(thread.id) || String(thread.id) !== String(threadId)
+      || !validChatWorkspaceRevision(thread.revision)
+      || !chatRunIsSafe(run, threadId)
+      || !validChatWorkspaceId(request.id) || String(request.id) !== String(run.request_message_id)
+      || String(request.thread_id || "") !== String(threadId)
+      || String(request.run_id || "") !== String(run.id)
+      || String(request.role || "") !== "user"
+      // Idempotent replay receipts intentionally remain content-free.  The
+      // browser validates the opaque user-message relationship either way,
+      // then rehydrates from the signed server projection instead of caching
+      // any message text locally.
+      || (replayHasBody && (typeof request.body !== "string" || !request.body.trim() || chatWorkspaceSafetyError(request.body)))) return null;
+    return {
+      thread: { id: String(thread.id), revision: Number(thread.revision), state: String(thread.state || "") },
+      run: { id: String(run.id), state: String(run.state), request_message_id: String(run.request_message_id) }
+    };
   }
 
   // Analytics Workspace is intentionally limited to manual measurements
@@ -8679,6 +8772,7 @@
     ++projectPackageSessionEpoch;
     ++documentWorkspaceSessionEpoch;
     ++chatWorkspaceSessionEpoch;
+    ++chatExecutionHydrationEpoch;
     ++analyticsWorkspaceSessionEpoch;
     ++channelStrategySessionEpoch;
     ++subtitleStudioSessionEpoch;
@@ -8908,10 +9002,12 @@
     // surface. Its flag never enables document operations, OCR, translation,
     // a provider, Bot bridge, job, wallet, payment or delivery.
     const documentWorkspaceEnabled = Boolean(status.flags && status.flags.document_workspace_enabled === true);
-    // AI Chat Workspace only unlocks signed Web-owned authoring records. It
-    // never enables a model, assistant reply, provider stream, Bot mode,
-    // wallet, payment, job, output or delivery path.
+    // AI Chat Workspace unlocks signed Web-owned authoring records. A
+    // separate, fail-closed execution flag only labels Web-native Chat Run
+    // readiness; it never permits browser-side provider, Bot, wallet,
+    // payment, job, output, stream or delivery calls.
     const chatWorkspaceEnabled = Boolean(status.flags && status.flags.chat_workspace_enabled === true);
+    const chatExecutionEnabled = Boolean(status.flags && status.flags.chat_execution_enabled === true);
     // Analytics Workspace owns only manual observations entered by the
     // signed Web account.  Its flag never means that a platform connection,
     // Bot report, provider analytics, AI insight, revenue, wallet, payment,
@@ -9310,6 +9406,13 @@
       "chat-context-state": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
       "chat-turn-create": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
       "chat-turn-state": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
+      // The server remains the final authority for a Chat Run boundary.  A
+      // signed Web account may submit a bounded request even while the
+      // optional executor flag is off; that request is honestly returned as
+      // guarded rather than becoming a fabricated assistant response.
+      "chat-run-view": Boolean(account && chatWorkspaceEnabled),
+      "chat-run-refresh": Boolean(account && chatWorkspaceEnabled),
+      "chat-run-submit": Boolean(account && me.csrf_token && chatWorkspaceEnabled),
       "analytics-workspace-view": Boolean(account && analyticsWorkspaceEnabled),
       "analytics-workspace-refresh": Boolean(account && analyticsWorkspaceEnabled),
       "analytics-workspace-filter": Boolean(account && analyticsWorkspaceEnabled),
@@ -9431,6 +9534,7 @@
     ++chatWorkspaceSessionEpoch;
     ++chatWorkspaceListHydrationEpoch;
     ++chatWorkspaceDetailHydrationEpoch;
+    ++chatExecutionHydrationEpoch;
     ++analyticsWorkspaceSessionEpoch;
     ++analyticsWorkspaceListHydrationEpoch;
     ++analyticsWorkspaceDetailHydrationEpoch;
@@ -9631,6 +9735,7 @@
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
       chatWorkspaceEnabled,
+      chatExecutionEnabled,
       analyticsWorkspaceEnabled,
       analyticsManualCsvExportEnabled,
       workboardEnabled,
@@ -9922,6 +10027,13 @@
       chatWorkspacePolicy: {},
       chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
       chatWorkspaceReadState: account && chatWorkspaceEnabled ? "loading" : "guarded",
+      // Chat Run receipts can reveal private user-authored message metadata.
+      // Clear them with every signed bootstrap; no prior run/timeline can
+      // survive a session switch, disabled route or failed owner read.
+      chatExecution: {},
+      chatRuns: [],
+      chatRunListing: { pagination: { total: 0, limit: CHAT_RUN_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      chatExecutionReadState: account && chatWorkspaceEnabled ? "loading" : "guarded",
       // Manual Analytics reports can include private internal observation
       // notes. Clear every owner-scoped projection before a signed read so a
       // failed request or account switch cannot reveal a previous account's
@@ -10373,7 +10485,8 @@
       // transcript or a browser draft when this native route is guarded.
       merge({
         chatWorkspaceSummary: {}, chatThreads: [], chatThreadDetail: {}, chatWorkspaceReferences: {}, chatWorkspaceEvents: [], chatWorkspacePolicy: {}, chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
-        chatWorkspaceReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+        chatWorkspaceReadState: "guarded", chatExecution: {}, chatRuns: [], chatRunListing: emptyChatRunListing(), chatExecutionReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
     }
     if (account && analyticsWorkspaceEnabled && ["/analytics", "/analytics/new"].includes(currentPath)) await hydrateAnalyticsWorkspace();
@@ -12612,6 +12725,78 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function emptyChatRunListing() {
+    return { pagination: { total: 0, limit: CHAT_RUN_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } };
+  }
+  function chatRunListPath(threadId) {
+    return "/chat-workspace/threads/" + encodeURIComponent(String(threadId)) + "/runs?limit=" + encodeURIComponent(String(CHAT_RUN_LIST_LIMIT)) + "&offset=0";
+  }
+  function chatExecutionRequestIsCurrent(requestEpoch, sessionEpoch, threadId, route) {
+    const detail = base().chatThreadDetail && typeof base().chatThreadDetail === "object" ? base().chatThreadDetail : {};
+    const thread = detail.thread && typeof detail.thread === "object" ? detail.thread : {};
+    return requestEpoch === chatExecutionHydrationEpoch
+      && sessionEpoch === chatWorkspaceSessionEpoch
+      && currentPortalPath() === route
+      && base().chatWorkspaceEnabled === true
+      && Boolean(base().session && base().session.authenticated === true)
+      && String(thread.id || "") === String(threadId || "");
+  }
+  function safeChatExecutionBoundary(value) {
+    const execution = value && typeof value === "object" ? value : {};
+    if (!chatExecutionBoundaryIsSafe({ execution })) return {};
+    return {
+      mode: "web_native_chat_run",
+      run_submission_available: execution.run_submission_available === true,
+      provider_execution_available: false,
+      assistant_reply_available: false,
+      cancel_available: false,
+      provider_called: false,
+      bot_called: false,
+      wallet_mutated: false,
+      payment_started: false,
+      job_created: false,
+      output_created: false,
+      stream_available: false,
+      output_delivery: "guarded"
+    };
+  }
+  async function hydrateChatExecution(threadId) {
+    if (!validChatWorkspaceId(threadId)) return null;
+    const route = "/chat/" + encodeURIComponent(String(threadId));
+    const requestEpoch = ++chatExecutionHydrationEpoch;
+    const sessionEpoch = chatWorkspaceSessionEpoch;
+    try {
+      const result = await api(chatRunListPath(threadId));
+      const data = result && result.data && typeof result.data === "object" ? result.data : {};
+      const execution = data.execution && typeof data.execution === "object" ? data.execution : {};
+      if (!chatExecutionBoundaryIsSafe({ execution })) throw new Error("Boundary Chat Run chưa được máy chủ xác nhận.");
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => chatRunIsSafe(item, threadId)).slice(0, CHAT_RUN_LIST_LIMIT).map((item) => ({
+          id: String(item.id), thread_id: String(item.thread_id), request_message_id: String(item.request_message_id),
+          assistant_message_id: null, state: String(item.state), created_at: String(item.created_at), updated_at: String(item.updated_at || item.created_at)
+        }))
+        : [];
+      const requested = { limit: CHAT_RUN_LIST_LIMIT, offset: 0 };
+      const pagination = chatRunPagination(data, requested);
+      if (pagination.returned !== items.length) throw new Error("Máy chủ trả số lượng Chat Run không nhất quán.");
+      if (!chatExecutionRequestIsCurrent(requestEpoch, sessionEpoch, threadId, route)) return { stale: true };
+      merge({
+        chatExecution: safeChatExecutionBoundary(execution),
+        chatRuns: items,
+        chatRunListing: { pagination },
+        chatExecutionReadState: "ready"
+      });
+      return { execution: safeChatExecutionBoundary(execution), items, pagination };
+    } catch (_) {
+      if (!chatExecutionRequestIsCurrent(requestEpoch, sessionEpoch, threadId, route)) return { stale: true };
+      // A failed/old endpoint cannot be represented as an empty assistant
+      // history.  Fail closed with no runs and let the UI say that the server
+      // has not confirmed the execution boundary yet.
+      merge({ chatExecution: {}, chatRuns: [], chatRunListing: emptyChatRunListing(), chatExecutionReadState: "guarded" });
+      return null;
+    }
+  }
+
   async function hydrateChatWorkspace(overrides) {
     // Only use the signed, Web-native API. A failed read must never be
     // replaced by a legacy Bot transcript, generic feature bridge or cache.
@@ -12654,6 +12839,7 @@
         chatWorkspaceSummary: summary, chatThreads: threads, chatWorkspaceEvents: events,
         chatWorkspaceReferences: references, chatWorkspacePolicy: policy, chatWorkspaceListing: listing,
         chatThreadDetail: {}, chatWorkspaceReadState: "ready",
+        chatExecution: {}, chatRuns: [], chatRunListing: emptyChatRunListing(), chatExecutionReadState: "guarded",
         pageStates: { ...(base().pageStates || {}), "/chat": "ready", "/chat/new": "ready" }
       });
       return { threads, events, listing };
@@ -12662,7 +12848,8 @@
       merge({
         chatWorkspaceSummary: {}, chatThreads: [], chatWorkspaceEvents: [], chatWorkspaceReferences: {}, chatWorkspacePolicy: {}, chatThreadDetail: {},
         chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: CHAT_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
-        chatWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), "/chat": "guarded", "/chat/new": "guarded" }
+        chatWorkspaceReadState: "failed", chatExecution: {}, chatRuns: [], chatRunListing: emptyChatRunListing(), chatExecutionReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), "/chat": "guarded", "/chat/new": "guarded" }
       });
       return { threads: [], events: [], listing: {} };
     }
@@ -12694,14 +12881,20 @@
       merge({
         chatThreadDetail: { thread, contexts, turns, versions, events, references: data.references && typeof data.references === "object" ? data.references : {} },
         chatWorkspaceReferences: references, chatWorkspacePolicy: policy, chatWorkspaceReadState: "ready",
+        // Run history is a separate signed endpoint.  Render the authoring
+        // record first, then independently hydrate the execution boundary so
+        // a transient run read failure never hides the thread itself.
+        chatExecution: {}, chatRuns: [], chatRunListing: emptyChatRunListing(), chatExecutionReadState: "loading",
         pageStates: { ...(base().pageStates || {}), [route]: String(thread.state || "guarded") === "draft" ? "ready" : String(thread.state || "guarded") }
       });
+      await hydrateChatExecution(threadId);
       return { thread, contexts, turns, versions };
     } catch (_) {
       if (!chatWorkspaceRequestIsCurrent(requestEpoch, chatWorkspaceDetailHydrationEpoch, sessionEpoch, route)) return null;
       merge({
         chatWorkspaceSummary: {}, chatThreads: [], chatWorkspaceEvents: [], chatWorkspaceReferences: {}, chatWorkspacePolicy: {}, chatThreadDetail: {}, chatWorkspaceListing: { state: "all", q: "", pagination: { total: 0, limit: CHAT_WORKSPACE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
-        chatWorkspaceReadState: "failed", pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
+        chatWorkspaceReadState: "failed", chatExecution: {}, chatRuns: [], chatRunListing: emptyChatRunListing(), chatExecutionReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [route]: "guarded" }
       });
       return null;
     }
@@ -19141,6 +19334,43 @@
         const offset = Number(fields.__chatWorkspaceOffset);
         if (!Number.isInteger(offset) || offset < 0 || offset > 500) throw new Error("Trang hội thoại không hợp lệ.");
         await hydrateChatWorkspace({ offset });
+        return;
+      }
+      if (action === "chat-run-refresh") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        if (!validChatWorkspaceId(threadId)) throw new Error("Mã thread Chat Run không hợp lệ.");
+        const refreshed = await hydrateChatExecution(threadId);
+        if (!refreshed || refreshed.stale) return;
+        toast("Đã tải lại trạng thái Chat Run từ máy chủ.");
+        return;
+      }
+      if (action === "chat-run-submit") {
+        const threadId = String(fields.__chatThreadId || chatThreadIdFromPath(route)).trim();
+        const expectedRevision = validChatWorkspaceRevision(fields.__chatThreadRevision);
+        const threadState = String(fields.__chatThreadState || "").trim().toLowerCase();
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        const execution = base().chatExecution && typeof base().chatExecution === "object" ? base().chatExecution : {};
+        if (!validChatWorkspaceId(threadId) || !expectedRevision || threadState !== "draft") throw new Error("Chat Run chỉ nhận từ thread Draft với revision hiện tại.");
+        if (capabilities["chat-run-submit"] !== true || !chatExecutionBoundaryIsSafe({ execution }) || execution.run_submission_available !== true) {
+          throw new Error("Máy chủ chưa cấp boundary Chat Run an toàn cho phiên hiện tại. Hãy làm mới trạng thái trước khi gửi.");
+        }
+        const payload = { ...chatRunPayload(fields), expected_revision: expectedRevision };
+        await chatWorkspaceMutation({
+          action, route, scope: `chat-workspace:thread:${threadId}:run:submit`,
+          path: `/chat-workspace/threads/${encodeURIComponent(threadId)}/runs`, payload,
+          onSuccess: async (result) => {
+            const receipt = chatRunSubmissionReceipt(result.data, threadId);
+            if (!receipt || result.status !== "guarded" || receipt.run.state !== "guarded") {
+              throw new Error("Máy chủ chưa trả receipt Chat Run guarded đúng boundary.");
+            }
+            // Never append a local message, fake assistant bubble or fake
+            // processing state.  The signed server projection is authoritative
+            // for the user message, run timeline and latest thread revision.
+            await hydrateChatWorkspace();
+            await hydrateChatThread(threadId);
+            toast(result.message || "Đã lưu Chat Run guarded. Chưa có assistant output.");
+          }
+        });
         return;
       }
       if (action === "chat-thread-create") {
