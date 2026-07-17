@@ -110,6 +110,20 @@ async def dashboard():
     assert "Manual top-up stays a Bot handoff" in (docs_dir / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     assert "BOT_COMPANION_HANDOFF.md" in (docs_dir / "README.md").read_text(encoding="utf-8")
     assert "Bot checkout audited: `unavailable` (`not_a_git_worktree`)" in (docs_dir / "README.md").read_text(encoding="utf-8")
+    # The generated compatibility map must preserve the three Web authority
+    # domains.  A later static audit must not silently reduce it to a generic
+    # "admin" list and thereby suggest that browser navigation grants Bot
+    # canonical authority.
+    erp_map = (docs_dir / "ADMIN_ERP_MAP.md").read_text(encoding="utf-8")
+    for marker in (
+        "## Authority model",
+        "Canonical Bot admin",
+        "Web Support Desk",
+        "Web CRM manager",
+        "WEBAPP_ADMIN_ERP_ENABLED",
+        "Compatibility target",
+    ):
+        assert marker in erp_map
 
 
 def test_static_audit_records_api_routes_db_env_and_background_signals(tmp_path: Path) -> None:
@@ -179,8 +193,8 @@ async def page(page_path):
     result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
 
     assert result["parity_gap"]["command_mappings"][0]["status"] == "COPIED_GUARDED"
-    assert result["parity_gap"]["gaps"][1]["area"] == "private_core_bridge"
-    assert result["parity_gap"]["gaps"][1]["count"] == 0
+    bridge_gap = next(item for item in result["parity_gap"]["gaps"] if item["area"] == "private_core_bridge")
+    assert bridge_gap["count"] == 0
 
 
 def test_static_audit_compares_web_bridge_method_and_path_shapes(tmp_path: Path) -> None:
@@ -474,6 +488,166 @@ def test_static_audit_excludes_clearly_named_bot_drafts_from_canonical_command_c
     assert "Excluded clearly named Bot drafts" in (tmp_path / "docs" / "bot-inventory.md").read_text(encoding="utf-8")
 
 
+def test_static_audit_prunes_ephemeral_pytest_project_copies(tmp_path: Path) -> None:
+    audit = _load_audit_module()
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text("app = FastAPI()", encoding="utf-8")
+    ephemeral_copy = web_root / "_pytest_route_copy" / "web"
+    ephemeral_copy.mkdir(parents=True)
+    (ephemeral_copy / "copyfast_api.py").write_text(
+        "app = FastAPI()\n@app.get('/should-not-be-audited')\nasync def ignored(): return {}",
+        encoding="utf-8",
+    )
+
+    discovered = audit._source_files(web_root)
+    relative_paths = {path.relative_to(web_root).as_posix() for path in discovered}
+
+    assert relative_paths == {"app.py"}
+
+
+def test_static_audit_derives_only_reviewed_literal_guided_video_callbacks(tmp_path: Path) -> None:
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def guided_video_result_keyboard(prefix):
+    return [
+        ("Save", f"{prefix}|save"),
+        ("Strength", f"{prefix}|strength|quick"),
+    ]
+
+guided_video_result_keyboard("promptvideo")
+guided_video_result_keyboard("imagevideo")
+guided_video_result_keyboard("videoref")
+guided_video_result_keyboard("videoidea")
+guided_video_result_keyboard(flow)
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get('/{page_path:path}')
+async def web_page(page_path: str):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    inventory = result["bot_inventory"]
+    template_values = {item["template"] for item in inventory["callback_templates"]}
+    concrete_tokens = {item["token"] for item in inventory["callback_data"]}
+    gap = result["parity_gap"]
+
+    assert "{*}|save" in template_values
+    assert "{*}|strength|quick" in template_values
+    assert {
+        "promptvideo|save", "imagevideo|save",
+        "promptvideo|strength|quick", "imagevideo|strength|quick",
+    }.issubset(concrete_tokens)
+    assert not {"flow|save", "videoref|save", "videoidea|save"}.intersection(concrete_tokens)
+    assert inventory["counts"]["callback_templates"] == len(template_values)
+    assert gap["source_counts"]["callback_templates"] == 0
+    assert gap["mapping_coverage_percent"] == 100.0
+    template_records = {item["template"]: item for item in inventory["callback_templates"]}
+    template_mappings = {item["source"]: item for item in gap["callback_template_mappings"]}
+    for template in ("{*}|save", "{*}|strength|quick"):
+        assert template_records[template]["resolution"] == "reviewed_literal_prefix_helper_calls"
+        assert template_records[template]["helper"] == "guided_video_result_keyboard"
+        assert set(template_records[template]["derived_callback_tokens"]) == {
+            template.replace("{*}", "promptvideo", 1),
+            template.replace("{*}", "imagevideo", 1),
+        }
+        assert template_mappings[template]["status"] == "COPIED_GUARDED"
+        assert template_mappings[template]["target"] == "DERIVED_LITERAL_PREFIX_CALLBACKS"
+        assert set(template_mappings[template]["target_routes"]) == {
+            "/video-studio/prompt-planner",
+            "/video-studio/image-motion-planner",
+        }
+    mappings = {item["source"]: item for item in gap["callback_mappings"]}
+    assert mappings["promptvideo|save"]["target"] == "/video-studio/prompt-planner"
+    assert mappings["imagevideo|save"]["target"] == "/video-studio/image-motion-planner"
+    assert mappings["imagevideo|save"]["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_derives_reviewed_motion_music_helpers_without_broad_generic_mapping(tmp_path: Path) -> None:
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+def guided_video_motion_keyboard(prefix):
+    back_action = "back_choices" if prefix == "promptvideo" else "back_style"
+    return [
+        ("Motion", f"{prefix}|motion_choice|1"),
+        ("Back", f"{prefix}|{back_action}"),
+    ]
+
+def guided_video_music_keyboard(prefix):
+    return [
+        ("Music", f"{prefix}|music_choice|1"),
+        ("Back", f"{prefix}|back_motion"),
+    ]
+
+def unrelated_keyboard(prefix):
+    return [("Unreviewed", f"{prefix}|save")]
+
+guided_video_motion_keyboard("promptvideo")
+guided_video_motion_keyboard("imagevideo")
+guided_video_motion_keyboard("videoref")
+guided_video_music_keyboard("promptvideo")
+guided_video_music_keyboard("imagevideo")
+guided_video_music_keyboard("videoidea")
+unrelated_keyboard("promptvideo")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get('/{page_path:path}')
+async def web_page(page_path: str):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    inventory = result["bot_inventory"]
+    concrete_tokens = {item["token"] for item in inventory["callback_data"]}
+    mappings = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+
+    assert {
+        "promptvideo|motion_choice|1", "imagevideo|motion_choice|1",
+        "promptvideo|back_choices", "imagevideo|back_style",
+        "promptvideo|music_choice|1", "imagevideo|music_choice|1",
+        "promptvideo|back_motion", "imagevideo|back_motion",
+    }.issubset(concrete_tokens)
+    assert not {
+        "videoref|motion_choice|1", "videoidea|music_choice|1", "promptvideo|save",
+    }.intersection(concrete_tokens)
+    assert mappings["{*}|motion_choice|1"]["status"] == "COPIED_GUARDED"
+    assert set(mappings["{*}|motion_choice|1"]["target_routes"]) == {
+        "/video-studio/prompt-planner",
+        "/video-studio/image-motion-planner",
+    }
+    assert set(mappings["{*}|{*}"]["target_routes"]) == {
+        "/video-studio/prompt-planner",
+        "/image-studio",
+    }
+    assert mappings["{*}|music_choice|1"]["status"] == "COPIED_GUARDED"
+    assert mappings["{*}|back_motion"]["status"] == "COPIED_GUARDED"
+    assert mappings["{*}|save"]["status"] == "NEEDS_WEB_IMPLEMENTATION"
+    assert audit._map_callback_template("{*}|save", {"file": "bot.py", "line": 1}, {"/{page_path:path}"}) is None
+
+
 def test_static_audit_routes_personal_bot_commands_to_distinct_companion_surfaces() -> None:
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
@@ -505,8 +679,11 @@ def test_static_audit_routes_customer_hubs_to_specific_web_surfaces() -> None:
         "status": "/status",
         "telegram_status": "/status",
         "create_media": "/studio",
-        "creative_flow": "/studio",
-        "media_factory": "/studio",
+        "creative_flow": "/creative-flow",
+        "media_factory": "/media-factory",
+        "trend_research": "/trend-research",
+        "video_factory_flow": "/video-studio/workflow",
+        "story_video_factory": "/video-studio/story-video-plan",
         "growth_ai": "/growth/ai",
         "campaign_report": "/campaign/report",
     }
@@ -522,7 +699,8 @@ def test_static_audit_routes_customer_payment_support_policy_and_link_commands_t
     expected = {
         "thucong": "/wallet/topup",
         "gopy": "/support",
-        "source_help": "/guides",
+        "source_help": "/guides/source-rights",
+        "dubbing_help": "/guides/source-rights",
         "linkweb": "/onboarding",
         "mode": "/account",
         "toanaas_hub": "/community",
@@ -534,3 +712,333 @@ def test_static_audit_routes_customer_payment_support_policy_and_link_commands_t
         mapped = audit._map_command({"command": command, "handler": f"cmd_{command}", "file": "bot.py", "line": 1}, routes)
         assert mapped["target"] == target
         assert mapped["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_keeps_explicit_public_overrides_out_of_admin_surface() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    mapped = audit._map_command(
+        {"command": "media_factory", "handler": "cmd_media_factory", "file": "bot.py", "line": 1, "admin_guarded": True},
+        routes,
+    )
+
+    assert mapped["classification"] == "customer"
+    assert mapped["target"] == "/media-factory"
+    assert mapped["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_maps_bot_contextual_meta_callbacks_to_the_web_wizard() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    fast_meta = audit._map_callback("freehub|meta", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert fast_meta["classification"] == "customer"
+    assert fast_meta["target"] == "/content/prompt-pack"
+    assert fast_meta["status"] == "COPIED_GUARDED"
+
+    for callback in ("freehub|meta_goal_sell", "freehub|meta_platform_tiktok", "freehub|meta_ratio_9x16", "freehub|meta_style_ugc"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/content/contextual-prompt"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_maps_bot_free_hub_text_recipes_to_content_prompt_pack() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback in ("freehub|caption", "freehub|ideas", "freehub|prompts", "freehub|hook"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/content/prompt-pack"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_maps_bot_free_hub_publish_package_to_explicit_web_review() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    mapped = audit._map_callback("freehub|publish_package", "callback_data", {"file": "bot.py", "line": 1}, routes)
+
+    assert mapped["classification"] == "customer"
+    assert mapped["target"] == "/content/publish-review"
+    assert mapped["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_maps_bot_reference_format_planning_to_owner_scoped_web_workspace() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback in (
+        "videoref|hub", "videoref|start", "videoref|await_video", "videoref|direction|viral",
+        "videoref|topic_choice", "videoref|profile_goal|sales", "videoref|plan", "videoref|save",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/video-studio/reference-format-planner"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    package = audit._map_callback("videoref|publish_package", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert package["target"] == "/content/publish-review"
+    assert package["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_maps_only_reviewed_video_idea_planning_callbacks_to_web_planner() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback in (
+        "videoidea|start",
+        "videoidea|kind|ad",
+        "videoidea|product_type|service",
+        "videoidea|product_choice|2",
+        "videoidea|goal|sales",
+        "videoidea|context|3",
+        "videoidea|cinema_choice|1",
+        "videoidea|genre|drama",
+        "videoidea|choose|2",
+        "videoidea|storyboard",
+        "videoidea|image_prompts",
+        "videoidea|video_prompts",
+        "videoidea|music",
+        "videoidea|save",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/video-studio/idea-planner"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    for callback in (
+        "videoidea|finalization",
+        "videoidea|frame_video",
+        "videoidea|render_ai",
+        "videoidea|platform|tiktok",
+        "videoidea|platform_custom",
+        "videoidea|trend_type|problem_solution",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+
+    # A future/unknown sub-action is intentionally not swallowed by a broad
+    # ``videoidea|`` prefix. It must receive its own reviewed disposition.
+    unknown = audit._map_callback("videoidea|future_action|1", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["target"] != "/video-studio/idea-planner"
+
+
+def test_static_audit_maps_only_reviewed_self_scene_text_planning_to_web_planner() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback in (
+        "selfscene|start",
+        "selfscene|plan_without_video",
+        "selfscene|direction_choice|1",
+        "selfscene|direction|cinematic",
+        "selfscene|object|person",
+        "selfscene|input|product",
+        "selfscene|context|3",
+        "selfscene|context_custom",
+        "selfscene|style_choice|2",
+        "selfscene|style_custom",
+        "selfscene|music|none",
+        "selfscene|image_guard",
+        "selfscene|music_guard",
+        "selfscene|plan",
+        "selfscene|save",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/video-studio/self-shot-planner"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    for callback in (
+        "selfscene|await_video",
+        "selfscene|use_recent_video",
+        "selfscene|input|video",
+        "selfscene|back_upload",
+        "selfscene|video_guard",
+        "selfscene|frame_hint",
+        "selfscene|finalization",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+
+    # No broad ``selfscene|`` fallback: a future action cannot inherit the
+    # proposed planner simply because it has the same Bot callback prefix.
+    unknown = audit._map_callback("selfscene|future_action|1", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["target"] != "/video-studio/self-shot-planner"
+
+
+def test_static_audit_maps_only_literal_long_video_planning_callbacks_to_web_roadmap() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback in (
+        "longvideo|start",
+        "longvideo|topic|sales",
+        "longvideo|topic_choice|2",
+        "longvideo|topic_refresh",
+        "longvideo|duration|10 phút",
+        "longvideo|duration_custom",
+        "longvideo|style|cinematic",
+        "longvideo|style_custom",
+        "longvideo|structure|3",
+        "longvideo|structure_custom",
+        "longvideo|storyboard",
+        "longvideo|image_prompts",
+        "longvideo|video_prompts",
+        "longvideo|music",
+        "longvideo|save",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/video-studio/long-form-planner"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    for callback in ("longvideo|finalization", "longvideo|frame_video", "longvideo|render_segments"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+
+    # Deliberately no ``longvideo|`` namespace fallback: an unreviewed action
+    # cannot inherit a Web route merely because it resembles the planner.
+    unknown = audit._map_callback("longvideo|future_action|1", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["target"] != "/video-studio/long-form-planner"
+    structure = audit._map_callback_template("longvideo|structure|{*}", {"file": "bot.py", "line": 1}, routes)
+    assert structure is not None
+    assert structure["target"] == "/video-studio/long-form-planner"
+    assert structure["status"] == "COPIED_GUARDED"
+    assert structure["resolution"] == "reviewed_bounded_longvideo_structure_template"
+
+
+def test_static_audit_maps_prompt_and_image_video_wizard_steps_to_web_planners() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    for callback in (
+        "promptvideo|motion_choice|1", "promptvideo|music_custom", "promptvideo|strength|director",
+        "promptvideo|finalization", "promptvideo|generate", "promptvideo|save", "promptvideo|edit_prompt",
+    ):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "/video-studio/prompt-planner"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    for callback in ("imagevideo|motion_choice|1", "imagevideo|music_choice|2", "imagevideo|strength|premium", "imagevideo|edit_prompt"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "/video-studio/image-motion-planner"
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    # The upload-specific Bot screens are intentionally distinct: the Web
+    # first sends the user to the validated Image Studio/Asset Vault boundary.
+    source = audit._map_callback("imagevideo|await_image", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert source["target"] == "/image-studio"
+
+
+def test_static_audit_maps_free_hub_gallery_upload_docs_and_server_recomputed_save() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+
+    expected = {
+        "freehub|library": "/free-prompt-gallery",
+        "freehub|lib_pick1": "/free-prompt-gallery",
+        "freehub|lib_more": "/free-prompt-gallery",
+        "freehub|upload": "/asset-vault",
+        "freehub|docs": "/notes",
+        "freehub|docs_split_merge": "/documents",
+        "freehub|suggest_pick1": "/content/prompt-pack",
+        "freehub|to_cinematic": "/video-studio/cinematic-concept",
+        "freehub|image_prompt": "/image/prompt-composer",
+        "freehub|video_prompt": "/video-studio/prompt-planner",
+    }
+    for callback, target in expected.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == target
+        assert mapped["status"] == "COPIED_GUARDED"
+
+    save = audit._map_callback("freehub|save", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert save["target"] == "/content/prompt-pack"
+    assert save["status"] == "COPIED_GUARDED"
+
+
+def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolving_ids() -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {
+        "memory|view|{*}": "/notes",
+        "ticket|reply|{*}": "/support",
+        "pipe|stage|review|{*}": "/workboard",
+        "storyboard|mode_ai|{*}": "/video-studio/storyboard-composer",
+        "videodub|type|{*}": "/dubbing",
+        "vproduct|camera|{*}": "/video/product",
+        "videoaddon|export|{*}": "/video/add-ons",
+        "manual|history|{*}": "/wallet/topup",
+        "shopai|confirm|{*}": "/wallet/topup",
+        "license_music|{*}": "/media-workspace",
+        "job|cancel|{*}": "/jobs",
+        "archive|dept|{*}": "/admin",
+    }
+    for template, target in expected.items():
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        assert mapped["source_kind"] == "callback_template"
+        assert mapped["source"] == template
+        assert mapped["target"] == target
+        assert mapped["status"] == "COPIED_GUARDED"
+        assert mapped["resolution"] == "reviewed_namespace_compatibility_route"
+
+    admin = audit._map_callback_template("archive|dept|{*}", {"file": "bot.py", "line": 1}, routes)
+    assert admin is not None
+    assert admin["classification"] == "admin"
+
+    for template in ("trend|video|{*}", "manual|approve_expected|{*}", "adconcept|admin_video_smoke|{*}"):
+        bot_only = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert bot_only is not None
+        assert bot_only["classification"] == "admin"
+        assert bot_only["target"] == "TELEGRAM_ONLY"
+        assert bot_only["status"] == "TELEGRAM_ONLY"
+
+    # A variable prefix has no fixed namespace. The audit must not guess that
+    # it is a save/action from any one Bot workflow.
+    assert audit._map_callback_template("{*}|save", {"file": "bot.py", "line": 1}, routes) is None
+
+
+def test_static_audit_inventories_literal_tuple_keyboard_callbacks_in_small_and_monolithic_sources(tmp_path: Path) -> None:
+    """Keyboard helper rows must not disappear when the Bot skips full AST parsing."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    bot_source = bot_root / "bot.py"
+    bot_source.write_text(
+        '''
+raise RuntimeError("The static auditor must not execute this source")
+
+keyboard_rows = [
+    ("Meta", "freehub|meta"),
+    ("Caption" if language == "vi" else "Caption/hashtags", "freehub|caption"),
+]
+buttons.append(("Publish", "freehub|publish_package"))
+not_a_keyboard_callback = ("Display only", "ordinary text")
+''',
+        encoding="utf-8",
+    )
+
+    expected = {"freehub|meta", "freehub|caption", "freehub|publish_package"}
+    original_max_ast_parse_bytes = audit.MAX_AST_PARSE_BYTES
+    try:
+        for max_ast_parse_bytes in (original_max_ast_parse_bytes, 1):
+            audit.MAX_AST_PARSE_BYTES = max_ast_parse_bytes
+            inventory = audit._extract_python_inventory(bot_root, [bot_source])
+            records = inventory["callback_data"]
+            assert {record["token"] for record in records} == expected
+            assert all(record["file"] == "bot.py" for record in records)
+            assert all(record["line"] > 0 for record in records)
+    finally:
+        audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes

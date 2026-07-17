@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import ensure_copyfast_schema, image_studio_enabled, read_transaction, transaction, utc_now
+from copyfast_db import ensure_copyfast_schema, image_studio_enabled, memory_center_enabled, read_transaction, transaction, utc_now
 
 
 router = APIRouter(prefix="/api/v1/image-studio", tags=["Web Image Creative Studio"])
@@ -34,6 +34,30 @@ ASPECT_RATIOS = frozenset({"1:1", "4:5", "3:4", "16:9", "9:16", "3:2", "2:3", "c
 OUTPUT_FORMATS = frozenset({"png", "jpg", "webp"})
 IMAGE_EXTENSIONS = frozenset({"jpg", "jpeg", "png", "webp"})
 IMAGE_CONTENT_TYPES = frozenset({"image/jpeg", "image/png", "image/webp"})
+PROMPT_COMPOSER_GOAL_CODES = frozenset({"product", "ad", "cinematic", "custom"})
+PROMPT_COMPOSER_RATIOS = frozenset({"1:1", "9:16", "16:9", "4:5", "3:4", "4:3", "3:2", "2:3", "21:9"})
+PROMPT_COMPOSER_LANGUAGES = frozenset({"vi", "en"})
+PROMPT_COMPOSER_RATIO_ALIASES = {
+    "1:1": "1:1", "1x1": "1:1", "square": "1:1", "vuong": "1:1", "vuông": "1:1",
+    "9:16": "9:16", "9x16": "9:16", "vertical": "9:16", "doc": "9:16", "dọc": "9:16", "reels": "9:16", "tiktok": "9:16",
+    "16:9": "16:9", "16x9": "16:9", "horizontal": "16:9", "ngang": "16:9", "youtube": "16:9",
+    "4:5": "4:5", "4x5": "4:5", "post": "4:5",
+    "3:4": "3:4", "3x4": "3:4", "portrait": "3:4",
+    "4:3": "4:3", "4x3": "4:3", "slide": "4:3",
+    "3:2": "3:2", "3x2": "3:2", "landscape": "3:2",
+    "2:3": "2:3", "2x3": "2:3",
+    "21:9": "21:9", "21x9": "21:9", "ultrawide": "21:9",
+}
+# This is a narrow imitation guard only.  It cannot establish ownership or
+# copyright clearance; it merely keeps explicit author/artist-style requests
+# out of the request-only prompt composer until a reviewed policy workflow is
+# available.
+PROMPT_COMPOSER_ORIGINALITY_MARKERS = (
+    "giống nghệ sĩ", "giống ca sĩ", "giống bài", "như bài", "cover bài", "remix bài",
+    "style của", "phong cách của", "nhái giọng", "bắt chước giọng", "sound like",
+    "sounds like", "in the style of", "copy melody", "cover song", "remix song",
+    "artist style", "same melody",
+)
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UNSAFE_CONTROL_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 URL_PATTERN = re.compile(r"(?:https?://|www\.|file:|data:|javascript:)", re.IGNORECASE)
@@ -69,10 +93,21 @@ MAX_ARTBOARDS_PER_ACCOUNT = 300
 MAX_DIRECTIONS_PER_ARTBOARD = 120
 MAX_VERSIONS_PER_ENTITY = 100
 MAX_LIST_LIMIT = 100
+MAX_LIST_OFFSET = 10_000
 MAX_EVENT_LIMIT = 50
 MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1024
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 ARCHIVED_ORDINAL_BASE = 1_000_000
+MAX_PROMPT_COMPOSER_SUBJECT = 260
+MAX_PROMPT_COMPOSER_STYLE = 180
+MAX_PROMPT_COMPOSER_CUSTOM_GOAL = 180
+MAX_PROMPT_COMPOSER_TEXT = 3_200
+# Keep this explicit handoff compatible with Memory Center's durable storage
+# envelope without importing that router.  The save action remains owned by
+# Image Studio and has no runtime dependency on a second API module.
+MAX_MEMORY_NOTE_TITLE = 160
+MAX_MEMORY_NOTE_CONTENT = 12_000
+MAX_MEMORY_NOTES_PER_ACCOUNT = 1_000
 
 
 def _require_enabled() -> None:
@@ -80,6 +115,21 @@ def _require_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Image Creative Studio đang tạm dừng để bảo trì. WEBAPP_IMAGE_STUDIO_ENABLED chưa được bật.",
+        )
+
+
+def _require_memory_handoff_enabled() -> None:
+    """Require the separate Web-owned Memory Center capability for a save.
+
+    Prompt composition remains available as a request-only Image Studio tool.
+    The explicit durable handoff must not bypass Memory Center maintenance or
+    silently turn a private Web note into Image Studio runtime state.
+    """
+
+    if not memory_center_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Memory Center đang tạm dừng để bảo trì. WEBAPP_MEMORY_CENTER_ENABLED chưa được bật.",
         )
 
 
@@ -130,6 +180,30 @@ def _body(value: Any, *, label: str, maximum: int, allow_empty: bool = False) ->
     if text and _sensitive_text(text):
         raise ValueError(f"{label} không nhận URL, secret, mã xác thực, tham chiếu ngoài hoặc chứng từ thanh toán")
     return text
+
+
+def _prompt_composer_ratio(value: Any) -> str:
+    """Canonicalize only the short, local aspect-ratio vocabulary.
+
+    This deliberately does not accept an arbitrary custom ratio: unlike the
+    durable Image Studio artboard, the stateless composer must have a compact
+    browser contract that can be validated before any draft text is rendered.
+    """
+
+    raw = _line(value, label="Tỷ lệ prompt ảnh", minimum=1, maximum=32).lower()
+    normalized = raw.replace("×", "x").replace(" ", "").replace("x", ":")
+    ratio = PROMPT_COMPOSER_RATIO_ALIASES.get(normalized)
+    if ratio not in PROMPT_COMPOSER_RATIOS:
+        raise ValueError("Tỷ lệ prompt ảnh không hợp lệ")
+    return ratio
+
+
+def _prompt_composer_marker(*parts: Any) -> str:
+    normalized = re.sub(r"\s+", " ", "\n".join(str(part or "") for part in parts)).strip().lower()[:10_000]
+    for marker in PROMPT_COMPOSER_ORIGINALITY_MARKERS:
+        if marker in normalized:
+            return marker
+    return ""
 
 
 def _tags(value: Any) -> list[str]:
@@ -397,6 +471,434 @@ class ReorderRequest(RevisionRequest):
         return values
 
 
+class ImagePromptComposerRequest(BaseModel):
+    """Bounded, non-persistent request for a deterministic image prompt draft.
+
+    No image, URL, asset reference, project, provider/model selection, job,
+    payment, wallet, idempotency or publish field is accepted.  This endpoint
+    composes text only; a customer must explicitly create and review a durable
+    Image Studio artboard later if they want to retain creative direction.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    goal_code: str
+    custom_goal: str = ""
+    subject: str
+    style: str = ""
+    ratio: str = "1:1"
+    language: str = "vi"
+
+    @field_validator("goal_code")
+    @classmethod
+    def validate_goal_code(cls, value: str) -> str:
+        normalized = _line(value, label="Mục tiêu prompt ảnh", minimum=1, maximum=32).lower()
+        if normalized not in PROMPT_COMPOSER_GOAL_CODES:
+            raise ValueError("Mục tiêu prompt ảnh không hợp lệ")
+        return normalized
+
+    @field_validator("custom_goal")
+    @classmethod
+    def validate_custom_goal(cls, value: str) -> str:
+        normalized = _line(value, label="Mục tiêu tùy chỉnh", minimum=2, maximum=MAX_PROMPT_COMPOSER_CUSTOM_GOAL, allow_empty=True)
+        if normalized and len(normalized) < 2:
+            raise ValueError("Mục tiêu tùy chỉnh cần từ 2 đến 180 ký tự hợp lệ")
+        return normalized
+
+    @field_validator("subject")
+    @classmethod
+    def validate_subject(cls, value: str) -> str:
+        return _line(value, label="Chủ thể", minimum=2, maximum=MAX_PROMPT_COMPOSER_SUBJECT)
+
+    @field_validator("style")
+    @classmethod
+    def validate_style(cls, value: str) -> str:
+        normalized = _line(value, label="Phong cách", minimum=2, maximum=MAX_PROMPT_COMPOSER_STYLE, allow_empty=True)
+        if normalized and len(normalized) < 2:
+            raise ValueError("Phong cách cần từ 2 đến 180 ký tự hợp lệ")
+        return normalized
+
+    @field_validator("ratio")
+    @classmethod
+    def validate_ratio(cls, value: str) -> str:
+        return _prompt_composer_ratio(value)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: str) -> str:
+        normalized = _line(value, label="Ngôn ngữ", minimum=2, maximum=8).lower()
+        if normalized not in PROMPT_COMPOSER_LANGUAGES:
+            raise ValueError("Ngôn ngữ prompt ảnh chỉ hỗ trợ vi hoặc en")
+        return normalized
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.goal_code == "custom" and not self.custom_goal:
+            raise ValueError("Mục tiêu tùy chỉnh là bắt buộc khi chọn custom")
+        if self.goal_code != "custom" and self.custom_goal:
+            raise ValueError("Mục tiêu tùy chỉnh chỉ dùng khi chọn custom")
+
+
+class ImagePromptComposerMemorySaveRequest(ImagePromptComposerRequest):
+    """Narrow, explicit handoff of a reviewed composer selection to Memory.
+
+    The browser may provide only the bounded ingredients necessary to recreate
+    the deterministic draft.  It cannot send a rendered prompt/body/title,
+    pick an account, use an asset, or point at a Bot pending result.
+    """
+
+    destination: str
+    idempotency_key: str
+
+    @field_validator("destination")
+    @classmethod
+    def validate_destination(cls, value: str) -> str:
+        if _line(value, label="Đích lưu", minimum=1, maximum=32).lower() != "memory_note":
+            raise ValueError("Image Prompt Composer hiện chỉ hỗ trợ lưu vào Memory Center")
+        return "memory_note"
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
+class ImagePromptComposerResult(BaseModel):
+    """Strict display schema for the stateless prompt-composer response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    goal_code: str
+    goal_label: str
+    custom_goal: str
+    subject: str
+    style: str
+    ratio: str
+    language: str
+    short_prompt: str
+    detailed_prompt: str
+    negative_prompt: str
+    variants: list[str] = Field(min_length=3, max_length=3)
+    review_before_use: list[str] = Field(min_length=1, max_length=6)
+
+    @field_validator("title", "goal_label")
+    @classmethod
+    def validate_result_label(cls, value: str) -> str:
+        return _line(value, label="Nhãn kết quả", minimum=1, maximum=320)
+
+    @field_validator("goal_code")
+    @classmethod
+    def validate_result_goal_code(cls, value: str) -> str:
+        if value not in PROMPT_COMPOSER_GOAL_CODES:
+            raise ValueError("Mục tiêu kết quả không hợp lệ")
+        return value
+
+    @field_validator("custom_goal")
+    @classmethod
+    def validate_result_custom_goal(cls, value: str) -> str:
+        normalized = _line(value, label="Mục tiêu tùy chỉnh kết quả", minimum=2, maximum=MAX_PROMPT_COMPOSER_CUSTOM_GOAL, allow_empty=True)
+        if normalized and len(normalized) < 2:
+            raise ValueError("Mục tiêu tùy chỉnh kết quả cần từ 2 đến 180 ký tự hợp lệ")
+        return normalized
+
+    @field_validator("subject")
+    @classmethod
+    def validate_result_subject(cls, value: str) -> str:
+        return _line(value, label="Chủ thể kết quả", minimum=2, maximum=MAX_PROMPT_COMPOSER_SUBJECT)
+
+    @field_validator("style")
+    @classmethod
+    def validate_result_style(cls, value: str) -> str:
+        return _line(value, label="Phong cách kết quả", minimum=2, maximum=MAX_PROMPT_COMPOSER_STYLE)
+
+    @field_validator("ratio")
+    @classmethod
+    def validate_result_ratio(cls, value: str) -> str:
+        return _prompt_composer_ratio(value)
+
+    @field_validator("language")
+    @classmethod
+    def validate_result_language(cls, value: str) -> str:
+        if value not in PROMPT_COMPOSER_LANGUAGES:
+            raise ValueError("Ngôn ngữ kết quả không hợp lệ")
+        return value
+
+    @field_validator("short_prompt", "detailed_prompt", "negative_prompt")
+    @classmethod
+    def validate_result_prompt(cls, value: str) -> str:
+        return _body(value, label="Prompt kết quả", maximum=MAX_PROMPT_COMPOSER_TEXT)
+
+    @field_validator("variants")
+    @classmethod
+    def validate_result_variants(cls, value: list[str]) -> list[str]:
+        if not isinstance(value, list) or len(value) != 3:
+            raise ValueError("Kết quả cần đúng ba biến thể prompt")
+        return [_body(item, label="Biến thể prompt", maximum=MAX_PROMPT_COMPOSER_TEXT) for item in value]
+
+    @field_validator("review_before_use")
+    @classmethod
+    def validate_review_before_use(cls, value: list[str]) -> list[str]:
+        if not isinstance(value, list) or not value:
+            raise ValueError("Kết quả cần có checklist review")
+        return [_line(item, label="Ghi chú review", minimum=2, maximum=320) for item in value]
+
+    def model_post_init(self, __context: Any) -> None:
+        if self.goal_code == "custom" and not self.custom_goal:
+            raise ValueError("Kết quả custom phải có mục tiêu tùy chỉnh")
+        if self.goal_code != "custom" and self.custom_goal:
+            raise ValueError("Kết quả không được có mục tiêu tùy chỉnh ngoài custom")
+
+
+def _prompt_composer_boundary() -> dict[str, Any]:
+    """The complete execution boundary for the stateless prompt composer."""
+
+    return {
+        "execution": "web_native_deterministic_prompt_only",
+        "input_persisted": False,
+        "source_image_inspected": False,
+        "provider_called": False,
+        "image_created": False,
+        "output_created": False,
+        "job_created": False,
+        "payment_started": False,
+        "wallet_mutated": False,
+        "asset_saved": False,
+        "publish_action_created": False,
+        "fact_checked": False,
+        "rights_verified": False,
+    }
+
+
+def _prompt_composer_guard(marker: str) -> dict[str, Any] | None:
+    if not marker:
+        return None
+    return envelope(
+        False,
+        "Mô tả cần được viết lại theo hướng nguyên bản, không mô phỏng tác giả, nghệ sĩ hoặc phong cách cụ thể.",
+        data=_prompt_composer_boundary(),
+        status_name="guarded",
+        error_code="WEB_IMAGE_PROMPT_ORIGINALITY_GUARD",
+    )
+
+
+def _prompt_composer_goal_label(goal_code: str, custom_goal: str, language: str) -> str:
+    if goal_code == "custom":
+        return custom_goal
+    labels = {
+        "vi": {
+            "product": "Ảnh sản phẩm",
+            "ad": "Ảnh quảng cáo",
+            "cinematic": "Ảnh cinematic / key visual video",
+        },
+        "en": {
+            "product": "Product image",
+            "ad": "Advertising image",
+            "cinematic": "Cinematic / video key visual",
+        },
+    }
+    return labels[language][goal_code]
+
+
+def _prompt_composer_default_style(goal_code: str, language: str) -> str:
+    catalog = {
+        "vi": {
+            "product": "studio sạch đẹp",
+            "ad": "thương hiệu rõ lợi ích",
+            "cinematic": "cinematic ánh sáng mạnh",
+            "custom": "tối giản, hiện đại",
+        },
+        "en": {
+            "product": "clean studio",
+            "ad": "benefit-led brand",
+            "cinematic": "strong cinematic lighting",
+            "custom": "minimal and contemporary",
+        },
+    }
+    return catalog[language][goal_code]
+
+
+def _compose_image_prompt(payload: ImagePromptComposerRequest) -> dict[str, Any]:
+    """Adapt the Bot's pure image-prompt text recipes into Web-native drafts.
+
+    The Bot source supplied goal labels, style defaults, ratio normalization,
+    a short prompt, a detailed prompt, negative guidance and three variants.
+    This adaptation intentionally omits its Telegram state, image/file state,
+    save/use actions, provider selection and credit language.  It returns no
+    media, does no model work and does not retain customer-authored text.
+    """
+
+    language = payload.language
+    goal_label = _prompt_composer_goal_label(payload.goal_code, payload.custom_goal, language)
+    style = payload.style or _prompt_composer_default_style(payload.goal_code, language)
+    subject = payload.subject
+    ratio = payload.ratio
+    review = (
+        [
+            "Đây là bản nháp text có thể chỉnh sửa; chưa tạo, xem trước hoặc kiểm tra ảnh nào.",
+            "Kiểm chứng mọi claim, số liệu, so sánh và nội dung chữ trước khi dùng bên ngoài.",
+            "Xác nhận quyền sử dụng thương hiệu, logo, người, địa điểm và mọi reference trước khi dùng.",
+            "Rà soát lại prompt theo công cụ bạn chọn; chất lượng, tính chính xác và quyền sử dụng chưa được xác minh.",
+        ]
+        if language == "vi"
+        else [
+            "This is an editable text draft; it has not created, inspected or previewed an image.",
+            "Verify every claim, number, comparison and text element before external use.",
+            "Confirm rights for brands, logos, people, locations and every reference before use.",
+            "Review the prompt against the tool you choose; quality, accuracy and rights are not verified.",
+        ]
+    )
+
+    if language == "vi":
+        short_prompt = (
+            f"{subject}, mục tiêu {goal_label}, phong cách {style}, tỷ lệ {ratio}, "
+            "chủ thể rõ, bố cục sạch, ánh sáng chuyên nghiệp, màu sắc cân bằng, không watermark, không thêm chữ không được yêu cầu"
+        )
+        detailed_prompt = (
+            f"Chủ thể: {subject}. Mục tiêu visual: {goal_label}. Phong cách: {style}. Tỷ lệ: {ratio}. "
+            "Bố cục đặt chủ thể chính ở điểm nhìn rõ ràng, có khoảng thở phù hợp cho kênh sử dụng, "
+            "ánh sáng nhất quán, màu sắc hài hòa và chi tiết có chủ đích. Giữ logo hoặc chữ quan trọng "
+            "nếu đã được cấp quyền; không tự thêm claim, logo hoặc chữ thừa. Đây là hướng prompt để biên tập, không phải yêu cầu thực thi ảnh."
+        )
+        negative_prompt = (
+            "chất lượng thấp, mờ, chủ thể hoặc khuôn mặt biến dạng, tay lỗi, logo hỏng, chữ sai hoặc thừa, "
+            "watermark, nền rối, phơi sáng quá mức hoặc thiếu sáng"
+        )
+        variants = [
+            f"{subject}, ảnh làm rõ sản phẩm hoặc thông điệp chính, phong cách {style}, {ratio}, bố cục hero sạch, ánh sáng premium, chi tiết có chủ đích, không watermark",
+            f"{subject}, key visual thương hiệu tinh tế, phong cách {style}, {ratio}, điểm nhìn rõ, nền gọn, màu cân bằng, chỉ dùng logo/chữ đã được cấp quyền",
+            f"{subject}, visual social nổi bật nhưng dễ đọc, phong cách {style}, {ratio}, chủ thể sạch, khoảng trống cho caption, không chữ tự phát hoặc watermark",
+        ]
+        title = f"Bản nháp prompt ảnh: {subject}"
+    else:
+        short_prompt = (
+            f"{subject}, goal {goal_label}, style {style}, ratio {ratio}, "
+            "clear subject, clean composition, professional lighting, balanced color, no watermark, no unrequested text"
+        )
+        detailed_prompt = (
+            f"Subject: {subject}. Visual goal: {goal_label}. Style: {style}. Ratio: {ratio}. "
+            "Place the primary subject at a clear focal point with suitable negative space for the intended channel, "
+            "consistent lighting, balanced color and deliberate detail. Preserve important logo or text only when it is authorized; "
+            "do not add claims, logos or extra text. This is an editable prompt direction, not an image-execution request."
+        )
+        negative_prompt = (
+            "low quality, blur, distorted subject or face, broken hands, broken logo, wrong or extra text, watermark, "
+            "messy background, overexposure, underexposure"
+        )
+        variants = [
+            f"{subject}, product or message-led hero visual, {style}, {ratio}, clean focal composition, premium lighting, deliberate detail, no watermark",
+            f"{subject}, refined brand key visual, {style}, {ratio}, clear focal point, tidy background, balanced color, authorized logo or text only",
+            f"{subject}, eye-catching but legible social visual, {style}, {ratio}, clean subject, caption space, no invented text or watermark",
+        ]
+        title = f"Image prompt draft: {subject}"
+
+    return ImagePromptComposerResult.model_validate(
+        {
+            "title": title,
+            "goal_code": payload.goal_code,
+            "goal_label": goal_label,
+            "custom_goal": payload.custom_goal,
+            "subject": subject,
+            "style": style,
+            "ratio": ratio,
+            "language": language,
+            "short_prompt": short_prompt,
+            "detailed_prompt": detailed_prompt,
+            "negative_prompt": negative_prompt,
+            "variants": variants,
+            "review_before_use": review,
+        }
+    ).model_dump()
+
+
+def _image_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, str, list[str]]:
+    """Serialize a fresh deterministic composer result as one Web note.
+
+    This is deliberately not a generic browser-authored note endpoint.  The
+    full text is derived again from bounded composer inputs inside the write
+    transaction, so a caller cannot substitute a different title, prompt,
+    result object or private payload while reusing the visible save control.
+    """
+
+    try:
+        result = ImagePromptComposerResult.model_validate(composer).model_dump()
+        title = _line(
+            "Image Prompt Composer",
+            label="Tiêu đề ghi chú",
+            minimum=3,
+            maximum=MAX_MEMORY_NOTE_TITLE,
+        )
+        lines = [
+            "Image Prompt Composer — bản nháp Web đã được dựng lại trên máy chủ.",
+            f"Tiêu đề bản nháp: {result['title']}",
+            f"Mục tiêu: {result['goal_label']}",
+            f"Chủ thể: {result['subject']}",
+            f"Phong cách: {result['style']}",
+            f"Tỷ lệ: {result['ratio']}",
+            f"Ngôn ngữ: {result['language']}",
+            "",
+            "## Prompt ngắn",
+            result["short_prompt"],
+            "",
+            "## Prompt chi tiết",
+            result["detailed_prompt"],
+            "",
+            "## Negative prompt",
+            result["negative_prompt"],
+            "",
+            "## Ba biến thể",
+        ]
+        for ordinal, variant in enumerate(result["variants"], start=1):
+            lines.append(f"### Biến thể {ordinal}")
+            lines.append(str(variant))
+        lines.extend(("", "## Kiểm tra trước khi sử dụng"))
+        lines.extend(f"- {item}" for item in result["review_before_use"])
+        lines.extend(
+            (
+                "",
+                "Ghi chú này không tạo ảnh, output, job, tài sản, thanh toán, publish hay gửi Telegram.",
+            )
+        )
+        content = _body(
+            "\n".join(lines),
+            label="Nội dung ghi chú Image Prompt Composer",
+            maximum=MAX_MEMORY_NOTE_CONTENT,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return title, content, ["image-prompt-composer", f"image-goal-{result['goal_code']}"]
+
+
+def _image_prompt_composer_memory_boundaries(
+    *,
+    draft_recomputed_on_server: bool = True,
+    web_note_persisted: bool = True,
+) -> dict[str, bool | str]:
+    """Truthful facts for a Web-note handoff, not an image execution."""
+
+    return {
+        "execution": "web_native_memory_note_server_recomputed",
+        "draft_recomputed_on_server": draft_recomputed_on_server,
+        "web_note_persisted": web_note_persisted,
+        "browser_result_persisted": False,
+        "pending_bot_save_created": False,
+        "telegram_state_changed": False,
+        "bot_called": False,
+        "bridge_called": False,
+        "source_image_inspected": False,
+        "provider_called": False,
+        "image_created": False,
+        "output_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+        "fact_checked": False,
+        "rights_verified": False,
+    }
+
+
 def _boundary(**extra: Any) -> dict[str, Any]:
     return {
         "execution": "authoring_only",
@@ -439,7 +941,45 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
             "revision": int(direction.get("revision") or 0),
             "state": str(direction.get("state") or ""),
         }
-    for name in ("reordered", "history_snapshot_recorded", "direction_count"):
+    note = source.get("note")
+    if isinstance(note, dict) and isinstance(note.get("id"), str):
+        # The generic idempotency table is a short-lived replay mechanism, not
+        # a second location for private composer text.  Keep its note receipt
+        # strictly opaque; the signed owner can read the note through Memory
+        # Center after the explicit handoff completed.
+        data["note"] = {
+            "id": str(note["id"]),
+            "revision": int(note.get("revision") or 0),
+            "state": str(note.get("state") or ""),
+            "category": str(note.get("category") or ""),
+            "priority": str(note.get("priority") or ""),
+        }
+    for name in (
+        "execution",
+        "reordered",
+        "history_snapshot_recorded",
+        "direction_count",
+        "destination",
+        "draft_recomputed_on_server",
+        "web_note_persisted",
+        "browser_result_persisted",
+        "pending_bot_save_created",
+        "telegram_state_changed",
+        "bot_called",
+        "bridge_called",
+        "source_image_inspected",
+        "provider_called",
+        "image_created",
+        "output_created",
+        "job_created",
+        "wallet_mutated",
+        "payment_started",
+        "asset_saved",
+        "publish_action_created",
+        "delivery_created",
+        "fact_checked",
+        "rights_verified",
+    ):
         if name in source:
             data[name] = source[name]
     return envelope(
@@ -1059,6 +1599,166 @@ def _allowed_transition(current: str, target: str) -> bool:
     }.get(current, set())
 
 
+@router.post("/tools/prompt-composer")
+async def compose_image_prompt(
+    payload: ImagePromptComposerRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Return a deterministic, request-only image prompt draft.
+
+    ``require_csrf`` also proves a signed Web session.  Do not add an audit
+    event, database write, idempotency receipt, source-image pathway, asset
+    save, provider/model call, image operation, job, wallet/payment mutation
+    or publish action here: all customer text and every derived draft remain
+    only in this request/response cycle.
+    """
+
+    _require_enabled()
+    del account  # Auth/CSRF is the only account boundary for this stateless tool.
+    guard = _prompt_composer_guard(
+        _prompt_composer_marker(payload.custom_goal, payload.subject, payload.style)
+    )
+    if guard:
+        return guard
+    composer = _compose_image_prompt(payload)
+    return envelope(
+        True,
+        "Đã tạo bản nháp prompt ảnh cục bộ để bạn biên tập. Không có ảnh, output, job, thanh toán hoặc hành động publish nào được tạo.",
+        data={"composer": composer, **_prompt_composer_boundary()},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/prompt-composer/save")
+async def save_image_prompt_composer_to_memory(
+    payload: ImagePromptComposerMemorySaveRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Save a server-recomputed composer draft as a private Web memory note.
+
+    This is deliberately separate from ``/tools/prompt-composer`` so the
+    preview remains stateless.  The browser sends only the bounded original
+    inputs, destination and idempotency key; it cannot submit a result object,
+    free-form note body, title, account, Bot pending state, asset or provider
+    reference.  The server recreates the full deterministic composer result
+    in the same transaction that creates the owner-scoped Web note.
+    """
+
+    _require_enabled()
+    _require_memory_handoff_enabled()
+    marker = _prompt_composer_marker(payload.custom_goal, payload.subject, payload.style)
+    if marker:
+        return envelope(
+            False,
+            "Mô tả cần được viết lại theo hướng nguyên bản trước khi lưu vào Memory Center.",
+            data={
+                "destination": "memory_note",
+                **_image_prompt_composer_memory_boundaries(
+                    draft_recomputed_on_server=False,
+                    web_note_persisted=False,
+                ),
+            },
+            status_name="guarded",
+            error_code="WEB_IMAGE_PROMPT_ORIGINALITY_GUARD",
+        )
+
+    account_id = str(account["id"])
+    key = _idempotency_key(payload.idempotency_key)
+    fingerprint = _fingerprint(
+        {
+            "action": "image_prompt_composer_memory_save",
+            "destination": payload.destination,
+            "goal_code": payload.goal_code,
+            "custom_goal": payload.custom_goal,
+            "subject": payload.subject,
+            "style": payload.style,
+            "ratio": payload.ratio,
+            "language": payload.language,
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        # Repeat the local deterministic composition while the write
+        # transaction is open.  No browser-authored generated result is ever
+        # accepted or stored as part of this handoff.
+        composer = _compose_image_prompt(payload)
+        note_title, note_content, tags = _image_prompt_composer_memory_note(composer)
+        active_count = conn.execute(
+            "SELECT COUNT(*) FROM web_memory_notes WHERE account_id=? AND state='active'",
+            (account_id,),
+        ).fetchone()
+        if int(active_count[0] or 0) >= MAX_MEMORY_NOTES_PER_ACCOUNT:
+            return envelope(
+                False,
+                "Memory Center đã đạt giới hạn ghi chú đang hoạt động cho Web account này.",
+                data={
+                    "destination": "memory_note",
+                    **_image_prompt_composer_memory_boundaries(
+                        draft_recomputed_on_server=True,
+                        web_note_persisted=False,
+                    ),
+                },
+                status_name="guarded",
+                error_code="WEB_MEMORY_NOTE_LIMIT",
+            )
+        note_id = str(uuid.uuid4())
+        now = utc_now()
+        category = "Image Prompt Composer"
+        priority = "normal"
+        tags_json = json.dumps(tags, ensure_ascii=False, separators=(",", ":"))
+        conn.execute(
+            """INSERT INTO web_memory_notes
+               (id, account_id, title, content, tags_json, category, priority, state, revision, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)""",
+            (note_id, account_id, note_title, note_content, tags_json, category, priority, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_note_versions
+               (id, note_id, account_id, revision, title, content, tags_json, category, priority, created_at)
+               VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?)""",
+            (str(uuid.uuid4()), note_id, account_id, note_title, note_content, tags_json, category, priority, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_events (id, account_id, note_id, reminder_id, action, created_at)
+               VALUES (?, ?, ?, NULL, ?, ?)""",
+            (str(uuid.uuid4()), account_id, note_id, "note_created", now),
+        )
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.image_studio.prompt_composer.save_memory",
+            request_id=_request_id(request),
+            target=note_id,
+            detail="server-recomputed image prompt composer saved as web-owned memory note",
+        )
+        return envelope(
+            True,
+            "Đã lưu bản nháp vào Memory Center của Web. Không tạo pending Telegram, ảnh, job, tài sản, thanh toán hay publish.",
+            data={
+                "note": {
+                    "id": note_id,
+                    "revision": 1,
+                    "state": "active",
+                    "category": category,
+                    "priority": priority,
+                },
+                "destination": "memory_note",
+                **_image_prompt_composer_memory_boundaries(),
+            },
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-image-studio:{account_id}:prompt-composer:save-memory",
+        account_id,
+        key,
+        fingerprint,
+        operation,
+    )
+
+
 @router.get("/summary")
 async def image_studio_summary(account: dict = Depends(require_account)):
     _require_enabled()
@@ -1092,14 +1792,106 @@ async def image_studio_references(account: dict = Depends(require_account)):
     return envelope(True, "Đã tải Project và image reference thuộc Web account hiện tại.", data=data, status_name="read_only")
 
 
+@router.get("/references/projects")
+async def image_studio_project_references(
+    q: str = Query(default="", max_length=100),
+    limit: int = Query(default=50, ge=1, le=MAX_LIST_LIMIT),
+    offset: int = Query(default=0),
+    account: dict = Depends(require_account),
+):
+    """List only the caller's active Project metadata for the Web picker."""
+    _require_enabled()
+    bounded_offset = max(0, min(int(offset), MAX_LIST_OFFSET))
+    needle = re.sub(r"\s+", " ", str(q or "")).strip()
+    if UNSAFE_CONTROL_PATTERN.search(needle) or _sensitive_text(needle):
+        raise HTTPException(status_code=422, detail="Từ khóa Project reference không hợp lệ")
+    clauses = ["account_id=?", "state='active'"]
+    values: list[Any] = [str(account["id"])]
+    if needle:
+        clauses.append("title LIKE ? ESCAPE '\\'")
+        values.append("%" + needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%")
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        rows = conn.execute(
+            f"""SELECT id, title, updated_at FROM web_projects WHERE {' AND '.join(clauses)}
+                ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*values, limit + 1, bounded_offset),
+        ).fetchall()
+    page_rows = rows[:limit]
+    has_more = len(rows) > limit
+    return envelope(
+        True,
+        "Đã tải Project reference thuộc Web account hiện tại.",
+        data={
+            "items": [{"id": str(row[0]), "title": str(row[1]), "updated_at": str(row[2])} for row in page_rows],
+            "has_more": has_more,
+            "next_offset": bounded_offset + limit if has_more else None,
+            "filters": {"q": needle},
+            "pagination": {"limit": limit, "offset": bounded_offset, "returned": len(page_rows)},
+            **_boundary(),
+        },
+        status_name="read_only",
+    )
+
+
+@router.get("/references/image-assets")
+async def image_studio_image_asset_references(
+    q: str = Query(default="", max_length=100),
+    limit: int = Query(default=50, ge=1, le=MAX_LIST_LIMIT),
+    offset: int = Query(default=0),
+    account: dict = Depends(require_account),
+):
+    """List owner-scoped image metadata without exposing a filename/path/blob."""
+    _require_enabled()
+    bounded_offset = max(0, min(int(offset), MAX_LIST_OFFSET))
+    needle = re.sub(r"\s+", " ", str(q or "")).strip()
+    if UNSAFE_CONTROL_PATTERN.search(needle) or _sensitive_text(needle):
+        raise HTTPException(status_code=422, detail="Từ khóa image reference không hợp lệ")
+    clauses = [
+        "account_id=?", "state='active'",
+        "lower(extension) IN ('jpg', 'jpeg', 'png', 'webp')",
+        "lower(content_type) IN ('image/jpeg', 'image/png', 'image/webp')",
+    ]
+    values: list[Any] = [str(account["id"])]
+    if needle:
+        clauses.append("(display_name LIKE ? ESCAPE '\\' OR original_filename LIKE ? ESCAPE '\\')")
+        wildcard = "%" + needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
+        values.extend([wildcard, wildcard])
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        rows = conn.execute(
+            f"""SELECT id, display_name, original_filename, extension, content_type, state, updated_at
+                FROM web_asset_files WHERE {' AND '.join(clauses)}
+                ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*values, limit + 1, bounded_offset),
+        ).fetchall()
+    page_rows = rows[:limit]
+    has_more = len(rows) > limit
+    return envelope(
+        True,
+        "Đã tải image Asset Vault reference thuộc Web account hiện tại.",
+        data={
+            "items": [_image_asset_public(row) for row in page_rows],
+            "has_more": has_more,
+            "next_offset": bounded_offset + limit if has_more else None,
+            "filters": {"q": needle},
+            "pagination": {"limit": limit, "offset": bounded_offset, "returned": len(page_rows)},
+            **_boundary(),
+        },
+        status_name="read_only",
+    )
+
+
 @router.get("/artboards")
 async def image_artboards(
     state: str = Query(default="active", max_length=20),
     q: str = Query(default="", max_length=180),
     limit: int = Query(default=30, ge=1, le=MAX_LIST_LIMIT),
+    offset: int = Query(default=0),
     account: dict = Depends(require_account),
 ):
     _require_enabled()
+    bounded_offset = max(0, min(int(offset), MAX_LIST_OFFSET))
     normalized_state = str(state or "active").strip().lower()
     if normalized_state not in {"active", *ARTBOARD_STATES}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái artboard không hợp lệ")
@@ -1120,7 +1912,7 @@ async def image_artboards(
         where.append("(a.title LIKE ? ESCAPE '\\' OR a.creative_brief LIKE ? ESCAPE '\\' OR a.style_direction LIKE ? ESCAPE '\\')")
         wildcard = "%" + needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         values.extend([wildcard, wildcard, wildcard])
-    values.append(limit)
+    values.extend([limit + 1, bounded_offset])
     ensure_copyfast_schema()
     with read_transaction() as conn:
         rows = conn.execute(
@@ -1128,11 +1920,25 @@ async def image_artboards(
                        a.creative_brief, a.style_direction, a.negative_direction, a.tags_json, a.lifecycle,
                        a.revision, a.created_at, a.updated_at, a.archived_at,
                        (SELECT COUNT(*) FROM web_image_directions d WHERE d.artboard_id=a.id AND d.account_id=a.account_id AND d.state='active')
-                FROM web_image_artboards a WHERE {' AND '.join(where)} ORDER BY a.updated_at DESC, a.id DESC LIMIT ?""",
+                FROM web_image_artboards a WHERE {' AND '.join(where)} ORDER BY a.updated_at DESC, a.id DESC LIMIT ? OFFSET ?""",
             values,
         ).fetchall()
-        items = [_artboard_public(row[:16], direction_count=int(row[16] or 0)) for row in rows]
-    return envelope(True, "Đã tải artboards.", data={"items": items, **_boundary()}, status_name="read_only")
+        page_rows = rows[:limit]
+        items = [_artboard_public(row[:16], direction_count=int(row[16] or 0)) for row in page_rows]
+    has_more = len(rows) > limit
+    return envelope(
+        True,
+        "Đã tải artboards.",
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": bounded_offset + limit if has_more else None,
+            "filters": {"state": normalized_state, "q": needle},
+            "pagination": {"limit": limit, "offset": bounded_offset, "returned": len(items)},
+            **_boundary(),
+        },
+        status_name="read_only",
+    )
 
 
 @router.get("/artboards/{artboard_id}")

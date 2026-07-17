@@ -23,6 +23,9 @@ from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, prompt_library_enabled, read_transaction, transaction, utc_now
+from copyfast_free_prompt_gallery import ITEM_ID_PATTERN as GALLERY_ITEM_ID_PATTERN
+from copyfast_free_prompt_gallery import SNAPSHOT_VERSION as FREE_PROMPT_GALLERY_SNAPSHOT_VERSION
+from copyfast_free_prompt_gallery import free_prompt_item
 
 
 router = APIRouter(prefix="/api/v1/prompt-library", tags=["Web Prompt Library"])
@@ -710,6 +713,94 @@ class ImportRequest(BaseModel):
     idempotency_key: str = Field(min_length=12, max_length=160)
 
 
+class GalleryPromptSaveRequest(BaseModel):
+    """A deliberate, content-free handoff from the immutable Web Gallery.
+
+    The browser supplies only a retry receipt. The server resolves the item
+    from the reviewed in-process Web snapshot, so a caller cannot use this
+    route to smuggle arbitrary Prompt Library content or claim a Bot save.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+
+def _gallery_source_note(*, prompt_id: str, snapshot_version: str) -> str:
+    return f"TOAN AAS Web Free Prompt Gallery | snapshot {snapshot_version} | {prompt_id}"
+
+
+def _gallery_snapshot(item: Any, *, prompt_id: str) -> dict[str, Any]:
+    """Normalize one reviewed Gallery item through the normal vault guards."""
+
+    category_id = str(item["category_id"])
+    industry_id = str(item["industry_id"])
+    platforms = [str(value) for value in item["platforms"]]
+    payload = PromptTemplatePayload(
+        title=str(item["title"]),
+        category=str(item["category_title"]),
+        product_context=str(item["industry"]),
+        platform=" / ".join(platforms),
+        style="Seed Gallery đã rà soát",
+        language="vi",
+        prompt_text=str(item["prompt"]),
+        negative_prompt="",
+        variables=[],
+        tags=["free-prompt-gallery", category_id, industry_id],
+        source=_gallery_source_note(prompt_id=prompt_id, snapshot_version=FREE_PROMPT_GALLERY_SNAPSHOT_VERSION),
+        license_note="Seed tham khảo; người dùng tự rà soát quyền sử dụng, tính chính xác và claim trước khi dùng.",
+        quality_score=50,
+    )
+    return _payload_snapshot(payload)
+
+
+def _gallery_save_boundaries() -> dict[str, bool | str]:
+    """State the narrow Web-only persistence contract for an explicit save."""
+
+    return {
+        "execution": "web_native_prompt_library_gallery_save",
+        "source_snapshot_read_only": True,
+        "template_persisted": True,
+        "gallery_state_persisted": False,
+        "pending_bot_save_created": False,
+        "telegram_state_changed": False,
+        "provider_called": False,
+        "bot_called": False,
+        "bridge_called": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+    }
+
+
+def _gallery_saved_template_row(conn: Any, *, account_id: str, prompt_id: str) -> tuple[tuple[Any, ...] | None, str | None]:
+    """Return the owner-owned saved template, pruning only impossible stale maps.
+
+    Normal databases enforce the cascade in the schema. The defensive delete
+    keeps an older/corrupted local database recoverable without ever querying
+    another account's template.
+    """
+
+    mapping = conn.execute(
+        """SELECT template_id, snapshot_version FROM web_prompt_gallery_saves
+           WHERE account_id=? AND gallery_prompt_id=?""",
+        (account_id, prompt_id),
+    ).fetchone()
+    if not mapping:
+        return None, None
+    template_id = str(mapping[0])
+    row = _template_row(conn, template_id=template_id, account_id=account_id)
+    if row:
+        return row, str(mapping[1])
+    conn.execute(
+        "DELETE FROM web_prompt_gallery_saves WHERE account_id=? AND gallery_prompt_id=?",
+        (account_id, prompt_id),
+    )
+    return None, None
+
+
 @router.get("/summary")
 async def prompt_library_summary(account: dict = Depends(require_account)):
     """Return owner-scoped counts only; content remains in private detail routes."""
@@ -722,6 +813,7 @@ async def prompt_library_summary(account: dict = Depends(require_account)):
 @router.get("/templates")
 async def list_templates(
     limit: int = 30,
+    offset: int = 0,
     state: str = "active",
     q: str = "",
     category: str = "",
@@ -733,6 +825,7 @@ async def list_templates(
     """Search only private template metadata for the signed Web account."""
     _require_prompt_library_enabled()
     bounded_limit = max(1, min(int(limit), MAX_LIST_LIMIT))
+    bounded_offset = max(0, min(int(offset), 10_000))
     state_filter = str(state or "active").strip().lower()
     if state_filter not in {*TEMPLATE_STATES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái template không hợp lệ")
@@ -767,10 +860,10 @@ async def list_templates(
             f"""SELECT id, title, category, product_context, platform, style, language, prompt_text,
                        negative_prompt, variables_json, tags_json, source_note, license_note, quality_score,
                        state, revision, created_at, updated_at
-                FROM web_prompt_templates WHERE {' AND '.join(clauses)}
-                ORDER BY CASE state WHEN 'active' THEN 0 ELSE 1 END, quality_score DESC, updated_at DESC, id DESC
-                LIMIT ?""",
-            (*params, bounded_limit + 1),
+                 FROM web_prompt_templates WHERE {' AND '.join(clauses)}
+                 ORDER BY CASE state WHEN 'active' THEN 0 ELSE 1 END, quality_score DESC, updated_at DESC, id DESC
+                 LIMIT ? OFFSET ?""",
+            (*params, bounded_limit + 1, bounded_offset),
         ).fetchall()
         facet_rows = conn.execute(
             """SELECT category, product_context, platform, tags_json FROM web_prompt_templates
@@ -791,6 +884,16 @@ async def list_templates(
         data={
             "items": [_template_public(tuple(row)) for row in rows[:bounded_limit]],
             "has_more": has_more,
+            "next_offset": bounded_offset + min(len(rows), bounded_limit) if has_more else None,
+            "filters": {
+                "q": query,
+                "category": category_filter,
+                "platform": platform_filter,
+                "product_context": context_filter,
+                "tag": tag_filter,
+                "state": state_filter,
+            },
+            "pagination": {"limit": bounded_limit, "offset": bounded_offset, "returned": min(len(rows), bounded_limit)},
             "facets": {
                 name: [{"name": value, "count": count} for value, count in sorted(values.items(), key=lambda pair: (-pair[1], pair[0].casefold()))[:30]]
                 for name, values in facets.items()
@@ -851,6 +954,142 @@ async def create_template(payload: PromptTemplateCreateRequest, request: Request
         return envelope(True, "Đã lưu template vào Prompt Library.", data={"template": _template_public(row, include_excerpt=False)}, status_name="completed")
 
     return _idempotent(f"web-prompt-library:{account_id}:template:create", account_id, key, fingerprint, operation)
+
+
+@router.post("/gallery-items/{prompt_id}/save")
+async def save_gallery_prompt(
+    prompt_id: str,
+    payload: GalleryPromptSaveRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Save exactly one reviewed Gallery seed into the signed owner's vault.
+
+    This is not the Bot Free Hub's conversation/pending-save behavior. It is
+    an explicit, CSRF-protected Web write to the existing private Prompt
+    Library, with a durable owner-scoped map that deduplicates the same
+    Gallery item even if the owner later edits the resulting template.
+    """
+
+    _require_prompt_library_enabled()
+    normalized_prompt_id = str(prompt_id or "").strip()
+    if not GALLERY_ITEM_ID_PATTERN.fullmatch(normalized_prompt_id):
+        raise HTTPException(status_code=422, detail="Mã prompt Gallery không hợp lệ")
+    item = free_prompt_item(normalized_prompt_id)
+    if item is None:
+        raise HTTPException(status_code=404, detail="Không tìm thấy prompt trong snapshot Gallery hiện tại")
+
+    key = _idempotency_key(payload.idempotency_key)
+    account_id = str(account["id"])
+    snapshot = _gallery_snapshot(item, prompt_id=normalized_prompt_id)
+    fingerprint = _fingerprint(
+        {
+            "gallery_prompt_id": normalized_prompt_id,
+            "snapshot_version": FREE_PROMPT_GALLERY_SNAPSHOT_VERSION,
+            "prompt_sha256": _content_hash(snapshot["prompt_text"]),
+            "source_sha256": _content_hash(snapshot["source_note"]),
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        existing, saved_snapshot_version = _gallery_saved_template_row(
+            conn, account_id=account_id, prompt_id=normalized_prompt_id
+        )
+        if existing:
+            return envelope(
+                True,
+                "Prompt Gallery này đã có trong Prompt Library; không tạo bản sao.",
+                data={
+                    "template": _template_public(existing, include_excerpt=False),
+                    "gallery": {
+                        "prompt_id": normalized_prompt_id,
+                        "snapshot_version": saved_snapshot_version or FREE_PROMPT_GALLERY_SNAPSHOT_VERSION,
+                    },
+                    "created": False,
+                    "deduplicated": True,
+                    "boundaries": _gallery_save_boundaries(),
+                },
+                status_name="completed",
+            )
+
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_prompt_templates WHERE account_id=? AND state='active'", (account_id,)
+        ).fetchone()
+        if int(count[0] or 0) >= MAX_TEMPLATES_PER_ACCOUNT:
+            return envelope(
+                False,
+                "Đã đạt giới hạn template active của Web account. Hãy archive template cũ trước.",
+                data={"boundaries": _gallery_save_boundaries()},
+                status_name="guarded",
+                error_code="WEB_PROMPT_TEMPLATE_LIMIT",
+            )
+        if not _has_template_storage_capacity(
+            conn, account_id=account_id, additional_bytes=_snapshot_storage_bytes(snapshot) * 2
+        ):
+            guarded = _storage_limit_response()
+            guarded["data"] = {"boundaries": _gallery_save_boundaries()}
+            return guarded
+
+        template_id = str(uuid.uuid4())
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_prompt_templates
+               (id, account_id, title, category, product_context, platform, style, language, prompt_text,
+                negative_prompt, variables_json, tags_json, source_note, license_note, quality_score, state,
+                revision, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)""",
+            (
+                template_id, account_id, snapshot["title"], snapshot["category"], snapshot["product_context"],
+                snapshot["platform"], snapshot["style"], snapshot["language"], snapshot["prompt_text"],
+                snapshot["negative_prompt"], snapshot["variables_json"], snapshot["tags_json"], snapshot["source_note"],
+                snapshot["license_note"], snapshot["quality_score"], now, now,
+            ),
+        )
+        _insert_version(conn, template_id=template_id, account_id=account_id, revision=1, snapshot=snapshot, created_at=now)
+        conn.execute(
+            """INSERT INTO web_prompt_gallery_saves
+               (account_id, gallery_prompt_id, snapshot_version, template_id, created_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            (account_id, normalized_prompt_id, FREE_PROMPT_GALLERY_SNAPSHOT_VERSION, template_id, now),
+        )
+        _event(conn, account_id=account_id, template_id=template_id, action="gallery_prompt_saved", revision=1)
+        _record_template_audit(
+            conn,
+            request=request,
+            account=account,
+            action="web.prompt_library.gallery_save",
+            target=template_id,
+            detail=f"web-owned static gallery prompt saved:{normalized_prompt_id}",
+        )
+        row = (
+            template_id, snapshot["title"], snapshot["category"], snapshot["product_context"], snapshot["platform"],
+            snapshot["style"], snapshot["language"], snapshot["prompt_text"], snapshot["negative_prompt"],
+            snapshot["variables_json"], snapshot["tags_json"], snapshot["source_note"], snapshot["license_note"],
+            snapshot["quality_score"], "active", 1, now, now,
+        )
+        return envelope(
+            True,
+            "Đã lưu seed Prompt Gallery vào Prompt Library riêng của bạn.",
+            data={
+                "template": _template_public(row, include_excerpt=False),
+                "gallery": {
+                    "prompt_id": normalized_prompt_id,
+                    "snapshot_version": FREE_PROMPT_GALLERY_SNAPSHOT_VERSION,
+                },
+                "created": True,
+                "deduplicated": False,
+                "boundaries": _gallery_save_boundaries(),
+            },
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-prompt-library:{account_id}:gallery-save",
+        account_id,
+        key,
+        fingerprint,
+        operation,
+    )
 
 
 def _detail(conn: Any, *, template_id: str, account_id: str) -> dict[str, Any] | None:

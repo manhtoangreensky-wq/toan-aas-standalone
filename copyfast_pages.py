@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import html
+import hashlib
 import json
+import os
+from functools import lru_cache
 from pathlib import Path
 import re
 
@@ -27,19 +30,72 @@ IMAGE_STUDIO_PATH = re.compile(r"^/image-studio/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-
 DOCUMENT_WORKSPACE_PATH = re.compile(r"^/document-workspace/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 CHAT_WORKSPACE_PATH = re.compile(r"^/chat/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ANALYTICS_WORKSPACE_PATH = re.compile(r"^/analytics/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+WORKBOARD_PATH = re.compile(r"^/workboard/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+CONTENT_HANDOFF_PATH = re.compile(r"^/content/handoffs/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+PARTNER_CRM_PATH = re.compile(r"^/crm/leads/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
+_PORTAL_BUILD_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$")
+_PORTAL_BUILD_ID_ENVIRONMENT_KEYS = (
+    # Explicit application configuration has priority.  Railway values are
+    # intentionally only a build stamp; neither identifier is a credential.
+    "APP_BUILD_ID",
+    "RAILWAY_GIT_COMMIT_SHA",
+    "RAILWAY_DEPLOYMENT_ID",
+)
+_PORTAL_BUILD_SOURCE_FILES = (
+    "portal.css",
+    "portal.js",
+    "integration.js",
+    "service-worker.js",
+    "manifest.webmanifest",
+    "offline.html",
+)
+
+
+def _safe_portal_build_id(value: object) -> str | None:
+    """Return a public-only build identifier, never an arbitrary env value.
+
+    This value is embedded in public HTML and a service-worker script URL, so
+    it must be an opaque, bounded cache key rather than a deployment message,
+    URL, secret or untrusted HTML fragment.
+    """
+
+    candidate = value if isinstance(value, str) else ""
+    return candidate if _PORTAL_BUILD_ID.fullmatch(candidate) else None
+
+
+@lru_cache(maxsize=1)
+def _local_portal_build_id() -> str:
+    """Hash the public shell source for a deterministic no-environment fallback."""
+
+    digest = hashlib.sha256()
+    asset_dir = ROOT / "static" / "portal"
+    for filename in _PORTAL_BUILD_SOURCE_FILES:
+        digest.update(filename.encode("utf-8"))
+        digest.update(b"\0")
+        try:
+            digest.update((asset_dir / filename).read_bytes())
+        except OSError:
+            # The fallback remains deterministic even in a partial local
+            # checkout; deployment must still supply a complete shell.
+            digest.update(b"missing")
+        digest.update(b"\0")
+    return f"local-{digest.hexdigest()[:20]}"
+
+
+def _portal_build_id() -> str:
+    """Choose a validated deployment ID or a deterministic public-shell hash."""
+
+    for key in _PORTAL_BUILD_ID_ENVIRONMENT_KEYS:
+        safe_value = _safe_portal_build_id(os.getenv(key))
+        if safe_value:
+            return safe_value
+    return _local_portal_build_id()
 
 
 def _portal_asset_version() -> str:
-    """Use a deterministic local asset stamp to prevent stale portal shells."""
-    asset_dir = ROOT / "static" / "portal"
-    try:
-        newest = max(
-            (item.stat().st_mtime_ns for item in asset_dir.glob("*") if item.is_file()),
-            default=0,
-        )
-    except OSError:
-        newest = 0
-    return str(newest or 1)
+    """Use the same safe build ID for shell URLs and worker generation."""
+
+    return _portal_build_id()
 
 
 def _title_for(path: str) -> str:
@@ -80,6 +136,12 @@ def _title_for(path: str) -> str:
         return "Hội thoại mới"
     if normalized == "/analytics/new":
         return "Báo cáo Analytics mới"
+    if normalized == "/workboard/new":
+        return "Thẻ công việc mới"
+    if normalized == "/content/handoffs/new":
+        return "Content Handoff mới"
+    if normalized == "/crm/leads/new":
+        return "Lead mới"
     if PROMPT_LIBRARY_PATH.fullmatch(normalized):
         return "Prompt Library"
     if CONTENT_STUDIO_PATH.fullmatch(normalized):
@@ -98,6 +160,12 @@ def _title_for(path: str) -> str:
         return "AI Chat Workspace"
     if ANALYTICS_WORKSPACE_PATH.fullmatch(normalized):
         return "Analytics Workspace"
+    if WORKBOARD_PATH.fullmatch(normalized):
+        return "Workboard & Review Queue"
+    if CONTENT_HANDOFF_PATH.fullmatch(normalized):
+        return "Content Handoff"
+    if PARTNER_CRM_PATH.fullmatch(normalized):
+        return "Partner & Lead CRM"
     if MEDIA_WORKSPACE_PATH.fullmatch(normalized):
         return "Audio Library & Briefing"
     if CAMPAIGN_PLAN_PATH.fullmatch(normalized):
@@ -110,10 +178,11 @@ def _title_for(path: str) -> str:
     aliases = {
         "/welcome": "Giới thiệu TOAN AAS", "/login": "Đăng nhập", "/register": "Tạo tài khoản", "/onboarding": "Bắt đầu với TOAN AAS",
         "/campaigns": "Campaign Planner", "/calendar": "Content Calendar", "/approvals": "Self-review Queue", "/projects": "Project Center",
+        "/operations": "Operations Center", "/admin/operations": "Operations Autopilot",
         "/image": "Studio ảnh", "/image-studio": "Image Creative Studio", "/document-workspace": "Document & PDF Workspace", "/video": "Studio video", "/video-studio": "Video Production Studio", "/subtitle-studio": "Subtitle & Transcript Workspace", "/voice": "Studio âm thanh", "/music": "Âm nhạc & SFX",
         "/chat": "AI Chat Workspace", "/analytics": "Analytics Workspace", "/features/content": "Content & Chat", "/features/image": "Image Studio", "/features/video": "Video Studio",
         "/features/voice": "Voice Studio", "/features/music": "Music & SFX", "/features/subtitle": "Phụ đề & ngôn ngữ",
-        "/features/documents": "Documents & PDF",
+        "/features/documents": "Documents & PDF", "/content/handoffs": "Content Handoff", "/crm/leads": "Partner & Lead CRM",
     }
     return aliases.get(normalized, "TOAN AAS")
 
@@ -127,20 +196,25 @@ def _fallback_template() -> str:
 def render_portal(path: str) -> HTMLResponse:
     normalized = ("/" + path.lstrip("/")) if path else "/"
     normalized = normalized.rstrip("/") or "/"
-    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new"} and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
+    if normalized not in allowed_paths() and normalized not in {"/chat/new", "/analytics/new", "/workboard/new", "/content/handoffs/new", "/crm/leads/new"} and not CAMPAIGN_PLAN_PATH.fullmatch(normalized) and not PROJECT_PATH.fullmatch(normalized) and not PROMPT_LIBRARY_PATH.fullmatch(normalized) and not MEDIA_WORKSPACE_PATH.fullmatch(normalized) and not CONTENT_STUDIO_PATH.fullmatch(normalized) and not VOICE_STUDIO_PATH.fullmatch(normalized) and not VIDEO_STUDIO_PATH.fullmatch(normalized) and not SUBTITLE_STUDIO_PATH.fullmatch(normalized) and not IMAGE_STUDIO_PATH.fullmatch(normalized) and not DOCUMENT_WORKSPACE_PATH.fullmatch(normalized) and not CHAT_WORKSPACE_PATH.fullmatch(normalized) and not ANALYTICS_WORKSPACE_PATH.fullmatch(normalized) and not WORKBOARD_PATH.fullmatch(normalized) and not CONTENT_HANDOFF_PATH.fullmatch(normalized) and not PARTNER_CRM_PATH.fullmatch(normalized) and not any(normalized.startswith(prefix) for prefix in ("/image", "/video", "/voice", "/music", "/subtitle", "/translate", "/dubbing", "/documents", "/document-workspace", "/support", "/tickets", "/admin", "/features", "/content", "/crm", "/tools", "/prompts", "/prompt-library", "/media-workspace", "/content-studio", "/voice-studio", "/video-studio", "/subtitle-studio", "/image-studio", "/caption", "/hashtag", "/hook", "/script", "/storyboard")):
         raise HTTPException(status_code=404, detail="Trang không tồn tại")
     template = TEMPLATE.read_text(encoding="utf-8") if TEMPLATE.exists() else _fallback_template()
+    build_id = _portal_build_id()
     payload = {
         "path": normalized,
         "title": _title_for(normalized),
         "apiBase": "/api/v1",
         "catalogUrl": "/api/v1/catalog",
         "authUrl": "/api/v1/auth/me",
+        # This public opaque value is deliberately separate from sessions,
+        # accounts and API data.  The browser passes it only to the root
+        # service-worker URL so each deployed public shell owns one cache.
+        "buildId": build_id,
     }
     output = (
         template
         .replace("__PORTAL_TITLE__", html.escape(payload["title"]))
-        .replace("__PORTAL_ASSET_VERSION__", _portal_asset_version())
+        .replace("__PORTAL_ASSET_VERSION__", build_id)
         .replace("__PORTAL_BOOTSTRAP__", json.dumps(payload, ensure_ascii=False).replace("</", "<\\/"))
     )
     return HTMLResponse(output)

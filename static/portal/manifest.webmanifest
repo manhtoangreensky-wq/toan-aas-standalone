@@ -1,17 +1,47 @@
 {
+  "id": "/",
   "name": "TOAN AAS Control Portal",
   "short_name": "TOAN AAS",
   "description": "TOAN AAS customer portal and admin control center.",
+  "lang": "vi",
+  "dir": "ltr",
   "start_url": "/dashboard",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#07131f",
   "theme_color": "#07131f",
+  "shortcuts": [
+    {
+      "name": "Tổng quan",
+      "short_name": "Tổng quan",
+      "description": "Mở tổng quan workspace TOAN AAS.",
+      "url": "/dashboard"
+    },
+    {
+      "name": "Project Center",
+      "short_name": "Projects",
+      "description": "Mở các project riêng tư của bạn.",
+      "url": "/projects"
+    },
+    {
+      "name": "Tạo workflow",
+      "short_name": "Tạo mới",
+      "description": "Chọn một workflow trong TOAN AAS.",
+      "url": "/features"
+    }
+  ],
   "icons": [
+    {
+      "src": "/static/portal/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
     {
       "src": "/static/logo_chính_thức.png",
       "sizes": "any",
       "type": "image/png",
-      "purpose": "any maskable"
+      "purpose": "any"
     }
   ]
 }

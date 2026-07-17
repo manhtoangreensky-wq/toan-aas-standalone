@@ -110,6 +110,47 @@ def create_vault(client: TestClient, csrf: str, key: str = "voice-studio-create-
     return detail.json()["data"]["vault"]
 
 
+def test_voice_vaults_are_paginated_and_owner_scoped(tmp_path, monkeypatch):
+    """Old Voice Vault metadata stays reachable through signed pages."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "voice-list-owner@example.com")
+        created = [
+            create_vault(
+                client,
+                csrf,
+                f"voice-list-pagination-{index:04d}",
+                title=f"Voice pagination {index}",
+                tags=["pagination"],
+                is_default=False,
+            )
+            for index in range(1, 4)
+        ]
+        pages = [
+            client.get(
+                "/api/v1/voice-studio/vaults",
+                params={"state": "all", "q": "Voice pagination", "tag": "pagination", "limit": 1, "offset": offset},
+            )
+            for offset in range(3)
+        ]
+        assert all(page.status_code == 200 for page in pages)
+        page_data = [page.json()["data"] for page in pages]
+        seen_ids = {item["id"] for data in page_data for item in data["items"]}
+        assert seen_ids == {item["id"] for item in created}
+        assert page_data[0]["has_more"] is True
+        assert page_data[0]["next_offset"] == 1
+        assert page_data[1]["next_offset"] == 2
+        assert page_data[2]["has_more"] is False
+        assert page_data[2]["next_offset"] is None
+        assert page_data[0]["filters"] == {"q": "Voice pagination", "tag": "pagination", "state": "all"}
+        assert page_data[0]["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+
+        with make_client(tmp_path, monkeypatch) as other:
+            register_and_login(other, "voice-list-other@example.com")
+            hidden = other.get("/api/v1/voice-studio/vaults", params={"state": "all", "q": "Voice pagination", "limit": 1})
+            assert hidden.status_code == 200
+            assert hidden.json()["data"]["items"] == []
+
+
 def test_voice_studio_requires_session_csrf_and_keeps_receipts_free_of_authoring_text(tmp_path, monkeypatch):
     db_path = tmp_path / "voice-studio-test.db"
     with make_client(tmp_path, monkeypatch) as client:

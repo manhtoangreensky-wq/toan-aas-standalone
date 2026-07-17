@@ -201,6 +201,6 @@ Admin entries must resolve authority from a canonical signed session and server-
 | /manifests | admin_internal_command | /admin/manifests |
 | /mark_payos_test | cmd_mark_payos_test | /admin/mark_payos_test |
 | /mark_published | admin_internal_command | /admin/mark_published |
-| /media_factory | cmd_media_factory | /admin/media_factory |
 | /member_user | cmd_member_user | /admin/member_user |
 | /memory_admin | cmd_memory_admin | /admin/memory_admin |
+| /memory_reminder_admin | cmd_memory_reminder_admin | /admin/memory_reminder_admin |

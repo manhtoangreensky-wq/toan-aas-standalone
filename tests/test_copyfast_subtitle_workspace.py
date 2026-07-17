@@ -208,3 +208,55 @@ def test_subtitle_reorder_exact_active_set_survives_archives_and_restore(tmp_pat
         active = [cue for cue in detail["cues"] if cue["state"] == "active"]
         assert [cue["id"] for cue in active] == [three["id"], one["id"]]
         assert [cue["ordinal"] for cue in active] == [1, 2]
+
+
+def test_subtitle_format_lab_is_csrf_protected_and_text_only(tmp_path, monkeypatch):
+    path = "/api/v1/subtitle-studio/format-tools/convert"
+    srt = "1\n00:00:01,000 --> 00:00:02,400\nCâu đầu tiên\n\n2\n00:00:02,400 --> 00:00:04,000\nCâu thứ hai"
+    with make_client(tmp_path, monkeypatch) as client:
+        assert client.post(path, json={"mode": "srt_to_vtt", "content": srt}).status_code == 401
+        csrf = login(client, "subtitle-format@example.com")
+        assert client.post(path, json={"mode": "srt_to_vtt", "content": srt}).status_code == 403
+        converted = client.post(path, headers={"X-CSRF-Token": csrf}, json={"mode": "srt_to_vtt", "content": srt})
+        assert converted.status_code == 200 and converted.json()["ok"] is True
+        payload = converted.json()
+        data = payload["data"]
+        assert payload["status"] == "completed"
+        assert data["mode"] == "srt_to_vtt"
+        assert data["format"] == "vtt"
+        assert data["cue_count"] == 2
+        assert data["text"].startswith("WEBVTT\n\n00:00:01.000 --> 00:00:02.400")
+        for key in ("provider_called", "asr_called", "translation_called", "tts_called", "dubbing_called", "media_uploads", "output_created", "job_created", "payment_charged"):
+            assert data[key] is False
+        assert data["execution"] == "web_native_text_transform"
+        assert data["output_delivery"] == "none"
+        assert converted.headers["Cache-Control"] == "no-store, private"
+
+
+def test_subtitle_format_lab_normalizes_vtt_and_creates_deterministic_text_srt(tmp_path, monkeypatch):
+    path = "/api/v1/subtitle-studio/format-tools/convert"
+    vtt = "WEBVTT\nKind: captions\n\nNOTE excluded\nmetadata is not returned\n\n00:00:01.000 --> 00:00:02.000\nHello\n\n00:00:02.000 --> 00:00:03.000\nWorld"
+    words = "một hai ba bốn năm sáu bảy tám chín mười mười một mười hai mười ba"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "subtitle-format-normalize@example.com")
+        normalized = client.post(path, headers={"X-CSRF-Token": csrf}, json={"mode": "vtt_to_srt", "content": vtt})
+        assert normalized.status_code == 200 and normalized.json()["ok"] is True
+        text = normalized.json()["data"]["text"]
+        assert text.startswith("1\n00:00:01,000 --> 00:00:02,000\nHello")
+        assert "Kind: captions" not in text and "NOTE excluded" not in text
+        generated = client.post(path, headers={"X-CSRF-Token": csrf}, json={"mode": "text_to_srt", "content": words, "duration_seconds": 5})
+        assert generated.status_code == 200 and generated.json()["ok"] is True
+        generated_data = generated.json()["data"]
+        assert generated_data["cue_count"] == 2
+        assert "00:00:00,000 --> 00:00:02,500" in generated_data["text"]
+        assert "00:00:02,500 --> 00:00:05,000" in generated_data["text"]
+        rejected_extra = client.post(path, headers={"X-CSRF-Token": csrf}, json={"mode": "text_to_srt", "content": "nội dung hợp lệ", "file_url": "https://invalid.example"})
+        assert rejected_extra.status_code == 422
+        malformed = client.post(path, headers={"X-CSRF-Token": csrf}, json={"mode": "srt_to_vtt", "content": "1\ninvalid timing\nCaption"})
+        assert malformed.status_code == 422
+        workspace = importlib.import_module("copyfast_subtitle_workspace")
+        monkeypatch.setattr(workspace, "MAX_EXPORT_UTF8_BYTES", 1)
+        oversized = client.post(path, headers={"X-CSRF-Token": csrf}, json={"mode": "text_to_srt", "content": "nội dung hợp lệ"})
+        assert oversized.status_code == 200 and oversized.json()["ok"] is False
+        assert oversized.json()["error_code"] == "WEB_SUBTITLE_FORMAT_OUTPUT_TOO_LARGE"
+        assert "text" not in oversized.json()["data"]

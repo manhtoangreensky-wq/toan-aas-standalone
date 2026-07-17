@@ -39,6 +39,9 @@ def test_content_studio_hydrates_and_mutates_only_via_owner_scoped_api() -> None
         "contentBriefPayload",
         "contentVariantPayload",
         "contentStudioFilterPayload",
+        "contentStudioListOffset",
+        "contentStudioListPath",
+        "contentStudioListingProjection",
         "hydrateContentStudio",
         "hydrateContentBrief",
         "hydrateContentVariantHistory",
@@ -58,6 +61,7 @@ def test_content_studio_hydrates_and_mutates_only_via_owner_scoped_api() -> None
 
     for capability in (
         '"content-studio-view": Boolean(account && contentStudioEnabled)',
+        '"content-studio-page": Boolean(account && contentStudioEnabled)',
         '"content-studio-create": Boolean(account && me.csrf_token && contentStudioEnabled)',
         '"content-studio-variant-create": Boolean(account && me.csrf_token && contentStudioEnabled)',
         '"content-studio-variant-select": Boolean(account && me.csrf_token && contentStudioEnabled)',
@@ -71,7 +75,7 @@ def test_content_studio_hydrates_and_mutates_only_via_owner_scoped_api() -> None
     assert "WEBAPP_CONTENT_STUDIO_ENABLED" in ROUTER
 
     start = INTEGRATION.index('if (action === "content-studio-filter"')
-    end = INTEGRATION.index('if (action === "support-cases-filter")')
+    end = INTEGRATION.index('if (action === "video-prompt-plan")')
     actions = INTEGRATION[start:end].lower()
     for forbidden in ("bridgeavailable", "payos", "wallet", "telegram", "/jobs", "/payments", "publish"):
         assert forbidden not in actions
@@ -91,6 +95,7 @@ def test_content_studio_hydrates_and_mutates_only_via_owner_scoped_api() -> None
         "content-variant-restore-version",
         "content-variant-select",
         "content-variant-history",
+        "content-studio-page",
     ):
         assert action in actions
     assert "contentstudiomutation({" in actions
@@ -114,15 +119,16 @@ def test_content_studio_keeps_private_authoring_out_of_bot_and_pwa_paths() -> No
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert "/api/v1/content-studio" not in shell
     assert '"/content-studio"' not in shell
-    # A private Workspace route changed the public shell bundle, so the
-    # service worker intentionally moved from v11 to v12. Private API/routes
-    # remain outside the shell cache checks above.
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v15"' in SERVICE_WORKER
+    # Private workspace additions may intentionally invalidate the public
+    # shell cache, but the cache name must remain versioned while private
+    # API/routes stay outside the shell checks above.
+    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (
         ".portal-content-studio-intro",
         ".portal-content-studio-grid",
+        ".portal-content-studio-pagination",
         ".portal-content-variant-card",
         ".portal-content-variant-history",
         ".portal-content-studio-grid, .portal-content-variant-grid { grid-template-columns: 1fr; }",
@@ -137,3 +143,53 @@ def test_content_studio_keeps_private_authoring_out_of_bot_and_pwa_paths() -> No
     assert "safeText" in detail
     assert "data-content-brief-id" in detail
     assert "data-content-variant-id" in detail
+
+
+def test_content_studio_filter_and_pagination_remain_ephemeral_and_owner_scoped() -> None:
+    assert 'data-portal-no-transient data-portal-action="content-studio-filter"' in PORTAL
+    assert '"content-studio-page"' in PORTAL
+    assert '__contentStudioOffset: source.getAttribute("data-content-studio-offset") || ""' in PORTAL
+    assert "function contentStudioListing(context)" in PORTAL
+    assert "function renderContentStudioPagination(listing)" in PORTAL
+
+
+def test_content_studio_private_reads_ignore_stale_session_route_and_variant_responses() -> None:
+    """Brief text and references must not reappear after a late response."""
+
+    for epoch in (
+        "contentStudioSessionEpoch",
+        "contentStudioListHydrationEpoch",
+        "contentStudioDetailHydrationEpoch",
+        "contentStudioVariantHistoryHydrationEpoch",
+    ):
+        assert f"let {epoch} = 0;" in INTEGRATION
+        assert f"++{epoch};" in INTEGRATION
+
+    helper_start = INTEGRATION.index("function contentStudioRequestIsCurrent")
+    helper_end = INTEGRATION.index("async function hydrateContentStudio", helper_start)
+    helper = INTEGRATION[helper_start:helper_end]
+    for requirement in (
+        "sessionEpoch === contentStudioSessionEpoch",
+        "currentPortalPath() === expectedPath",
+        "isNativeContentStudioPath(expectedPath)",
+        "base().contentStudioEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+
+    list_start = INTEGRATION.index("async function hydrateContentStudio")
+    detail_start = INTEGRATION.index("async function hydrateContentBrief", list_start)
+    list_read = INTEGRATION[list_start:detail_start]
+    detail_end = INTEGRATION.index("const CHANNEL_STRATEGY_LIST_LIMIT", detail_start)
+    detail_read = INTEGRATION[detail_start:detail_end]
+    variant_start = INTEGRATION.index("async function hydrateContentVariantHistory")
+    variant_end = INTEGRATION.index("function voiceStudioPolicyIsSafe", variant_start)
+    variant_read = INTEGRATION[variant_start:variant_end]
+
+    assert "const requestEpoch = ++contentStudioListHydrationEpoch;" in list_read
+    assert "if (!contentStudioRequestIsCurrent(requestEpoch, contentStudioListHydrationEpoch, sessionEpoch, path)) return { stale: true };" in list_read
+    assert "const requestEpoch = ++contentStudioDetailHydrationEpoch;" in detail_read
+    assert "if (currentPortalPath() !== route) return null;" in detail_read
+    assert "if (!contentStudioRequestIsCurrent(requestEpoch, contentStudioDetailHydrationEpoch, sessionEpoch, route)) return null;" in detail_read
+    assert "const requestEpoch = ++contentStudioVariantHistoryHydrationEpoch;" in variant_read
+    assert "if (!contentStudioRequestIsCurrent(requestEpoch, contentStudioVariantHistoryHydrationEpoch, sessionEpoch, route)) return null;" in variant_read

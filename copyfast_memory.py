@@ -20,10 +20,12 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, Field, field_validator
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, memory_center_enabled, transaction, utc_now
+from copyfast_free_prompt_gallery import SNAPSHOT_VERSION, free_prompt_item
 
 
 router = APIRouter(prefix="/api/v1/memory", tags=["Web Memory Center"])
@@ -51,6 +53,14 @@ MAX_REMINDER_BODY = 2_000
 MAX_CATEGORY = 80
 MAX_TAGS = 12
 MAX_TAG_LENGTH = 40
+GALLERY_ITEM_ID_PATTERN = re.compile(r"^[a-z][a-z0-9_]{2,180}$")
+# A Gallery receipt is merely a retry aid for an already persisted Web note.
+# Keep it materially shorter-lived than user data, and bound it separately
+# from the generic Memory mutation ledger.  The per-account Gallery scope is
+# deliberate: this maintenance must never evict a note/reminder receipt or
+# another customer's Gallery receipt.
+GALLERY_MEMORY_IDEMPOTENCY_TTL = timedelta(hours=24)
+MAX_GALLERY_MEMORY_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 128
 
 
 def _require_memory_enabled() -> None:
@@ -292,6 +302,118 @@ def _idempotent(
     return response
 
 
+def _gallery_idempotency_now() -> datetime:
+    """Return a UTC clock compatible with the database's ISO-8601 receipts.
+
+    ``utc_now`` is the single timestamp source used by this module and is
+    intentionally patchable in focused tests.  A malformed clock must not
+    keep a stale idempotency receipt alive indefinitely, so fall back to the
+    process UTC clock rather than raising during a customer retry.
+    """
+
+    try:
+        return _parse_utc(utc_now())
+    except ValueError:
+        return datetime.now(timezone.utc)
+
+
+def _prune_gallery_memory_idempotency(
+    conn: Any,
+    *,
+    scope: str,
+    protected_key: str,
+) -> None:
+    """Bound only one account's Gallery-to-Memory retry receipts.
+
+    This is intentionally not a general cleanup of ``web_idempotency``.  The
+    passed scope is constructed only by ``_gallery_memory_idempotent`` and
+    always includes the signed account.  First discard expired or malformed
+    Gallery receipts; then make room for a new key while preserving an active
+    requested key so deterministic retries retain their response.
+    """
+
+    now = _gallery_idempotency_now()
+    cutoff = now - GALLERY_MEMORY_IDEMPOTENCY_TTL
+    rows = conn.execute(
+        "SELECT key, created_at FROM web_idempotency WHERE scope=? ORDER BY created_at ASC, key ASC",
+        (scope,),
+    ).fetchall()
+
+    active: list[tuple[str, datetime]] = []
+    expired_keys: list[str] = []
+    for row in rows:
+        row_key = str(row[0] or "")
+        try:
+            created_at = _parse_utc(str(row[1] or ""))
+        except ValueError:
+            # A corrupt timestamp cannot be safely replayed forever.
+            expired_keys.append(row_key)
+            continue
+        if created_at <= cutoff:
+            expired_keys.append(row_key)
+            continue
+        active.append((row_key, created_at))
+
+    if expired_keys:
+        conn.executemany(
+            "DELETE FROM web_idempotency WHERE scope=? AND key=?",
+            [(scope, row_key) for row_key in expired_keys],
+        )
+
+    # Retain space for an incoming key.  A protected active key is excluded
+    # from cap eviction so retry semantics cannot depend on its age.
+    active.sort(key=lambda row: (row[1], row[0]))
+    limit = max(1, int(MAX_GALLERY_MEMORY_IDEMPOTENCY_RECORDS_PER_ACCOUNT))
+    protected_active = any(row_key == protected_key for row_key, _ in active)
+    allowed_before_operation = limit if protected_active else limit - 1
+    overflow = max(0, len(active) - allowed_before_operation)
+    if overflow:
+        keys_to_evict = [row_key for row_key, _ in active if row_key != protected_key][:overflow]
+        if keys_to_evict:
+            conn.executemany(
+                "DELETE FROM web_idempotency WHERE scope=? AND key=?",
+                [(scope, row_key) for row_key in keys_to_evict],
+            )
+
+
+def _gallery_memory_idempotent(
+    *,
+    account_id: str,
+    key: str,
+    request_fingerprint: str,
+    operation: Callable[[Any], dict[str, Any]],
+) -> dict[str, Any]:
+    """Run a Gallery-to-Memory write with bounded account-scoped retries."""
+
+    ensure_copyfast_schema()
+    scope = f"web-memory:{account_id}:gallery-item:save"
+    with transaction() as conn:
+        _prune_gallery_memory_idempotency(conn, scope=scope, protected_key=key)
+        existing = conn.execute(
+            "SELECT response_json, request_fingerprint FROM web_idempotency WHERE scope=? AND key=?",
+            (scope, key),
+        ).fetchone()
+        if existing:
+            stored_fingerprint = str(existing[1] or "")
+            if not stored_fingerprint or not hmac.compare_digest(stored_fingerprint, request_fingerprint):
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho yêu cầu khác")
+            try:
+                response = json.loads(str(existing[0]))
+            except (TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise HTTPException(status_code=409, detail="Bản ghi idempotency Gallery không hợp lệ") from exc
+            if isinstance(response, dict):
+                return response
+            raise HTTPException(status_code=409, detail="Bản ghi idempotency Gallery không hợp lệ")
+
+        response = operation(conn)
+        conn.execute(
+            """INSERT INTO web_idempotency (scope, key, response_json, request_fingerprint, created_at)
+               VALUES (?, ?, ?, ?, ?)""",
+            (scope, key, json.dumps(response, ensure_ascii=False, separators=(",", ":")), request_fingerprint, utc_now()),
+        )
+    return response
+
+
 def _event(conn: Any, *, account_id: str, action: str, note_id: str | None = None, reminder_id: str | None = None) -> None:
     conn.execute(
         """INSERT INTO web_memory_events (id, account_id, note_id, reminder_id, action, created_at)
@@ -333,6 +455,88 @@ def _note_public(row: tuple[Any, ...], *, include_content: bool = False) -> dict
     return result
 
 
+def _gallery_note_receipt(
+    *,
+    note_id: str,
+    category: str,
+    priority: str,
+) -> dict[str, Any]:
+    """Return metadata only; a Gallery prompt must not echo in a save receipt."""
+
+    return {
+        "id": note_id,
+        "category": category,
+        "priority": priority,
+        "state": "active",
+        "revision": 1,
+    }
+
+
+def _gallery_memory_boundaries(*, memory_note_persisted: bool) -> dict[str, bool | str]:
+    """State the exact side effects of the static Gallery-to-Memory handoff."""
+
+    boundaries: dict[str, bool | str] = {
+        "execution": "web_native_memory_gallery_save",
+        "source_snapshot_read_only": True,
+        "memory_note_persisted": memory_note_persisted,
+        "gallery_state_persisted": False,
+        "pending_bot_save_created": False,
+        "telegram_state_changed": False,
+        "provider_called": False,
+        "bot_called": False,
+        "bridge_called": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+    }
+    return boundaries
+
+
+def _gallery_memory_note_fields(prompt_id: str) -> tuple[str, str, list[str], str, str] | None:
+    """Resolve one immutable Gallery item into server-controlled note fields.
+
+    The static snapshot is the sole source for the saved prompt.  Nothing in
+    this helper accepts browser-authored content, which avoids turning a
+    Gallery confirmation into a generic arbitrary-note write endpoint.
+    """
+
+    item = free_prompt_item(prompt_id)
+    if item is None:
+        return None
+    title = _single_line(
+        f"Free Prompt Gallery — {str(item['title'])}",
+        label="Tiêu đề ghi chú Gallery",
+        minimum=3,
+        maximum=MAX_NOTE_TITLE,
+    )
+    content = _safe_content(
+        "\n".join(
+            (
+                "Mẫu prompt đã lưu từ Free Prompt Gallery của TOAN AAS Web.",
+                f"Snapshot: {SNAPSHOT_VERSION}",
+                f"Prompt ID: {prompt_id}",
+                "",
+                str(item["prompt"]),
+                "",
+                "Tự rà soát tính chính xác, quyền sử dụng và claim trước khi xuất bản.",
+            )
+        ),
+        label="Nội dung ghi chú Gallery",
+        maximum=MAX_NOTE_CONTENT,
+    )
+    tags = _tags(["free-prompt-gallery", str(item["category_id"]), str(item["industry_id"])])
+    category = _single_line(
+        "Free Prompt Gallery",
+        label="Danh mục ghi chú Gallery",
+        minimum=1,
+        maximum=MAX_CATEGORY,
+    )
+    return title, content, tags, category, "normal"
+
+
 def _reminder_public(row: tuple[Any, ...], *, now: datetime | None = None) -> dict[str, Any]:
     current = now or datetime.now(timezone.utc)
     state = str(row[8])
@@ -360,6 +564,8 @@ def _reminder_public(row: tuple[Any, ...], *, now: datetime | None = None) -> di
     }
     if len(row) > 14:
         result["note_title"] = str(row[14]) if row[14] else ""
+    if len(row) > 15:
+        result["note_state"] = str(row[15]) if row[15] else "unavailable"
     return result
 
 
@@ -393,7 +599,7 @@ def _note_row(conn: Any, *, note_id: str, account_id: str) -> tuple[Any, ...] | 
 def _reminder_row(conn: Any, *, reminder_id: str, account_id: str) -> tuple[Any, ...] | None:
     row = conn.execute(
         """SELECT r.id, r.note_id, r.title, r.body, r.due_at, r.next_run_at, r.timezone, r.repeat_rule,
-                  r.state, r.revision, r.last_completed_at, r.completed_at, r.created_at, r.updated_at, n.title
+                  r.state, r.revision, r.last_completed_at, r.completed_at, r.created_at, r.updated_at, n.title, n.state
            FROM web_memory_reminders r
            LEFT JOIN web_memory_notes n ON n.id=r.note_id AND n.account_id=r.account_id
            WHERE r.id=? AND r.account_id=?""",
@@ -453,6 +659,25 @@ class NoteCreateRequest(BaseModel):
 
 class NoteUpdateRequest(NoteCreateRequest):
     expected_revision: int = Field(ge=1, le=1_000_000)
+
+
+class GalleryItemMemorySaveRequest(BaseModel):
+    """The browser may only confirm a reviewed server-side Gallery item.
+
+    Prompt text, title, tags, account identifiers and source metadata never
+    cross this mutation boundary from the browser.  This keeps the handoff
+    equivalent to saving an already selected Bot Free Hub result, while the
+    stored note remains wholly owned by the signed Web account.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
 
 
 class RevisionMutationRequest(BaseModel):
@@ -555,6 +780,7 @@ async def memory_summary(account: dict = Depends(require_account)):
 @router.get("/notes")
 async def list_notes(
     limit: int = 30,
+    offset: int = 0,
     state: str = "active",
     q: str = "",
     priority: str = "",
@@ -564,6 +790,7 @@ async def list_notes(
     """Search/list bounded note metadata only for the signed Web owner."""
     _require_memory_enabled()
     bounded_limit = max(1, min(int(limit), 100))
+    bounded_offset = max(0, min(int(offset), 10_000))
     state_filter = str(state or "active").strip().lower()
     if state_filter not in {*NOTE_STATES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái ghi chú không hợp lệ")
@@ -596,8 +823,8 @@ async def list_notes(
             f"""SELECT id, title, content, tags_json, category, priority, state, revision, created_at, updated_at
                 FROM web_memory_notes WHERE {' AND '.join(clauses)}
                 ORDER BY CASE priority WHEN 'urgent' THEN 0 WHEN 'important' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END,
-                         updated_at DESC, id DESC LIMIT ?""",
-            (*params, bounded_limit + 1),
+                         updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded_limit + 1, bounded_offset),
         ).fetchall()
         facet_rows = conn.execute(
             """SELECT tags_json, category FROM web_memory_notes
@@ -619,6 +846,14 @@ async def list_notes(
         data={
             "items": [_note_public(tuple(row)) for row in rows[:bounded_limit]],
             "has_more": has_more,
+            "next_offset": bounded_offset + min(len(rows), bounded_limit) if has_more else None,
+            "filters": {
+                "state": state_filter,
+                "q": query,
+                "priority": priority_filter,
+                "category": category_filter,
+            },
+            "pagination": {"limit": bounded_limit, "offset": bounded_offset, "returned": min(len(rows), bounded_limit)},
             "facets": {
                 "categories": [{"name": name, "count": count} for name, count in sorted(categories.items(), key=lambda item: (-item[1], item[0].casefold()))[:20]],
                 "tags": [{"name": name, "count": count} for name, count in sorted(tags.items(), key=lambda item: (-item[1], item[0].casefold()))[:30]],
@@ -678,6 +913,117 @@ async def create_note(payload: NoteCreateRequest, request: Request, account: dic
         return envelope(True, "Đã lưu ghi chú trong Memory Center của Web.", data={"note": note}, status_name="completed")
 
     return _idempotent(f"web-memory:{account_id}:note:create", key, fingerprint, operation)
+
+
+@router.post("/gallery-items/{prompt_id}/save", response_model=None)
+async def save_gallery_item_to_memory(
+    prompt_id: str,
+    payload: GalleryItemMemorySaveRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+) -> Any:
+    """Save one known static Gallery seed into the signed owner's Memory Center.
+
+    This is deliberately narrower than the Bot's generic pending-result save:
+    it can only resolve a reviewed immutable Web Gallery ID.  It does not read
+    or create Telegram pending state, invoke the Bot/core bridge/provider, or
+    create a job, Xu/payment change, asset, publish action or delivery.
+    """
+
+    _require_memory_enabled()
+    normalized_prompt_id = str(prompt_id or "").strip()
+    if not GALLERY_ITEM_ID_PATTERN.fullmatch(normalized_prompt_id):
+        raise HTTPException(status_code=422, detail="Prompt ID Gallery không hợp lệ")
+    fields = _gallery_memory_note_fields(normalized_prompt_id)
+    if fields is None:
+        return JSONResponse(
+            envelope(
+                False,
+                "Không tìm thấy prompt trong snapshot Gallery hiện tại.",
+                status_name="guarded",
+                error_code="WEB_FREE_PROMPT_NOT_FOUND",
+            ),
+            status_code=404,
+        )
+    title, content, tags, category, priority = fields
+    key = _idempotency_key(payload.idempotency_key)
+    account_id = str(account["id"])
+    tags_json = json.dumps(tags, ensure_ascii=False, separators=(",", ":"))
+    fingerprint = _fingerprint(
+        {
+            "action": "save_static_gallery_item_to_memory",
+            "prompt_id": normalized_prompt_id,
+            "snapshot_version": SNAPSHOT_VERSION,
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_memory_notes WHERE account_id=? AND state='active'",
+            (account_id,),
+        ).fetchone()
+        if int(count[0] or 0) >= MAX_NOTES_PER_ACCOUNT:
+            return envelope(
+                False,
+                "Đã đạt giới hạn ghi chú active của Web account. Hãy archive ghi chú cũ trước.",
+                data={
+                    "gallery": {
+                        "prompt_id": normalized_prompt_id,
+                        "snapshot_version": SNAPSHOT_VERSION,
+                    },
+                    "boundaries": _gallery_memory_boundaries(memory_note_persisted=False),
+                },
+                status_name="guarded",
+                error_code="WEB_MEMORY_NOTE_LIMIT",
+            )
+        note_id = str(uuid.uuid4())
+        now = utc_now()
+        conn.execute(
+            """INSERT INTO web_memory_notes
+               (id, account_id, title, content, tags_json, category, priority, state, revision, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)""",
+            (note_id, account_id, title, content, tags_json, category, priority, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_note_versions
+               (id, note_id, account_id, revision, title, content, tags_json, category, priority, created_at)
+               VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?)""",
+            (str(uuid.uuid4()), note_id, account_id, title, content, tags_json, category, priority, now),
+        )
+        _event(conn, account_id=account_id, action="note_created", note_id=note_id)
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.memory.gallery_item.save",
+            request_id=_request_id(request),
+            target=note_id,
+            detail="web-owned static Gallery item saved to Memory Center",
+        )
+        return envelope(
+            True,
+            "Đã lưu mẫu Gallery vào Memory Center riêng của Web account.",
+            data={
+                "note": _gallery_note_receipt(
+                    note_id=note_id,
+                    category=category,
+                    priority=priority,
+                ),
+                "gallery": {
+                    "prompt_id": normalized_prompt_id,
+                    "snapshot_version": SNAPSHOT_VERSION,
+                },
+                "boundaries": _gallery_memory_boundaries(memory_note_persisted=True),
+            },
+            status_name="completed",
+        )
+
+    return _gallery_memory_idempotent(
+        account_id=account_id,
+        key=key,
+        request_fingerprint=fingerprint,
+        operation=operation,
+    )
 
 
 @router.get("/notes/{note_id}")
@@ -868,10 +1214,11 @@ async def restore_note_version(note_id: str, revision: int, payload: RevisionMut
 
 
 @router.get("/reminders")
-async def list_reminders(limit: int = 50, state: str = "active", account: dict = Depends(require_account)):
+async def list_reminders(limit: int = 50, offset: int = 0, state: str = "active", account: dict = Depends(require_account)):
     """List reminders for one account; overdue is a UI state, not a delivery claim."""
     _require_memory_enabled()
     bounded_limit = max(1, min(int(limit), 100))
+    bounded_offset = max(0, min(int(offset), 10_000))
     state_filter = str(state or "active").strip().lower()
     if state_filter not in {*REMINDER_STATES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái reminder không hợp lệ")
@@ -885,20 +1232,27 @@ async def list_reminders(limit: int = 50, state: str = "active", account: dict =
     with transaction() as conn:
         rows = conn.execute(
             f"""SELECT r.id, r.note_id, r.title, r.body, r.due_at, r.next_run_at, r.timezone, r.repeat_rule,
-                      r.state, r.revision, r.last_completed_at, r.completed_at, r.created_at, r.updated_at, n.title
+                      r.state, r.revision, r.last_completed_at, r.completed_at, r.created_at, r.updated_at, n.title, n.state
                FROM web_memory_reminders r
                LEFT JOIN web_memory_notes n ON n.id=r.note_id AND n.account_id=r.account_id
                WHERE {' AND '.join(clauses)}
                ORDER BY CASE r.state WHEN 'active' THEN 0 WHEN 'paused' THEN 1 ELSE 2 END,
-                        r.next_run_at ASC, r.updated_at DESC, r.id DESC LIMIT ?""",
-            (*params, bounded_limit + 1),
+                        r.next_run_at ASC, r.updated_at DESC, r.id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded_limit + 1, bounded_offset),
         ).fetchall()
     has_more = len(rows) > bounded_limit
     now = datetime.now(timezone.utc)
     return envelope(
         True,
         "Danh sách reminder riêng của Web account hiện tại.",
-        data={"items": [_reminder_public(tuple(row), now=now) for row in rows[:bounded_limit]], "has_more": has_more, "notification_delivery": "web_view_only"},
+        data={
+            "items": [_reminder_public(tuple(row), now=now) for row in rows[:bounded_limit]],
+            "has_more": has_more,
+            "next_offset": bounded_offset + min(len(rows), bounded_limit) if has_more else None,
+            "filters": {"state": state_filter},
+            "pagination": {"limit": bounded_limit, "offset": bounded_offset, "returned": min(len(rows), bounded_limit)},
+            "notification_delivery": "web_view_only",
+        },
         status_name="read_only",
     )
 
@@ -971,7 +1325,11 @@ async def update_reminder(reminder_id: str, payload: ReminderUpdateRequest, requ
             return envelope(False, "Reminder đã hoàn tất hoặc hủy không thể chỉnh sửa.", status_name="guarded", error_code="WEB_MEMORY_REMINDER_TERMINAL")
         if int(current[9]) != payload.expected_revision:
             return envelope(False, "Reminder đã có phiên bản mới. Hãy tải lại trước khi lưu.", data={"current_revision": int(current[9])}, status_name="guarded", error_code="WEB_MEMORY_REMINDER_CONFLICT")
-        if not _linked_note_active(conn, note_id=payload.note_id, account_id=account_id):
+        # Archive never silently detaches an existing reminder. A reminder may
+        # therefore retain its already-linked archived note during an unrelated
+        # edit, while new/replaced links still require an active owned note.
+        current_note_id = str(current[1]) if current[1] else None
+        if payload.note_id != current_note_id and not _linked_note_active(conn, note_id=payload.note_id, account_id=account_id):
             return envelope(False, "Ghi chú liên kết không tồn tại hoặc đã archive.", status_name="guarded", error_code="WEB_MEMORY_NOTE_NOT_FOUND")
         next_revision = int(current[9]) + 1
         now = utc_now()

@@ -1169,6 +1169,36 @@
   "callback_data": [
     {
       "file": "bot.py",
+      "line": 40205,
+      "token": "1:1"
+    },
+    {
+      "file": "bot.py",
+      "line": 39046,
+      "token": "21:9"
+    },
+    {
+      "file": "bot.py",
+      "line": 33807,
+      "token": "3:4"
+    },
+    {
+      "file": "bot.py",
+      "line": 33808,
+      "token": "4:3"
+    },
+    {
+      "file": "bot.py",
+      "line": 40205,
+      "token": "4:3"
+    },
+    {
+      "file": "bot.py",
+      "line": 93518,
+      "token": "4:5"
+    },
+    {
+      "file": "bot.py",
       "line": 89311,
       "token": "adconcept|admin_video_smoke"
     },
@@ -2149,6 +2179,11 @@
     },
     {
       "file": "bot.py",
+      "line": 123240,
+      "token": "archive|type|general"
+    },
+    {
+      "file": "bot.py",
       "line": 47018,
       "token": "back_lang"
     },
@@ -2359,6 +2394,11 @@
     },
     {
       "file": "bot.py",
+      "line": 49541,
+      "token": "create_media|quick_image"
+    },
+    {
+      "file": "bot.py",
       "line": 91044,
       "token": "create_media|quick_image"
     },
@@ -2449,6 +2489,11 @@
     },
     {
       "file": "bot.py",
+      "line": 84692,
+      "token": "docflow|ask_pages"
+    },
+    {
+      "file": "bot.py",
       "line": 84609,
       "token": "docflow|back"
     },
@@ -2479,6 +2524,26 @@
     },
     {
       "file": "bot.py",
+      "line": 84723,
+      "token": "docflow|clear"
+    },
+    {
+      "file": "bot.py",
+      "line": 84685,
+      "token": "docflow|compress|light"
+    },
+    {
+      "file": "bot.py",
+      "line": 84686,
+      "token": "docflow|compress|medium"
+    },
+    {
+      "file": "bot.py",
+      "line": 84687,
+      "token": "docflow|compress|strong"
+    },
+    {
+      "file": "bot.py",
       "line": 84698,
       "token": "docflow|confirm"
     },
@@ -2486,6 +2551,21 @@
       "file": "bot.py",
       "line": 84710,
       "token": "docflow|confirm"
+    },
+    {
+      "file": "bot.py",
+      "line": 84720,
+      "token": "docflow|confirm"
+    },
+    {
+      "file": "bot.py",
+      "line": 84688,
+      "token": "docflow|reset_files"
+    },
+    {
+      "file": "bot.py",
+      "line": 84693,
+      "token": "docflow|reset_files"
     },
     {
       "file": "bot.py",
@@ -2889,6 +2969,16 @@
     },
     {
       "file": "bot.py",
+      "line": 49436,
+      "token": "framevideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49441,
+      "token": "framevideo|start"
+    },
+    {
+      "file": "bot.py",
       "line": 80091,
       "token": "framevideo|start"
     },
@@ -2899,7 +2989,147 @@
     },
     {
       "file": "bot.py",
+      "line": 46044,
+      "token": "freehub|caption"
+    },
+    {
+      "file": "bot.py",
+      "line": 46630,
+      "token": "freehub|caption_more"
+    },
+    {
+      "file": "bot.py",
+      "line": 46457,
+      "token": "freehub|copy"
+    },
+    {
+      "file": "bot.py",
+      "line": 46463,
+      "token": "freehub|copy"
+    },
+    {
+      "file": "bot.py",
+      "line": 46540,
+      "token": "freehub|copy"
+    },
+    {
+      "file": "bot.py",
+      "line": 46588,
+      "token": "freehub|copy"
+    },
+    {
+      "file": "bot.py",
+      "line": 46629,
+      "token": "freehub|copy"
+    },
+    {
+      "file": "bot.py",
+      "line": 46653,
+      "token": "freehub|docs_split_merge"
+    },
+    {
+      "file": "bot.py",
+      "line": 46655,
+      "token": "freehub|docs_summary_guard"
+    },
+    {
+      "file": "bot.py",
+      "line": 46454,
+      "token": "freehub|edit"
+    },
+    {
+      "file": "bot.py",
+      "line": 46462,
+      "token": "freehub|edit"
+    },
+    {
+      "file": "bot.py",
+      "line": 46538,
+      "token": "freehub|edit"
+    },
+    {
+      "file": "bot.py",
+      "line": 46045,
+      "token": "freehub|ideas"
+    },
+    {
+      "file": "bot.py",
+      "line": 46504,
+      "token": "freehub|image_prompt"
+    },
+    {
+      "file": "bot.py",
+      "line": 46632,
+      "token": "freehub|lib_back"
+    },
+    {
+      "file": "bot.py",
+      "line": 46617,
+      "token": "freehub|lib_more"
+    },
+    {
+      "file": "bot.py",
+      "line": 46614,
+      "token": "freehub|lib_pick1"
+    },
+    {
+      "file": "bot.py",
+      "line": 46615,
+      "token": "freehub|lib_pick2"
+    },
+    {
+      "file": "bot.py",
+      "line": 46616,
+      "token": "freehub|lib_pick3"
+    },
+    {
+      "file": "bot.py",
+      "line": 46048,
+      "token": "freehub|library"
+    },
+    {
+      "file": "bot.py",
+      "line": 46619,
+      "token": "freehub|library"
+    },
+    {
+      "file": "bot.py",
       "line": 46125,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46192,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46487,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46507,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46657,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46684,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46710,
+      "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46948,
       "token": "freehub|main"
     },
     {
@@ -2926,6 +3156,256 @@
       "file": "bot.py",
       "line": 127611,
       "token": "freehub|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46043,
+      "token": "freehub|meta"
+    },
+    {
+      "file": "bot.py",
+      "line": 46628,
+      "token": "freehub|meta"
+    },
+    {
+      "file": "bot.py",
+      "line": 46755,
+      "token": "freehub|meta_goal_brand"
+    },
+    {
+      "file": "bot.py",
+      "line": 46754,
+      "token": "freehub|meta_goal_engage"
+    },
+    {
+      "file": "bot.py",
+      "line": 46753,
+      "token": "freehub|meta_goal_sell"
+    },
+    {
+      "file": "bot.py",
+      "line": 46756,
+      "token": "freehub|meta_goal_story"
+    },
+    {
+      "file": "bot.py",
+      "line": 46759,
+      "token": "freehub|meta_platform_facebook"
+    },
+    {
+      "file": "bot.py",
+      "line": 46760,
+      "token": "freehub|meta_platform_reels"
+    },
+    {
+      "file": "bot.py",
+      "line": 46762,
+      "token": "freehub|meta_platform_shorts"
+    },
+    {
+      "file": "bot.py",
+      "line": 46761,
+      "token": "freehub|meta_platform_tiktok"
+    },
+    {
+      "file": "bot.py",
+      "line": 46766,
+      "token": "freehub|meta_ratio_16x9"
+    },
+    {
+      "file": "bot.py",
+      "line": 46767,
+      "token": "freehub|meta_ratio_1x1"
+    },
+    {
+      "file": "bot.py",
+      "line": 46768,
+      "token": "freehub|meta_ratio_4x5"
+    },
+    {
+      "file": "bot.py",
+      "line": 46765,
+      "token": "freehub|meta_ratio_9x16"
+    },
+    {
+      "file": "bot.py",
+      "line": 46772,
+      "token": "freehub|meta_style_cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 46773,
+      "token": "freehub|meta_style_fun"
+    },
+    {
+      "file": "bot.py",
+      "line": 46774,
+      "token": "freehub|meta_style_luxury"
+    },
+    {
+      "file": "bot.py",
+      "line": 46771,
+      "token": "freehub|meta_style_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 46775,
+      "token": "freehub|meta_style_ugc"
+    },
+    {
+      "file": "bot.py",
+      "line": 46542,
+      "token": "freehub|prompt_back"
+    },
+    {
+      "file": "bot.py",
+      "line": 46591,
+      "token": "freehub|prompt_back"
+    },
+    {
+      "file": "bot.py",
+      "line": 46046,
+      "token": "freehub|prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 46047,
+      "token": "freehub|publish_package"
+    },
+    {
+      "file": "bot.py",
+      "line": 46484,
+      "token": "freehub|publish_package"
+    },
+    {
+      "file": "bot.py",
+      "line": 46455,
+      "token": "freehub|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 46464,
+      "token": "freehub|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 46537,
+      "token": "freehub|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 46589,
+      "token": "freehub|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 46627,
+      "token": "freehub|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 46190,
+      "token": "freehub|suggest_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 46189,
+      "token": "freehub|suggest_more"
+    },
+    {
+      "file": "bot.py",
+      "line": 46186,
+      "token": "freehub|suggest_pick1"
+    },
+    {
+      "file": "bot.py",
+      "line": 46187,
+      "token": "freehub|suggest_pick2"
+    },
+    {
+      "file": "bot.py",
+      "line": 46188,
+      "token": "freehub|suggest_pick3"
+    },
+    {
+      "file": "bot.py",
+      "line": 46470,
+      "token": "freehub|to_caption"
+    },
+    {
+      "file": "bot.py",
+      "line": 46479,
+      "token": "freehub|to_caption"
+    },
+    {
+      "file": "bot.py",
+      "line": 46480,
+      "token": "freehub|to_cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 46474,
+      "token": "freehub|to_ideas"
+    },
+    {
+      "file": "bot.py",
+      "line": 46469,
+      "token": "freehub|to_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 46475,
+      "token": "freehub|to_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 46481,
+      "token": "freehub|to_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 46050,
+      "token": "freehub|upload"
+    },
+    {
+      "file": "bot.py",
+      "line": 46450,
+      "token": "freehub|use_prompt1"
+    },
+    {
+      "file": "bot.py",
+      "line": 46451,
+      "token": "freehub|use_prompt2"
+    },
+    {
+      "file": "bot.py",
+      "line": 46452,
+      "token": "freehub|use_prompt3"
+    },
+    {
+      "file": "bot.py",
+      "line": 46456,
+      "token": "freehub|use_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 46453,
+      "token": "freehub|variant"
+    },
+    {
+      "file": "bot.py",
+      "line": 46461,
+      "token": "freehub|variant"
+    },
+    {
+      "file": "bot.py",
+      "line": 46539,
+      "token": "freehub|variant"
+    },
+    {
+      "file": "bot.py",
+      "line": 46505,
+      "token": "freehub|video_prompt"
     },
     {
       "file": "handlers/freelance_handler.py",
@@ -2984,6 +3464,21 @@
     },
     {
       "file": "bot.py",
+      "line": 51615,
+      "token": "imagevideo|back_image"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54748,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_motion",
+      "template_file": "bot.py",
+      "template_line": 51284,
+      "token": "imagevideo|back_motion"
+    },
+    {
+      "file": "bot.py",
       "line": 55300,
       "token": "imagevideo|back_motion"
     },
@@ -2994,8 +3489,558 @@
     },
     {
       "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "imagevideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "imagevideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "imagevideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "imagevideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54743,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "imagevideo|back_style"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55276,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "imagevideo|back_style"
+    },
+    {
+      "file": "bot.py",
       "line": 55281,
       "token": "imagevideo|back_style"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55292,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "imagevideo|back_style"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55309,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "imagevideo|back_style"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55329,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "imagevideo|back_style"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "imagevideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "imagevideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "imagevideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "imagevideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "imagevideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "imagevideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "imagevideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "imagevideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "imagevideo|generate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "imagevideo|generate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "imagevideo|generate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "imagevideo|generate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54743,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "imagevideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55276,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "imagevideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55292,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "imagevideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55309,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "imagevideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55329,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "imagevideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54743,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "imagevideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55276,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "imagevideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55292,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "imagevideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55309,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "imagevideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55329,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "imagevideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54743,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "imagevideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55276,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "imagevideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55292,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "imagevideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55309,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "imagevideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55329,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "imagevideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54743,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "imagevideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55276,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "imagevideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55292,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "imagevideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55309,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "imagevideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55329,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "imagevideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54743,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "imagevideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55276,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "imagevideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55292,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "imagevideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55309,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "imagevideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55329,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "imagevideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54748,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51277,
+      "token": "imagevideo|music_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54748,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51278,
+      "token": "imagevideo|music_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54748,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51279,
+      "token": "imagevideo|music_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54748,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_custom",
+      "template_file": "bot.py",
+      "template_line": 51281,
+      "token": "imagevideo|music_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54748,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_refresh",
+      "template_file": "bot.py",
+      "template_line": 51280,
+      "token": "imagevideo|music_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "imagevideo|save"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "imagevideo|save"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "imagevideo|save"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "imagevideo|save"
     },
     {
       "file": "bot.py",
@@ -3011,6 +4056,246 @@
       "file": "bot.py",
       "line": 40880,
       "token": "imagevideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49410,
+      "token": "imagevideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49418,
+      "token": "imagevideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49426,
+      "token": "imagevideo|start"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "imagevideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "imagevideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "imagevideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "imagevideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "imagevideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "imagevideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "imagevideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "imagevideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "imagevideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "imagevideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "imagevideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "imagevideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "imagevideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "imagevideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "imagevideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "imagevideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54756,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "imagevideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54763,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "imagevideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55367,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "imagevideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55378,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "imagevideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "line": 51608,
+      "token": "imagevideo|style_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 51609,
+      "token": "imagevideo|style_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 51610,
+      "token": "imagevideo|style_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 51612,
+      "token": "imagevideo|style_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 51611,
+      "token": "imagevideo|style_refresh"
     },
     {
       "file": "bot.py",
@@ -3089,6 +4374,11 @@
     },
     {
       "file": "bot.py",
+      "line": 49543,
+      "token": "imgtool|edit_ai_start"
+    },
+    {
+      "file": "bot.py",
       "line": 39930,
       "token": "imgtool|edit_ai_variation"
     },
@@ -3110,6 +4400,11 @@
     {
       "file": "bot.py",
       "line": 39545,
+      "token": "imgtool|edit_back_choice"
+    },
+    {
+      "file": "bot.py",
+      "line": 40713,
       "token": "imgtool|edit_back_choice"
     },
     {
@@ -3201,6 +4496,11 @@
       "file": "bot.py",
       "line": 39419,
       "token": "imgtool|edit_manual_guard|text"
+    },
+    {
+      "file": "bot.py",
+      "line": 39360,
+      "token": "imgtool|edit_need_image"
     },
     {
       "file": "bot.py",
@@ -3419,6 +4719,11 @@
     },
     {
       "file": "bot.py",
+      "line": 40711,
+      "token": "imgtool|edit_type_custom"
+    },
+    {
+      "file": "bot.py",
       "line": 39531,
       "token": "imgtool|edit_type|ad_creative"
     },
@@ -3514,8 +4819,18 @@
     },
     {
       "file": "bot.py",
+      "line": 40724,
+      "token": "imgtool|editor_custom"
+    },
+    {
+      "file": "bot.py",
       "line": 40744,
       "token": "imgtool|editor_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 40709,
+      "token": "imgtool|editor_logo"
     },
     {
       "file": "bot.py",
@@ -3554,6 +4869,11 @@
     },
     {
       "file": "bot.py",
+      "line": 40734,
+      "token": "imgtool|editor_logo_overlay"
+    },
+    {
+      "file": "bot.py",
       "line": 39371,
       "token": "imgtool|editor_presets"
     },
@@ -3579,8 +4899,53 @@
     },
     {
       "file": "bot.py",
+      "line": 40706,
+      "token": "imgtool|editor_presets"
+    },
+    {
+      "file": "bot.py",
+      "line": 40721,
+      "token": "imgtool|editor_preset|cinematic_warm"
+    },
+    {
+      "file": "bot.py",
+      "line": 40723,
+      "token": "imgtool|editor_preset|food_vivid"
+    },
+    {
+      "file": "bot.py",
+      "line": 40722,
+      "token": "imgtool|editor_preset|fresh_blue"
+    },
+    {
+      "file": "bot.py",
+      "line": 40705,
+      "token": "imgtool|editor_preset|photo_clear_detail"
+    },
+    {
+      "file": "bot.py",
+      "line": 40719,
+      "token": "imgtool|editor_preset|photo_clear_detail"
+    },
+    {
+      "file": "bot.py",
+      "line": 40720,
+      "token": "imgtool|editor_preset|product_clean"
+    },
+    {
+      "file": "bot.py",
+      "line": 40707,
+      "token": "imgtool|editor_resize"
+    },
+    {
+      "file": "bot.py",
       "line": 40745,
       "token": "imgtool|editor_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 40708,
+      "token": "imgtool|editor_text"
     },
     {
       "file": "bot.py",
@@ -3619,6 +4984,16 @@
     },
     {
       "file": "bot.py",
+      "line": 40733,
+      "token": "imgtool|editor_text_overlay"
+    },
+    {
+      "file": "bot.py",
+      "line": 40710,
+      "token": "imgtool|editor_upscale"
+    },
+    {
+      "file": "bot.py",
       "line": 39038,
       "token": "imgtool|prompt_back_goal"
     },
@@ -3626,6 +5001,11 @@
       "file": "bot.py",
       "line": 39043,
       "token": "imgtool|prompt_back_goal"
+    },
+    {
+      "file": "bot.py",
+      "line": 39241,
+      "token": "imgtool|prompt_change_ratio"
     },
     {
       "file": "bot.py",
@@ -3639,6 +5019,26 @@
     },
     {
       "file": "bot.py",
+      "line": 38986,
+      "token": "imgtool|prompt_goal_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 38984,
+      "token": "imgtool|prompt_goal|ad"
+    },
+    {
+      "file": "bot.py",
+      "line": 38985,
+      "token": "imgtool|prompt_goal|cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 38983,
+      "token": "imgtool|prompt_goal|product"
+    },
+    {
+      "file": "bot.py",
       "line": 38787,
       "token": "imgtool|prompt_manual"
     },
@@ -3656,6 +5056,66 @@
       "file": "bot.py",
       "line": 38791,
       "token": "imgtool|prompt_need_image"
+    },
+    {
+      "file": "bot.py",
+      "line": 39089,
+      "token": "imgtool|prompt_ratio|16x9"
+    },
+    {
+      "file": "bot.py",
+      "line": 39087,
+      "token": "imgtool|prompt_ratio|1x1"
+    },
+    {
+      "file": "bot.py",
+      "line": 39091,
+      "token": "imgtool|prompt_ratio|3x4"
+    },
+    {
+      "file": "bot.py",
+      "line": 39092,
+      "token": "imgtool|prompt_ratio|4x3"
+    },
+    {
+      "file": "bot.py",
+      "line": 39090,
+      "token": "imgtool|prompt_ratio|4x5"
+    },
+    {
+      "file": "bot.py",
+      "line": 39088,
+      "token": "imgtool|prompt_ratio|9x16"
+    },
+    {
+      "file": "bot.py",
+      "line": 39243,
+      "token": "imgtool|prompt_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 39307,
+      "token": "imgtool|prompt_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 39320,
+      "token": "imgtool|prompt_save_variant|0"
+    },
+    {
+      "file": "bot.py",
+      "line": 39317,
+      "token": "imgtool|prompt_save_variant|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 39318,
+      "token": "imgtool|prompt_save_variant|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 39319,
+      "token": "imgtool|prompt_save_variant|3"
     },
     {
       "file": "bot.py",
@@ -3696,10 +5156,45 @@
       "file": "bot.py",
       "line": 39042,
       "token": "imgtool|prompt_style|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 39240,
+      "token": "imgtool|prompt_use"
+    },
+    {
+      "file": "bot.py",
+      "line": 39309,
+      "token": "imgtool|prompt_variant_original"
+    },
+    {
+      "file": "bot.py",
+      "line": 39304,
+      "token": "imgtool|prompt_variant_select|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 39305,
+      "token": "imgtool|prompt_variant_select|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 39306,
+      "token": "imgtool|prompt_variant_select|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 39242,
+      "token": "imgtool|prompt_variants"
     },
     {
       "file": "bot.py",
       "line": 40221,
+      "token": "imgtool|resize_back_choice"
+    },
+    {
+      "file": "bot.py",
+      "line": 40253,
       "token": "imgtool|resize_back_choice"
     },
     {
@@ -3711,6 +5206,51 @@
       "file": "bot.py",
       "line": 40852,
       "token": "imgtool|resize_continue"
+    },
+    {
+      "file": "bot.py",
+      "line": 40232,
+      "token": "imgtool|resize_method|blur"
+    },
+    {
+      "file": "bot.py",
+      "line": 40234,
+      "token": "imgtool|resize_method|crop"
+    },
+    {
+      "file": "bot.py",
+      "line": 40233,
+      "token": "imgtool|resize_method|pad"
+    },
+    {
+      "file": "bot.py",
+      "line": 40166,
+      "token": "imgtool|resize_need_image"
+    },
+    {
+      "file": "bot.py",
+      "line": 40249,
+      "token": "imgtool|resize_pixels_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 40245,
+      "token": "imgtool|resize_pixels|1024x1024"
+    },
+    {
+      "file": "bot.py",
+      "line": 40248,
+      "token": "imgtool|resize_pixels|1080x1350"
+    },
+    {
+      "file": "bot.py",
+      "line": 40247,
+      "token": "imgtool|resize_pixels|1080x1920"
+    },
+    {
+      "file": "bot.py",
+      "line": 40246,
+      "token": "imgtool|resize_pixels|1920x1080"
     },
     {
       "file": "bot.py",
@@ -3809,8 +5349,28 @@
     },
     {
       "file": "bot.py",
+      "line": 52967,
+      "token": "longvideo|back_duration"
+    },
+    {
+      "file": "bot.py",
+      "line": 53277,
+      "token": "longvideo|back_structure"
+    },
+    {
+      "file": "bot.py",
+      "line": 53186,
+      "token": "longvideo|back_style"
+    },
+    {
+      "file": "bot.py",
       "line": 52943,
       "token": "longvideo|back_topic_suggestions"
+    },
+    {
+      "file": "bot.py",
+      "line": 49486,
+      "token": "longvideo|duration_custom"
     },
     {
       "file": "bot.py",
@@ -3844,8 +5404,218 @@
     },
     {
       "file": "bot.py",
+      "line": 53267,
+      "token": "longvideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 53271,
+      "token": "longvideo|frame_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 53269,
+      "token": "longvideo|image_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53273,
+      "token": "longvideo|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 53272,
+      "token": "longvideo|render_segments"
+    },
+    {
+      "file": "bot.py",
+      "line": 53274,
+      "token": "longvideo|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 52925,
+      "token": "longvideo|start"
+    },
+    {
+      "file": "bot.py",
       "line": 56026,
       "token": "longvideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 53268,
+      "token": "longvideo|storyboard"
+    },
+    {
+      "file": "bot.py",
+      "line": 53185,
+      "token": "longvideo|structure_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52964,
+      "token": "longvideo|style_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52963,
+      "token": "longvideo|style|cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 52961,
+      "token": "longvideo|style|professional"
+    },
+    {
+      "file": "bot.py",
+      "line": 52962,
+      "token": "longvideo|style|viral"
+    },
+    {
+      "file": "bot.py",
+      "line": 52918,
+      "token": "longvideo|topic_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 52919,
+      "token": "longvideo|topic_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 52920,
+      "token": "longvideo|topic_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 52877,
+      "token": "longvideo|topic_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52921,
+      "token": "longvideo|topic_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52922,
+      "token": "longvideo|topic_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52875,
+      "token": "longvideo|topic|education"
+    },
+    {
+      "file": "bot.py",
+      "line": 52874,
+      "token": "longvideo|topic|sales"
+    },
+    {
+      "file": "bot.py",
+      "line": 52876,
+      "token": "longvideo|topic|story"
+    },
+    {
+      "file": "bot.py",
+      "line": 53270,
+      "token": "longvideo|video_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 127052,
+      "token": "marketing|back_suggestions"
+    },
+    {
+      "file": "bot.py",
+      "line": 127133,
+      "token": "marketing|back_suggestions"
+    },
+    {
+      "file": "bot.py",
+      "line": 126987,
+      "token": "marketing|brief_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 127047,
+      "token": "marketing|caption"
+    },
+    {
+      "file": "bot.py",
+      "line": 126983,
+      "token": "marketing|choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 126984,
+      "token": "marketing|choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 126985,
+      "token": "marketing|choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 127049,
+      "token": "marketing|cskh"
+    },
+    {
+      "file": "bot.py",
+      "line": 126955,
+      "token": "marketing|kind_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 126952,
+      "token": "marketing|kind|affiliate"
+    },
+    {
+      "file": "bot.py",
+      "line": 126954,
+      "token": "marketing|kind|food"
+    },
+    {
+      "file": "bot.py",
+      "line": 126950,
+      "token": "marketing|kind|physical"
+    },
+    {
+      "file": "bot.py",
+      "line": 126953,
+      "token": "marketing|kind|realestate"
+    },
+    {
+      "file": "bot.py",
+      "line": 126951,
+      "token": "marketing|kind|service"
+    },
+    {
+      "file": "bot.py",
+      "line": 127050,
+      "token": "marketing|kpi"
+    },
+    {
+      "file": "bot.py",
+      "line": 126986,
+      "token": "marketing|refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 127051,
+      "token": "marketing|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 127048,
+      "token": "marketing|schedule"
+    },
+    {
+      "file": "bot.py",
+      "line": 127046,
+      "token": "marketing|select_video"
     },
     {
       "file": "bot.py",
@@ -3854,8 +5624,78 @@
     },
     {
       "file": "bot.py",
+      "line": 126990,
+      "token": "marketing|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 127115,
+      "token": "marketing|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49508,
+      "token": "memory|create"
+    },
+    {
+      "file": "bot.py",
+      "line": 86352,
+      "token": "memory|create"
+    },
+    {
+      "file": "bot.py",
+      "line": 86405,
+      "token": "memory|create"
+    },
+    {
+      "file": "bot.py",
+      "line": 49513,
+      "token": "memory|delete_start"
+    },
+    {
+      "file": "bot.py",
+      "line": 86355,
+      "token": "memory|delete_start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49509,
+      "token": "memory|list"
+    },
+    {
+      "file": "bot.py",
+      "line": 86353,
+      "token": "memory|list"
+    },
+    {
+      "file": "bot.py",
+      "line": 86428,
+      "token": "memory|list"
+    },
+    {
+      "file": "bot.py",
       "line": 86449,
       "token": "memory|list"
+    },
+    {
+      "file": "bot.py",
+      "line": 49512,
+      "token": "memory|search"
+    },
+    {
+      "file": "bot.py",
+      "line": 86354,
+      "token": "memory|search"
+    },
+    {
+      "file": "bot.py",
+      "line": 86404,
+      "token": "memory|search"
+    },
+    {
+      "file": "bot.py",
+      "line": 86427,
+      "token": "memory|search"
     },
     {
       "file": "handlers/affiliate_handler.py",
@@ -4079,6 +5919,16 @@
     },
     {
       "file": "bot.py",
+      "line": 126958,
+      "token": "menu|admin"
+    },
+    {
+      "file": "bot.py",
+      "line": 127055,
+      "token": "menu|admin"
+    },
+    {
+      "file": "bot.py",
       "line": 122387,
       "token": "menu|admin_billing_duyet"
     },
@@ -4271,6 +6121,11 @@
       "file": "bot.py",
       "line": 37908,
       "token": "menu|create_media"
+    },
+    {
+      "file": "bot.py",
+      "line": 49532,
+      "token": "menu|doc_tools"
     },
     {
       "file": "bot.py",
@@ -4569,6 +6424,11 @@
     },
     {
       "file": "bot.py",
+      "line": 46708,
+      "token": "menu|guide"
+    },
+    {
+      "file": "bot.py",
       "line": 49727,
       "token": "menu|guide_credits"
     },
@@ -4664,6 +6524,21 @@
     },
     {
       "file": "bot.py",
+      "line": 46654,
+      "token": "menu|hint_doc_compress_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 49529,
+      "token": "menu|hint_doc_compress_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 84480,
+      "token": "menu|hint_doc_compress_pdf"
+    },
+    {
+      "file": "bot.py",
       "line": 40874,
       "token": "menu|hint_doc_image_to_pdf"
     },
@@ -4671,6 +6546,56 @@
       "file": "bot.py",
       "line": 40880,
       "token": "menu|hint_doc_image_to_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 46652,
+      "token": "menu|hint_doc_image_to_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 49528,
+      "token": "menu|hint_doc_image_to_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 84479,
+      "token": "menu|hint_doc_image_to_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 49531,
+      "token": "menu|hint_doc_merge_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 84482,
+      "token": "menu|hint_doc_merge_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 49527,
+      "token": "menu|hint_doc_pdf_to_word"
+    },
+    {
+      "file": "bot.py",
+      "line": 84478,
+      "token": "menu|hint_doc_pdf_to_word"
+    },
+    {
+      "file": "bot.py",
+      "line": 49511,
+      "token": "menu|hint_doc_save_document"
+    },
+    {
+      "file": "bot.py",
+      "line": 49530,
+      "token": "menu|hint_doc_split_pdf"
+    },
+    {
+      "file": "bot.py",
+      "line": 84481,
+      "token": "menu|hint_doc_split_pdf"
     },
     {
       "file": "bot.py",
@@ -4709,6 +6634,11 @@
     },
     {
       "file": "bot.py",
+      "line": 49510,
+      "token": "menu|hint_remind"
+    },
+    {
+      "file": "bot.py",
       "line": 49747,
       "token": "menu|hint_scene_pack"
     },
@@ -4721,6 +6651,36 @@
       "file": "bot.py",
       "line": 45384,
       "token": "menu|hint_video_status"
+    },
+    {
+      "file": "bot.py",
+      "line": 49412,
+      "token": "menu|hint_video_status"
+    },
+    {
+      "file": "bot.py",
+      "line": 49420,
+      "token": "menu|hint_video_status"
+    },
+    {
+      "file": "bot.py",
+      "line": 49428,
+      "token": "menu|hint_video_status"
+    },
+    {
+      "file": "bot.py",
+      "line": 49544,
+      "token": "menu|image_edit_start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49542,
+      "token": "menu|image_prompt_start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49520,
+      "token": "menu|internal_archive"
     },
     {
       "file": "bot.py",
@@ -5310,6 +7270,21 @@
     {
       "file": "bot.py",
       "line": 49502,
+      "token": "menu|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 49521,
+      "token": "menu|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 49546,
+      "token": "menu|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 49557,
       "token": "menu|main"
     },
     {
@@ -6299,12 +8274,22 @@
     },
     {
       "file": "bot.py",
+      "line": 49517,
+      "token": "menu|main_docs"
+    },
+    {
+      "file": "bot.py",
       "line": 49694,
       "token": "menu|main_docs"
     },
     {
       "file": "bot.py",
       "line": 49701,
+      "token": "menu|main_docs"
+    },
+    {
+      "file": "bot.py",
+      "line": 86357,
       "token": "menu|main_docs"
     },
     {
@@ -6364,6 +8349,11 @@
     },
     {
       "file": "bot.py",
+      "line": 39361,
+      "token": "menu|main_image"
+    },
+    {
+      "file": "bot.py",
       "line": 39373,
       "token": "menu|main_image"
     },
@@ -6384,12 +8374,22 @@
     },
     {
       "file": "bot.py",
+      "line": 40167,
+      "token": "menu|main_image"
+    },
+    {
+      "file": "bot.py",
       "line": 40194,
       "token": "menu|main_image"
     },
     {
       "file": "bot.py",
       "line": 40201,
+      "token": "menu|main_image"
+    },
+    {
+      "file": "bot.py",
+      "line": 40699,
       "token": "menu|main_image"
     },
     {
@@ -6474,6 +8474,16 @@
     },
     {
       "file": "bot.py",
+      "line": 46049,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
+      "line": 46681,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
       "line": 46982,
       "token": "menu|main_memory"
     },
@@ -6494,12 +8504,37 @@
     },
     {
       "file": "bot.py",
+      "line": 49534,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
       "line": 49693,
       "token": "menu|main_memory"
     },
     {
       "file": "bot.py",
       "line": 49700,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
+      "line": 84486,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
+      "line": 86359,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
+      "line": 86407,
+      "token": "menu|main_memory"
+    },
+    {
+      "file": "bot.py",
+      "line": 86430,
       "token": "menu|main_memory"
     },
     {
@@ -6724,6 +8759,46 @@
     },
     {
       "file": "bot.py",
+      "line": 47273,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49431,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49438,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49443,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49456,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49465,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49474,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49489,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
       "line": 49693,
       "token": "menu|main_video"
     },
@@ -6734,7 +8809,42 @@
     },
     {
       "file": "bot.py",
+      "line": 51668,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 52503,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 52775,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 52880,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 53451,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 54033,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
       "line": 59260,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 80137,
       "token": "menu|main_video"
     },
     {
@@ -6746,6 +8856,21 @@
       "file": "bot.py",
       "line": 96944,
       "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 98749,
+      "token": "menu|main_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49515,
+      "token": "menu|memory_storage_addon"
+    },
+    {
+      "file": "bot.py",
+      "line": 85245,
+      "token": "menu|memory_storage_addon"
     },
     {
       "file": "bot.py",
@@ -6764,6 +8889,16 @@
     },
     {
       "file": "bot.py",
+      "line": 49516,
+      "token": "menu|memory_storage_cleanup"
+    },
+    {
+      "file": "bot.py",
+      "line": 85245,
+      "token": "menu|memory_storage_cleanup"
+    },
+    {
+      "file": "bot.py",
       "line": 86645,
       "token": "menu|memory_storage_cleanup"
     },
@@ -6779,12 +8914,27 @@
     },
     {
       "file": "bot.py",
+      "line": 46682,
+      "token": "menu|memory_storage_status"
+    },
+    {
+      "file": "bot.py",
+      "line": 49514,
+      "token": "menu|memory_storage_status"
+    },
+    {
+      "file": "bot.py",
       "line": 84606,
       "token": "menu|memory_storage_status"
     },
     {
       "file": "bot.py",
       "line": 84702,
+      "token": "menu|memory_storage_status"
+    },
+    {
+      "file": "bot.py",
+      "line": 86356,
       "token": "menu|memory_storage_status"
     },
     {
@@ -6955,6 +9105,21 @@
     {
       "file": "bot.py",
       "line": 45431,
+      "token": "menu|support"
+    },
+    {
+      "file": "bot.py",
+      "line": 46707,
+      "token": "menu|support"
+    },
+    {
+      "file": "bot.py",
+      "line": 46946,
+      "token": "menu|support"
+    },
+    {
+      "file": "bot.py",
+      "line": 46947,
       "token": "menu|support"
     },
     {
@@ -7159,6 +9324,11 @@
     },
     {
       "file": "bot.py",
+      "line": 49610,
+      "token": "menu|translate"
+    },
+    {
+      "file": "bot.py",
       "line": 49695,
       "token": "menu|translate"
     },
@@ -7219,12 +9389,62 @@
     },
     {
       "file": "bot.py",
+      "line": 49606,
+      "token": "menu|translation_auto_target"
+    },
+    {
+      "file": "bot.py",
+      "line": 49656,
+      "token": "menu|translation_auto_target"
+    },
+    {
+      "file": "bot.py",
       "line": 49673,
       "token": "menu|translation_auto_target"
     },
     {
       "file": "bot.py",
+      "line": 49603,
+      "token": "menu|translation_document"
+    },
+    {
+      "file": "bot.py",
+      "line": 49605,
+      "token": "menu|translation_language"
+    },
+    {
+      "file": "bot.py",
+      "line": 30403,
+      "token": "menu|translation_language_hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 30441,
+      "token": "menu|translation_language_hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 30498,
+      "token": "menu|translation_language_hub"
+    },
+    {
+      "file": "bot.py",
       "line": 49576,
+      "token": "menu|translation_language_hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 49635,
+      "token": "menu|translation_language_hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 49646,
+      "token": "menu|translation_language_hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 49659,
       "token": "menu|translation_language_hub"
     },
     {
@@ -7234,8 +9454,103 @@
     },
     {
       "file": "bot.py",
+      "line": 49601,
+      "token": "menu|translation_live_conversation"
+    },
+    {
+      "file": "bot.py",
+      "line": 30400,
+      "token": "menu|translation_output_voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 30496,
+      "token": "menu|translation_output_voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 30401,
+      "token": "menu|translation_stop_session"
+    },
+    {
+      "file": "bot.py",
+      "line": 49608,
+      "token": "menu|translation_stop_session"
+    },
+    {
+      "file": "bot.py",
+      "line": 30398,
+      "token": "menu|translation_swap_languages"
+    },
+    {
+      "file": "bot.py",
+      "line": 49602,
+      "token": "menu|translation_text"
+    },
+    {
+      "file": "bot.py",
+      "line": 49644,
+      "token": "menu|translation_text"
+    },
+    {
+      "file": "bot.py",
+      "line": 49645,
+      "token": "menu|translation_text"
+    },
+    {
+      "file": "bot.py",
+      "line": 49633,
+      "token": "menu|translation_text_target_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 49628,
+      "token": "menu|translation_text_target_en"
+    },
+    {
+      "file": "bot.py",
+      "line": 49630,
+      "token": "menu|translation_text_target_ja"
+    },
+    {
+      "file": "bot.py",
+      "line": 49631,
+      "token": "menu|translation_text_target_ko"
+    },
+    {
+      "file": "bot.py",
+      "line": 49632,
+      "token": "menu|translation_text_target_th"
+    },
+    {
+      "file": "bot.py",
+      "line": 49627,
+      "token": "menu|translation_text_target_vi"
+    },
+    {
+      "file": "bot.py",
+      "line": 49629,
+      "token": "menu|translation_text_target_zh"
+    },
+    {
+      "file": "bot.py",
+      "line": 49607,
+      "token": "menu|translation_transcript"
+    },
+    {
+      "file": "bot.py",
+      "line": 49600,
+      "token": "menu|translation_two_way"
+    },
+    {
+      "file": "bot.py",
       "line": 49577,
       "token": "menu|translation_video_factory"
+    },
+    {
+      "file": "bot.py",
+      "line": 49604,
+      "token": "menu|translation_voice"
     },
     {
       "file": "bot.py",
@@ -7281,6 +9596,46 @@
       "file": "bot.py",
       "line": 49743,
       "token": "menu|video_workflow"
+    },
+    {
+      "file": "bot.py",
+      "line": 88834,
+      "token": "motion|back_style"
+    },
+    {
+      "file": "bot.py",
+      "line": 88832,
+      "token": "motion|back_suggestions"
+    },
+    {
+      "file": "bot.py",
+      "line": 88671,
+      "token": "motion|choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 88672,
+      "token": "motion|choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 88673,
+      "token": "motion|choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 88674,
+      "token": "motion|refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 88678,
+      "token": "motion|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 88675,
+      "token": "motion|topic|custom"
     },
     {
       "file": "bot.py",
@@ -7610,6 +9965,11 @@
     {
       "file": "bot.py",
       "line": 45427,
+      "token": "pricing|main"
+    },
+    {
+      "file": "bot.py",
+      "line": 46945,
       "token": "pricing|main"
     },
     {
@@ -7949,8 +10309,63 @@
     },
     {
       "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54722,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "promptvideo|back_choices"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55137,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "promptvideo|back_choices"
+    },
+    {
+      "file": "bot.py",
       "line": 55142,
       "token": "promptvideo|back_choices"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55157,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "promptvideo|back_choices"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55177,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|{*}",
+      "template_file": "bot.py",
+      "template_line": 51221,
+      "token": "promptvideo|back_choices"
+    },
+    {
+      "file": "bot.py",
+      "line": 51152,
+      "token": "promptvideo|back_description"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54727,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_motion",
+      "template_file": "bot.py",
+      "template_line": 51284,
+      "token": "promptvideo|back_motion"
     },
     {
       "file": "bot.py",
@@ -7959,6 +10374,151 @@
     },
     {
       "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "promptvideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "promptvideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|back_music",
+      "template_file": "bot.py",
+      "template_line": 51553,
+      "token": "promptvideo|back_music"
+    },
+    {
+      "file": "bot.py",
+      "line": 51057,
+      "token": "promptvideo|back_start"
+    },
+    {
+      "file": "bot.py",
+      "line": 51145,
+      "token": "promptvideo|choose|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 51146,
+      "token": "promptvideo|choose|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 51147,
+      "token": "promptvideo|choose|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 51148,
+      "token": "promptvideo|custom_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "promptvideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "promptvideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|edit_prompt",
+      "template_file": "bot.py",
+      "template_line": 51550,
+      "token": "promptvideo|edit_prompt"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "promptvideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "promptvideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|finalization",
+      "template_file": "bot.py",
+      "template_line": 51547,
+      "token": "promptvideo|finalization"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "promptvideo|generate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "promptvideo|generate"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|generate",
+      "template_file": "bot.py",
+      "template_line": 51548,
+      "token": "promptvideo|generate"
+    },
+    {
+      "file": "bot.py",
       "line": 50993,
       "token": "promptvideo|kind|ad"
     },
@@ -7996,6 +10556,726 @@
       "file": "bot.py",
       "line": 50999,
       "token": "promptvideo|kind|viral"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54722,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "promptvideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55137,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "promptvideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55157,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "promptvideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55177,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51214,
+      "token": "promptvideo|motion_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54722,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "promptvideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55137,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "promptvideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55157,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "promptvideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55177,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51215,
+      "token": "promptvideo|motion_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54722,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "promptvideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55137,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "promptvideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55157,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "promptvideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55177,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51216,
+      "token": "promptvideo|motion_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54722,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "promptvideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55137,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "promptvideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55157,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "promptvideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55177,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_custom",
+      "template_file": "bot.py",
+      "template_line": 51218,
+      "token": "promptvideo|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 54722,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "promptvideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55137,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "promptvideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55157,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "promptvideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 55177,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|motion_refresh",
+      "template_file": "bot.py",
+      "template_line": 51217,
+      "token": "promptvideo|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54727,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_choice|1",
+      "template_file": "bot.py",
+      "template_line": 51277,
+      "token": "promptvideo|music_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54727,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_choice|2",
+      "template_file": "bot.py",
+      "template_line": 51278,
+      "token": "promptvideo|music_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54727,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_choice|3",
+      "template_file": "bot.py",
+      "template_line": 51279,
+      "token": "promptvideo|music_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54727,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_custom",
+      "template_file": "bot.py",
+      "template_line": 51281,
+      "token": "promptvideo|music_custom"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 54727,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|music_refresh",
+      "template_file": "bot.py",
+      "template_line": 51280,
+      "token": "promptvideo|music_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 51149,
+      "token": "promptvideo|prompt_refresh"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "promptvideo|save"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "promptvideo|save"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|save",
+      "template_file": "bot.py",
+      "template_line": 51549,
+      "token": "promptvideo|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 49409,
+      "token": "promptvideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49417,
+      "token": "promptvideo|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49425,
+      "token": "promptvideo|start"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "promptvideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "promptvideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|director",
+      "template_file": "bot.py",
+      "template_line": 51540,
+      "token": "promptvideo|strength|director"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "promptvideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "promptvideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|premium",
+      "template_file": "bot.py",
+      "template_line": 51543,
+      "token": "promptvideo|strength|premium"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "promptvideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "promptvideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|provider_safe",
+      "template_file": "bot.py",
+      "template_line": 51542,
+      "token": "promptvideo|strength|provider_safe"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "promptvideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "promptvideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|quick",
+      "template_file": "bot.py",
+      "template_line": 51539,
+      "token": "promptvideo|strength|quick"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 54734,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "promptvideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55216,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "promptvideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 55225,
+      "resolution": "reviewed_literal_prefix_helper_call",
+      "template": "{*}|strength|viral",
+      "template_file": "bot.py",
+      "template_line": 51541,
+      "token": "promptvideo|strength|viral"
+    },
+    {
+      "file": "bot.py",
+      "line": 51050,
+      "token": "promptvideo|topic_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 51051,
+      "token": "promptvideo|topic_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 51052,
+      "token": "promptvideo|topic_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 51053,
+      "token": "promptvideo|topic_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 51054,
+      "token": "promptvideo|topic_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52497,
+      "token": "selfscene|await_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 52654,
+      "token": "selfscene|back_context"
+    },
+    {
+      "file": "bot.py",
+      "line": 52579,
+      "token": "selfscene|back_direction"
+    },
+    {
+      "file": "bot.py",
+      "line": 52623,
+      "token": "selfscene|back_object"
+    },
+    {
+      "file": "bot.py",
+      "line": 52687,
+      "token": "selfscene|back_style"
+    },
+    {
+      "file": "bot.py",
+      "line": 52545,
+      "token": "selfscene|back_upload"
+    },
+    {
+      "file": "bot.py",
+      "line": 52619,
+      "token": "selfscene|context_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52620,
+      "token": "selfscene|context_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52616,
+      "token": "selfscene|context|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 52617,
+      "token": "selfscene|context|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 52618,
+      "token": "selfscene|context|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 52538,
+      "token": "selfscene|direction_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 52539,
+      "token": "selfscene|direction_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 52540,
+      "token": "selfscene|direction_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 52542,
+      "token": "selfscene|direction_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52541,
+      "token": "selfscene|direction_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52683,
+      "token": "selfscene|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 52767,
+      "token": "selfscene|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 52770,
+      "token": "selfscene|frame_hint"
+    },
+    {
+      "file": "bot.py",
+      "line": 52768,
+      "token": "selfscene|image_guard"
+    },
+    {
+      "file": "bot.py",
+      "line": 49454,
+      "token": "selfscene|input|custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 49463,
+      "token": "selfscene|input|custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 49472,
+      "token": "selfscene|input|custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 49450,
+      "token": "selfscene|input|person"
+    },
+    {
+      "file": "bot.py",
+      "line": 49459,
+      "token": "selfscene|input|person"
+    },
+    {
+      "file": "bot.py",
+      "line": 49468,
+      "token": "selfscene|input|person"
+    },
+    {
+      "file": "bot.py",
+      "line": 49452,
+      "token": "selfscene|input|pet"
+    },
+    {
+      "file": "bot.py",
+      "line": 49461,
+      "token": "selfscene|input|pet"
+    },
+    {
+      "file": "bot.py",
+      "line": 49470,
+      "token": "selfscene|input|pet"
+    },
+    {
+      "file": "bot.py",
+      "line": 49451,
+      "token": "selfscene|input|product"
+    },
+    {
+      "file": "bot.py",
+      "line": 49460,
+      "token": "selfscene|input|product"
+    },
+    {
+      "file": "bot.py",
+      "line": 49469,
+      "token": "selfscene|input|product"
+    },
+    {
+      "file": "bot.py",
+      "line": 49453,
+      "token": "selfscene|input|video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49462,
+      "token": "selfscene|input|video"
+    },
+    {
+      "file": "bot.py",
+      "line": 49471,
+      "token": "selfscene|input|video"
+    },
+    {
+      "file": "bot.py",
+      "line": 52771,
+      "token": "selfscene|music_guard"
+    },
+    {
+      "file": "bot.py",
+      "line": 52684,
+      "token": "selfscene|music|none"
+    },
+    {
+      "file": "bot.py",
+      "line": 52576,
+      "token": "selfscene|object|custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52573,
+      "token": "selfscene|object|person"
+    },
+    {
+      "file": "bot.py",
+      "line": 52575,
+      "token": "selfscene|object|pet"
+    },
+    {
+      "file": "bot.py",
+      "line": 52574,
+      "token": "selfscene|object|product"
+    },
+    {
+      "file": "bot.py",
+      "line": 52772,
+      "token": "selfscene|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 52647,
+      "token": "selfscene|style_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 52648,
+      "token": "selfscene|style_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 52649,
+      "token": "selfscene|style_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 52651,
+      "token": "selfscene|style_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 52650,
+      "token": "selfscene|style_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52499,
+      "token": "selfscene|use_recent_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 52769,
+      "token": "selfscene|video_guard"
     },
     {
       "file": "bot.py",
@@ -8059,8 +11339,43 @@
     },
     {
       "file": "bot.py",
+      "line": 80309,
+      "token": "storyboard|back_count"
+    },
+    {
+      "file": "bot.py",
+      "line": 80258,
+      "token": "storyboard|back_scripts"
+    },
+    {
+      "file": "bot.py",
       "line": 80388,
       "token": "storyboard|confirm_images"
+    },
+    {
+      "file": "bot.py",
+      "line": 80255,
+      "token": "storyboard|count_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 80252,
+      "token": "storyboard|count|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 80253,
+      "token": "storyboard|count|5"
+    },
+    {
+      "file": "bot.py",
+      "line": 80254,
+      "token": "storyboard|count|7"
+    },
+    {
+      "file": "bot.py",
+      "line": 80304,
+      "token": "storyboard|edit_scene"
     },
     {
       "file": "bot.py",
@@ -8074,6 +11389,21 @@
     },
     {
       "file": "bot.py",
+      "line": 80236,
+      "token": "storyboard|idea_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 80134,
+      "token": "storyboard|images"
+    },
+    {
+      "file": "bot.py",
+      "line": 80306,
+      "token": "storyboard|images"
+    },
+    {
+      "file": "bot.py",
       "line": 80363,
       "token": "storyboard|images"
     },
@@ -8084,6 +11414,11 @@
     },
     {
       "file": "bot.py",
+      "line": 80305,
+      "token": "storyboard|regen"
+    },
+    {
+      "file": "bot.py",
       "line": 80404,
       "token": "storyboard|regen"
     },
@@ -8091,6 +11426,56 @@
       "file": "bot.py",
       "line": 80405,
       "token": "storyboard|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 80133,
+      "token": "storyboard|script"
+    },
+    {
+      "file": "bot.py",
+      "line": 80235,
+      "token": "storyboard|script"
+    },
+    {
+      "file": "bot.py",
+      "line": 80234,
+      "token": "storyboard|script_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 80231,
+      "token": "storyboard|select|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 80232,
+      "token": "storyboard|select|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 80233,
+      "token": "storyboard|select|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 80239,
+      "token": "storyboard|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 102161,
+      "token": "storyboard|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 102165,
+      "token": "storyboard|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 80132,
+      "token": "storyboard|suggest"
     },
     {
       "file": "bot.py",
@@ -8106,6 +11491,11 @@
       "file": "bot.py",
       "line": 80361,
       "token": "storyboard|tier|standard"
+    },
+    {
+      "file": "bot.py",
+      "line": 80303,
+      "token": "storyboard|use"
     },
     {
       "file": "bot.py",
@@ -8131,6 +11521,261 @@
       "file": "bot.py",
       "line": 80392,
       "token": "storyboard|warranty"
+    },
+    {
+      "file": "bot.py",
+      "line": 53648,
+      "token": "storypack|back_brief"
+    },
+    {
+      "file": "bot.py",
+      "line": 56222,
+      "token": "storypack|back_brief"
+    },
+    {
+      "file": "bot.py",
+      "line": 53835,
+      "token": "storypack|back_concepts"
+    },
+    {
+      "file": "bot.py",
+      "line": 56292,
+      "token": "storypack|back_concepts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53907,
+      "token": "storypack|back_detail"
+    },
+    {
+      "file": "bot.py",
+      "line": 53955,
+      "token": "storypack|back_detail"
+    },
+    {
+      "file": "bot.py",
+      "line": 53967,
+      "token": "storypack|back_detail"
+    },
+    {
+      "file": "bot.py",
+      "line": 53977,
+      "token": "storypack|back_detail"
+    },
+    {
+      "file": "bot.py",
+      "line": 53532,
+      "token": "storypack|back_topic"
+    },
+    {
+      "file": "bot.py",
+      "line": 53529,
+      "token": "storypack|brief_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 53641,
+      "token": "storypack|concept|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 53642,
+      "token": "storypack|concept|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 53643,
+      "token": "storypack|concept|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 53949,
+      "token": "storypack|copy_meta_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 53950,
+      "token": "storypack|copy_meta_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 53951,
+      "token": "storypack|copy_meta_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 53829,
+      "token": "storypack|copy_plan"
+    },
+    {
+      "file": "bot.py",
+      "line": 53832,
+      "token": "storypack|create_or_upload_images"
+    },
+    {
+      "file": "bot.py",
+      "line": 53964,
+      "token": "storypack|create_or_upload_images"
+    },
+    {
+      "file": "bot.py",
+      "line": 53831,
+      "token": "storypack|create_video_ai"
+    },
+    {
+      "file": "bot.py",
+      "line": 53645,
+      "token": "storypack|edit_requirement"
+    },
+    {
+      "file": "bot.py",
+      "line": 53825,
+      "token": "storypack|edit_requirement"
+    },
+    {
+      "file": "bot.py",
+      "line": 53527,
+      "token": "storypack|generate_concepts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53528,
+      "token": "storypack|generate_concepts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53826,
+      "token": "storypack|image_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53973,
+      "token": "storypack|image_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53828,
+      "token": "storypack|meta_ai_prompt"
+    },
+    {
+      "file": "bot.py",
+      "line": 53962,
+      "token": "storypack|meta_ai_prompt"
+    },
+    {
+      "file": "bot.py",
+      "line": 53644,
+      "token": "storypack|regenerate_concepts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53824,
+      "token": "storypack|regenerate_concepts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53952,
+      "token": "storypack|regenerate_meta_ai_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53830,
+      "token": "storypack|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 53904,
+      "token": "storypack|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 53963,
+      "token": "storypack|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 53517,
+      "token": "storypack|set_duration|15s"
+    },
+    {
+      "file": "bot.py",
+      "line": 53518,
+      "token": "storypack|set_duration|30s"
+    },
+    {
+      "file": "bot.py",
+      "line": 53519,
+      "token": "storypack|set_duration|60s"
+    },
+    {
+      "file": "bot.py",
+      "line": 53512,
+      "token": "storypack|set_platform|Facebook"
+    },
+    {
+      "file": "bot.py",
+      "line": 53515,
+      "token": "storypack|set_ratio|16:9"
+    },
+    {
+      "file": "bot.py",
+      "line": 53516,
+      "token": "storypack|set_ratio|1:1"
+    },
+    {
+      "file": "bot.py",
+      "line": 53514,
+      "token": "storypack|set_ratio|9:16"
+    },
+    {
+      "file": "bot.py",
+      "line": 53521,
+      "token": "storypack|set_style|cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 53444,
+      "token": "storypack|template|cinematic_story"
+    },
+    {
+      "file": "bot.py",
+      "line": 53448,
+      "token": "storypack|template|custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 53443,
+      "token": "storypack|template|product_ad"
+    },
+    {
+      "file": "bot.py",
+      "line": 53447,
+      "token": "storypack|template|shop_affiliate"
+    },
+    {
+      "file": "bot.py",
+      "line": 53445,
+      "token": "storypack|template|tiktok_reels"
+    },
+    {
+      "file": "bot.py",
+      "line": 53446,
+      "token": "storypack|template|tutorial"
+    },
+    {
+      "file": "bot.py",
+      "line": 53974,
+      "token": "storypack|upload_images_guard"
+    },
+    {
+      "file": "bot.py",
+      "line": 53827,
+      "token": "storypack|video_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 53961,
+      "token": "storypack|video_prompts"
     },
     {
       "file": "bot.py",
@@ -8524,6 +12169,11 @@
     },
     {
       "file": "bot.py",
+      "line": 30495,
+      "token": "tr_pick|voice"
+    },
+    {
+      "file": "bot.py",
       "line": 30561,
       "token": "tr_pick|voice"
     },
@@ -8564,8 +12214,93 @@
     },
     {
       "file": "bot.py",
+      "line": 99480,
+      "token": "trendg|admin_video_smoke"
+    },
+    {
+      "file": "bot.py",
+      "line": 99513,
+      "token": "trendg|admin_video_smoke"
+    },
+    {
+      "file": "bot.py",
+      "line": 99473,
+      "token": "trendg|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 99645,
+      "token": "trendg|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 99510,
+      "token": "trendg|finalize"
+    },
+    {
+      "file": "bot.py",
+      "line": 99363,
+      "token": "trendg|image_prompt_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99357,
+      "token": "trendg|image_prompt_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 99338,
+      "token": "trendg|image_prompt_select_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 99339,
+      "token": "trendg|image_prompt_select_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 99340,
+      "token": "trendg|image_prompt_select_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 99447,
+      "token": "trendg|image_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99647,
+      "token": "trendg|image_review"
+    },
+    {
+      "file": "bot.py",
       "line": 100851,
       "token": "trendg|image_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99280,
+      "token": "trendg|image_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99341,
+      "token": "trendg|image_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99366,
+      "token": "trendg|image_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99475,
+      "token": "trendg|image_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99508,
+      "token": "trendg|image_step"
     },
     {
       "file": "bot.py",
@@ -8609,6 +12344,156 @@
     },
     {
       "file": "bot.py",
+      "line": 99279,
+      "token": "trendg|motion_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99278,
+      "token": "trendg|motion_lock"
+    },
+    {
+      "file": "bot.py",
+      "line": 99257,
+      "token": "trendg|motion_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 99344,
+      "token": "trendg|motion_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99254,
+      "token": "trendg|motion_select_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 99255,
+      "token": "trendg|motion_select_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 99256,
+      "token": "trendg|motion_select_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 99193,
+      "token": "trendg|motion_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99284,
+      "token": "trendg|motion_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99529,
+      "token": "trendg|music_ai"
+    },
+    {
+      "file": "bot.py",
+      "line": 99665,
+      "token": "trendg|music_genre|cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 99666,
+      "token": "trendg|music_genre|tech"
+    },
+    {
+      "file": "bot.py",
+      "line": 99667,
+      "token": "trendg|music_genre|viral"
+    },
+    {
+      "file": "bot.py",
+      "line": 99528,
+      "token": "trendg|music_library"
+    },
+    {
+      "file": "bot.py",
+      "line": 99526,
+      "token": "trendg|music_none"
+    },
+    {
+      "file": "bot.py",
+      "line": 99565,
+      "token": "trendg|music_none"
+    },
+    {
+      "file": "bot.py",
+      "line": 99589,
+      "token": "trendg|music_none"
+    },
+    {
+      "file": "bot.py",
+      "line": 99699,
+      "token": "trendg|music_none"
+    },
+    {
+      "file": "bot.py",
+      "line": 99587,
+      "token": "trendg|music_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 99697,
+      "token": "trendg|music_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 99561,
+      "token": "trendg|music_select_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 99562,
+      "token": "trendg|music_select_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 99563,
+      "token": "trendg|music_select_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 99476,
+      "token": "trendg|music_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99507,
+      "token": "trendg|music_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99590,
+      "token": "trendg|music_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99611,
+      "token": "trendg|music_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99669,
+      "token": "trendg|music_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99527,
+      "token": "trendg|music_suggest"
+    },
+    {
+      "file": "bot.py",
+      "line": 99564,
+      "token": "trendg|music_suggest"
+    },
+    {
+      "file": "bot.py",
       "line": 45358,
       "token": "trendg|start"
     },
@@ -8631,6 +12516,251 @@
       "file": "bot.py",
       "line": 98937,
       "token": "trendg|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 99086,
+      "token": "trendg|topic_back"
+    },
+    {
+      "file": "bot.py",
+      "line": 98746,
+      "token": "trendg|topic_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 98924,
+      "token": "trendg|topic_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 98927,
+      "token": "trendg|topic_groups"
+    },
+    {
+      "file": "bot.py",
+      "line": 98742,
+      "token": "trendg|topic_group|affiliate"
+    },
+    {
+      "file": "bot.py",
+      "line": 98743,
+      "token": "trendg|topic_group|ai_tool"
+    },
+    {
+      "file": "bot.py",
+      "line": 98745,
+      "token": "trendg|topic_group|education"
+    },
+    {
+      "file": "bot.py",
+      "line": 98744,
+      "token": "trendg|topic_group|food"
+    },
+    {
+      "file": "bot.py",
+      "line": 98741,
+      "token": "trendg|topic_group|product"
+    },
+    {
+      "file": "bot.py",
+      "line": 98923,
+      "token": "trendg|topic_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 98920,
+      "token": "trendg|topic_select_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 98921,
+      "token": "trendg|topic_select_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 98922,
+      "token": "trendg|topic_select_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 99198,
+      "token": "trendg|trend_back_choices"
+    },
+    {
+      "file": "bot.py",
+      "line": 99163,
+      "token": "trendg|trend_choices"
+    },
+    {
+      "file": "bot.py",
+      "line": 99195,
+      "token": "trendg|trend_choices"
+    },
+    {
+      "file": "bot.py",
+      "line": 99192,
+      "token": "trendg|trend_lock"
+    },
+    {
+      "file": "bot.py",
+      "line": 99159,
+      "token": "trendg|trend_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 99260,
+      "token": "trendg|trend_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99156,
+      "token": "trendg|trend_select_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 99157,
+      "token": "trendg|trend_select_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 99158,
+      "token": "trendg|trend_select_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 99082,
+      "token": "trendg|trend_source_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99160,
+      "token": "trendg|trend_source_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99194,
+      "token": "trendg|trend_source_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99080,
+      "token": "trendg|trend_source_popular"
+    },
+    {
+      "file": "bot.py",
+      "line": 99081,
+      "token": "trendg|trend_source_search"
+    },
+    {
+      "file": "bot.py",
+      "line": 99083,
+      "token": "trendg|trend_source_skip"
+    },
+    {
+      "file": "bot.py",
+      "line": 99477,
+      "token": "trendg|video_prompt_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99509,
+      "token": "trendg|video_prompt_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 99472,
+      "token": "trendg|video_prompt_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 99610,
+      "token": "trendg|video_prompt_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 99441,
+      "token": "trendg|video_prompt_select_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 99442,
+      "token": "trendg|video_prompt_select_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 99443,
+      "token": "trendg|video_prompt_select_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 99281,
+      "token": "trendg|video_prompt_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99364,
+      "token": "trendg|video_prompt_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99444,
+      "token": "trendg|video_prompt_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99481,
+      "token": "trendg|video_prompt_step"
+    },
+    {
+      "file": "bot.py",
+      "line": 99474,
+      "token": "trendg|video_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 99588,
+      "token": "trendg|video_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 99609,
+      "token": "trendg|video_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 99698,
+      "token": "trendg|video_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 99514,
+      "token": "trendg|video_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99531,
+      "token": "trendg|video_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99592,
+      "token": "trendg|video_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99612,
+      "token": "trendg|video_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99646,
+      "token": "trendg|video_review"
+    },
+    {
+      "file": "bot.py",
+      "line": 99701,
+      "token": "trendg|video_review"
     },
     {
       "file": "bot.py",
@@ -8705,6 +12835,11 @@
     {
       "file": "bot.py",
       "line": 69345,
+      "token": "vfinal|addon"
+    },
+    {
+      "file": "bot.py",
+      "line": 73986,
       "token": "vfinal|addon"
     },
     {
@@ -9274,6 +13409,36 @@
     },
     {
       "file": "bot.py",
+      "line": 71632,
+      "token": "vfinal|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 71674,
+      "token": "vfinal|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 72358,
+      "token": "vfinal|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 72412,
+      "token": "vfinal|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 72750,
+      "token": "vfinal|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 73985,
+      "token": "vfinal|music"
+    },
+    {
+      "file": "bot.py",
       "line": 74205,
       "token": "vfinal|music"
     },
@@ -9544,7 +13709,37 @@
     },
     {
       "file": "bot.py",
+      "line": 72033,
+      "token": "vfinal|voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 73317,
+      "token": "vfinal|voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 73731,
+      "token": "vfinal|voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 73814,
+      "token": "vfinal|voice"
+    },
+    {
+      "file": "bot.py",
       "line": 73843,
+      "token": "vfinal|voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 73943,
+      "token": "vfinal|voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 73984,
       "token": "vfinal|voice"
     },
     {
@@ -9584,13 +13779,28 @@
     },
     {
       "file": "bot.py",
+      "line": 73726,
+      "token": "vfinal|voice_default|female"
+    },
+    {
+      "file": "bot.py",
       "line": 94571,
       "token": "vfinal|voice_default|female"
     },
     {
       "file": "bot.py",
+      "line": 73727,
+      "token": "vfinal|voice_default|male"
+    },
+    {
+      "file": "bot.py",
       "line": 94574,
       "token": "vfinal|voice_default|male"
+    },
+    {
+      "file": "bot.py",
+      "line": 73730,
+      "token": "vfinal|voice_default|neutral"
     },
     {
       "file": "bot.py",
@@ -9661,6 +13871,46 @@
       "file": "handlers/video_handler.py",
       "line": 16,
       "token": "video_stock"
+    },
+    {
+      "file": "bot.py",
+      "line": 127199,
+      "token": "video_upload|admin"
+    },
+    {
+      "file": "bot.py",
+      "line": 127194,
+      "token": "video_upload|enhance"
+    },
+    {
+      "file": "bot.py",
+      "line": 127192,
+      "token": "video_upload|ideas"
+    },
+    {
+      "file": "bot.py",
+      "line": 127193,
+      "token": "video_upload|motion"
+    },
+    {
+      "file": "bot.py",
+      "line": 127191,
+      "token": "video_upload|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 127189,
+      "token": "video_upload|reference"
+    },
+    {
+      "file": "bot.py",
+      "line": 127196,
+      "token": "video_upload|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 127190,
+      "token": "video_upload|selfscene"
     },
     {
       "file": "bot.py",
@@ -9879,6 +14129,11 @@
     },
     {
       "file": "bot.py",
+      "line": 124170,
+      "token": "videodub|back_type"
+    },
+    {
+      "file": "bot.py",
       "line": 124296,
       "token": "videodub|back_type"
     },
@@ -9899,6 +14154,11 @@
     },
     {
       "file": "bot.py",
+      "line": 124768,
+      "token": "videodub|back_type"
+    },
+    {
+      "file": "bot.py",
       "line": 125014,
       "token": "videodub|back_type"
     },
@@ -9906,6 +14166,16 @@
       "file": "bot.py",
       "line": 125240,
       "token": "videodub|back_type"
+    },
+    {
+      "file": "bot.py",
+      "line": 124796,
+      "token": "videodub|back_voice"
+    },
+    {
+      "file": "bot.py",
+      "line": 124816,
+      "token": "videodub|back_voice"
     },
     {
       "file": "bot.py",
@@ -9946,6 +14216,26 @@
       "file": "bot.py",
       "line": 125239,
       "token": "videodub|job_download"
+    },
+    {
+      "file": "bot.py",
+      "line": 124741,
+      "token": "videodub|language_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 124764,
+      "token": "videodub|language_strategy|original"
+    },
+    {
+      "file": "bot.py",
+      "line": 124765,
+      "token": "videodub|language_strategy|translate"
+    },
+    {
+      "file": "bot.py",
+      "line": 124737,
+      "token": "videodub|language|English"
     },
     {
       "file": "bot.py",
@@ -10049,8 +14339,23 @@
     },
     {
       "file": "bot.py",
+      "line": 124166,
+      "token": "videodub|source_current_video"
+    },
+    {
+      "file": "bot.py",
       "line": 124115,
       "token": "videodub|source_media"
+    },
+    {
+      "file": "bot.py",
+      "line": 124163,
+      "token": "videodub|source_media"
+    },
+    {
+      "file": "bot.py",
+      "line": 124162,
+      "token": "videodub|source_upload"
     },
     {
       "file": "bot.py",
@@ -10059,8 +14364,28 @@
     },
     {
       "file": "bot.py",
+      "line": 51775,
+      "token": "videodub|start"
+    },
+    {
+      "file": "bot.py",
       "line": 94448,
       "token": "videodub|start|video_addon"
+    },
+    {
+      "file": "bot.py",
+      "line": 125939,
+      "token": "videodub|subtitle_add_line"
+    },
+    {
+      "file": "bot.py",
+      "line": 125940,
+      "token": "videodub|subtitle_delete_line"
+    },
+    {
+      "file": "bot.py",
+      "line": 125938,
+      "token": "videodub|subtitle_edit_line"
     },
     {
       "file": "bot.py",
@@ -10084,8 +14409,148 @@
     },
     {
       "file": "bot.py",
+      "line": 125945,
+      "token": "videodub|subtitle_editor_back"
+    },
+    {
+      "file": "bot.py",
+      "line": 125937,
+      "token": "videodub|subtitle_find_replace"
+    },
+    {
+      "file": "bot.py",
+      "line": 125936,
+      "token": "videodub|subtitle_preview_lines"
+    },
+    {
+      "file": "bot.py",
+      "line": 125942,
+      "token": "videodub|subtitle_save"
+    },
+    {
+      "file": "bot.py",
+      "line": 125941,
+      "token": "videodub|subtitle_shift_time"
+    },
+    {
+      "file": "bot.py",
+      "line": 124793,
+      "token": "videodub|voice_create"
+    },
+    {
+      "file": "bot.py",
+      "line": 124792,
+      "token": "videodub|voice_saved"
+    },
+    {
+      "file": "bot.py",
+      "line": 124790,
+      "token": "videodub|voice|default_female"
+    },
+    {
+      "file": "bot.py",
+      "line": 124791,
+      "token": "videodub|voice|default_male"
+    },
+    {
+      "file": "bot.py",
+      "line": 47267,
+      "token": "videoedit|color"
+    },
+    {
+      "file": "bot.py",
+      "line": 47268,
+      "token": "videoedit|crop"
+    },
+    {
+      "file": "bot.py",
+      "line": 127195,
+      "token": "videoedit|menu"
+    },
+    {
+      "file": "bot.py",
+      "line": 47295,
+      "token": "videoedit|method|blur"
+    },
+    {
+      "file": "bot.py",
+      "line": 47295,
+      "token": "videoedit|method|crop"
+    },
+    {
+      "file": "bot.py",
+      "line": 47281,
+      "token": "videoedit|preset|video_cinematic"
+    },
+    {
+      "file": "bot.py",
+      "line": 47279,
+      "token": "videoedit|preset|video_clear"
+    },
+    {
+      "file": "bot.py",
+      "line": 47282,
+      "token": "videoedit|preset|video_soft_clean"
+    },
+    {
+      "file": "bot.py",
+      "line": 47280,
+      "token": "videoedit|preset|video_tiktok_pop"
+    },
+    {
+      "file": "bot.py",
+      "line": 47288,
+      "token": "videoedit|ratio|16x9"
+    },
+    {
+      "file": "bot.py",
+      "line": 47288,
+      "token": "videoedit|ratio|1x1"
+    },
+    {
+      "file": "bot.py",
+      "line": 47288,
+      "token": "videoedit|ratio|4x5"
+    },
+    {
+      "file": "bot.py",
+      "line": 47288,
+      "token": "videoedit|ratio|9x16"
+    },
+    {
+      "file": "bot.py",
+      "line": 47271,
+      "token": "videoedit|sharpen"
+    },
+    {
+      "file": "bot.py",
+      "line": 47270,
+      "token": "videoedit|text"
+    },
+    {
+      "file": "bot.py",
+      "line": 47269,
+      "token": "videoedit|vertical"
+    },
+    {
+      "file": "bot.py",
+      "line": 54568,
+      "token": "videoidea|back_choices"
+    },
+    {
+      "file": "bot.py",
       "line": 56551,
       "token": "videoidea|back_choices"
+    },
+    {
+      "file": "bot.py",
+      "line": 54172,
+      "token": "videoidea|back_context"
+    },
+    {
+      "file": "bot.py",
+      "line": 54447,
+      "token": "videoidea|back_context"
     },
     {
       "file": "bot.py",
@@ -10114,6 +14579,76 @@
     },
     {
       "file": "bot.py",
+      "line": 54112,
+      "token": "videoidea|back_product_type"
+    },
+    {
+      "file": "bot.py",
+      "line": 54168,
+      "token": "videoidea|choice_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 54454,
+      "token": "videoidea|choice_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 54165,
+      "token": "videoidea|choose|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 54451,
+      "token": "videoidea|choose|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 54166,
+      "token": "videoidea|choose|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 54452,
+      "token": "videoidea|choose|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 54167,
+      "token": "videoidea|choose|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 54453,
+      "token": "videoidea|choose|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 54243,
+      "token": "videoidea|cinema_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 54244,
+      "token": "videoidea|cinema_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 54245,
+      "token": "videoidea|cinema_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 54247,
+      "token": "videoidea|cinema_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 54246,
+      "token": "videoidea|cinema_refresh"
+    },
+    {
+      "file": "bot.py",
       "line": 54145,
       "token": "videoidea|context_custom"
     },
@@ -10131,6 +14666,31 @@
       "file": "bot.py",
       "line": 54145,
       "token": "videoidea|context|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 54558,
+      "token": "videoidea|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 54562,
+      "token": "videoidea|frame_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 54291,
+      "token": "videoidea|genre|drama"
+    },
+    {
+      "file": "bot.py",
+      "line": 54290,
+      "token": "videoidea|genre|fantasy"
+    },
+    {
+      "file": "bot.py",
+      "line": 54289,
+      "token": "videoidea|genre|scifi"
     },
     {
       "file": "bot.py",
@@ -10154,6 +14714,86 @@
     },
     {
       "file": "bot.py",
+      "line": 54169,
+      "token": "videoidea|idea_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 54455,
+      "token": "videoidea|idea_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 54560,
+      "token": "videoidea|image_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 54028,
+      "token": "videoidea|kind|ad"
+    },
+    {
+      "file": "bot.py",
+      "line": 54029,
+      "token": "videoidea|kind|cinema"
+    },
+    {
+      "file": "bot.py",
+      "line": 54445,
+      "token": "videoidea|kind|cinema"
+    },
+    {
+      "file": "bot.py",
+      "line": 54030,
+      "token": "videoidea|kind|custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 54564,
+      "token": "videoidea|music"
+    },
+    {
+      "file": "bot.py",
+      "line": 54258,
+      "token": "videoidea|platform|facebook"
+    },
+    {
+      "file": "bot.py",
+      "line": 54256,
+      "token": "videoidea|platform|tiktok"
+    },
+    {
+      "file": "bot.py",
+      "line": 54257,
+      "token": "videoidea|platform|youtube"
+    },
+    {
+      "file": "bot.py",
+      "line": 54105,
+      "token": "videoidea|product_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 54106,
+      "token": "videoidea|product_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 54107,
+      "token": "videoidea|product_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 54108,
+      "token": "videoidea|product_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 54109,
+      "token": "videoidea|product_refresh"
+    },
+    {
+      "file": "bot.py",
       "line": 54051,
       "token": "videoidea|product_type|affiliate"
     },
@@ -10174,13 +14814,378 @@
     },
     {
       "file": "bot.py",
+      "line": 54563,
+      "token": "videoidea|render_ai"
+    },
+    {
+      "file": "bot.py",
+      "line": 54565,
+      "token": "videoidea|save"
+    },
+    {
+      "file": "bot.py",
       "line": 54052,
       "token": "videoidea|start"
     },
     {
       "file": "bot.py",
+      "line": 54250,
+      "token": "videoidea|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 54559,
+      "token": "videoidea|storyboard"
+    },
+    {
+      "file": "bot.py",
+      "line": 54273,
+      "token": "videoidea|trend_type|before_after"
+    },
+    {
+      "file": "bot.py",
+      "line": 54275,
+      "token": "videoidea|trend_type|pov"
+    },
+    {
+      "file": "bot.py",
+      "line": 54274,
+      "token": "videoidea|trend_type|problem_solution"
+    },
+    {
+      "file": "bot.py",
+      "line": 54561,
+      "token": "videoidea|video_prompts"
+    },
+    {
+      "file": "bot.py",
       "line": 51811,
       "token": "videoref|await_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 51900,
+      "token": "videoref|back_direction"
+    },
+    {
+      "file": "bot.py",
+      "line": 52040,
+      "token": "videoref|back_topics"
+    },
+    {
+      "file": "bot.py",
+      "line": 51848,
+      "token": "videoref|back_upload"
+    },
+    {
+      "file": "bot.py",
+      "line": 51663,
+      "token": "videoref|catalog"
+    },
+    {
+      "file": "bot.py",
+      "line": 51845,
+      "token": "videoref|direction_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 51841,
+      "token": "videoref|direction|ad"
+    },
+    {
+      "file": "bot.py",
+      "line": 51843,
+      "token": "videoref|direction|cinema"
+    },
+    {
+      "file": "bot.py",
+      "line": 51844,
+      "token": "videoref|direction|education"
+    },
+    {
+      "file": "bot.py",
+      "line": 51842,
+      "token": "videoref|direction|viral"
+    },
+    {
+      "file": "bot.py",
+      "line": 52026,
+      "token": "videoref|finalization"
+    },
+    {
+      "file": "bot.py",
+      "line": 51664,
+      "token": "videoref|format"
+    },
+    {
+      "file": "bot.py",
+      "line": 51774,
+      "token": "videoref|format"
+    },
+    {
+      "file": "bot.py",
+      "line": 52032,
+      "token": "videoref|frame_plan"
+    },
+    {
+      "file": "bot.py",
+      "line": 52033,
+      "token": "videoref|generate"
+    },
+    {
+      "file": "bot.py",
+      "line": 51699,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 51779,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 54771,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 54794,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 55434,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 55445,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 55450,
+      "token": "videoref|hub"
+    },
+    {
+      "file": "bot.py",
+      "line": 52027,
+      "token": "videoref|image_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 51660,
+      "token": "videoref|link"
+    },
+    {
+      "file": "bot.py",
+      "line": 54792,
+      "token": "videoref|manual"
+    },
+    {
+      "file": "bot.py",
+      "line": 51776,
+      "token": "videoref|performance"
+    },
+    {
+      "file": "bot.py",
+      "line": 51662,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 51717,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 51728,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 52036,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 54822,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 54826,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 54830,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 55410,
+      "token": "videoref|profile"
+    },
+    {
+      "file": "bot.py",
+      "line": 51715,
+      "token": "videoref|profile_affiliate|no"
+    },
+    {
+      "file": "bot.py",
+      "line": 51714,
+      "token": "videoref|profile_affiliate|yes"
+    },
+    {
+      "file": "bot.py",
+      "line": 51697,
+      "token": "videoref|profile_create"
+    },
+    {
+      "file": "bot.py",
+      "line": 51723,
+      "token": "videoref|profile_goal|follow"
+    },
+    {
+      "file": "bot.py",
+      "line": 51725,
+      "token": "videoref|profile_goal|lead"
+    },
+    {
+      "file": "bot.py",
+      "line": 51724,
+      "token": "videoref|profile_goal|sales"
+    },
+    {
+      "file": "bot.py",
+      "line": 51726,
+      "token": "videoref|profile_goal|website"
+    },
+    {
+      "file": "bot.py",
+      "line": 51704,
+      "token": "videoref|profile_platform|facebook"
+    },
+    {
+      "file": "bot.py",
+      "line": 51705,
+      "token": "videoref|profile_platform|instagram"
+    },
+    {
+      "file": "bot.py",
+      "line": 51706,
+      "token": "videoref|profile_platform|other"
+    },
+    {
+      "file": "bot.py",
+      "line": 51704,
+      "token": "videoref|profile_platform|tiktok"
+    },
+    {
+      "file": "bot.py",
+      "line": 51705,
+      "token": "videoref|profile_platform|youtube"
+    },
+    {
+      "file": "bot.py",
+      "line": 51665,
+      "token": "videoref|publish_package"
+    },
+    {
+      "file": "bot.py",
+      "line": 52029,
+      "token": "videoref|publish_package"
+    },
+    {
+      "file": "bot.py",
+      "line": 55492,
+      "token": "videoref|publish_package"
+    },
+    {
+      "file": "bot.py",
+      "line": 52030,
+      "token": "videoref|sample_segments"
+    },
+    {
+      "file": "bot.py",
+      "line": 52037,
+      "token": "videoref|save"
+    },
+    {
+      "file": "bot.py",
+      "line": 52035,
+      "token": "videoref|save_catalog"
+    },
+    {
+      "file": "bot.py",
+      "line": 49411,
+      "token": "videoref|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49419,
+      "token": "videoref|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 49427,
+      "token": "videoref|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 51661,
+      "token": "videoref|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 54792,
+      "token": "videoref|start"
+    },
+    {
+      "file": "bot.py",
+      "line": 51893,
+      "token": "videoref|topic_choice|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 51894,
+      "token": "videoref|topic_choice|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 51895,
+      "token": "videoref|topic_choice|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 51897,
+      "token": "videoref|topic_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 51896,
+      "token": "videoref|topic_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52028,
+      "token": "videoref|version_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52034,
+      "token": "videoref|version_refresh"
+    },
+    {
+      "file": "bot.py",
+      "line": 52031,
+      "token": "videoref|video_prompts"
+    },
+    {
+      "file": "bot.py",
+      "line": 47692,
+      "token": "vproduct|addon_skip"
     },
     {
       "file": "bot.py",
@@ -10389,6 +15394,31 @@
     },
     {
       "file": "bot.py",
+      "line": 47684,
+      "token": "vproduct|ideas|multi_scene_film"
+    },
+    {
+      "file": "bot.py",
+      "line": 47676,
+      "token": "vproduct|ideas|script_image_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 47671,
+      "token": "vproduct|ideas|video_ai_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 47651,
+      "token": "vproduct|ideas|video_idea"
+    },
+    {
+      "file": "bot.py",
+      "line": 47652,
+      "token": "vproduct|ideas|video_idea"
+    },
+    {
+      "file": "bot.py",
       "line": 47953,
       "token": "vproduct|image_plan|skip"
     },
@@ -10401,6 +15431,111 @@
       "file": "bot.py",
       "line": 47939,
       "token": "vproduct|input_detail|image_to_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 47663,
+      "token": "vproduct|input_media|image_to_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 47659,
+      "token": "vproduct|input_media|motion_prompt"
+    },
+    {
+      "file": "bot.py",
+      "line": 47680,
+      "token": "vproduct|input_media|self_shot_scene_change"
+    },
+    {
+      "file": "bot.py",
+      "line": 47672,
+      "token": "vproduct|input_media|video_ai_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 47663,
+      "token": "vproduct|input_text|image_to_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 47659,
+      "token": "vproduct|input_text|motion_prompt"
+    },
+    {
+      "file": "bot.py",
+      "line": 47684,
+      "token": "vproduct|input_text|multi_scene_film"
+    },
+    {
+      "file": "bot.py",
+      "line": 47676,
+      "token": "vproduct|input_text|script_image_video"
+    },
+    {
+      "file": "bot.py",
+      "line": 47680,
+      "token": "vproduct|input_text|self_shot_scene_change"
+    },
+    {
+      "file": "bot.py",
+      "line": 47655,
+      "token": "vproduct|input_text|storyboard_prompt"
+    },
+    {
+      "file": "bot.py",
+      "line": 47671,
+      "token": "vproduct|input_text|video_ai_real"
+    },
+    {
+      "file": "bot.py",
+      "line": 47651,
+      "token": "vproduct|input_text|video_idea"
+    },
+    {
+      "file": "bot.py",
+      "line": 47688,
+      "token": "vproduct|input_text|video_reference"
+    },
+    {
+      "file": "bot.py",
+      "line": 47689,
+      "token": "vproduct|input_text|video_reference"
+    },
+    {
+      "file": "bot.py",
+      "line": 47692,
+      "token": "vproduct|legacy|audio_addons"
+    },
+    {
+      "file": "bot.py",
+      "line": 47693,
+      "token": "vproduct|legacy|audio_addons"
+    },
+    {
+      "file": "bot.py",
+      "line": 47667,
+      "token": "vproduct|legacy|frame_video_local"
+    },
+    {
+      "file": "bot.py",
+      "line": 47668,
+      "token": "vproduct|legacy|frame_video_local"
+    },
+    {
+      "file": "bot.py",
+      "line": 47696,
+      "token": "vproduct|legacy|video_local_edit"
+    },
+    {
+      "file": "bot.py",
+      "line": 47697,
+      "token": "vproduct|legacy|video_local_edit"
+    },
+    {
+      "file": "bot.py",
+      "line": 47688,
+      "token": "vproduct|legacy|video_reference"
     },
     {
       "file": "bot.py",
@@ -10739,6 +15874,11 @@
     },
     {
       "file": "bot.py",
+      "line": 47655,
+      "token": "vproduct|sample|storyboard_prompt"
+    },
+    {
+      "file": "bot.py",
       "line": 48014,
       "token": "vproduct|scene_count|1"
     },
@@ -10784,13 +15924,33 @@
     },
     {
       "file": "bot.py",
-      "line": 48707,
+      "line": 47647,
       "token": "vproduct|trend_custom"
     },
     {
       "file": "bot.py",
       "line": 48707,
+      "token": "vproduct|trend_custom"
+    },
+    {
+      "file": "bot.py",
+      "line": 47648,
       "token": "vproduct|trend_more"
+    },
+    {
+      "file": "bot.py",
+      "line": 48707,
+      "token": "vproduct|trend_more"
+    },
+    {
+      "file": "bot.py",
+      "line": 47647,
+      "token": "vproduct|trend_today"
+    },
+    {
+      "file": "bot.py",
+      "line": 47672,
+      "token": "vproduct|trend_today"
     }
   ],
   "callback_handlers": [
@@ -11117,6 +16277,2234 @@
       "handler": "handle_operator_menu_callback",
       "line": 129182,
       "pattern": "<catch-all>"
+    }
+  ],
+  "callback_templates": [
+    {
+      "file": "bot.py",
+      "line": 89180,
+      "resolution": "unresolved_dynamic_template",
+      "template": "adconcept|admin_video_smoke|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 89174,
+      "resolution": "unresolved_dynamic_template",
+      "template": "adconcept|create_video_current|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 89374,
+      "resolution": "unresolved_dynamic_template",
+      "template": "adconcept|image_ai_tier|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 89127,
+      "resolution": "unresolved_dynamic_template",
+      "template": "adconcept|save_image_prompt_current|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 89172,
+      "resolution": "unresolved_dynamic_template",
+      "template": "adconcept|save_video_prompt_current|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 123178,
+      "resolution": "unresolved_dynamic_template",
+      "template": "archive|dept|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 123634,
+      "resolution": "unresolved_dynamic_template",
+      "template": "archive|dept|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91791,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|bottom_center"
+    },
+    {
+      "file": "bot.py",
+      "line": 91790,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|bottom_left"
+    },
+    {
+      "file": "bot.py",
+      "line": 91793,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|bottom_right"
+    },
+    {
+      "file": "bot.py",
+      "line": 91786,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|center"
+    },
+    {
+      "file": "bot.py",
+      "line": 91783,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|center_left"
+    },
+    {
+      "file": "bot.py",
+      "line": 91787,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|center_right"
+    },
+    {
+      "file": "bot.py",
+      "line": 91779,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|top_center"
+    },
+    {
+      "file": "bot.py",
+      "line": 91778,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|top_left"
+    },
+    {
+      "file": "bot.py",
+      "line": 91782,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}|top_right"
+    },
+    {
+      "file": "bot.py",
+      "line": 115216,
+      "resolution": "unresolved_dynamic_template",
+      "template": "creative|select|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 115241,
+      "resolution": "unresolved_dynamic_template",
+      "template": "creative|select|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80057,
+      "resolution": "unresolved_dynamic_template",
+      "template": "framevideo|preview_check|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 40531,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|bottom_center"
+    },
+    {
+      "file": "bot.py",
+      "line": 40530,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|bottom_left"
+    },
+    {
+      "file": "bot.py",
+      "line": 40533,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|bottom_right"
+    },
+    {
+      "file": "bot.py",
+      "line": 40526,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|center"
+    },
+    {
+      "file": "bot.py",
+      "line": 40523,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|center_left"
+    },
+    {
+      "file": "bot.py",
+      "line": 40527,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|center_right"
+    },
+    {
+      "file": "bot.py",
+      "line": 40519,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|top_center"
+    },
+    {
+      "file": "bot.py",
+      "line": 40518,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|top_left"
+    },
+    {
+      "file": "bot.py",
+      "line": 40522,
+      "resolution": "unresolved_dynamic_template",
+      "template": "imgtool|{*}|top_right"
+    },
+    {
+      "file": "bot.py",
+      "line": 111009,
+      "resolution": "unresolved_dynamic_template",
+      "template": "job|approve|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 111010,
+      "resolution": "unresolved_dynamic_template",
+      "template": "job|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 77146,
+      "resolution": "unresolved_dynamic_template",
+      "template": "license_music|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 53184,
+      "resolution": "unresolved_dynamic_template",
+      "template": "longvideo|structure|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7994,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|approve_custom|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7994,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|approve_expected|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7843,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|await_bill|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 31436,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|confirm|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7584,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|currency|CNY|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7581,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|currency|USD|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7580,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|currency|VND|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7698,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|currency|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 31554,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|currency|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7656,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxamount|{*}|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7660,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxcustom|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7698,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxcustom|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7689,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxmethod|CNY|{*}|momo_tuithantai|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7693,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxmethod|CNY|{*}|usdt_trc20|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7692,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxmethod|CNY|{*}|zalopay_merchant|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7688,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxmethod|CNY|{*}|zalopay_personal|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7696,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|fxmethod|USD|{*}|usdt_trc20|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7586,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|history|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7627,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|history|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7843,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|history|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7996,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|history|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 121493,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|history|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 123830,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|history|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7606,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7627,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7660,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7881,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7623,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|method|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7995,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|reject|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 31437,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|reject|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7602,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|vndamount|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 7603,
+      "resolution": "unresolved_dynamic_template",
+      "template": "manual|vndamount|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 86445,
+      "resolution": "unresolved_dynamic_template",
+      "template": "memory|delete_yes|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 86400,
+      "resolution": "unresolved_dynamic_template",
+      "template": "memory|delete|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 86426,
+      "resolution": "unresolved_dynamic_template",
+      "template": "memory|delete|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 86402,
+      "resolution": "unresolved_dynamic_template",
+      "template": "memory|view|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 86446,
+      "resolution": "unresolved_dynamic_template",
+      "template": "memory|view|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30399,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 49778,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 49785,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 122173,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 122174,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 122181,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 122431,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 114491,
+      "resolution": "unresolved_dynamic_template",
+      "template": "opmenu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 111995,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|edit|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 112960,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|edit|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 113100,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|edit|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 117901,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|publish|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119209,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|publish|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119397,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|publish|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 111996,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|review|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 112961,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|review|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 113101,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|review|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 117904,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|review|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119396,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|script|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 111994,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|voice|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 112959,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|voice|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 113099,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|stage|voice|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 112000,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|blocked|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 112965,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|blocked|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 113105,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|blocked|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119207,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|blocked|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119399,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|blocked|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 111999,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|published|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 112964,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|published|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 113104,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|published|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 117903,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|ready|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119206,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pipe|status|ready|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 105933,
+      "resolution": "unresolved_dynamic_template",
+      "template": "pkgbuy|confirm|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 77785,
+      "resolution": "unresolved_dynamic_template",
+      "template": "play_media|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30795,
+      "resolution": "unresolved_dynamic_template",
+      "template": "prov|cancel|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30792,
+      "resolution": "unresolved_dynamic_template",
+      "template": "prov|image|free|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30786,
+      "resolution": "unresolved_dynamic_template",
+      "template": "prov|image|paid|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30777,
+      "resolution": "unresolved_dynamic_template",
+      "template": "prov|voice|free|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30771,
+      "resolution": "unresolved_dynamic_template",
+      "template": "prov|voice|paid|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 77786,
+      "resolution": "unresolved_dynamic_template",
+      "template": "select_media|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 67492,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai_video_job|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 67877,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 90855,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91884,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 100850,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 101071,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|cancel|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 37708,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 67874,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 90854,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91512,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91883,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 96737,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 100849,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 101070,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 37707,
+      "resolution": "unresolved_dynamic_template",
+      "template": "shopai|package|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 86597,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storage|confirm|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80436,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|ai_motion|{*}|{*}|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 80437,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|ai_motion|{*}|{*}|2"
+    },
+    {
+      "file": "bot.py",
+      "line": 80438,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|ai_motion|{*}|{*}|3"
+    },
+    {
+      "file": "bot.py",
+      "line": 80427,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|ai_scene|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80402,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|finalization|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80403,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_ai|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80439,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_ai|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80405,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_audio|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80429,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_back|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 80403,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_frame|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 102331,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_frame|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 102362,
+      "resolution": "unresolved_dynamic_template",
+      "template": "storyboard|mode_frame|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38060,
+      "resolution": "unresolved_dynamic_template",
+      "template": "support|bot_input|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38078,
+      "resolution": "unresolved_dynamic_template",
+      "template": "support|consult_input|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38074,
+      "resolution": "unresolved_dynamic_template",
+      "template": "support|consult_need|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 117140,
+      "resolution": "unresolved_dynamic_template",
+      "template": "task|handoff|x|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 117138,
+      "resolution": "unresolved_dynamic_template",
+      "template": "task|status|blocked|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 117137,
+      "resolution": "unresolved_dynamic_template",
+      "template": "task|status|ready|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38532,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|al|{*}|0"
+    },
+    {
+      "file": "bot.py",
+      "line": 38559,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|al|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38561,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|al|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38525,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|ask|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38526,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|assign|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38424,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|attach|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 58746,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|av|{*}|new"
+    },
+    {
+      "file": "bot.py",
+      "line": 59017,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|av|{*}|new"
+    },
+    {
+      "file": "bot.py",
+      "line": 59021,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|av|{*}|new"
+    },
+    {
+      "file": "bot.py",
+      "line": 59037,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|av|{*}|new"
+    },
+    {
+      "file": "bot.py",
+      "line": 59066,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|av|{*}|new"
+    },
+    {
+      "file": "bot.py",
+      "line": 38529,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|file|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38531,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|lead|{*}|contact"
+    },
+    {
+      "file": "bot.py",
+      "line": 38531,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|lead|{*}|potential"
+    },
+    {
+      "file": "bot.py",
+      "line": 38526,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|note|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38423,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|pv|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38423,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|reply_user|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38523,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|reply|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 58745,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|reply|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 59036,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|reply|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 58745,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|send|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 59036,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|send|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 38524,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|st|{*}|refund_pending"
+    },
+    {
+      "file": "bot.py",
+      "line": 38523,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|st|{*}|resolved"
+    },
+    {
+      "file": "bot.py",
+      "line": 38525,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|st|{*}|waiting_provider"
+    },
+    {
+      "file": "bot.py",
+      "line": 38524,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|suggest|{*}|0"
+    },
+    {
+      "file": "bot.py",
+      "line": 59037,
+      "resolution": "unresolved_dynamic_template",
+      "template": "ticket|suggest|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30593,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_more|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30582,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_pick|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30558,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_target|voice|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30589,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_target|{*}|en"
+    },
+    {
+      "file": "bot.py",
+      "line": 30588,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_target|{*}|vi"
+    },
+    {
+      "file": "bot.py",
+      "line": 30592,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_target|{*}|zh"
+    },
+    {
+      "file": "bot.py",
+      "line": 30578,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tr_target|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 119299,
+      "resolution": "unresolved_dynamic_template",
+      "template": "trend|video|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 94035,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vfinal|tier|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 96593,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videoaddon|export|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 96806,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videoaddon|preview_retry|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 96818,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videoaddon|preview_status|{*}|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 96769,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videoaddon|preview|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 125214,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|job_status|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124334,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|link_status|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124107,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|type|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124108,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|type|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124111,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|type|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124361,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|type|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124362,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|type|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124365,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|type|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124810,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|voice_profile_page|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124812,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|voice_profile_page|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124441,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124461,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124714,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 124951,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videodub|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47304,
+      "resolution": "unresolved_dynamic_template",
+      "template": "videoedit|status|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47909,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|camera|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47852,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|color|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47763,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|idea_select|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47703,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|input_text|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47991,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|motion|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47359,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|open|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47923,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|pace|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47891,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|scene_idea|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 48070,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|style|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 47873,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|subject|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 48700,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|trend_select|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 48393,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|{*}|{*}"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|back_motion",
+        "promptvideo|back_motion"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 51284,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54727,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54748,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|back_motion"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|back_music",
+        "promptvideo|back_music"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51553,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|back_music"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|edit_prompt",
+        "promptvideo|edit_prompt"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51550,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|edit_prompt"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|finalization",
+        "promptvideo|finalization"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51547,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|finalization"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|generate",
+        "promptvideo|generate"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51548,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|generate"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|motion_choice|1",
+        "promptvideo|motion_choice|1"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 51214,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54722,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54743,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55137,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55157,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55177,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55276,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55292,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55309,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55329,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|motion_choice|1"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|motion_choice|2",
+        "promptvideo|motion_choice|2"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 51215,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54722,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54743,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55137,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55157,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55177,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55276,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55292,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55309,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55329,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|motion_choice|2"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|motion_choice|3",
+        "promptvideo|motion_choice|3"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 51216,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54722,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54743,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55137,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55157,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55177,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55276,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55292,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55309,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55329,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|motion_choice|3"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|motion_custom",
+        "promptvideo|motion_custom"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 51218,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54722,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54743,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55137,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55157,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55177,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55276,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55292,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55309,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55329,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|motion_custom"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|motion_refresh",
+        "promptvideo|motion_refresh"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 51217,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54722,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54743,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55137,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55157,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55177,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55276,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55292,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55309,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55329,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|motion_refresh"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|music_choice|1",
+        "promptvideo|music_choice|1"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 51277,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54727,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54748,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|music_choice|1"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|music_choice|2",
+        "promptvideo|music_choice|2"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 51278,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54727,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54748,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|music_choice|2"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|music_choice|3",
+        "promptvideo|music_choice|3"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 51279,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54727,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54748,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|music_choice|3"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|music_custom",
+        "promptvideo|music_custom"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 51281,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54727,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54748,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|music_custom"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|music_refresh",
+        "promptvideo|music_refresh"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_music_keyboard",
+      "line": 51280,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54727,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54748,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|music_refresh"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|save",
+        "promptvideo|save"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51549,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|save"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|strength|director",
+        "promptvideo|strength|director"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51540,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|strength|director"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|strength|premium",
+        "promptvideo|strength|premium"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51543,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|strength|premium"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|strength|provider_safe",
+        "promptvideo|strength|provider_safe"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51542,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|strength|provider_safe"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|strength|quick",
+        "promptvideo|strength|quick"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51539,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|strength|quick"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|strength|viral",
+        "promptvideo|strength|viral"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_result_keyboard",
+      "line": 51541,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54734,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54756,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54763,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55216,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55225,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55367,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55378,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|strength|viral"
+    },
+    {
+      "derived_callback_tokens": [
+        "imagevideo|back_style",
+        "promptvideo|back_choices"
+      ],
+      "file": "bot.py",
+      "helper": "guided_video_motion_keyboard",
+      "line": 51221,
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 54722,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 54743,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55137,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55157,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55177,
+          "prefix": "promptvideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55276,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55292,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55309,
+          "prefix": "imagevideo"
+        },
+        {
+          "file": "bot.py",
+          "line": 55329,
+          "prefix": "imagevideo"
+        }
+      ],
+      "resolution": "reviewed_literal_prefix_helper_calls",
+      "template": "{*}|{*}"
     }
   ],
   "commands": [
@@ -16535,8 +23923,9 @@
   "conversations": [],
   "counts": {
     "background_jobs": 194,
-    "callback_data": 1925,
+    "callback_data": 2821,
     "callback_handlers": 54,
+    "callback_templates": 232,
     "commands": 773,
     "conversations": 0,
     "database_tables": 97,

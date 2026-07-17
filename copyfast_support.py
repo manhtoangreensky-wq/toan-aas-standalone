@@ -19,10 +19,17 @@ import uuid
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import ensure_copyfast_schema, support_desk_enabled, transaction, utc_now
+from copyfast_assets import (
+    open_verified_private_asset_stream,
+    private_asset_attachment_response,
+    read_verified_private_asset_bytes,
+    seal_verified_private_file,
+)
+from copyfast_db import asset_vault_enabled, ensure_copyfast_schema, support_desk_enabled, transaction, utc_now
 
 
 router = APIRouter(prefix="/api/v1/support", tags=["Web Support Desk"])
@@ -38,6 +45,26 @@ CASE_STATES = frozenset({
     "new", "reviewing", "waiting_user", "waiting_provider",
     "refund_pending", "resolved", "closed",
 })
+CARE_TEAM_QUEUES = frozenset({
+    "general", "technical", "account", "creative", "document", "product",
+})
+CARE_ASSIGNMENT_FILTERS = frozenset({"all", "mine", "assigned", "unassigned"})
+SLA_CLASSES = frozenset({"standard", "priority", "critical"})
+SLA_TARGET_HOURS = {"standard": 24, "priority": 8, "critical": 2}
+# This is deliberately distinct from the legacy customer-waiting report and
+# Operations Autopilot's persisted triage health.  It is only the current,
+# Web-native Customer Care first-touch target projected by ``_sla_public``.
+CARE_SLA_STATUS_FILTERS = frozenset({
+    "all", "unavailable", "pending", "within_target", "breached", "overdue_unacknowledged",
+})
+ESCALATION_STATES = frozenset({"none", "requested", "acknowledged", "resolved", "cancelled"})
+ESCALATION_TRANSITIONS = {
+    "none": frozenset({"requested"}),
+    "requested": frozenset({"acknowledged", "cancelled"}),
+    "acknowledged": frozenset({"resolved", "cancelled"}),
+    "resolved": frozenset(),
+    "cancelled": frozenset(),
+}
 VISIBLE_MESSAGE_ROLES = frozenset({"customer", "operator"})
 MESSAGE_VISIBILITIES = frozenset({"public", "internal"})
 # Customer timelines disclose only customer actions and a public operator
@@ -46,7 +73,7 @@ MESSAGE_VISIBILITIES = frozenset({"public", "internal"})
 # case state itself.
 CUSTOMER_VISIBLE_EVENT_ACTIONS = frozenset({
     "case_created", "customer_replied", "customer_close", "customer_reopen",
-    "operator_replied_public",
+    "operator_replied_public", "customer_attachment_added",
 })
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 SECRET_ASSIGNMENT_PATTERN = re.compile(
@@ -94,6 +121,18 @@ MAX_SUBJECT = 180
 MAX_DETAIL = 4_000
 MAX_REPLY = 4_000
 MAX_OPERATION_NOTE = 360
+MAX_CARE_REASON = 360
+STAFF_ACCOUNT_ID_PATTERN = re.compile(r"^[A-Za-z0-9_-]{1,128}$")
+MAX_SUPPORT_ATTACHMENTS_PER_CASE = 3
+MAX_SUPPORT_ATTACHMENT_BYTES = 5 * 1024 * 1024
+SUPPORT_ATTACHMENT_PAYMENT_CATEGORIES = frozenset({"payment_topup", "refund", "package_combo"})
+SUPPORT_ATTACHMENT_CONTENT_TYPES = {
+    (".png", "image/png"),
+    (".jpg", "image/jpeg"),
+    (".jpeg", "image/jpeg"),
+    (".webp", "image/webp"),
+    (".txt", "text/plain"),
+}
 
 
 def _require_support_enabled() -> None:
@@ -101,6 +140,20 @@ def _require_support_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Web Support Desk đang tạm dừng để bảo trì. WEBAPP_SUPPORT_DESK_ENABLED chưa được bật.",
+        )
+
+
+def _require_support_evidence_enabled() -> None:
+    """Require the existing private Asset Vault boundary for evidence.
+
+    Support Desk deliberately never owns a second upload directory. A case
+    can only link a file after the same persistent, private Asset Vault gate
+    used by the Web workspace is explicitly enabled.
+    """
+    if not asset_vault_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Đính kèm bằng chứng đang được bảo vệ vì Asset Vault chưa được bật.",
         )
 
 
@@ -184,6 +237,36 @@ def _state(value: Any) -> str:
     normalized = str(value or "").strip().lower()
     if normalized not in CASE_STATES:
         raise ValueError("Trạng thái hỗ trợ không hợp lệ")
+    return normalized
+
+
+def _team_queue(value: Any) -> str:
+    normalized = str(value or "general").strip().lower()
+    if normalized not in CARE_TEAM_QUEUES:
+        raise ValueError("Hàng đợi Customer Care không hợp lệ")
+    return normalized
+
+
+def _sla_class(value: Any) -> str:
+    normalized = str(value or "standard").strip().lower()
+    if normalized not in SLA_CLASSES:
+        raise ValueError("Phân loại SLA nội bộ không hợp lệ")
+    return normalized
+
+
+def _escalation_state(value: Any) -> str:
+    normalized = str(value or "").strip().lower()
+    if normalized not in ESCALATION_STATES or normalized == "none":
+        raise ValueError("Trạng thái escalation không hợp lệ")
+    return normalized
+
+
+def _staff_account_id(value: Any) -> str | None:
+    normalized = str(value or "").strip()
+    if not normalized:
+        return None
+    if not STAFF_ACCOUNT_ID_PATTERN.fullmatch(normalized):
+        raise ValueError("Mã nhân sự Customer Care không hợp lệ")
     return normalized
 
 
@@ -271,12 +354,68 @@ def _case_row(conn: Any, *, case_id: str, account_id: str | None = None) -> tupl
     row = conn.execute(
         f"""SELECT c.id, c.account_id, c.category, c.priority, c.subject, c.initial_detail, c.state, c.revision,
                    c.created_at, c.updated_at, c.last_public_message_at, c.resolved_at, c.closed_at,
-                   a.display_name, a.email
-              FROM web_support_cases c JOIN web_accounts a ON a.id=c.account_id
+                   a.display_name, a.email,
+                   COALESCE(ctrl.team_queue, 'general'), ctrl.assigned_account_id,
+                   assignee.display_name, COALESCE(ctrl.sla_class, 'standard'),
+                   COALESCE(ctrl.escalation_state, 'none'), COALESCE(ctrl.escalation_reason, ''),
+                   ctrl.escalation_requested_at, ctrl.escalation_acknowledged_at,
+                   ctrl.escalation_resolved_at, ctrl.first_staff_touched_at
+              FROM web_support_cases c
+              JOIN web_accounts a ON a.id=c.account_id
+              LEFT JOIN web_support_case_controls ctrl ON ctrl.case_id=c.id
+              LEFT JOIN web_accounts assignee ON assignee.id=ctrl.assigned_account_id
               WHERE {' AND '.join(clauses)}""",
         tuple(params),
     ).fetchone()
     return tuple(row) if row else None
+
+
+def _case_control(conn: Any, *, case_id: str) -> tuple[Any, ...] | None:
+    row = conn.execute(
+        """SELECT team_queue, assigned_account_id, sla_class, first_staff_touched_at,
+                  escalation_state, escalation_reason, escalation_requested_at,
+                  escalation_acknowledged_at, escalation_resolved_at, escalation_actor_account_id,
+                  updated_at
+             FROM web_support_case_controls WHERE case_id=?""",
+        (case_id,),
+    ).fetchone()
+    return tuple(row) if row else None
+
+
+def _ensure_case_control(conn: Any, *, case_id: str, now: str) -> None:
+    """Create metadata lazily for legacy cases without changing case history."""
+    conn.execute(
+        """INSERT OR IGNORE INTO web_support_case_controls
+           (case_id, team_queue, assigned_account_id, sla_class, first_staff_touched_at,
+            escalation_state, escalation_reason, escalation_requested_at,
+            escalation_acknowledged_at, escalation_resolved_at, escalation_actor_account_id, updated_at)
+           VALUES (?, 'general', NULL, 'standard', NULL, 'none', '', NULL, NULL, NULL, NULL, ?)""",
+        (case_id, now),
+    )
+
+
+def _care_event(
+    conn: Any,
+    *,
+    case_id: str,
+    account_id: str,
+    actor_account_id: str,
+    kind: str,
+    action: str,
+    previous_value: str = "",
+    next_value: str = "",
+    reason: str = "",
+) -> None:
+    """Persist staff-only metadata history, never a customer-visible event."""
+    conn.execute(
+        """INSERT INTO web_support_case_control_events
+           (id, case_id, account_id, actor_account_id, kind, action, previous_value, next_value, reason, created_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        (
+            str(uuid.uuid4()), case_id, account_id, actor_account_id, kind, action,
+            previous_value, next_value, reason, utc_now(),
+        ),
+    )
 
 
 def _excerpt(value: str, length: int = 200) -> str:
@@ -294,7 +433,133 @@ def _mask_email(value: str) -> str:
     return f"{local[:1]}***@{domain}"
 
 
-def _case_public(row: tuple[Any, ...], *, include_detail: bool = False, admin: bool = False) -> dict[str, Any]:
+def _as_utc(value: Any) -> datetime | None:
+    try:
+        parsed = datetime.fromisoformat(str(value or "").replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc)
+
+
+def _sla_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Describe an internal triage target without promising customer delivery."""
+    classification = str(row[18] or "standard")
+    target_hours = SLA_TARGET_HOURS.get(classification, SLA_TARGET_HOURS["standard"])
+    started_at = str(row[8] or "")
+    first_touch_at = str(row[24]) if row[24] else None
+    created = _as_utc(started_at)
+    first_touch = _as_utc(first_touch_at)
+    due_at = None
+    status = "unavailable"
+    if created:
+        due = created + timedelta(hours=target_hours)
+        due_at = due.isoformat(timespec="seconds")
+        if first_touch:
+            status = "within_target" if first_touch <= due else "breached"
+        else:
+            status = "overdue_unacknowledged" if datetime.now(timezone.utc) > due else "pending"
+    return {
+        "class": classification,
+        "target_hours": target_hours,
+        "starts_at": started_at,
+        "due_at": due_at,
+        "first_staff_touch_at": first_touch_at,
+        "status": status,
+        "scope": "internal_triage_only",
+    }
+
+
+def _care_sla_status_sql(*, now: str) -> tuple[str, tuple[str, ...]]:
+    """Return the fixed SQL projection matching ``_sla_public`` statuses.
+
+    Customer Care list filtering must happen before the bounded list query's
+    ``LIMIT``/``OFFSET``.  Recomputing a page in the browser or post-filtering
+    a page would silently hide matching cases.  SQLite ``julianday`` keeps the
+    calculation server-side and treats malformed dates as NULL, which matches
+    the fail-closed ``unavailable``/no-first-touch behavior of ``_as_utc``.
+
+    The expression is intentionally local to this Web Support Desk table. It
+    does not join the separate customer-waiting report, Operations Autopilot,
+    Bot, provider, payment, wallet or job state.
+    """
+    target_hours = """
+        CASE COALESCE(ctrl.sla_class, 'standard')
+            WHEN 'critical' THEN 2.0
+            WHEN 'priority' THEN 8.0
+            ELSE 24.0
+        END
+    """
+    return (
+        f"""
+        CASE
+            WHEN julianday(c.created_at) IS NULL THEN 'unavailable'
+            WHEN julianday(ctrl.first_staff_touched_at) IS NOT NULL THEN
+                CASE
+                    WHEN julianday(ctrl.first_staff_touched_at)
+                         <= julianday(c.created_at) + (({target_hours}) / 24.0)
+                    THEN 'within_target'
+                    ELSE 'breached'
+                END
+            WHEN julianday(?) > julianday(c.created_at) + (({target_hours}) / 24.0)
+            THEN 'overdue_unacknowledged'
+            ELSE 'pending'
+        END
+        """,
+        (now,),
+    )
+
+
+def _care_public(
+    row: tuple[Any, ...], *, include_reason: bool, include_assignee_id: bool = False,
+) -> dict[str, Any]:
+    """Return the minimum Customer Care projection for the current surface.
+
+    A staff-list item only needs to name the assignee.  The internal account
+    identifier is needed exclusively by the manager's single-case triage
+    form, so it must not be replicated across every operator list response.
+    """
+    assigned_account_id = str(row[16] or "")
+    assignee = None
+    if assigned_account_id:
+        assignee = {"display_name": str(row[17] or "Customer Care")}
+        if include_assignee_id:
+            assignee["id"] = assigned_account_id
+    escalation = {
+        "state": str(row[19] or "none"),
+        "requested_at": str(row[21]) if row[21] else None,
+        "acknowledged_at": str(row[22]) if row[22] else None,
+        "resolved_at": str(row[23]) if row[23] else None,
+        "delivery": "internal_metadata_only",
+    }
+    if include_reason:
+        escalation["reason"] = str(row[20] or "")
+    return {
+        "team_queue": str(row[15] or "general"),
+        "assignee": assignee,
+        "sla": _sla_public(row),
+        "escalation": escalation,
+    }
+
+
+def _care_event_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    return {
+        "id": str(row[0]),
+        "kind": str(row[1]),
+        "action": str(row[2]),
+        "previous_value": str(row[3] or ""),
+        "next_value": str(row[4] or ""),
+        "reason": str(row[5] or ""),
+        "created_at": str(row[6]),
+        "actor_display_name": str(row[7] or "Customer Care"),
+    }
+
+
+def _case_public(
+    row: tuple[Any, ...], *, include_detail: bool = False, admin: bool = False,
+    include_assignee_id: bool = False,
+) -> dict[str, Any]:
     result = {
         "id": str(row[0]),
         "category": str(row[2]),
@@ -313,6 +578,14 @@ def _case_public(row: tuple[Any, ...], *, include_detail: bool = False, admin: b
         result["detail"] = str(row[5])
     if admin:
         result["customer"] = {"display_name": str(row[13] or "Khách hàng"), "email_masked": _mask_email(str(row[14] or ""))}
+        # Only the manager's case-specific triage form needs this ID to render
+        # its selected roster value. Lists, mutation receipts and operator
+        # detail views never need it.
+        result["care"] = _care_public(
+            row,
+            include_reason=include_detail,
+            include_assignee_id=include_assignee_id,
+        )
     return result
 
 
@@ -351,6 +624,14 @@ def _require_staff(account: dict) -> str:
     role = _staff_role(account)
     if not role:
         raise HTTPException(status_code=403, detail="Quyền Support Desk chưa được cấp cho signed Web account này")
+    return role
+
+
+def _require_support_manager(account: dict) -> str:
+    """Require the protected, server-side Customer Care manager role."""
+    role = _require_staff(account)
+    if role != "manager":
+        raise HTTPException(status_code=403, detail="Chỉ Customer Care manager được thay đổi phân công hoặc SLA")
     return role
 
 
@@ -410,6 +691,28 @@ class CaseReplyRequest(SupportRequestModel):
         return _safe_text(value, label="Phản hồi", minimum=1, maximum=MAX_REPLY)
 
 
+class CaseAttachmentRequest(SupportRequestModel):
+    """Link one existing Asset Vault item as private Support evidence.
+
+    There is intentionally no ``UploadFile`` or arbitrary filename/path in
+    this model.  The browser can only choose a server-listed private asset
+    already owned by the signed account.
+    """
+
+    asset_id: str = Field(min_length=36, max_length=36)
+    expected_revision: int = Field(ge=1, le=1_000_000)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+    customer_redaction_confirmed: bool = False
+
+    @field_validator("asset_id")
+    @classmethod
+    def validate_asset_id(cls, value: str) -> str:
+        try:
+            return str(uuid.UUID(str(value)))
+        except (TypeError, ValueError, AttributeError) as exc:
+            raise ValueError("Mã Asset Vault không hợp lệ") from exc
+
+
 class CaseTransitionRequest(SupportRequestModel):
     expected_revision: int = Field(ge=1, le=1_000_000)
     idempotency_key: str = Field(min_length=12, max_length=160)
@@ -454,6 +757,58 @@ class AdminUpdateRequest(SupportRequestModel):
     @classmethod
     def validate_note(cls, value: str) -> str:
         return _safe_text(value, label="Lý do thao tác", minimum=3, maximum=MAX_OPERATION_NOTE)
+
+
+class AdminCareTriageRequest(SupportRequestModel):
+    """Manager-only internal routing; it never sends a customer notification."""
+
+    team_queue: str = Field(max_length=32)
+    assigned_account_id: str | None = Field(default=None, max_length=128)
+    sla_class: str = Field(max_length=16)
+    operation_note: str = Field(min_length=3, max_length=MAX_CARE_REASON)
+    expected_revision: int = Field(ge=1, le=1_000_000)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+    confirm: bool = False
+
+    @field_validator("team_queue")
+    @classmethod
+    def validate_team_queue(cls, value: str) -> str:
+        return _team_queue(value)
+
+    @field_validator("assigned_account_id")
+    @classmethod
+    def validate_assigned_account_id(cls, value: str | None) -> str | None:
+        return _staff_account_id(value)
+
+    @field_validator("sla_class")
+    @classmethod
+    def validate_sla_class(cls, value: str) -> str:
+        return _sla_class(value)
+
+    @field_validator("operation_note")
+    @classmethod
+    def validate_operation_note(cls, value: str) -> str:
+        return _safe_text(value, label="Ghi chú phân công", minimum=3, maximum=MAX_CARE_REASON)
+
+
+class AdminCareEscalationRequest(SupportRequestModel):
+    """Controlled internal escalation lifecycle, not an external escalation."""
+
+    escalation_state: str = Field(max_length=24)
+    reason: str = Field(min_length=3, max_length=MAX_CARE_REASON)
+    expected_revision: int = Field(ge=1, le=1_000_000)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+    confirm: bool = False
+
+    @field_validator("escalation_state")
+    @classmethod
+    def validate_escalation_state(cls, value: str) -> str:
+        return _escalation_state(value)
+
+    @field_validator("reason")
+    @classmethod
+    def validate_reason(cls, value: str) -> str:
+        return _safe_text(value, label="Lý do escalation", minimum=3, maximum=MAX_CARE_REASON)
 
 
 @router.get("/summary")
@@ -562,9 +917,10 @@ async def create_case(payload: CaseCreateRequest, request: Request, account: dic
         now = utc_now()
         conn.execute(
             """INSERT INTO web_support_cases
-               (id, account_id, category, priority, subject, initial_detail, state, revision, created_at, updated_at, last_public_message_at, resolved_at, closed_at)
-               VALUES (?, ?, ?, ?, ?, ?, 'new', 1, ?, ?, ?, NULL, NULL)""",
-            (case_id, account_id, payload.category, payload.priority, payload.subject, payload.detail, now, now, now),
+               (id, account_id, category, priority, subject, initial_detail, state, revision, created_at, updated_at,
+                last_public_message_at, resolved_at, closed_at, customer_waiting_since)
+               VALUES (?, ?, ?, ?, ?, ?, 'new', 1, ?, ?, ?, NULL, NULL, ?)""",
+            (case_id, account_id, payload.category, payload.priority, payload.subject, payload.detail, now, now, now, now),
         )
         conn.execute(
             """INSERT INTO web_support_messages
@@ -584,7 +940,158 @@ async def create_case(payload: CaseCreateRequest, request: Request, account: dic
     return _idempotent(f"web-support:{account_id}:case:create", key, fingerprint, operation)
 
 
-def _case_detail(conn: Any, *, case_id: str, account_id: str | None, admin: bool) -> dict[str, Any] | None:
+def _support_attachment_not_found() -> dict[str, Any]:
+    """Fail closed without disclosing another account's evidence metadata."""
+    return envelope(
+        False,
+        "Không tìm thấy bằng chứng riêng tư thuộc yêu cầu Web hiện tại.",
+        status_name="guarded",
+        error_code="WEB_SUPPORT_ATTACHMENT_NOT_FOUND",
+    )
+
+
+def _support_attachment_unavailable() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Tệp bằng chứng riêng tư không còn sẵn sàng để dùng hoặc tải xuống.",
+        status_name="guarded",
+        error_code="WEB_SUPPORT_ATTACHMENT_UNAVAILABLE",
+    )
+
+
+def _attachment_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Return only snapshot fields safe for a case timeline/detail view."""
+    return {
+        "id": str(row[0]),
+        "display_name": str(row[1]),
+        "content_type": str(row[2]),
+        "byte_size": int(row[3]),
+        "created_at": str(row[4]),
+    }
+
+
+def _case_attachments(conn: Any, *, case_id: str) -> list[dict[str, Any]]:
+    rows = conn.execute(
+        """SELECT id, display_name_snapshot, content_type_snapshot, byte_size_snapshot, created_at
+             FROM web_support_case_attachments
+             WHERE case_id=?
+             ORDER BY created_at ASC, id ASC
+             LIMIT ?""",
+        (case_id, MAX_SUPPORT_ATTACHMENTS_PER_CASE),
+    ).fetchall()
+    return [_attachment_public(tuple(row)) for row in rows]
+
+
+def _support_attachment_asset_row(conn: Any, *, asset_id: str, account_id: str) -> tuple[Any, ...] | None:
+    """Load only owner-scoped Asset Vault metadata needed for evidence checks."""
+    row = conn.execute(
+        """SELECT id, account_id, display_name, extension, content_type, byte_size, sha256, storage_key, state
+             FROM web_asset_files
+             WHERE id=? AND account_id=?""",
+        (asset_id, account_id),
+    ).fetchone()
+    return tuple(row) if row else None
+
+
+def _support_attachment_kind(asset: tuple[Any, ...]) -> str | None:
+    pair = (str(asset[3] or "").lower(), str(asset[4] or "").lower())
+    if pair not in SUPPORT_ATTACHMENT_CONTENT_TYPES:
+        return None
+    return "text" if pair[1] == "text/plain" else "image"
+
+
+def _support_attachment_text_is_safe(content: bytes) -> bool:
+    """Apply Support Desk's secret/payment rules to a bounded TXT asset.
+
+    Images require an explicit customer redaction attestation but are never
+    OCR-decoded or claimed to be inspected. Plain text is small enough to
+    scan exactly before it enters the evidence relationship.
+    """
+    try:
+        text = content.decode("utf-8-sig")
+    except UnicodeDecodeError:
+        return False
+    return "\x00" not in text and not _contains_sensitive(text) and not MANUAL_PAYMENT_PATTERN.search(text)
+
+
+def _mark_support_attachment_asset_unavailable(conn: Any, *, asset_id: str, account_id: str) -> None:
+    """Fail closed on an integrity mismatch without deleting private evidence."""
+    conn.execute(
+        """UPDATE web_asset_files
+           SET state='unavailable', updated_at=?, lifecycle_revision=lifecycle_revision + 1
+           WHERE id=? AND account_id=? AND state IN ('active', 'archived')""",
+        (utc_now(), asset_id, account_id),
+    )
+
+
+def _attachment_download_row(
+    conn: Any,
+    *,
+    case_id: str,
+    attachment_id: str,
+    account_id: str | None,
+) -> tuple[Any, ...] | None:
+    clauses = ["e.id=?", "e.case_id=?", "e.account_id=c.account_id", "f.id=e.asset_id", "f.account_id=e.account_id"]
+    params: list[Any] = [attachment_id, case_id]
+    if account_id is not None:
+        clauses.append("c.account_id=?")
+        params.append(account_id)
+    row = conn.execute(
+        f"""SELECT e.id, e.case_id, e.account_id, e.display_name_snapshot, e.content_type_snapshot,
+                   e.byte_size_snapshot, f.id, f.content_type, f.byte_size, f.sha256, f.storage_key, f.state
+              FROM web_support_case_attachments e
+              JOIN web_support_cases c ON c.id=e.case_id
+              JOIN web_asset_files f ON f.id=e.asset_id
+              WHERE {' AND '.join(clauses)}""",
+        tuple(params),
+    ).fetchone()
+    return tuple(row) if row else None
+
+
+def _attachment_download_response(conn: Any, *, row: tuple[Any, ...]) -> StreamingResponse | dict[str, Any]:
+    """Build a verified, never-cached response for one private evidence item."""
+    (
+        _attachment_id, _case_id, account_id, display_name, snapshot_type, snapshot_size,
+        asset_id, asset_type, asset_size, digest, storage_key, state,
+    ) = row
+    # Evidence can survive an Asset Vault archive, but an unavailable asset
+    # is never downloadable. Snapshot fields must agree with the current
+    # private asset row so stale metadata cannot be served as a file.
+    if (
+        str(state) not in {"active", "archived"}
+        or str(snapshot_type) != str(asset_type)
+        or int(snapshot_size) != int(asset_size)
+        or str(snapshot_type) not in {"image/png", "image/jpeg", "image/webp", "text/plain"}
+    ):
+        return _support_attachment_unavailable()
+    stream = open_verified_private_asset_stream(
+        storage_key=str(storage_key),
+        expected_bytes=int(asset_size),
+        expected_digest=str(digest),
+    )
+    if stream is None:
+        _mark_support_attachment_asset_unavailable(conn, asset_id=str(asset_id), account_id=str(account_id))
+        return _support_attachment_unavailable()
+    sealed_stream = seal_verified_private_file(
+        stream,
+        expected_bytes=int(asset_size),
+        expected_digest=str(digest),
+    )
+    if sealed_stream is None:
+        _mark_support_attachment_asset_unavailable(conn, asset_id=str(asset_id), account_id=str(account_id))
+        return _support_attachment_unavailable()
+    return private_asset_attachment_response(
+        sealed_stream,
+        byte_size=int(asset_size),
+        media_type=str(snapshot_type),
+        filename=str(display_name),
+    )
+
+
+def _case_detail(
+    conn: Any, *, case_id: str, account_id: str | None, admin: bool,
+    include_assignee_id: bool = False,
+) -> dict[str, Any] | None:
     row = _case_row(conn, case_id=case_id, account_id=account_id)
     if not row:
         return None
@@ -608,12 +1115,29 @@ def _case_detail(conn: Any, *, case_id: str, account_id: str | None, admin: bool
             WHERE {' AND '.join(event_clauses)} ORDER BY created_at ASC, rowid ASC LIMIT 300""",
         tuple(event_params),
     ).fetchall()
-    return {
-        "case": _case_public(row, include_detail=True, admin=admin),
+    result = {
+        "case": _case_public(
+            row,
+            include_detail=True,
+            admin=admin,
+            include_assignee_id=admin and include_assignee_id,
+        ),
         "messages": [_message_public(tuple(item), admin=admin) for item in messages],
         "events": [_event_public(tuple(item)) for item in events],
+        "attachments": _case_attachments(conn, case_id=case_id),
         "delivery": "web_view_only",
     }
+    if admin:
+        control_events = conn.execute(
+            """SELECT e.id, e.kind, e.action, e.previous_value, e.next_value, e.reason, e.created_at,
+                      a.display_name
+                 FROM web_support_case_control_events e
+                 LEFT JOIN web_accounts a ON a.id=e.actor_account_id
+                 WHERE e.case_id=? ORDER BY e.created_at ASC, e.rowid ASC LIMIT 200""",
+            (case_id,),
+        ).fetchall()
+        result["care_history"] = [_care_event_public(tuple(item)) for item in control_events]
+    return result
 
 
 @router.get("/cases/{case_id}")
@@ -626,6 +1150,256 @@ async def get_case(case_id: str, account: dict = Depends(require_account)):
     if not data:
         return _case_not_found()
     return envelope(True, "Đã nạp yêu cầu riêng từ Web Support Desk.", data=data, status_name="read_only")
+
+
+@router.post("/cases/{case_id}/attachments")
+async def attach_case_evidence(
+    case_id: str,
+    payload: CaseAttachmentRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Link one existing, owner-scoped Asset Vault item as case evidence.
+
+    This endpoint deliberately accepts metadata only. It never accepts file
+    bytes, multipart form data, a source URL, an Asset Vault path, payment
+    proof or an external-notification request.
+    """
+    _require_support_enabled()
+    _require_support_evidence_enabled()
+    if payload.customer_redaction_confirmed is not True:
+        raise HTTPException(
+            status_code=422,
+            detail="Cần xác nhận đã che thông tin nhạy cảm trước khi đính kèm bằng chứng.",
+        )
+    case_id = _uuid(case_id, label="Mã yêu cầu")
+    key = _idempotency_key(payload.idempotency_key)
+    account_id = str(account["id"])
+    fingerprint = _fingerprint({
+        "action": "attach_private_asset",
+        "asset_id": payload.asset_id,
+        "expected_revision": payload.expected_revision,
+        "customer_redaction_confirmed": True,
+    })
+
+    def operation(conn: Any) -> dict[str, Any]:
+        current = _case_row(conn, case_id=case_id, account_id=account_id)
+        if not current:
+            return _case_not_found()
+        if str(current[2]) in SUPPORT_ATTACHMENT_PAYMENT_CATEGORIES:
+            return envelope(
+                False,
+                "Nhóm yêu cầu này không nhận bằng chứng tệp. Không gửi bill, TXID, QR hoặc dữ liệu thanh toán vào Web Support Desk.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ATTACHMENT_PAYMENT_CATEGORY_BLOCKED",
+            )
+        if str(current[6]) == "closed":
+            return envelope(
+                False,
+                "Yêu cầu đã đóng. Hãy mở lại trước khi liên kết bằng chứng mới.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_CASE_CLOSED",
+            )
+        if int(current[7]) != payload.expected_revision:
+            return envelope(
+                False,
+                "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi đính kèm bằng chứng.",
+                data={"current_revision": int(current[7])},
+                status_name="guarded",
+                error_code="WEB_SUPPORT_CASE_CONFLICT",
+            )
+        existing = conn.execute(
+            "SELECT id FROM web_support_case_attachments WHERE case_id=? AND asset_id=?",
+            (case_id, payload.asset_id),
+        ).fetchone()
+        if existing:
+            return envelope(
+                False,
+                "Tệp này đã được liên kết với yêu cầu Web hiện tại.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ATTACHMENT_ALREADY_LINKED",
+            )
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_support_case_attachments WHERE case_id=?",
+            (case_id,),
+        ).fetchone()
+        if int(count[0] or 0) >= MAX_SUPPORT_ATTACHMENTS_PER_CASE:
+            return envelope(
+                False,
+                "Mỗi yêu cầu Web chỉ nhận tối đa 3 bằng chứng riêng tư.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ATTACHMENT_LIMIT",
+            )
+        asset = _support_attachment_asset_row(conn, asset_id=payload.asset_id, account_id=account_id)
+        if not asset or str(asset[8]) != "active":
+            return envelope(
+                False,
+                "Tệp Asset Vault không còn sẵn sàng để liên kết với yêu cầu này.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ATTACHMENT_ASSET_NOT_AVAILABLE",
+            )
+        kind = _support_attachment_kind(asset)
+        if kind is None:
+            return envelope(
+                False,
+                "Bằng chứng chỉ nhận PNG, JPEG, WebP hoặc TXT riêng tư từ Asset Vault.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ATTACHMENT_TYPE_NOT_ALLOWED",
+            )
+        try:
+            byte_size = int(asset[5])
+        except (TypeError, ValueError):
+            return _support_attachment_unavailable()
+        if byte_size <= 0 or byte_size > MAX_SUPPORT_ATTACHMENT_BYTES:
+            return envelope(
+                False,
+                "Tệp bằng chứng vượt giới hạn 5 MB của Web Support Desk.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ATTACHMENT_SIZE_LIMIT",
+            )
+        if kind == "text":
+            content = read_verified_private_asset_bytes(
+                storage_key=str(asset[7]),
+                expected_bytes=byte_size,
+                expected_digest=str(asset[6]),
+                maximum_bytes=MAX_SUPPORT_ATTACHMENT_BYTES,
+            )
+            if content is None:
+                _mark_support_attachment_asset_unavailable(conn, asset_id=str(asset[0]), account_id=account_id)
+                return _support_attachment_unavailable()
+            if not _support_attachment_text_is_safe(content):
+                return envelope(
+                    False,
+                    "Tệp TXT có dữ liệu nhạy cảm hoặc thông tin thanh toán nên không thể dùng làm bằng chứng.",
+                    status_name="guarded",
+                    error_code="WEB_SUPPORT_ATTACHMENT_CONTENT_RESTRICTED",
+                )
+        else:
+            image_stream = open_verified_private_asset_stream(
+                storage_key=str(asset[7]),
+                expected_bytes=byte_size,
+                expected_digest=str(asset[6]),
+            )
+            if image_stream is None:
+                _mark_support_attachment_asset_unavailable(conn, asset_id=str(asset[0]), account_id=account_id)
+                return _support_attachment_unavailable()
+            image_stream.close()
+
+        attachment_id = str(uuid.uuid4())
+        now = utc_now()
+        revision = int(current[7]) + 1
+        changed = conn.execute(
+            """UPDATE web_support_cases SET revision=?, updated_at=?
+               WHERE id=? AND account_id=? AND revision=?""",
+            (revision, now, case_id, account_id, int(current[7])),
+        )
+        if changed.rowcount != 1:
+            return envelope(
+                False,
+                "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi đính kèm bằng chứng.",
+                status_name="guarded",
+                error_code="WEB_SUPPORT_CASE_CONFLICT",
+            )
+        conn.execute(
+            """INSERT INTO web_support_case_attachments
+               (id, case_id, account_id, asset_id, display_name_snapshot, content_type_snapshot,
+                byte_size_snapshot, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                attachment_id, case_id, account_id, str(asset[0]), str(asset[2]), str(asset[4]), byte_size, now,
+            ),
+        )
+        # This event carries only an action/state. It intentionally has no
+        # Asset ID, name, storage path, checksum, text content or payment
+        # metadata, while still invalidating stale triage/reliability reads
+        # through the case revision update above.
+        _event(
+            conn,
+            case_id=case_id,
+            account_id=account_id,
+            actor_account_id=account_id,
+            action="customer_attachment_added",
+            state=str(current[6]),
+        )
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.support.case.attachment.link",
+            request_id=_request_id(request),
+            target=case_id,
+            detail=f"private asset-vault evidence linked; kind={kind}; no upload/payment/OCR/external delivery",
+        )
+        row = _case_row(conn, case_id=case_id, account_id=account_id)
+        attachment_row = conn.execute(
+            """SELECT id, display_name_snapshot, content_type_snapshot, byte_size_snapshot, created_at
+                 FROM web_support_case_attachments WHERE id=? AND case_id=? AND account_id=?""",
+            (attachment_id, case_id, account_id),
+        ).fetchone()
+        return envelope(
+            True,
+            "Đã liên kết bằng chứng riêng tư từ Asset Vault. Không có upload mới, OCR, thông báo ngoài Web hoặc thao tác thanh toán.",
+            data={
+                "case": _case_public(row or ()),
+                "attachment": _attachment_public(tuple(attachment_row)) if attachment_row else None,
+                "delivery": "web_view_only",
+            },
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-support:{account_id}:case:{case_id}:attachment:link",
+        key,
+        fingerprint,
+        operation,
+    )
+
+
+@router.get("/cases/{case_id}/attachments/{attachment_id}/download")
+async def download_case_evidence(
+    case_id: str,
+    attachment_id: str,
+    account: dict = Depends(require_account),
+):
+    _require_support_enabled()
+    _require_support_evidence_enabled()
+    case_id = _uuid(case_id, label="Mã yêu cầu")
+    attachment_id = _uuid(attachment_id, label="Mã bằng chứng")
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = _attachment_download_row(
+            conn,
+            case_id=case_id,
+            attachment_id=attachment_id,
+            account_id=str(account["id"]),
+        )
+        if not row:
+            return _support_attachment_not_found()
+        return _attachment_download_response(conn, row=row)
+
+
+@router.get("/admin/cases/{case_id}/attachments/{attachment_id}/download")
+async def admin_download_case_evidence(
+    case_id: str,
+    attachment_id: str,
+    account: dict = Depends(require_account),
+):
+    _require_support_enabled()
+    _require_support_evidence_enabled()
+    require_support_staff(account)
+    case_id = _uuid(case_id, label="Mã yêu cầu")
+    attachment_id = _uuid(attachment_id, label="Mã bằng chứng")
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = _attachment_download_row(
+            conn,
+            case_id=case_id,
+            attachment_id=attachment_id,
+            account_id=None,
+        )
+        if not row:
+            return _support_attachment_not_found()
+        return _attachment_download_response(conn, row=row)
 
 
 @router.post("/cases/{case_id}/reply")
@@ -659,9 +1433,10 @@ async def reply_case(case_id: str, payload: CaseReplyRequest, request: Request, 
             (str(uuid.uuid4()), case_id, account_id, account_id, payload.body, now),
         )
         conn.execute(
-            """UPDATE web_support_cases SET state=?, revision=?, updated_at=?, last_public_message_at=?, resolved_at=?, closed_at=?
+            """UPDATE web_support_cases SET state=?, revision=?, updated_at=?, last_public_message_at=?, resolved_at=?, closed_at=?,
+               customer_waiting_since=?
                WHERE id=? AND account_id=? AND revision=?""",
-            (next_state, revision, now, now, resolved_at, closed_at, case_id, account_id, int(current[7])),
+            (next_state, revision, now, now, resolved_at, closed_at, now, case_id, account_id, int(current[7])),
         )
         _event(conn, case_id=case_id, account_id=account_id, actor_account_id=account_id, action="customer_replied", state=next_state)
         _record_audit(conn, account_id=account_id, canonical_user_id=str(account.get("canonical_user_id") or "") or None, action="web.support.case.reply", request_id=_request_id(request), target=case_id, detail="web support customer reply appended")
@@ -699,9 +1474,9 @@ def _customer_transition(*, case_id: str, payload: CaseTransitionRequest, reques
         revision = int(current[7]) + 1
         resolved_at, closed_at = _state_timestamps(current, next_state, now)
         conn.execute(
-            """UPDATE web_support_cases SET state=?, revision=?, updated_at=?, closed_at=?, resolved_at=?
+            """UPDATE web_support_cases SET state=?, revision=?, updated_at=?, closed_at=?, resolved_at=?, customer_waiting_since=?
                WHERE id=? AND account_id=? AND revision=?""",
-            (next_state, revision, now, closed_at, resolved_at, case_id, account_id, int(current[7])),
+            (next_state, revision, now, closed_at, resolved_at, None if action == "close" else now, case_id, account_id, int(current[7])),
         )
         _event(conn, case_id=case_id, account_id=account_id, actor_account_id=account_id, action=f"customer_{action}", state=next_state)
         _record_audit(conn, account_id=account_id, canonical_user_id=str(account.get("canonical_user_id") or "") or None, action=f"web.support.case.{action}", request_id=_request_id(request), target=case_id, detail="web support customer state changed")
@@ -751,8 +1526,9 @@ async def admin_summary(account: dict = Depends(require_account)):
         rows = conn.execute("SELECT state, COUNT(*) FROM web_support_cases GROUP BY state").fetchall()
         overdue = conn.execute(
             """SELECT COUNT(*) FROM web_support_cases
-               WHERE (state IN ('new','reviewing','refund_pending') AND updated_at<?)
-                  OR (state='waiting_provider' AND updated_at<?)""",
+               WHERE customer_waiting_since IS NOT NULL
+                 AND ((state IN ('new','reviewing','refund_pending') AND customer_waiting_since<?)
+                      OR (state='waiting_provider' AND customer_waiting_since<?))""",
             (cutoff_one_day, cutoff_three_days),
         ).fetchone()
     states = {state: 0 for state in sorted(CASE_STATES)}
@@ -762,6 +1538,304 @@ async def admin_summary(account: dict = Depends(require_account)):
     return envelope(True, "Tổng quan Web Support Desk cho operator.", data={"states": states, "overdue": int(overdue[0] or 0) if overdue else 0, "operator_role": role, "delivery": "web_view_only"}, status_name="read_only")
 
 
+def _active_support_staff(conn: Any, *, account_id: str) -> dict[str, str] | None:
+    """Resolve an assignee from protected account storage, never request data."""
+    row = conn.execute(
+        """SELECT id, display_name, role_cache
+             FROM web_accounts WHERE id=? AND is_active=1""",
+        (account_id,),
+    ).fetchone()
+    if not row:
+        return None
+    role = _staff_role({"role": str(row[2] or "")})
+    if not role:
+        return None
+    return {
+        "id": str(row[0]),
+        "display_name": str(row[1] or "Customer Care"),
+        "role": role,
+    }
+
+
+def _care_change_marker(*, team_queue: str, sla_class: str, assigned_account_id: str | None) -> str:
+    # Preserve only bounded routing metadata in staff history. This avoids
+    # copying customer content, email addresses or an internal support note
+    # into a generic activity feed.
+    assignment = "assigned" if assigned_account_id else "unassigned"
+    return f"queue:{team_queue};sla:{sla_class};assignee:{assignment}"
+
+
+@router.get("/admin/care/staff")
+async def admin_care_staff(account: dict = Depends(require_account)):
+    """Return a manager-only, server-derived assignee roster without email/PII."""
+    _require_support_enabled()
+    _require_support_manager(account)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            """SELECT id, display_name, role_cache
+                 FROM web_accounts
+                 WHERE is_active=1 AND role_cache IN ('admin', 'support_manager', 'support_operator')
+                 ORDER BY CASE role_cache WHEN 'admin' THEN 0 WHEN 'support_manager' THEN 1 ELSE 2 END,
+                          display_name COLLATE NOCASE ASC, id ASC
+                 LIMIT 200"""
+        ).fetchall()
+    items = []
+    for row in rows:
+        role = _staff_role({"role": str(row[2] or "")})
+        if role:
+            items.append({"id": str(row[0]), "display_name": str(row[1] or "Customer Care"), "role": role})
+    return envelope(
+        True,
+        "Danh sách nhân sự Customer Care được lấy từ Web account role phía máy chủ.",
+        data={
+            "items": items,
+            "boundaries": [
+                "Không trả email hoặc dữ liệu khách hàng.",
+                "Roster chỉ phục vụ phân công nội bộ, không cấp quyền qua browser.",
+            ],
+        },
+        status_name="read_only",
+    )
+
+
+@router.get("/admin/care/queues")
+async def admin_care_queues(account: dict = Depends(require_account)):
+    """Return staff-only queue/SLA counters; it never creates a timer or notice."""
+    _require_support_enabled()
+    role = require_support_staff(account)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        rows = conn.execute(
+            """SELECT COALESCE(ctrl.team_queue, 'general') AS team_queue,
+                      COUNT(*) AS total,
+                      SUM(CASE WHEN ctrl.assigned_account_id IS NULL THEN 1 ELSE 0 END) AS unassigned,
+                      SUM(CASE WHEN COALESCE(ctrl.sla_class, 'standard')='critical' THEN 1 ELSE 0 END) AS critical,
+                      SUM(CASE WHEN COALESCE(ctrl.escalation_state, 'none') IN ('requested', 'acknowledged') THEN 1 ELSE 0 END) AS escalated
+                 FROM web_support_cases c
+                 LEFT JOIN web_support_case_controls ctrl ON ctrl.case_id=c.id
+                 WHERE c.state NOT IN ('resolved', 'closed')
+                 GROUP BY COALESCE(ctrl.team_queue, 'general')
+                 ORDER BY CASE COALESCE(ctrl.team_queue, 'general')
+                     WHEN 'general' THEN 0 WHEN 'technical' THEN 1 WHEN 'account' THEN 2
+                     WHEN 'creative' THEN 3 WHEN 'document' THEN 4 ELSE 5 END"""
+        ).fetchall()
+    items = [{
+        "team_queue": str(row[0]),
+        "total": int(row[1] or 0),
+        "unassigned": int(row[2] or 0),
+        "critical": int(row[3] or 0),
+        "escalated": int(row[4] or 0),
+    } for row in rows]
+    return envelope(
+        True,
+        "Tổng hợp hàng đợi Customer Care nội bộ.",
+        data={
+            "items": items,
+            "operator_role": role,
+            "delivery": "internal_metadata_only",
+            "boundaries": [
+                "Không gửi thông báo khách hàng hoặc tạo SLA timer tự động.",
+                "Không xử lý nạp thủ công, thanh toán, refund hoặc retry bên ngoài.",
+            ],
+        },
+        status_name="read_only",
+    )
+
+
+@router.post("/admin/cases/{case_id}/care/triage")
+async def admin_care_triage(
+    case_id: str,
+    payload: AdminCareTriageRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Manager-only internal queue/assignee/SLA change with no external delivery."""
+    _require_support_enabled()
+    staff_role = _require_support_manager(account)
+    if not payload.confirm:
+        raise HTTPException(status_code=422, detail="Customer Care manager cần xác nhận trước khi phân công")
+    case_id = _uuid(case_id, label="Mã yêu cầu")
+    key = _idempotency_key(payload.idempotency_key)
+    fingerprint = _fingerprint({
+        "expected_revision": payload.expected_revision,
+        "team_queue": payload.team_queue,
+        "assigned_account_id": payload.assigned_account_id or "",
+        "sla_class": payload.sla_class,
+        "operation_note_sha256": _content_hash(payload.operation_note),
+    })
+
+    def operation(conn: Any) -> dict[str, Any]:
+        current = _case_row(conn, case_id=case_id)
+        if not current:
+            return _case_not_found()
+        if str(current[6]) == "closed":
+            return envelope(False, "Yêu cầu đã đóng; hãy mở lại trước khi phân công Customer Care.", status_name="guarded", error_code="WEB_SUPPORT_CASE_CLOSED")
+        if int(current[7]) != payload.expected_revision:
+            return envelope(False, "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi phân công.", data={"current_revision": int(current[7])}, status_name="guarded", error_code="WEB_SUPPORT_CASE_CONFLICT")
+        assignee = None
+        if payload.assigned_account_id:
+            assignee = _active_support_staff(conn, account_id=payload.assigned_account_id)
+            if not assignee:
+                return envelope(False, "Nhân sự được chọn không còn có quyền Customer Care hoạt động.", status_name="guarded", error_code="WEB_SUPPORT_ASSIGNEE_INVALID")
+        control = _case_control(conn, case_id=case_id)
+        previous_queue = str(control[0]) if control else "general"
+        previous_assignee = str(control[1] or "") if control else ""
+        previous_sla = str(control[2]) if control else "standard"
+        now = utc_now()
+        revision = int(current[7]) + 1
+        changed = conn.execute(
+            """UPDATE web_support_cases SET revision=?, updated_at=?
+               WHERE id=? AND revision=?""",
+            (revision, now, case_id, int(current[7])),
+        )
+        if changed.rowcount != 1:
+            return envelope(False, "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi phân công.", status_name="guarded", error_code="WEB_SUPPORT_CASE_CONFLICT")
+        _ensure_case_control(conn, case_id=case_id, now=now)
+        conn.execute(
+            """UPDATE web_support_case_controls
+               SET team_queue=?, assigned_account_id=?, sla_class=?,
+                   first_staff_touched_at=COALESCE(first_staff_touched_at, ?), updated_at=?
+               WHERE case_id=?""",
+            (payload.team_queue, assignee["id"] if assignee else None, payload.sla_class, now, now, case_id),
+        )
+        _care_event(
+            conn,
+            case_id=case_id,
+            account_id=str(current[1]),
+            actor_account_id=str(account["id"]),
+            kind="triage",
+            action="updated",
+            previous_value=_care_change_marker(
+                team_queue=previous_queue,
+                sla_class=previous_sla,
+                assigned_account_id=previous_assignee or None,
+            ),
+            next_value=_care_change_marker(
+                team_queue=payload.team_queue,
+                sla_class=payload.sla_class,
+                assigned_account_id=assignee["id"] if assignee else None,
+            ),
+            reason=payload.operation_note,
+        )
+        _event(conn, case_id=case_id, account_id=str(current[1]), actor_account_id=str(account["id"]), action="operator_care_triaged", state=str(current[6]))
+        _record_audit(
+            conn,
+            account_id=str(account["id"]),
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.support.admin.care.triage",
+            request_id=_request_id(request),
+            target=case_id,
+            detail=f"internal care triage queue:{payload.team_queue} sla:{payload.sla_class} assignee:{'assigned' if assignee else 'unassigned'} role:{staff_role}; no external delivery",
+        )
+        row = _case_row(conn, case_id=case_id)
+        return envelope(
+            True,
+            "Đã cập nhật hàng đợi, phân công và SLA nội bộ. Chưa gửi thông báo khách hàng.",
+            data={"case": _case_public(row or (), admin=True), "delivery": "internal_metadata_only"},
+            status_name="completed",
+        )
+
+    return _idempotent(f"web-support:admin:{account['id']}:case:{case_id}:care:triage", key, fingerprint, operation)
+
+
+@router.post("/admin/cases/{case_id}/care/escalation")
+async def admin_care_escalation(
+    case_id: str,
+    payload: AdminCareEscalationRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Record a controlled internal escalation lifecycle; no external action is implied."""
+    _require_support_enabled()
+    staff_role = require_support_staff(account)
+    if payload.escalation_state != "requested" and staff_role != "manager":
+        raise HTTPException(status_code=403, detail="Chỉ Customer Care manager được xác nhận, giải quyết hoặc hủy escalation")
+    if not payload.confirm:
+        raise HTTPException(status_code=422, detail="Cần xác nhận trước khi thay đổi escalation nội bộ")
+    case_id = _uuid(case_id, label="Mã yêu cầu")
+    key = _idempotency_key(payload.idempotency_key)
+    fingerprint = _fingerprint({
+        "expected_revision": payload.expected_revision,
+        "escalation_state": payload.escalation_state,
+        "reason_sha256": _content_hash(payload.reason),
+    })
+
+    def operation(conn: Any) -> dict[str, Any]:
+        current = _case_row(conn, case_id=case_id)
+        if not current:
+            return _case_not_found()
+        if str(current[6]) == "closed":
+            return envelope(False, "Yêu cầu đã đóng; không thể tạo escalation mới.", status_name="guarded", error_code="WEB_SUPPORT_CASE_CLOSED")
+        if int(current[7]) != payload.expected_revision:
+            return envelope(False, "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi thay đổi escalation.", data={"current_revision": int(current[7])}, status_name="guarded", error_code="WEB_SUPPORT_CASE_CONFLICT")
+        control = _case_control(conn, case_id=case_id)
+        previous_state = str(control[4]) if control else "none"
+        allowed = ESCALATION_TRANSITIONS.get(previous_state, frozenset())
+        if payload.escalation_state not in allowed:
+            return envelope(
+                False,
+                "Chuyển trạng thái escalation không hợp lệ. Hãy tải lại lịch sử Customer Care.",
+                data={"current_escalation_state": previous_state},
+                status_name="guarded",
+                error_code="WEB_SUPPORT_ESCALATION_STATE_INVALID",
+            )
+        now = utc_now()
+        revision = int(current[7]) + 1
+        changed = conn.execute(
+            """UPDATE web_support_cases SET revision=?, updated_at=?
+               WHERE id=? AND revision=?""",
+            (revision, now, case_id, int(current[7])),
+        )
+        if changed.rowcount != 1:
+            return envelope(False, "Yêu cầu đã có cập nhật mới. Hãy tải lại trước khi thay đổi escalation.", status_name="guarded", error_code="WEB_SUPPORT_CASE_CONFLICT")
+        _ensure_case_control(conn, case_id=case_id, now=now)
+        requested_at = now if payload.escalation_state == "requested" else (str(control[6]) if control and control[6] else now)
+        acknowledged_at = now if payload.escalation_state == "acknowledged" else (str(control[7]) if control and control[7] else None)
+        resolved_at = now if payload.escalation_state in {"resolved", "cancelled"} else None
+        conn.execute(
+            """UPDATE web_support_case_controls
+               SET escalation_state=?, escalation_reason=?, escalation_requested_at=?,
+                   escalation_acknowledged_at=?, escalation_resolved_at=?, escalation_actor_account_id=?,
+                   first_staff_touched_at=COALESCE(first_staff_touched_at, ?), updated_at=?
+               WHERE case_id=?""",
+            (
+                payload.escalation_state, payload.reason, requested_at, acknowledged_at, resolved_at,
+                str(account["id"]), now, now, case_id,
+            ),
+        )
+        _care_event(
+            conn,
+            case_id=case_id,
+            account_id=str(current[1]),
+            actor_account_id=str(account["id"]),
+            kind="escalation",
+            action=payload.escalation_state,
+            previous_value=previous_state,
+            next_value=payload.escalation_state,
+            reason=payload.reason,
+        )
+        _event(conn, case_id=case_id, account_id=str(current[1]), actor_account_id=str(account["id"]), action=f"operator_escalation_{payload.escalation_state}", state=str(current[6]))
+        _record_audit(
+            conn,
+            account_id=str(account["id"]),
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.support.admin.care.escalation",
+            request_id=_request_id(request),
+            target=case_id,
+            detail=f"internal care escalation {previous_state}->{payload.escalation_state} role:{staff_role}; no external delivery",
+        )
+        row = _case_row(conn, case_id=case_id)
+        return envelope(
+            True,
+            "Đã lưu trạng thái escalation nội bộ. Chưa kích hoạt thông báo hay thao tác bên ngoài.",
+            data={"case": _case_public(row or (), admin=True), "delivery": "internal_metadata_only"},
+            status_name="completed",
+        )
+
+    return _idempotent(f"web-support:admin:{account['id']}:case:{case_id}:care:escalation", key, fingerprint, operation)
+
+
 @router.get("/admin/cases")
 async def admin_list_cases(
     limit: int = 50,
@@ -769,6 +1843,11 @@ async def admin_list_cases(
     state: str = "all",
     category: str = "",
     q: str = "",
+    team_queue: str = "all",
+    assignment: str = "all",
+    sla_class: str = "all",
+    care_sla_status: str = "all",
+    escalation_state: str = "all",
     account: dict = Depends(require_account),
 ):
     _require_support_enabled()
@@ -783,6 +1862,21 @@ async def admin_list_cases(
     category_filter = str(category or "").strip().lower()
     if category_filter and category_filter not in CASE_CATEGORIES:
         raise HTTPException(status_code=422, detail="Bộ lọc nhóm yêu cầu không hợp lệ")
+    team_queue_filter = str(team_queue or "all").strip().lower()
+    if team_queue_filter not in {*CARE_TEAM_QUEUES, "all"}:
+        raise HTTPException(status_code=422, detail="Bộ lọc hàng đợi Customer Care không hợp lệ")
+    assignment_filter = str(assignment or "all").strip().lower()
+    if assignment_filter not in CARE_ASSIGNMENT_FILTERS:
+        raise HTTPException(status_code=422, detail="Bộ lọc phân công Customer Care không hợp lệ")
+    sla_class_filter = str(sla_class or "all").strip().lower()
+    if sla_class_filter not in {*SLA_CLASSES, "all"}:
+        raise HTTPException(status_code=422, detail="Bộ lọc SLA Customer Care không hợp lệ")
+    care_sla_status_filter = str(care_sla_status or "all").strip().lower()
+    if care_sla_status_filter not in CARE_SLA_STATUS_FILTERS:
+        raise HTTPException(status_code=422, detail="Bộ lọc trạng thái SLA Customer Care không hợp lệ")
+    escalation_filter = str(escalation_state or "all").strip().lower()
+    if escalation_filter not in {*ESCALATION_STATES, "all"}:
+        raise HTTPException(status_code=422, detail="Bộ lọc escalation Customer Care không hợp lệ")
     query = _validated_line(q, label="Từ khóa tìm kiếm", minimum=0, maximum=80, allow_empty=True)
     clauses = ["1=1"]
     params: list[Any] = []
@@ -792,6 +1886,38 @@ async def admin_list_cases(
     if category_filter:
         clauses.append("c.category=?")
         params.append(category_filter)
+    # Controls are left-joined so legacy/new cases without a triage row still
+    # remain visible in their safe defaults (general, standard, none,
+    # unassigned).  These are only staff-visible Web-native metadata filters;
+    # no account ID, external queue, provider, payment or Bot state may enter
+    # the query surface.
+    if team_queue_filter != "all":
+        clauses.append("COALESCE(ctrl.team_queue, 'general')=?")
+        params.append(team_queue_filter)
+    if assignment_filter == "mine":
+        # The browser submits only the fixed enum. The signed staff account is
+        # the sole assignee identity used here, so a user cannot enumerate or
+        # query another operator's queue by supplying an account ID.
+        clauses.append("ctrl.assigned_account_id=?")
+        params.append(str(account["id"]))
+    elif assignment_filter == "assigned":
+        clauses.append("ctrl.assigned_account_id IS NOT NULL")
+    elif assignment_filter == "unassigned":
+        clauses.append("ctrl.assigned_account_id IS NULL")
+    if sla_class_filter != "all":
+        clauses.append("COALESCE(ctrl.sla_class, 'standard')=?")
+        params.append(sla_class_filter)
+    if care_sla_status_filter != "all":
+        # The current time and every SLA target stay server-side.  This fixed
+        # projection is intentionally evaluated before pagination so a
+        # browser cannot suppress matching case IDs by filtering a partial
+        # page, supply a clock/timestamp, or borrow another SLA policy.
+        status_sql, status_params = _care_sla_status_sql(now=utc_now())
+        clauses.append(f"({status_sql})=?")
+        params.extend((*status_params, care_sla_status_filter))
+    if escalation_filter != "all":
+        clauses.append("COALESCE(ctrl.escalation_state, 'none')=?")
+        params.append(escalation_filter)
     if query:
         escaped = query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         clauses.append("(c.subject LIKE ? ESCAPE '\\' OR c.initial_detail LIKE ? ESCAPE '\\' OR a.display_name LIKE ? ESCAPE '\\')")
@@ -801,8 +1927,16 @@ async def admin_list_cases(
         rows = conn.execute(
             f"""SELECT c.id, c.account_id, c.category, c.priority, c.subject, c.initial_detail, c.state, c.revision,
                        c.created_at, c.updated_at, c.last_public_message_at, c.resolved_at, c.closed_at,
-                       a.display_name, a.email
-                  FROM web_support_cases c JOIN web_accounts a ON a.id=c.account_id
+                       a.display_name, a.email,
+                       COALESCE(ctrl.team_queue, 'general'), ctrl.assigned_account_id,
+                       assignee.display_name, COALESCE(ctrl.sla_class, 'standard'),
+                       COALESCE(ctrl.escalation_state, 'none'), COALESCE(ctrl.escalation_reason, ''),
+                       ctrl.escalation_requested_at, ctrl.escalation_acknowledged_at,
+                       ctrl.escalation_resolved_at, ctrl.first_staff_touched_at
+                  FROM web_support_cases c
+                  JOIN web_accounts a ON a.id=c.account_id
+                  LEFT JOIN web_support_case_controls ctrl ON ctrl.case_id=c.id
+                  LEFT JOIN web_accounts assignee ON assignee.id=ctrl.assigned_account_id
                   WHERE {' AND '.join(clauses)}
                   ORDER BY CASE c.priority WHEN 'urgent' THEN 0 WHEN 'high' THEN 1 WHEN 'normal' THEN 2 ELSE 3 END,
                            c.updated_at DESC, c.rowid DESC LIMIT ? OFFSET ?""",
@@ -815,6 +1949,15 @@ async def admin_list_cases(
             "items": [_case_public(tuple(row), admin=True) for row in rows[:bounded_limit]],
             "has_more": len(rows) > bounded_limit,
             "next_offset": bounded_offset + bounded_limit if len(rows) > bounded_limit else None,
+            "filters": {
+                "state": state_filter,
+                "category": category_filter,
+                "team_queue": team_queue_filter,
+                "assignment": assignment_filter,
+                "sla_class": sla_class_filter,
+                "care_sla_status": care_sla_status_filter,
+                "escalation_state": escalation_filter,
+            },
         },
         status_name="read_only",
     )
@@ -823,11 +1966,17 @@ async def admin_list_cases(
 @router.get("/admin/cases/{case_id}")
 async def admin_get_case(case_id: str, account: dict = Depends(require_account)):
     _require_support_enabled()
-    require_support_staff(account)
+    staff_role = require_support_staff(account)
     case_id = _uuid(case_id, label="Mã yêu cầu")
     ensure_copyfast_schema()
     with transaction() as conn:
-        data = _case_detail(conn, case_id=case_id, account_id=None, admin=True)
+        data = _case_detail(
+            conn,
+            case_id=case_id,
+            account_id=None,
+            admin=True,
+            include_assignee_id=staff_role == "manager",
+        )
     if not data:
         return _case_not_found()
     return envelope(True, "Đã nạp yêu cầu Web Support Desk cho operator.", data=data, status_name="read_only")
@@ -865,9 +2014,11 @@ async def admin_reply_case(case_id: str, payload: AdminReplyRequest, request: Re
             (str(uuid.uuid4()), case_id, str(current[1]), str(account["id"]), payload.visibility, payload.body, now),
         )
         conn.execute(
-            """UPDATE web_support_cases SET state=?, revision=?, updated_at=?, last_public_message_at=?, resolved_at=?, closed_at=?
+            """UPDATE web_support_cases SET state=?, revision=?, updated_at=?, last_public_message_at=?, resolved_at=?, closed_at=?,
+               customer_waiting_since=CASE WHEN ?='public' THEN NULL ELSE customer_waiting_since END
                WHERE id=? AND revision=?""",
-            (next_state, revision, now, now if payload.visibility == "public" else current[10], resolved_at, closed_at, case_id, int(current[7])),
+            (next_state, revision, now, now if payload.visibility == "public" else current[10], resolved_at, closed_at,
+             payload.visibility, case_id, int(current[7])),
         )
         _event(conn, case_id=case_id, account_id=str(current[1]), actor_account_id=str(account["id"]), action="operator_replied_public" if payload.visibility == "public" else "operator_noted_internal", state=next_state)
         _record_audit(conn, account_id=str(account["id"]), canonical_user_id=str(account.get("canonical_user_id") or "") or None, action="web.support.admin.reply", request_id=_request_id(request), target=case_id, detail=f"web support operator reply visibility:{payload.visibility} role:{staff_role}")
@@ -900,9 +2051,10 @@ async def admin_update_case(case_id: str, payload: AdminUpdateRequest, request: 
         revision = int(current[7]) + 1
         resolved_at, closed_at = _state_timestamps(current, payload.state, now)
         conn.execute(
-            """UPDATE web_support_cases SET state=?, priority=?, revision=?, updated_at=?, resolved_at=?, closed_at=?
+            """UPDATE web_support_cases SET state=?, priority=?, revision=?, updated_at=?, resolved_at=?, closed_at=?,
+               customer_waiting_since=CASE WHEN ? IN ('resolved','closed') THEN NULL ELSE customer_waiting_since END
                WHERE id=? AND revision=?""",
-            (payload.state, payload.priority, revision, now, resolved_at, closed_at, case_id, int(current[7])),
+            (payload.state, payload.priority, revision, now, resolved_at, closed_at, payload.state, case_id, int(current[7])),
         )
         conn.execute(
             """INSERT INTO web_support_messages

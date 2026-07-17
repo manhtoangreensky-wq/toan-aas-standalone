@@ -8,38 +8,67 @@ the signed-session web layer and its server-to-server bot bridge.
 
 from __future__ import annotations
 
+import asyncio
 from contextlib import asynccontextmanager
+import logging
 import os
 import time
 import uuid
 from urllib.parse import quote, urlparse
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import Depends, FastAPI, HTTPException, Request, Response
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
+import copyfast_admin_audit
+import copyfast_admin_erp_navigation
 import copyfast_analytics_workspace
+import copyfast_autopilot
 import copyfast_assets
 import copyfast_auth
+import copyfast_auth_throttle
+import copyfast_channel_strategy
+import copyfast_content_handoff
 import copyfast_content_studio
 import copyfast_chat_workspace
+import copyfast_data_controls
 import copyfast_document_operations
 import copyfast_document_workspace
+import copyfast_free_prompt_gallery
+import copyfast_governance
 import copyfast_image_operations
 import copyfast_image_studio
 import copyfast_memory
+import copyfast_media_factory
+import copyfast_mfa
 import copyfast_music_media
+import copyfast_notification_center
+import copyfast_operations_desk
+import copyfast_partner_crm
 import copyfast_prompt_library
+import copyfast_prompt_studio
 import copyfast_project_packages
 import copyfast_projects
+import copyfast_reliability
 import copyfast_support
 import copyfast_subtitle_workspace
+import copyfast_trend_research
 import copyfast_video_studio
 import copyfast_voice_studio
-from copyfast_auth import current_session, ensure_auth_configuration, ensure_oauth_configuration, envelope, require_canonical_admin
+import copyfast_workboard
+from copyfast_auth import (
+    current_session,
+    ensure_auth_configuration,
+    ensure_email_verification_configuration,
+    ensure_password_recovery_configuration,
+    ensure_oauth_configuration,
+    envelope,
+    require_canonical_admin,
+)
+from copyfast_mfa import ensure_totp_mfa_configuration
 from copyfast_db import (
     ensure_asset_vault_persistence,
     ensure_copyfast_persistence,
@@ -47,8 +76,19 @@ from copyfast_db import (
     ensure_document_operations_persistence,
     ensure_image_operations_persistence,
     ensure_project_package_persistence,
+    is_production_like_environment,
 )
 from copyfast_pages import ROOT, render_portal
+
+
+LOGGER = logging.getLogger(__name__)
+STARTUP_RECONCILIATION_TASK_NAME = "copyfast-startup-reconciliation"
+STARTUP_RECONCILIATION_STEPS = (
+    ("asset_vault", copyfast_assets.reconcile_asset_vault_storage),
+    ("project_packages", copyfast_project_packages.reconcile_project_package_storage),
+    ("document_operations", copyfast_document_operations.reconcile_document_operation_storage),
+    ("image_operations", copyfast_image_operations.reconcile_image_operation_storage),
+)
 
 
 def _origins() -> list[str]:
@@ -59,8 +99,7 @@ def _origins() -> list[str]:
     origins = [item.strip().rstrip("/") for item in raw.split(",") if item.strip()]
     if not origins or "*" in origins:
         raise RuntimeError("CORS_ALLOW_ORIGINS phải là danh sách origin tường minh khi dùng cookie")
-    environment_values = (os.environ.get("APP_ENV", ""), os.environ.get("ENVIRONMENT", ""), os.environ.get("RAILWAY_ENVIRONMENT", ""))
-    production = any(value.strip().lower() in {"production", "prod"} for value in environment_values if value)
+    production = is_production_like_environment()
     for origin in origins:
         parsed = urlparse(origin)
         local_http = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
@@ -71,10 +110,87 @@ def _origins() -> list[str]:
     return origins
 
 
+async def _run_startup_reconciliation(application: FastAPI) -> None:
+    """Reconcile private filesystem metadata without delaying readiness.
+
+    All four reconciliation functions may walk a private volume.  They are
+    useful integrity maintenance, not a prerequisite to authenticate a user
+    or answer Railway's health check, so run them serially on a worker thread
+    only after the ASGI lifespan has yielded.  Each failure is deliberately
+    isolated: a later storage boundary still receives reconciliation and a
+    failed scan cannot make a healthy service appear unavailable.
+    """
+    status = application.state.copyfast_startup_reconciliation
+    status["status"] = "running"
+    status["started_at_epoch"] = time.time()
+    for name, reconcile in STARTUP_RECONCILIATION_STEPS:
+        status["current_step"] = name
+        try:
+            await asyncio.to_thread(reconcile)
+        except asyncio.CancelledError:
+            status["status"] = "cancelled"
+            status["current_step"] = None
+            status["finished_at_epoch"] = time.time()
+            LOGGER.info("Cancelled deferred startup reconciliation")
+            raise
+        except Exception:
+            # Do not retain exception text in application state: it could
+            # include a private storage path.  Operators still receive the
+            # sanitized step name plus the traceback in server-only logs.
+            status["failed_steps"].append(name)
+            LOGGER.exception("Deferred startup reconciliation failed for step=%s", name)
+        else:
+            status["completed_steps"].append(name)
+    status["current_step"] = None
+    status["finished_at_epoch"] = time.time()
+    status["status"] = "completed" if not status["failed_steps"] else "completed_with_errors"
+    LOGGER.info(
+        "Deferred startup reconciliation finished status=%s completed=%d failed=%d",
+        status["status"],
+        len(status["completed_steps"]),
+        len(status["failed_steps"]),
+    )
+
+
+def _start_startup_reconciliation(application: FastAPI) -> asyncio.Task[None]:
+    """Schedule volume scans after readiness without exposing a public API."""
+    application.state.copyfast_startup_reconciliation = {
+        "status": "scheduled",
+        "current_step": None,
+        "completed_steps": [],
+        "failed_steps": [],
+        "started_at_epoch": None,
+        "finished_at_epoch": None,
+    }
+    task = asyncio.create_task(
+        _run_startup_reconciliation(application), name=STARTUP_RECONCILIATION_TASK_NAME
+    )
+    application.state.copyfast_startup_reconciliation_task = task
+    return task
+
+
+async def _stop_startup_reconciliation(application: FastAPI) -> None:
+    """Cancel a best-effort storage scan cleanly during ASGI shutdown."""
+    task = getattr(application.state, "copyfast_startup_reconciliation_task", None)
+    if task is None or task.done():
+        return
+    task.cancel()
+    try:
+        await task
+    except asyncio.CancelledError:
+        # ``asyncio.to_thread`` cannot forcibly stop an already-running
+        # synchronous syscall.  Cancellation detaches the task from ASGI
+        # shutdown while every reconcile function remains independently safe.
+        pass
+
+
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(application: FastAPI):
     ensure_auth_configuration()
     ensure_oauth_configuration()
+    ensure_email_verification_configuration()
+    ensure_password_recovery_configuration()
+    ensure_totp_mfa_configuration()
     ensure_copyfast_persistence()
     ensure_copyfast_schema()
     ensure_asset_vault_persistence()
@@ -83,11 +199,11 @@ async def lifespan(_: FastAPI):
     ensure_image_operations_persistence()
     copyfast_document_operations.ensure_document_operations_runtime()
     copyfast_image_operations.ensure_image_operations_runtime()
-    copyfast_assets.reconcile_asset_vault_storage()
-    copyfast_project_packages.reconcile_project_package_storage()
-    copyfast_document_operations.reconcile_document_operation_storage()
-    copyfast_image_operations.reconcile_image_operation_storage()
-    yield
+    _start_startup_reconciliation(application)
+    try:
+        yield
+    finally:
+        await _stop_startup_reconciliation(application)
 
 
 app = FastAPI(title="TOAN AAS Web App", version="P0.WEBAPP.COPYFAST1", lifespan=lifespan)
@@ -102,6 +218,10 @@ RATE_WINDOW_MAX_KEYS = 4096
 # raw ASGI stream *before* FastAPI/Pydantic buffers or parses JSON.
 PROMPT_LIBRARY_BODY_MAX_BYTES = 512 * 1024
 PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES = 6 * 1024 * 1024
+# Prompt Blueprint Composer accepts only a compact, text-only editorial brief.
+# Bound its raw stream before JSON/Pydantic parsing; this never enables a file,
+# provider, Bot, job, wallet/payment or publishing payload.
+PROMPT_STUDIO_BODY_MAX_BYTES = 16 * 1024
 # Audio Workspace only accepts bounded metadata JSON (the largest server
 # field is a 6,000-character brief).  Cap its raw stream separately before
 # FastAPI buffers/parses a potentially chunked body.
@@ -110,6 +230,14 @@ MEDIA_WORKSPACE_BODY_MAX_BYTES = 64 * 1024
 # raw JSON stream before FastAPI/Pydantic can parse a potentially chunked
 # request; media/file uploads remain outside this route family.
 CONTENT_STUDIO_BODY_MAX_BYTES = 128 * 1024
+# Content Handoff accepts a short review purpose, opaque UUID references and
+# an internal staff note only. Keep a narrow pre-parse cap; it never enables
+# uploads, social publishing, external delivery or provider input.
+CONTENT_HANDOFF_BODY_MAX_BYTES = 16 * 1024
+# Channel Strategy stores only small, signed-account profile metadata and a
+# revision receipt. Cap it before JSON parsing; this never enables channel
+# connection, URL fetch, analytics, provider, Bot, job or publishing input.
+CHANNEL_STRATEGY_BODY_MAX_BYTES = 32 * 1024
 # Voice Studio accepts only bounded scripts/metadata; it has no audio-upload
 # or provider payload contract.
 VOICE_STUDIO_BODY_MAX_BYTES = 128 * 1024
@@ -126,6 +254,17 @@ IMAGE_STUDIO_BODY_MAX_BYTES = 128 * 1024
 # references only.  Cap the raw body before Pydantic/SQLite handling; this
 # does not cover or enable the separate Document Operations executor.
 DOCUMENT_WORKSPACE_BODY_MAX_BYTES = 128 * 1024
+# Document Operations accept only compact JSON with Asset Vault UUIDs and
+# bounded options.  A separate raw-stream cap protects private OCR/PDF
+# executors before FastAPI parses a malicious chunked body.
+DOCUMENT_OPERATION_BODY_MAX_BYTES = 16 * 1024
+# Trend Research is a compact, text-only request with a 180-character topic.
+# Retain a small raw-stream cap before Pydantic parses a chunked payload.
+TREND_RESEARCH_BODY_MAX_BYTES = 16 * 1024
+# Media Factory Blueprint is an equally small topic/language planning receipt.
+# The early cap applies before Pydantic parsing and does not enable a media
+# upload, source fetch, provider request, Bot call or execution engine.
+MEDIA_FACTORY_BODY_MAX_BYTES = 16 * 1024
 # Conversation Workspace accepts plain-text authoring data only.  Keep its
 # raw JSON cap deliberately small before Pydantic or SQLite sees a request;
 # it does not permit model streaming, file upload or provider input.
@@ -134,6 +273,40 @@ CHAT_WORKSPACE_BODY_MAX_BYTES = 64 * 1024
 # cap runs before Pydantic/SQLite and deliberately does not permit CSV/file
 # import, platform connectors, Bot/provider traffic, payments or jobs.
 ANALYTICS_WORKSPACE_BODY_MAX_BYTES = 128 * 1024
+# Workboard accepts only bounded private task/checklist metadata. It has no
+# file, URL-fetch, provider, Bot, wallet, payment, job or publish payload.
+WORKBOARD_BODY_MAX_BYTES = 128 * 1024
+# Partner & Lead CRM stores compact signed-account metadata and private notes;
+# it has no attachment, payout, referral, provider or contact-delivery body.
+PARTNER_CRM_BODY_MAX_BYTES = 16 * 1024
+# The scheduler sends a fixed, signed JSON receipt only.  Cap it well below
+# normal authoring routes before HMAC/JSON parsing so malformed chunked input
+# cannot become a memory-amplification path.
+AUTOPILOT_TICK_BODY_MAX_BYTES = 8 * 1024
+# An Operations approval contains only a short decision receipt.  Bound it
+# before FastAPI/Pydantic parse JSON so an authenticated manager endpoint does
+# not become an unbounded request-body sink.
+AUTOPILOT_APPROVAL_BODY_MAX_BYTES = 8 * 1024
+# Reliability follow-up mutations contain only a revision, confirmation and
+# idempotency receipt. Apply the same early raw-body boundary as Operations
+# approvals before Pydantic/SQLite handling.
+RELIABILITY_FOLLOWUP_BODY_MAX_BYTES = 8 * 1024
+# Inbox scheduler and signed-account state mutations carry only compact
+# metadata/idempotency receipts. Bound them before HMAC/Pydantic parsing.
+NOTIFICATION_TICK_BODY_MAX_BYTES = 8 * 1024
+INBOX_MUTATION_BODY_MAX_BYTES = 8 * 1024
+# Data Control mutations contain only an explicit policy acknowledgement,
+# revision and idempotency receipt. Keep the same compact raw-body boundary
+# before JSON/SQLite work; exports remain a response-only direct attachment.
+DATA_CONTROLS_BODY_MAX_BYTES = 8 * 1024
+# Governance mutations carry an internal text document, bounded independently
+# before Pydantic/SQLite sees it. This is not a file import, Bot document, or
+# generic Admin write transport.
+GOVERNANCE_BODY_MAX_BYTES = 96 * 1024
+# Login and registration accept only a compact email/password/name JSON body.
+# Bound it before FastAPI/Pydantic begins parsing so the durable route-level
+# throttle below never has to inspect an arbitrary-size credential payload.
+AUTH_CREDENTIAL_BODY_MAX_BYTES = 8 * 1024
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -151,28 +324,60 @@ class PromptLibraryBodyLimitMiddleware:
         *,
         max_bytes: int,
         import_max_bytes: int,
+        prompt_studio_max_bytes: int = PROMPT_STUDIO_BODY_MAX_BYTES,
         media_max_bytes: int = MEDIA_WORKSPACE_BODY_MAX_BYTES,
         content_studio_max_bytes: int = CONTENT_STUDIO_BODY_MAX_BYTES,
+        content_handoff_max_bytes: int = CONTENT_HANDOFF_BODY_MAX_BYTES,
+        channel_strategy_max_bytes: int = CHANNEL_STRATEGY_BODY_MAX_BYTES,
         voice_studio_max_bytes: int = VOICE_STUDIO_BODY_MAX_BYTES,
         video_studio_max_bytes: int = VIDEO_STUDIO_BODY_MAX_BYTES,
         subtitle_studio_max_bytes: int = SUBTITLE_STUDIO_BODY_MAX_BYTES,
         image_studio_max_bytes: int = IMAGE_STUDIO_BODY_MAX_BYTES,
         document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
+        document_operation_max_bytes: int = DOCUMENT_OPERATION_BODY_MAX_BYTES,
+        trend_research_max_bytes: int = TREND_RESEARCH_BODY_MAX_BYTES,
+        media_factory_max_bytes: int = MEDIA_FACTORY_BODY_MAX_BYTES,
         chat_workspace_max_bytes: int = CHAT_WORKSPACE_BODY_MAX_BYTES,
         analytics_workspace_max_bytes: int = ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
+        workboard_max_bytes: int = WORKBOARD_BODY_MAX_BYTES,
+        partner_crm_max_bytes: int = PARTNER_CRM_BODY_MAX_BYTES,
+        autopilot_tick_max_bytes: int = AUTOPILOT_TICK_BODY_MAX_BYTES,
+        autopilot_approval_max_bytes: int = AUTOPILOT_APPROVAL_BODY_MAX_BYTES,
+        reliability_followup_max_bytes: int = RELIABILITY_FOLLOWUP_BODY_MAX_BYTES,
+        notification_tick_max_bytes: int = NOTIFICATION_TICK_BODY_MAX_BYTES,
+        inbox_mutation_max_bytes: int = INBOX_MUTATION_BODY_MAX_BYTES,
+        data_controls_max_bytes: int = DATA_CONTROLS_BODY_MAX_BYTES,
+        governance_max_bytes: int = GOVERNANCE_BODY_MAX_BYTES,
+        auth_credential_max_bytes: int = AUTH_CREDENTIAL_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
         self.import_max_bytes = int(import_max_bytes)
+        self.prompt_studio_max_bytes = int(prompt_studio_max_bytes)
         self.media_max_bytes = int(media_max_bytes)
         self.content_studio_max_bytes = int(content_studio_max_bytes)
+        self.content_handoff_max_bytes = int(content_handoff_max_bytes)
+        self.channel_strategy_max_bytes = int(channel_strategy_max_bytes)
         self.voice_studio_max_bytes = int(voice_studio_max_bytes)
         self.video_studio_max_bytes = int(video_studio_max_bytes)
         self.subtitle_studio_max_bytes = int(subtitle_studio_max_bytes)
         self.image_studio_max_bytes = int(image_studio_max_bytes)
         self.document_workspace_max_bytes = int(document_workspace_max_bytes)
+        self.document_operation_max_bytes = int(document_operation_max_bytes)
+        self.trend_research_max_bytes = int(trend_research_max_bytes)
+        self.media_factory_max_bytes = int(media_factory_max_bytes)
         self.chat_workspace_max_bytes = int(chat_workspace_max_bytes)
         self.analytics_workspace_max_bytes = int(analytics_workspace_max_bytes)
+        self.workboard_max_bytes = int(workboard_max_bytes)
+        self.partner_crm_max_bytes = int(partner_crm_max_bytes)
+        self.autopilot_tick_max_bytes = int(autopilot_tick_max_bytes)
+        self.autopilot_approval_max_bytes = int(autopilot_approval_max_bytes)
+        self.reliability_followup_max_bytes = int(reliability_followup_max_bytes)
+        self.notification_tick_max_bytes = int(notification_tick_max_bytes)
+        self.inbox_mutation_max_bytes = int(inbox_mutation_max_bytes)
+        self.data_controls_max_bytes = int(data_controls_max_bytes)
+        self.governance_max_bytes = int(governance_max_bytes)
+        self.auth_credential_max_bytes = int(auth_credential_max_bytes)
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -182,22 +387,55 @@ class PromptLibraryBodyLimitMiddleware:
             and str(scope.get("method") or "").upper() in {"POST", "PATCH"}
             and (
                 path.startswith("/api/v1/prompt-library/")
+                or path.startswith("/api/v1/prompt-studio/")
                 or path.startswith("/api/v1/media-workspace/")
                 or path.startswith("/api/v1/content-studio/")
+                or path.startswith("/api/v1/content-handoffs/")
+                or path.startswith("/api/v1/channel-strategy/")
                 or path.startswith("/api/v1/voice-studio/")
                 or path.startswith("/api/v1/video-studio/")
                 or path.startswith("/api/v1/subtitle-studio/")
                 or path.startswith("/api/v1/image-studio/")
                 or path.startswith("/api/v1/document-workspace/")
+                or path.startswith("/api/v1/document-operations/")
+                or path.startswith("/api/v1/trend-research/")
+                or path.startswith("/api/v1/media-factory/")
                 or path.startswith("/api/v1/chat-workspace/")
                 or path.startswith("/api/v1/analytics-workspace/")
+                or path.startswith("/api/v1/workboard/")
+                or path.startswith("/api/v1/partner-crm/")
+                or path == "/internal/v1/operations/tick"
+                or path.startswith("/api/v1/operations/admin/approvals/")
+                or path.startswith("/api/v1/operations/admin/followups/")
+                or path == "/internal/v1/notifications/tick"
+                or path.startswith("/api/v1/inbox/items/")
+                or path.startswith("/api/v1/account/data-controls/")
+                or path.startswith("/api/v1/admin/governance/")
+                or path in {
+                    "/api/v1/auth/login",
+                    "/api/v1/auth/register",
+                    "/api/v1/auth/security/password",
+                    "/api/v1/auth/security/email-verification/start",
+                    "/api/v1/auth/password-recovery/start",
+                    "/api/v1/auth/password-recovery/confirm",
+                    "/api/v1/auth/login/mfa",
+                    "/api/v1/auth/mfa/enrollment/start",
+                    "/api/v1/auth/mfa/enrollment/confirm",
+                    "/api/v1/auth/mfa/disable",
+                }
             )
         )
 
     def _limit_for(self, scope) -> int:
         path = str(scope.get("path") or "")
+        if path.startswith("/api/v1/prompt-studio/"):
+            return self.prompt_studio_max_bytes
         if path.startswith("/api/v1/content-studio/"):
             return self.content_studio_max_bytes
+        if path.startswith("/api/v1/content-handoffs/"):
+            return self.content_handoff_max_bytes
+        if path.startswith("/api/v1/channel-strategy/"):
+            return self.channel_strategy_max_bytes
         if path.startswith("/api/v1/voice-studio/"):
             return self.voice_studio_max_bytes
         if path.startswith("/api/v1/video-studio/"):
@@ -206,12 +444,49 @@ class PromptLibraryBodyLimitMiddleware:
             return self.subtitle_studio_max_bytes
         if path.startswith("/api/v1/image-studio/"):
             return self.image_studio_max_bytes
+        if path.startswith("/api/v1/document-operations/"):
+            return self.document_operation_max_bytes
+        if path.startswith("/api/v1/trend-research/"):
+            return self.trend_research_max_bytes
+        if path.startswith("/api/v1/media-factory/"):
+            return self.media_factory_max_bytes
         if path.startswith("/api/v1/document-workspace/"):
             return self.document_workspace_max_bytes
         if path.startswith("/api/v1/chat-workspace/"):
             return self.chat_workspace_max_bytes
         if path.startswith("/api/v1/analytics-workspace/"):
             return self.analytics_workspace_max_bytes
+        if path.startswith("/api/v1/workboard/"):
+            return self.workboard_max_bytes
+        if path.startswith("/api/v1/partner-crm/"):
+            return self.partner_crm_max_bytes
+        if path == "/internal/v1/operations/tick":
+            return self.autopilot_tick_max_bytes
+        if path.startswith("/api/v1/operations/admin/approvals/"):
+            return self.autopilot_approval_max_bytes
+        if path.startswith("/api/v1/operations/admin/followups/"):
+            return self.reliability_followup_max_bytes
+        if path == "/internal/v1/notifications/tick":
+            return self.notification_tick_max_bytes
+        if path.startswith("/api/v1/inbox/items/"):
+            return self.inbox_mutation_max_bytes
+        if path.startswith("/api/v1/account/data-controls/"):
+            return self.data_controls_max_bytes
+        if path.startswith("/api/v1/admin/governance/"):
+            return self.governance_max_bytes
+        if path in {
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/auth/security/password",
+            "/api/v1/auth/security/email-verification/start",
+            "/api/v1/auth/password-recovery/start",
+            "/api/v1/auth/password-recovery/confirm",
+            "/api/v1/auth/login/mfa",
+            "/api/v1/auth/mfa/enrollment/start",
+            "/api/v1/auth/mfa/enrollment/confirm",
+            "/api/v1/auth/mfa/disable",
+        }:
+            return self.auth_credential_max_bytes
         if path.startswith("/api/v1/media-workspace/"):
             return self.media_max_bytes
         return self.import_max_bytes if path == "/api/v1/prompt-library/import" else self.max_bytes
@@ -221,30 +496,93 @@ class PromptLibraryBodyLimitMiddleware:
         # private API security headers directly rather than relying on a later
         # function middleware to decorate a response that it never receives.
         path = str(scope.get("path") or "")
+        is_prompt_studio = path.startswith("/api/v1/prompt-studio/")
         is_content_studio = path.startswith("/api/v1/content-studio/")
+        is_content_handoff = path.startswith("/api/v1/content-handoffs/")
+        is_channel_strategy = path.startswith("/api/v1/channel-strategy/")
         is_voice_studio = path.startswith("/api/v1/voice-studio/")
         is_video_studio = path.startswith("/api/v1/video-studio/")
         is_subtitle_studio = path.startswith("/api/v1/subtitle-studio/")
         is_image_studio = path.startswith("/api/v1/image-studio/")
+        is_document_operation = path.startswith("/api/v1/document-operations/")
+        is_trend_research = path.startswith("/api/v1/trend-research/")
+        is_media_factory = path.startswith("/api/v1/media-factory/")
         is_document_workspace = path.startswith("/api/v1/document-workspace/")
         is_chat_workspace = path.startswith("/api/v1/chat-workspace/")
         is_analytics_workspace = path.startswith("/api/v1/analytics-workspace/")
+        is_workboard = path.startswith("/api/v1/workboard/")
+        is_partner_crm = path.startswith("/api/v1/partner-crm/")
+        is_autopilot_tick = path == "/internal/v1/operations/tick"
+        is_autopilot_approval = path.startswith("/api/v1/operations/admin/approvals/")
+        is_reliability_followup = path.startswith("/api/v1/operations/admin/followups/")
+        is_notification_tick = path == "/internal/v1/notifications/tick"
+        is_inbox_mutation = path.startswith("/api/v1/inbox/items/")
+        is_data_controls = path.startswith("/api/v1/account/data-controls/")
+        is_governance = path.startswith("/api/v1/admin/governance/")
+        is_auth_credential = path in {
+            "/api/v1/auth/login",
+            "/api/v1/auth/register",
+            "/api/v1/auth/security/password",
+            "/api/v1/auth/security/email-verification/start",
+            "/api/v1/auth/password-recovery/start",
+            "/api/v1/auth/password-recovery/confirm",
+            "/api/v1/auth/login/mfa",
+            "/api/v1/auth/mfa/enrollment/start",
+            "/api/v1/auth/mfa/enrollment/confirm",
+            "/api/v1/auth/mfa/disable",
+        }
+        is_mailbox_confirmation = path in {
+            "/api/v1/auth/email-verification/confirm",
+            "/api/v1/auth/password-recovery/confirm",
+        }
         is_media = path.startswith("/api/v1/media-workspace/")
         # This route family is authoring-only.  Include the explicit boundary
         # even on an early raw-body rejection, before its router can run.
         boundary = (
-            copyfast_chat_workspace._boundary()
+            copyfast_prompt_studio._boundary()
+            if is_prompt_studio
+            else copyfast_content_handoff._boundary(record_persisted=False)
+            if is_content_handoff
+            else copyfast_partner_crm._boundary(lead_persisted=False)
+            if is_partner_crm
+            else copyfast_channel_strategy._boundary(profile_persisted=False)
+            if is_channel_strategy
+            else copyfast_chat_workspace._boundary()
             if is_chat_workspace
             else copyfast_analytics_workspace._boundary()
             if is_analytics_workspace
+            else copyfast_workboard._boundary()
+            if is_workboard
+            else copyfast_autopilot._boundary()
+            if is_autopilot_tick or is_autopilot_approval
+            else copyfast_reliability._boundary()
+            if is_reliability_followup
+            else copyfast_notification_center._boundary()
+            if is_notification_tick or is_inbox_mutation
+            else copyfast_data_controls._boundary()
+            if is_data_controls
+            else copyfast_governance._boundary()
+            if is_governance
+            else copyfast_media_factory._boundary()
+            if is_media_factory
             else copyfast_document_workspace._boundary() if is_document_workspace else None
         )
         response = JSONResponse(
             envelope(
                 False,
                 (
-                    "Dữ liệu Creative Content Studio vượt giới hạn kích thước an toàn."
+                    "Thông tin đăng nhập vượt giới hạn kích thước an toàn."
+                    if is_auth_credential
+                    else "Dữ liệu Prompt Studio vượt giới hạn kích thước an toàn."
+                    if is_prompt_studio
+                    else "Dữ liệu Content Handoff vượt giới hạn kích thước an toàn."
+                    if is_content_handoff
+                    else "Dữ liệu Partner & Lead CRM vượt giới hạn kích thước an toàn."
+                    if is_partner_crm
+                    else "Dữ liệu Creative Content Studio vượt giới hạn kích thước an toàn."
                     if is_content_studio
+                    else "Dữ liệu Channel Strategy vượt giới hạn kích thước an toàn."
+                    if is_channel_strategy
                     else "Dữ liệu Voice Studio vượt giới hạn kích thước an toàn."
                     if is_voice_studio
                     else "Dữ liệu Video Production Studio vượt giới hạn kích thước an toàn."
@@ -253,12 +591,34 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_studio
                     else "Dữ liệu Image Creative Studio vượt giới hạn kích thước an toàn."
                     if is_image_studio
+                    else "Dữ liệu Document Operations vượt giới hạn kích thước an toàn."
+                    if is_document_operation
+                    else "Dữ liệu Trend Research vượt giới hạn kích thước an toàn."
+                    if is_trend_research
+                    else "Dữ liệu Media Factory Blueprint vượt giới hạn kích thước an toàn."
+                    if is_media_factory
                     else "Dữ liệu Document & PDF Workspace vượt giới hạn kích thước an toàn."
                     if is_document_workspace
                     else "Dữ liệu AI Chat Workspace vượt giới hạn kích thước an toàn."
                     if is_chat_workspace
                     else "Dữ liệu Analytics Workspace vượt giới hạn kích thước an toàn."
                     if is_analytics_workspace
+                    else "Dữ liệu Workboard & Review Queue vượt giới hạn kích thước an toàn."
+                    if is_workboard
+                    else "Dữ liệu Operations Autopilot nội bộ vượt giới hạn kích thước an toàn."
+                    if is_autopilot_tick
+                    else "Quyết định Operations Autopilot vượt giới hạn kích thước an toàn."
+                    if is_autopilot_approval
+                    else "Quyết định Reliability Follow-up vượt giới hạn kích thước an toàn."
+                    if is_reliability_followup
+                    else "Dữ liệu Inbox Automation nội bộ vượt giới hạn kích thước an toàn."
+                    if is_notification_tick
+                    else "Quyết định Inbox riêng tư vượt giới hạn kích thước an toàn."
+                    if is_inbox_mutation
+                    else "Yêu cầu Data Control vượt giới hạn kích thước an toàn."
+                    if is_data_controls
+                    else "Dữ liệu Governance Documents vượt giới hạn kích thước an toàn."
+                    if is_governance
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
                     if is_media
                     else "Dữ liệu Prompt Library vượt giới hạn kích thước an toàn."
@@ -266,8 +626,18 @@ class PromptLibraryBodyLimitMiddleware:
                 data=boundary,
                 status_name="guarded",
                 error_code=(
-                    "WEB_CONTENT_STUDIO_BODY_TOO_LARGE"
+                    "WEB_AUTH_CREDENTIAL_BODY_TOO_LARGE"
+                    if is_auth_credential
+                    else "WEB_PROMPT_STUDIO_BODY_TOO_LARGE"
+                    if is_prompt_studio
+                    else "WEB_CONTENT_HANDOFF_BODY_TOO_LARGE"
+                    if is_content_handoff
+                    else "WEB_PARTNER_CRM_BODY_TOO_LARGE"
+                    if is_partner_crm
+                    else "WEB_CONTENT_STUDIO_BODY_TOO_LARGE"
                     if is_content_studio
+                    else "WEB_CHANNEL_STRATEGY_BODY_TOO_LARGE"
+                    if is_channel_strategy
                     else "WEB_VOICE_STUDIO_BODY_TOO_LARGE"
                     if is_voice_studio
                     else "WEB_VIDEO_STUDIO_BODY_TOO_LARGE"
@@ -276,12 +646,34 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_studio
                     else "WEB_IMAGE_STUDIO_BODY_TOO_LARGE"
                     if is_image_studio
+                    else "WEB_DOCUMENT_OPERATION_BODY_TOO_LARGE"
+                    if is_document_operation
+                    else "WEB_TREND_RESEARCH_BODY_TOO_LARGE"
+                    if is_trend_research
+                    else "WEB_MEDIA_FACTORY_BODY_TOO_LARGE"
+                    if is_media_factory
                     else "WEB_DOCUMENT_WORKSPACE_BODY_TOO_LARGE"
                     if is_document_workspace
                     else "WEB_CHAT_WORKSPACE_BODY_TOO_LARGE"
                     if is_chat_workspace
                     else "WEB_ANALYTICS_WORKSPACE_BODY_TOO_LARGE"
                     if is_analytics_workspace
+                    else "WEB_WORKBOARD_BODY_TOO_LARGE"
+                    if is_workboard
+                    else "WEB_AUTOPILOT_TICK_BODY_TOO_LARGE"
+                    if is_autopilot_tick
+                    else "WEB_AUTOPILOT_APPROVAL_BODY_TOO_LARGE"
+                    if is_autopilot_approval
+                    else "WEB_RELIABILITY_FOLLOWUP_BODY_TOO_LARGE"
+                    if is_reliability_followup
+                    else "WEB_NOTIFICATION_TICK_BODY_TOO_LARGE"
+                    if is_notification_tick
+                    else "WEB_INBOX_MUTATION_BODY_TOO_LARGE"
+                    if is_inbox_mutation
+                    else "WEB_DATA_CONTROL_BODY_TOO_LARGE"
+                    if is_data_controls
+                    else "WEB_GOVERNANCE_BODY_TOO_LARGE"
+                    if is_governance
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
                     if is_media
                     else "WEB_PROMPT_LIBRARY_BODY_TOO_LARGE"
@@ -297,6 +689,13 @@ class PromptLibraryBodyLimitMiddleware:
                 "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
             },
         )
+        if is_mailbox_confirmation:
+            # The email link carries a one-time proof in its query string.
+            # Preserve the stricter browser boundary even when the body cap
+            # rejects a malformed confirmation before the router runs.
+            response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+            response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         await response(scope, receive, send)
 
     async def __call__(self, scope, receive, send):
@@ -369,15 +768,31 @@ app.add_middleware(
     PromptLibraryBodyLimitMiddleware,
     max_bytes=PROMPT_LIBRARY_BODY_MAX_BYTES,
     import_max_bytes=PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES,
+    prompt_studio_max_bytes=PROMPT_STUDIO_BODY_MAX_BYTES,
     media_max_bytes=MEDIA_WORKSPACE_BODY_MAX_BYTES,
     content_studio_max_bytes=CONTENT_STUDIO_BODY_MAX_BYTES,
+    content_handoff_max_bytes=CONTENT_HANDOFF_BODY_MAX_BYTES,
+    channel_strategy_max_bytes=CHANNEL_STRATEGY_BODY_MAX_BYTES,
     voice_studio_max_bytes=VOICE_STUDIO_BODY_MAX_BYTES,
     video_studio_max_bytes=VIDEO_STUDIO_BODY_MAX_BYTES,
     subtitle_studio_max_bytes=SUBTITLE_STUDIO_BODY_MAX_BYTES,
     image_studio_max_bytes=IMAGE_STUDIO_BODY_MAX_BYTES,
     document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
+    document_operation_max_bytes=DOCUMENT_OPERATION_BODY_MAX_BYTES,
+    trend_research_max_bytes=TREND_RESEARCH_BODY_MAX_BYTES,
+    media_factory_max_bytes=MEDIA_FACTORY_BODY_MAX_BYTES,
     chat_workspace_max_bytes=CHAT_WORKSPACE_BODY_MAX_BYTES,
     analytics_workspace_max_bytes=ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
+    workboard_max_bytes=WORKBOARD_BODY_MAX_BYTES,
+    partner_crm_max_bytes=PARTNER_CRM_BODY_MAX_BYTES,
+    autopilot_tick_max_bytes=AUTOPILOT_TICK_BODY_MAX_BYTES,
+    autopilot_approval_max_bytes=AUTOPILOT_APPROVAL_BODY_MAX_BYTES,
+    reliability_followup_max_bytes=RELIABILITY_FOLLOWUP_BODY_MAX_BYTES,
+    notification_tick_max_bytes=NOTIFICATION_TICK_BODY_MAX_BYTES,
+    inbox_mutation_max_bytes=INBOX_MUTATION_BODY_MAX_BYTES,
+    data_controls_max_bytes=DATA_CONTROLS_BODY_MAX_BYTES,
+    governance_max_bytes=GOVERNANCE_BODY_MAX_BYTES,
+    auth_credential_max_bytes=AUTH_CREDENTIAL_BODY_MAX_BYTES,
 )
 
 
@@ -417,7 +832,7 @@ def _safe_onboarding_next(value: str | None) -> str:
     if parsed.scheme or parsed.netloc or parsed.params or parsed.query or parsed.fragment:
         return ""
     path = parsed.path.rstrip("/") or "/"
-    if path in {"/login", "/register", "/onboarding"}:
+    if path in {"/login", "/register", "/password-recovery", "/onboarding"}:
         return ""
     return path
 
@@ -451,6 +866,26 @@ async def security_headers(request: Request, call_next):
     auth_limits = {
         "/api/v1/auth/login": 8,
         "/api/v1/auth/register": 4,
+        "/api/v1/auth/security/password": 6,
+        # SMTP delivery is externally visible but never browser-authoritative.
+        # Limit it before the signed-session/CSRF/database work so a stolen
+        # cookie cannot become a mailbox-spam primitive.
+        "/api/v1/auth/security/email-verification/start": 3,
+        # The one-time mailbox proof has its own HMAC/expiry/consumption
+        # checks. This early cap only filters malformed POST floods.
+        "/api/v1/auth/email-verification/confirm": 30,
+        # Password recovery always returns the same response. This small
+        # public edge gate limits email-delivery abuse before account lookup;
+        # account-specific limits stay inside the signed Web database.
+        "/api/v1/auth/password-recovery/start": 5,
+        "/api/v1/auth/password-recovery/confirm": 30,
+        # Password-first TOTP completion receives a separate tight bucket.
+        # The server additionally locks its opaque challenge after five bad
+        # codes; neither limit creates or reveals a session.
+        "/api/v1/auth/login/mfa": 8,
+        "/api/v1/auth/mfa/enrollment/start": 6,
+        "/api/v1/auth/mfa/enrollment/confirm": 8,
+        "/api/v1/auth/mfa/disable": 6,
         "/api/v1/auth/telegram/login/start": 5,
         "/api/v1/auth/telegram/login/complete": 8,
         "/api/v1/auth/telegram/link/start": 5,
@@ -461,6 +896,13 @@ async def security_headers(request: Request, call_next):
         # additional edge rate limit in front of Railway.
         "/api/v1/auth/internal/telegram-link/confirm": 60,
         "/api/v1/auth/internal/telegram-link/confirm/": 60,
+        # The Operations Cron is separately HMAC-authenticated. This small
+        # pre-verification bucket limits malformed traffic before body/HMAC
+        # work without treating a browser cookie as internal authority.
+        "/internal/v1/operations/tick": 12,
+        # Inbox has an isolated HMAC protocol and must receive the same
+        # early malformed-request protection before JSON/HMAC processing.
+        "/internal/v1/notifications/tick": 12,
         # Private Web Asset Vault blobs are deliberately rate-limited before
         # multipart parsing; this is separate from Bot upload staging.
         "/api/v1/asset-vault/upload": 20,
@@ -485,6 +927,7 @@ async def security_headers(request: Request, call_next):
             "/api/v1/document-operations/image-to-pdf",
             "/api/v1/document-operations/pdf-to-images",
             "/api/v1/document-operations/pdf-to-word",
+            "/api/v1/document-operations/ocr-image",
             "/api/v1/image-operations/resize",
             "/api/v1/image-operations/enhance",
         }
@@ -513,6 +956,14 @@ async def security_headers(request: Request, call_next):
     # not imply an AI/provider, Bot, payment, job or publishing capability.
     content_studio_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/content-studio/")
     content_studio_read = request.method == "GET" and request.url.path.startswith("/api/v1/content-studio/")
+    # Trend Research is request-only text planning, but it still receives an
+    # independent early cap before session/CSRF/template work. This never
+    # opens live search, scraping, a provider, Bot bridge, job or payment.
+    trend_research_write = request.method == "POST" and request.url.path.startswith("/api/v1/trend-research/")
+    # Media Factory Blueprint is also a request-only deterministic plan. Its
+    # own bucket prevents repeat template work before session/CSRF handling;
+    # it does not open an engine, source fetch, Bot bridge, job or payment.
+    media_factory_write = request.method == "POST" and request.url.path.startswith("/api/v1/media-factory/")
     # Voice Studio persists only owner-scoped text/metadata and immutable
     # versions.  These fixed route-family buckets do not imply TTS, clone,
     # preview, provider, Bot, wallet or payment execution.
@@ -551,12 +1002,57 @@ async def security_headers(request: Request, call_next):
     # publishing or generated reports.
     analytics_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/analytics-workspace/")
     analytics_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/analytics-workspace/")
+    # A finalized manual CSV is a bounded private attachment, not a generic
+    # analytics write.  Give it a smaller fixed bucket before CSRF, owner
+    # lookup, SQLite reads or attachment assembly; this never enables Bot
+    # campaign reports, platform exports or stored delivery artifacts.
+    analytics_workspace_manual_csv_export = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/analytics-workspace/reports/")
+        and request.url.path.endswith("/export.csv")
+    )
+    # Data Control Center reads one owner-scoped inventory/history projection;
+    # its two writes are either a staged erasure request or a bounded direct
+    # JSON attachment. Fixed buckets protect that private data before CSRF,
+    # idempotency and SQLite work without granting any external authority.
+    data_controls_write = request.method == "POST" and request.url.path.startswith("/api/v1/account/data-controls/")
+    data_controls_read = request.method == "GET" and request.url.path.startswith("/api/v1/account/data-controls/")
+    data_controls_export = request.method == "POST" and request.url.path == "/api/v1/account/data-controls/export.json"
+    # Governance Documents is a local-admin Web record surface. Dedicated
+    # fixed family buckets protect read/review mutations before signed-admin,
+    # CSRF, DLP, revision and idempotency checks; they do not imply a Bot,
+    # bridge, wallet, payment, provider, job, publication or notification.
+    governance_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/admin/governance/")
+    governance_read = request.method == "GET" and request.url.path.startswith("/api/v1/admin/governance/")
+    # Workboard is a private Web-only coordination surface. Fixed route-family
+    # gates protect owner-scoped SQLite reads/writes before CSRF, revision and
+    # idempotency work; they do not enable any Bot, provider, job, payment,
+    # publication or notification automation.
+    workboard_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/workboard/")
+    workboard_read = request.method == "GET" and request.url.path.startswith("/api/v1/workboard/")
+    # Campaign schedule actions are anchored to a signed owner's Campaign
+    # detail route.  The plan itself is the schedule source, so POST/PATCH
+    # mutations and the detail/schedule GET views share fixed pre-DB buckets.
+    # This gate only limits repeated Web requests; the router still enforces
+    # signed session, CSRF, ownership, revision and idempotency independently.
+    campaign_schedule_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/campaigns/")
+    campaign_schedule_read = request.method == "GET" and request.url.path.startswith("/api/v1/campaigns/")
     # Web Support Desk writes are durable, owner-scoped customer/operator
     # mutations.  Keep a narrow pre-DB gate separate from generic auth and
     # memory activity; it does not relax the router's CSRF/role/idempotency
     # checks and does not affect the legacy Bot bridge ticket endpoint.
     support_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/cases")
     support_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/support/admin/cases")
+    operations_admin_write = request.method == "POST" and request.url.path.startswith("/api/v1/operations/admin/approvals/")
+    reliability_followup_write = request.method == "POST" and request.url.path.startswith("/api/v1/operations/admin/followups/")
+    reliability_followup_read = request.method == "GET" and (
+        request.url.path.startswith("/api/v1/operations/admin/reliability/")
+        or request.url.path == "/api/v1/operations/admin/followups"
+    )
+    operations_read = request.method == "GET" and request.url.path.startswith("/api/v1/operations/")
+    notification_tick = request.method == "POST" and request.url.path == "/internal/v1/notifications/tick"
+    inbox_write = request.method == "POST" and request.url.path.startswith("/api/v1/inbox/items/")
+    inbox_read = request.method == "GET" and request.url.path.startswith("/api/v1/inbox/")
     rate_limit = auth_limits.get(request.url.path) if request.method == "POST" else (10 if oauth_start else None)
     if asset_archive:
         rate_limit = 30
@@ -584,6 +1080,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if content_studio_read:
         rate_limit = 120
+    if trend_research_write:
+        rate_limit = 40
+    if media_factory_write:
+        rate_limit = 40
     if voice_studio_write:
         rate_limit = 40
     if voice_studio_read:
@@ -610,12 +1110,44 @@ async def security_headers(request: Request, call_next):
         rate_limit = 120
     if analytics_workspace_write:
         rate_limit = 40
+    if analytics_workspace_manual_csv_export:
+        rate_limit = 10
     if analytics_workspace_read:
+        rate_limit = 120
+    if data_controls_write:
+        rate_limit = 20
+    if data_controls_export:
+        rate_limit = 10
+    if data_controls_read:
+        rate_limit = 120
+    if governance_write:
+        rate_limit = 20
+    if governance_read:
+        rate_limit = 120
+    if workboard_write:
+        rate_limit = 40
+    if workboard_read:
+        rate_limit = 120
+    if campaign_schedule_write:
+        rate_limit = 40
+    if campaign_schedule_read:
         rate_limit = 120
     if support_write:
         rate_limit = 20
     if support_admin_write:
         rate_limit = 30
+    if operations_admin_write:
+        rate_limit = 20
+    if reliability_followup_write:
+        rate_limit = 20
+    if reliability_followup_read:
+        rate_limit = 120
+    if operations_read:
+        rate_limit = 120
+    if inbox_write:
+        rate_limit = 40
+    if inbox_read:
+        rate_limit = 120
     if rate_limit is not None:
         client_ip = request.client.host if request.client else "unknown"
         now = time.monotonic()
@@ -630,6 +1162,8 @@ async def security_headers(request: Request, call_next):
             else "media-workspace-read" if media_workspace_read
             else "content-studio-write" if content_studio_write
             else "content-studio-read" if content_studio_read
+            else "trend-research-write" if trend_research_write
+            else "media-factory-write" if media_factory_write
             else "voice-studio-write" if voice_studio_write
             else "voice-studio-read" if voice_studio_read
             else "video-studio-write" if video_studio_write
@@ -642,16 +1176,45 @@ async def security_headers(request: Request, call_next):
             else "document-workspace-read" if document_workspace_read
             else "chat-workspace-write" if chat_workspace_write
             else "chat-workspace-read" if chat_workspace_read
+            else "analytics-workspace-manual-csv-export" if analytics_workspace_manual_csv_export
             else "analytics-workspace-write" if analytics_workspace_write
             else "analytics-workspace-read" if analytics_workspace_read
+            else "data-controls-export" if data_controls_export
+            else "data-controls-write" if data_controls_write
+            else "data-controls-read" if data_controls_read
+            else "governance-write" if governance_write
+            else "governance-read" if governance_read
+            else "workboard-write" if workboard_write
+            else "workboard-read" if workboard_read
+            else "campaign-schedule-write" if campaign_schedule_write
+            else "campaign-schedule-read" if campaign_schedule_read
+            else "operations-admin-write" if operations_admin_write
+            else "reliability-followup-write" if reliability_followup_write
+            else "reliability-followup-read" if reliability_followup_read
+            else "operations-read" if operations_read
+            else "notification-tick" if notification_tick
+            else "inbox-write" if inbox_write
+            else "inbox-read" if inbox_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
         window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < RATE_WINDOW_SECONDS]
         if len(window) >= rate_limit:
             is_document_workspace_request = document_workspace_write or document_workspace_read
+            is_trend_research_request = trend_research_write
+            is_media_factory_request = media_factory_write
             is_chat_workspace_request = chat_workspace_write or chat_workspace_read
             is_analytics_workspace_request = analytics_workspace_write or analytics_workspace_read
+            is_data_controls_request = data_controls_write or data_controls_read
+            is_governance_request = governance_write or governance_read
+            is_workboard_request = workboard_write or workboard_read
+            is_campaign_schedule_request = campaign_schedule_write or campaign_schedule_read
+            is_reliability_request = reliability_followup_write or reliability_followup_read
+            is_inbox_request = inbox_write or inbox_read or notification_tick
+            is_mailbox_confirmation = request.url.path in {
+                "/api/v1/auth/email-verification/confirm",
+                "/api/v1/auth/password-recovery/confirm",
+            }
             response = JSONResponse(
                 envelope(
                     False,
@@ -661,6 +1224,22 @@ async def security_headers(request: Request, call_next):
                         if is_chat_workspace_request
                         else copyfast_analytics_workspace._boundary()
                         if is_analytics_workspace_request
+                        else copyfast_data_controls._boundary()
+                        if is_data_controls_request
+                        else copyfast_governance._boundary()
+                        if is_governance_request
+                        else copyfast_workboard._boundary()
+                        if is_workboard_request
+                        else copyfast_api._campaign_schedule_boundary()
+                        if is_campaign_schedule_request
+                        else copyfast_reliability._boundary()
+                        if is_reliability_request
+                        else copyfast_notification_center._boundary()
+                        if is_inbox_request
+                        else copyfast_trend_research._boundary()
+                        if is_trend_research_request
+                        else copyfast_media_factory._boundary()
+                        if is_media_factory_request
                         else copyfast_document_workspace._boundary() if is_document_workspace_request else None
                     ),
                     status_name="guarded",
@@ -675,11 +1254,38 @@ async def security_headers(request: Request, call_next):
                     "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
                 },
             )
+            if analytics_workspace_manual_csv_export or data_controls_export:
+                # This early return bypasses the normal post-route header
+                # decoration below. Keep a throttled private attachment attempt
+                # inside the same boundary as a successful response.
+                response.headers["Referrer-Policy"] = "no-referrer"
+                response.headers["Content-Security-Policy"] = "sandbox"
+                response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+            elif is_governance_request:
+                response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+            elif is_mailbox_confirmation:
+                response.headers["Referrer-Policy"] = "no-referrer"
+                response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+                response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
             response.headers["X-Request-ID"] = request_id
             return response
         window.append(now)
         _auth_rate_windows[rate_key] = window
-    response = await call_next(request)
+    try:
+        response = await call_next(request)
+    except Exception:
+        # An unhandled exception may be rendered by Starlette outside this
+        # middleware. Capture only a fixed Web-native route family and a
+        # sanitized 5xx aggregate; this helper never reads request input,
+        # identity, diagnostics or response payload and cannot alter the
+        # original exception path.
+        copyfast_reliability.record_runtime_failure(request, status_code=500)
+        raise
+    if response.status_code >= 500 and not bool(getattr(request.state, "reliability_expected_failure", False)):
+        # Deliberately do not record planned HTTPException maintenance/config
+        # guards as runtime faults. The exception handler marks those paths
+        # below; only unexpected 5xx response metadata reaches Reliability.
+        copyfast_reliability.record_runtime_failure(request, status_code=int(response.status_code))
     response.headers["X-Request-ID"] = request_id
     response.headers["X-Content-Type-Options"] = "nosniff"
     # A private attachment deliberately has a stricter per-response policy
@@ -689,12 +1295,67 @@ async def security_headers(request: Request, call_next):
     private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
     private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
+    # Support evidence uses the same private attachment boundary as Asset
+    # Vault. It has both owner and staff routes under `/api/v1/support/`, so
+    # keep the check route-family based rather than trying to infer a case ID
+    # from untrusted path segments.
+    private_support_evidence_download = request.url.path.startswith("/api/v1/support/") and request.url.path.endswith("/download")
     private_prompt_export = request.method == "POST" and request.url.path == "/api/v1/prompt-library/export"
-    private_download = private_asset_download or private_package_download or private_document_download or private_image_download or private_prompt_export
-    response.headers["Referrer-Policy"] = "no-referrer" if private_download else "same-origin"
+    private_manual_analytics_csv_export = (
+        request.method == "POST"
+        and request.url.path.startswith("/api/v1/analytics-workspace/reports/")
+        and request.url.path.endswith("/export.csv")
+    )
+    private_data_controls_export = (
+        request.method == "POST"
+        and request.url.path == "/api/v1/account/data-controls/export.json"
+    )
+    # Both confirmation routes receive a proof in the URL and may render a
+    # credential form. Their router intentionally emits a narrow no-referrer
+    # CSP; keep middleware from widening it after the endpoint returns.
+    mailbox_confirmation = request.url.path in {
+        "/api/v1/auth/email-verification/confirm",
+        "/api/v1/auth/password-recovery/confirm",
+    }
+    # Governance records, lifecycle history and local-admin audit projections
+    # are private API data even though they are not downloadable attachments.
+    # Keep their cross-origin resource boundary explicit; the generic API
+    # no-store rule below keeps them out of browser/PWA caches.
+    private_governance = request.url.path.startswith("/api/v1/admin/governance/")
+    private_download = (
+        private_asset_download or private_package_download or private_document_download
+        or private_image_download or private_support_evidence_download or private_prompt_export
+        or private_manual_analytics_csv_export or private_data_controls_export
+    )
+    response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
-    response.headers["Content-Security-Policy"] = "sandbox" if private_download else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
-    if request.url.path.startswith("/api/v1/") or request.url.path.startswith("/internal/"):
+    response.headers["Content-Security-Policy"] = (
+        "sandbox"
+        if private_download
+        else "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+        if mailbox_confirmation
+        else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
+    )
+    if private_download or private_governance or mailbox_confirmation:
+        # Cover successful attachments and every normal post-route rejection
+        # (CSRF, validation, feature flag, owner, revision or size). The
+        # early rate-limit branch sets the same header before its return.
+        response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+    # A signed-out browser must never be able to resurrect an old dashboard
+    # document from its HTTP cache.  The service worker deliberately caches
+    # only fixed public assets, but HTML portal documents and their auth
+    # redirects also need an explicit browser-cache boundary.
+    is_portal_document = response.headers.get("content-type", "").lower().startswith("text/html")
+    is_dynamic_redirect = (
+        response.status_code in {301, 302, 303, 307, 308}
+        and not request.url.path.startswith("/static/")
+    )
+    if (
+        request.url.path.startswith("/api/v1/")
+        or request.url.path.startswith("/internal/")
+        or is_portal_document
+        or is_dynamic_redirect
+    ):
         response.headers["Cache-Control"] = "no-store, private"
     return response
 
@@ -714,11 +1375,21 @@ app.add_middleware(
 
 @app.exception_handler(HTTPException)
 async def copyfast_http_exception(request: Request, exc: HTTPException):
+    if exc.status_code >= 500:
+        # A deliberate feature/configuration guard is not an application
+        # runtime crash. Keep it out of the reliability signal intake while
+        # preserving the existing truthful API response.
+        request.state.reliability_expected_failure = True
     if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/") or request.url.path == "/admin" or request.url.path.startswith("/admin/"):
         error = "REQUEST_DENIED" if exc.status_code in {401, 403} else "REQUEST_INVALID"
         is_document_workspace = request.url.path.startswith("/api/v1/document-workspace/")
+        is_media_factory = request.url.path.startswith("/api/v1/media-factory/")
         is_chat_workspace = request.url.path.startswith("/api/v1/chat-workspace/")
         is_analytics_workspace = request.url.path.startswith("/api/v1/analytics-workspace/")
+        is_workboard = request.url.path.startswith("/api/v1/workboard/")
+        is_governance = request.url.path.startswith("/api/v1/admin/governance/")
+        is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
+        is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
         return JSONResponse(
             envelope(
                 False,
@@ -728,6 +1399,16 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                     if is_chat_workspace
                     else copyfast_analytics_workspace._boundary()
                     if is_analytics_workspace
+                    else copyfast_workboard._boundary()
+                    if is_workboard
+                    else copyfast_governance._boundary()
+                    if is_governance
+                    else copyfast_reliability._boundary()
+                    if is_reliability_followup
+                    else copyfast_notification_center._boundary()
+                    if is_notification_center
+                    else copyfast_media_factory._boundary()
+                    if is_media_factory
                     else copyfast_document_workspace._boundary() if is_document_workspace else None
                 ),
                 status_name="failed",
@@ -741,6 +1422,9 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
 @app.exception_handler(RequestValidationError)
 async def copyfast_validation_exception(request: Request, _exc: RequestValidationError):
     if request.url.path.startswith("/api/") or request.url.path.startswith("/internal/"):
+        is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
+        is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
+        is_governance = request.url.path.startswith("/api/v1/admin/governance/")
         return JSONResponse(
             envelope(
                 False,
@@ -750,6 +1434,16 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                     if request.url.path.startswith("/api/v1/chat-workspace/")
                     else copyfast_analytics_workspace._boundary()
                     if request.url.path.startswith("/api/v1/analytics-workspace/")
+                    else copyfast_workboard._boundary()
+                    if request.url.path.startswith("/api/v1/workboard/")
+                    else copyfast_governance._boundary()
+                    if is_governance
+                    else copyfast_reliability._boundary()
+                    if is_reliability_followup
+                    else copyfast_notification_center._boundary()
+                    if is_notification_center
+                    else copyfast_media_factory._boundary()
+                    if request.url.path.startswith("/api/v1/media-factory/")
                     else copyfast_document_workspace._boundary() if request.url.path.startswith("/api/v1/document-workspace/") else None
                 ),
                 status_name="failed",
@@ -764,8 +1458,115 @@ static_dir = ROOT / "static"
 if static_dir.is_dir():
     app.mount("/static", StaticFiles(directory=str(static_dir)), name="static")
 
+
+@app.get("/service-worker.js", include_in_schema=False)
+async def root_service_worker():
+    """Serve the worker at the origin root so its scope can cover the PWA.
+
+    The worker itself has a deliberately tiny, public-only cache policy.  It
+    must be revalidated on every registration check: otherwise an old worker
+    could keep an obsolete offline policy after a security fix is deployed.
+    """
+
+    return FileResponse(
+        static_dir / "portal" / "service-worker.js",
+        media_type="application/javascript",
+        headers={
+            "Cache-Control": "no-cache, no-store, max-age=0, must-revalidate",
+            "Service-Worker-Allowed": "/",
+            "X-Content-Type-Options": "nosniff",
+        },
+    )
+
+
+def _durable_auth_throttle_guard(payload_email: str, request: Request, *, action: str) -> JSONResponse | None:
+    """Consume a post-validation credential slot without exposing identity.
+
+    The model passed by FastAPI has already survived the raw 8 KiB cap and
+    bounded field validation.  Invalid email-shaped input remains on the
+    original auth route's existing validation path, so it cannot create an
+    unbounded stream of durable HMAC rows.  The cheap middleware gate remains
+    deliberately separate and executes before this function.
+    """
+
+    normalized_email = copyfast_auth_throttle.normalize_email(payload_email)
+    if not copyfast_auth.EMAIL_PATTERN.fullmatch(normalized_email):
+        return None
+    decision = copyfast_auth_throttle.consume(request, action=action, email=normalized_email)
+    if decision.allowed:
+        return None
+    unavailable = decision.reason == "unavailable"
+    response = JSONResponse(
+        envelope(
+            False,
+            "Dịch vụ đăng nhập đang được bảo vệ. Vui lòng thử lại sau ít phút.",
+            status_name="guarded",
+            error_code="AUTH_THROTTLE_UNAVAILABLE" if unavailable else "AUTH_RATE_LIMITED",
+        ),
+        status_code=503 if unavailable else 429,
+        headers={
+            "Cache-Control": "no-store, private",
+            "Retry-After": str(max(1, min(3600, int(decision.retry_after_seconds or 60)))),
+        },
+    )
+    return response
+
+
+@app.post("/api/v1/auth/register", include_in_schema=False)
+async def durable_register(
+    payload: copyfast_auth.RegisterRequest,
+    request: Request,
+    response: Response,
+):
+    """Bounded, durable wrapper for the existing non-enumerating register flow."""
+
+    guarded = _durable_auth_throttle_guard(payload.email, request, action="register")
+    if guarded is not None:
+        return guarded
+    return await copyfast_auth.register(payload, request, response)
+
+
+@app.post("/api/v1/auth/login", include_in_schema=False)
+async def durable_login(
+    payload: copyfast_auth.LoginRequest,
+    request: Request,
+    response: Response,
+):
+    """Bounded, durable wrapper for the existing constant-work login flow."""
+
+    guarded = _durable_auth_throttle_guard(payload.email, request, action="login")
+    if guarded is not None:
+        return guarded
+    return await copyfast_auth.login(payload, request, response)
+
+
+@app.post("/api/v1/auth/security/password", include_in_schema=False)
+async def durable_password_change(
+    payload: copyfast_auth.PasswordChangeRequest,
+    request: Request,
+    response: Response,
+    account: dict = Depends(copyfast_auth.require_csrf),
+):
+    """Throttle only a real Web password factor before its rotation flow.
+
+    Telegram-first and OAuth-only aliases never feed the durable email
+    throttle. They are not password factors and must not create a second
+    recovery/login surface merely by visiting this route with a valid cookie.
+    """
+
+    email = str(account.get("email") or "")
+    if copyfast_auth.password_login_factor_available(email, bool(account.get("password_login_enabled"))):
+        guarded = _durable_auth_throttle_guard(email, request, action="password_change")
+        if guarded is not None:
+            return guarded
+    return await copyfast_auth.change_password(payload, request, response, account=account)
+
+
 app.include_router(copyfast_auth.router, prefix="/api/v1/auth")
+app.include_router(copyfast_mfa.router)
 app.include_router(copyfast_api.router)
+app.include_router(copyfast_admin_erp_navigation.router)
+app.include_router(copyfast_admin_audit.router)
 app.include_router(copyfast_projects.router)
 app.include_router(copyfast_assets.router)
 app.include_router(copyfast_project_packages.router)
@@ -773,8 +1574,14 @@ app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
+app.include_router(copyfast_prompt_studio.router)
 app.include_router(copyfast_music_media.router)
 app.include_router(copyfast_content_studio.router)
+app.include_router(copyfast_channel_strategy.router)
+app.include_router(copyfast_content_handoff.router)
+app.include_router(copyfast_free_prompt_gallery.router)
+app.include_router(copyfast_trend_research.router)
+app.include_router(copyfast_media_factory.router)
 app.include_router(copyfast_voice_studio.router)
 app.include_router(copyfast_video_studio.router)
 app.include_router(copyfast_subtitle_workspace.router)
@@ -782,7 +1589,15 @@ app.include_router(copyfast_image_studio.router)
 app.include_router(copyfast_document_workspace.router)
 app.include_router(copyfast_chat_workspace.router)
 app.include_router(copyfast_analytics_workspace.router)
+app.include_router(copyfast_data_controls.router)
+app.include_router(copyfast_governance.router)
+app.include_router(copyfast_workboard.router)
+app.include_router(copyfast_partner_crm.router)
 app.include_router(copyfast_support.router)
+app.include_router(copyfast_autopilot.router)
+app.include_router(copyfast_reliability.router)
+app.include_router(copyfast_operations_desk.router)
+app.include_router(copyfast_notification_center.router)
 
 
 @app.get("/health")
@@ -844,12 +1659,46 @@ async def page(page_path: str, request: Request):
     # its own Web surface so it can have independent readiness and filtering.
     if normalized == "/music/library" and request.query_params.get("type") == "sfx":
         return RedirectResponse("/music/sfx-library", status_code=307)
-    # Support Desk is a separately-owned Web service: its operator screen is
-    # authorized with a server-side signed Web role and deliberately
-    # does not require a Telegram/Bot identity.  Every other Admin ERP route
-    # retains the stricter live canonical Bot-admin verification.
-    if normalized == "/admin/support" or normalized.startswith("/admin/support/"):
+    if normalized == "/admin/autopilot":
+        return RedirectResponse("/admin/operations", status_code=307)
+    # Support Desk, Operations and the internal Content Handoff queue are
+    # separately owned Web services.  Their narrow, server-side Web roles
+    # deliberately do not require a Telegram/Bot identity.  Every other Admin
+    # ERP route retains the stricter live canonical Bot-admin verification.
+    if (
+        normalized == "/admin/support"
+        or normalized.startswith("/admin/support/")
+        or normalized == "/admin/operations"
+        or normalized.startswith("/admin/operations/")
+        or normalized == "/admin/autopilot"
+        or normalized.startswith("/admin/autopilot/")
+        or normalized == "/admin/reliability"
+        or normalized.startswith("/admin/reliability/")
+        # The ERP navigation manifest grants this exact queue to Web Support
+        # staff.  Keep its HTML gate aligned with the queue API's own
+        # ``require_support_staff`` check instead of accidentally promoting a
+        # Web-native handoff review to a canonical Bot-admin route.  Do not
+        # broaden this to a prefix: no other /admin/content-handoffs path has
+        # been reviewed as a staff surface yet.
+        or normalized == "/admin/content-handoffs"
+        # Operations Desk is an exact, read-only Web-native staff surface.
+        # Its API independently repeats this role check, and no nested route
+        # has been reviewed as an inherited support route.
+        or normalized == "/admin/work-queue"
+    ):
         copyfast_support.require_support_staff(current_session(request)["account"])
+    # This is deliberately an exact route rather than an `/admin/crm/*`
+    # prefix.  The manager directory returns only identifier-free pipeline
+    # metadata and its JSON endpoint independently requires the signed local
+    # Web admin role.  No Bot bridge call is appropriate for this one
+    # Web-native, read-only view.
+    elif normalized == "/admin/crm/leads":
+        copyfast_auth.require_admin(request)
+    # Governance Documents is an independently flagged, Web-native local
+    # admin surface.  Its API repeats signed admin + CSRF/revision checks and
+    # never grants access to the remaining canonical Bot-admin ERP routes.
+    elif normalized == "/admin/governance" or normalized.startswith("/admin/governance/"):
+        copyfast_auth.require_admin(request)
     # The portal renderer is intentionally generic for parity routes, so this
     # explicit guard is necessary before it can render any remaining /admin/*
     # surface. Browser-supplied IDs never influence this decision.
@@ -868,7 +1717,7 @@ async def page(page_path: str, request: Request):
             return RedirectResponse("/login", status_code=307)
         return RedirectResponse("/dashboard", status_code=307)
 
-    public_pages = {"/welcome", "/legal", "/privacy"}
+    public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery"}
     if normalized in {"/login", "/register"}:
         try:
             current_session(request)

@@ -1360,6 +1360,7 @@ def test_pdf_split_rejects_archived_tampered_encrypted_and_oversize_page_inputs_
         archived = client.post(
             f"/api/v1/asset-vault/{archived_source['id']}/archive",
             headers={"X-CSRF-Token": csrf, "Idempotency-Key": "pdf-source-archive-action-0001"},
+            json={"expected_revision": 1},
         )
         assert archived.status_code == 200
         assert split(client, csrf, asset_id=archived_source["id"], page_range="1", key="pdf-split-archived-0001").json()["error_code"] == "WEB_DOCUMENT_SOURCE_NOT_FOUND"

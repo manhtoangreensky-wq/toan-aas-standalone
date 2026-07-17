@@ -84,6 +84,7 @@ MAX_WORKSPACES_PER_ACCOUNT = 300
 MAX_PLANS_PER_WORKSPACE = 120
 MAX_VERSIONS_PER_ENTITY = 100
 MAX_LIST_LIMIT = 100
+MAX_LIST_OFFSET = 10_000
 MAX_EVENT_LIMIT = 50
 MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1024
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
@@ -1124,6 +1125,7 @@ async def document_workspaces(
     state: str = Query(default="active", max_length=20),
     q: str = Query(default="", max_length=180),
     limit: int = Query(default=30, ge=1, le=MAX_LIST_LIMIT),
+    offset: int = Query(default=0, ge=0, le=MAX_LIST_OFFSET),
     account: dict = Depends(require_account),
 ):
     _require_enabled()
@@ -1144,7 +1146,11 @@ async def document_workspaces(
         where.append("(w.title LIKE ? ESCAPE '\\' OR w.source_summary LIKE ? ESCAPE '\\' OR w.objective LIKE ? ESCAPE '\\')")
         wildcard = "%" + needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         values.extend([wildcard, wildcard, wildcard])
-    values.append(limit)
+    # Fetch one bounded sentinel row so the owner-scoped library can page
+    # without a separate count query or a disclosure of records outside this
+    # account/filter.  The public projection below deliberately remains an
+    # excerpt-only workspace card.
+    values.extend([limit + 1, offset])
     ensure_copyfast_schema()
     with read_transaction() as conn:
         rows = conn.execute(
@@ -1152,11 +1158,27 @@ async def document_workspaces(
                        w.language, w.target_language, w.tags_json, w.lifecycle, w.revision,
                        w.created_at, w.updated_at, w.archived_at,
                        (SELECT COUNT(*) FROM web_document_plans p WHERE p.workspace_id=w.id AND p.account_id=w.account_id AND p.state='active')
-                FROM web_document_workspaces w WHERE {' AND '.join(where)} ORDER BY w.updated_at DESC, w.id DESC LIMIT ?""",
+                FROM web_document_workspaces w WHERE {' AND '.join(where)} ORDER BY w.updated_at DESC, w.id DESC LIMIT ? OFFSET ?""",
             values,
         ).fetchall()
-        items = [_workspace_public(row[:14], plan_count=int(row[14] or 0)) for row in rows]
-    return envelope(True, "Đã tải document workspaces.", data={"items": items, **_boundary()}, status_name="read_only")
+        has_more = len(rows) > limit
+        items = [_workspace_public(row[:14], plan_count=int(row[14] or 0)) for row in rows[:limit]]
+    return envelope(
+        True,
+        "Đã tải document workspaces.",
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": offset + limit if has_more else None,
+            # Search phrases can be sensitive authoring metadata.  The client
+            # already owns the current in-memory query, so echo only the
+            # non-sensitive lifecycle filter instead of reflecting `q`.
+            "filters": {"state": normalized_state},
+            "pagination": {"limit": limit, "offset": offset, "returned": len(items)},
+            **_boundary(),
+        },
+        status_name="read_only",
+    )
 
 
 @router.get("/workspaces/{workspace_id}")

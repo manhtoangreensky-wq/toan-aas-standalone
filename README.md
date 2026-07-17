@@ -7,7 +7,7 @@ Production Web App for `app.toanaas.vn`.
 - Railway entrypoint: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 - Compatibility entrypoint: `main:app` exports the exact same application.
 - Health checks: `/health`, `/api/v1/health`
-- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/video-studio`, `/voice-studio`, `/wallet`, `/jobs`, `/assets`
+- Customer portal: `/dashboard`, `/projects`, `/project-packages`, `/asset-vault`, `/notes`, `/reminders`, `/inbox`, `/automation`, `/video-studio`, `/voice-studio`, `/wallet`, `/jobs`, `/assets`
 - Admin Portal: `/admin` (signed session plus current canonical Bot role)
 
 ## Required Railway production configuration
@@ -16,9 +16,38 @@ Production Web App for `app.toanaas.vn`.
   Railway **Variables** page. It signs Web sessions and must never be placed
   in Git, browser JavaScript, tickets or logs. The app intentionally refuses
   to start without it in production instead of issuing forgeable sessions.
-- Persist the Web-owned session database on the service's Railway volume with
-  an absolute `WEBAPP_SESSION_DB_PATH`, an existing
-  `RAILWAY_VOLUME_MOUNT_PATH`, or the standard persistent `/data` mount. See
+- Web mailbox assurance and password recovery are separately opt-in. Leave
+  WEBAPP_EMAIL_VERIFICATION_ENABLED and WEBAPP_PASSWORD_RECOVERY_ENABLED
+  unset until a real authenticated SMTP transport and the HTTPS public origin
+  are configured. Both use WEBAPP_EMAIL_SMTP_HOST, WEBAPP_EMAIL_SMTP_PORT,
+  WEBAPP_EMAIL_SMTP_USERNAME, WEBAPP_EMAIL_SMTP_PASSWORD,
+  WEBAPP_EMAIL_SMTP_TLS_MODE, WEBAPP_EMAIL_VERIFICATION_FROM and
+  WEBAPP_EMAIL_VERIFICATION_PUBLIC_BASE_URL. An enabled incomplete flow fails
+  at startup rather than claiming delivery; see
+  [Email Verification Contract](docs/migration/EMAIL_VERIFICATION_CONTRACT.md)
+  and [Password Recovery Contract](docs/migration/PASSWORD_RECOVERY_CONTRACT.md).
+- Web-native TOTP MFA is separately opt-in and defaults to guarded. Enable
+  `WEBAPP_TOTP_MFA_ENABLED=true` only with a distinct Railway-only
+  `WEBAPP_TOTP_MFA_ENCRYPTION_KEY` that is URL-safe base64 and decodes to
+  exactly 32 bytes. It protects only the Web Email + password factor: no Bot
+  identity, Xu, PayOS, provider, job or Telegram state is changed. An active
+  factor fails closed if its runtime/key is unavailable. See
+  [TOTP MFA Contract](docs/migration/TOTP_MFA_CONTRACT.md).
+- Email/password login and registration also have a durable, Web-owned
+  throttle in the same persistent session database. It stores only HMAC
+  fingerprints of a normalized email and an effective client scope; never
+  store or configure a raw email/IP list. The throttle uses
+  `WEB_SESSION_SECRET` with domain separation by default; an operator may set
+  a separate Railway-only `WEBAPP_AUTH_THROTTLE_HMAC_SECRET` during a planned
+  key rotation. Leave `WEBAPP_AUTH_TRUSTED_PROXY_CIDRS` unset unless the
+  direct Railway/reverse-proxy peer ranges are known exactly—otherwise
+  `X-Forwarded-For` is intentionally ignored. See
+  [`OAUTH_AUTH_MAP.md`](docs/migration/OAUTH_AUTH_MAP.md).
+- Persist the Web-owned session database on the service's Railway volume. In
+  `production`, `prod` **and** `live`, an explicit
+  `WEBAPP_SESSION_DB_PATH` must resolve to a database file *under* the
+  existing `RAILWAY_VOLUME_MOUNT_PATH` (or the standard persistent `/data`
+  mount); an arbitrary absolute `/app/...` path is rejected at startup. See
   [`TELEGRAM_WEB_CONNECTION.md`](docs/migration/TELEGRAM_WEB_CONNECTION.md)
   for the full non-secret configuration contract.
 - `WEBAPP_ASSET_VAULT_ENABLED` defaults to `false`. Enable it only after this
@@ -76,13 +105,33 @@ Production Web App for `app.toanaas.vn`.
   persistent-volume contract described above; do not advertise notification
   delivery unless a separate, audited adapter is enabled. See
   [`MEMORY_CENTER_CONTRACT.md`](docs/migration/MEMORY_CENTER_CONTRACT.md).
+- `WEBAPP_DATA_CONTROLS_ENABLED` defaults to `false`. `/account/data-controls`
+  is an opt-in Web-only privacy control: it can download a bounded direct JSON
+  copy of Web-authored profile, Memory, Prompt Library and Workboard data, and
+  submit/cancel a staged `web_authoring_only` erasure review request. It never
+  automatically deletes data and never reads, mutates or promises action for
+  Telegram/Bot, Xu/PayOS, provider, job, asset, credential, raw-audit or
+  support/operations data. See
+  [`DATA_CONTROLS_CONTRACT.md`](docs/migration/DATA_CONTROLS_CONTRACT.md).
 - `WEBAPP_ANALYTICS_WORKSPACE_ENABLED` defaults to `true`. `/analytics` is a
   signed-account workspace for reports, metric definitions, manual snapshots
   and human-authored findings. It calculates only from numbers the account
   saved with server-side `Decimal`; it never connects a social platform,
   reads Bot/provider reports, creates AI insight, handles revenue/Xu/PayOS,
-  starts jobs, publishes or exports a report file. See
+  starts jobs, publishes or creates a stored report file.
+  `WEBAPP_ANALYTICS_WORKSPACE_EXPORT_ENABLED` separately defaults to `false`:
+  enable it only after reviewing the narrow, owner-scoped finalized-report CSV
+  attachment contract. That attachment is generated from active Web-owned
+  manual records on demand with session, CSRF and revision checks; it is not a
+  Bot `/campaign/report`, platform report, stored asset, job or delivery
+  artifact. See
   [`ANALYTICS_WORKSPACE_CONTRACT.md`](docs/migration/ANALYTICS_WORKSPACE_CONTRACT.md).
+- `WEBAPP_WORKBOARD_ENABLED` defaults to `true`. `/workboard` is a
+  signed-account Kanban and self-review queue for metadata the same Web
+  account owns. It can reference verified Web Project, Campaign, Analytics,
+  Note or Draft records, but never creates a Bot job, publish action,
+  notification, provider request, wallet/Xu mutation or PayOS operation. See
+  [`WORKBOARD_REVIEW_QUEUE_CONTRACT.md`](docs/migration/WORKBOARD_REVIEW_QUEUE_CONTRACT.md).
 - `WEBAPP_VOICE_STUDIO_ENABLED` defaults to `true`. `/voice-studio` is a
   signed-account authoring workspace for voice direction, consent metadata,
   scripts, local cue-sheet estimates and revision history. It never stores
@@ -103,6 +152,33 @@ Production Web App for `app.toanaas.vn`.
   Bot tickets, send notifications, accept payment proof, alter Xu/PayOS,
   call providers, refund or create jobs. See
   [`WEB_SUPPORT_DESK_CONTRACT.md`](docs/migration/WEB_SUPPORT_DESK_CONTRACT.md).
+- `WEBAPP_AUTOPILOT_ENABLED` defaults to `false`. `/operations` and the
+  staff-only `/admin/operations` can observe Web-native Support Desk metadata
+  and a signed scheduler's bounded receipts. Automatic metadata triage is
+  separately opt-in and remains unable to call the Bot/provider, mutate
+  Xu/PayOS, send a customer message, retry a job or change deployment/code.
+  Enable it only through the one-replica, HMAC-protected runbook in
+  [`OPERATIONS_AUTOPILOT_CONTRACT.md`](docs/migration/OPERATIONS_AUTOPILOT_CONTRACT.md).
+- `WEBAPP_RELIABILITY_FOLLOWUP_ENABLED` defaults to `false`. The staff-only
+  `/admin/reliability` queue can aggregate only allow-listed Web-native 5xx
+  metadata and existing Support triage; it is not a raw log, auto-fix,
+  Railway restart/deploy, Bot/provider/job/payment/wallet executor or
+  customer-contact channel. It requires the Autopilot contract and its
+  Web-only incident secret; use the bounded retention and enablement rules in
+  [`WEB_RELIABILITY_FOLLOWUP_CONTRACT.md`](docs/migration/WEB_RELIABILITY_FOLLOWUP_CONTRACT.md).
+- `WEBAPP_NOTIFICATION_CENTER_ENABLED` defaults to `true`, while
+  `WEBAPP_NOTIFICATION_AUTOMATION_ENABLED` defaults to `false`. `/inbox` and
+  `/automation` are durable, signed-account **in-app records only**; phase 1
+  can materialize an overdue Web reminder but never sends Telegram/email/SMS/
+  web push, calls Bot/provider, or changes wallet/Xu, PayOS, jobs, deployment
+  or a customer reply. Enable its separate HMAC scheduler only after the Web
+  SQLite database is verified on a persistent volume with one replica. In a
+  production-like environment, a valid explicit replica attestation '=1' is
+  also required; invalid budgets or deployment guards return a nonce-consuming
+  guarded receipt rather than running a partial tick. Customer summaries show
+  only owner-scoped materialization metadata, never global scheduler receipts;
+  see
+  [`WEB_NOTIFICATION_AUTOMATION_CONTRACT.md`](docs/migration/WEB_NOTIFICATION_AUTOMATION_CONTRACT.md).
 
 ## Authority boundary
 
@@ -146,6 +222,20 @@ private Bot bridge.
   not mirror Bot `memory_*` tables or claim that Telegram/email/push has been
   delivered. Bot memory AI classification, storage quota/add-ons and its
   actual reminder sender remain outside this Web-only contract.
+- `/inbox` and `/automation` are a separate Web-native Inbox Center. A
+  durable record means only that the signed Web account can view it on return;
+  it is not Telegram/email/SMS/web-push delivery. Its current scheduler may
+  materialize only an overdue Web Memory reminder without changing that source;
+  it does not auto-schedule Workboard/Campaign local-time fields, contact a
+  customer, mutate Bot/provider/PayOS/wallet/job state or deploy. See
+  [`WEB_NOTIFICATION_AUTOMATION_CONTRACT.md`](docs/migration/WEB_NOTIFICATION_AUTOMATION_CONTRACT.md).
+- `/workboard` is a separate Web-owned Workboard & Review Queue. Its states
+  and checklists are private self-management metadata; `review` and `done`
+  are never a Bot/admin approval, job completion, publication, notification
+  or external automation claim. It accepts only owner-verified opaque
+  references and cannot fetch a URL, upload a file or invoke any external
+  system. See
+  [`WORKBOARD_REVIEW_QUEUE_CONTRACT.md`](docs/migration/WORKBOARD_REVIEW_QUEUE_CONTRACT.md).
 - `/support` and `/tickets` are a separate Web-owned Support Desk. Cases,
   public replies and staff-only notes are bound to the signed Web account and
   server-side Support role. They never mirror Bot ticket state, create a

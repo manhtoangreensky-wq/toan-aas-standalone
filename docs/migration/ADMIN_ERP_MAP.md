@@ -1,8 +1,20 @@
 # Admin ERP map
 
-Every admin page requires signed session, canonical role, CSRF on writes, confirmation, idempotency where applicable, and audit events.
+## Authority model
 
-| Bot command | Handler | Planned Web target |
+Admin navigation is an ERP information architecture, not a browser-issued permission. All server write actions require a signed session, CSRF, confirmation, permission check, idempotency where applicable, optimistic revision where applicable, and an audit event.
+
+| Authority domain | Server authorizes | May do | Must not do |
+| --- | --- | --- | --- |
+| Canonical Bot admin | Core Bridge canonical role | Read canonical users/jobs/payments/providers and request the existing guarded Bot actions. | Accept a browser `admin_id`, duplicate wallet/PayOS state, call a provider from the browser, or create a second webhook/ledger. |
+| Web Support Desk | Signed server-side staff role | Operate owner-scoped Web support cases, triage and review handoffs. | Become canonical Bot admin or perform wallet/payment/provider actions without a canonical bridge contract. |
+| Web CRM manager | Signed server-side local admin role | Read redacted, Web-owned Partner & Lead CRM pipeline records. | Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data. |
+
+`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and `WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; the server still checks the signed role on every request.
+
+The following is a Bot command compatibility map. A target is a signed guarded Web surface or a canonical bridge projection; it is never proof that a browser may execute the Bot command directly.
+
+| Bot command | Handler | Compatibility target |
 | --- | --- | --- |
 | /add | cmd_admin_add | /admin/add |
 | /add_music | cmd_add_music | /admin/add_music |
@@ -201,6 +213,6 @@ Every admin page requires signed session, canonical role, CSRF on writes, confir
 | /manifests | admin_internal_command | /admin/manifests |
 | /mark_payos_test | cmd_mark_payos_test | /admin/mark_payos_test |
 | /mark_published | admin_internal_command | /admin/mark_published |
-| /media_factory | cmd_media_factory | /admin/media_factory |
 | /member_user | cmd_member_user | /admin/member_user |
 | /memory_admin | cmd_memory_admin | /admin/memory_admin |
+| /memory_reminder_admin | cmd_memory_reminder_admin | /admin/memory_reminder_admin |

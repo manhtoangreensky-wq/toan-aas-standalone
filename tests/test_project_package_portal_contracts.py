@@ -30,10 +30,10 @@ def test_project_package_hydration_and_actions_do_not_depend_on_bot_bridge() -> 
     assert "const projectPackageEnabled" in INTEGRATION
     assert '"project-package-view": Boolean(account && projectPackageEnabled)' in INTEGRATION
     assert '"project-package-export": Boolean(account && me.csrf_token && projectPackageEnabled)' in INTEGRATION
-    assert "async function hydrateProjectPackages(projectId)" in INTEGRATION
+    assert "async function hydrateProjectPackages(projectId, offsetValue)" in INTEGRATION
     assert '"/project-packages"' in INTEGRATION
-    assert 'api(`/projects/${encodeURIComponent(projectId)}/packages`' in INTEGRATION
-    assert 'api(path)' in INTEGRATION
+    assert "function projectPackageListPath" in INTEGRATION
+    assert "api(projectPackageListPath(selectedProjectId, offset))" in INTEGRATION
     action = INTEGRATION[INTEGRATION.index('if (action === "project-package-export")'):INTEGRATION.index('if (action === "project-create")')]
     assert "bridgeAvailable" not in action
     assert "provider" not in action.lower()

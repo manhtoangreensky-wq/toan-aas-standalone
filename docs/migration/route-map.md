@@ -123,7 +123,7 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | /content_policy | /legal | COPIED_GUARDED |
 | /costs | /admin/costs | COPIED_GUARDED |
 | /create_media | /studio | COPIED_GUARDED |
-| /creative_flow | /studio | COPIED_GUARDED |
+| /creative_flow | /creative-flow | MAPPED_TO_EXISTING_ROUTE |
 | /creative_report | /admin/creative_report | COPIED_GUARDED |
 | /creative_select | /admin/creative_select | COPIED_GUARDED |
 | /creative_test | /admin/creative_test | COPIED_GUARDED |
@@ -141,7 +141,7 @@ This maps Telegram entry points to the intended Web route family. Existing-route
 | /dub_public_open | /admin/dub_public_open | COPIED_GUARDED |
 | /dub_quote_test | /admin/dub_quote_test | COPIED_GUARDED |
 | /dub_status | /admin/dub_status | COPIED_GUARDED |
-| /dubbing_help | /features/subtitle | COPIED_GUARDED |
+| /dubbing_help | /guides/source-rights | COPIED_GUARDED |
 | /duyet | /admin/duyet | COPIED_GUARDED |
 | /emergency_lock | TELEGRAM_ONLY | TELEGRAM_ONLY |
 | /emergency_status | TELEGRAM_ONLY | TELEGRAM_ONLY |

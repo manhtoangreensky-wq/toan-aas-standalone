@@ -39,10 +39,16 @@ def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api(
         "isNativeMediaWorkspacePath",
         "mediaWorkspaceSafetyError",
         "mediaWorkspaceFilterPayload",
+        "mediaWorkspaceListOffset",
         "mediaWorkspaceListPath",
+        "mediaWorkspaceListingProjection",
+        "mediaAudioAssetFilterPayload",
+        "mediaAudioAssetListPath",
+        "mediaAudioAssetListingProjection",
         "mediaCollectionPayload",
         "mediaItemPayload",
         "hydrateMediaWorkspace",
+        "hydrateMediaAudioAssets",
         "hydrateMediaCollection",
     ):
         assert f"function {helper}" in INTEGRATION or f"async function {helper}" in INTEGRATION
@@ -51,13 +57,17 @@ def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api(
         'api("/media-workspace/summary")',
         'api("/media-workspace/policy")',
         'api("/media-workspace/events?limit=50")',
-        'api("/media-workspace/audio-assets?limit=100")',
+        'api(mediaWorkspaceListPath(filter, offset))',
+        'api(mediaAudioAssetListPath(audioFilter, audioOffset))',
+        'api(mediaAudioAssetListPath(filter, offset))',
         'api(`/media-workspace/collections/${encodeURIComponent(String(collectionId))}`)',
         'api("/media-workspace/collections",',
     ):
         assert endpoint in INTEGRATION
 
     assert '"media-workspace-view": Boolean(account && mediaWorkspaceEnabled)' in INTEGRATION
+    assert '"media-workspace-page": Boolean(account && mediaWorkspaceEnabled)' in INTEGRATION
+    assert '"media-audio-page": Boolean(account && mediaWorkspaceEnabled)' in INTEGRATION
     assert '"media-workspace-create": Boolean(account && me.csrf_token && mediaWorkspaceEnabled)' in INTEGRATION
     assert "WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED" in ROUTER
     assert "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE" in APP
@@ -74,7 +84,10 @@ def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api(
     assert "mediaWorkspaceSummary: {}, mediaCollections: [], mediaWorkspaceEvents: []" in detail_hydrator
 
     action_start = INTEGRATION.index('if (action === "media-workspace-filter"')
-    action_end = INTEGRATION.index('if (action === "support-cases-filter")')
+    # Stop at the next standalone composer route. The action dispatcher has
+    # several unrelated Web-native tools after Media Workspace; including
+    # them here made this contract inspect unrelated Telegram copy.
+    action_end = INTEGRATION.index('if (action === "content-prompt-pack-compose")', action_start)
     actions = INTEGRATION[action_start:action_end].lower()
     for forbidden in ("bridgeavailable", "payos", "wallet", "telegram", "/music"):
         assert forbidden not in actions
@@ -89,6 +102,9 @@ def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api(
         "media-item-attach",
         "media-item-update",
         "media-item-detach",
+        "media-workspace-page",
+        "media-audio-filter",
+        "media-audio-page",
     ):
         assert action in actions
     assert "acquiresubmission(scope" in actions
@@ -96,6 +112,15 @@ def test_media_workspace_hydrates_and_mutates_only_through_owner_scoped_web_api(
     assert "local_deterministic_draft_only" in actions
     assert "provider_called !== false" in actions
     assert "charge_started !== false" in actions
+    assert "data-media-collection-offset" in PORTAL
+    assert "data-media-audio-offset" in PORTAL
+    assert "function renderMediaWorkspacePagination" in PORTAL
+    assert "function renderMediaAudioAssetPagination" in PORTAL
+    assert "portal-media-pagination" in PORTAL
+    assert "portal-media-pagination" in CSS
+    assert "portal-media-audio-filter" in CSS
+    assert "LIMIT ? OFFSET ?" in ROUTER
+    assert "LOWER(extension)=?" in ROUTER
 
 
 def test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache() -> None:
@@ -129,3 +154,42 @@ def test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache(
         ".portal-media-collection-grid { grid-template-columns: 1fr; }",
     ):
         assert selector in CSS
+
+
+def test_media_workspace_reads_ignore_late_session_route_and_page_responses() -> None:
+    for epoch in (
+        "mediaWorkspaceSessionEpoch",
+        "mediaWorkspaceListHydrationEpoch",
+        "mediaWorkspaceAudioHydrationEpoch",
+        "mediaWorkspaceDetailHydrationEpoch",
+    ):
+        assert f"let {epoch} = 0;" in INTEGRATION
+        assert f"++{epoch};" in INTEGRATION
+
+    helper_start = INTEGRATION.index("function mediaWorkspaceRequestIsCurrent")
+    helper_end = INTEGRATION.index("async function hydrateMediaWorkspace", helper_start)
+    helper = INTEGRATION[helper_start:helper_end]
+    for requirement in (
+        "sessionEpoch === mediaWorkspaceSessionEpoch",
+        "currentPortalPath() === expectedPath",
+        "isNativeMediaWorkspacePath(expectedPath)",
+        "!isNativeMusicPromptComposerPath(expectedPath)",
+        "base().mediaWorkspaceEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+
+    list_start = INTEGRATION.index("async function hydrateMediaWorkspace")
+    audio_start = INTEGRATION.index("async function hydrateMediaAudioAssets", list_start)
+    detail_start = INTEGRATION.index("async function hydrateMediaCollection", audio_start)
+    list_read = INTEGRATION[list_start:audio_start]
+    audio_read = INTEGRATION[audio_start:detail_start]
+    detail_read = INTEGRATION[detail_start:INTEGRATION.index("function contentStudioRequestIsCurrent", detail_start)]
+
+    assert "const requestEpoch = ++mediaWorkspaceListHydrationEpoch;" in list_read
+    assert "mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceListHydrationEpoch, sessionEpoch, path)" in list_read
+    assert "const requestEpoch = ++mediaWorkspaceAudioHydrationEpoch;" in audio_read
+    assert "mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceAudioHydrationEpoch, sessionEpoch, expectedPath)" in audio_read
+    assert "const requestEpoch = ++mediaWorkspaceDetailHydrationEpoch;" in detail_read
+    assert "if (currentPortalPath() !== route) return null;" in detail_read
+    assert "mediaWorkspaceRequestIsCurrent(requestEpoch, mediaWorkspaceDetailHydrationEpoch, sessionEpoch, route)" in detail_read

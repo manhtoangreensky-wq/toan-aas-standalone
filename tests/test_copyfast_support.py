@@ -7,6 +7,7 @@ the rest of the portal evolves.
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta, timezone
 import importlib
 import sqlite3
 import sys
@@ -166,6 +167,319 @@ def test_support_cases_are_csrf_owned_idempotent_and_private(tmp_path, monkeypat
             )
             assert denied_reply.status_code == 200
             assert denied_reply.json()["error_code"] == "WEB_SUPPORT_CASE_NOT_FOUND"
+
+
+def test_support_case_listing_paginates_without_cross_account_metadata(tmp_path, monkeypatch):
+    """The customer portal relies on this bounded owner-scoped list receipt."""
+    with make_client(tmp_path, monkeypatch) as owner:
+        csrf = register_and_login(owner, "support-pagination-owner@example.com")
+        first_case = create_case(
+            owner,
+            csrf,
+            "support-pagination-first-0001",
+            subject="Yêu cầu cũ cần theo dõi",
+        )
+        second_case = create_case(
+            owner,
+            csrf,
+            "support-pagination-second-0001",
+            subject="Yêu cầu mới cần theo dõi",
+        )
+
+        first_page = owner.get("/api/v1/support/cases", params={"limit": 1, "offset": 0, "state": "all"})
+        assert first_page.status_code == 200
+        first_data = first_page.json()["data"]
+        assert len(first_data["items"]) == 1
+        assert first_data["has_more"] is True
+        assert first_data["next_offset"] == 1
+
+        second_page = owner.get("/api/v1/support/cases", params={"limit": 1, "offset": first_data["next_offset"], "state": "all"})
+        assert second_page.status_code == 200
+        second_data = second_page.json()["data"]
+        assert len(second_data["items"]) == 1
+        assert second_data["has_more"] is False
+        assert second_data["next_offset"] is None
+        assert {first_data["items"][0]["id"], second_data["items"][0]["id"]} == {first_case["id"], second_case["id"]}
+
+        with make_client(tmp_path, monkeypatch) as other:
+            register_and_login(other, "support-pagination-other@example.com")
+            hidden = other.get("/api/v1/support/cases", params={"limit": 1, "offset": 0, "state": "all"})
+            assert hidden.status_code == 200
+            assert hidden.json()["data"]["items"] == []
+            assert hidden.json()["data"]["has_more"] is False
+            assert hidden.json()["data"]["next_offset"] is None
+
+
+def test_support_admin_case_listing_is_role_guarded_and_pages_all_cases_once(tmp_path, monkeypatch):
+    """Staff queue paging must not hide records after the first 50 cases.
+
+    Cases are inserted directly only to keep this boundary test fast.  The
+    role is still granted exclusively through the protected account record;
+    neither the request nor a query parameter can turn the signed account
+    into a Support Desk operator.
+    """
+    with make_client(tmp_path, monkeypatch) as client:
+        register_and_login(client, "support-admin-pagination@example.com")
+
+        denied = client.get("/api/v1/support/admin/cases", params={"limit": 50, "offset": 0, "state": "all"})
+        assert denied.status_code == 403
+        assert denied.json()["error_code"] == "REQUEST_DENIED"
+
+        case_ids = [f"10000000-0000-4000-8000-{index:012d}" for index in range(1, 102)]
+        with sqlite3.connect(tmp_path / "copyfast-support-test.db") as conn:
+            account_id = conn.execute(
+                "SELECT id FROM web_accounts WHERE email='support-admin-pagination@example.com'"
+            ).fetchone()[0]
+            conn.execute("UPDATE web_accounts SET role_cache='support_manager' WHERE id=?", (account_id,))
+            rows = []
+            for index, case_id in enumerate(case_ids, start=1):
+                timestamp = f"2026-07-{index // 24 + 1:02d}T{index % 24:02d}:00:00+00:00"
+                rows.append((
+                    case_id,
+                    account_id,
+                    "general_support",
+                    "normal",
+                    f"Admin pagination case {index:03d}",
+                    "Nội dung kiểm thử nội bộ cho phân trang hàng đợi.",
+                    "new",
+                    1,
+                    timestamp,
+                    timestamp,
+                    timestamp,
+                    None,
+                    None,
+                ))
+            conn.executemany(
+                """INSERT INTO web_support_cases
+                   (id, account_id, category, priority, subject, initial_detail, state, revision,
+                    created_at, updated_at, last_public_message_at, resolved_at, closed_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                rows,
+            )
+            conn.commit()
+
+        pages = []
+        for offset, expected_count, expected_more, expected_next in (
+            (0, 50, True, 50),
+            (50, 50, True, 100),
+            (100, 1, False, None),
+        ):
+            response = client.get(
+                "/api/v1/support/admin/cases",
+                params={"limit": 50, "offset": offset, "state": "all"},
+            )
+            assert response.status_code == 200
+            data = response.json()["data"]
+            assert len(data["items"]) == expected_count
+            assert data["has_more"] is expected_more
+            assert data["next_offset"] == expected_next
+            pages.append({item["id"] for item in data["items"]})
+
+        assert all(left.isdisjoint(right) for index, left in enumerate(pages) for right in pages[index + 1:])
+        assert set().union(*pages) == set(case_ids)
+
+
+def test_support_admin_case_listing_filters_web_native_customer_care_metadata_only(tmp_path, monkeypatch):
+    """Staff can filter queue metadata without supplying an account identifier."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "support-care-filter-manager@example.com")
+        technical = create_case(client, csrf, "support-care-filter-technical-0001", subject="Case kỹ thuật cần điều phối")
+        defaulted = create_case(client, csrf, "support-care-filter-default-0001", subject="Case chưa được điều phối")
+        product = create_case(client, csrf, "support-care-filter-product-0001", subject="Case sản phẩm cần điều phối")
+        database = tmp_path / "copyfast-support-test.db"
+        now = "2026-07-16T12:00:00+00:00"
+        with sqlite3.connect(database) as conn:
+            manager_id = conn.execute(
+                "SELECT id FROM web_accounts WHERE email=?",
+                ("support-care-filter-manager@example.com",),
+            ).fetchone()[0]
+            conn.execute("UPDATE web_accounts SET role_cache='support_manager' WHERE id=?", (manager_id,))
+            conn.executemany(
+                """INSERT INTO web_support_case_controls
+                   (case_id, team_queue, assigned_account_id, sla_class, first_staff_touched_at,
+                    escalation_state, escalation_reason, escalation_requested_at,
+                    escalation_acknowledged_at, escalation_resolved_at,
+                    escalation_actor_account_id, updated_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                [
+                    (
+                        technical["id"], "technical", manager_id, "priority", now,
+                        "requested", "Cần rà soát technical nội bộ.", now, None, None, manager_id, now,
+                    ),
+                    (
+                        product["id"], "product", manager_id, "critical", now,
+                        "acknowledged", "Đang có quản lý xử lý nội bộ.", now, now, None, manager_id, now,
+                    ),
+                ],
+            )
+            conn.commit()
+
+        technical_only = client.get(
+            "/api/v1/support/admin/cases",
+            params={
+                "team_queue": "technical", "assignment": "assigned",
+                "sla_class": "priority", "escalation_state": "requested",
+            },
+        )
+        assert technical_only.status_code == 200
+        technical_data = technical_only.json()["data"]
+        assert [item["id"] for item in technical_data["items"]] == [technical["id"]]
+        assert technical_data["filters"] == {
+            "state": "all", "category": "", "team_queue": "technical",
+            "assignment": "assigned", "sla_class": "priority", "care_sla_status": "all",
+            "escalation_state": "requested",
+        }
+        assert "assigned_account_id" not in str(technical_only.request.url)
+        # The queue list can name the assignee but must not fan out an
+        # internal account identifier or an escalation narrative to every
+        # staff browser.  A case-specific manager detail retains its narrowly
+        # scoped roster ID for the triage selector.
+        listed_care = technical_data["items"][0]["care"]
+        assert listed_care["assignee"] == {"display_name": "Web Support Owner"}
+        assert "reason" not in listed_care["escalation"]
+
+        detail = client.get(f"/api/v1/support/admin/cases/{technical['id']}")
+        assert detail.status_code == 200
+        assert detail.json()["data"]["case"]["care"]["assignee"]["id"] == manager_id
+
+        # ``mine`` is identity-derived on the server. The browser sends only
+        # the fixed enum, yet it can combine the view with the ordinary queue
+        # filters without receiving a roster/account identifier in the list.
+        mine = client.get("/api/v1/support/admin/cases", params={"assignment": "mine"})
+        assert mine.status_code == 200
+        mine_data = mine.json()["data"]
+        assert {item["id"] for item in mine_data["items"]} == {technical["id"], product["id"]}
+        assert mine_data["filters"]["assignment"] == "mine"
+        assert "assigned_account_id" not in str(mine.request.url)
+        assert manager_id not in str(mine_data)
+        mine_technical = client.get(
+            "/api/v1/support/admin/cases",
+            params={"assignment": "mine", "team_queue": "technical"},
+        )
+        assert mine_technical.status_code == 200
+        assert [item["id"] for item in mine_technical.json()["data"]["items"]] == [technical["id"]]
+
+        register_and_login(client, "support-care-filter-operator@example.com")
+        with sqlite3.connect(database) as conn:
+            operator_id = conn.execute(
+                "SELECT id FROM web_accounts WHERE email=?",
+                ("support-care-filter-operator@example.com",),
+            ).fetchone()[0]
+            conn.execute("UPDATE web_accounts SET role_cache='support_operator' WHERE id=?", (operator_id,))
+            conn.commit()
+        operator_detail = client.get(f"/api/v1/support/admin/cases/{technical['id']}")
+        assert operator_detail.status_code == 200
+        assert "id" not in operator_detail.json()["data"]["case"]["care"]["assignee"]
+        operator_mine = client.get("/api/v1/support/admin/cases", params={"assignment": "mine"})
+        assert operator_mine.status_code == 200
+        assert operator_mine.json()["data"]["items"] == []
+        assert operator_mine.json()["data"]["filters"]["assignment"] == "mine"
+        # An unrecognized browser query parameter cannot turn the signed
+        # operator into the manager or reveal the manager's cases.
+        forged_mine = client.get(
+            "/api/v1/support/admin/cases",
+            params={"assignment": "mine", "assigned_account_id": manager_id},
+        )
+        assert forged_mine.status_code == 200
+        assert forged_mine.json()["data"]["items"] == []
+        assert manager_id not in str(forged_mine.json()["data"])
+
+        default_only = client.get(
+            "/api/v1/support/admin/cases",
+            params={
+                "team_queue": "general", "assignment": "unassigned",
+                "sla_class": "standard", "escalation_state": "none",
+            },
+        )
+        assert default_only.status_code == 200
+        assert [item["id"] for item in default_only.json()["data"]["items"]] == [defaulted["id"]]
+
+        for name, value in (
+            ("team_queue", "untrusted_queue"),
+            ("assignment", "account-id-must-not-be-a-filter"),
+            ("sla_class", "instant"),
+            ("escalation_state", "external"),
+        ):
+            rejected = client.get("/api/v1/support/admin/cases", params={name: value})
+            assert rejected.status_code == 422
+
+
+def test_support_admin_case_listing_filters_current_customer_care_sla_status_server_side(tmp_path, monkeypatch):
+    """The first-touch target is filtered before pagination, not in the browser."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "support-care-sla-filter-manager@example.com")
+        cases = {
+            "pending": create_case(client, csrf, "support-care-sla-pending-0001", subject="Case chờ tiếp nhận"),
+            "overdue_unacknowledged": create_case(client, csrf, "support-care-sla-overdue-0001", subject="Case quá hạn tiếp nhận"),
+            "within_target": create_case(client, csrf, "support-care-sla-within-0001", subject="Case đã nhận đúng hạn"),
+            "breached": create_case(client, csrf, "support-care-sla-breached-0001", subject="Case đã nhận quá hạn"),
+            "unavailable": create_case(client, csrf, "support-care-sla-unavailable-0001", subject="Case thiếu mốc bắt đầu"),
+        }
+        database = tmp_path / "copyfast-support-test.db"
+        now = datetime.now(timezone.utc).replace(microsecond=0)
+        created_at = {
+            "pending": (now - timedelta(hours=1)).isoformat(),
+            "overdue_unacknowledged": (now - timedelta(hours=25)).isoformat(),
+            "within_target": (now - timedelta(hours=30)).isoformat(),
+            "breached": (now - timedelta(hours=30)).isoformat(),
+            "unavailable": "not-a-web-timestamp",
+        }
+        with sqlite3.connect(database) as conn:
+            manager_id = conn.execute(
+                "SELECT id FROM web_accounts WHERE email=?",
+                ("support-care-sla-filter-manager@example.com",),
+            ).fetchone()[0]
+            conn.execute("UPDATE web_accounts SET role_cache='support_manager' WHERE id=?", (manager_id,))
+            conn.executemany(
+                "UPDATE web_support_cases SET created_at=?, updated_at=? WHERE id=?",
+                [(created_at[status], created_at[status], case["id"]) for status, case in cases.items()],
+            )
+            conn.executemany(
+                """INSERT INTO web_support_case_controls
+                   (case_id, team_queue, assigned_account_id, sla_class, first_staff_touched_at,
+                    escalation_state, escalation_reason, escalation_requested_at,
+                    escalation_acknowledged_at, escalation_resolved_at,
+                    escalation_actor_account_id, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'none', '', NULL, NULL, NULL, NULL, ?)""",
+                [
+                    # An invalid touch timestamp is treated exactly like no
+                    # touch by _sla_public, so it remains a pending target.
+                    (cases["pending"]["id"], "technical", manager_id, "standard", "not-a-touch-timestamp", now.isoformat()),
+                    (cases["overdue_unacknowledged"]["id"], "technical", manager_id, "standard", None, now.isoformat()),
+                    (cases["within_target"]["id"], "product", manager_id, "critical", (now - timedelta(hours=29)).isoformat(), now.isoformat()),
+                    (cases["breached"]["id"], "technical", manager_id, "priority", (now - timedelta(hours=20)).isoformat(), now.isoformat()),
+                    (cases["unavailable"]["id"], "general", None, "standard", None, now.isoformat()),
+                ],
+            )
+            conn.commit()
+
+        for status, case in cases.items():
+            response = client.get("/api/v1/support/admin/cases", params={"care_sla_status": status})
+            assert response.status_code == 200
+            data = response.json()["data"]
+            assert [item["id"] for item in data["items"]] == [case["id"]]
+            assert data["filters"]["care_sla_status"] == status
+            assert data["items"][0]["care"]["sla"]["status"] == status
+            # Staff lists remain redacted even while the server derives a
+            # status from control metadata and its own clock.
+            assert manager_id not in str(data)
+
+        combined = client.get(
+            "/api/v1/support/admin/cases",
+            params={
+                "assignment": "mine",
+                "team_queue": "technical",
+                "care_sla_status": "overdue_unacknowledged",
+            },
+        )
+        assert combined.status_code == 200
+        assert [item["id"] for item in combined.json()["data"]["items"]] == [cases["overdue_unacknowledged"]["id"]]
+        assert manager_id not in str(combined.json()["data"])
+
+        invalid = client.get("/api/v1/support/admin/cases", params={"care_sla_status": "external_clock"})
+        assert invalid.status_code == 422
 
 
 def test_support_case_lifecycle_rejects_sensitive_manual_payment_content_and_sanitizes_audit(tmp_path, monkeypatch):

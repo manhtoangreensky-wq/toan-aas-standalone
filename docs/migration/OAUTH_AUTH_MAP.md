@@ -9,6 +9,7 @@ webhooks.
 | Method | Current behaviour | Browser trust boundary |
 | --- | --- | --- |
 | Email + password | Enabled by default; an address ending in `@gmail.com` is treated as a normal email address. | Password is submitted to the same-origin Web API and is scrypt-hashed server-side. |
+| TOTP MFA | Disabled unless `WEBAPP_TOTP_MFA_ENABLED=true` and a separate 32-byte encryption key are configured. It is available only after an Email + password factor proves its current password. | Setup key, recovery-code reveal and login challenge are transient in the current Portal tab. The database keeps AES-GCM secret ciphertext and HMAC hashes only; no secret reaches persistent browser storage. |
 | Telegram Login (OIDC) | Disabled until BotFather Web Login credentials are configured. A signed Telegram profile creates a Telegram-first Web session without a bot.py edit. | State, PKCE, nonce, token exchange and fixed-JWKS RS256 verification remain server-side; browser never submits an ID or receives a token. |
 | Telegram Bot link | Passwordless sign-in via the Bot. The first valid Bot proof creates a minimal Telegram-first Web profile by default; set `WEBAPP_TELEGRAM_AUTO_REGISTER_ENABLED=false` to require a previously linked account instead. | Browser never submits a raw Telegram ID. A one-time Bot proof is bound to an HttpOnly browser challenge. An OIDC-created account must link the same Telegram user before canonical Bot data unlocks. |
 | Google OAuth | Disabled unless all Google configuration is present. | OAuth state/PKCE/nonce are server-owned; Google ID token is verified against fixed Google JWKS. |
@@ -86,9 +87,12 @@ dependency.
   token, ID token and raw Telegram ID never enter browser storage.
 - `state` is high-entropy, stored as a SHA-256 hash, browser-bound by a signed
   HttpOnly cookie, expires in ten minutes, and is consumed before a token
-  exchange. Google/GitHub state stays `SameSite=Lax`; Apple uses a dedicated
-  short-lived `SameSite=None; Secure` state cookie because Apple returns a
-  cross-site form POST. The main signed session always remains `Lax`.
+  exchange. Each start receives its own HMAC-derived cookie name, so parallel
+  Google/GitHub/Apple tabs cannot overwrite or clear one another; the opaque
+  state itself is never placed in that name. Google/GitHub state stays
+  `SameSite=Lax`; Apple uses its own short-lived `SameSite=None; Secure`
+  state cookie because Apple returns a cross-site form POST. The main signed
+  session always remains `Lax`.
 - When secure cookies are active (mandatory for production), session,
   Telegram-challenge and OAuth cookies use `__Host-` names, `Secure`,
   `Path=/`, and no `Domain`. The server does not accept legacy unprefixed
@@ -112,26 +116,123 @@ dependency.
 - Only an HMAC hash of the external provider subject is retained in
   `web_external_identities`. Access tokens, refresh tokens, ID tokens and raw
   provider subjects are discarded after verification.
-- A fresh OAuth identity is never automatically attached to an existing
-  email/password account based on matching email. The customer must sign in
-  to that existing account and use the CSRF-protected link action.
+- A fresh verified Google/GitHub/Apple identity is never attached to,
+  reclaimed from, merged with, deleted from, or allowed to access an existing
+  Web account just because the public email matches. If that email is already
+  held, the verified identity receives its own OAuth-only Web account with an
+  HMAC-derived internal alias; password login remains disabled and the signed
+  browser sees its own provider-verified public contact instead. The original
+  account, data and sessions remain untouched.
 - Linking binds the OAuth state to the exact signed Web session that started
   it. It cannot change Telegram identity, role, wallet, PayOS, jobs or
-  providers.
+  providers. A linked provider may mark a contact as OAuth-verified only when
+  its freshly verified normalized email exactly equals the signed account's
+  existing email; a mismatched provider contact never replaces or merges it.
+- Password rotation, OAuth-factor changes, Telegram-first Email/password
+  upgrades and session-revocation actions preserve the initiating signed
+  session ID and recheck it inside the same SQLite write transaction before
+  changing a factor, revoking a peer session or issuing a replacement session.
+  A request whose session was revoked/rotated after its initial CSRF proof
+  returns the guarded `SECURITY_SESSION_STALE` response, records only a
+  redacted denied audit outcome, and cannot change the password, alter another
+  session or mint a new cookie.
+
+## Durable email/password throttle
+
+`POST /api/v1/auth/login` and `POST /api/v1/auth/register` retain the small
+in-process pre-parse flood gate, then use a second route-level SQLite counter
+only after their compact JSON body, Pydantic fields and conservative email
+form check are bounded/validated.
+Each attempt consumes **two** opaque rows in one short `BEGIN IMMEDIATE`
+transaction: `action + HMAC(normalized email) + HMAC(effective client scope)`
+and a distinct domain-separated `action + HMAC(normalized email) +
+HMAC(email-global scope)`. The latter is an HMAC-derived internal sentinel,
+never a literal `global` value. It closes the rotating-IP/client-fingerprint
+bypass without persisting a raw email, IP, password, cookie, session ID or
+request payload. An ordinary process restart or concurrent single-replica
+request cannot reset or overrun either window.
+
+- Defaults: one client permits 20 login attempts per 15 minutes and 8
+  registrations per hour. Across all client fingerprints, the same normalized
+  email is bounded to 40 login attempts per 15 minutes and 16 registrations
+  per hour. The global ceiling is intentionally finite and naturally expires;
+  it resists distributed guessing without becoming a permanent account lock.
+  The existing cheap IP gate still protects broad anonymous floods before
+  parsing.
+- `WEBAPP_AUTH_THROTTLE_HMAC_SECRET` is optional and must remain Railway-only.
+  When unset, the mandatory `WEB_SESSION_SECRET` is used with a separate HMAC
+  purpose label. Rotating either secret starts new throttle fingerprints; it
+  never reveals or migrates the old address values.
+- `WEBAPP_AUTH_TRUSTED_PROXY_CIDRS` is empty by default. A browser supplied
+  `X-Forwarded-For` is used only when the direct ASGI peer belongs to one
+  valid explicit CIDR allowlist entry; malformed, absent or overly broad
+  (`< /8` IPv4 / `< /32` IPv6) configuration fails closed to the direct peer
+  scope. Neither direct nor forwarded address is
+  persisted in plaintext.
+- Bounded tuning names are
+  `WEBAPP_AUTH_LOGIN_THROTTLE_LIMIT`,
+  `WEBAPP_AUTH_LOGIN_THROTTLE_WINDOW_SECONDS`,
+  `WEBAPP_AUTH_REGISTER_THROTTLE_LIMIT`,
+  `WEBAPP_AUTH_REGISTER_THROTTLE_WINDOW_SECONDS`, and
+  `WEBAPP_AUTH_LOGIN_GLOBAL_THROTTLE_LIMIT`,
+  `WEBAPP_AUTH_LOGIN_GLOBAL_THROTTLE_WINDOW_SECONDS`,
+  `WEBAPP_AUTH_REGISTER_GLOBAL_THROTTLE_LIMIT`,
+  `WEBAPP_AUTH_REGISTER_GLOBAL_THROTTLE_WINDOW_SECONDS`, and
+  `WEBAPP_AUTH_THROTTLE_DB_TIMEOUT_SECONDS`. They are limits, not feature
+  switches; client limits are constrained to 1–100 attempts, global limits to
+  2–200 attempts, and all windows to 60–86,400 seconds. Invalid values fall
+  back to safe bounded defaults.
+- If the counter schema, persistent database or short lock cannot be reached,
+  the password route returns one non-enumerating, `no-store` 503 guard with a
+  bounded retry time. It does not fall back to an in-memory success path.
+
+This is Web-only abuse control. It does not change Bot identity, Telegram
+linking, OAuth, PayOS, Xu, provider, job or webhook authority.
 
 ## Additive Web-only data
 
-`web_oauth_states` holds short-lived hashed state metadata.  It is safe to
+`web_oauth_states` holds short-lived hashed state metadata. It is safe to
 delete after expiry/consumption. `web_external_identities` maps a provider and
-HMAC-hashed immutable subject to one Web account.  `password_login_enabled`
-keeps OAuth-only accounts from accepting the generated unusable local password
-hash. These are all additive to the Web session database; no destructive
-migration runs and no Bot table is read or written.
+HMAC-hashed immutable subject to one Web account. `web_account_oauth_contacts`
+is keyed by Web account and stores only a freshly provider-verified public
+email plus provider/timestamps; it deliberately has no unique-email constraint
+so collision-isolated accounts can coexist. It never stores a raw provider
+subject, token, code or credential. `password_login_enabled` keeps OAuth-only
+accounts from accepting the generated unusable local password hash. These are
+all additive to the Web session database; no destructive migration runs and no
+Bot table is read or written.
+
+## Email-ownership boundary
+
+Email/password registration alone is never proof that the registrant controls
+the mailbox. The Account Security Center now supports an explicitly enabled
+Web-owned SMTP confirmation adapter: a signed account may request one
+short-lived link, open its no-store confirmation page and manually submit the
+one-time proof. The default is disabled until SMTP and a public HTTPS origin
+are configured. A delivery failure never produces a verified state.
+
+A standard password email therefore remains `unverified` until either the
+mailbox link is consumed or a linked Google/GitHub/Apple factor returns the
+**same** provider-verified email. The browser receives only the assurance
+state and provider label, never a provider-returned contact address, SMTP
+credential, mailbox token or subject. This is not a password reset/recovery
+flow and it never merges two accounts merely because their emails match.
+
+The OAuth collision-isolation rule prevents that limitation from blocking a
+later provider-verified Google/GitHub/Apple sign-in or granting it the
+pre-existing account. It does not automatically consolidate two accounts. The
+separate Web password-recovery adapter can reset only an active Email +
+password factor after a fresh mailbox proof; it cannot consolidate accounts.
+Any account consolidation still needs an explicit, auditable support process
+with fresh proof and no automatic data merge.
 
 ## Test boundary
 
 Automated tests mock provider identity fetches; they never contact Google,
 GitHub or Apple. Tests cover disabled providers, signed state + PKCE, replay
 rejection, Apple form POST, `__Host-` secure-cookie/legacy-cookie rejection,
-OAuth-only accounts, subject hashing, no automatic email collision linking,
-and CSRF/session-bound explicit linking.
+OAuth-only collision isolation, subject hashing, no automatic account
+takeover/merge on email collision, CSRF/session-bound explicit linking,
+HMAC-only durable auth buckets, atomic
+limit enforcement across a module restart, trusted-proxy header handling and
+safe database-unavailable guards.

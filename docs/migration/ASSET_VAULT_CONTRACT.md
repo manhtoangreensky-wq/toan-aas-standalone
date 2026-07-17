@@ -52,13 +52,19 @@ local Railway volume.
 ```text
 GET  /api/v1/asset-vault
 GET  /api/v1/asset-vault/{id}
+GET  /api/v1/asset-vault/{id}/lifecycle
 POST /api/v1/asset-vault/upload
 GET  /api/v1/asset-vault/{id}/download
 POST /api/v1/asset-vault/{id}/archive
+POST /api/v1/asset-vault/{id}/restore
 ```
 
 - Every read requires a signed server session and is owner scoped.
-- Every write requires signed session, CSRF and an `Idempotency-Key`.
+- Every write requires signed session, CSRF and an idempotency key. Archive
+  also requires JSON `expected_revision`; restore requires JSON
+  `expected_revision` plus `idempotency_key`. Both are compare-and-set
+  lifecycle transitions, so a stale browser action is guarded rather than
+  overwriting a newer archive/restore/unavailable decision.
 - Upload keys bind to a digest of file + safe metadata. Reusing a key for
   different content is rejected; a matching completed request replays safely.
 - Upload streams to a private staging file, enforces account quota and file
@@ -67,13 +73,19 @@ POST /api/v1/asset-vault/{id}/archive
 - Metadata stores no raw blob or browser filesystem path. API responses omit
   internal storage keys and SHA-256 values. Audit records contain only asset
   ID, byte count and canonical MIME—not filename, path, content or hash.
-- Downloads validate active state, owner, size and SHA-256 before a
-  `Content-Disposition: attachment` response with `no-store, private`,
-  `nosniff`, `no-referrer` and CSP sandbox headers.
+- Downloads validate active state, owner, size and SHA-256 through pinned,
+  non-symlink Vault directory/file descriptors before a
+  `Content-Disposition: attachment` response. The verified bytes are rehashed
+  into an anonymous sealed temporary descriptor before they stream, so a
+  mutable Vault object is never reopened or streamed by pathname. Responses
+  use `no-store, private`, `nosniff`, `no-referrer` and CSP sandbox headers;
+  Support evidence uses the same descriptor contract.
 - Archive is a reversible-product-state boundary only: it removes the file
   from active listing/download without erasing the private blob, and it does
   **not** free account quota. No browser delete or public share link exists in
-  this release.
+  this release. Restore revalidates the archived descriptor immediately before
+  activation; an absent, swapped or integrity-invalid blob becomes
+  `unavailable` instead of being revived.
 
 The PWA caches only named public shell resources and never caches
 `/api/v1/asset-vault` requests or downloads.

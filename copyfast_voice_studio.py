@@ -23,7 +23,7 @@ import uuid
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator, model_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now, voice_studio_enabled
@@ -86,6 +86,48 @@ PAYMENT_PROOF_PATTERN = re.compile(
     r"account\s+(?:number|no|id)|qr\s*(?:code|thanh\s*toán|thanh\s*toan)?)\b",
     re.IGNORECASE,
 )
+
+# The Bot's voice-style menu is useful as a writing reference, but a Web
+# direction composer must not turn a text field into a provider, file, handle
+# or identity-imitating voice request.  Keep these checks local to the new
+# stateless endpoint so the durable Voice Vault contracts remain unchanged.
+VOICE_DIRECTION_MARKUP_PATTERN = re.compile(
+    r"(?:<\s*/?\s*[A-Za-z][^>\r\n]{0,240}>|\[[^\]\r\n]{1,160}\]\([^\)\r\n]{1,480}\)|```|\bon[a-z]+\s*=)",
+    re.IGNORECASE,
+)
+VOICE_DIRECTION_URL_OR_FILE_PATTERN = re.compile(
+    r"(?:\b(?:https?|ftp)://|\bwww\.|\b(?:file|data|javascript|tg):|(?:^|\s)[A-Za-z]:[\\/]|(?:^|\s)/(?:[A-Za-z0-9_.-]+/){1,})",
+    re.IGNORECASE,
+)
+VOICE_DIRECTION_HANDLE_PATTERN = re.compile(
+    r"\b(?:(?:provider|model|engine|bot|telegram|render|job|media|asset|file|output|preview|voice|profile)"
+    r"(?:[ _-]*(?:voice|profile|media|file|asset|output|preview))?[ _-]*(?:id|ref(?:erence)?|token|handle|url|path)|"
+    r"(?:upload|download)[ _-]*(?:id|url|path))\b|(?:^|\s)@[A-Za-z0-9_]{3,}",
+    re.IGNORECASE,
+)
+VOICE_DIRECTION_PAYMENT_PATTERN = re.compile(
+    r"\b(?:payos|wallet|top[ _-]?up|payment|invoice|order[ _-]*(?:id|code|ref)|"
+    r"transaction[ _-]*(?:id|code|ref)|mã\s*(?:thanh\s*toán|giao\s*dịch)|"
+    r"ma\s*(?:thanh\s*toan|giao\s*dich))\b",
+    re.IGNORECASE,
+)
+VOICE_DIRECTION_ORIGINALITY_MARKERS = (
+    "clone giọng", "nhái giọng", "bắt chước giọng", "giống giọng", "giống hệt giọng",
+    "giọng của ", "giọng ca sĩ", "giọng nghệ sĩ", "giọng người nổi tiếng",
+    "voice clone", "clone voice", "imitate voice", "impersonate", "sound like", "sounds like",
+    "in the voice of", "voice of ", "celebrity voice", "artist voice", "singer voice",
+)
+VOICE_DIRECTION_PUBLIC_VOICE_PATTERN = re.compile(
+    r"\b(?:celebrity|famous\s+person|public\s+figure|real\s+person|người\s+nổi\s+tiếng|"
+    r"ca\s*sĩ|diễn\s*viên|nghệ\s*sĩ|idol|taylor\s+swift|cristiano\s+ronaldo|sơn\s+tùng|son\s+tung)\b",
+    re.IGNORECASE,
+)
+VOICE_DIRECTION_NAMED_VOICE_PATTERN = re.compile(
+    r"(?:\bgiọng\s+(?:của\s+)?|\bvoice\s+(?:of\s+|the\s+)?)"
+    r"(?:[A-ZĐ][A-Za-zÀ-ỹĐđ'’-]{1,}(?:\s+[A-ZĐ][A-Za-zÀ-ỹĐđ'’-]{1,}){1,4})"
+)
+VOICE_DIRECTION_MAX_INPUT = 260
+VOICE_DIRECTION_MAX_OUTPUT = 1_200
 
 MAX_VAULTS_PER_STATE = 300
 MAX_SCRIPTS_PER_VAULT = 250
@@ -999,7 +1041,14 @@ async def voice_studio_references(account: dict = Depends(require_account)):
 
 
 @router.get("/vaults")
-async def list_vaults(q: str = "", tag: str = "", state: str = "all", limit: int = 100, account: dict = Depends(require_account)):
+async def list_vaults(
+    q: str = "",
+    tag: str = "",
+    state: str = "all",
+    limit: int = 50,
+    offset: int = 0,
+    account: dict = Depends(require_account),
+):
     _require_enabled()
     ensure_copyfast_schema()
     query = _safe_filter(q, label="Từ khoá", maximum=100)
@@ -1008,6 +1057,7 @@ async def list_vaults(q: str = "", tag: str = "", state: str = "all", limit: int
     if state_value not in {"all", *VAULT_STATES}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái không hợp lệ")
     bounded = max(1, min(MAX_LIST_LIMIT, int(limit)))
+    bounded_offset = max(0, min(int(offset), 10_000))
     where = ["account_id=?"]
     params: list[Any] = [str(account["id"])]
     if state_value != "all":
@@ -1027,10 +1077,23 @@ async def list_vaults(q: str = "", tag: str = "", state: str = "all", limit: int
                        consent_status, consent_note, tags_json, policy_marker, state, is_default, revision,
                        created_at, updated_at, archived_at
                 FROM web_voice_vaults WHERE {' AND '.join(where)}
-                ORDER BY CASE state WHEN 'active' THEN 0 ELSE 1 END, is_default DESC, updated_at DESC, id DESC LIMIT ?""",
-            (*params, bounded),
+                ORDER BY CASE state WHEN 'active' THEN 0 ELSE 1 END, is_default DESC, updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded + 1, bounded_offset),
         ).fetchall()
-        return envelope(True, "Đã nạp Voice Vault riêng tư.", data={"items": [_vault_public(row) for row in rows], "limit": bounded}, status_name="completed")
+    items = [_vault_public(row) for row in rows[:bounded]]
+    has_more = len(rows) > bounded
+    return envelope(
+        True,
+        "Đã nạp Voice Vault riêng tư.",
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": bounded_offset + bounded if has_more else None,
+            "filters": {"q": query, "tag": tag_filter, "state": state_value},
+            "pagination": {"limit": bounded, "offset": bounded_offset, "returned": len(items)},
+        },
+        status_name="completed",
+    )
 
 
 @router.post("/vaults")
@@ -1513,3 +1576,438 @@ async def list_events(limit: int = 50, account: dict = Depends(require_account))
             (str(account["id"]), bounded),
         ).fetchall()
     return envelope(True, "Đã nạp hoạt động Voice Studio.", data={"items": [{"vault_id": str(row[0]), "script_id": str(row[1]) if row[1] else None, "entity_type": str(row[2]), "action": str(row[3]), "revision": int(row[4]), "created_at": str(row[5])} for row in rows], "limit": bounded}, status_name="completed")
+
+
+# ---------------------------------------------------------------------------
+# Transient Voice Direction Composer
+# ---------------------------------------------------------------------------
+#
+# This small, request-only composer is a Web-native translation of the Bot's
+# static ``voice_style_suggestions`` vocabulary.  It deliberately sits after
+# the durable Voice Vault routes so it cannot share their persistence,
+# consent-attestation, profile, revision or audio-related behavior.
+
+VOICE_DIRECTION_SUGGESTION_SETS: dict[str, tuple[dict[str, Any], ...]] = {
+    "core": (
+        {
+            "id": "female-soft",
+            "name": {"vi": "Nữ nhẹ nhàng", "en": "Gentle female"},
+            "tone": {"vi": "ấm, rõ chữ, thân thiện", "en": "warm, clear and friendly"},
+            "pace": {"vi": "vừa phải", "en": "moderate"},
+            "use_case": {"vi": "hướng dẫn, giải thích, review chân thật", "en": "guides, explainers and grounded reviews"},
+            "direction": {"vi": "Đọc rõ từng ý, giữ nụ cười nhẹ trong giọng và tránh nhịp quảng cáo gấp.", "en": "Articulate each point, keep a light warmth, and avoid rushed sales pacing."},
+        },
+        {
+            "id": "male-deep",
+            "name": {"vi": "Nam trầm tin cậy", "en": "Trustworthy deep male"},
+            "tone": {"vi": "chắc, trầm, đáng tin", "en": "grounded, deep and trustworthy"},
+            "pace": {"vi": "chậm vừa", "en": "measured"},
+            "use_case": {"vi": "dịch vụ cao cấp, sản phẩm cần niềm tin, thương hiệu", "en": "premium services, trust-led products and brand narration"},
+            "direction": {"vi": "Giữ nhịp chắc, nhấn nhẹ lợi ích chính và để câu kết có khoảng thở.", "en": "Maintain a steady rhythm, lightly emphasize the central benefit, and leave room at the close."},
+        },
+        {
+            "id": "youth-sales",
+            "name": {"vi": "Trẻ trung bán hàng", "en": "Youthful sales"},
+            "tone": {"vi": "năng lượng, gần gũi, có nhịp CTA", "en": "energetic, approachable and CTA-aware"},
+            "pace": {"vi": "nhanh vừa", "en": "brisk but clear"},
+            "use_case": {"vi": "TikTok/Reels/Shorts, affiliate, ưu đãi ngắn", "en": "TikTok/Reels/Shorts, affiliate and short offers"},
+            "direction": {"vi": "Mở đầu bắt nhịp nhanh, giữ câu ngắn, rồi chốt CTA gọn và tự nhiên.", "en": "Start with a quick hook, keep sentences short, then land a concise natural CTA."},
+        },
+    ),
+    "extended": (
+        {
+            "id": "luxury-cinematic",
+            "name": {"vi": "Luxury cinematic", "en": "Luxury cinematic"},
+            "tone": {"vi": "sang, tiết chế, cảm xúc nhẹ", "en": "premium, restrained and lightly emotional"},
+            "pace": {"vi": "chậm", "en": "slow"},
+            "use_case": {"vi": "nước hoa, mỹ phẩm, thời trang, concept thương hiệu", "en": "fragrance, beauty, fashion and brand concepts"},
+            "direction": {"vi": "Nói ít nhưng có trọng lượng, đặt khoảng nghỉ rõ và tránh giọng bán hàng gấp.", "en": "Use fewer words with weight, leave clear rests, and avoid urgent sales delivery."},
+        },
+        {
+            "id": "tutorial-clear",
+            "name": {"vi": "AI tutorial rõ ràng", "en": "Clear AI tutorial"},
+            "tone": {"vi": "rõ, sạch, logic", "en": "clear, clean and logical"},
+            "pace": {"vi": "vừa", "en": "moderate"},
+            "use_case": {"vi": "hướng dẫn dùng app, SaaS, công cụ AI", "en": "app, SaaS and AI-tool tutorials"},
+            "direction": {"vi": "Chia nhịp theo bước, nhấn từ khóa thao tác và không đọc quá nhanh.", "en": "Break delivery by steps, emphasize action keywords, and do not rush instructions."},
+        },
+        {
+            "id": "faceless-story",
+            "name": {"vi": "Faceless kể chuyện", "en": "Faceless storytelling"},
+            "tone": {"vi": "tò mò, tự nhiên, dẫn chuyện", "en": "curious, natural and narrative"},
+            "pace": {"vi": "vừa chậm", "en": "moderately slow"},
+            "use_case": {"vi": "video kể chuyện, before/after, chia sẻ kinh nghiệm", "en": "story videos, before/after and experience sharing"},
+            "direction": {"vi": "Dẫn người xem theo mạch chuyện, mở bằng móc câu hỏi và kết bằng lời mời nhẹ.", "en": "Lead viewers through a story arc, open with a question hook, and close with a gentle invitation."},
+        },
+    ),
+}
+VOICE_DIRECTION_LANGUAGES = frozenset({"vi", "en"})
+VOICE_DIRECTION_READING_SPEEDS = frozenset({"slow", "normal", "fast"})
+
+
+def _voice_direction_line(
+    value: Any,
+    *,
+    label: str,
+    minimum: int,
+    maximum: int,
+    allow_empty: bool = False,
+) -> str:
+    """Validate the isolated text-only direction composer boundary.
+
+    The durable Voice Vault has intentionally broader authoring fields.  This
+    helper applies only to the stateless Composer, where markup, URLs/files,
+    opaque handles, secrets and payment material must not become a hidden
+    integration contract.
+    """
+
+    text = _single_line(value, label=label, minimum=minimum, maximum=maximum, allow_empty=allow_empty)
+    if text and (
+        VOICE_DIRECTION_MARKUP_PATTERN.search(text)
+        or VOICE_DIRECTION_URL_OR_FILE_PATTERN.search(text)
+        or VOICE_DIRECTION_HANDLE_PATTERN.search(text)
+        or VOICE_DIRECTION_PAYMENT_PATTERN.search(text)
+    ):
+        raise ValueError(f"{label} không nhận markup, URL/file, handle, thanh toán hoặc mã/tham chiếu hệ thống ngoài")
+    return text
+
+
+def _voice_direction_code(value: Any, *, label: str, allowed: frozenset[str] | set[str]) -> str:
+    normalized = _voice_direction_line(value, label=label, minimum=1, maximum=64)
+    if normalized not in allowed:
+        raise ValueError(f"{label} không hợp lệ")
+    return normalized
+
+
+def _voice_direction_output_line(
+    value: Any,
+    *,
+    label: str,
+    minimum: int = 2,
+    maximum: int = VOICE_DIRECTION_MAX_OUTPUT,
+) -> str:
+    """Revalidate deterministic text before returning it to the browser."""
+
+    return _voice_direction_line(value, label=label, minimum=minimum, maximum=maximum)
+
+
+def _voice_direction_marker(*parts: Any) -> str:
+    """Identify requests that need an originality/identity review.
+
+    This is deliberately a guard, not a consent, identity, or rights service.
+    No request field can attest consent or bypass the restriction.
+    """
+
+    raw = re.sub(r"\s+", " ", " ".join(str(part or "") for part in parts)).strip()[:5_000]
+    normalized = raw.casefold()
+    for marker in VOICE_DIRECTION_ORIGINALITY_MARKERS:
+        if marker in normalized:
+            return "originality"
+    if VOICE_DIRECTION_NAMED_VOICE_PATTERN.search(raw):
+        return "originality"
+    # Mentioning a public figure in the text alone is not necessarily an
+    # impersonation request.  It is guarded once it is paired with a delivery
+    # instruction or an explicit public-voice term.
+    if VOICE_DIRECTION_PUBLIC_VOICE_PATTERN.search(normalized) and re.search(
+        r"(?:giọng|voice|đọc\s+như|nói\s+như|mô\s*phỏng|bắt\s*chước|nhái|clone|imitate|sound\s+like)",
+        normalized,
+        re.IGNORECASE,
+    ):
+        return "originality"
+    return ""
+
+
+def _voice_direction_boundary() -> dict[str, Any]:
+    """Return the exact no-execution boundary for this transient planner."""
+
+    return {
+        "execution": "web_native_deterministic_voice_direction_only",
+        "input_persisted": False,
+        "raw_audio_stored": False,
+        "consent_attestation_recorded": False,
+        "provider_called": False,
+        "provider_voice_id_stored": False,
+        "tts_called": False,
+        "voice_clone_called": False,
+        "preview_created": False,
+        "audio_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "output_created": False,
+        "telegram_called": False,
+    }
+
+
+def _voice_direction_guard(marker: str) -> dict[str, Any] | None:
+    if not marker:
+        return None
+    return envelope(
+        False,
+        "Nội dung cần được viết lại theo hướng giọng nguyên bản, không mô phỏng, clone hoặc gắn với giọng người thật/người nổi tiếng.",
+        data=_voice_direction_boundary(),
+        status_name="guarded",
+        error_code="WEB_VOICE_DIRECTION_ORIGINALITY_GUARD",
+    )
+
+
+class VoiceDirectionComposerRequest(BaseModel):
+    """Strict input for the Bot-derived, non-persistent voice direction tool."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    text: StrictStr
+    language: StrictStr
+    suggestion_set: StrictStr
+    selected_suggestion: StrictInt = Field(ge=1, le=3)
+    reading_speed: StrictStr
+
+    @field_validator("text")
+    @classmethod
+    def validate_text(cls, value: StrictStr) -> str:
+        return _voice_direction_line(value, label="Nội dung đọc", minimum=2, maximum=VOICE_DIRECTION_MAX_INPUT)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _voice_direction_code(value, label="Ngôn ngữ", allowed=VOICE_DIRECTION_LANGUAGES)
+
+    @field_validator("suggestion_set")
+    @classmethod
+    def validate_suggestion_set(cls, value: StrictStr) -> str:
+        return _voice_direction_code(value, label="Nhóm gợi ý", allowed=set(VOICE_DIRECTION_SUGGESTION_SETS))
+
+    @field_validator("reading_speed")
+    @classmethod
+    def validate_reading_speed(cls, value: StrictStr) -> str:
+        return _voice_direction_code(value, label="Tốc độ đọc", allowed=VOICE_DIRECTION_READING_SPEEDS)
+
+
+class VoiceDirectionSuggestion(BaseModel):
+    """One text-only delivery direction; it never names a provider voice."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    choice: StrictInt = Field(ge=1, le=3)
+    id: StrictStr
+    name: StrictStr
+    tone: StrictStr
+    pace: StrictStr
+    use_case: StrictStr
+    direction: StrictStr
+    style_prompt: StrictStr
+
+    @field_validator("id")
+    @classmethod
+    def validate_id(cls, value: StrictStr) -> str:
+        allowed = {item["id"] for entries in VOICE_DIRECTION_SUGGESTION_SETS.values() for item in entries}
+        return _voice_direction_code(value, label="Mã hướng giọng", allowed=allowed)
+
+    @field_validator("name", "tone", "pace", "use_case", "direction", "style_prompt")
+    @classmethod
+    def validate_text_fields(cls, value: StrictStr) -> str:
+        return _voice_direction_output_line(value, label="Nội dung hướng giọng")
+
+
+class VoiceDirectionDeliveryNotes(BaseModel):
+    """Compact editorial delivery notes, not a TTS/preview request."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    pace_adjustment: StrictStr
+    pause_notes: StrictStr
+    emphasis_notes: StrictStr
+    cta_notes: StrictStr
+
+    @field_validator("pace_adjustment", "pause_notes", "emphasis_notes", "cta_notes")
+    @classmethod
+    def validate_notes(cls, value: StrictStr) -> str:
+        return _voice_direction_output_line(value, label="Ghi chú thể hiện")
+
+
+class VoiceDirectionComposerResult(BaseModel):
+    """Exact public schema for the deterministic Voice Direction Composer."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: StrictStr
+    text: StrictStr
+    language: StrictStr
+    suggestion_set: StrictStr
+    selected_suggestion: StrictInt = Field(ge=1, le=3)
+    reading_speed: StrictStr
+    suggestions: list[VoiceDirectionSuggestion] = Field(min_length=3, max_length=3)
+    selected_direction: VoiceDirectionSuggestion
+    delivery_notes: VoiceDirectionDeliveryNotes
+    cautions: list[StrictStr] = Field(default_factory=list, max_length=6)
+    review_before_use: list[StrictStr] = Field(min_length=1, max_length=6)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: StrictStr) -> str:
+        return _voice_direction_output_line(value, label="Tiêu đề hướng giọng", maximum=180)
+
+    @field_validator("text")
+    @classmethod
+    def validate_result_text(cls, value: StrictStr) -> str:
+        return _voice_direction_output_line(value, label="Nội dung đọc kết quả", maximum=VOICE_DIRECTION_MAX_INPUT)
+
+    @field_validator("language")
+    @classmethod
+    def validate_result_language(cls, value: StrictStr) -> str:
+        return _voice_direction_code(value, label="Ngôn ngữ kết quả", allowed=VOICE_DIRECTION_LANGUAGES)
+
+    @field_validator("suggestion_set")
+    @classmethod
+    def validate_result_suggestion_set(cls, value: StrictStr) -> str:
+        return _voice_direction_code(value, label="Nhóm gợi ý kết quả", allowed=set(VOICE_DIRECTION_SUGGESTION_SETS))
+
+    @field_validator("reading_speed")
+    @classmethod
+    def validate_result_speed(cls, value: StrictStr) -> str:
+        return _voice_direction_code(value, label="Tốc độ đọc kết quả", allowed=VOICE_DIRECTION_READING_SPEEDS)
+
+    @field_validator("cautions", "review_before_use")
+    @classmethod
+    def validate_lines(cls, value: list[StrictStr], info: Any) -> list[str]:
+        if not isinstance(value, list):
+            raise ValueError("Danh sách review hướng giọng không hợp lệ")
+        label = "Lưu ý hướng giọng" if info.field_name == "cautions" else "Checklist review hướng giọng"
+        return [_voice_direction_output_line(item, label=label) for item in value]
+
+    def model_post_init(self, __context: Any) -> None:
+        catalog = VOICE_DIRECTION_SUGGESTION_SETS.get(self.suggestion_set)
+        if not catalog:
+            raise ValueError("Nhóm gợi ý kết quả không hợp lệ")
+        if [item.choice for item in self.suggestions] != [1, 2, 3]:
+            raise ValueError("Suggestions phải có đúng ba lựa chọn theo thứ tự")
+        if [item.id for item in self.suggestions] != [str(item["id"]) for item in catalog]:
+            raise ValueError("Suggestions không khớp nhóm gợi ý đã chọn")
+        expected = self.suggestions[self.selected_suggestion - 1]
+        if self.selected_direction.model_dump() != expected.model_dump():
+            raise ValueError("Selected direction phải khớp selected suggestion")
+
+
+def _voice_direction_suggestion(entry: dict[str, Any], *, choice: int, language: str) -> dict[str, Any]:
+    name = str(entry["name"][language])
+    tone = str(entry["tone"][language])
+    pace = str(entry["pace"][language])
+    use_case = str(entry["use_case"][language])
+    direction = str(entry["direction"][language])
+    style_prompt = (
+        f"{name}: {tone}; tốc độ {pace}; phù hợp {use_case}. Hướng thể hiện: {direction}"
+        if language == "vi"
+        else f"{name}: {tone}; pace {pace}; suitable for {use_case}. Delivery direction: {direction}"
+    )
+    return {
+        "choice": choice,
+        "id": str(entry["id"]),
+        "name": name,
+        "tone": tone,
+        "pace": pace,
+        "use_case": use_case,
+        "direction": direction,
+        "style_prompt": style_prompt,
+    }
+
+
+def _voice_direction_delivery_notes(*, language: str, reading_speed: str) -> dict[str, str]:
+    if language == "vi":
+        pace = {
+            "slow": "Đọc chậm hơn nhịp hội thoại thường, giữ rõ phụ âm và không kéo dài từng từ.",
+            "normal": "Giữ nhịp hội thoại tự nhiên, ưu tiên rõ nghĩa hơn tốc độ.",
+            "fast": "Tăng nhịp vừa đủ nhưng vẫn tách câu, không nuốt từ khóa hoặc CTA.",
+        }[reading_speed]
+        return {
+            "pace_adjustment": pace,
+            "pause_notes": "Dừng ngắn sau câu mở, trước ý chính và trước CTA; không biến dấu nghỉ thành hiệu ứng âm thanh.",
+            "emphasis_notes": "Chỉ nhấn tên sản phẩm, lợi ích đã được review và một hành động chính; tránh nhấn claim tuyệt đối.",
+            "cta_notes": "Để CTA ngắn, trung thực và cần được đội ngũ duyệt trước khi sử dụng trong bản ghi âm riêng.",
+        }
+    pace = {
+        "slow": "Read slower than everyday conversation, retain clear consonants, and do not stretch every word.",
+        "normal": "Keep a natural conversational rhythm and prioritize clarity over speed.",
+        "fast": "Increase pace carefully while preserving sentence breaks, key terms, and the CTA.",
+    }[reading_speed]
+    return {
+        "pace_adjustment": pace,
+        "pause_notes": "Use short rests after the opening, before the main idea, and before the CTA; do not treat pauses as audio effects.",
+        "emphasis_notes": "Emphasize only the product name, reviewed benefit, and one primary action; avoid absolute claims.",
+        "cta_notes": "Keep the CTA brief and truthful; obtain editorial approval before it is used in any separate audio workflow.",
+    }
+
+
+def _compose_voice_direction(payload: VoiceDirectionComposerRequest) -> dict[str, Any]:
+    """Build a bounded text plan with no persistence or audio side effects."""
+
+    suggestions = [
+        _voice_direction_suggestion(entry, choice=index, language=payload.language)
+        for index, entry in enumerate(VOICE_DIRECTION_SUGGESTION_SETS[payload.suggestion_set], start=1)
+    ]
+    if payload.language == "vi":
+        title = "Gợi ý hướng giọng đọc"
+        cautions = [
+            "Đây là hướng biên tập bằng văn bản, không phải giọng nói, audio, preview hoặc output TTS.",
+            "Không dùng để mô phỏng, clone hoặc gắn với danh tính giọng của người thật/người nổi tiếng.",
+            "Kiểm tra sự thật, quyền sử dụng, phát âm thương hiệu và CTA trước khi dùng trong một workflow được phê duyệt riêng.",
+        ]
+        review = [
+            "Đọc lại nội dung để phát hiện claim, tên riêng, dữ liệu nhạy cảm hoặc lời hứa chưa được kiểm chứng.",
+            "Đảm bảo lựa chọn giọng là mô tả nguyên bản, không là yêu cầu bắt chước một người cụ thể.",
+            "Xác nhận nhịp đọc và khoảng nghỉ phù hợp với kênh phát hành trước khi tạo bất kỳ audio nào ở workflow khác.",
+        ]
+    else:
+        title = "Voice direction suggestions"
+        cautions = [
+            "This is an editorial text direction, not speech, audio, a preview, or a TTS output.",
+            "Do not use it to imitate, clone, or attach a real or public person's vocal identity.",
+            "Review facts, usage rights, brand pronunciation, and the CTA before using a separately approved workflow.",
+        ]
+        review = [
+            "Read the text again for unverified claims, names, sensitive data, or unsupported promises.",
+            "Confirm the selected direction is original and is not an instruction to imitate a specific person.",
+            "Confirm reading rhythm and rests fit the release channel before any separate audio workflow is considered.",
+        ]
+    result = {
+        "title": title,
+        "text": payload.text,
+        "language": payload.language,
+        "suggestion_set": payload.suggestion_set,
+        "selected_suggestion": payload.selected_suggestion,
+        "reading_speed": payload.reading_speed,
+        "suggestions": suggestions,
+        "selected_direction": dict(suggestions[payload.selected_suggestion - 1]),
+        "delivery_notes": _voice_direction_delivery_notes(language=payload.language, reading_speed=payload.reading_speed),
+        "cautions": cautions,
+        "review_before_use": review,
+    }
+    return VoiceDirectionComposerResult.model_validate(result).model_dump()
+
+
+@router.post("/tools/direction-composer")
+async def compose_voice_direction(
+    payload: VoiceDirectionComposerRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Return a transient, deterministic delivery-direction draft.
+
+    The signed session and CSRF dependency is intentionally the only account
+    boundary here.  This route does not persist input, emit audit records,
+    record consent, store raw audio/voice IDs, call TTS/clone/preview/provider
+    code, create jobs/outputs/assets, mutate wallet/payment state, or call
+    Telegram.
+    """
+
+    _require_enabled()
+    del account
+    guarded = _voice_direction_guard(_voice_direction_marker(payload.text))
+    if guarded:
+        return guarded
+    composer = _compose_voice_direction(payload)
+    return envelope(
+        True,
+        "Đã tạo hướng giọng đọc dạng văn bản để bạn review. Không có audio, preview, output, job, thanh toán hoặc Telegram action nào được tạo.",
+        data={"composer": composer, **_voice_direction_boundary()},
+        status_name="draft",
+    )

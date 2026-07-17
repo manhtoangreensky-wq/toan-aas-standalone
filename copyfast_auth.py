@@ -2,23 +2,33 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 import base64
+from email.message import EmailMessage
 import hashlib
 import hmac
 import json
 import os
 import re
 import secrets
+import smtplib
+import ssl
 import uuid
-from urllib.parse import urlencode, urlparse
+from urllib.parse import parse_qs, urlencode, urlparse
 
-from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 import httpx
 from pydantic import BaseModel, Field, ValidationError
 
-from copyfast_db import ensure_copyfast_schema, transaction, utc_now
+from copyfast_db import (
+    ensure_copyfast_schema,
+    is_production_like_environment,
+    read_transaction,
+    transaction,
+    utc_now,
+)
 
 
 router = APIRouter(tags=["COPYFAST Auth"])
@@ -30,14 +40,36 @@ OAUTH_LINK_COOKIE = "toan_aas_oauth_link"
 SESSION_TTL_HOURS = max(1, int(os.environ.get("WEB_SESSION_TTL_HOURS", "24")))
 LINK_TTL_MINUTES = max(1, int(os.environ.get("TELEGRAM_LINK_TTL_MINUTES", "10")))
 OAUTH_STATE_TTL_MINUTES = max(1, int(os.environ.get("WEB_OAUTH_STATE_TTL_MINUTES", "10")))
+EMAIL_VERIFICATION_DEFAULT_TTL_MINUTES = 20
+EMAIL_VERIFICATION_MIN_TTL_MINUTES = 5
+EMAIL_VERIFICATION_MAX_TTL_MINUTES = 60
+EMAIL_VERIFICATION_RATE_WINDOW_MINUTES = 15
+EMAIL_VERIFICATION_MAX_STARTS_PER_WINDOW = 3
+EMAIL_VERIFICATION_TOKEN_BYTES = 32
+PASSWORD_RECOVERY_DEFAULT_TTL_MINUTES = 20
+PASSWORD_RECOVERY_MIN_TTL_MINUTES = 5
+PASSWORD_RECOVERY_MAX_TTL_MINUTES = 60
+PASSWORD_RECOVERY_RATE_WINDOW_MINUTES = 15
+PASSWORD_RECOVERY_MAX_STARTS_PER_WINDOW = 3
+PASSWORD_RECOVERY_TOKEN_BYTES = 32
+PASSWORD_RECOVERY_CONFIRM_MAX_BODY_BYTES = 4_096
 EMAIL_PATTERN = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
 TELEGRAM_BOT_USERNAME_PATTERN = re.compile(r"^[A-Za-z0-9_]{5,32}$")
+SMTP_HOST_PATTERN = re.compile(r"^[A-Za-z0-9](?:[A-Za-z0-9.-]{0,251}[A-Za-z0-9])?$")
+EMAIL_VERIFICATION_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
 TELEGRAM_ONLY_EMAIL_DOMAIN = "telegram.toanaas.invalid"
+OAUTH_ONLY_EMAIL_DOMAIN = "oauth.toanaas.invalid"
 BRIDGE_CALLBACK_MAX_AGE_SECONDS = 300
 BRIDGE_CALLBACK_MAX_FUTURE_SKEW_SECONDS = 30
 BRIDGE_CALLBACK_MAX_BODY_BYTES = 2_048
 BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
 OAUTH_PROVIDER_NAMES = frozenset({"google", "github", "apple", "telegram"})
+# Only these providers have a verified-email contract.  Telegram's numeric
+# identity remains separate from contact email and from the Bot canonical ID.
+OAUTH_CONTACT_PROVIDERS = frozenset({"google", "github", "apple"})
+OAUTH_STATE_VALUE_MAX_LENGTH = 256
+OAUTH_STATE_COOKIE_NAME_DIGEST_LENGTH = 32
+SESSION_REFERENCE_PATTERN = re.compile(r"^[0-9a-f]{64}$")
 GOOGLE_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
@@ -103,24 +135,51 @@ def _bridge_callback_failure(
 
 
 def _is_production() -> bool:
-    """Use one environment decision for secret and cookie protections."""
-    values = (
-        os.environ.get("APP_ENV", ""),
-        os.environ.get("ENVIRONMENT", ""),
-        os.environ.get("RAILWAY_ENVIRONMENT", ""),
+    """Use the shared deployment decision for secrets and cookie policy."""
+    return is_production_like_environment()
+
+
+def _is_hosted_deployment() -> bool:
+    """Recognise Railway/hosted environments even when their label is preview.
+
+    Railway preview/staging deployments do not always use the literal
+    ``production`` label, but they are still public HTTPS deployments and
+    must never receive an unprefixed or non-Secure session cookie.  The check
+    is intentionally based on platform metadata only; a developer can still
+    run HTTP locally without pretending that localhost is a public service.
+    """
+
+    if _is_production():
+        return True
+    return any(
+        os.environ.get(name, "").strip()
+        for name in (
+            "RAILWAY_ENVIRONMENT",
+            "RAILWAY_ENVIRONMENT_ID",
+            "RAILWAY_PROJECT_ID",
+            "RAILWAY_SERVICE_ID",
+            "RAILWAY_DEPLOYMENT_ID",
+            "RAILWAY_PUBLIC_DOMAIN",
+        )
     )
-    return any(value.strip().lower() in {"production", "prod"} for value in values if value)
 
 
 def _secret() -> bytes:
     value = os.environ.get("WEB_SESSION_SECRET", "").strip()
-    if not value and _is_production():
-        raise RuntimeError("WEB_SESSION_SECRET chưa được cấu hình")
-    return (value or "copyfast-local-development-secret-only").encode("utf-8")
+    encoded = value.encode("utf-8")
+    # Never keep a deterministic local fallback in source.  A 128-bit random
+    # value is the minimum safe HMAC key length and is practical for local
+    # development, CI and all hosted deployments alike.
+    if len(encoded) < 16:
+        raise RuntimeError("WEB_SESSION_SECRET phải được cấu hình ngẫu nhiên, tối thiểu 16 byte")
+    return encoded
 
 
 def _cookie_secure() -> bool:
-    return os.environ.get("WEB_COOKIE_SECURE", "").lower() in {"1", "true", "yes"} or _is_production()
+    # Explicit false is accepted only for an unhosted local HTTP workflow.
+    # Any Railway metadata (including preview) forces the browser-enforced
+    # Secure + __Host- cookie protections even if APP_ENV was omitted.
+    return os.environ.get("WEB_COOKIE_SECURE", "").lower() in {"1", "true", "yes"} or _is_hosted_deployment()
 
 
 def _cookie_name(name: str) -> str:
@@ -140,6 +199,136 @@ def _env_flag(name: str, default: bool = False) -> bool:
     if not value:
         return default
     return value in {"1", "true", "yes", "on"}
+
+
+def _bounded_int_environment(name: str, default: int, minimum: int, maximum: int) -> int:
+    """Read a non-secret integer configuration without creating unsafe ranges."""
+
+    try:
+        value = int(os.environ.get(name, str(default)).strip())
+    except (TypeError, ValueError):
+        return default
+    return min(maximum, max(minimum, value))
+
+
+def _email_verification_enabled() -> bool:
+    """Whether the explicitly configured Web-owned SMTP flow is available."""
+
+    return _env_flag("WEBAPP_EMAIL_VERIFICATION_ENABLED")
+
+
+def _password_recovery_enabled() -> bool:
+    """Whether the separately opt-in Web password recovery flow is available."""
+
+    return _env_flag("WEBAPP_PASSWORD_RECOVERY_ENABLED")
+
+
+def _email_verification_public_base_url() -> str:
+    """Return the strict public origin used in a mailbox confirmation link."""
+
+    raw = (
+        os.environ.get("WEBAPP_EMAIL_VERIFICATION_PUBLIC_BASE_URL", "").strip()
+        or os.environ.get("WEBAPP_PUBLIC_BASE_URL", "").strip()
+    ).rstrip("/")
+    if not raw:
+        raise RuntimeError("WEBAPP_EMAIL_VERIFICATION_PUBLIC_BASE_URL chưa được cấu hình")
+    parsed = urlparse(raw)
+    local_http = parsed.scheme == "http" and parsed.hostname in {"localhost", "127.0.0.1", "::1"}
+    if (
+        not parsed.hostname
+        or parsed.username
+        or parsed.password
+        or parsed.query
+        or parsed.fragment
+        or parsed.path not in {"", "/"}
+    ):
+        raise RuntimeError("WEBAPP_EMAIL_VERIFICATION_PUBLIC_BASE_URL không hợp lệ")
+    if parsed.scheme != "https" and not (local_http and not _is_production()):
+        raise RuntimeError("WEBAPP_EMAIL_VERIFICATION_PUBLIC_BASE_URL phải dùng HTTPS ngoài môi trường local")
+    return raw
+
+
+def _smtp_email_configuration() -> dict:
+    """Load shared SMTP transport settings without returning them to a browser."""
+
+    host = os.environ.get("WEBAPP_EMAIL_SMTP_HOST", "").strip()
+    username = os.environ.get("WEBAPP_EMAIL_SMTP_USERNAME", "").strip()
+    password = os.environ.get("WEBAPP_EMAIL_SMTP_PASSWORD", "")
+    sender = os.environ.get("WEBAPP_EMAIL_VERIFICATION_FROM", "").strip().lower()
+    mode = os.environ.get("WEBAPP_EMAIL_SMTP_TLS_MODE", "starttls").strip().lower()
+    port = _bounded_int_environment("WEBAPP_EMAIL_SMTP_PORT", 587, 1, 65535)
+    timeout_seconds = _bounded_int_environment("WEBAPP_EMAIL_SMTP_TIMEOUT_SECONDS", 10, 3, 30)
+    if not host or not SMTP_HOST_PATTERN.fullmatch(host) or host.startswith(".") or host.endswith("."):
+        raise RuntimeError("WEBAPP_EMAIL_SMTP_HOST không hợp lệ")
+    if not username or not password:
+        raise RuntimeError("WEBAPP_EMAIL_SMTP_USERNAME/PASSWORD chưa được cấu hình")
+    if not EMAIL_PATTERN.fullmatch(sender):
+        raise RuntimeError("WEBAPP_EMAIL_VERIFICATION_FROM phải là địa chỉ email hợp lệ")
+    if mode not in {"starttls", "ssl"}:
+        raise RuntimeError("WEBAPP_EMAIL_SMTP_TLS_MODE chỉ nhận starttls hoặc ssl")
+    return {
+        "host": host,
+        "port": port,
+        "username": username,
+        "password": password,
+        "sender": sender,
+        "mode": mode,
+        "timeout_seconds": timeout_seconds,
+        "public_base_url": _email_verification_public_base_url(),
+    }
+
+
+def _email_verification_configuration() -> dict | None:
+    """Load settings for the signed-account mailbox assurance flow."""
+
+    if not _email_verification_enabled():
+        return None
+    return {
+        **_smtp_email_configuration(),
+        "ttl_minutes": _bounded_int_environment(
+            "WEBAPP_EMAIL_VERIFICATION_TTL_MINUTES",
+            EMAIL_VERIFICATION_DEFAULT_TTL_MINUTES,
+            EMAIL_VERIFICATION_MIN_TTL_MINUTES,
+            EMAIL_VERIFICATION_MAX_TTL_MINUTES,
+        ),
+    }
+
+
+def _password_recovery_configuration() -> dict | None:
+    """Load settings for the public, non-enumerating recovery flow."""
+
+    if not _password_recovery_enabled():
+        return None
+    return {
+        **_smtp_email_configuration(),
+        "ttl_minutes": _bounded_int_environment(
+            "WEBAPP_PASSWORD_RECOVERY_TTL_MINUTES",
+            PASSWORD_RECOVERY_DEFAULT_TTL_MINUTES,
+            PASSWORD_RECOVERY_MIN_TTL_MINUTES,
+            PASSWORD_RECOVERY_MAX_TTL_MINUTES,
+        ),
+    }
+
+
+def ensure_email_verification_configuration() -> None:
+    """Fail a deliberately enabled hosted flow early when SMTP is incomplete."""
+
+    _email_verification_configuration()
+
+
+def ensure_password_recovery_configuration() -> None:
+    """Fail a deliberately enabled recovery flow early when SMTP is incomplete."""
+
+    _password_recovery_configuration()
+
+
+def email_verification_delivery_available() -> bool:
+    """Expose only availability, never SMTP host/account/secret details."""
+
+    try:
+        return _email_verification_configuration() is not None
+    except RuntimeError:
+        return False
 
 
 def _oauth_enabled(provider: str) -> bool:
@@ -244,6 +433,132 @@ def _link_expiry() -> str:
     return (_now() + timedelta(minutes=LINK_TTL_MINUTES)).isoformat(timespec="seconds")
 
 
+def _email_verification_expiry(ttl_minutes: int) -> str:
+    return (_now() + timedelta(minutes=ttl_minutes)).isoformat(timespec="seconds")
+
+
+def _email_verification_window_start() -> str:
+    return (
+        _now() - timedelta(minutes=EMAIL_VERIFICATION_RATE_WINDOW_MINUTES)
+    ).isoformat(timespec="seconds")
+
+
+def _password_recovery_expiry(ttl_minutes: int) -> str:
+    return (_now() + timedelta(minutes=ttl_minutes)).isoformat(timespec="seconds")
+
+
+def _password_recovery_window_start() -> str:
+    return (
+        _now() - timedelta(minutes=PASSWORD_RECOVERY_RATE_WINDOW_MINUTES)
+    ).isoformat(timespec="seconds")
+
+
+def _email_verification_token_hash(challenge_id: str, token: str) -> str:
+    """Hash a one-time token with the session secret before it enters SQLite."""
+
+    material = f"toan-aas/email-verification/v1/{challenge_id}/{token}".encode("utf-8")
+    return hmac.new(_secret(), material, hashlib.sha256).hexdigest()
+
+
+def _password_recovery_token_hash(challenge_id: str, token: str) -> str:
+    """Hash an independent recovery proof; it is never interchangeable with email assurance."""
+
+    material = f"toan-aas/password-recovery/v1/{challenge_id}/{token}".encode("utf-8")
+    return hmac.new(_secret(), material, hashlib.sha256).hexdigest()
+
+
+def _email_verification_confirmation_url(config: dict, challenge_id: str, token: str) -> str:
+    query = urlencode({"c": challenge_id, "t": token})
+    return f"{config['public_base_url']}/api/v1/auth/email-verification/confirm?{query}"
+
+
+def _password_recovery_confirmation_url(config: dict, challenge_id: str, token: str) -> str:
+    query = urlencode({"c": challenge_id, "t": token})
+    return f"{config['public_base_url']}/api/v1/auth/password-recovery/confirm?{query}"
+
+
+def _smtp_send_email_verification(config: dict, *, recipient: str, confirmation_url: str) -> None:
+    """Perform one authenticated TLS SMTP handoff without retaining payloads."""
+
+    message = EmailMessage()
+    message["From"] = config["sender"]
+    message["To"] = recipient
+    message["Subject"] = "Xác minh email TOAN AAS"
+    message.set_content(
+        "Bạn vừa yêu cầu xác minh email cho tài khoản TOAN AAS.\n\n"
+        "Mở liên kết sau để xác minh quyền sở hữu mailbox này:\n"
+        f"{confirmation_url}\n\n"
+        "Liên kết chỉ dùng một lần và sẽ hết hạn. Nếu bạn không yêu cầu, "
+        "bạn có thể bỏ qua email này."
+    )
+    context = ssl.create_default_context()
+    connection_type = smtplib.SMTP_SSL if config["mode"] == "ssl" else smtplib.SMTP
+    with connection_type(
+        config["host"],
+        config["port"],
+        timeout=config["timeout_seconds"],
+    ) as smtp:
+        smtp.ehlo()
+        if config["mode"] == "starttls":
+            smtp.starttls(context=context)
+            smtp.ehlo()
+        smtp.login(config["username"], config["password"])
+        smtp.send_message(message, from_addr=config["sender"], to_addrs=[recipient])
+
+
+async def _send_email_verification_message(config: dict, *, recipient: str, challenge_id: str, token: str) -> None:
+    """Keep potentially slow SMTP I/O outside the async event loop and DB lock."""
+
+    confirmation_url = _email_verification_confirmation_url(config, challenge_id, token)
+    await asyncio.to_thread(
+        _smtp_send_email_verification,
+        config,
+        recipient=recipient,
+        confirmation_url=confirmation_url,
+    )
+
+
+def _smtp_send_password_recovery(config: dict, *, recipient: str, confirmation_url: str) -> None:
+    """Perform one TLS SMTP handoff for a password-reset proof."""
+
+    message = EmailMessage()
+    message["From"] = config["sender"]
+    message["To"] = recipient
+    message["Subject"] = "Đặt lại mật khẩu TOAN AAS"
+    message.set_content(
+        "Bạn vừa yêu cầu đặt lại mật khẩu cho tài khoản TOAN AAS.\n\n"
+        "Mở liên kết sau để tự chọn mật khẩu mới:\n"
+        f"{confirmation_url}\n\n"
+        "Liên kết chỉ dùng một lần và sẽ hết hạn. Thao tác này thu hồi các "
+        "phiên Web đang đăng nhập. Nếu bạn không yêu cầu, hãy bỏ qua email này."
+    )
+    context = ssl.create_default_context()
+    connection_type = smtplib.SMTP_SSL if config["mode"] == "ssl" else smtplib.SMTP
+    with connection_type(
+        config["host"],
+        config["port"],
+        timeout=config["timeout_seconds"],
+    ) as smtp:
+        smtp.ehlo()
+        if config["mode"] == "starttls":
+            smtp.starttls(context=context)
+            smtp.ehlo()
+        smtp.login(config["username"], config["password"])
+        smtp.send_message(message, from_addr=config["sender"], to_addrs=[recipient])
+
+
+async def _send_password_recovery_message(config: dict, *, recipient: str, challenge_id: str, token: str) -> None:
+    """Keep password recovery SMTP work outside the event loop and database lock."""
+
+    confirmation_url = _password_recovery_confirmation_url(config, challenge_id, token)
+    await asyncio.to_thread(
+        _smtp_send_password_recovery,
+        config,
+        recipient=recipient,
+        confirmation_url=confirmation_url,
+    )
+
+
 def _bridge_callback_expiry(timestamp: int) -> str:
     """Retain a callback nonce through the full accepted signature lifetime.
 
@@ -305,6 +620,20 @@ def _parse_session_cookie(value: str | None) -> str | None:
     return session_id
 
 
+def _security_session_reference(session_id: str) -> str:
+    """Return a one-way, account-scoped UI handle for a signed session.
+
+    The database primary key and the signed cookie value are authentication
+    material.  The account-security screen only needs a short-lived action
+    handle, so it receives a domain-separated HMAC instead.  It is never
+    accepted as a cookie, never written to audit text, and cannot be reversed
+    into a session identifier by the browser.
+    """
+
+    material = f"toan-aas/security-session-reference/v1/{session_id}".encode("utf-8")
+    return hmac.new(_secret(), material, hashlib.sha256).hexdigest()
+
+
 def _telegram_login_cookie_value(browser_token: str) -> str:
     """Sign a short-lived Telegram login challenge separately from sessions."""
     material = f"telegram-login.{browser_token}".encode("utf-8")
@@ -335,6 +664,29 @@ def _oauth_state_hash(state_value: str) -> str:
 def _oauth_hmac(label: str, *parts: str) -> str:
     material = ".".join((label, *parts)).encode("utf-8")
     return hmac.new(_oauth_hmac_secret(), material, hashlib.sha256).hexdigest()
+
+
+def _oauth_state_cookie_name(provider: str, state_value: str) -> str:
+    """Return a browser-binding cookie name unique to one OAuth attempt.
+
+    A single fixed state cookie made a later Google/GitHub/Apple start erase
+    an earlier tab's browser proof.  The opaque state is already high entropy,
+    but it is never placed in the cookie name: a separate HMAC-derived suffix
+    keeps the name unguessable from ordinary browser metadata and binds it to
+    the expected provider.  Each cookie remains short-lived and HttpOnly;
+    independent attempts therefore cannot overwrite one another.
+    """
+    if provider not in OAUTH_PROVIDER_NAMES or not state_value or len(state_value) > OAUTH_STATE_VALUE_MAX_LENGTH:
+        raise ValueError("OAuth state cookie không hợp lệ")
+    digest = _oauth_hmac("state-cookie-name-v1", provider, state_value)[:OAUTH_STATE_COOKIE_NAME_DIGEST_LENGTH]
+    return _cookie_name(f"{OAUTH_STATE_COOKIE}_v1_{provider}_{digest}")
+
+
+def _oauth_state_cookie_samesite(provider: str) -> str:
+    # Apple returns a cross-site form POST.  Its state proof gets a distinct
+    # cookie name, so enabling Apple never weakens Google/GitHub/Telegram's
+    # Lax browser binding.
+    return "none" if provider == "apple" else "lax"
 
 
 def _oauth_state_cookie_value(provider: str, state_value: str) -> str:
@@ -388,6 +740,49 @@ def _oauth_code_challenge(state_value: str) -> str:
 
 def _external_subject_hash(provider: str, subject: str) -> str:
     return _oauth_hmac("identity", provider, subject)
+
+
+def _oauth_only_email(provider: str, subject: str) -> str:
+    """Return a non-login alias for an isolated OAuth collision account.
+
+    The alias is deterministic for one immutable provider subject, but it
+    contains neither the raw subject nor the provider-verified contact email.
+    It is a database implementation detail only: password login stays off
+    and ``browser_account_payload`` replaces it with the verified contact.
+    """
+    if provider not in OAUTH_CONTACT_PROVIDERS or not subject:
+        raise ValueError("OAuth-only alias requires a verified email provider identity")
+    digest = _oauth_hmac("oauth-only-login-alias-v1", provider, subject)[:48]
+    return f"oauth-{provider}-{digest}@{OAUTH_ONLY_EMAIL_DOMAIN}"
+
+
+def _is_oauth_only_email(value: str) -> bool:
+    email = str(value or "").strip().lower()
+    providers = "|".join(sorted(OAUTH_CONTACT_PROVIDERS))
+    return bool(
+        re.fullmatch(
+            rf"oauth-(?:{providers})-[0-9a-f]{{48}}@{re.escape(OAUTH_ONLY_EMAIL_DOMAIN)}",
+            email,
+        )
+    )
+
+
+def _verified_oauth_contact_email(identity: dict) -> str:
+    """Return a freshly provider-verified email or the empty string.
+
+    Provider parsing has to set ``email_verified`` explicitly.  Treating a
+    missing flag as verified would let a future provider adapter accidentally
+    broaden this boundary, so mocked/adapter identities must opt in as well.
+    """
+    provider = str(identity.get("provider") or "")
+    email = str(identity.get("email") or "").strip().lower()
+    if (
+        provider not in OAUTH_CONTACT_PROVIDERS
+        or identity.get("email_verified") is not True
+        or not EMAIL_PATTERN.fullmatch(email)
+    ):
+        return ""
+    return email
 
 
 def _safe_oauth_return_path(value: str | None) -> str:
@@ -562,6 +957,18 @@ def _is_telegram_only_email(value: str) -> bool:
     return bool(re.fullmatch(rf"telegram-[0-9a-f]{{40}}@{re.escape(TELEGRAM_ONLY_EMAIL_DOMAIN)}", email))
 
 
+def password_login_factor_available(email: str, password_login_enabled: bool) -> bool:
+    """Whether this account has a Web password factor that can be used now.
+
+    Internal aliases exist solely to keep a legacy unique-email database
+    column intact.  They must never become a password recovery or password
+    change surface for Telegram-first/OAuth-only accounts.
+    """
+
+    normalized = str(email or "").strip().lower()
+    return bool(password_login_enabled) and not _is_telegram_only_email(normalized) and not _is_oauth_only_email(normalized)
+
+
 def _telegram_deep_link(code: str) -> str:
     bot_username = _telegram_bot_username()
     if not bot_username:
@@ -591,6 +998,74 @@ def _linked_oauth_providers(account_id: str | None) -> set[str]:
     return {str(row[0]) for row in rows if str(row[0]) in OAUTH_PROVIDER_NAMES}
 
 
+def _oauth_verified_contact(account_id: str | None) -> tuple[str, str] | None:
+    """Read the signed account's provider-verified public contact narrowly.
+
+    This read is deliberately keyed only by the already authenticated account
+    ID.  It never searches by email, and it returns no provider subject,
+    token, or account identifier to browser payloads.
+    """
+    if not account_id:
+        return None
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        row = conn.execute(
+            """SELECT email, provider
+               FROM web_account_oauth_contacts
+               WHERE account_id=?""",
+            (account_id,),
+        ).fetchone()
+    if not row:
+        return None
+    email = str(row[0] or "").strip().lower()
+    provider = str(row[1] or "")
+    if provider not in OAUTH_CONTACT_PROVIDERS or not EMAIL_PATTERN.fullmatch(email):
+        return None
+    return email, provider
+
+
+def _email_link_verified_contact(conn, *, account_id: str, expected_email: str) -> bool:
+    """Confirm a Web email-link proof still matches this login identifier."""
+
+    normalized = str(expected_email or "").strip().lower()
+    if not EMAIL_PATTERN.fullmatch(normalized):
+        return False
+    row = conn.execute(
+        """SELECT email, verification_method
+           FROM web_account_email_contacts
+           WHERE account_id=?""",
+        (account_id,),
+    ).fetchone()
+    return bool(
+        row
+        and str(row[1] or "") == "email_link"
+        and str(row[0] or "").strip().lower() == normalized
+    )
+
+
+def _store_oauth_verified_contact(conn, *, account_id: str, provider: str, email: str, now: str) -> None:
+    """Persist only a freshly verified OAuth contact for one Web account.
+
+    The caller has already validated the provider identity.  There is no
+    uniqueness rule on the contact address and no audit text receives it: a
+    collision must leave both Web accounts independent.
+    """
+    normalized = str(email or "").strip().lower()
+    if provider not in OAUTH_CONTACT_PROVIDERS or not EMAIL_PATTERN.fullmatch(normalized):
+        return
+    conn.execute(
+        """INSERT INTO web_account_oauth_contacts
+           (account_id, provider, email, verified_at, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?)
+           ON CONFLICT(account_id) DO UPDATE SET
+               provider=excluded.provider,
+               email=excluded.email,
+               verified_at=excluded.verified_at,
+               updated_at=excluded.updated_at""",
+        (account_id, provider, normalized, now, now, now),
+    )
+
+
 def browser_account_payload(account: dict) -> dict:
     """Return the minimum account metadata the browser needs to render safely.
 
@@ -601,11 +1076,22 @@ def browser_account_payload(account: dict) -> dict:
     linked_providers = _linked_oauth_providers(str(account.get("id") or ""))
     email = str(account.get("email") or "")
     telegram_only = _is_telegram_only_email(email)
+    oauth_internal_alias = _is_oauth_only_email(email)
+    verified_contact = _oauth_verified_contact(str(account.get("id") or ""))
+    password_login_enabled = bool(account.get("password_login_enabled", True))
+    oauth_only = not password_login_enabled and not telegram_only
     return {
         # A Telegram-first account has an internal deterministic placeholder
-        # only to satisfy the existing unique email column. Never display it
-        # as an address a customer can use or contact.
-        "email": "" if telegram_only else email,
+        # only to satisfy the existing unique email column. An isolated
+        # OAuth collision account uses a different internal alias, which is
+        # likewise never displayed or accepted as a password identifier.
+        # Its freshly verified OAuth contact is safe to show only to this
+        # signed account.
+        "email": (
+            ""
+            if telegram_only or (oauth_internal_alias and not verified_contact)
+            else (verified_contact[0] if verified_contact else email)
+        ),
         "display_name": str(account.get("display_name") or ""),
         "role": "admin" if account.get("role") == "admin" else "user",
         "telegram_linked": bool(account.get("canonical_user_id")),
@@ -615,7 +1101,7 @@ def browser_account_payload(account: dict) -> dict:
             "avatar_style": str(account.get("avatar_style") or "gradient"),
         },
         "login_methods": {
-            "email": bool(account.get("password_login_enabled", True)) and not telegram_only,
+            "email": password_login_enabled and not telegram_only,
             # This is an OIDC Web-login proof. It is deliberately distinct
             # from `telegram` below: only the signed Bot callback may mark
             # the canonical Bot identity as linked for Xu, jobs and assets.
@@ -625,7 +1111,10 @@ def browser_account_payload(account: dict) -> dict:
             "github": "github" in linked_providers,
             "apple": "apple" in linked_providers,
         },
-        "account_type": "telegram" if telegram_only else "standard",
+        # `oauth_only` is explicit UI/API truth, not a promise that a mailbox
+        # verification email was sent by this Web service.
+        "oauth_only": oauth_only,
+        "account_type": "telegram" if telegram_only else ("oauth_only" if oauth_only else "standard"),
     }
 
 
@@ -749,18 +1238,22 @@ async def require_canonical_admin_csrf(request: Request) -> dict:
     return await _require_current_canonical_admin(request, require_admin_csrf(request))
 
 
-def _create_session(response: Response, account_id: str) -> dict:
-    ensure_copyfast_schema()
+def _insert_session(conn, account_id: str, *, now: str | None = None) -> dict:
+    """Persist a fresh signed-session record inside an existing transaction."""
+
     session_id = str(uuid.uuid4())
     csrf_token = secrets.token_urlsafe(32)
     expires_at = _expiry()
-    now = utc_now()
-    with transaction() as conn:
-        conn.execute(
-            """INSERT INTO web_sessions (id, account_id, csrf_token, expires_at, created_at, last_seen_at)
-               VALUES (?, ?, ?, ?, ?, ?)""",
-            (session_id, account_id, csrf_token, expires_at, now, now),
-        )
+    created_at = now or utc_now()
+    conn.execute(
+        """INSERT INTO web_sessions (id, account_id, csrf_token, expires_at, created_at, last_seen_at)
+           VALUES (?, ?, ?, ?, ?, ?)""",
+        (session_id, account_id, csrf_token, expires_at, created_at, created_at),
+    )
+    return {"session_id": session_id, "csrf_token": csrf_token, "expires_at": expires_at}
+
+
+def _set_session_cookie(response: Response, session_id: str) -> None:
     response.set_cookie(
         _cookie_name(SESSION_COOKIE),
         _session_cookie_value(session_id),
@@ -770,7 +1263,50 @@ def _create_session(response: Response, account_id: str) -> dict:
         max_age=SESSION_TTL_HOURS * 3600,
         path="/",
     )
-    return {"csrf_token": csrf_token, "expires_at": expires_at}
+
+
+def _create_session(response: Response, account_id: str) -> dict:
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        session = _insert_session(conn, account_id)
+    _set_session_cookie(response, session["session_id"])
+    return {"csrf_token": session["csrf_token"], "expires_at": session["expires_at"]}
+
+
+def _rotate_account_sessions(conn, account_id: str, *, now: str | None = None) -> dict:
+    """Revoke every existing session and create exactly one fresh session.
+
+    Password and factor changes invalidate *all* prior signed sessions,
+    including the initiating browser.  The caller must set the replacement
+    cookie only after this write transaction succeeds.
+    """
+
+    rotated_at = now or utc_now()
+    conn.execute(
+        "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+        (rotated_at, account_id),
+    )
+    return _insert_session(conn, account_id, now=rotated_at)
+
+
+def _session_is_active_for_account(conn, *, session_id: str, account_id: str, now: str | None = None) -> bool:
+    """Recheck a signed-session actor while the caller holds its write lock.
+
+    CSRF is proven at request entry, but another security action may rotate
+    that session while this request waits for SQLite. Sensitive factor writes
+    use this owner-bound check inside their transaction so stale requests do
+    not commit after the rotation.
+    """
+
+    if not session_id or not account_id:
+        return False
+    active_at = now or utc_now()
+    row = conn.execute(
+        """SELECT 1 FROM web_sessions
+           WHERE id=? AND account_id=? AND revoked_at IS NULL AND expires_at>?""",
+        (session_id, account_id, active_at),
+    ).fetchone()
+    return bool(row)
 
 
 class RegisterRequest(BaseModel):
@@ -782,6 +1318,172 @@ class RegisterRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str = Field(min_length=3, max_length=254)
     password: str = Field(min_length=1, max_length=256)
+
+
+class PasswordChangeRequest(BaseModel):
+    current_password: str = Field(min_length=1, max_length=256)
+    new_password: str = Field(min_length=12, max_length=256)
+
+
+class EmailVerificationStartRequest(BaseModel):
+    """Explicit consent before the signed account asks SMTP to send a link."""
+
+    confirm: bool = False
+
+
+class PasswordRecoveryStartRequest(BaseModel):
+    """Public identifier input; the endpoint always returns the same handoff."""
+
+    email: str = Field(min_length=3, max_length=254)
+
+
+class SessionRevokeRequest(BaseModel):
+    session_ref: str = Field(min_length=64, max_length=64)
+
+
+def _security_linked_providers(conn, account_id: str) -> set[str]:
+    """Read only the signed account's provider names, never subjects/tokens."""
+
+    rows = conn.execute(
+        "SELECT provider FROM web_external_identities WHERE account_id=?",
+        (account_id,),
+    ).fetchall()
+    return {str(row[0]) for row in rows if str(row[0]) in OAUTH_PROVIDER_NAMES}
+
+
+def _security_login_methods(conn, *, account_id: str, email: str, password_login_enabled: bool) -> dict:
+    """Build the intentionally minimal login-factor projection for one owner.
+
+    Contact is deliberately an assurance label rather than a recovery
+    mechanism. A password registration is never proof on its own: the signed
+    account must either complete a Web-owned one-time mailbox link or present
+    a matching provider-verified OAuth contact. No contact state can merge,
+    reclaim, delete or access another account.
+    """
+
+    linked = _security_linked_providers(conn, account_id)
+    password_available = password_login_factor_available(email, password_login_enabled)
+    oauth = []
+    usable_factor_count = 1 if password_available else 0
+    for provider in sorted(OAUTH_PROVIDER_NAMES):
+        provider_linked = provider in linked
+        enabled = _oauth_enabled(provider)
+        usable = provider_linked and enabled
+        if usable:
+            usable_factor_count += 1
+        oauth.append(
+            {
+                "provider": provider,
+                "linked": provider_linked,
+                "enabled": enabled,
+                # A linked, disabled provider is deliberately not removable
+                # here. The operator must restore/retire configuration through
+                # the controlled deployment path, never through a customer UI.
+                "can_unlink": bool(usable and usable_factor_count),
+            }
+        )
+    # Calculate each button only after all current factors are known. This
+    # avoids a loop-order bug where the first linked provider appears to be
+    # the last factor even when another provider follows it.
+    for item in oauth:
+        item["can_unlink"] = bool(
+            item["linked"]
+            and item["enabled"]
+            and usable_factor_count > 1
+        )
+
+    normalized_email = str(email or "").strip().lower()
+    contact_row = conn.execute(
+        """SELECT provider, email
+           FROM web_account_oauth_contacts
+           WHERE account_id=?""",
+        (account_id,),
+    ).fetchone()
+    contact_provider = str(contact_row[0]) if contact_row else ""
+    contact_email = str(contact_row[1]).strip().lower() if contact_row else ""
+    # The contact record is a derived convenience projection, not a standalone
+    # login factor.  Recheck the immutable provider-identity binding before
+    # it can serve as email-ownership evidence; this makes a stale/corrupt
+    # contact row fail closed even if an interrupted maintenance operation ever
+    # left it behind.
+    contact_identity_exists = bool(
+        contact_provider in OAUTH_CONTACT_PROVIDERS
+        and conn.execute(
+            """SELECT 1 FROM web_external_identities
+               WHERE account_id=? AND provider=?""",
+            (account_id, contact_provider),
+        ).fetchone()
+    )
+    contact_is_verified = bool(
+        contact_identity_exists
+        and EMAIL_PATTERN.fullmatch(contact_email)
+    )
+    email_link_verified = _email_link_verified_contact(
+        conn,
+        account_id=account_id,
+        expected_email=normalized_email,
+    )
+    now = utc_now()
+    pending_email_verification = bool(
+        conn.execute(
+            """SELECT 1 FROM web_email_verification_challenges
+               WHERE account_id=? AND state='sent' AND expires_at>? LIMIT 1""",
+            (account_id, now),
+        ).fetchone()
+    )
+    email_delivery_available = email_verification_delivery_available()
+    # A Telegram-only placeholder is never a contact address.  Conversely, an
+    # OAuth-only account can show an OAuth contact as verified even though its
+    # internal unique-email alias must remain hidden from customers.
+    if _is_telegram_only_email(normalized_email):
+        contact = {"state": "not_applicable", "provider": "", "verified": False}
+    elif email_link_verified and password_available:
+        contact = {"state": "verified_email_link", "provider": "email_link", "verified": True}
+    elif contact_is_verified and (
+        _is_oauth_only_email(normalized_email)
+        # These are normalized account-contact identifiers, not credentials
+        # or an oracle on an unauthenticated endpoint.  Plain equality keeps
+        # internationalized email local-parts safe; ``compare_digest`` rejects
+        # non-ASCII ``str`` values on supported Python runtimes.
+        or contact_email == normalized_email
+    ):
+        contact = {"state": "verified_oauth", "provider": contact_provider, "verified": True}
+    elif password_available:
+        # Do not expose a mismatched provider contact as a hint about another
+        # mailbox.  The signed user sees only that this particular login email
+        # has not yet been independently proven.
+        contact = {"state": "unverified", "provider": "", "verified": False}
+    else:
+        contact = {"state": "unavailable", "provider": "", "verified": False}
+    return {
+        "password": {"available": password_available},
+        "oauth": oauth,
+        "usable_factor_count": usable_factor_count,
+        "contact": contact,
+        "email_verification": {
+            "available": email_delivery_available,
+            "can_start": bool(
+                password_available
+                and not contact["verified"]
+                and email_delivery_available
+            ),
+            "pending": bool(
+                password_available
+                and not contact["verified"]
+                and pending_email_verification
+            ),
+        },
+    }
+
+
+def _password_change_policy_error(value: str) -> str | None:
+    """Keep a small, stable policy without retaining the submitted secret."""
+
+    if len(value) < 12 or len(value) > 256:
+        return "Mật khẩu mới phải có từ 12 đến 256 ký tự."
+    if any(ord(character) < 32 or ord(character) == 127 for character in value):
+        return "Mật khẩu mới có ký tự điều khiển không hợp lệ."
+    return None
 
 
 class TelegramAccountUpgradeRequest(BaseModel):
@@ -868,21 +1570,59 @@ def _create_telegram_only_account(conn, *, canonical_user_id: str, role: str, di
 
 def _set_oauth_state_cookie(response: Response, provider: str, state_value: str) -> None:
     response.set_cookie(
-        _cookie_name(OAUTH_STATE_COOKIE),
+        _oauth_state_cookie_name(provider, state_value),
         _oauth_state_cookie_value(provider, state_value),
         httponly=True,
         secure=_cookie_secure(),
         # Apple posts its authorization response cross-site. Its short-lived
         # state cookie must therefore be None+Secure, while the main session
         # cookie deliberately remains Lax and is never weakened for OAuth.
-        samesite="none" if provider == "apple" else "lax",
+        samesite=_oauth_state_cookie_samesite(provider),
         max_age=OAUTH_STATE_TTL_MINUTES * 60,
         path="/",
     )
 
 
-def _clear_oauth_state_cookie(response: Response) -> None:
-    response.delete_cookie(_cookie_name(OAUTH_STATE_COOKIE), path="/", secure=_cookie_secure(), httponly=True, samesite="lax")
+def _matching_oauth_state_cookie_name(request: Request, provider: str, state_value: str) -> str | None:
+    """Find only the signed browser proof for this callback attempt.
+
+    The final fixed-name candidate accepts a state issued by the immediately
+    preceding deployment for at most its existing TTL.  It is intentionally a
+    read-only migration fallback: all new starts receive an independent
+    state-specific cookie, and a callback never clears an unrelated attempt.
+    """
+    if provider not in OAUTH_PROVIDER_NAMES or not state_value or len(state_value) > OAUTH_STATE_VALUE_MAX_LENGTH:
+        return None
+    candidates = (
+        _oauth_state_cookie_name(provider, state_value),
+        _cookie_name(OAUTH_STATE_COOKIE),
+    )
+    for cookie_name in candidates:
+        cookie = _parse_oauth_state_cookie(request.cookies.get(cookie_name))
+        if cookie and cookie[0] == provider and hmac.compare_digest(cookie[1], state_value):
+            return cookie_name
+    return None
+
+
+def _clear_oauth_state_cookie(
+    response: Response,
+    *,
+    request: Request,
+    provider: str,
+    state_value: str,
+    cookie_name: str | None = None,
+) -> None:
+    """Delete only the state proof consumed or rejected by this callback."""
+    matching_name = cookie_name or _matching_oauth_state_cookie_name(request, provider, state_value)
+    if not matching_name:
+        return
+    response.delete_cookie(
+        matching_name,
+        path="/",
+        secure=_cookie_secure(),
+        httponly=True,
+        samesite=_oauth_state_cookie_samesite(provider),
+    )
 
 
 def _set_oauth_link_cookie(response: Response, provider: str, session_id: str, ticket: str) -> None:
@@ -983,8 +1723,8 @@ def _oauth_redirect(reason: str, *, path: str = "/login") -> RedirectResponse:
 
 
 def _consume_oauth_state(request: Request, provider: str, state_value: str) -> dict | None:
-    cookie = _parse_oauth_state_cookie(request.cookies.get(_cookie_name(OAUTH_STATE_COOKIE)))
-    if not cookie or cookie[0] != provider or not hmac.compare_digest(cookie[1], state_value):
+    cookie_name = _matching_oauth_state_cookie_name(request, provider, state_value)
+    if not cookie_name:
         return None
     with transaction() as conn:
         row = conn.execute(
@@ -1001,6 +1741,9 @@ def _consume_oauth_state(request: Request, provider: str, state_value: str) -> d
         "account_id": row[2],
         "initiating_session_id": row[3],
         "return_path": row[4],
+        # This value remains server-internal.  It lets every callback outcome
+        # remove exactly its own proof instead of invalidating other tabs.
+        "_state_cookie_name": cookie_name,
     }
 
 
@@ -1058,7 +1801,13 @@ async def _verify_google_id_token(id_token: str, *, client_id: str, expected_non
     subject = str(claims.get("sub") or "").strip()
     if not EMAIL_PATTERN.fullmatch(email) or not subject:
         raise OAuthIdentityError("Google identity không hợp lệ")
-    return {"provider": "google", "subject": subject, "email": email, "display_name": str(claims.get("name") or "").strip()[:120]}
+    return {
+        "provider": "google",
+        "subject": subject,
+        "email": email,
+        "email_verified": True,
+        "display_name": str(claims.get("name") or "").strip()[:120],
+    }
 
 
 async def _fetch_google_identity(code: str, state_value: str) -> dict:
@@ -1152,6 +1901,7 @@ async def _verify_telegram_id_token(id_token: str, *, client_id: str, expected_n
         # as the HMAC-protected external-identity key.
         "subject": telegram_user_id,
         "email": "",
+        "email_verified": False,
         "display_name": display_name,
     }
 
@@ -1232,7 +1982,13 @@ async def _fetch_github_identity(code: str, state_value: str) -> dict:
     if not EMAIL_PATTERN.fullmatch(email) or not subject:
         raise OAuthIdentityError("GitHub identity không hợp lệ")
     display_name = str(profile.get("name") or profile.get("login") or "").strip()[:120]
-    return {"provider": "github", "subject": subject, "email": email, "display_name": display_name}
+    return {
+        "provider": "github",
+        "subject": subject,
+        "email": email,
+        "email_verified": True,
+        "display_name": display_name,
+    }
 
 
 def _apple_private_key(config: dict) -> str:
@@ -1323,7 +2079,12 @@ async def _verify_apple_id_token(id_token: str, *, client_id: str, expected_nonc
         raise OAuthIdentityError("Apple email chưa được xác minh")
     if email and not EMAIL_PATTERN.fullmatch(email):
         raise OAuthIdentityError("Apple email không hợp lệ")
-    return {"provider": "apple", "subject": subject, "email": email}
+    return {
+        "provider": "apple",
+        "subject": subject,
+        "email": email,
+        "email_verified": bool(email),
+    }
 
 
 def _apple_display_name(value: str | None) -> str:
@@ -1382,7 +2143,7 @@ async def _fetch_oauth_identity(provider: str, code: str, state_value: str) -> d
 def _oauth_signin_account(identity: dict, request: Request) -> tuple[dict | None, str]:
     provider = str(identity.get("provider") or "")
     subject = str(identity.get("subject") or "")
-    email = str(identity.get("email") or "").strip().lower()
+    verified_contact_email = _verified_oauth_contact_email(identity)
     display_name = str(identity.get("display_name") or "").strip()[:120]
     if provider not in OAUTH_PROVIDER_NAMES or not subject:
         return None, "failed"
@@ -1401,7 +2162,24 @@ def _oauth_signin_account(identity: dict, request: Request) -> tuple[dict | None
             if not account["is_active"]:
                 _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="inactive account")
                 return None, "failed"
-            conn.execute("UPDATE web_external_identities SET last_login_at=? WHERE provider=? AND subject_hash=?", (utc_now(), provider, subject_hash))
+            now = utc_now()
+            # A previous mapping remains the sign-in authority even when a
+            # provider omits a contact on a later callback (notably Apple).
+            # Refresh the Web-owned contact only where this very identity
+            # supplied a new, explicitly verified address and it cannot turn
+            # a password account into a different person's mailbox.
+            if verified_contact_email and (
+                not account["password_login_enabled"]
+                or hmac.compare_digest(str(account["email"] or "").strip().lower(), verified_contact_email)
+            ):
+                _store_oauth_verified_contact(
+                    conn,
+                    account_id=account["id"],
+                    provider=provider,
+                    email=verified_contact_email,
+                    now=now,
+                )
+            conn.execute("UPDATE web_external_identities SET last_login_at=? WHERE provider=? AND subject_hash=?", (now, provider, subject_hash))
             _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider)
             return account, "ok"
         if provider == "telegram":
@@ -1432,28 +2210,47 @@ def _oauth_signin_account(identity: dict, request: Request) -> tuple[dict | None
                 _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.signin", request_id=_request_id(request), target=provider, detail="attached verified Telegram OIDC to canonical Bot account")
                 return account, "ok"
         # A first Apple authorization may not include an email. Existing
-        # identities are already handled above, but a new account must never
-        # be fabricated without a verified, contactable address. Telegram is
-        # the explicit exception: its signed profile ID is a login identity,
-        # and the account gets a non-contactable internal placeholder until
-        # the customer optionally adds Email + password.
-        if not EMAIL_PATTERN.fullmatch(email):
-            if provider == "telegram":
-                email = _telegram_only_email(subject)
-            else:
+        # identities were handled above, but a new Google/GitHub/Apple
+        # account requires an explicit freshly verified contact. Telegram is
+        # the exception: its signed profile ID is a login identity and gets a
+        # non-contactable internal placeholder until the customer optionally
+        # adds Email + password.
+        contact_email = ""
+        isolated_collision = False
+        if provider == "telegram":
+            account_email = _telegram_only_email(subject)
+        else:
+            contact_email = verified_contact_email
+            if not contact_email:
                 _record_audit(conn, account_id=None, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="new provider identity has no verified email")
                 return None, "failed"
-        existing_email = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email,)).fetchone()
-        if existing_email:
-            _record_audit(conn, account_id=existing_email[0], canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="email belongs to an existing account; explicit linking required")
-            return None, "link-required"
+            # Do not load, mutate, audit against, or issue a session for the
+            # pre-existing account. A presence check is enough to select a
+            # separate internal alias for the freshly verified OAuth user.
+            email_collision = conn.execute(
+                "SELECT 1 FROM web_accounts WHERE email=? LIMIT 1",
+                (contact_email,),
+            ).fetchone()
+            isolated_collision = bool(email_collision)
+            account_email = _oauth_only_email(provider, subject) if isolated_collision else contact_email
+            if isolated_collision:
+                # The HMAC alias should be unique to this immutable identity.
+                # A conflicting legacy/corrupt alias is guarded instead of
+                # attaching this sign-in to any account we did not create.
+                alias_taken = conn.execute(
+                    "SELECT 1 FROM web_accounts WHERE email=? LIMIT 1",
+                    (account_email,),
+                ).fetchone()
+                if alias_taken:
+                    _record_audit(conn, account_id=None, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, outcome="denied", detail="oauth-only internal alias is already reserved")
+                    return None, "failed"
         account_id = str(uuid.uuid4())
         now = utc_now()
         conn.execute(
             """INSERT INTO web_accounts
             (id, email, password_hash, display_name, password_login_enabled, created_at, updated_at)
             VALUES (?, ?, ?, ?, 0, ?, ?)""",
-            (account_id, email, _password_hash(secrets.token_urlsafe(48)), display_name, now, now),
+            (account_id, account_email, _password_hash(secrets.token_urlsafe(48)), display_name, now, now),
         )
         conn.execute(
             """INSERT INTO web_account_profiles
@@ -1466,52 +2263,129 @@ def _oauth_signin_account(identity: dict, request: Request) -> tuple[dict | None
             VALUES (?, ?, ?, ?, ?)""",
             (provider, subject_hash, account_id, now, now),
         )
+        if contact_email:
+            _store_oauth_verified_contact(
+                conn,
+                account_id=account_id,
+                provider=provider,
+                email=contact_email,
+                now=now,
+            )
         account = {
-            "id": account_id, "email": email, "display_name": display_name, "canonical_user_id": None,
+            "id": account_id, "email": account_email, "display_name": display_name, "canonical_user_id": None,
             "role": "user", "is_active": True, "password_login_enabled": False,
             "locale": "vi", "timezone": "Asia/Ho_Chi_Minh", "avatar_style": "gradient",
         }
-        _record_audit(conn, account_id=account_id, canonical_user_id=None, action="oauth.signin", request_id=_request_id(request), target=provider, detail="created oauth-only web account")
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=None,
+            action="oauth.signin",
+            request_id=_request_id(request),
+            target=provider,
+            detail=(
+                "created isolated oauth-only web account after verified-contact collision"
+                if isolated_collision
+                else "created oauth-only web account"
+            ),
+        )
     return account, "ok"
 
 
-def _link_oauth_identity(identity: dict, account: dict, request: Request) -> str:
+def _link_oauth_identity(
+    identity: dict,
+    account: dict,
+    request: Request,
+    *,
+    initiating_session_id: str,
+) -> tuple[str, dict | None]:
+    """Attach one OAuth factor and rotate every prior signed session.
+
+    The callback validates its state/browser proof before this call. A second
+    owner-bound check inside this mutation transaction closes the small window
+    in which another security action can rotate the initiating session.
+    """
+
     provider = str(identity.get("provider") or "")
     subject = str(identity.get("subject") or "")
-    if provider not in OAUTH_PROVIDER_NAMES or not subject:
-        return "failed"
+    verified_contact_email = _verified_oauth_contact_email(identity)
+    if provider not in OAUTH_PROVIDER_NAMES or not subject or not initiating_session_id:
+        return "failed", None
     subject_hash = _external_subject_hash(provider, subject)
     with transaction() as conn:
+        if not _session_is_active_for_account(
+            conn,
+            session_id=initiating_session_id,
+            account_id=str(account["id"]),
+        ):
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=account["canonical_user_id"],
+                action="oauth.link",
+                request_id=_request_id(request),
+                target=provider,
+                outcome="denied",
+                detail="initiating signed session is no longer active",
+            )
+            return "session", None
         # A customer who already has a canonical Bot identity may only attach
         # Telegram Login for that same signed Telegram user. This preserves
         # the one-person, one-canonical-identity boundary across OIDC and the
         # Bot deep-link without ever exposing either ID to JavaScript.
         if provider == "telegram" and account.get("canonical_user_id") and not hmac.compare_digest(str(account["canonical_user_id"]), subject):
             _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider, outcome="denied", detail="Telegram OIDC identity does not match canonical Bot identity")
-            return "failed"
+            return "failed", None
         same_provider = conn.execute(
             "SELECT subject_hash FROM web_external_identities WHERE account_id=? AND provider=?",
             (account["id"], provider),
         ).fetchone()
         if same_provider:
             outcome = "already-linked" if hmac.compare_digest(str(same_provider[0]), subject_hash) else "failed"
+            if outcome == "already-linked" and verified_contact_email and hmac.compare_digest(
+                str(account.get("email") or "").strip().lower(),
+                verified_contact_email,
+            ):
+                _store_oauth_verified_contact(
+                    conn,
+                    account_id=account["id"],
+                    provider=provider,
+                    email=verified_contact_email,
+                    now=utc_now(),
+                )
             _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider, outcome="denied" if outcome == "failed" else "ok", detail="provider already linked" if outcome == "already-linked" else "different provider identity already linked")
-            return outcome
+            return outcome, None
         existing = conn.execute(
             "SELECT account_id FROM web_external_identities WHERE provider=? AND subject_hash=?",
             (provider, subject_hash),
         ).fetchone()
         if existing:
             _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider, outcome="denied", detail="identity linked to another account")
-            return "failed"
+            return "failed", None
         now = utc_now()
         conn.execute(
             """INSERT INTO web_external_identities (provider, subject_hash, account_id, created_at, last_login_at)
             VALUES (?, ?, ?, ?, ?)""",
             (provider, subject_hash, account["id"], now, now),
         )
+        # Explicit linking proves control of the signed Web account, not
+        # ownership of every contact a provider happens to return. Only mark
+        # a contact verified when it exactly equals the account's existing
+        # login address; never replace it and never merge another account.
+        if verified_contact_email and hmac.compare_digest(
+            str(account.get("email") or "").strip().lower(),
+            verified_contact_email,
+        ):
+            _store_oauth_verified_contact(
+                conn,
+                account_id=account["id"],
+                provider=provider,
+                email=verified_contact_email,
+                now=now,
+            )
+        replacement = _rotate_account_sessions(conn, account["id"], now=now)
         _record_audit(conn, account_id=account["id"], canonical_user_id=account["canonical_user_id"], action="oauth.link", request_id=_request_id(request), target=provider)
-    return "linked"
+    return "linked", replacement
 
 
 def _oauth_bound_link_account(state_data: dict) -> dict | None:
@@ -1544,7 +2418,9 @@ def _oauth_bound_link_account(state_data: dict) -> dict | None:
 @router.post("/register")
 async def register(payload: RegisterRequest, request: Request, response: Response):
     email = payload.email.strip().lower()
-    if not EMAIL_PATTERN.fullmatch(email):
+    # HMAC-derived OAuth collision aliases are Web-internal identifiers, not
+    # addresses a customer may reserve for email/password sign-in.
+    if not EMAIL_PATTERN.fullmatch(email) or _is_oauth_only_email(email):
         return envelope(False, "Email không hợp lệ", status_name="failed", error_code="INVALID_EMAIL")
     ensure_copyfast_schema()
     account_id = str(uuid.uuid4())
@@ -1579,7 +2455,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
             raise
     return envelope(
         True,
-        "Nếu email chưa có tài khoản, yêu cầu đăng ký đã được tiếp nhận. Hãy đăng nhập để tiếp tục hoặc dùng chức năng khôi phục mật khẩu khi được phát hành.",
+        "Nếu email chưa có tài khoản, yêu cầu đăng ký đã được tiếp nhận. Hãy đăng nhập để tiếp tục; sau đó bạn có thể xác minh mailbox từ Bảo mật tài khoản khi adapter email được cấu hình.",
         status_name="awaiting_confirm",
     )
 
@@ -1588,6 +2464,7 @@ async def register(payload: RegisterRequest, request: Request, response: Respons
 async def login(payload: LoginRequest, request: Request, response: Response):
     ensure_copyfast_schema()
     email = payload.email.strip().lower()
+    internal_oauth_alias = _is_oauth_only_email(email)
     with transaction() as conn:
         row = conn.execute(
             """SELECT a.id, a.email, a.password_hash, a.display_name, a.canonical_user_id, a.role_cache, a.is_active, a.password_login_enabled,
@@ -1596,11 +2473,69 @@ async def login(payload: LoginRequest, request: Request, response: Response):
                WHERE a.email=?""",
             (email,),
         ).fetchone()
-        password_hash = row[2] if row and row[6] and row[7] else _DUMMY_PASSWORD_HASH
+        password_hash = row[2] if row and row[6] and row[7] and not internal_oauth_alias else _DUMMY_PASSWORD_HASH
         password_valid = _verify_password(payload.password, password_hash)
-        if not row or not row[6] or not row[7] or not password_valid:
+        if not row or not row[6] or not row[7] or internal_oauth_alias or not password_valid:
             _record_audit(conn, account_id=row[0] if row else None, canonical_user_id=None, action="auth.login", request_id=_request_id(request), outcome="denied")
             return envelope(False, "Email hoặc mật khẩu không đúng", status_name="failed", error_code="LOGIN_DENIED")
+        # A Web-native TOTP factor is deliberately enforced after the
+        # constant-work password check and before any signed session exists.
+        # The browser receives only one opaque, short-lived challenge; it
+        # never sees an account id, factor id, secret or recovery-code hash.
+        # If an active factor exists while its runtime is paused or invalid,
+        # fail closed rather than silently bypassing second-factor protection.
+        from copyfast_mfa import (
+            active_totp_factor_exists,
+            create_password_login_challenge,
+            totp_mfa_runtime_available,
+        )
+        if active_totp_factor_exists(conn, account_id=str(row[0])):
+            if not totp_mfa_runtime_available():
+                _record_audit(
+                    conn,
+                    account_id=row[0],
+                    canonical_user_id=row[4],
+                    action="auth.login",
+                    request_id=_request_id(request),
+                    outcome="guarded",
+                )
+                return envelope(
+                    False,
+                    "Xác thực hai bước đang tạm không khả dụng. Không có phiên nào được tạo.",
+                    status_name="guarded",
+                    error_code="WEB_TOTP_MFA_UNAVAILABLE",
+                )
+            try:
+                mfa_challenge = create_password_login_challenge(conn, account_id=str(row[0]))
+            except RuntimeError:
+                _record_audit(
+                    conn,
+                    account_id=row[0],
+                    canonical_user_id=row[4],
+                    action="auth.login",
+                    request_id=_request_id(request),
+                    outcome="guarded",
+                )
+                return envelope(
+                    False,
+                    "Xác thực hai bước đang tạm không khả dụng. Không có phiên nào được tạo.",
+                    status_name="guarded",
+                    error_code="WEB_TOTP_MFA_UNAVAILABLE",
+                )
+            _record_audit(
+                conn,
+                account_id=row[0],
+                canonical_user_id=row[4],
+                action="auth.mfa_login_challenge",
+                request_id=_request_id(request),
+                outcome="ok",
+            )
+            return envelope(
+                True,
+                "Mật khẩu đã được xác minh. Nhập mã xác thực hai bước để hoàn tất đăng nhập.",
+                data=mfa_challenge,
+                status_name="awaiting_confirm",
+            )
         account = {
             "id": row[0], "email": row[1], "display_name": row[3] or "",
             "canonical_user_id": row[4], "role": row[5] or "user",
@@ -1633,6 +2568,1374 @@ async def me(request: Request, account: dict = Depends(require_account)):
             "csrf_token": session["csrf_token"],
             "expires_at": session["expires_at"],
         },
+    )
+
+
+@router.get("/security/sessions")
+async def security_sessions(request: Request, account: dict = Depends(require_account)):
+    """List at most twenty live owner sessions without exposing identifiers.
+
+    The portal receives an HMAC action reference plus timestamps only.  It
+    never receives the database session ID, signed cookie, CSRF token, IP or
+    user-agent, so this view cannot become a secondary credential inventory.
+    """
+
+    session = current_session(request)
+    now = utc_now()
+    with read_transaction() as conn:
+        rows = conn.execute(
+            """SELECT id, created_at, last_seen_at, expires_at
+               FROM web_sessions
+               WHERE account_id=? AND revoked_at IS NULL AND expires_at>?
+               ORDER BY last_seen_at DESC, id DESC
+               LIMIT 20""",
+            (account["id"], now),
+        ).fetchall()
+    sessions = [
+        {
+            "session_ref": _security_session_reference(str(row[0])),
+            "current": hmac.compare_digest(str(row[0]), str(session["session_id"])),
+            "created_at": str(row[1]),
+            "last_seen_at": str(row[2]),
+            "expires_at": str(row[3]),
+        }
+        for row in rows
+    ]
+    return envelope(
+        True,
+        "Đã tải các phiên đăng nhập đang hoạt động.",
+        data={"sessions": sessions},
+        status_name="read_only",
+    )
+
+
+@router.post("/security/sessions/revoke")
+async def revoke_security_session(
+    payload: SessionRevokeRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Revoke one non-current session selected by an opaque owner handle."""
+
+    current = current_session(request)
+    if current["account"]["id"] != account["id"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không còn hợp lệ")
+    actor_session_id = str(current["session_id"])
+    reference = payload.session_ref.strip().lower()
+    revoked = False
+    stale_actor = False
+    with transaction() as conn:
+        now = utc_now()
+        if not _session_is_active_for_account(
+            conn,
+            session_id=actor_session_id,
+            account_id=account["id"],
+            now=now,
+        ):
+            stale_actor = True
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_session_revoke",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="initiating signed session is no longer active",
+            )
+        else:
+            # Session references are generated only by the capped list endpoint.
+            # Querying the same bounded, owner-scoped set prevents an unbounded
+            # HMAC comparison loop and makes a foreign reference indistinguishable
+            # from an expired or malformed local reference.
+            if SESSION_REFERENCE_PATTERN.fullmatch(reference):
+                rows = conn.execute(
+                    """SELECT id FROM web_sessions
+                       WHERE account_id=? AND revoked_at IS NULL AND expires_at>?
+                       ORDER BY last_seen_at DESC, id DESC
+                       LIMIT 20""",
+                    (account["id"], now),
+                ).fetchall()
+                for row in rows:
+                    candidate_id = str(row[0])
+                    if hmac.compare_digest(reference, _security_session_reference(candidate_id)):
+                        if not hmac.compare_digest(candidate_id, actor_session_id):
+                            changed = conn.execute(
+                                """UPDATE web_sessions SET revoked_at=?
+                                   WHERE id=? AND account_id=? AND revoked_at IS NULL AND expires_at>?""",
+                                (now, candidate_id, account["id"], now),
+                            )
+                            revoked = changed.rowcount == 1
+                        break
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_session_revoke",
+                request_id=_request_id(request),
+                outcome="ok" if revoked else "noop",
+            )
+    if stale_actor:
+        return JSONResponse(
+            envelope(
+                False,
+                "Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi quản lý phiên.",
+                status_name="guarded",
+                error_code="SECURITY_SESSION_STALE",
+            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    return envelope(
+        True,
+        "Đã cập nhật trạng thái phiên đăng nhập.",
+        data={"revoked": revoked},
+        status_name="completed",
+    )
+
+
+@router.post("/security/sessions/revoke-others")
+async def revoke_other_security_sessions(
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Idempotently revoke every other active signed session for this owner."""
+
+    current = current_session(request)
+    if current["account"]["id"] != account["id"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không còn hợp lệ")
+    actor_session_id = str(current["session_id"])
+    stale_actor = False
+    revoked_count = 0
+    with transaction() as conn:
+        now = utc_now()
+        if not _session_is_active_for_account(
+            conn,
+            session_id=actor_session_id,
+            account_id=account["id"],
+            now=now,
+        ):
+            stale_actor = True
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_sessions_revoke_others",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="initiating signed session is no longer active",
+            )
+        else:
+            changed = conn.execute(
+                """UPDATE web_sessions SET revoked_at=?
+                   WHERE account_id=? AND id<>? AND revoked_at IS NULL AND expires_at>?""",
+                (now, account["id"], actor_session_id, now),
+            )
+            revoked_count = max(0, int(changed.rowcount))
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_sessions_revoke_others",
+                request_id=_request_id(request),
+                outcome="ok" if revoked_count else "noop",
+            )
+    if stale_actor:
+        return JSONResponse(
+            envelope(
+                False,
+                "Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi quản lý phiên.",
+                status_name="guarded",
+                error_code="SECURITY_SESSION_STALE",
+            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    return envelope(
+        True,
+        "Đã thu hồi các phiên đăng nhập khác.",
+        data={"revoked_count": revoked_count},
+        status_name="completed",
+    )
+
+
+@router.post("/security/password")
+async def change_password(
+    payload: PasswordChangeRequest,
+    request: Request,
+    response: Response,
+    account: dict = Depends(require_csrf),
+):
+    """Change a Web password and rotate every previously signed session."""
+
+    policy_error = _password_change_policy_error(payload.new_password)
+    if policy_error:
+        return envelope(False, policy_error, status_name="failed", error_code="PASSWORD_POLICY_INVALID")
+    # Both values are browser-supplied. This policy check is not a comparison
+    # with a stored secret, so Unicode-safe equality avoids `compare_digest`'s
+    # non-ASCII string TypeError; `_verify_password` remains constant-time.
+    if payload.current_password == payload.new_password:
+        return envelope(
+            False,
+            "Mật khẩu mới cần khác mật khẩu hiện tại.",
+            status_name="failed",
+            error_code="PASSWORD_POLICY_INVALID",
+        )
+
+    # CSRF proves the actor at request entry. Preserve the signed-session ID
+    # and verify it again while the password write lock is held: another
+    # factor/password action may rotate or revoke this session while the
+    # request is waiting for SQLite. Do not let that stale request mint the
+    # replacement session for a new password.
+    actor_session = current_session(request)
+    if actor_session["account"]["id"] != account["id"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không còn hợp lệ")
+    actor_session_id = str(actor_session["session_id"])
+    replacement = None
+    stale_actor = False
+    with transaction() as conn:
+        now = utc_now()
+        if not _session_is_active_for_account(
+            conn,
+            session_id=actor_session_id,
+            account_id=account["id"],
+            now=now,
+        ):
+            stale_actor = True
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_password_change",
+                request_id=_request_id(request),
+                outcome="denied",
+                detail="initiating signed session is no longer active",
+            )
+        else:
+            row = conn.execute(
+                """SELECT email, password_hash, password_login_enabled, is_active
+                   FROM web_accounts WHERE id=?""",
+                (account["id"],),
+            ).fetchone()
+            password_available = bool(
+                row
+                and bool(row[2])
+                and bool(row[3])
+                and password_login_factor_available(str(row[0]), bool(row[2]))
+            )
+            stored_hash = str(row[1]) if row and password_available else _DUMMY_PASSWORD_HASH
+            verified = _verify_password(payload.current_password, stored_hash)
+            if not password_available or not verified:
+                _record_audit(
+                    conn,
+                    account_id=account["id"],
+                    canonical_user_id=None,
+                    action="auth.security_password_change",
+                    request_id=_request_id(request),
+                    outcome="denied",
+                )
+                return envelope(
+                    False,
+                    "Không thể xác minh mật khẩu hiện tại.",
+                    status_name="failed",
+                    error_code="PASSWORD_CHANGE_DENIED",
+                )
+            conn.execute(
+                "UPDATE web_accounts SET password_hash=?, updated_at=? WHERE id=?",
+                (_password_hash(payload.new_password), now, account["id"]),
+            )
+            replacement = _rotate_account_sessions(conn, account["id"], now=now)
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_password_change",
+                request_id=_request_id(request),
+            )
+    if stale_actor:
+        return JSONResponse(
+            envelope(
+                False,
+                "Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi đổi mật khẩu.",
+                status_name="guarded",
+                error_code="SECURITY_SESSION_STALE",
+            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    # Never send the session ID to the browser response. The cookie is the
+    # only transport for it, while the new CSRF token is intentionally part of
+    # the signed-session bootstrap payload.
+    _set_session_cookie(response, str(replacement["session_id"]))
+    return envelope(
+        True,
+        "Đã đổi mật khẩu và thu hồi các phiên đăng nhập cũ.",
+        data={"csrf_token": replacement["csrf_token"], "expires_at": replacement["expires_at"]},
+        status_name="completed",
+    )
+
+
+@router.get("/security/login-methods")
+async def security_login_methods(account: dict = Depends(require_account)):
+    """Expose only factor availability needed by the Account Security UI."""
+
+    with read_transaction() as conn:
+        row = conn.execute(
+            "SELECT email, password_login_enabled FROM web_accounts WHERE id=? AND is_active=1",
+            (account["id"],),
+        ).fetchone()
+        methods = _security_login_methods(
+            conn,
+            account_id=account["id"],
+            email=str(row[0]) if row else "",
+            password_login_enabled=bool(row[1]) if row else False,
+        )
+    return envelope(
+        True,
+        "Đã tải phương thức đăng nhập.",
+        data={"login_methods": methods},
+        status_name="read_only",
+    )
+
+
+def _email_verification_challenge_id(value: str) -> str:
+    """Normalize one UUID without accepting a database or path identifier."""
+
+    candidate = str(value or "").strip().lower()
+    try:
+        parsed = uuid.UUID(candidate)
+    except (TypeError, ValueError, AttributeError):
+        return ""
+    return candidate if str(parsed) == candidate else ""
+
+
+def _email_verification_token(value: str) -> str:
+    token = str(value or "").strip()
+    return token if EMAIL_VERIFICATION_TOKEN_PATTERN.fullmatch(token) else ""
+
+
+def _email_verification_html(*, completed: bool, can_confirm: bool, challenge_id: str = "", token: str = "") -> HTMLResponse:
+    """Return a tiny no-store confirmation page with no external resources."""
+
+    if completed:
+        heading = "Email đã được xác minh"
+        body = (
+            "Quyền sở hữu mailbox đã được ghi nhận cho tài khoản Web phù hợp. "
+            "Bạn có thể quay lại ứng dụng để tiếp tục."
+        )
+        action = '<p><a href="/account/security">Mở Bảo mật tài khoản</a></p>'
+    elif can_confirm:
+        heading = "Xác nhận quyền sở hữu email"
+        body = (
+            "Bạn sắp xác minh mailbox này cho một tài khoản TOAN AAS. "
+            "Chỉ tiếp tục nếu chính bạn vừa yêu cầu thao tác này."
+        )
+        action = (
+            '<form method="post" action="/api/v1/auth/email-verification/confirm">'
+            f'<input type="hidden" name="c" value="{challenge_id}" autocomplete="off">'
+            f'<input type="hidden" name="t" value="{token}" autocomplete="off">'
+            '<input type="hidden" name="confirm" value="email-link" autocomplete="off">'
+            '<button type="submit">Xác minh email</button>'
+            "</form>"
+        )
+    else:
+        heading = "Liên kết xác minh không còn hợp lệ"
+        body = (
+            "Liên kết có thể đã hết hạn, đã được dùng hoặc bị thay thế bởi một yêu cầu mới. "
+            "Hãy đăng nhập và yêu cầu một liên kết mới nếu cần."
+        )
+        action = '<p><a href="/login">Mở đăng nhập</a></p>'
+    response = HTMLResponse(
+        "<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+        f"<title>{heading} | TOAN AAS</title>"
+        "<style>body{margin:0;background:#07131c;color:#edf7fb;font:16px/1.55 system-ui,sans-serif}"
+        "main{max-width:600px;margin:12vh auto;padding:32px;border:1px solid #244454;border-radius:18px;background:#0c202b}"
+        "h1{font-size:28px;margin:0 0 12px}p{color:#b9ced8}button,a{display:inline-block;padding:10px 16px;border-radius:10px;"
+        "border:0;background:#57d1c9;color:#062126;font-weight:700;text-decoration:none;cursor:pointer}</style>"
+        "</head><body><main>"
+        f"<h1>{heading}</h1><p>{body}</p>{action}"
+        "</main></body></html>",
+        status_code=200,
+        headers={
+            "Cache-Control": "no-store, private",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+        },
+    )
+    return response
+
+
+async def _read_email_verification_confirmation(request: Request) -> tuple[str, str] | None:
+    """Read the small manual confirmation form without accepting an upload."""
+
+    declared = request.headers.get("content-length", "").strip()
+    if declared:
+        try:
+            if int(declared) < 0 or int(declared) > 1024:
+                return None
+        except ValueError:
+            return None
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if content_type != "application/x-www-form-urlencoded":
+        return None
+    body = await request.body()
+    if len(body) > 1024:
+        return None
+    try:
+        parsed = parse_qs(
+            body.decode("utf-8"),
+            keep_blank_values=True,
+            strict_parsing=True,
+            max_num_fields=3,
+        )
+    except (UnicodeDecodeError, ValueError):
+        return None
+    if set(parsed) != {"c", "t", "confirm"} or any(len(values) != 1 for values in parsed.values()):
+        return None
+    if parsed["confirm"][0] != "email-link":
+        return None
+    challenge_id = _email_verification_challenge_id(parsed["c"][0])
+    token = _email_verification_token(parsed["t"][0])
+    return (challenge_id, token) if challenge_id and token else None
+
+
+@router.post("/security/email-verification/start")
+async def start_email_verification(
+    payload: EmailVerificationStartRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Send one explicit, owner-scoped mailbox verification challenge.
+
+    The delivery call is deliberately outside the SQLite transaction. A
+    challenge remains unusable until the authenticated SMTP handoff succeeds,
+    and both the token and recipient address remain absent from browser data.
+    """
+
+    if not payload.confirm:
+        return envelope(
+            False,
+            "Hãy xác nhận trước khi yêu cầu gửi liên kết xác minh email.",
+            status_name="guarded",
+            error_code="EMAIL_VERIFICATION_CONFIRM_REQUIRED",
+        )
+    try:
+        config = _email_verification_configuration()
+    except RuntimeError:
+        config = None
+    if config is None:
+        with transaction() as conn:
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.email_verification_start",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+        return JSONResponse(
+            envelope(
+                False,
+                "Dịch vụ xác minh email chưa được cấu hình để gửi liên kết thật.",
+                status_name="guarded",
+                error_code="EMAIL_VERIFICATION_UNAVAILABLE",
+            ),
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    actor = current_session(request)
+    if str(actor["account"]["id"]) != str(account["id"]):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không còn hợp lệ")
+    actor_session_id = str(actor["session_id"])
+    now = utc_now()
+    challenge_id = str(uuid.uuid4())
+    token = secrets.token_urlsafe(EMAIL_VERIFICATION_TOKEN_BYTES)
+    stale_actor = False
+    rate_limited = False
+    already_verified = False
+    unavailable_factor = False
+    with transaction() as conn:
+        if not _session_is_active_for_account(
+            conn,
+            session_id=actor_session_id,
+            account_id=account["id"],
+            now=now,
+        ):
+            stale_actor = True
+            outcome = "denied"
+        else:
+            row = conn.execute(
+                """SELECT email, password_login_enabled
+                   FROM web_accounts WHERE id=? AND is_active=1""",
+                (account["id"],),
+            ).fetchone()
+            email = str(row[0]).strip().lower() if row else ""
+            password_enabled = bool(row[1]) if row else False
+            if not password_login_factor_available(email, password_enabled):
+                unavailable_factor = True
+                outcome = "denied"
+            else:
+                methods = _security_login_methods(
+                    conn,
+                    account_id=str(account["id"]),
+                    email=email,
+                    password_login_enabled=password_enabled,
+                )
+                already_verified = bool(methods["contact"]["verified"])
+                if already_verified:
+                    outcome = "noop"
+                else:
+                    recent = conn.execute(
+                        """SELECT COUNT(*) FROM web_email_verification_challenges
+                           WHERE account_id=? AND created_at>?""",
+                        (account["id"], _email_verification_window_start()),
+                    ).fetchone()
+                    rate_limited = int(recent[0]) >= EMAIL_VERIFICATION_MAX_STARTS_PER_WINDOW
+                    if rate_limited:
+                        outcome = "denied"
+                    else:
+                        conn.execute(
+                            """UPDATE web_email_verification_challenges
+                               SET state='superseded', updated_at=?
+                               WHERE account_id=? AND state IN ('prepared', 'sent')
+                                 AND consumed_at IS NULL""",
+                            (now, account["id"]),
+                        )
+                        conn.execute(
+                            """INSERT INTO web_email_verification_challenges
+                               (id, account_id, email, token_hash, state, expires_at, created_at, updated_at)
+                               VALUES (?, ?, ?, ?, 'prepared', ?, ?, ?)""",
+                            (
+                                challenge_id,
+                                account["id"],
+                                email,
+                                _email_verification_token_hash(challenge_id, token),
+                                _email_verification_expiry(int(config["ttl_minutes"])),
+                                now,
+                                now,
+                            ),
+                        )
+                        outcome = "prepared"
+        _record_audit(
+            conn,
+            account_id=account["id"],
+            canonical_user_id=None,
+            action="auth.email_verification_start",
+            request_id=_request_id(request),
+            outcome=outcome,
+        )
+    if stale_actor:
+        return JSONResponse(
+            envelope(
+                False,
+                "Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi yêu cầu xác minh email.",
+                status_name="guarded",
+                error_code="SECURITY_SESSION_STALE",
+            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    if unavailable_factor:
+        return envelope(
+            False,
+            "Tài khoản này chưa có phương thức Email + mật khẩu có thể xác minh.",
+            status_name="guarded",
+            error_code="EMAIL_VERIFICATION_FACTOR_UNAVAILABLE",
+        )
+    if already_verified:
+        return envelope(
+            True,
+            "Email của tài khoản này đã có bằng chứng xác minh.",
+            data={"email_verification": {"started": False, "pending": False}},
+            status_name="completed",
+        )
+    if rate_limited:
+        return JSONResponse(
+            envelope(
+                False,
+                "Bạn đã yêu cầu quá nhiều liên kết xác minh. Hãy thử lại sau ít phút.",
+                status_name="guarded",
+                error_code="EMAIL_VERIFICATION_RATE_LIMITED",
+            ),
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={"Retry-After": str(EMAIL_VERIFICATION_RATE_WINDOW_MINUTES * 60)},
+        )
+    try:
+        await _send_email_verification_message(
+            config,
+            recipient=email,
+            challenge_id=challenge_id,
+            token=token,
+        )
+    except Exception:
+        # SMTP libraries can expose host/user details in exception strings.
+        # Never return or persist those values. The stale challenge stays
+        # unusable, so a timeout cannot become an unearned mailbox proof.
+        with transaction() as conn:
+            conn.execute(
+                """UPDATE web_email_verification_challenges
+                   SET state='failed', updated_at=?
+                   WHERE id=? AND account_id=? AND state='prepared'""",
+                (utc_now(), challenge_id, account["id"]),
+            )
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.email_verification_delivery",
+                request_id=_request_id(request),
+                outcome="failed",
+            )
+        return JSONResponse(
+            envelope(
+                False,
+                "Chưa thể gửi liên kết xác minh. Không có email nào được xem là đã xác minh.",
+                status_name="guarded",
+                error_code="EMAIL_VERIFICATION_DELIVERY_FAILED",
+            ),
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        )
+    marked_sent = False
+    with transaction() as conn:
+        changed = conn.execute(
+            """UPDATE web_email_verification_challenges
+               SET state='sent', sent_at=?, updated_at=?
+               WHERE id=? AND account_id=? AND state='prepared'""",
+            (utc_now(), utc_now(), challenge_id, account["id"]),
+        )
+        marked_sent = changed.rowcount == 1
+        _record_audit(
+            conn,
+            account_id=account["id"],
+            canonical_user_id=None,
+            action="auth.email_verification_delivery",
+            request_id=_request_id(request),
+            outcome="ok" if marked_sent else "superseded",
+        )
+    if not marked_sent:
+        return envelope(
+            False,
+            "Yêu cầu xác minh đã được thay thế bởi một yêu cầu mới hơn. Hãy dùng liên kết mới nhất.",
+            status_name="guarded",
+            error_code="EMAIL_VERIFICATION_SUPERSEDED",
+        )
+    return envelope(
+        True,
+        "Đã gửi liên kết xác minh. Hãy mở email và tự xác nhận trước khi liên kết hết hạn.",
+        data={
+            "email_verification": {
+                "started": True,
+                "pending": True,
+                "expires_in_minutes": int(config["ttl_minutes"]),
+            }
+        },
+        status_name="awaiting_confirm",
+    )
+
+
+@router.get("/email-verification/confirm", response_class=HTMLResponse)
+async def email_verification_confirmation_page(request: Request):
+    """Render a manual confirmation page; a link preview cannot consume proof."""
+
+    challenge_id = _email_verification_challenge_id(request.query_params.get("c", ""))
+    token = _email_verification_token(request.query_params.get("t", ""))
+    return _email_verification_html(
+        completed=False,
+        can_confirm=bool(challenge_id and token),
+        challenge_id=challenge_id,
+        token=token,
+    )
+
+
+@router.post("/email-verification/confirm", response_class=HTMLResponse)
+async def confirm_email_verification(request: Request):
+    """Consume a one-time mailbox proof only after a user submits the page."""
+
+    parsed = await _read_email_verification_confirmation(request)
+    if parsed is None:
+        return _email_verification_html(completed=False, can_confirm=False)
+    challenge_id, token = parsed
+    now = utc_now()
+    completed = False
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT account_id, email, token_hash, state, expires_at
+               FROM web_email_verification_challenges WHERE id=?""",
+            (challenge_id,),
+        ).fetchone()
+        try:
+            expires_active = bool(row and _as_time(str(row[4])) > _now())
+        except (TypeError, ValueError):
+            expires_active = False
+        valid = bool(
+            row
+            and str(row[3]) == "sent"
+            and expires_active
+            and hmac.compare_digest(
+                str(row[2]),
+                _email_verification_token_hash(challenge_id, token),
+            )
+        )
+        if valid:
+            account_id = str(row[0])
+            email = str(row[1]).strip().lower()
+            account_row = conn.execute(
+                """SELECT email, password_login_enabled, is_active
+                   FROM web_accounts WHERE id=?""",
+                (account_id,),
+            ).fetchone()
+            account_matches = bool(
+                account_row
+                and bool(account_row[2])
+                and password_login_factor_available(str(account_row[0]), bool(account_row[1]))
+                and str(account_row[0]).strip().lower() == email
+            )
+            if account_matches:
+                conn.execute(
+                    """INSERT INTO web_account_email_contacts
+                       (account_id, email, verification_method, verified_at, created_at, updated_at)
+                       VALUES (?, ?, 'email_link', ?, ?, ?)
+                       ON CONFLICT(account_id) DO UPDATE SET
+                           email=excluded.email,
+                           verification_method=excluded.verification_method,
+                           verified_at=excluded.verified_at,
+                           updated_at=excluded.updated_at""",
+                    (account_id, email, now, now, now),
+                )
+                consumed = conn.execute(
+                    """UPDATE web_email_verification_challenges
+                       SET state='consumed', consumed_at=?, updated_at=?
+                       WHERE id=? AND state='sent'""",
+                    (now, now, challenge_id),
+                )
+                completed = consumed.rowcount == 1
+                if completed:
+                    conn.execute(
+                        """UPDATE web_email_verification_challenges
+                           SET state='superseded', updated_at=?
+                           WHERE account_id=? AND id<>? AND state IN ('prepared', 'sent')""",
+                        (now, account_id, challenge_id),
+                    )
+                    _record_audit(
+                        conn,
+                        account_id=account_id,
+                        canonical_user_id=None,
+                        action="auth.email_verification_confirm",
+                        request_id=_request_id(request),
+                        outcome="ok",
+                    )
+        if not completed:
+            _record_audit(
+                conn,
+                account_id=str(row[0]) if row else None,
+                canonical_user_id=None,
+                action="auth.email_verification_confirm",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+    return _email_verification_html(completed=completed, can_confirm=False)
+
+
+def _password_recovery_challenge_id(value: str) -> str:
+    """Normalize a recovery UUID without accepting an arbitrary database key."""
+
+    return _email_verification_challenge_id(value)
+
+
+def _password_recovery_token(value: str) -> str:
+    """Keep recovery proof validation explicit even though its token shape matches email links."""
+
+    return _email_verification_token(value)
+
+
+def _password_recovery_html(
+    *,
+    completed: bool,
+    can_confirm: bool,
+    challenge_id: str = "",
+    token: str = "",
+    issue: str = "",
+) -> HTMLResponse:
+    """Render a no-store, scanner-safe password recovery confirmation page."""
+
+    if completed:
+        heading = "Mật khẩu đã được đặt lại"
+        body = (
+            "Mật khẩu mới đã được lưu và các phiên Web đang đăng nhập đã được thu hồi. "
+            "Hãy đăng nhập lại bằng mật khẩu mới."
+        )
+        action = '<p><a href="/login">Mở đăng nhập</a></p>'
+    elif can_confirm:
+        heading = "Chọn mật khẩu mới"
+        body = (
+            "Chỉ tiếp tục nếu bạn vừa yêu cầu đặt lại mật khẩu. Xác nhận này chỉ "
+            "dùng liên kết một lần và không tự đăng nhập bạn."
+        )
+        alert = (
+            f'<p class="alert">{issue}</p>'
+            if issue
+            else ""
+        )
+        action = (
+            f"{alert}"
+            '<form method="post" action="/api/v1/auth/password-recovery/confirm">'
+            f'<input type="hidden" name="c" value="{challenge_id}" autocomplete="off">'
+            f'<input type="hidden" name="t" value="{token}" autocomplete="off">'
+            '<input type="hidden" name="confirm" value="password-recovery" autocomplete="off">'
+            '<label>Mật khẩu mới'
+            '<input type="password" name="password" minlength="12" maxlength="256" '
+            'autocomplete="new-password" required></label>'
+            '<label>Xác nhận mật khẩu mới'
+            '<input type="password" name="confirm_password" minlength="12" maxlength="256" '
+            'autocomplete="new-password" required></label>'
+            '<button type="submit">Đặt lại mật khẩu</button>'
+            "</form>"
+        )
+    else:
+        heading = "Liên kết đặt lại mật khẩu không còn hợp lệ"
+        body = (
+            "Liên kết có thể đã hết hạn, đã được dùng hoặc bị thay thế bởi một yêu cầu mới. "
+            "Bạn có thể gửi lại yêu cầu từ trang đăng nhập nếu cần."
+        )
+        action = '<p><a href="/password-recovery">Yêu cầu liên kết mới</a></p>'
+    response = HTMLResponse(
+        "<!doctype html><html lang=\"vi\"><head><meta charset=\"utf-8\">"
+        "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">"
+        f"<title>{heading} | TOAN AAS</title>"
+        "<style>body{margin:0;background:#07131c;color:#edf7fb;font:16px/1.55 system-ui,sans-serif}"
+        "main{max-width:600px;margin:12vh auto;padding:32px;border:1px solid #244454;border-radius:18px;background:#0c202b}"
+        "h1{font-size:28px;margin:0 0 12px}p,label{color:#b9ced8}label{display:block;margin:14px 0 8px;font-weight:700}"
+        "input{box-sizing:border-box;width:100%;margin-top:6px;padding:10px;border:1px solid #356070;border-radius:10px;background:#07131c;color:#edf7fb}"
+        "button,a{display:inline-block;margin-top:18px;padding:10px 16px;border-radius:10px;border:0;background:#57d1c9;color:#062126;font-weight:700;text-decoration:none;cursor:pointer}"
+        ".alert{padding:10px 12px;border-radius:10px;background:#45262b;color:#ffdadd}</style>"
+        "</head><body><main>"
+        f"<h1>{heading}</h1><p>{body}</p>{action}"
+        "</main></body></html>",
+        status_code=200,
+        headers={
+            "Cache-Control": "no-store, private",
+            "Referrer-Policy": "no-referrer",
+            "X-Content-Type-Options": "nosniff",
+            "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'",
+        },
+    )
+    return response
+
+
+async def _read_password_recovery_confirmation(request: Request) -> tuple[str, str, str, str] | None:
+    """Read the bounded HTML form without accepting files or arbitrary fields."""
+
+    declared = request.headers.get("content-length", "").strip()
+    if declared:
+        try:
+            if int(declared) < 0 or int(declared) > PASSWORD_RECOVERY_CONFIRM_MAX_BODY_BYTES:
+                return None
+        except ValueError:
+            return None
+    content_type = request.headers.get("content-type", "").split(";", 1)[0].strip().lower()
+    if content_type != "application/x-www-form-urlencoded":
+        return None
+    body = await request.body()
+    if len(body) > PASSWORD_RECOVERY_CONFIRM_MAX_BODY_BYTES:
+        return None
+    try:
+        parsed = parse_qs(
+            body.decode("utf-8"),
+            keep_blank_values=True,
+            strict_parsing=True,
+            max_num_fields=5,
+        )
+    except (UnicodeDecodeError, ValueError):
+        return None
+    if set(parsed) != {"c", "t", "confirm", "password", "confirm_password"} or any(
+        len(values) != 1 for values in parsed.values()
+    ):
+        return None
+    if parsed["confirm"][0] != "password-recovery":
+        return None
+    challenge_id = _password_recovery_challenge_id(parsed["c"][0])
+    token = _password_recovery_token(parsed["t"][0])
+    password = parsed["password"][0]
+    confirmation = parsed["confirm_password"][0]
+    if not challenge_id or not token:
+        return None
+    return challenge_id, token, password, confirmation
+
+
+async def _deliver_password_recovery_challenge(
+    *,
+    config: dict,
+    account_id: str,
+    email: str,
+    challenge_id: str,
+    token: str,
+    request_id: str,
+) -> None:
+    """Deliver a prepared recovery proof after the generic browser response."""
+
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        pending = conn.execute(
+            """SELECT 1 FROM web_password_recovery_challenges
+               WHERE id=? AND account_id=? AND state='prepared' AND expires_at>?""",
+            (challenge_id, account_id, utc_now()),
+        ).fetchone()
+    if not pending:
+        return
+    try:
+        await _send_password_recovery_message(
+            config,
+            recipient=email,
+            challenge_id=challenge_id,
+            token=token,
+        )
+    except Exception:
+        # SMTP exceptions may contain private transport details. They are
+        # intentionally neither returned to the browser nor stored in audit
+        # text. A failed prepared record cannot ever reset a password.
+        with transaction() as conn:
+            changed = conn.execute(
+                """UPDATE web_password_recovery_challenges
+                   SET state='failed', updated_at=?
+                   WHERE id=? AND account_id=? AND state='prepared'""",
+                (utc_now(), challenge_id, account_id),
+            )
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="auth.password_recovery_delivery",
+                request_id=request_id,
+                outcome="failed" if changed.rowcount == 1 else "superseded",
+            )
+        return
+    with transaction() as conn:
+        now = utc_now()
+        changed = conn.execute(
+            """UPDATE web_password_recovery_challenges
+               SET state='sent', sent_at=?, updated_at=?
+               WHERE id=? AND account_id=? AND state='prepared'""",
+            (now, now, challenge_id, account_id),
+        )
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=None,
+            action="auth.password_recovery_delivery",
+            request_id=request_id,
+            outcome="ok" if changed.rowcount == 1 else "superseded",
+        )
+
+
+def _password_recovery_acknowledgement() -> dict:
+    """Keep every public request response identical to prevent enumeration."""
+
+    return envelope(
+        True,
+        "Nếu email thuộc một tài khoản Email + mật khẩu đang hoạt động, chúng tôi sẽ gửi liên kết đặt lại khi dịch vụ email được bật. Hãy kiểm tra mailbox của bạn.",
+        data={"password_recovery": {"accepted": True}},
+        status_name="awaiting_confirm",
+    )
+
+
+@router.post("/password-recovery/start")
+async def start_password_recovery(
+    payload: PasswordRecoveryStartRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+):
+    """Prepare a mailbox reset proof without revealing account or delivery state."""
+
+    try:
+        config = _password_recovery_configuration()
+    except RuntimeError:
+        # Enabled-but-invalid configuration is rejected during normal app
+        # startup. Keep this route generic as an additional non-enumerating
+        # fail-closed boundary for isolated router/test mounts.
+        config = None
+    email = payload.email.strip().lower()
+    if config is None or not EMAIL_PATTERN.fullmatch(email) or _is_oauth_only_email(email) or _is_telegram_only_email(email):
+        with transaction() as conn:
+            _record_audit(
+                conn,
+                account_id=None,
+                canonical_user_id=None,
+                action="auth.password_recovery_start",
+                request_id=_request_id(request),
+                outcome="ignored",
+            )
+        return _password_recovery_acknowledgement()
+
+    now = utc_now()
+    challenge_id = str(uuid.uuid4())
+    token = secrets.token_urlsafe(PASSWORD_RECOVERY_TOKEN_BYTES)
+    queued = None
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT id, email, password_login_enabled, is_active, canonical_user_id
+               FROM web_accounts WHERE email=?""",
+            (email,),
+        ).fetchone()
+        account_id = str(row[0]) if row else ""
+        account_email = str(row[1]).strip().lower() if row else ""
+        password_available = bool(
+            row
+            and bool(row[3])
+            and password_login_factor_available(account_email, bool(row[2]))
+        )
+        outcome = "ignored"
+        if password_available:
+            recent = conn.execute(
+                """SELECT COUNT(*) FROM web_password_recovery_challenges
+                   WHERE account_id=? AND created_at>?""",
+                (account_id, _password_recovery_window_start()),
+            ).fetchone()
+            if int(recent[0]) < PASSWORD_RECOVERY_MAX_STARTS_PER_WINDOW:
+                conn.execute(
+                    """UPDATE web_password_recovery_challenges
+                       SET state='superseded', updated_at=?
+                       WHERE account_id=? AND state IN ('prepared', 'sent')
+                         AND consumed_at IS NULL""",
+                    (now, account_id),
+                )
+                conn.execute(
+                    """INSERT INTO web_password_recovery_challenges
+                       (id, account_id, email, token_hash, state, expires_at, created_at, updated_at)
+                       VALUES (?, ?, ?, ?, 'prepared', ?, ?, ?)""",
+                    (
+                        challenge_id,
+                        account_id,
+                        account_email,
+                        _password_recovery_token_hash(challenge_id, token),
+                        _password_recovery_expiry(int(config["ttl_minutes"])),
+                        now,
+                        now,
+                    ),
+                )
+                queued = {
+                    "account_id": account_id,
+                    "email": account_email,
+                    "challenge_id": challenge_id,
+                    "token": token,
+                }
+                outcome = "queued"
+            else:
+                outcome = "rate_limited"
+        _record_audit(
+            conn,
+            account_id=account_id or None,
+            canonical_user_id=str(row[4]) if row and row[4] else None,
+            action="auth.password_recovery_start",
+            request_id=_request_id(request),
+            outcome=outcome,
+        )
+    if queued:
+        background_tasks.add_task(
+            _deliver_password_recovery_challenge,
+            config=config,
+            account_id=queued["account_id"],
+            email=queued["email"],
+            challenge_id=queued["challenge_id"],
+            token=queued["token"],
+            request_id=_request_id(request),
+        )
+    return _password_recovery_acknowledgement()
+
+
+@router.get("/password-recovery/confirm", response_class=HTMLResponse)
+async def password_recovery_confirmation_page(request: Request):
+    """Show a manual form; GET/link scanners cannot reset a password."""
+
+    challenge_id = _password_recovery_challenge_id(request.query_params.get("c", ""))
+    token = _password_recovery_token(request.query_params.get("t", ""))
+    return _password_recovery_html(
+        completed=False,
+        can_confirm=bool(challenge_id and token),
+        challenge_id=challenge_id,
+        token=token,
+    )
+
+
+@router.post("/password-recovery/confirm", response_class=HTMLResponse)
+async def confirm_password_recovery(request: Request):
+    """Consume one mailbox proof, set a fresh password and revoke Web sessions."""
+
+    parsed = await _read_password_recovery_confirmation(request)
+    if parsed is None:
+        return _password_recovery_html(completed=False, can_confirm=False)
+    challenge_id, token, new_password, confirmation = parsed
+    policy_error = _password_change_policy_error(new_password)
+    if policy_error:
+        return _password_recovery_html(
+            completed=False,
+            can_confirm=True,
+            challenge_id=challenge_id,
+            token=token,
+            issue=policy_error,
+        )
+    if new_password != confirmation:
+        return _password_recovery_html(
+            completed=False,
+            can_confirm=True,
+            challenge_id=challenge_id,
+            token=token,
+            issue="Xác nhận mật khẩu mới chưa khớp.",
+        )
+
+    now = utc_now()
+    completed = False
+    retry_issue = ""
+    with transaction() as conn:
+        row = conn.execute(
+            """SELECT account_id, email, token_hash, state, expires_at
+               FROM web_password_recovery_challenges WHERE id=?""",
+            (challenge_id,),
+        ).fetchone()
+        try:
+            expires_active = bool(row and _as_time(str(row[4])) > _now())
+        except (TypeError, ValueError):
+            expires_active = False
+        valid = bool(
+            row
+            and str(row[3]) == "sent"
+            and expires_active
+            and hmac.compare_digest(
+                str(row[2]),
+                _password_recovery_token_hash(challenge_id, token),
+            )
+        )
+        if valid:
+            account_id = str(row[0])
+            email = str(row[1]).strip().lower()
+            account_row = conn.execute(
+                """SELECT email, password_hash, password_login_enabled, is_active, canonical_user_id
+                   FROM web_accounts WHERE id=?""",
+                (account_id,),
+            ).fetchone()
+            account_matches = bool(
+                account_row
+                and bool(account_row[3])
+                and password_login_factor_available(str(account_row[0]), bool(account_row[2]))
+                and str(account_row[0]).strip().lower() == email
+            )
+            stored_hash = str(account_row[1]) if account_matches else _DUMMY_PASSWORD_HASH
+            if account_matches and _verify_password(new_password, stored_hash):
+                retry_issue = "Mật khẩu mới cần khác mật khẩu hiện tại."
+            elif account_matches:
+                consumed = conn.execute(
+                    """UPDATE web_password_recovery_challenges
+                       SET state='consumed', consumed_at=?, updated_at=?
+                       WHERE id=? AND account_id=? AND state='sent'""",
+                    (now, now, challenge_id, account_id),
+                )
+                if consumed.rowcount == 1:
+                    conn.execute(
+                        "UPDATE web_accounts SET password_hash=?, updated_at=? WHERE id=?",
+                        (_password_hash(new_password), now, account_id),
+                    )
+                    conn.execute(
+                        "UPDATE web_sessions SET revoked_at=? WHERE account_id=? AND revoked_at IS NULL",
+                        (now, account_id),
+                    )
+                    conn.execute(
+                        """UPDATE web_password_recovery_challenges
+                           SET state='superseded', updated_at=?
+                           WHERE account_id=? AND id<>? AND state IN ('prepared', 'sent')""",
+                        (now, account_id, challenge_id),
+                    )
+                    completed = True
+                    _record_audit(
+                        conn,
+                        account_id=account_id,
+                        canonical_user_id=str(account_row[4]) if account_row[4] else None,
+                        action="auth.password_recovery_confirm",
+                        request_id=_request_id(request),
+                        outcome="ok",
+                    )
+        if not completed and not retry_issue:
+            _record_audit(
+                conn,
+                account_id=str(row[0]) if row else None,
+                canonical_user_id=None,
+                action="auth.password_recovery_confirm",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+        elif retry_issue:
+            _record_audit(
+                conn,
+                account_id=str(row[0]) if row else None,
+                canonical_user_id=None,
+                action="auth.password_recovery_confirm",
+                request_id=_request_id(request),
+                outcome="noop",
+            )
+    response = _password_recovery_html(
+        completed=completed,
+        can_confirm=bool(retry_issue),
+        challenge_id=challenge_id if retry_issue else "",
+        token=token if retry_issue else "",
+        issue=retry_issue,
+    )
+    if completed:
+        # A recovery never creates or rotates a session. Clear any stale cookie
+        # in the browser that submitted the link after server-side revocation.
+        response.delete_cookie(
+            _cookie_name(SESSION_COOKIE),
+            path="/",
+            secure=_cookie_secure(),
+            httponly=True,
+            samesite="lax",
+        )
+    return response
+
+
+@router.post("/security/oauth/{provider}/unlink")
+async def unlink_security_oauth(
+    provider: str,
+    request: Request,
+    response: Response,
+    account: dict = Depends(require_csrf),
+):
+    """Detach one safe OAuth factor without allowing a customer lockout."""
+
+    normalized_provider = provider.strip().lower()
+    if normalized_provider not in OAUTH_PROVIDER_NAMES:
+        with transaction() as conn:
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_oauth_unlink",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+        return envelope(
+            False,
+            "Phương thức đăng nhập không hợp lệ.",
+            status_name="guarded",
+            error_code="OAUTH_PROVIDER_INVALID",
+        )
+    if not _oauth_enabled(normalized_provider):
+        with transaction() as conn:
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_oauth_unlink",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+        return envelope(
+            False,
+            "Phương thức này đang không khả dụng để quản lý trên Web.",
+            status_name="guarded",
+            error_code="OAUTH_PROVIDER_DISABLED",
+        )
+    # A Telegram-first Bot account has a canonical Bot identity outside this
+    # OIDC table. Even with an extra OIDC proof, the UI/API must not present a
+    # misleading "unlink Telegram" operation for that account type.
+    if normalized_provider == "telegram" and _is_telegram_only_email(str(account.get("email") or "")):
+        with transaction() as conn:
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=None,
+                action="auth.security_oauth_unlink",
+                request_id=_request_id(request),
+                outcome="denied",
+            )
+        return envelope(
+            False,
+            "Tài khoản Telegram-first không hỗ trợ gỡ liên kết Telegram tại đây.",
+            status_name="guarded",
+            error_code="TELEGRAM_UNLINK_NOT_AVAILABLE",
+        )
+
+    # The CSRF dependency proves the actor at request entry. Preserve its
+    # signed-session id and verify it again *inside* the mutation transaction:
+    # another security action may revoke/rotate it while this request waits
+    # for SQLite's write lock.
+    actor_session = current_session(request)
+    if actor_session["account"]["id"] != account["id"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không còn hợp lệ")
+    actor_session_id = str(actor_session["session_id"])
+    replacement = None
+    guarded = False
+    stale_actor = False
+    now = utc_now()
+    with transaction() as conn:
+        if not _session_is_active_for_account(
+            conn,
+            session_id=actor_session_id,
+            account_id=account["id"],
+            now=now,
+        ):
+            stale_actor = True
+            outcome = "denied"
+        else:
+            row = conn.execute(
+                "SELECT email, password_login_enabled FROM web_accounts WHERE id=? AND is_active=1",
+                (account["id"],),
+            ).fetchone()
+            methods = _security_login_methods(
+                conn,
+                account_id=account["id"],
+                email=str(row[0]) if row else "",
+                password_login_enabled=bool(row[1]) if row else False,
+            )
+            linked = {str(item["provider"]) for item in methods["oauth"] if item["linked"]}
+            if normalized_provider not in linked:
+                outcome = "noop"
+            elif int(methods["usable_factor_count"]) <= 1:
+                guarded = True
+                outcome = "denied"
+            else:
+                conn.execute(
+                    "DELETE FROM web_external_identities WHERE account_id=? AND provider=?",
+                    (account["id"], normalized_provider),
+                )
+                # The contact table has at most one contact per account. Remove
+                # it only when it belongs to the factor being detached; a contact
+                # from another still-linked provider remains untouched.
+                conn.execute(
+                    "DELETE FROM web_account_oauth_contacts WHERE account_id=? AND provider=?",
+                    (account["id"], normalized_provider),
+                )
+                replacement = _rotate_account_sessions(conn, account["id"], now=now)
+                outcome = "ok"
+        _record_audit(
+            conn,
+            account_id=account["id"],
+            canonical_user_id=None,
+            action="auth.security_oauth_unlink",
+            request_id=_request_id(request),
+            outcome=outcome,
+        )
+    if stale_actor:
+        return JSONResponse(
+            envelope(
+                False,
+                "Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi thay đổi phương thức đăng nhập.",
+                status_name="guarded",
+                error_code="SECURITY_SESSION_STALE",
+            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
+        )
+    if guarded:
+        return envelope(
+            False,
+            "Hãy giữ lại ít nhất một phương thức đăng nhập đang hoạt động.",
+            status_name="guarded",
+            error_code="SECURITY_LAST_LOGIN_FACTOR",
+        )
+    if replacement:
+        _set_session_cookie(response, str(replacement["session_id"]))
+    return envelope(
+        True,
+        "Đã cập nhật phương thức đăng nhập.",
+        data=(
+            {"unlinked": True, "csrf_token": replacement["csrf_token"], "expires_at": replacement["expires_at"]}
+            if replacement
+            else {"unlinked": False}
+        ),
+        status_name="completed",
     )
 
 
@@ -1673,7 +3976,12 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
 
 
 @router.post("/telegram-account/upgrade")
-async def upgrade_telegram_account(payload: TelegramAccountUpgradeRequest, request: Request, account: dict = Depends(require_csrf)):
+async def upgrade_telegram_account(
+    payload: TelegramAccountUpgradeRequest,
+    request: Request,
+    response: Response,
+    account: dict = Depends(require_csrf),
+):
     """Attach email/password to the current Bot-proven Telegram-first account.
 
     This is an explicit account upgrade, never an automatic merge. The signed
@@ -1682,7 +3990,7 @@ async def upgrade_telegram_account(payload: TelegramAccountUpgradeRequest, reque
     taking over a separate email/OAuth account.
     """
     email = payload.email.strip().lower()
-    if not EMAIL_PATTERN.fullmatch(email):
+    if not EMAIL_PATTERN.fullmatch(email) or _is_oauth_only_email(email):
         return envelope(False, "Email không hợp lệ.", status_name="failed", error_code="INVALID_EMAIL")
     if not _is_telegram_only_email(str(account.get("email") or "")) or bool(account.get("password_login_enabled")):
         return envelope(
@@ -1691,36 +3999,27 @@ async def upgrade_telegram_account(payload: TelegramAccountUpgradeRequest, reque
             status_name="guarded",
             error_code="TELEGRAM_ACCOUNT_UPGRADE_NOT_NEEDED",
         )
-    password_hash = _password_hash(payload.password)
+
+    # This is a security-factor mutation: retain the signed session that
+    # passed CSRF at request entry and recheck it under the write transaction.
+    # Otherwise a browser session revoked by another security action while it
+    # waits on SQLite could still attach a password and receive a replacement
+    # cookie for the Telegram-first account.
+    actor_session = current_session(request)
+    if actor_session["account"]["id"] != account["id"]:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Phiên đăng nhập không còn hợp lệ")
+    actor_session_id = str(actor_session["session_id"])
+    replacement = None
+    stale_actor = False
     with transaction() as conn:
-        existing = conn.execute("SELECT id FROM web_accounts WHERE email=? AND id<>?", (email, account["id"])).fetchone()
-        if existing:
-            # Do not disclose whether an address belongs to a password or an
-            # OAuth account. Account consolidation needs an explicit recovery
-            # process, not an identity transfer from this browser request.
-            _record_audit(
-                conn,
-                account_id=account["id"],
-                canonical_user_id=account["canonical_user_id"],
-                action="auth.telegram_account_upgrade",
-                request_id=_request_id(request),
-                outcome="denied",
-                detail="requested email belongs to another web account",
-            )
-            return envelope(
-                False,
-                "Email này chưa thể dùng để nâng cấp tài khoản. Hãy dùng email khác hoặc liên hệ hỗ trợ để xử lý hai tài khoản riêng biệt.",
-                status_name="guarded",
-                error_code="EMAIL_UPGRADE_UNAVAILABLE",
-            )
         now = utc_now()
-        result = conn.execute(
-            """UPDATE web_accounts
-               SET email=?, password_hash=?, password_login_enabled=1, updated_at=?
-               WHERE id=? AND password_login_enabled=0""",
-            (email, password_hash, now, account["id"]),
-        )
-        if result.rowcount != 1:
+        if not _session_is_active_for_account(
+            conn,
+            session_id=actor_session_id,
+            account_id=account["id"],
+            now=now,
+        ):
+            stale_actor = True
             _record_audit(
                 conn,
                 account_id=account["id"],
@@ -1728,18 +4027,76 @@ async def upgrade_telegram_account(payload: TelegramAccountUpgradeRequest, reque
                 action="auth.telegram_account_upgrade",
                 request_id=_request_id(request),
                 outcome="denied",
-                detail="account changed while upgrade was submitted",
+                detail="initiating signed session is no longer active",
             )
-            return envelope(False, "Tài khoản vừa thay đổi. Hãy làm mới trang rồi thử lại.", status_name="guarded", error_code="TELEGRAM_ACCOUNT_UPGRADE_CONFLICT")
-        _record_audit(
-            conn,
-            account_id=account["id"],
-            canonical_user_id=account["canonical_user_id"],
-            action="auth.telegram_account_upgrade",
-            request_id=_request_id(request),
+        else:
+            existing = conn.execute("SELECT id FROM web_accounts WHERE email=? AND id<>?", (email, account["id"])).fetchone()
+            if existing:
+                # Do not disclose whether an address belongs to a password or an
+                # OAuth account. Account consolidation needs an explicit recovery
+                # process, not an identity transfer from this browser request.
+                _record_audit(
+                    conn,
+                    account_id=account["id"],
+                    canonical_user_id=account["canonical_user_id"],
+                    action="auth.telegram_account_upgrade",
+                    request_id=_request_id(request),
+                    outcome="denied",
+                    detail="requested email belongs to another web account",
+                )
+                return envelope(
+                    False,
+                    "Email này chưa thể dùng để nâng cấp tài khoản. Hãy dùng email khác hoặc liên hệ hỗ trợ để xử lý hai tài khoản riêng biệt.",
+                    status_name="guarded",
+                    error_code="EMAIL_UPGRADE_UNAVAILABLE",
+                )
+            result = conn.execute(
+                """UPDATE web_accounts
+                   SET email=?, password_hash=?, password_login_enabled=1, updated_at=?
+                   WHERE id=? AND password_login_enabled=0""",
+                (email, _password_hash(payload.password), now, account["id"]),
+            )
+            if result.rowcount != 1:
+                _record_audit(
+                    conn,
+                    account_id=account["id"],
+                    canonical_user_id=account["canonical_user_id"],
+                    action="auth.telegram_account_upgrade",
+                    request_id=_request_id(request),
+                    outcome="denied",
+                    detail="account changed while upgrade was submitted",
+                )
+                return envelope(False, "Tài khoản vừa thay đổi. Hãy làm mới trang rồi thử lại.", status_name="guarded", error_code="TELEGRAM_ACCOUNT_UPGRADE_CONFLICT")
+            replacement = _rotate_account_sessions(conn, account["id"], now=now)
+            _record_audit(
+                conn,
+                account_id=account["id"],
+                canonical_user_id=account["canonical_user_id"],
+                action="auth.telegram_account_upgrade",
+                request_id=_request_id(request),
+            )
+    if stale_actor:
+        return JSONResponse(
+            envelope(
+                False,
+                "Phiên đăng nhập không còn hợp lệ. Hãy đăng nhập lại trước khi thêm phương thức Email.",
+                status_name="guarded",
+                error_code="SECURITY_SESSION_STALE",
+            ),
+            status_code=status.HTTP_401_UNAUTHORIZED,
         )
+    _set_session_cookie(response, str(replacement["session_id"]))
     updated = {**account, "email": email, "password_login_enabled": True}
-    return envelope(True, "Đã thêm đăng nhập Email + mật khẩu cho tài khoản Telegram hiện tại.", data={"account": browser_account_payload(updated)}, status_name="completed")
+    return envelope(
+        True,
+        "Đã thêm đăng nhập Email + mật khẩu cho tài khoản Telegram hiện tại.",
+        data={
+            "account": browser_account_payload(updated),
+            "csrf_token": replacement["csrf_token"],
+            "expires_at": replacement["expires_at"],
+        },
+        status_name="completed",
+    )
 
 
 @router.get("/providers")
@@ -1840,18 +4197,16 @@ async def start_oauth(provider: str, request: Request):
 async def _oauth_callback_impl(provider: str, request: Request, values: dict[str, str], *, apple_display_name: str = "") -> RedirectResponse:
     """Consume one OAuth state and complete either sign-in or explicit link."""
     if not _oauth_enabled(provider):
-        response = _oauth_redirect("unavailable")
-        _clear_oauth_state_cookie(response)
-        return response
+        return _oauth_redirect("unavailable")
     state_value = str(values.get("state") or "")
-    if not state_value or len(state_value) > 256:
+    if not state_value or len(state_value) > OAUTH_STATE_VALUE_MAX_LENGTH:
         response = _oauth_redirect("state")
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value)
         return response
     state_data = _consume_oauth_state(request, provider, state_value)
     if not state_data:
         response = _oauth_redirect("state")
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value)
         return response
     provider_error = str(values.get("error") or "")
     code = str(values.get("code") or "")
@@ -1859,7 +4214,7 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         with transaction() as conn:
             _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider cancelled or omitted authorization code")
         response = _oauth_redirect("cancelled" if provider_error == "access_denied" else "failed", path="/account" if state_data["purpose"] == "link" else "/login")
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     try:
         identity = await _fetch_apple_identity(code, state_value, display_name=apple_display_name) if provider == "apple" else await _fetch_oauth_identity(provider, code, state_value)
@@ -1869,7 +4224,7 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         with transaction() as conn:
             _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider identity verification failed")
         response = _oauth_redirect("failed", path="/account" if state_data["purpose"] == "link" else "/login")
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     except Exception:
         # Treat unexpected provider client failures exactly like a failed
@@ -1877,35 +4232,45 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
         with transaction() as conn:
             _record_audit(conn, account_id=state_data["account_id"], canonical_user_id=None, action="oauth.callback", request_id=_request_id(request), target=provider, outcome="denied", detail="provider callback failed")
         response = _oauth_redirect("failed", path="/account" if state_data["purpose"] == "link" else "/login")
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     if state_data["purpose"] == "link":
         if provider == "apple":
             account = _oauth_bound_link_account(state_data)
             if not account:
                 response = _oauth_redirect("session", path="/account")
-                _clear_oauth_state_cookie(response)
+                _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
                 return response
         else:
             try:
                 session = current_session(request)
             except HTTPException:
                 response = _oauth_redirect("session", path="/account")
-                _clear_oauth_state_cookie(response)
+                _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
                 return response
             if session["session_id"] != state_data["initiating_session_id"] or session["account"]["id"] != state_data["account_id"]:
                 response = _oauth_redirect("session", path="/account")
-                _clear_oauth_state_cookie(response)
+                _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
                 return response
             account = session["account"]
-        outcome = _link_oauth_identity(identity, account, request)
+        outcome, replacement = _link_oauth_identity(
+            identity,
+            account,
+            request,
+            initiating_session_id=str(state_data.get("initiating_session_id") or ""),
+        )
         response = _oauth_redirect(outcome, path="/account")
-        _clear_oauth_state_cookie(response)
+        if replacement:
+            # Do not place the fresh CSRF token in a redirect URL or callback
+            # body. The browser receives only its replacement HttpOnly cookie;
+            # the normal authenticated `/me` bootstrap returns the new CSRF.
+            _set_session_cookie(response, str(replacement["session_id"]))
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     account, outcome = _oauth_signin_account(identity, request)
     if not account:
         response = _oauth_redirect(outcome)
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
         return response
     return_path = _safe_oauth_return_path(state_data["return_path"])
     # OAuth establishes a signed Web account with its own Workspace. Telegram
@@ -1915,7 +4280,7 @@ async def _oauth_callback_impl(provider: str, request: Request, values: dict[str
     target = return_path
     response = RedirectResponse(target, status_code=status.HTTP_303_SEE_OTHER)
     _create_session(response, account["id"])
-    _clear_oauth_state_cookie(response)
+    _clear_oauth_state_cookie(response, request=request, provider=provider, state_value=state_value, cookie_name=state_data["_state_cookie_name"])
     return response
 
 
@@ -1924,7 +4289,12 @@ async def oauth_callback(provider: str, request: Request):
     provider = provider.strip().lower()
     if provider == "apple":
         response = _oauth_redirect("failed")
-        _clear_oauth_state_cookie(response)
+        _clear_oauth_state_cookie(
+            response,
+            request=request,
+            provider="apple",
+            state_value=str(request.query_params.get("state") or ""),
+        )
         return response
     return await _oauth_callback_impl(
         provider,
@@ -1944,15 +4314,11 @@ async def apple_oauth_callback(request: Request):
     # sink. The submitted `id_token`/email/name are never trusted as identity.
     body = await request.body()
     if len(body) > 16_384:
-        response = _oauth_redirect("failed")
-        _clear_oauth_state_cookie(response)
-        return response
+        return _oauth_redirect("failed")
     try:
         form = await request.form()
     except Exception:
-        response = _oauth_redirect("failed")
-        _clear_oauth_state_cookie(response)
-        return response
+        return _oauth_redirect("failed")
     values = {key: str(form.get(key) or "") for key in ("state", "error", "code", "user")}
     return await _oauth_callback_impl("apple", request, values, apple_display_name=_apple_display_name(values["user"]))
 

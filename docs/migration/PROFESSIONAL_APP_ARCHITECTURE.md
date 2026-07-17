@@ -74,6 +74,33 @@ canonical processing jobs and assets with a validated delivery contract. It
 does not invent notifications, job completion, wallet balances or provider
 results in the browser.
 
+### Installable app shell
+
+When `WEBAPP_PWA_ENABLED` is published by the server, a signed customer may
+see **Cài app** only after that browser has supplied its native
+`beforeinstallprompt` event. The Portal keeps that event in current-tab memory
+only and calls `prompt()` solely from the customer’s explicit click; it never
+auto-prompts, stores install state alongside a session, or claims the app was
+installed before the browser confirms it. The prompt is one-use and is cleared
+afterward.
+
+Installing the shell is not a sign-in, account export or offline entitlement.
+The service worker still caches only a fixed public shell and generic offline
+notice; dashboard, account, wallet, payment, admin, API and private delivery
+routes remain network-only and require a fresh signed session.
+
+The manifest provides a dedicated maskable app mark and only three deterministic
+launch shortcuts: Dashboard, Project Center and the workflow catalogue. Those
+shortcuts are navigation affordances, not offline copies or account-specific
+deep links: each opens through the normal signed-session and owner/permission
+checks, and none is added to the service-worker's private cache boundary.
+
+Each deployed public shell also has a validated server-rendered build ID. The
+worker caches only that build's fixed public allow-list and waits for the
+browser's normal lifecycle rather than interrupting an open form. See
+[`PWA_ROLLOUT_VERSIONING_CONTRACT.md`](PWA_ROLLOUT_VERSIONING_CONTRACT.md) for
+the identifier sources, cache scope and reload behavior.
+
 ## TypeScript migration path
 
 The existing `portal.js` presentation layer and `integration.js` signed API
@@ -102,7 +129,7 @@ plan: the production service is currently Python/Nixpacks.
 - No browser ledger, credit, webhook or payment finalization.
 - No raw Telegram ID, session token, bridge HMAC or provider secret in UI
   state or local storage.
-- The service worker may cache only public hashed shell assets; never signed
+- The service worker may cache only the fixed public shell asset allow-list; never signed
   bootstrap, API, admin, wallet, payment or private file responses.
 - External engine features preserve `draft → estimate → confirm → queued →
   processing → completed/failed/guarded`, with a separately audited Web-native

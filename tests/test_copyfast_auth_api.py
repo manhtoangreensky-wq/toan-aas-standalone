@@ -9,6 +9,7 @@ from pathlib import Path
 import sqlite3
 import sys
 import time
+import types
 import uuid
 from zipfile import ZipFile
 from urllib.parse import parse_qs, urlparse
@@ -23,8 +24,8 @@ MODULES = [
 ]
 
 
-def make_client(tmp_path, monkeypatch, *, base_url="http://testserver"):
-    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-test.db"))
+def make_client(tmp_path, monkeypatch, *, base_url="http://testserver", session_database_path=None):
+    monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(session_database_path or (tmp_path / "copyfast-test.db")))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-session-secret")
     monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
     monkeypatch.setenv("CORE_BRIDGE_CALLBACK_TOKEN", "bridge-test-token")
@@ -398,6 +399,113 @@ def test_workspace_drafts_are_safe_idempotent_and_owner_scoped(tmp_path, monkeyp
             assert "Video ra mắt" not in hidden.text
 
 
+def test_workspace_draft_list_filters_pages_and_never_searches_brief_bodies(tmp_path, monkeypatch):
+    """The mature Web library stays owner-scoped, bounded and metadata-only."""
+    with make_client(tmp_path, monkeypatch) as first:
+        assert first.post(
+            "/api/v1/auth/register",
+            json={"email": "draft-library-owner@example.com", "password": "correct-horse-battery-staple"},
+        ).json()["ok"] is True
+        csrf = first.post(
+            "/api/v1/auth/login",
+            json={"email": "draft-library-owner@example.com", "password": "correct-horse-battery-staple"},
+        ).json()["data"]["csrf_token"]
+
+        def create_draft(feature_key: str, title: str, brief: str) -> dict:
+            response = first.post(
+                "/api/v1/workspace/drafts",
+                headers={"X-CSRF-Token": csrf},
+                json={
+                    "feature_key": feature_key,
+                    "title": title,
+                    "input": {"brief": brief},
+                    "idempotency_key": f"workspace-library-create-{uuid.uuid4()}",
+                },
+            )
+            assert response.status_code == 200
+            return response.json()["data"]["item"]
+
+        first_active = create_draft("video_product", "Launch library alpha", "PRIVATE_BRIEF_NEVER_LIST alpha")
+        archived = create_draft("voice_tts", "Voice library beta", "PRIVATE_BRIEF_NEVER_LIST beta")
+        second_active = create_draft("video_product", "Launch library gamma", "PRIVATE_BRIEF_NEVER_LIST gamma")
+        archived_response = first.post(
+            f"/api/v1/workspace/drafts/{archived['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "workspace-library-archive-0001"},
+        )
+        assert archived_response.json()["status"] == "archived"
+
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            audit_count_before_reads = conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE action LIKE 'workspace.draft.%'"
+            ).fetchone()[0]
+
+        default_listing = first.get("/api/v1/workspace/drafts")
+        assert default_listing.status_code == 200
+        assert {item["id"] for item in default_listing.json()["data"]["items"]} == {first_active["id"], second_active["id"]}
+        legacy_all = first.get("/api/v1/workspace/drafts?include_archived=true")
+        assert {item["id"] for item in legacy_all.json()["data"]["items"]} == {first_active["id"], archived["id"], second_active["id"]}
+        explicit_active = first.get("/api/v1/workspace/drafts?state=active&include_archived=true")
+        assert {item["id"] for item in explicit_active.json()["data"]["items"]} == {first_active["id"], second_active["id"]}
+
+        page_one = first.get("/api/v1/workspace/drafts?state=all&limit=2&offset=0")
+        assert page_one.status_code == 200
+        page_one_data = page_one.json()["data"]
+        assert page_one.json()["status"] == "read_only"
+        assert page_one_data["pagination"] == {"limit": 2, "offset": 0, "returned": 2}
+        assert page_one_data["has_more"] is True
+        assert page_one_data["next_offset"] == 2
+        assert page_one_data["filters"] == {"state": "all", "feature_key": "", "q": ""}
+        assert page_one_data["summary"] == {"active": 2, "archived": 1}
+        public_fields = {"id", "feature_key", "feature_title", "route", "title", "state", "created_at", "updated_at"}
+        assert all(set(item) == public_fields for item in page_one_data["items"])
+        assert "input" not in page_one.text.lower()
+        assert "private_brief_never_list" not in page_one.text.lower()
+
+        page_two = first.get("/api/v1/workspace/drafts?state=all&limit=2&offset=2")
+        page_two_data = page_two.json()["data"]
+        assert page_two_data["pagination"] == {"limit": 2, "offset": 2, "returned": 1}
+        assert page_two_data["has_more"] is False
+        assert page_two_data["next_offset"] is None
+        page_one_ids = {item["id"] for item in page_one_data["items"]}
+        page_two_ids = {item["id"] for item in page_two_data["items"]}
+        assert page_one_ids.isdisjoint(page_two_ids)
+        assert page_one_ids | page_two_ids == {first_active["id"], archived["id"], second_active["id"]}
+
+        archived_only = first.get("/api/v1/workspace/drafts?state=archived")
+        assert [item["id"] for item in archived_only.json()["data"]["items"]] == [archived["id"]]
+        feature_only = first.get("/api/v1/workspace/drafts?state=all&feature_key=voice_tts")
+        assert [item["id"] for item in feature_only.json()["data"]["items"]] == [archived["id"]]
+        title_search = first.get("/api/v1/workspace/drafts?state=all&q=Voice")
+        assert [item["id"] for item in title_search.json()["data"]["items"]] == [archived["id"]]
+        body_search = first.get("/api/v1/workspace/drafts?state=all&q=PRIVATE_BRIEF_NEVER_LIST")
+        assert body_search.json()["data"]["items"] == []
+        assert first.get("/api/v1/workspace/drafts?state=queued").status_code == 422
+        assert first.get("/api/v1/workspace/drafts?feature_key=account").status_code == 422
+
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            audit_count_after_reads = conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE action LIKE 'workspace.draft.%'"
+            ).fetchone()[0]
+        assert audit_count_after_reads == audit_count_before_reads
+
+        application = importlib.import_module("app").app
+        with TestClient(application) as second:
+            assert second.post(
+                "/api/v1/auth/register",
+                json={"email": "draft-library-other@example.com", "password": "correct-horse-battery-staple"},
+            ).json()["ok"] is True
+            assert second.post(
+                "/api/v1/auth/login",
+                json={"email": "draft-library-other@example.com", "password": "correct-horse-battery-staple"},
+            ).json()["ok"] is True
+            hidden = second.get("/api/v1/workspace/drafts?state=all&limit=2&offset=0")
+            assert hidden.status_code == 200
+            assert hidden.json()["data"]["items"] == []
+            assert "Launch library" not in hidden.text
+            assert "PRIVATE_BRIEF_NEVER_LIST" not in hidden.text
+
+
 def test_catalog_declares_exact_web_workspace_draft_support(tmp_path, monkeypatch):
     """The UI must not offer a local draft on a read-only/history surface."""
     with make_client(tmp_path, monkeypatch) as client:
@@ -468,6 +576,7 @@ def test_google_oauth_uses_signed_state_pkce_and_creates_an_oauth_only_account(t
                 "provider": "google",
                 "subject": "google-immutable-subject-001",
                 "email": "new-google@example.com",
+                "email_verified": True,
                 "display_name": "Google User",
             }
 
@@ -500,6 +609,112 @@ def test_google_oauth_uses_signed_state_pkce_and_creates_an_oauth_only_account(t
         replay = client.get(f"/api/v1/auth/oauth/google/callback?code=opaque-code&state={state_value}", follow_redirects=False)
         assert replay.status_code == 303
         assert replay.headers["location"] == "/login?oauth=state"
+
+
+def test_oauth_state_cookies_isolate_parallel_provider_tabs_and_preserve_provider_policy(tmp_path, monkeypatch):
+    """One provider callback must not consume or erase another tab's proof."""
+    enable_oauth_provider(monkeypatch, "google")
+    enable_oauth_provider(monkeypatch, "github")
+    enable_apple_oauth(monkeypatch)
+    # This route-level state test stubs every identity exchange.  A tiny JWT
+    # stand-in lets the app's startup validation mint Apple's local client
+    # assertion without adding a network/provider dependency to this test.
+    monkeypatch.setitem(sys.modules, "jwt", types.SimpleNamespace(encode=lambda *_args, **_kwargs: "test-apple-client-assertion"))
+    with make_client(tmp_path, monkeypatch, base_url="https://testserver") as client:
+        import copyfast_auth
+
+        seen = []
+
+        async def fake_identity(provider, code, state_value):
+            seen.append((provider, code, state_value))
+            return {
+                "provider": provider,
+                "subject": f"{provider}-parallel-subject",
+                "email": f"{provider}-parallel@example.com",
+                "email_verified": True,
+                "display_name": f"{provider.title()} Parallel",
+            }
+
+        async def fake_apple_identity(code, state_value, *, display_name=""):
+            seen.append(("apple", code, state_value))
+            return {
+                "provider": "apple",
+                "subject": "apple-parallel-subject",
+                "email": "apple-parallel@example.com",
+                "email_verified": True,
+                "display_name": display_name,
+            }
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_oauth_identity", fake_identity)
+        monkeypatch.setattr(copyfast_auth, "_fetch_apple_identity", fake_apple_identity)
+
+        google_start = client.get("/api/v1/auth/oauth/google/start?next=/video/product", follow_redirects=False)
+        google_state, _ = oauth_state_from_redirect(google_start)
+        github_start = client.get("/api/v1/auth/oauth/github/start?next=/assets", follow_redirects=False)
+        github_state, _ = oauth_state_from_redirect(github_start)
+        apple_start = client.get("/api/v1/auth/oauth/apple/start?next=/documents", follow_redirects=False)
+        apple_state, _ = oauth_state_from_redirect(apple_start)
+
+        cookie_names = {
+            provider: copyfast_auth._oauth_state_cookie_name(provider, state_value)
+            for provider, state_value in (
+                ("google", google_state),
+                ("github", github_state),
+                ("apple", apple_state),
+            )
+        }
+        assert len(set(cookie_names.values())) == 3
+        assert all(name.startswith("__Host-toan_aas_oauth_state_v1_") for name in cookie_names.values())
+        assert all(state_value not in cookie_names[provider] for provider, state_value in (
+            ("google", google_state),
+            ("github", github_state),
+            ("apple", apple_state),
+        ))
+        assert all(client.cookies.get(cookie_name) for cookie_name in cookie_names.values())
+        assert "SameSite=lax" in google_start.headers["set-cookie"]
+        assert "SameSite=lax" in github_start.headers["set-cookie"]
+        assert "SameSite=none" in apple_start.headers["set-cookie"]
+
+        # A provider/state mismatch cannot touch a valid state cookie owned by
+        # another flow.  The real Google callback still succeeds afterwards.
+        mismatch = client.get(
+            f"/api/v1/auth/oauth/github/callback?code=wrong-provider-code&state={google_state}",
+            follow_redirects=False,
+        )
+        assert mismatch.headers["location"] == "/login?oauth=state"
+        assert client.cookies.get(cookie_names["google"])
+        assert client.cookies.get(cookie_names["github"])
+        assert client.cookies.get(cookie_names["apple"])
+
+        github_callback = client.get(
+            f"/api/v1/auth/oauth/github/callback?code=github-parallel-code&state={github_state}",
+            follow_redirects=False,
+        )
+        assert github_callback.headers["location"] == "/assets"
+        assert client.cookies.get(cookie_names["github"]) is None
+        assert client.cookies.get(cookie_names["google"])
+        assert client.cookies.get(cookie_names["apple"])
+
+        google_callback = client.get(
+            f"/api/v1/auth/oauth/google/callback?code=google-parallel-code&state={google_state}",
+            follow_redirects=False,
+        )
+        assert google_callback.headers["location"] == "/video/product"
+        assert client.cookies.get(cookie_names["google"]) is None
+        assert client.cookies.get(cookie_names["apple"])
+
+        apple_callback = client.post(
+            "/api/v1/auth/oauth/apple/callback",
+            data={"code": "apple-parallel-code", "state": apple_state},
+            follow_redirects=False,
+        )
+        assert apple_callback.headers["location"] == "/documents"
+        assert client.cookies.get(cookie_names["apple"]) is None
+        assert seen == [
+            ("github", "github-parallel-code", github_state),
+            ("google", "google-parallel-code", google_state),
+            ("apple", "apple-parallel-code", apple_state),
+        ]
 
 
 def test_telegram_oidc_creates_a_web_session_but_requires_the_same_bot_identity(tmp_path, monkeypatch):
@@ -653,7 +868,7 @@ def test_telegram_oidc_id_token_uses_fixed_jwks_and_bot_compatible_profile_id(tm
         }
         token = jwt.encode(payload, private_pem, algorithm="RS256", headers={"kid": "telegram-rsa-kid"})
         identity = asyncio.run(copyfast_auth._verify_telegram_id_token(token, client_id=config["client_id"], expected_nonce=nonce))
-        assert identity == {"provider": "telegram", "subject": "246802468", "email": "", "display_name": "Telegram Signed User"}
+        assert identity == {"provider": "telegram", "subject": "246802468", "email": "", "email_verified": False, "display_name": "Telegram Signed User"}
 
         bad_id_payload = {**payload, "id": "not-a-telegram-id"}
         bad_id_token = jwt.encode(bad_id_payload, private_pem, algorithm="RS256", headers={"kid": "telegram-rsa-kid"})
@@ -666,50 +881,224 @@ def test_telegram_oidc_id_token_uses_fixed_jwks_and_bot_compatible_profile_id(tm
             asyncio.run(copyfast_auth._verify_telegram_id_token(es256_token, client_id=config["client_id"], expected_nonce=nonce))
 
 
-def test_oauth_never_auto_links_a_matching_email_and_explicit_github_link_needs_csrf(tmp_path, monkeypatch):
+def test_verified_oauth_email_collision_creates_an_isolated_oauth_only_account(tmp_path, monkeypatch):
+    """A verified OAuth mailbox must never take over a pre-registered account."""
     enable_oauth_provider(monkeypatch, "github")
-    with make_client(tmp_path, monkeypatch) as client:
+    with make_client(tmp_path, monkeypatch) as owner_client:
         import copyfast_auth
+        from copyfast_db import transaction
+
+        contact_email = "existing@example.com"
+        raw_subject = "github-immutable-subject-001"
 
         async def matching_email_identity(provider, code, state_value):
             return {
                 "provider": provider,
-                "subject": "github-immutable-subject-001",
-                "email": "existing@example.com",
+                "subject": raw_subject,
+                "email": contact_email,
+                "email_verified": True,
                 "display_name": "GitHub User",
             }
 
         monkeypatch.setattr(copyfast_auth, "_fetch_oauth_identity", matching_email_identity)
-        registration = client.post(
+        assert owner_client.post(
             "/api/v1/auth/register",
-            json={"email": "existing@example.com", "password": "correct-horse-battery-staple"},
+            json={"email": contact_email, "password": "correct-horse-battery-staple", "display_name": "Original Owner"},
+        ).json()["ok"] is True
+        owner_login = owner_client.post(
+            "/api/v1/auth/login",
+            json={"email": contact_email, "password": "correct-horse-battery-staple"},
         )
-        assert registration.json()["ok"] is True
-        login = client.post("/api/v1/auth/login", json={"email": "existing@example.com", "password": "correct-horse-battery-staple"})
+        owner_before = owner_client.get("/api/v1/auth/me").json()["data"]
+        owner_cookie_name = copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE)
+        owner_cookie = owner_client.cookies.get(owner_cookie_name)
+        assert owner_cookie
+
+        # A separate browser completes OAuth. The original signed session is
+        # intentionally neither read into the callback nor replaced/revoked.
+        with TestClient(owner_client.app) as oauth_client:
+            started = oauth_client.get("/api/v1/auth/oauth/github/start", follow_redirects=False)
+            state_value, query = oauth_state_from_redirect(started)
+            assert query["scope"] == ["read:user user:email"]
+            callback = oauth_client.get(
+                f"/api/v1/auth/oauth/github/callback?code=opaque-code&state={state_value}",
+                follow_redirects=False,
+            )
+            assert callback.status_code == 303
+            assert callback.headers["location"] == "/dashboard"
+            isolated = oauth_client.get("/api/v1/auth/me").json()["data"]["account"]
+            assert isolated["email"] == contact_email
+            assert isolated["account_type"] == "oauth_only"
+            assert isolated["oauth_only"] is True
+            assert isolated["login_methods"] == {
+                "email": False,
+                "telegram_oidc": False,
+                "telegram": False,
+                "google": False,
+                "github": True,
+                "apple": False,
+            }
+            assert raw_subject not in json.dumps(isolated)
+
+        # The first account and its session/data stay exactly where they were.
+        owner_after = owner_client.get("/api/v1/auth/me").json()["data"]
+        assert owner_after["csrf_token"] == owner_before["csrf_token"] == owner_login.json()["data"]["csrf_token"]
+        assert owner_after["account"]["display_name"] == "Original Owner"
+        assert owner_client.cookies.get(owner_cookie_name) == owner_cookie
+
+        with transaction() as conn:
+            rows = conn.execute(
+                "SELECT id, email, password_login_enabled, display_name FROM web_accounts ORDER BY created_at, id"
+            ).fetchall()
+            assert len(rows) == 2
+            original = next(row for row in rows if row[1] == contact_email)
+            isolated_row = next(row for row in rows if row[0] != original[0])
+            assert original[2:] == (1, "Original Owner")
+            assert isolated_row[2] == 0
+            assert copyfast_auth._is_oauth_only_email(isolated_row[1])
+            assert contact_email not in isolated_row[1]
+            assert raw_subject not in isolated_row[1]
+            contact = conn.execute(
+                "SELECT account_id, provider, email FROM web_account_oauth_contacts"
+            ).fetchall()
+            assert contact == [(isolated_row[0], "github", contact_email)]
+            mapped_account = conn.execute(
+                "SELECT account_id FROM web_external_identities WHERE provider='github'"
+            ).fetchone()[0]
+            assert mapped_account == isolated_row[0]
+            audit_text = "\n".join(str(row[0] or "") for row in conn.execute("SELECT detail FROM web_audit_events").fetchall())
+            assert contact_email not in audit_text
+            assert raw_subject not in audit_text
+            internal_alias = isolated_row[1]
+        assert internal_alias not in json.dumps(isolated)
+
+        # Neither the public contact nor the internal alias can become a
+        # password path for the isolated OAuth account.
+        with TestClient(owner_client.app) as password_client:
+            assert password_client.post(
+                "/api/v1/auth/login",
+                json={"email": contact_email, "password": "not-the-original-password"},
+            ).json()["error_code"] == "LOGIN_DENIED"
+            assert password_client.post(
+                "/api/v1/auth/login",
+                json={"email": internal_alias, "password": "not-a-real-password"},
+            ).json()["error_code"] == "LOGIN_DENIED"
+            assert password_client.get("/api/v1/auth/me").status_code == 401
+
+        # Replaying the same verified immutable subject signs into the
+        # isolated account; it never creates a third account or touches the
+        # original account.
+        with TestClient(owner_client.app) as repeat_client:
+            started = repeat_client.get("/api/v1/auth/oauth/github/start", follow_redirects=False)
+            state_value, _ = oauth_state_from_redirect(started)
+            assert repeat_client.get(
+                f"/api/v1/auth/oauth/github/callback?code=repeat-code&state={state_value}",
+                follow_redirects=False,
+            ).headers["location"] == "/dashboard"
+            repeated = repeat_client.get("/api/v1/auth/me").json()["data"]["account"]
+            assert repeated["email"] == contact_email
+            assert repeated["oauth_only"] is True
+        with transaction() as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_accounts").fetchone()[0] == 2
+            assert conn.execute("SELECT COUNT(*) FROM web_account_oauth_contacts").fetchone()[0] == 1
+
+
+def test_explicit_oauth_link_records_only_an_exact_verified_contact(tmp_path, monkeypatch):
+    """Linking stays opt-in and a mismatched provider email cannot take over UI contact."""
+    enable_oauth_provider(monkeypatch, "github")
+    enable_oauth_provider(monkeypatch, "google")
+    # This route test stubs the provider exchange completely; a minimal JWT
+    # module lets startup validate the enabled Google capability without
+    # requiring crypto extras in this focused local test environment.
+    monkeypatch.setitem(sys.modules, "jwt", types.SimpleNamespace())
+    with make_client(tmp_path, monkeypatch) as client:
+        import copyfast_auth
+        from copyfast_db import transaction
+
+        account_email = "link-owner@example.com"
+
+        async def linked_identity(provider, code, state_value):
+            if provider == "github":
+                return {
+                    "provider": "github",
+                    "subject": "github-link-subject",
+                    "email": account_email,
+                    "email_verified": True,
+                    "display_name": "GitHub Link",
+                }
+            return {
+                "provider": "google",
+                "subject": "google-mismatched-subject",
+                "email": "different-owner@example.com",
+                "email_verified": True,
+                "display_name": "Google Different Contact",
+            }
+
+        monkeypatch.setattr(copyfast_auth, "_fetch_oauth_identity", linked_identity)
+        assert client.post(
+            "/api/v1/auth/register",
+            json={"email": account_email, "password": "correct-horse-battery-staple"},
+        ).json()["ok"] is True
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": account_email, "password": "correct-horse-battery-staple"},
+        )
         csrf = login.json()["data"]["csrf_token"]
-        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
+        assert client.post("/api/v1/auth/oauth/github/link/start", headers={"X-CSRF-Token": "wrong"}, json={}).status_code == 403
 
-        started = client.get("/api/v1/auth/oauth/github/start", follow_redirects=False)
-        state_value, query = oauth_state_from_redirect(started)
-        assert query["scope"] == ["read:user user:email"]
-        collision = client.get(f"/api/v1/auth/oauth/github/callback?code=opaque-code&state={state_value}", follow_redirects=False)
-        assert collision.headers["location"] == "/login?oauth=link-required"
-        assert client.get("/api/v1/auth/me").status_code == 401
+        with TestClient(client.app) as second_browser:
+            second_login = second_browser.post(
+                "/api/v1/auth/login",
+                json={"email": account_email, "password": "correct-horse-battery-staple"},
+            )
+            assert second_login.json()["ok"] is True
+            github_start = client.post("/api/v1/auth/oauth/github/link/start", headers={"X-CSRF-Token": csrf}, json={})
+            github_state, _ = oauth_state_from_redirect(client.get(github_start.json()["data"]["start_path"], follow_redirects=False))
+            assert client.get(
+                f"/api/v1/auth/oauth/github/callback?code=github-link-code&state={github_state}",
+                follow_redirects=False,
+            ).headers["location"] == "/account?oauth=linked"
+            assert second_browser.get("/api/v1/auth/me").status_code == 401
 
-        relogin = client.post("/api/v1/auth/login", json={"email": "existing@example.com", "password": "correct-horse-battery-staple"})
-        csrf = relogin.json()["data"]["csrf_token"]
-        rejected = client.post("/api/v1/auth/oauth/github/link/start", headers={"X-CSRF-Token": "wrong"}, json={})
-        assert rejected.status_code == 403
-        link_start = client.post("/api/v1/auth/oauth/github/link/start", headers={"X-CSRF-Token": csrf}, json={})
-        assert link_start.status_code == 200
-        assert link_start.json()["data"]["start_path"] == "/api/v1/auth/oauth/github/start?link=1"
-        provider_redirect = client.get(link_start.json()["data"]["start_path"], follow_redirects=False)
-        link_state, _query = oauth_state_from_redirect(provider_redirect)
-        completed_link = client.get(f"/api/v1/auth/oauth/github/callback?code=opaque-link-code&state={link_state}", follow_redirects=False)
-        assert completed_link.status_code == 303
-        assert completed_link.headers["location"] == "/account?oauth=linked"
+        csrf = client.get("/api/v1/auth/me").json()["data"]["csrf_token"]
+        google_start = client.post("/api/v1/auth/oauth/google/link/start", headers={"X-CSRF-Token": csrf}, json={})
+        google_state, _ = oauth_state_from_redirect(client.get(google_start.json()["data"]["start_path"], follow_redirects=False))
+        assert client.get(
+            f"/api/v1/auth/oauth/google/callback?code=google-link-code&state={google_state}",
+            follow_redirects=False,
+        ).headers["location"] == "/account?oauth=linked"
+        csrf = client.get("/api/v1/auth/me").json()["data"]["csrf_token"]
+
         account = client.get("/api/v1/auth/me").json()["data"]["account"]
-        assert account["login_methods"] == {"email": True, "telegram_oidc": False, "telegram": False, "google": False, "github": True, "apple": False}
+        assert account["email"] == account_email
+        assert account["account_type"] == "standard"
+        assert account["oauth_only"] is False
+        assert account["login_methods"] == {
+            "email": True,
+            "telegram_oidc": False,
+            "telegram": False,
+            "google": True,
+            "github": True,
+            "apple": False,
+        }
+        with transaction() as conn:
+            verified_contact = conn.execute(
+                "SELECT provider, email FROM web_account_oauth_contacts"
+            ).fetchall()
+            assert verified_contact == [("github", account_email)]
+            assert conn.execute("SELECT COUNT(*) FROM web_accounts").fetchone()[0] == 1
+
+        # A later sign-in with the already linked GitHub subject returns to
+        # the existing account instead of using matching email to create or
+        # take over another account.
+        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).json()["ok"] is True
+        started = client.get("/api/v1/auth/oauth/github/start", follow_redirects=False)
+        state_value, _ = oauth_state_from_redirect(started)
+        assert client.get(
+            f"/api/v1/auth/oauth/github/callback?code=github-repeat-code&state={state_value}",
+            follow_redirects=False,
+        ).headers["location"] == "/dashboard"
+        assert client.get("/api/v1/auth/me").json()["data"]["account"]["email"] == account_email
 
 
 def test_apple_oauth_uses_form_post_and_can_link_without_relaxing_session_cookie(tmp_path, monkeypatch):
@@ -726,6 +1115,7 @@ def test_apple_oauth_uses_form_post_and_can_link_without_relaxing_session_cookie
                 "provider": "apple",
                 "subject": "apple-immutable-subject-001",
                 "email": "apple-user@example.com",
+                "email_verified": True,
                 "display_name": display_name,
             }
 
@@ -775,7 +1165,7 @@ def test_apple_oauth_uses_form_post_and_can_link_without_relaxing_session_cookie
         link_start = client.post("/api/v1/auth/oauth/apple/link/start", headers={"X-CSRF-Token": csrf}, json={})
         provider_redirect = client.get(link_start.json()["data"]["start_path"], follow_redirects=False)
         link_state, _ = oauth_state_from_redirect(provider_redirect)
-        state_cookie_name = copyfast_auth._cookie_name(copyfast_auth.OAUTH_STATE_COOKIE)
+        state_cookie_name = copyfast_auth._oauth_state_cookie_name("apple", link_state)
         state_cookie = client.cookies.get(state_cookie_name)
         assert state_cookie
         with TestClient(client.app, base_url="https://testserver") as form_post_client:
@@ -785,17 +1175,33 @@ def test_apple_oauth_uses_form_post_and_can_link_without_relaxing_session_cookie
                 data={"code": "apple-link-code", "state": link_state},
                 follow_redirects=False,
             )
+            replacement_cookie = form_post_client.cookies.get(copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE))
         assert linked.status_code == 303
         assert linked.headers["location"] == "/account?oauth=linked"
+        # A real browser owns both the pre-redirect tab and Apple's form-post
+        # callback, so it receives the replacement cookie even though the Lax
+        # session cookie was not sent on the cross-site POST. This separate
+        # TestClient models only the missing request cookie, then transfers
+        # the response cookie back to that shared browser jar.
+        assert replacement_cookie
+        client.cookies.set(copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE), replacement_cookie)
         linked_methods = client.get("/api/v1/auth/me").json()["data"]["account"]["login_methods"]
         assert linked_methods["email"] is True
         assert linked_methods["apple"] is True
 
 
 def test_secure_deployments_use_host_prefixed_cookie_names_and_reject_legacy_session_cookie(tmp_path, monkeypatch):
+    volume = tmp_path / "host-cookie-volume"
+    volume.mkdir()
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("WEB_COOKIE_SECURE", "true")
-    with make_client(tmp_path, monkeypatch, base_url="https://testserver") as client:
+    monkeypatch.setenv("RAILWAY_VOLUME_MOUNT_PATH", str(volume))
+    with make_client(
+        tmp_path,
+        monkeypatch,
+        base_url="https://testserver",
+        session_database_path=volume / "copyfast-test.db",
+    ) as client:
         import copyfast_auth
 
         registration = client.post("/api/v1/auth/register", json={"email": "host-cookie@example.com", "password": "correct-horse-battery-staple"})
@@ -875,7 +1281,7 @@ def test_apple_id_token_verification_uses_apple_rsa_jwks_not_the_es256_client_se
         }
         token = jwt.encode(payload, private_pem, algorithm="RS256", headers={"kid": "apple-rsa-kid"})
         identity = asyncio.run(copyfast_auth._verify_apple_id_token(token, client_id=config["client_id"], expected_nonce=nonce))
-        assert identity == {"provider": "apple", "subject": "apple-rsa-subject", "email": "apple-rsa@example.com"}
+        assert identity == {"provider": "apple", "subject": "apple-rsa-subject", "email": "apple-rsa@example.com", "email_verified": True}
 
         ec_key = ec.generate_private_key(ec.SECP256R1())
         es256_token = jwt.encode(payload, ec_key, algorithm="ES256", headers={"kid": "apple-es256-kid"})
@@ -1160,20 +1566,32 @@ def test_telegram_first_account_can_add_email_password_without_relinking_identit
         assert completed.json()["data"]["account"]["account_type"] == "telegram"
         csrf = completed.json()["data"]["csrf_token"]
 
-        upgraded = client.post(
-            "/api/v1/auth/telegram-account/upgrade",
-            headers={"X-CSRF-Token": csrf},
-            json={"email": "telegram-upgrade@example.com", "password": "correct-horse-battery-staple"},
-        )
-        assert upgraded.status_code == 200
-        assert upgraded.json()["ok"] is True
-        account = upgraded.json()["data"]["account"]
-        assert account["email"] == "telegram-upgrade@example.com"
-        assert account["telegram_linked"] is True
-        assert account["login_methods"]["email"] is True
-        assert account["login_methods"]["telegram"] is True
+        with TestClient(client.app) as second_browser:
+            second_started = second_browser.post("/api/v1/auth/telegram/login/start", json={})
+            second_code = second_started.json()["data"]["code"]
+            assert confirm_link(second_browser, second_code, canonical_user_id="telegram-upgrade-user").status_code == 200
+            second_completed = second_browser.post("/api/v1/auth/telegram/login/complete", json={})
+            assert second_completed.status_code == 200
 
-        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf}).status_code == 200
+            upgraded = client.post(
+                "/api/v1/auth/telegram-account/upgrade",
+                headers={"X-CSRF-Token": csrf},
+                json={"email": "telegram-upgrade@example.com", "password": "correct-horse-battery-staple"},
+            )
+            assert upgraded.status_code == 200
+            assert upgraded.json()["ok"] is True
+            account = upgraded.json()["data"]["account"]
+            assert account["email"] == "telegram-upgrade@example.com"
+            assert account["telegram_linked"] is True
+            assert account["login_methods"]["email"] is True
+            assert account["login_methods"]["telegram"] is True
+            fresh_csrf = upgraded.json()["data"]["csrf_token"]
+            assert upgraded.json()["data"]["expires_at"]
+            assert client.get("/api/v1/auth/me").json()["data"]["csrf_token"] == fresh_csrf
+            assert fresh_csrf != csrf
+            assert second_browser.get("/api/v1/auth/me").status_code == 401
+
+        assert client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": fresh_csrf}).status_code == 200
         password_login = client.post(
             "/api/v1/auth/login",
             json={"email": "telegram-upgrade@example.com", "password": "correct-horse-battery-staple"},
@@ -1582,6 +2000,31 @@ def test_app_root_redirects_to_secure_access_and_welcome_is_explicit(tmp_path, m
         assert client.get("/app", follow_redirects=False).headers["location"] == "/dashboard"
 
 
+def test_portal_documents_and_auth_redirects_are_never_http_cached(tmp_path, monkeypatch):
+    """A stale portal shell must not survive logout or an expired session."""
+    with make_client(tmp_path, monkeypatch) as client:
+        public_portal = client.get("/welcome", follow_redirects=False)
+        signed_out_redirect = client.get("/dashboard", follow_redirects=False)
+        assert public_portal.status_code == 200
+        assert signed_out_redirect.status_code == 307
+        assert public_portal.headers["cache-control"] == "no-store, private"
+        assert signed_out_redirect.headers["cache-control"] == "no-store, private"
+
+        registered = client.post(
+            "/api/v1/auth/register",
+            json={"email": "cache-boundary@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registered.status_code == 200
+        signed_in = client.post(
+            "/api/v1/auth/login",
+            json={"email": "cache-boundary@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert signed_in.status_code == 200
+        signed_in_dashboard = client.get("/dashboard", follow_redirects=False)
+        assert signed_in_dashboard.status_code == 200
+        assert signed_in_dashboard.headers["cache-control"] == "no-store, private"
+
+
 def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         unauthenticated = client.get("/admin", follow_redirects=False)
@@ -1594,6 +2037,99 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
         stale_cached_role = client.get("/admin/users", follow_redirects=False)
         assert stale_cached_role.status_code == 403
         assert stale_cached_role.json()["error_code"] == "REQUEST_DENIED"
+
+
+def test_web_local_admin_crm_page_is_signed_role_only_and_never_queries_bot_bridge(tmp_path, monkeypatch):
+    """The one redacted CRM page is not a hidden canonical-admin route."""
+    monkeypatch.setenv("WEBAPP_ADMIN_ERP_ENABLED", "true")
+    with make_client(tmp_path, monkeypatch) as client:
+        registered = client.post(
+            "/api/v1/auth/register",
+            json={"email": "local-crm-admin@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registered.status_code == 200
+        signed_in = client.post(
+            "/api/v1/auth/login",
+            json={"email": "local-crm-admin@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert signed_in.status_code == 200
+        # Browser input does not grant this role; the test changes only the
+        # server-side account row, matching the route's production authority.
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            conn.execute("UPDATE web_accounts SET role_cache='admin' WHERE email=?", ("local-crm-admin@example.com",))
+            conn.commit()
+
+        application_module = sys.modules["app"]
+        bridge_calls: list[str] = []
+
+        async def unexpected_canonical_check(_request):
+            bridge_calls.append("called")
+            raise AssertionError("The local CRM manager page must not query the Bot bridge")
+
+        monkeypatch.setattr(application_module, "require_canonical_admin", unexpected_canonical_check)
+        page = client.get("/admin/crm/leads", follow_redirects=False)
+        assert page.status_code == 200
+        assert bridge_calls == []
+
+        # A signed customer remains unable to use the exact local-admin page.
+        other = TestClient(application_module.app)
+        assert other.post(
+            "/api/v1/auth/register",
+            json={"email": "local-crm-customer@example.com", "password": "correct-horse-battery-staple"},
+        ).status_code == 200
+        assert other.post(
+            "/api/v1/auth/login",
+            json={"email": "local-crm-customer@example.com", "password": "correct-horse-battery-staple"},
+        ).status_code == 200
+        denied = other.get("/admin/crm/leads", follow_redirects=False)
+        assert denied.status_code == 403
+        assert denied.json()["error_code"] == "REQUEST_DENIED"
+
+
+def test_web_support_content_handoff_queue_uses_its_own_server_role_not_bot_admin(tmp_path, monkeypatch):
+    """The staff queue advertised by Admin ERP must not require Bot authority.
+
+    Content Handoff is a Web-owned internal review ledger.  Its queue API
+    already uses ``require_support_staff``; the protected Portal document must
+    use the same narrow authority so a support operator can open the route
+    without accidentally invoking the canonical Bot-admin bridge.
+    """
+    with make_client(tmp_path, monkeypatch) as client:
+        registered = client.post(
+            "/api/v1/auth/register",
+            json={"email": "handoff-support-operator@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registered.status_code == 200
+        signed_in = client.post(
+            "/api/v1/auth/login",
+            json={"email": "handoff-support-operator@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert signed_in.status_code == 200
+
+        denied = client.get("/admin/content-handoffs", follow_redirects=False)
+        assert denied.status_code == 403
+        assert denied.json()["error_code"] == "REQUEST_DENIED"
+
+        # The role is changed only in the server-side account store.  Nothing
+        # supplied by this browser request grants the staff authority.
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            conn.execute(
+                "UPDATE web_accounts SET role_cache='support_operator' WHERE email=?",
+                ("handoff-support-operator@example.com",),
+            )
+            conn.commit()
+
+        application_module = sys.modules["app"]
+        bridge_calls: list[str] = []
+
+        async def unexpected_canonical_check(_request):
+            bridge_calls.append("called")
+            raise AssertionError("Web Support Content Handoff queue must not query the Bot admin bridge")
+
+        monkeypatch.setattr(application_module, "require_canonical_admin", unexpected_canonical_check)
+        queue = client.get("/admin/content-handoffs", follow_redirects=False)
+        assert queue.status_code == 200
+        assert bridge_calls == []
 
 
 def test_every_admin_api_rechecks_canonical_role_for_reads_and_writes(tmp_path, monkeypatch):
@@ -1931,8 +2467,11 @@ def test_telegram_callback_caps_body_validates_after_hmac_and_binds_audit_to_sig
 
 
 def test_production_environment_requires_a_real_secret_and_sets_secure_session_cookie(tmp_path, monkeypatch):
+    volume = tmp_path / "production-cookie-volume"
+    volume.mkdir()
     monkeypatch.setenv("ENVIRONMENT", "production")
-    with make_client(tmp_path, monkeypatch) as client:
+    monkeypatch.setenv("RAILWAY_VOLUME_MOUNT_PATH", str(volume))
+    with make_client(tmp_path, monkeypatch, session_database_path=volume / "copyfast-test.db") as client:
         registration = client.post(
             "/api/v1/auth/register",
             json={"email": "production-cookie@example.com", "password": "correct-horse-battery-staple"},
@@ -1950,6 +2489,25 @@ def test_production_environment_requires_a_real_secret_and_sets_secure_session_c
         copyfast_auth.ensure_auth_configuration()
 
 
+def test_auth_never_falls_back_to_a_source_secret_and_railway_preview_forces_secure_cookies(monkeypatch):
+    import copyfast_auth
+
+    for name in (
+        "WEB_SESSION_SECRET", "APP_ENV", "ENVIRONMENT", "RAILWAY_ENVIRONMENT",
+        "RAILWAY_ENVIRONMENT_ID", "RAILWAY_PROJECT_ID", "RAILWAY_SERVICE_ID",
+        "RAILWAY_DEPLOYMENT_ID", "RAILWAY_PUBLIC_DOMAIN", "WEB_COOKIE_SECURE",
+    ):
+        monkeypatch.delenv(name, raising=False)
+    with pytest.raises(RuntimeError, match="WEB_SESSION_SECRET"):
+        copyfast_auth.ensure_auth_configuration()
+
+    monkeypatch.setenv("WEB_SESSION_SECRET", "railway-preview-test-session-secret")
+    monkeypatch.setenv("RAILWAY_ENVIRONMENT", "staging")
+    monkeypatch.setenv("WEB_COOKIE_SECURE", "false")
+    assert copyfast_auth._cookie_secure() is True
+    assert copyfast_auth._cookie_name(copyfast_auth.SESSION_COOKIE).startswith("__Host-")
+
+
 def test_production_requires_persistent_session_database_configuration(tmp_path, monkeypatch):
     import copyfast_db
 
@@ -1964,10 +2522,11 @@ def test_production_requires_persistent_session_database_configuration(tmp_path,
     with pytest.raises(RuntimeError, match="đường dẫn tuyệt đối"):
         copyfast_db.ensure_copyfast_persistence()
 
-    # Use the platform-native temporary path so this verifies the persistence
-    # guard on both Railway's Linux image and Windows development worktrees.
+    # An arbitrary absolute container path is not evidence of persistence.
+    # The file must live under this Web service's verified volume.
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "toanaas-session.db"))
-    copyfast_db.ensure_copyfast_persistence()
+    with pytest.raises(RuntimeError, match="persistent volume"):
+        copyfast_db.ensure_copyfast_persistence()
 
 
 def test_production_accepts_only_an_existing_absolute_railway_volume_mount(tmp_path, monkeypatch):
@@ -2154,6 +2713,78 @@ def test_web_campaign_planner_is_csrf_owned_idempotent_and_never_calls_canonical
         assert audits
         assert all(row[0] == item["id"] for row in audits)
         assert all("example.com" not in row[1] and "Video giới thiệu" not in row[1] for row in audits)
+
+
+def test_web_campaign_calendar_window_is_month_bounded_redacted_and_owner_scoped(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_link(client)
+
+        def create_plan(key, title, scheduled_for, platform):
+            response = client.post(
+                "/api/v1/campaigns",
+                headers={"X-CSRF-Token": csrf},
+                json={
+                    "title": title,
+                    "destination_url": f"https://example.com/{key}?private=1",
+                    "platform": platform,
+                    "objective": "traffic",
+                    "scheduled_for": scheduled_for,
+                    "idempotency_key": key,
+                },
+            )
+            assert response.status_code == 200
+            return response.json()["data"]["item"]
+
+        july_tiktok = create_plan("calendar-window-0001", "Lịch TikTok tháng bảy", "2026-07-16T09:30", "tiktok")
+        july_facebook = create_plan("calendar-window-0002", "Lịch Facebook tháng bảy", "2026-07-20T14:00", "facebook")
+        create_plan("calendar-window-0003", "Lịch tháng tám", "2026-08-01T08:00", "website")
+
+        window = client.get("/api/v1/campaign-calendar/window", params={"month": "2026-07", "status": "all", "platform": "all"})
+        assert window.status_code == 200
+        assert window.headers["cache-control"] == "no-store, private"
+        body = window.json()
+        assert body["ok"] is True
+        assert body["status"] == "read_only"
+        assert body["data"]["month"] == "2026-07"
+        assert body["data"]["filters"] == {"status": "all", "platform": "all"}
+        assert body["data"]["summary"] == {"total": 2, "returned": 2, "has_more": False, "limit": 200}
+        assert [item["id"] for item in body["data"]["items"]] == [july_tiktok["id"], july_facebook["id"]]
+        for item in body["data"]["items"]:
+            assert set(item) == {"id", "title", "platform", "objective", "scheduled_for", "approval_status", "updated_at"}
+            assert item["scheduled_for"].startswith("2026-07-")
+            assert "destination_url" not in item
+            assert "review_note" not in item
+            assert "account_id" not in item
+            assert "canonical" not in item
+
+        filtered = client.get("/api/v1/campaign-calendar/window", params={"month": "2026-07", "status": "draft", "platform": "tiktok"})
+        assert filtered.status_code == 200
+        assert [item["id"] for item in filtered.json()["data"]["items"]] == [july_tiktok["id"]]
+
+        for invalid in (
+            {"month": "2026-13", "status": "all", "platform": "all"},
+            {"month": "2026-07", "status": "published", "platform": "all"},
+            {"month": "2026-07", "status": "all", "platform": "external"},
+        ):
+            rejected = client.get("/api/v1/campaign-calendar/window", params=invalid)
+            assert rejected.status_code == 422
+            assert rejected.json()["error_code"] == "REQUEST_INVALID"
+
+        logout = client.post("/api/v1/auth/logout", headers={"X-CSRF-Token": csrf})
+        assert logout.status_code == 200
+        registration = client.post(
+            "/api/v1/auth/register",
+            json={"email": "calendar-other@example.com", "password": "correct-horse-battery-staple", "display_name": "Calendar Other"},
+        )
+        assert registration.json()["ok"] is True
+        assert client.post(
+            "/api/v1/auth/login",
+            json={"email": "calendar-other@example.com", "password": "correct-horse-battery-staple"},
+        ).json()["ok"] is True
+        other_window = client.get("/api/v1/campaign-calendar/window", params={"month": "2026-07", "status": "all", "platform": "all"})
+        assert other_window.status_code == 200
+        assert other_window.json()["data"]["items"] == []
+        assert other_window.json()["data"]["summary"]["total"] == 0
 
 
 def test_web_campaign_planner_enforces_account_ownership_without_a_telegram_gate(tmp_path, monkeypatch):

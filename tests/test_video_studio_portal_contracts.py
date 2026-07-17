@@ -33,7 +33,16 @@ def test_video_studio_is_a_native_route_not_a_legacy_video_alias() -> None:
     assert 'if (linkPath === "/video/create") return path === "/video" || path.startsWith("/video/");' in PORTAL
     assert 'const canonicalBotVideoRoute = path === "/video" || path.startsWith("/video/");' in INTEGRATION
     assert "!isNativeVideoStudioPath(currentPath)" in INTEGRATION
-    assert "isNativeContentStudioPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path)" in INTEGRATION
+    # This guard has deliberately expanded as other private studios were
+    # added.  Keep the Video Studio exclusion without coupling the test to an
+    # exact ordering of independent private route families.
+    native_guard = next(
+        line for line in INTEGRATION.splitlines()
+        if "isNativeVideoStudioPath(path)" in line and line.lstrip().startswith("if (")
+    )
+    assert "isNativeContentStudioPath(path)" in native_guard
+    assert "isNativeVoiceStudioPath(path)" in native_guard
+    assert "isNativeVideoStudioPath(path)" in native_guard
 
     # The global delegated action must keep optimistic revisions and target
     # IDs server-verifiable rather than deriving them in browser state.
@@ -124,7 +133,12 @@ def test_video_studio_has_no_private_pwa_cache_or_fake_media_surface() -> None:
     assert "/api/v1/video-studio" in SERVICE_WORKER
     assert "/api/v1/video-studio" not in shell
     assert '"/video-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v15"' in SERVICE_WORKER
+    # Cache generations intentionally change whenever the shell changes; the
+    # contract is that there is one explicitly versioned shell cache, not a
+    # particular historical generation number.
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-"' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (
@@ -154,3 +168,127 @@ def test_video_scene_order_uses_active_scene_position_not_raw_list_index() -> No
     assert 'const order = active ? activeSceneOrder++ : -1;' in PORTAL
     assert "renderVideoSceneCard(scene, plan, context, route, order, activeScenes.length)" in PORTAL
     assert 'const displayOrder = active && Number.isInteger(order) && order >= 0' in PORTAL
+
+
+def test_video_studio_bootstrap_projection_retains_only_verified_authoring_state() -> None:
+    """A successful owner-scoped hydration must survive Portal remounting.
+
+    This locks the strict browser projection without manufacturing provider or
+    media output in a fixture. API owner/CSRF and execution boundaries are
+    covered by the dedicated Video Studio suite.
+    """
+    projection_start = PORTAL.index("const VIDEO_STUDIO_BOOTSTRAP_FORMATS")
+    projection_end = PORTAL.index("function normalizeBootstrap", projection_start)
+    projection = PORTAL[projection_start:projection_end]
+    for required in (
+        "normalizeVideoStudioSummary",
+        "normalizeVideoStudioPlans",
+        "normalizeVideoStudioDetail",
+        "normalizeVideoStudioEstimate",
+        "normalizeVideoStudioReferences",
+        "normalizeVideoStudioEvents",
+        "VIDEO_STUDIO_BOOTSTRAP_READ_STATES",
+        "sourcePlanId !== planId",
+        "activeOrdinal",
+        "archivedOrdinal",
+        "legacyArchivedOrdinal",
+        "1000000 + VIDEO_STUDIO_BOOTSTRAP_MAX_SCENES",
+        "computedDifference",
+        "difference !== computedDifference",
+        "difference_seconds",
+        "delta_seconds",
+    ):
+        assert required in projection
+
+    # Keep field bounds / ownership consistency and the server archive range;
+    # never pass raw scene objects or silently lose archived history.
+    assert "validProjectId(id)" in projection
+    assert "revision >= 1 && revision <= 1000000" in projection
+    assert "VIDEO_STUDIO_BOOTSTRAP_MAX_SCENES = 250" in projection
+    assert "VIDEO_STUDIO_BOOTSTRAP_MAX_EVENTS = 50" in projection
+
+    bootstrap_start = PORTAL.index("function normalizeBootstrap")
+    bootstrap_end = PORTAL.index("function getBootstrap", bootstrap_start)
+    bootstrap = PORTAL[bootstrap_start:bootstrap_end]
+    for returned_field in (
+        "videoStudioEnabled: source.videoStudioEnabled === true",
+        "videoStudioSummary: normalizeVideoStudioSummary(source.videoStudioSummary)",
+        "videoPlans: normalizeVideoStudioPlans(source.videoPlans)",
+        "videoPlanDetail,",
+        "videoPlanEstimate,",
+        "videoStudioReferences: normalizeVideoStudioReferences(source.videoStudioReferences)",
+        "videoStudioEvents: normalizeVideoStudioEvents(source.videoStudioEvents)",
+        "videoStudioReadState: VIDEO_STUDIO_BOOTSTRAP_READ_STATES.has",
+    ):
+        assert returned_field in bootstrap
+
+    # A detached estimate cannot be accepted as a rendered outcome: it must
+    # bind to the plan which was normalized for this owner-scoped route.
+    assert 'videoPlanDetail.plan ? videoPlanDetail.plan.id : ""' in bootstrap
+
+
+def test_video_navigation_is_a_dedicated_group_with_unambiguous_active_routes() -> None:
+    """Advanced planners stay discoverable without duplicating Workspace links."""
+    for route, label in (
+        ('["/video-studio", "Kế hoạch sản xuất"', "overview"),
+        ('["/video-studio/workflow", "Bắt đầu theo quy trình"', "workflow"),
+        ('["/video-studio/story-video-plan", "Story Video Planner"', "story"),
+        ('["/video-studio/script-to-screen-planner", "Script-to-Screen & Phim dài tập"', "episodic"),
+    ):
+        assert route in PORTAL, label
+
+    for group in (
+        'label: "Video Studio", defaultOpen: true',
+        'label: "Video Studio · Ý tưởng & kịch bản"',
+        'label: "Video Studio · Phim & storyboard"',
+        'label: "Video Studio · Tư liệu & chuyển động"',
+    ):
+        assert group in PORTAL
+    assert "groups.splice(3, 0, ...videoStudioNavGroups);" in PORTAL
+    assert 'if (linkPath === "/video-studio/workflow") return path === "/video-studio/workflow";' in PORTAL
+    assert 'if (linkPath === "/video-studio/story-video-plan") return path === "/video-studio/story-video-plan";' in PORTAL
+
+
+def test_video_studio_plan_and_reference_reads_ignore_stale_private_responses() -> None:
+    for epoch in (
+        "videoStudioSessionEpoch",
+        "videoStudioListHydrationEpoch",
+        "videoStudioDetailHydrationEpoch",
+        "imageMotionPlannerReferencesHydrationEpoch",
+        "referenceFormatPlannerReferencesHydrationEpoch",
+    ):
+        assert f"let {epoch} = 0;" in INTEGRATION
+        assert f"++{epoch};" in INTEGRATION
+
+    helper_start = INTEGRATION.index("function videoStudioRequestIsCurrent")
+    helper_end = INTEGRATION.index("function imageMotionPlannerReferencesRequestIsCurrent", helper_start)
+    helper = INTEGRATION[helper_start:helper_end]
+    for requirement in (
+        "sessionEpoch === videoStudioSessionEpoch",
+        "currentPortalPath() === expectedPath",
+        "isNativeVideoStudioPath(expectedPath)",
+        "base().videoStudioEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+
+    motion_start = INTEGRATION.index("async function hydrateImageMotionPlannerReferences")
+    reference_start = INTEGRATION.index("async function hydrateReferenceFormatPlannerReferences", motion_start)
+    list_start = INTEGRATION.index("async function hydrateVideoStudio", reference_start)
+    detail_start = INTEGRATION.index("async function hydrateVideoPlan", list_start)
+    motion = INTEGRATION[motion_start:reference_start]
+    reference = INTEGRATION[reference_start:list_start]
+    listing = INTEGRATION[list_start:detail_start]
+    detail = INTEGRATION[detail_start:INTEGRATION.index("function imageStudioReferenceRequestState", detail_start)]
+
+    assert "const requestEpoch = ++imageMotionPlannerReferencesHydrationEpoch;" in motion
+    assert "imageMotionPlannerReferencesRequestIsCurrent(requestEpoch, sessionEpoch, route)" in motion
+    assert "const requestEpoch = ++referenceFormatPlannerReferencesHydrationEpoch;" in reference
+    assert "referenceFormatPlannerReferencesRequestIsCurrent(requestEpoch, sessionEpoch, route)" in reference
+    assert "const requestEpoch = ++videoStudioListHydrationEpoch;" in listing
+    assert "videoStudioRequestIsCurrent(requestEpoch, videoStudioListHydrationEpoch, sessionEpoch, expectedPath)" in listing
+    assert "const requestEpoch = ++videoStudioDetailHydrationEpoch;" in detail
+    assert "videoStudioRequestIsCurrent(requestEpoch, videoStudioDetailHydrationEpoch, sessionEpoch, route)" in detail
+    # Plan detail performs an independent estimate read after its first
+    # response, so it needs the same fence after that second await.
+    assert 'const estimateResult = await api("/video-studio/plans/" + encodeURIComponent(String(planId)) + "/estimate");' in detail
