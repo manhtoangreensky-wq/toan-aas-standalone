@@ -275,11 +275,39 @@ def test_image_operation_history_paginates_resize_and_enhance_rows_without_cross
         for offset in ("-1", "10001", "not-an-offset"):
             assert client.get(f"/api/v1/image-operations?kind=image_resize&limit=2&offset={offset}").status_code == 422
 
+        # The combined `/image/history` reader intentionally omits `kind`.
+        # A future/untrusted DB value must not leak into that projection or
+        # consume a pagination slot merely because this test can insert it
+        # directly into SQLite.
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE web_image_operations SET kind=?, updated_at=? WHERE id=?",
+                ("future_image_internal", "2026-07-16T00:00:09+00:00", resize_operations[2]["id"]),
+            )
+        expected_history_ids = {operation["id"] for operation in resize_operations[:2] + enhance_operations}
+        combined_ids: list[str] = []
+        for offset, expected_count, has_more, next_offset in ((0, 2, True, 2), (2, 2, True, 4), (4, 1, False, None)):
+            response = client.get(f"/api/v1/image-operations?limit=2&offset={offset}")
+            assert response.status_code == 200
+            data = response.json()["data"]
+            assert len(data["items"]) == expected_count
+            assert data["has_more"] is has_more
+            assert data["next_offset"] == next_offset
+            assert secret not in response.text
+            for item in data["items"]:
+                assert item["kind"] in {"image_resize", "image_enhance"}
+                assert_private_listing(item, secret)
+                combined_ids.append(item["id"])
+        assert set(combined_ids) == expected_history_ids
+        assert resize_operations[2]["id"] not in combined_ids
+
     with make_client(tmp_path, monkeypatch) as other:
         register_and_login(other, "image-history-other@example.com")
         for kind in ("image_resize", "image_enhance"):
             hidden = other.get(f"/api/v1/image-operations?kind={kind}&limit=2&offset=0")
             assert_paged_response(hidden, [], has_more=False, next_offset=None, secret=secret)
+        combined_hidden = other.get("/api/v1/image-operations?limit=2&offset=0")
+        assert_paged_response(combined_hidden, [], has_more=False, next_offset=None, secret=secret)
 
 
 def test_operation_history_portal_has_independent_in_memory_pagers_for_each_private_surface() -> None:
@@ -291,9 +319,11 @@ def test_operation_history_portal_has_independent_in_memory_pagers_for_each_priv
         "documentOperationListing",
         "imageOperationListing",
         "imageEnhanceOperationListing",
+        "imageHistoryListing",
         'action === "document-operation-page"',
         'action === "image-operation-page"',
         'action === "image-enhance-operation-page"',
+        'action === "image-history-operation-page"',
     ):
         assert token in INTEGRATION
     for token in (

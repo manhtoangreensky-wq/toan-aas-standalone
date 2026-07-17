@@ -187,6 +187,12 @@ ENGINE_SPECS.update(_many(("documents_pdf_to_images",), mode=ENGINE_MODE_WEB_NAT
 ENGINE_SPECS.update(_many(("documents_pdf_to_word",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_to_word_enabled"), handler="pdf_to_word", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_resize",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled", "image_resize_enabled"), handler="image_resize", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_edit",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled", "image_enhance_enabled"), handler="image_enhance", asset_vault=True))
+# Image History is a read-only, account-scoped projection of the two verified
+# Web-native PNG operation kinds.  It deliberately does not depend on either
+# execution flag: an account may still need to retrieve a previously verified
+# artifact while new Resize/Enhance submissions are paused.  It is not a Bot
+# delivery history, provider feed, asset-library substitute or payment record.
+ENGINE_SPECS.update(_many(("image_history",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled"), handler="image_operation_history", asset_vault=True))
 
 # Bot companion applies only to canonical/read-only product domains.  The
 # public descriptor remains guarded even if an account happens to be linked:
@@ -195,7 +201,7 @@ ENGINE_SPECS.update(_many(
     (
         "wallet", "wallet_topup", "packages", "membership", "jobs", "assets",
         "referrals", "rewards", "community", "guides", "growth_ai",
-        "campaign_report", "image_history", "video_progress", "video_preview",
+        "campaign_report", "video_progress", "video_preview",
         "video_export", "voice_vault", "voice_preview", "voice_outputs",
         "music_library", "sfx_library", "music_upload", "service_status",
     ),

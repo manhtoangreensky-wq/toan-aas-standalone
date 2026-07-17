@@ -8,6 +8,7 @@ PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_RESIZE_ASPECT_CONTRACT.md").read_text(encoding="utf-8")
+HISTORY_CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_HISTORY_WEB_NATIVE_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_resize_replaces_a_generic_bridge_form_with_a_native_private_surface() -> None:
@@ -56,8 +57,9 @@ def test_resize_hydration_and_write_use_only_private_image_operation_routes() ->
     resize_reader_start = INTEGRATION.index("async function hydrateImageOperations(offsetValue)")
     resize_reader_end = INTEGRATION.index("async function hydrateImageEnhanceOperations", resize_reader_start)
     resize_reader = INTEGRATION[resize_reader_start:resize_reader_end]
-    assert 'return "/image-operations?" + new URLSearchParams({' in history_path
-    assert "kind: normalizedKind" in history_path
+    assert 'const query = new URLSearchParams({' in history_path
+    assert 'if (normalizedKind) query.set("kind", normalizedKind);' in history_path
+    assert 'return "/image-operations?" + query.toString();' in history_path
     assert "limit: String(OPERATION_HISTORY_LIST_LIMIT)" in history_path
     assert "offset: String(operationHistoryListOffset(offset))" in history_path
     assert 'const kind = "image_resize"' in resize_reader
@@ -89,6 +91,42 @@ def test_resize_surface_is_truthful_and_has_no_browser_generated_output_or_priva
     # The worker has an explicit fixed public shell allowlist, so the private
     # image operation API can never be cached by route prefix or accident.
     assert "image-operations" not in SERVICE_WORKER.lower() or "private" in SERVICE_WORKER.lower()
+
+
+def test_image_history_is_a_private_web_native_projection_not_a_bot_asset_proxy() -> None:
+    assert 'customerPage("/image/history", "Lịch sử ảnh"' in PORTAL
+    assert 'layout: "image-operation-history", type: "image-operation", action: "none", status: "guarded"' in PORTAL
+    assert 'readOnlyPage("/image/history"' not in PORTAL
+    assert "function renderImageOperationHistory(page, context)" in PORTAL
+    assert 'case "image-operation-history": return renderImageOperationHistory(page, context);' in PORTAL
+    assert "function renderImageHistoryOperationCards(items)" in PORTAL
+    assert "function renderImageHistoryOperationPagination(context, enabled, route)" in PORTAL
+    assert 'data-portal-action="image-history-refresh"' in PORTAL
+    assert 'data-image-history-operation-offset' in PORTAL
+    page_start = PORTAL.index("function renderImageOperationHistory(page, context)")
+    page_end = PORTAL.index("function renderImageResize(page, context)", page_start)
+    history_surface = PORTAL[page_start:page_end]
+    for phrase in ("Không fallback sang danh sách Asset, Bot job hoặc output provider.", "Không cache private", "PayOS", "Không có Bot fallback"):
+        assert phrase in history_surface
+    assert "fetch(" not in history_surface
+    assert "api(" not in history_surface
+    assert "localStorage" not in history_surface
+    assert '"/image/history": account && assetVaultEnabled && imageOperationsEnabled ? "processing" : "guarded"' in INTEGRATION
+    assert 'imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded"' in INTEGRATION
+    assert "async function hydrateImageHistoryOperations(offsetValue)" in INTEGRATION
+    reader_start = INTEGRATION.index("async function hydrateImageHistoryOperations(offsetValue)")
+    reader_end = INTEGRATION.index("async function hydrateProjectDetail", reader_start)
+    reader = INTEGRATION[reader_start:reader_end]
+    for token in ('const kind = "";', "api(imageOperationHistoryPath(kind, offset))", "imageHistoryOperations: items", '"/image/history": "ready"', "IMAGE_OPERATION_HISTORY_KINDS.has"):
+        assert token in reader
+    assert "Bot asset" in reader
+    assert "provider" not in reader.lower()
+    legacy_assets_start = INTEGRATION.index('path === "/assets" || ["/image/assets"')
+    legacy_assets_end = INTEGRATION.index('} else if (path === "/video/progress")', legacy_assets_start)
+    assert '"/image/history"' not in INTEGRATION[legacy_assets_start:legacy_assets_end]
+    assert 'path === "/image/resize" || path === "/image/edit" || path === "/image/history"' in INTEGRATION
+    for phrase in ("image_resize", "image_enhance", "No Bot bridge", "PayOS", "No public preview URL"):
+        assert phrase in HISTORY_CONTRACT
 
 
 def test_resize_backend_is_independent_bounded_and_blocks_generic_bridge_duplicates() -> None:

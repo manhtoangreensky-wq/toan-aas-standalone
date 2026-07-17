@@ -100,7 +100,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("image_upscale", "Nâng cấp ảnh", "image", "/image/upscale", input_hint="Tải ảnh cần upscale."),
     WebFeature("image_transform", "Image-to-image", "image", "/image/transform", input_hint="Ảnh nguồn và mô tả biến thể."),
     WebFeature("image_remove_background", "Xóa nền", "image", "/image/remove-background", input_hint="Tải ảnh cần xử lý."),
-    WebFeature("image_history", "Lịch sử ảnh", "image", "/image/history"),
+    WebFeature("image_history", "Lịch sử ảnh", "image", "/image/history", input_hint="PNG Resize & Image Enhance riêng tư do Web Workspace đã xác minh; không bao gồm job/output Bot hoặc provider."),
     WebFeature("video_single", "Video nhanh", "video", "/video/create", input_hint="Prompt hoặc brief video."),
     WebFeature("video_image_to_video", "Ảnh thành video", "video", "/video/image-to-video", input_hint="Ảnh nguồn và chuyển động mong muốn."),
     WebFeature("video_product", "Video sản phẩm", "video", "/video/product", input_hint="Thông tin sản phẩm và hình ảnh."),

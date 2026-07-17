@@ -44,6 +44,18 @@ def test_native_image_enhance_cannot_be_enabled_by_a_provider_flag() -> None:
     assert descriptor == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "guarded"}
 
 
+def test_native_image_history_remains_readable_when_new_image_writes_are_paused() -> None:
+    disabled = engine_descriptor("image_history", {})
+    enabled = engine_descriptor(
+        "image_history",
+        {"asset_vault_enabled": True, "image_operations_enabled": True},
+    )
+
+    assert disabled == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "guarded"}
+    assert enabled == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "ready"}
+    assert engine_spec("image_history").requires_asset_vault is True
+
+
 def test_bot_companion_and_future_adapters_never_claim_public_execution() -> None:
     companion = engine_descriptor("wallet", {"copyfast_enabled": True})
     future_adapter = engine_descriptor("music_song", {"provider_calls_enabled": True, "copyfast_enabled": True})

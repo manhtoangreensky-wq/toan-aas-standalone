@@ -108,6 +108,7 @@
   let documentOperationHistoryHydrationEpoch = 0;
   let imageOperationHistoryHydrationEpoch = 0;
   let imageEnhanceOperationHistoryHydrationEpoch = 0;
+  let imageHistoryOperationHydrationEpoch = 0;
   // Asset Vault is shared by private owner workflows, but it is never a
   // shared browser cache. Session and request fences keep a late vault or
   // picker response from crossing accounts, pages or operation types.
@@ -9056,7 +9057,11 @@
       // The private source/history reads still need to complete before a
       // server-enabled native page can truthfully show a ready badge.
       "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded",
-      "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded"
+      "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded",
+      // History only reads already verified output. It remains available when a
+      // specific creation flag is paused, but still requires the same private
+      // storage and operation-service gates.
+      "/image/history": account && assetVaultEnabled && imageOperationsEnabled ? "processing" : "guarded"
     };
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
@@ -10141,6 +10146,7 @@
       imageOperationAssetReferenceReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageEnhanceOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
+      imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: [],
       documentOperationListing: operationHistoryListingProjection("", 0, {}, 0),
       imageOperations: [],
@@ -10149,6 +10155,8 @@
       // Enhance history is loading. The UI deliberately renders no form or
       // artifact until both private reads settle.
       imageEnhanceOperations: [],
+      imageHistoryOperations: [],
+      imageHistoryListing: operationHistoryListingProjection("", 0, {}, 0),
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
@@ -10295,6 +10303,13 @@
       imageEnhanceOperationsReadState: "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
       imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/history") await hydrateImageHistoryOperations();
+    else if (account && currentPath === "/image/history") merge({
+      imageHistoryOperations: [],
+      imageHistoryListing: operationHistoryListingProjection("", 0, {}, 0),
+      imageHistoryReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
     if (account && memoryCenterEnabled && ["/notes", "/reminders"].includes(currentPath)) await hydrateMemoryCenter();
@@ -14382,12 +14397,13 @@
 
   function imageOperationHistoryPath(kind, offset) {
     const normalizedKind = String(kind || "").trim().toLowerCase();
-    if (!IMAGE_OPERATION_HISTORY_KINDS.has(normalizedKind)) throw new Error("Loại Image Operation không hợp lệ.");
-    return "/image-operations?" + new URLSearchParams({
-      kind: normalizedKind,
+    if (normalizedKind && !IMAGE_OPERATION_HISTORY_KINDS.has(normalizedKind)) throw new Error("Loại Image Operation không hợp lệ.");
+    const query = new URLSearchParams({
       limit: String(OPERATION_HISTORY_LIST_LIMIT),
       offset: String(operationHistoryListOffset(offset))
-    }).toString();
+    });
+    if (normalizedKind) query.set("kind", normalizedKind);
+    return "/image-operations?" + query.toString();
   }
 
   function operationHistoryRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch) {
@@ -14531,6 +14547,50 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/image/edit": imageEnhancePrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageHistoryOperations(offsetValue) {
+    // An empty kind is intentional: the server returns only the bounded set
+    // of Web-native image operation kinds, already owner-scoped. Do not merge
+    // a Bot asset list or a route-local Resize/Enhance cache into this view.
+    const kind = "";
+    const offset = operationHistoryOffsetForKind(base().imageHistoryListing, kind, offsetValue);
+    const requestEpoch = ++imageHistoryOperationHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    try {
+      const result = await api(imageOperationHistoryPath(kind, offset));
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageHistoryOperationHydrationEpoch, sessionEpoch)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items
+          .filter((item) => item && validImageOperationId(item.id) && IMAGE_OPERATION_HISTORY_KINDS.has(String(item.kind || "")))
+          .slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      merge({
+        imageHistoryOperations: items,
+        imageHistoryListing: operationHistoryListingProjection(kind, offset, data, items.length),
+        imageHistoryReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/history": "ready"
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageHistoryOperationHydrationEpoch, sessionEpoch)) return null;
+      // Failed owner-scoped reads clear the entire combined projection. Never
+      // substitute stale rows, canonical Bot assets or browser-created data.
+      merge({
+        imageHistoryOperations: [],
+        imageHistoryListing: operationHistoryListingProjection(kind, offset, {}, 0),
+        imageHistoryReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/history": "guarded"
         }
       });
       return [];
@@ -15905,7 +15965,7 @@
           readiness: readiness.data || {},
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures) }
         });
-      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/assets" || ["/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         if (!isCurrent()) return null;
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
@@ -15915,7 +15975,7 @@
         const items = jobs.data && jobs.data.items ? jobs.data.items : [];
         merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
         scheduleJobPolling(path, items);
-      } else if (path === "/image/resize" || path === "/image/edit") {
+      } else if (path === "/image/resize" || path === "/image/edit" || path === "/image/history") {
         // Native image operations hydrate separately from Asset Vault. Do not
         // request pricing/readiness from the bridge or overwrite the strict
         // server-side guarded/ready state with a generic image feature badge.
@@ -22158,6 +22218,27 @@
         }
         const refreshed = await hydrateImageEnhanceOperations(operationHistoryListOffset(fields.__imageEnhanceOperationOffset));
         if (!refreshed) throw new Error("Không thể tải trang lịch sử Image Enhance Studio.");
+        return;
+      }
+      if (action === "image-history-refresh") {
+        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử ảnh Web.");
+        }
+        await hydrateImageHistoryOperations();
+        if (String(base().imageHistoryReadState || "guarded") !== "ready") {
+          throw new Error("Không thể làm mới lịch sử ảnh Web.");
+        }
+        toast("Đã làm mới lịch sử ảnh Web.");
+        return;
+      }
+      if (action === "image-history-operation-page") {
+        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử ảnh Web.");
+        }
+        await hydrateImageHistoryOperations(operationHistoryListOffset(fields.__imageHistoryOperationOffset));
+        if (String(base().imageHistoryReadState || "guarded") !== "ready") {
+          throw new Error("Không thể tải trang lịch sử ảnh Web.");
+        }
         return;
       }
       if (action === "document-operation-refresh") {
