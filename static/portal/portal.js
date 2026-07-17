@@ -1128,7 +1128,13 @@
   featurePage("/image/upscale", "Nâng cấp ảnh", "Gửi yêu cầu upscale từ ảnh nguồn và nhận quote canonical trước khi xác nhận.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
   featurePage("/image/transform", "Image-to-Image", "Chuẩn bị biến thể từ ảnh nguồn với toàn bộ quyền kiểm tra ở Core Bridge.", ICONS.image, FIELD_SETS.imageTransform, ["/image/image-to-image"]);
   featurePage("/image/remove-background", "Xóa nền", "Tạo quote xóa nền từ ảnh nguồn; job chỉ xuất hiện sau adapter canonical.", ICONS.image, FIELD_SETS.imageSource, [], { action: "feature-estimate", actionLabel: "Ước tính Xu", estimateDirect: true });
-  readOnlyPage("/image/history", "Lịch sử ảnh", "Danh sách output ảnh thuộc phiên sẽ xuất hiện sau khi bridge xác thực.", ICONS.image, "assets", ["/image/assets"]);
+  customerPage("/image/history", "Lịch sử ảnh", "Theo dõi PNG riêng tư đã được Web Workspace tạo và xác minh; không thay thế lịch sử job Bot.", ICONS.image, {
+    layout: "image-operation-history", type: "image-operation", action: "none", status: "guarded", fields: [],
+    notes: [
+      "Chỉ gồm output Resize & Aspect Studio và Image Enhance Studio do Web Workspace tạo. Job, output hoặc lịch sử provider/Bot không được sao chép sang đây.",
+      "Tải xuống luôn kiểm tra signed session, quyền sở hữu và integrity của PNG. Không có preview công khai, URL tĩnh hay PWA cache."
+    ]
+  }, ["/image/assets"]);
 
   featurePage("/video/create", "Video nhanh", "Chuẩn bị brief video, sau đó ước tính và xác nhận với Core Bridge.", ICONS.video, FIELD_SETS.videoContextual, ["/video"]);
   featurePage("/video/long", "Video dài", "Chuẩn bị dự án video dài; tiến độ và output chỉ đến từ job canonical.", ICONS.video, FIELD_SETS.videoStoryboard);
@@ -6137,6 +6143,14 @@
       imageEnhanceEnabled: source.imageEnhanceEnabled === true,
       imageEnhanceOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageEnhanceOperationsReadState || ""))
         ? String(source.imageEnhanceOperationsReadState)
+        : "guarded",
+      // Image History is a third, combined read-only projection. It must not
+      // borrow Resize/Enhance state from a prior route or degrade into a Bot
+      // asset list when its own signed request is still loading.
+      imageHistoryOperations: Array.isArray(source.imageHistoryOperations) ? source.imageHistoryOperations.slice(0, OPERATION_HISTORY_LIST_LIMIT) : [],
+      imageHistoryListing: normalizeOperationHistoryListing(source.imageHistoryListing, IMAGE_OPERATION_HISTORY_KINDS, ""),
+      imageHistoryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageHistoryReadState || ""))
+        ? String(source.imageHistoryReadState)
         : "guarded",
       // Account activity is already a redacted, owner-scoped projection from
       // the Web API. Retain the bounded list during each presentation pass so
@@ -13531,6 +13545,10 @@
     return normalizeOperationHistoryListing(context && context.imageEnhanceOperationListing, IMAGE_OPERATION_HISTORY_KINDS, "image_enhance");
   }
 
+  function imageHistoryOperationHistoryListing(context) {
+    return normalizeOperationHistoryListing(context && context.imageHistoryListing, IMAGE_OPERATION_HISTORY_KINDS, "");
+  }
+
   function renderDocumentOperationHistoryPagination(context, enabled, route) {
     const listing = documentOperationHistoryListing(context);
     const pagination = listing.pagination || {};
@@ -13553,6 +13571,16 @@
       route,
       enhance ? "data-image-enhance-operation-offset" : "data-image-operation-offset",
       enhance ? "Phân trang lịch sử Image Enhance" : "Phân trang lịch sử Resize Studio"
+    );
+  }
+
+  function renderImageHistoryOperationPagination(context, enabled, route) {
+    const listing = imageHistoryOperationHistoryListing(context);
+    const pagination = listing.pagination || {};
+    if (!pagination.returned && !pagination.has_more && pagination.previous_offset === null) return "";
+    return renderOperationsPagination(
+      listing, enabled, "lịch sử ảnh Web", "image-history-operation-page", route,
+      "data-image-history-operation-offset", "Phân trang lịch sử ảnh Web"
     );
   }
 
@@ -13689,6 +13717,13 @@
     return (Array.isArray(context.imageEnhanceOperations) ? context.imageEnhanceOperations : [])
       .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
         && String(item.kind || "") === "image_enhance")
+      .slice(0, OPERATION_HISTORY_LIST_LIMIT);
+  }
+
+  function imageHistoryOperationItems(context) {
+    return (Array.isArray(context.imageHistoryOperations) ? context.imageHistoryOperations : [])
+      .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
+        && IMAGE_OPERATION_HISTORY_KINDS.has(String(item.kind || "")))
       .slice(0, OPERATION_HISTORY_LIST_LIMIT);
   }
 
@@ -13872,6 +13907,37 @@
           ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
           : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
       return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">PNG</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã resize"))}</h2><p class="portal-card-subtitle">${safeText(fitLabel)} · ${safeText(String(item.preset || "custom"))}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>Canvas</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có")}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderImageHistoryOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có PNG Web đã xác minh", "Lịch sử này chỉ hiển thị output Resize hoặc Image Enhance do signed Web account hiện tại tạo. Nó không suy đoán từ Asset Vault, Bot, provider hay browser.", "▧");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const kind = String(item.kind || "");
+      const isResize = kind === "image_resize";
+      const status = imageOperationState(item);
+      const downloadPath = imageOperationDownloadPath(item);
+      const sourceWidth = Number(item.source_width);
+      const sourceHeight = Number(item.source_height);
+      const targetWidth = Number(item.target_width);
+      const targetHeight = Number(item.target_height);
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "Canvas an toàn";
+      const preset = String(item.preset || "custom");
+      const resizeLabel = { crop: "Crop giữa khung", pad: "Pad nền trắng", blur: "Blur nền" }[String(item.fit_mode || "")] || "Đang kiểm tra";
+      const operationLabel = isResize
+        ? `${resizeLabel} · ${String(item.preset || "custom")}`
+        : (IMAGE_ENHANCE_PRESET_LABELS[preset] || preset);
+      const settings = isResize ? resizeLabel : imageEnhanceSettings(item);
+      const fallbackName = isResize ? "PNG private đã resize" : "PNG private đã chỉnh";
+      const pendingMessage = status === "failed" || status === "unavailable"
+        ? "Không có PNG tải xuống; kiểm tra ảnh nguồn private và tạo bản sao mới."
+        : status === "guarded"
+          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
+          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isResize ? "PNG" : "✦"}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackName))}</h2><p class="portal-card-subtitle">${safeText(operationLabel)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Loại</dt><dd>${safeText(isResize ? "Resize & Aspect" : "Image Enhance")}</dd></div><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>${safeText(isResize ? "Khung" : "Thông số")}</dt><dd>${safeText(settings)}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -14151,6 +14217,34 @@
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn thứ tự ảnh</h2><p class="portal-card-subtitle">Ảnh 1 trở thành trang 1, rồi tới Ảnh 2… Browser không upload bytes hoặc gửi raw file path cho thao tác này.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-image-to-pdf" data-portal-route="/documents/image-to-pdf" data-portal-confirm="Tạo PDF từ ảnh theo đúng thứ tự đã chọn? Web sẽ tạo một attachment riêng tư mới sau khi kiểm tra mọi input và output." novalidate>${renderFields(imageToPdfFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PDF riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Web-native, có kiểm soát</h2><p class="portal-card-subtitle">Tiện ích tạo PDF riêng tư với output được xác minh trước khi phát hành.</p></div></div><ol class="portal-project-steps"><li><strong>1. Thứ tự có chủ đích</strong><span>Slot Ảnh 1 đến Ảnh 8 được giữ trong request fingerprint và trở thành thứ tự trang PDF.</span></li><li><strong>2. Decode có giới hạn</strong><span>JPEG/PNG/WebP tĩnh, tối đa 20 MB mỗi ảnh, 40 MB tổng, 7.680 px mỗi cạnh, tỷ lệ 12:1, 16 MP mỗi ảnh và 32 MP mỗi lần; chặn nguồn trùng hoặc ảnh động.</span></li><li><strong>3. Delivery riêng tư</strong><span>Output được strict-reparse, hash lại và tải qua signed session; không có public URL hoặc PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PDF đã tạo từ ảnh</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download không khả dụng nếu integrity hoặc ownership không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/image-to-pdf"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có PDF từ ảnh", "PDF chỉ xuất hiện sau khi mọi ảnh nguồn và output đều vượt qua kiểm tra server-side. Không có output mô phỏng.")}${renderDocumentOperationHistoryPagination(context, canView, "/documents/image-to-pdf")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Artifact có lifecycle private riêng; thao tác này không thay đổi ví, thanh toán, provider hoặc webhook.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderImageOperationHistory(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["image-operation-view"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["image-operation-refresh"] === true);
+    const readState = String(context.imageHistoryReadState || "guarded");
+    if (!canView) {
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Lịch sử ảnh đang ở chế độ an toàn</h2><p>Máy chủ chỉ mở lịch sử PNG Web-native sau khi signed session, Asset Vault và Image Operations được xác minh. Không fallback sang danh sách Asset, Bot job hoặc output provider.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có output giả</span></div></div></div></section></article>`;
+    }
+    if (readState === "loading") {
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><span class="portal-state-icon" aria-hidden="true">◌</span><div><h2>Đang xác minh lịch sử ảnh private</h2><p>Web Workspace đang tải projection Resize và Image Enhance thuộc signed account hiện tại. Không hiển thị dữ liệu route trước, browser cache hay danh sách Bot trong khi chờ.</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div></div></div></section></article>`;
+    }
+    if (readState !== "ready") {
+      const retry = canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-image-operation-history">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">!</span><div><h2>Chưa thể tải lịch sử ảnh private</h2><p>Projection owner-scoped chưa trả dữ liệu an toàn. Web đã xóa dữ liệu cũ và không thay thế bằng Asset Vault, Bot, provider hay preview công khai.</p><div class="portal-state-meta"><span>Không có cache</span><span>Không có Bot fallback</span><span>Không có URL công khai</span></div>${retry}</div></div></section></article>`;
+    }
+    const operations = imageHistoryOperationItems(context);
+    const listing = imageHistoryOperationHistoryListing(context);
+    const returned = Number(listing.pagination && listing.pagination.returned) || operations.length;
+    return `<article class="portal-page portal-image-operation-history">
+      ${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Image History</span><h2>Một lịch sử PNG đã xác minh, không trộn authority</h2><p>Chỉ output Resize & Aspect Studio và Image Enhance Studio của signed Web account hiện tại xuất hiện tại đây. Mỗi download được server kiểm tra lại ownership, integrity và trạng thái hoàn tất trước khi stream file.</p></div><dl><div><dt>${safeText(String(returned))}</dt><dd>PNG Web ở trang này</dd></div><div><dt>Ngoài phạm vi</dt><dd>Bot job / provider output không được truy vấn</dd></div></dl></section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã xử lý</h2><p class="portal-card-subtitle">Không dùng URL tĩnh, preview công khai, PWA cache hoặc lịch sử Asset/Bot thay thế khi một đọc private thất bại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageHistoryOperationCards(operations)}${renderImageHistoryOperationPagination(context, canView, "/image/history")}</section>
+      <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới dữ liệu</h2><p>Đây là output storage riêng của Web Workspace, không phải delivery center chung.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không gọi Bot/Core Bridge, provider, PayOS, ví Xu hoặc webhook.</li><li>Không ghi đè file gốc, không tạo preview và không suy đoán output từ Asset Vault.</li><li>Muốn tạo bản mới, mở <a href="/image/resize">Resize &amp; Aspect Studio</a> hoặc <a href="/image/edit">Image Enhance Studio</a>.</li></ul></section>
+      ${renderNotes(page)}
     </article>`;
   }
 
@@ -18283,6 +18377,7 @@
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
       case "image-enhance": return renderImageEnhance(page, context);
+      case "image-operation-history": return renderImageOperationHistory(page, context);
       case "support-desk": return renderSupportDesk(page, context);
       case "support-cases": return renderSupportCases(page, context);
       case "support-case-detail": return renderSupportCaseDetail(page, context);
@@ -18563,6 +18658,11 @@
     if (String(action || "").startsWith("image-enhance-operation-")) {
       Object.assign(fields, {
         __imageEnhanceOperationOffset: source.getAttribute("data-image-enhance-operation-offset") || ""
+      });
+    }
+    if (String(action || "").startsWith("image-history-operation-")) {
+      Object.assign(fields, {
+        __imageHistoryOperationOffset: source.getAttribute("data-image-history-operation-offset") || ""
       });
     }
     // Document Workspace mutations deliberately use the same explicit

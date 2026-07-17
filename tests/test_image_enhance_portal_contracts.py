@@ -54,8 +54,9 @@ def test_enhance_hydration_and_write_use_only_private_image_operation_routes() -
     enhance_reader_start = INTEGRATION.index("async function hydrateImageEnhanceOperations(offsetValue)")
     enhance_reader_end = INTEGRATION.index("async function hydrateProjectDetail", enhance_reader_start)
     enhance_reader = INTEGRATION[enhance_reader_start:enhance_reader_end]
-    assert 'return "/image-operations?" + new URLSearchParams({' in history_path
-    assert "kind: normalizedKind" in history_path
+    assert 'const query = new URLSearchParams({' in history_path
+    assert 'if (normalizedKind) query.set("kind", normalizedKind);' in history_path
+    assert 'return "/image-operations?" + query.toString();' in history_path
     assert "limit: String(OPERATION_HISTORY_LIST_LIMIT)" in history_path
     assert "offset: String(operationHistoryListOffset(offset))" in history_path
     assert 'const kind = "image_enhance"' in enhance_reader

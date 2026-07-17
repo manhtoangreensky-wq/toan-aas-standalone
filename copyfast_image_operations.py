@@ -50,6 +50,11 @@ router = APIRouter(prefix="/api/v1/image-operations", tags=["Web Image Operation
 IMAGE_RESIZE_KIND = "image_resize"
 IMAGE_ENHANCE_KIND = "image_enhance"
 SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})
+# An omitted kind is the combined history contract used by `/image/history`.
+# Keep it explicit rather than treating every present/future table value as a
+# public Web history row. New operation kinds require a deliberate UI/API
+# contract change before they can appear in this projection.
+IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 FIT_MODES = frozenset({"crop", "pad", "blur"})
 ENHANCE_FIT_MODE = "enhance"
@@ -1467,10 +1472,13 @@ async def list_image_operations(
                 (str(account["id"]), normalized_kind, bounded_limit + 1, int(offset)),
             ).fetchall()
         else:
+            history_kinds = tuple(sorted(IMAGE_HISTORY_KINDS))
+            placeholders = ", ".join("?" for _ in history_kinds)
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_image_operations
-                    WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
-                (str(account["id"]), bounded_limit + 1, int(offset)),
+                    WHERE account_id=? AND kind IN ({placeholders})
+                    ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+                (str(account["id"]), *history_kinds, bounded_limit + 1, int(offset)),
             ).fetchall()
     has_more = len(rows) > bounded_limit
     return envelope(
