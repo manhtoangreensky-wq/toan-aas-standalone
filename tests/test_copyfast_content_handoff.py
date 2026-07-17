@@ -19,7 +19,7 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 
-MODULES = ["copyfast_db", "copyfast_auth", "copyfast_support", "copyfast_content_handoff"]
+MODULES = ["copyfast_db", "copyfast_auth", "copyfast_support", "copyfast_native_read_models", "copyfast_content_handoff"]
 
 
 def _account(email: str, role: str = "user") -> dict[str, str | None]:
@@ -61,6 +61,60 @@ def _seed_references(db, account_id: str, *, suffix: str) -> dict[str, object]:
             (campaign_id, account_id, f"Campaign handoff {suffix}", now, now),
         )
     return {"project_id": project_id, "asset_ids": [asset_id], "campaign_id": campaign_id}
+
+
+def _seed_native_lineage(db, account_id: str, *, suffix: str) -> dict[str, str]:
+    """Seed a real-shaped local output and asset without invoking a provider."""
+
+    source_asset_id = str(uuid.uuid4())
+    job_id = str(uuid.uuid4())
+    now = db.utc_now()
+    with db.transaction() as conn:
+        conn.execute(
+            """INSERT INTO web_asset_files
+               (id, account_id, project_id, display_name, original_filename,
+                extension, content_type, byte_size, sha256, storage_key,
+                state, created_at, updated_at, archived_at)
+               VALUES (?, ?, NULL, 'native-lineage.png', 'native-lineage.png',
+                       '.png', 'image/png', 1024, ?, ?, 'active', ?, ?, NULL)""",
+            (source_asset_id, account_id, "a" * 64, f"test-native/{suffix}/{source_asset_id}.blob", now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_image_operations
+               (id, account_id, source_asset_id, project_id, kind, state,
+                idempotency_key, request_fingerprint, source_sha256,
+                source_byte_size, source_width, source_height, target_width,
+                target_height, preset, fit_mode, storage_key,
+                original_filename, content_type, byte_size, sha256,
+                failure_code, created_at, queued_at, started_at, completed_at,
+                updated_at, settings_json)
+               VALUES (?, ?, ?, NULL, 'image_resize', 'completed', ?, ?, ?,
+                       1024, 1600, 1200, 1024, 1024, '1:1', 'crop', ?,
+                       'untrusted-private-name.png', 'image/png', 2048, ?,
+                       NULL, ?, ?, ?, ?, ?, '{}')""",
+            (
+                job_id,
+                account_id,
+                source_asset_id,
+                f"content-handoff-native-{suffix}",
+                f"fingerprint-{suffix}",
+                "a" * 64,
+                "outputs/" + ("b" * 32) + ".png",
+                "c" * 64,
+                now,
+                now,
+                now,
+                now,
+                now,
+            ),
+        )
+    models = importlib.import_module("copyfast_native_read_models")
+    return {
+        "native_output": models.encode_native_job_id("image-operation", job_id),
+        "native_asset": models.encode_native_asset_id(source_asset_id),
+        "source_asset_id": source_asset_id,
+        "job_id": job_id,
+    }
 
 
 def make_client(tmp_path, monkeypatch):
@@ -236,6 +290,113 @@ def test_handoff_owner_scopes_opaque_web_references_and_rejects_external_or_fore
             "external_notification_sent", "job_created", "wallet_mutated", "payment_processed", "external_delivery_verified",
         ):
             assert boundary[key] is False
+    finally:
+        client.close()
+
+
+def test_handoff_native_lineage_requires_sealed_owner_output_and_never_fakes_delivery(tmp_path, monkeypatch):
+    client, module, db, context, owner, other, *_ = make_client(tmp_path, monkeypatch)
+    try:
+        native = _seed_native_lineage(db, str(owner["id"]), suffix="owner")
+        references = {
+            "project_id": None,
+            "asset_ids": [],
+            "campaign_id": None,
+            "native_refs": [
+                {"ref_type": "native_output", "ref_id": native["native_output"]},
+                {"ref_type": "native_asset", "ref_id": native["native_asset"]},
+            ],
+        }
+        record = _create(client, references, "content-handoff-native-create-0001")
+        detail = client.get(f"/api/v1/content-handoffs/records/{record['id']}")
+        assert detail.status_code == 200 and detail.json()["ok"] is True
+        assert detail.json()["data"]["record"]["references"]["native_refs"] == references["native_refs"]
+
+        lineage = client.get(f"/api/v1/content-handoffs/records/{record['id']}/lineage")
+        assert lineage.status_code == 200 and lineage.json()["ok"] is True
+        items = {entry["ref_type"]: entry for entry in lineage.json()["data"]["lineage"]}
+        output = items["native_output"]
+        assert output == {
+            "ref_type": "native_output",
+            "ref_id": native["native_output"],
+            "state": "completed",
+            "status": "completed",
+            "availability": "available",
+            "output": {
+                "filename": "toan-aas-image-resized.png",
+                "content_type": "image/png",
+                "byte_size": 2048,
+            },
+        }
+        assert items["native_asset"] == {
+            "ref_type": "native_asset",
+            "ref_id": native["native_asset"],
+            "state": "active",
+            "status": "active",
+            "availability": "available",
+            "output": None,
+        }
+        assert module._safe_lineage_output(
+            {"filename": "toan-aas-image-ocr.txt", "content_type": "text/plain; charset=utf-8", "byte_size": 1}
+        ) == {"filename": "toan-aas-image-ocr.txt", "content_type": "text/plain; charset=utf-8", "byte_size": 1}
+        assert module._safe_lineage_output(
+            {"filename": "empty.txt", "content_type": "text/plain", "byte_size": 0}
+        ) is None
+        serialized = json.dumps(lineage.json(), ensure_ascii=False)
+        assert str(native["job_id"]) not in serialized
+        assert str(native["source_asset_id"]) not in serialized
+        assert "outputs/" not in serialized
+        assert '"sha256"' not in serialized
+        for key in ("provider_called", "job_created", "wallet_mutated", "payment_processed", "external_delivery_verified"):
+            assert lineage.json()["data"][key] is False
+
+        # Native refs are included in the same revisioned document as other
+        # Handoff references, and raw/foreign opaque IDs stay rejected.
+        updated = client.patch(
+            f"/api/v1/content-handoffs/records/{record['id']}",
+            json={
+                "title": "Bộ nội dung native đã ghi nhận revision",
+                "purpose": "Rà soát lineage Web-native an toàn trước khi nhóm nội bộ xem xét bước tiếp theo.",
+                "references": references,
+                "expected_revision": record["revision"],
+                "idempotency_key": "content-handoff-native-update-0001",
+            },
+        )
+        assert updated.status_code == 200 and updated.json()["ok"] is True
+        current = client.get(f"/api/v1/content-handoffs/records/{record['id']}").json()["data"]
+        assert current["record"]["references"]["native_refs"] == references["native_refs"]
+        assert {entry["revision"] for entry in current["versions"]} >= {1, 2}
+
+        malformed = client.post(
+            "/api/v1/content-handoffs/records",
+            json=_payload(
+                "content-handoff-native-malformed-0001",
+                {"project_id": None, "asset_ids": [], "campaign_id": None, "native_refs": [{"ref_type": "native_output", "ref_id": "not-an-opaque-id"}]},
+            ),
+        )
+        assert malformed.status_code == 422
+        context["account"] = other
+        hidden = client.get(f"/api/v1/content-handoffs/records/{record['id']}/lineage")
+        assert hidden.status_code == 200 and hidden.json()["error_code"] == "WEB_CONTENT_HANDOFF_NOT_FOUND"
+        foreign = client.post(
+            "/api/v1/content-handoffs/records",
+            json=_payload("content-handoff-native-foreign-0001", references),
+        )
+        assert foreign.status_code == 200
+        assert foreign.json()["error_code"] == "WEB_CONTENT_HANDOFF_REFERENCE_INVALID"
+
+        # The record keeps honest history if its output later loses the sealed
+        # contract: no recreated file, URL, or success claim is returned.
+        context["account"] = owner
+        with db.transaction() as conn:
+            conn.execute("UPDATE web_image_operations SET storage_key=NULL WHERE id=?", (native["job_id"],))
+        unavailable = client.get(f"/api/v1/content-handoffs/records/{record['id']}/lineage")
+        assert unavailable.status_code == 200 and unavailable.json()["ok"] is True
+        invalid_output = {entry["ref_type"]: entry for entry in unavailable.json()["data"]["lineage"]}["native_output"]
+        assert invalid_output["state"] == "completed"
+        assert invalid_output["status"] == "unavailable"
+        assert invalid_output["availability"] == "unavailable"
+        assert invalid_output["output"] is None
     finally:
         client.close()
 
