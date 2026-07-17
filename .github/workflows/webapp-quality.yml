@@ -4,7 +4,10 @@ on:
   push:
     branches:
       - main
-      - feature/**
+  # Every feature change is checked through its pull request.  Keeping the
+  # push trigger to main preserves a post-merge source check, while avoiding
+  # a duplicate full-suite run (and duplicate failure notification) for each
+  # feature branch push that also opens a PR.
   pull_request:
   workflow_dispatch:
 
