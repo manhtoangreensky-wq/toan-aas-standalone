@@ -6,7 +6,7 @@ it is deliberately not a second Bot job/asset/quote store.
 
 ## Web-only API
 
-- `GET /api/v1/workspace/drafts`
+- `GET /api/v1/workspace/drafts?state=active|archived|all&feature_key=&q=&limit=&offset=`
 - `GET /api/v1/workspace/drafts/{id}`
 - `POST /api/v1/workspace/drafts`
 - `PATCH /api/v1/workspace/drafts/{id}`
@@ -15,6 +15,23 @@ it is deliberately not a second Bot job/asset/quote store.
 All reads and writes use the signed Web account. Writes require CSRF and an
 idempotency key; an audit event stores only the opaque draft ID, feature key
 and outcome. Every missing/foreign ID returns the same guarded response.
+
+The list is a bounded, owner-scoped metadata projection. `state`, an exact
+registered `feature_key`, and `q` (title/workflow metadata only) are optional;
+the server clamps `limit` to 1–100 and `offset` to 0–10,000, returns one
+look-ahead row, and exposes `has_more`, `next_offset`, `filters`,
+`pagination`, and owner-only active/archive counts. It never selects, returns,
+searches, or audits the saved scalar body from the list route. Full scalar
+values are available only from the owner-scoped detail route when the customer
+chooses **Tiếp tục brief**.
+
+For compatibility, an omitted `state` keeps the original active-only list;
+`include_archived=true` with omitted `state` means `state=all`. An explicit
+`state` wins if both are supplied. The Portal sends filter/cursor data only to
+the owner-scoped API while the current page is open: it does not put it into
+the browser URL/history, `localStorage`, Telegram, an audit event, or a Bot
+handoff. The Dashboard asks only for a small active metadata projection and
+does not inherit a Workspace Library query.
 
 ## Stored and excluded data
 
@@ -41,6 +58,11 @@ a resume, so “Cập nhật bản nháp Web” uses the owner-scoped `PATCH` en
 for that record. “Lưu thành bản mới” remains available for a deliberate copy.
 This edit marker is never placed in `localStorage`, never enters feature input,
 and cannot authorize a Bot operation.
+
+After a create, update, or archive, the Portal invalidates the in-memory page
+and re-reads the current owner-scoped list. It never inserts a returned record
+optimistically into a filtered/history page, so ordering, state and pagination
+remain server-authoritative.
 
 ## Explicit non-goals
 

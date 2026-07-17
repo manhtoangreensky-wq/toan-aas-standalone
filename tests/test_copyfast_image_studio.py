@@ -9,6 +9,7 @@ to manufacture an image/output status.
 from __future__ import annotations
 
 import importlib
+import json
 import sqlite3
 import sys
 import uuid
@@ -45,12 +46,25 @@ def login(client: TestClient, email: str) -> str:
         json={"email": email, "password": "correct-horse-battery-staple", "display_name": "Image Owner"},
     )
     assert registered.status_code == 200
+    return sign_in(client, email)
+
+
+def sign_in(client: TestClient, email: str) -> str:
+    """Sign into an account that may already have been registered."""
     signed_in = client.post(
         "/api/v1/auth/login",
         json={"email": email, "password": "correct-horse-battery-staple"},
     )
     assert signed_in.status_code == 200
     return signed_in.json()["data"]["csrf_token"]
+
+
+def register_account(client: TestClient, email: str) -> None:
+    registered = client.post(
+        "/api/v1/auth/register",
+        json={"email": email, "password": "correct-horse-battery-staple", "display_name": "Image Reference Owner"},
+    )
+    assert registered.status_code == 200
 
 
 def artboard_payload(key: str, **overrides) -> dict:
@@ -112,6 +126,84 @@ def insert_image_asset(db_path, email: str, *, extension: str = "png", content_t
             ),
         )
     return asset_id
+
+
+def _account_id(db_path, email: str) -> str:
+    with sqlite3.connect(db_path) as conn:
+        row = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email,)).fetchone()
+    assert row
+    return str(row[0])
+
+
+def insert_image_studio_listing_records(db_path, email: str, *, prefix: str, count: int) -> dict[str, list[str]]:
+    """Seed deterministic owner-scoped rows without using write APIs/caps.
+
+    The pagination contract must remain correct after an account grows past its
+    interactive creation cap, so direct fixtures are intentional here.
+    """
+    account_id = _account_id(db_path, email)
+    artboard_ids: list[str] = []
+    project_ids: list[str] = []
+    asset_ids: list[str] = []
+    with sqlite3.connect(db_path) as conn:
+        for index in range(count):
+            artboard_id = str(uuid.uuid4())
+            project_id = str(uuid.uuid4())
+            asset_id = str(uuid.uuid4())
+            timestamp = f"2026-07-15T00:{index // 60:02d}:{index % 60:02d}+00:00"
+            suffix = f"{index:03d}"
+            conn.execute(
+                """INSERT INTO web_projects (id, account_id, title, summary, objective, state, created_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'active', ?, ?)""",
+                (
+                    project_id,
+                    account_id,
+                    f"{prefix} Project reference {suffix}",
+                    f"{prefix} project-private-summary-{suffix}",
+                    f"{prefix} project-private-objective-{suffix}",
+                    timestamp,
+                    timestamp,
+                ),
+            )
+            conn.execute(
+                """INSERT INTO web_image_artboards
+                   (id, account_id, project_id, title, image_intent, language, aspect_ratio, output_format,
+                    creative_brief, style_direction, negative_direction, tags_json, lifecycle, revision,
+                    created_at, updated_at, archived_at)
+                   VALUES (?, ?, NULL, ?, 'create', 'vi', '4:5', 'png', ?, ?, ?, ?, 'draft', 1, ?, ?, NULL)""",
+                (
+                    artboard_id,
+                    account_id,
+                    f"{prefix} Artboard reference {suffix}",
+                    f"{prefix} artboard private brief {suffix}",
+                    "Clean studio",
+                    "No watermark",
+                    json.dumps(["pagination"], ensure_ascii=False),
+                    timestamp,
+                    timestamp,
+                ),
+            )
+            conn.execute(
+                """INSERT INTO web_asset_files
+                   (id, account_id, project_id, display_name, original_filename, extension, content_type,
+                    byte_size, sha256, storage_key, state, created_at, updated_at, archived_at)
+                   VALUES (?, ?, NULL, ?, ?, 'png', 'image/png', ?, ?, ?, 'active', ?, ?, NULL)""",
+                (
+                    asset_id,
+                    account_id,
+                    f"{prefix} Image asset reference {suffix}",
+                    f"{prefix.lower().replace(' ', '-')}-private-original-{suffix}.png",
+                    123 + index,
+                    f"{index:064x}",
+                    f"private/{account_id}/{asset_id}-{suffix}.bin",
+                    timestamp,
+                    timestamp,
+                ),
+            )
+            artboard_ids.append(artboard_id)
+            project_ids.append(project_id)
+            asset_ids.append(asset_id)
+    return {"artboards": artboard_ids, "projects": project_ids, "assets": asset_ids}
 
 
 def test_image_studio_session_csrf_body_cap_and_receipt_redaction(tmp_path, monkeypatch):
@@ -202,6 +294,85 @@ def test_image_studio_owner_assets_markup_and_child_cas(tmp_path, monkeypatch):
                 json=direction_payload("image-cross-owner-0001", 1),
             )
             assert denied.status_code == 200 and denied.json()["error_code"] == "WEB_IMAGE_ARTBOARD_NOT_FOUND"
+
+
+def test_image_studio_paginated_listings_are_owner_scoped_searchable_and_redacted(tmp_path, monkeypatch):
+    """Older Image Studio work stays reachable without leaking vault internals."""
+    db_path = tmp_path / "image-studio-test.db"
+    owner_email = "image-page-owner@example.com"
+    other_email = "image-page-other@example.com"
+    with make_client(tmp_path, monkeypatch) as client:
+        login(client, owner_email)
+        register_account(client, other_email)
+        owner = insert_image_studio_listing_records(db_path, owner_email, prefix="Owner", count=101)
+        other = insert_image_studio_listing_records(db_path, other_email, prefix="Other", count=1)
+        sign_in(client, owner_email)
+
+        def listing(path: str, *, offset: int = 0, q: str = "", state: str | None = None) -> dict:
+            params: dict[str, str | int] = {"limit": 50, "offset": offset}
+            if q:
+                params["q"] = q
+            if state is not None:
+                params["state"] = state
+            response = client.get(path, params=params)
+            assert response.status_code == 200 and response.json()["ok"] is True
+            return response.json()["data"]
+
+        artboard_pages = [
+            listing("/api/v1/image-studio/artboards", offset=offset, state="active")
+            for offset in (0, 50, 100)
+        ]
+        assert [page["pagination"] for page in artboard_pages] == [
+            {"limit": 50, "offset": 0, "returned": 50},
+            {"limit": 50, "offset": 50, "returned": 50},
+            {"limit": 50, "offset": 100, "returned": 1},
+        ]
+        assert [page["has_more"] for page in artboard_pages] == [True, True, False]
+        assert [page["next_offset"] for page in artboard_pages] == [50, 100, None]
+        artboard_ids = {str(item["id"]) for page in artboard_pages for item in page["items"]}
+        assert artboard_ids == set(owner["artboards"])
+        assert other["artboards"][0] not in artboard_ids
+        assert artboard_pages[0]["filters"] == {"state": "active", "q": ""}
+        artboard_search = listing(
+            "/api/v1/image-studio/artboards", q="Owner Artboard reference 100", state="active"
+        )
+        assert [item["id"] for item in artboard_search["items"]] == [owner["artboards"][100]]
+
+        project_pages = [
+            listing("/api/v1/image-studio/references/projects", offset=offset)
+            for offset in (0, 50, 100)
+        ]
+        assert [page["pagination"] for page in project_pages] == [
+            {"limit": 50, "offset": 0, "returned": 50},
+            {"limit": 50, "offset": 50, "returned": 50},
+            {"limit": 50, "offset": 100, "returned": 1},
+        ]
+        assert [page["has_more"] for page in project_pages] == [True, True, False]
+        project_ids = {str(item["id"]) for page in project_pages for item in page["items"]}
+        assert project_ids == set(owner["projects"])
+        assert other["projects"][0] not in project_ids
+        assert "project-private-summary" not in json.dumps(project_pages, ensure_ascii=False)
+        project_search = listing("/api/v1/image-studio/references/projects", q="Owner Project reference 100")
+        assert [item["id"] for item in project_search["items"]] == [owner["projects"][100]]
+
+        asset_pages = [
+            listing("/api/v1/image-studio/references/image-assets", offset=offset)
+            for offset in (0, 50, 100)
+        ]
+        assert [page["pagination"] for page in asset_pages] == [
+            {"limit": 50, "offset": 0, "returned": 50},
+            {"limit": 50, "offset": 50, "returned": 50},
+            {"limit": 50, "offset": 100, "returned": 1},
+        ]
+        assert [page["has_more"] for page in asset_pages] == [True, True, False]
+        asset_ids = {str(item["id"]) for page in asset_pages for item in page["items"]}
+        assert asset_ids == set(owner["assets"])
+        assert other["assets"][0] not in asset_ids
+        serialized_assets = json.dumps(asset_pages, ensure_ascii=False)
+        for forbidden in ("original_filename", "storage_key", "sha256", "private/", "owner-private-original"):
+            assert forbidden not in serialized_assets
+        asset_search = listing("/api/v1/image-studio/references/image-assets", q="Owner Image asset reference 100")
+        assert [item["id"] for item in asset_search["items"]] == [owner["assets"][100]]
 
 
 def test_image_studio_lifecycle_archive_estimate_and_direction_reorder(tmp_path, monkeypatch):

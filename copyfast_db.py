@@ -19,13 +19,29 @@ def utc_now() -> str:
     return datetime.now(timezone.utc).isoformat(timespec="seconds")
 
 
-def _is_production() -> bool:
+PRODUCTION_LIKE_ENVIRONMENT_VALUES = frozenset({"production", "prod", "live"})
+
+
+def is_production_like_environment() -> bool:
+    """Return whether the Web service must use deployment-grade safeguards.
+
+    Keep this tiny helper dependency-free so every Web boundary can make the
+    same decision without importing application/router code.  Railway labels
+    a public production service either ``production``/``prod`` or ``live``;
+    treating only the first two as production would let a live deployment use
+    development CORS, cookie, SQLite or scheduler assumptions after restart.
+    """
     values = (
         os.environ.get("APP_ENV", ""),
         os.environ.get("ENVIRONMENT", ""),
         os.environ.get("RAILWAY_ENVIRONMENT", ""),
     )
-    return any(value.strip().lower() in {"production", "prod"} for value in values if value)
+    return any(value.strip().lower() in PRODUCTION_LIKE_ENVIRONMENT_VALUES for value in values if value)
+
+
+def _is_production() -> bool:
+    """Backward-compatible private alias for older Web storage helpers."""
+    return is_production_like_environment()
 
 
 def _railway_volume_directory() -> Path | None:
@@ -42,7 +58,7 @@ def _railway_volume_directory() -> Path | None:
     candidate = Path(configured).expanduser()
     if not candidate.is_absolute() or not os.path.isdir(candidate):
         return None
-    return candidate
+    return candidate.resolve()
 
 
 def _persistent_session_directory() -> Path | None:
@@ -83,6 +99,18 @@ def image_to_pdf_enabled() -> bool:
     requires the Asset Vault and generated-output storage contracts.
     """
     return os.environ.get("WEBAPP_IMAGE_TO_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def image_ocr_enabled() -> bool:
+    """Whether private, local Image OCR is deliberately enabled.
+
+    OCR invokes a service-installed Tesseract binary and decodes an image, so
+    it remains a separate fail-closed switch from generic Document Operations
+    and Image → PDF.  A disabled switch must never make a browser OCR claim or
+    start a local process.
+    """
+
+    return os.environ.get("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def pdf_to_word_enabled() -> bool:
@@ -148,6 +176,36 @@ def memory_center_enabled() -> bool:
     return os.environ.get("WEBAPP_MEMORY_CENTER_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def data_controls_enabled() -> bool:
+    """Whether the Web-only Privacy & Data Control Center is available.
+
+    The center can return a bounded direct authoring-data attachment and record
+    a staged erasure-review request, so it is deliberately disabled until the
+    operator explicitly enables the independent Web capability.  It never
+    grants Bot/Telegram, wallet, PayOS, provider, job, Asset Vault or file
+    deletion authority.
+    """
+
+    return os.environ.get("WEBAPP_DATA_CONTROLS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def governance_documents_enabled() -> bool:
+    """Whether the local Web Governance Documents module is deliberately on.
+
+    Existing Admin ERP navigation historically treats its umbrella flag as
+    enabled unless explicitly disabled.  Governance documents are a new
+    durable internal-record surface, so retain that umbrella kill switch *and*
+    require a second false-by-default opt-in.  This helper never grants Bot,
+    bridge, wallet/Xu, PayOS, provider, job, notification or publication
+    authority; it only controls the Web-owned tables declared below.
+    """
+
+    enabled_values = {"1", "true", "yes", "on"}
+    umbrella = os.environ.get("WEBAPP_ADMIN_ERP_ENABLED", "true").strip().lower() in enabled_values
+    dedicated = os.environ.get("WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED", "false").strip().lower() in enabled_values
+    return umbrella and dedicated
+
+
 def support_desk_enabled() -> bool:
     """Whether the independently owned Web Support Desk is available.
 
@@ -169,6 +227,18 @@ def prompt_library_enabled() -> bool:
     single maintenance switch for operators.
     """
     return os.environ.get("WEBAPP_PROMPT_LIBRARY_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def prompt_studio_enabled() -> bool:
+    """Whether the transient, deterministic Prompt Blueprint Composer is available.
+
+    This switch only governs a signed request/response text planner.  It has
+    no persistence, Bot/Core Bridge, provider/model, job, wallet/Xu, PayOS,
+    asset, publication or delivery implication, so it can be useful by
+    default while retaining a deliberate maintenance gate.
+    """
+
+    return os.environ.get("WEBAPP_PROMPT_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def music_media_workspace_enabled() -> bool:
@@ -193,6 +263,39 @@ def content_studio_enabled() -> bool:
     maintenance switch for operators.
     """
     return os.environ.get("WEBAPP_CONTENT_STUDIO_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def channel_strategy_enabled() -> bool:
+    """Whether signed accounts may use Web-native Channel Strategy profiles.
+
+    The profile, its history and deterministic review preview live only in the
+    Web session database.  This switch never enables a channel connection,
+    social lookup, analytics import, Bot/Core Bridge request, provider, job,
+    wallet/Xu, PayOS, publishing or delivery capability.
+    """
+    return os.environ.get("WEBAPP_CHANNEL_STRATEGY_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def trend_research_enabled() -> bool:
+    """Whether the deterministic manual Trend Research planner is available.
+
+    This flag exposes only a request/response checklist derived from the Bot's
+    static ``/trend_research`` guidance. It never enables live platform
+    search, scraping, a provider/model, Bot/Core Bridge call, Xu/wallet,
+    PayOS, job, asset, media output, publishing or delivery capability.
+    """
+    return os.environ.get("WEBAPP_TREND_RESEARCH_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def media_factory_enabled() -> bool:
+    """Whether the deterministic Web Media Factory Blueprint is available.
+
+    This flag exposes only a signed, transient plan ported from the Bot's
+    ``/media_factory`` fallback text. It never enables live trend/social
+    search, a provider/model, Bot/Core Bridge call, Xu/wallet, PayOS, job,
+    asset/media output, publication, delivery or webhook capability.
+    """
+    return os.environ.get("WEBAPP_MEDIA_FACTORY_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def voice_studio_enabled() -> bool:
@@ -274,6 +377,87 @@ def analytics_workspace_enabled() -> bool:
     publishing, upload or report-file delivery integration.
     """
     return os.environ.get("WEBAPP_ANALYTICS_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def analytics_workspace_export_enabled() -> bool:
+    """Whether finalized manual Analytics CSV attachments are deliberately enabled.
+
+    This is narrower than the authoring workspace flag because an attachment
+    can leave the browser.  When enabled it permits only a bounded,
+    CSRF-protected CSV response made from the signed owner's manual records;
+    it does not enable Bot/campaign reports, platform data, provider calls,
+    assets, jobs, wallet/Xu, PayOS or a stored delivery artifact.
+    """
+
+    return os.environ.get("WEBAPP_ANALYTICS_WORKSPACE_EXPORT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def workboard_enabled() -> bool:
+    """Whether the signed-account Web-native Workboard is available.
+
+    Workboard records only private planning metadata, checklist progress and
+    references to other rows already owned by the same Web account.  Enabling
+    it never calls a Bot, provider or social API, creates a job, publishes
+    content, mutates a wallet/Xu ledger, starts a payment, or delivers an
+    external notification.  It is useful by default while retaining one
+    explicit maintenance switch for operators.
+    """
+    return os.environ.get("WEBAPP_WORKBOARD_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def autopilot_enabled() -> bool:
+    """Whether the controlled Operations Autopilot surface is enabled.
+
+    The default is deliberately fail-closed.  Turning this flag on only
+    enables authenticated observation, deterministic complaint triage and the
+    internal scheduler endpoint; it never grants an external provider,
+    payment, wallet, deployment or messaging capability.
+    """
+    return os.environ.get("WEBAPP_AUTOPILOT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def autopilot_safe_remediation_enabled() -> bool:
+    """Whether the small, allow-listed local remediation set is enabled.
+
+    This is intentionally separate from :func:`autopilot_enabled` so an
+    operator can inspect operations and record authenticated ticks before
+    allowing even low-risk metadata writes such as SLA classification.
+    """
+    return os.environ.get("WEBAPP_AUTOPILOT_SAFE_REMEDIATION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def autopilot_heartbeat_followup_enabled() -> bool:
+    """Whether a late scheduler heartbeat may create Web-only metadata.
+
+    The flag is deliberately separate from the broader Operations flags so a
+    deployed Cron cannot begin creating operational incidents merely because
+    routine Support triage was enabled.  Even when enabled, the feature only
+    records a bounded local Operations incident; it cannot restart a Cron,
+    change Railway, contact anyone, or invoke Bot/provider/payment/wallet/job
+    authority.
+    """
+    return os.environ.get("WEBAPP_AUTOPILOT_HEARTBEAT_FOLLOWUP_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def notification_center_enabled() -> bool:
+    """Whether signed accounts may read their private Web inbox."""
+    return os.environ.get("WEBAPP_NOTIFICATION_CENTER_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def notification_automation_enabled() -> bool:
+    """Whether the isolated scheduler may materialize allowed inbox records."""
+    return os.environ.get("WEBAPP_NOTIFICATION_AUTOMATION_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def reliability_followup_enabled() -> bool:
+    """Whether Runtime Reliability Follow-up may persist Web-only metadata.
+
+    This deliberately defaults to disabled.  Enabling it does not authorize a
+    repair, deployment, provider call, money movement, customer reply or
+    external notification; it only allows a later reviewed service to retain
+    bounded, sanitized Web-runtime follow-up records.
+    """
+    return os.environ.get("WEBAPP_RELIABILITY_FOLLOWUP_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def _is_within(path: Path, parent: Path) -> bool:
@@ -535,14 +719,53 @@ def ensure_image_operations_persistence() -> Path | None:
 
 
 def session_database_path() -> str:
-    """Resolve the Web-owned auth/session database without using a Bot store."""
+    """Resolve the Web-owned auth/session database without using a Bot store.
+
+    A production-like process may never fall back to an arbitrary absolute
+    container path.  SQLite sessions hold CSRF, link-code and replay state,
+    so an ``/app/*.db`` value would appear to work until a normal deploy
+    discarded it.  Resolve the file and prove it sits below this Web service's
+    verified Railway volume (or verified ``/data``) before returning it.
+    """
     configured = os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
     if configured:
+        if _is_production():
+            return str(_validated_production_session_database_path(configured))
         return configured
     persistent_directory = _persistent_session_directory()
     if persistent_directory is not None:
-        return str(persistent_directory / "toanaas_webapp_session.db")
+        return str(persistent_directory.resolve() / "toanaas_webapp_session.db")
+    if _is_production():
+        raise RuntimeError(
+            "Production cần WEBAPP_SESSION_DB_PATH là file dưới persistent volume, "
+            "RAILWAY_VOLUME_MOUNT_PATH hợp lệ, hoặc mount /data cho signed session và Telegram link"
+        )
     return "toanaas_webapp_session.db"
+
+
+def _validated_production_session_database_path(configured: str) -> Path:
+    """Return a resolved session *file* only after volume-boundary proof."""
+    raw_path = Path(configured).expanduser()
+    if not raw_path.is_absolute():
+        raise RuntimeError("WEBAPP_SESSION_DB_PATH phải là đường dẫn tuyệt đối khi production")
+    persistent_directory = _persistent_session_directory()
+    if persistent_directory is None:
+        raise RuntimeError(
+            "Production cần WEBAPP_SESSION_DB_PATH là file dưới persistent volume, "
+            "RAILWAY_VOLUME_MOUNT_PATH hợp lệ, hoặc mount /data cho signed session và Telegram link"
+        )
+    candidate = raw_path.resolve()
+    volume = persistent_directory.resolve()
+    if candidate == volume or not _is_within(candidate, volume):
+        raise RuntimeError(
+            "WEBAPP_SESSION_DB_PATH phải là file dưới persistent volume khi production"
+        )
+    # The SQLite database need not exist until the first clean startup, but a
+    # pre-existing directory/special path is never a database file.  Resolving
+    # first also rejects a symlink that escapes the declared volume.
+    if candidate.exists() and not candidate.is_file():
+        raise RuntimeError("WEBAPP_SESSION_DB_PATH phải trỏ tới file database, không phải thư mục")
+    return candidate
 
 
 def ensure_copyfast_persistence() -> None:
@@ -554,17 +777,37 @@ def ensure_copyfast_persistence() -> None:
     """
     if not _is_production():
         return
-    configured = os.environ.get("WEBAPP_SESSION_DB_PATH", "").strip()
-    if configured:
-        if not Path(configured).expanduser().is_absolute():
-            raise RuntimeError("WEBAPP_SESSION_DB_PATH phải là đường dẫn tuyệt đối khi production")
-        return
-    if _persistent_session_directory() is not None:
-        return
-    raise RuntimeError(
-        "Production cần WEBAPP_SESSION_DB_PATH trên persistent volume, "
-        "RAILWAY_VOLUME_MOUNT_PATH hợp lệ, hoặc mount /data cho signed session và Telegram link"
-    )
+    # ``session_database_path`` performs the complete resolve + volume-boundary
+    # check.  Keep a single authority so every request path and all schedulers
+    # receive the same failure rather than allowing an early SQLite connection
+    # to create an ephemeral database first.
+    session_database_path()
+
+
+def web_scheduler_persistence_ready() -> bool:
+    """Whether a Web scheduler's SQLite replay/lease state survives restart.
+
+    Production-like Web startup already requires its signed-session database
+    below this service's verified volume.  Operations Autopilot repeats the
+    same proof deliberately because losing nonce/lease/run history after a
+    restart could permit a signed scheduler request to be replayed.  Local and
+    test environments intentionally do not need that Railway attestation.
+    """
+    if not _is_production():
+        return True
+    persistent_directory = _persistent_session_directory()
+    if persistent_directory is None:
+        return False
+    try:
+        database_path = Path(session_database_path()).expanduser().resolve()
+        return _is_within(database_path, persistent_directory.resolve())
+    except (OSError, RuntimeError):
+        return False
+
+
+def operations_autopilot_persistence_ready() -> bool:
+    """Compatibility name for Operations Autopilot's scheduler guard."""
+    return web_scheduler_persistence_ready()
 
 
 @contextmanager
@@ -578,6 +821,34 @@ def transaction():
     # sources), so enforce them before any schema or application write.
     conn.execute("PRAGMA foreign_keys=ON")
     conn.execute("PRAGMA busy_timeout=30000")
+    try:
+        conn.execute("BEGIN IMMEDIATE")
+        yield conn
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
+    finally:
+        conn.close()
+
+
+@contextmanager
+def best_effort_transaction(*, timeout_seconds: float = 0.05):
+    """Open a short, non-blocking write transaction for observability only.
+
+    Request-path telemetry must never wait behind a long-running SQLite writer
+    and make an already failing customer response slower.  Callers must treat
+    ``sqlite3.OperationalError`` as a dropped observation, not a business
+    failure.  This helper owns no schema creation and is deliberately not used
+    for sessions, money, account writes or any user-facing state change.
+    """
+    bounded_timeout = max(0.001, min(float(timeout_seconds), 0.25))
+    path = session_database_path()
+    parent = Path(path).expanduser().resolve().parent
+    parent.mkdir(parents=True, exist_ok=True)
+    conn = sqlite3.connect(path, timeout=bounded_timeout)
+    conn.execute("PRAGMA foreign_keys=ON")
+    conn.execute(f"PRAGMA busy_timeout={max(1, int(bounded_timeout * 1000))}")
     try:
         conn.execute("BEGIN IMMEDIATE")
         yield conn
@@ -756,6 +1027,192 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # A provider may prove control of a contact address without making
+        # that address a password-login identifier for this Web account.  In
+        # particular, a verified OAuth identity whose address is already
+        # held by another account receives an isolated OAuth-only account
+        # with an internal alias in ``web_accounts.email``.  Keep its public,
+        # provider-verified contact here instead.  Deliberately do *not* add
+        # a unique constraint on ``email``: two separate Web accounts can
+        # legitimately carry the same verified contact while remaining
+        # isolated, and no account is reclaimed or merged automatically.
+        #
+        # The immutable provider subject stays exclusively as an HMAC in
+        # ``web_external_identities``.  This table never receives it, tokens,
+        # or any provider credential.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_account_oauth_contacts (
+                account_id TEXT PRIMARY KEY,
+                provider TEXT NOT NULL CHECK(provider IN ('google', 'github', 'apple')),
+                email TEXT NOT NULL,
+                verified_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # A password account may prove control of its own login mailbox through
+        # a Web-owned, short-lived email link. This is deliberately separate
+        # from OAuth contacts: neither table may merge accounts, alter a
+        # password identifier, or become a Bot identity/payment/wallet record.
+        # The contact row stores no token or delivery credential.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_account_email_contacts (
+                account_id TEXT PRIMARY KEY,
+                email TEXT NOT NULL,
+                verification_method TEXT NOT NULL CHECK(verification_method='email_link'),
+                verified_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Delivery metadata is intentionally minimal and additive. The raw
+        # verification token never reaches SQLite; only a server-secret HMAC
+        # digest is retained. A challenge can only be consumed after a
+        # successful SMTP handoff marked it sent.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_email_verification_challenges (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                email TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                state TEXT NOT NULL CHECK(state IN ('prepared', 'sent', 'failed', 'consumed', 'superseded')),
+                expires_at TEXT NOT NULL,
+                sent_at TEXT,
+                consumed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_web_email_verification_account_created
+            ON web_email_verification_challenges(account_id, created_at DESC)
+            """
+        )
+        # Password recovery is a separate Web-only, expiring proof. It shares
+        # no token or state with mailbox-assurance challenges and never
+        # creates a session by itself. Keeping it separate makes revocation,
+        # audit and retention rules independently reviewable.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_password_recovery_challenges (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                email TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                state TEXT NOT NULL CHECK(state IN ('prepared', 'sent', 'failed', 'consumed', 'superseded')),
+                expires_at TEXT NOT NULL,
+                sent_at TEXT,
+                consumed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_web_password_recovery_account_created
+            ON web_password_recovery_challenges(account_id, created_at DESC)
+            """
+        )
+        # TOTP factors are an optional Web-only second factor. The raw shared
+        # secret is never stored: secret_ciphertext is authenticated
+        # encryption controlled by the dedicated Web MFA key, and enrollment
+        # / login tokens are HMAC digests only. None of these tables mirrors
+        # Telegram identity, Bot state, wallet/Xu, PayOS, provider or job
+        # authority.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_totp_factors (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                secret_ciphertext TEXT NOT NULL,
+                enrollment_token_hash TEXT NOT NULL,
+                state TEXT NOT NULL CHECK(state IN ('prepared', 'active', 'disabled', 'superseded')),
+                revision INTEGER NOT NULL DEFAULT 1,
+                enrollment_expires_at TEXT,
+                enabled_at TEXT,
+                disabled_at TEXT,
+                last_counter INTEGER,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_web_totp_factors_one_active
+            ON web_totp_factors(account_id) WHERE state='active'
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_web_totp_factors_account_state
+            ON web_totp_factors(account_id, state, updated_at DESC)
+            """
+        )
+        # Recovery codes are generated once after a successfully confirmed
+        # factor and stored as keyed digests only. A consumed/invalidated row
+        # remains as a bounded security audit marker rather than becoming a
+        # reusable credential.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_totp_recovery_codes (
+                id TEXT PRIMARY KEY,
+                factor_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                code_hash TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL,
+                used_at TEXT,
+                invalidated_at TEXT,
+                FOREIGN KEY(factor_id) REFERENCES web_totp_factors(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_web_totp_recovery_codes_factor
+            ON web_totp_recovery_codes(factor_id, account_id, used_at, invalidated_at)
+            """
+        )
+        # Password login may complete its first factor before a signed session
+        # exists. This short-lived, opaque challenge binds the second-factor
+        # proof to that successful password check without exposing an account
+        # id or persisting a raw browser token.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_totp_login_challenges (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                token_hash TEXT NOT NULL,
+                state TEXT NOT NULL CHECK(state IN ('pending', 'consumed', 'locked', 'superseded')),
+                attempt_count INTEGER NOT NULL DEFAULT 0,
+                expires_at TEXT NOT NULL,
+                consumed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE INDEX IF NOT EXISTS idx_web_totp_login_challenges_account
+            ON web_totp_login_challenges(account_id, state, expires_at, created_at DESC)
+            """
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_bridge_callback_nonces (
@@ -820,6 +1277,31 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Password credential throttling is a tiny, Web-owned abuse-control
+        # record.  It intentionally persists only HMAC fingerprints and fixed
+        # timing/counter fields: never an email address, remote IP, password,
+        # cookie, session ID, request body or Bot/provider/payment state. The
+        # third key also holds a domain-separated HMAC-only email-global
+        # sentinel; it is never a literal marker or raw network address.
+        # ``BEGIN IMMEDIATE`` in copyfast_auth_throttle serializes updates so
+        # a restart or concurrent Web worker cannot reset/overrun a bucket.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_auth_throttle_buckets (
+                action TEXT NOT NULL,
+                email_hmac TEXT NOT NULL,
+                client_scope_hmac TEXT NOT NULL,
+                attempts INTEGER NOT NULL,
+                window_started_at INTEGER NOT NULL,
+                expires_at_epoch INTEGER NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY(action, email_hmac, client_scope_hmac)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_auth_throttle_expiry ON web_auth_throttle_buckets(expires_at_epoch)"
+        )
         # Campaign Planner deliberately owns only Web planning metadata.  It
         # is not a mirror of the Bot's campaign, publishing, analytics,
         # wallet, PayOS or provider state.  Keeping a distinct table name
@@ -839,7 +1321,49 @@ def ensure_copyfast_schema() -> None:
                 review_note TEXT NOT NULL DEFAULT '',
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Campaign Planner predates optimistic source binding for explicit
+        # in-app reminders.  The additive revision lets a schedule intent
+        # fail closed after any local plan edit without changing old plan IDs,
+        # Calendar semantics or canonical Bot campaign state.
+        campaign_plan_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_campaign_plans)").fetchall()}
+        if "revision" not in campaign_plan_columns:
+            conn.execute("ALTER TABLE web_campaign_plans ADD COLUMN revision INTEGER NOT NULL DEFAULT 1")
+        conn.execute(
+            "UPDATE web_campaign_plans SET revision=1 WHERE revision IS NULL OR typeof(revision)!='integer' OR revision<1"
+        )
+        # A Campaign schedule intent is a separate, explicit owner request
+        # for exactly one future private Inbox record.  It deliberately keeps
+        # only opaque source coordinates and a digest — never a Campaign
+        # title, destination URL, review note, publishing payload, provider
+        # handle, payment data or a copy of the source itself.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_campaign_schedule_intents (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                plan_id TEXT NOT NULL,
+                source_revision INTEGER NOT NULL,
+                source_snapshot_hash TEXT NOT NULL,
+                trigger_local_at TEXT NOT NULL,
+                timezone TEXT NOT NULL,
+                trigger_at TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_by_account_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                dispatched_at TEXT,
+                guarded_at TEXT,
+                guard_code TEXT,
+                cancelled_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(created_by_account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(plan_id) REFERENCES web_campaign_plans(id)
             )
             """
         )
@@ -856,6 +1380,7 @@ def ensure_copyfast_schema() -> None:
                 title TEXT NOT NULL,
                 input_json TEXT NOT NULL,
                 state TEXT NOT NULL DEFAULT 'active',
+                lifecycle_revision INTEGER NOT NULL DEFAULT 1,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
@@ -972,10 +1497,22 @@ def ensure_copyfast_schema() -> None:
                 last_public_message_at TEXT NOT NULL,
                 resolved_at TEXT,
                 closed_at TEXT,
+                -- This is deliberately separate from generic updated_at.
+                -- It is set only when a customer is actually waiting for a
+                -- Web Support response, so internal routing/triage cannot
+                -- make an overdue request look newly serviced.
+                customer_waiting_since TEXT,
                 FOREIGN KEY(account_id) REFERENCES web_accounts(id)
             )
             """
         )
+        # Older local databases predate the semantic SLA clock.  A NULL
+        # clock is intentionally fail-closed: Operations will not infer a
+        # customer wait from generic update time or create/close an SLA
+        # incident until a genuine Web customer-waiting event establishes it.
+        support_case_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_support_cases)").fetchall()}
+        if "customer_waiting_since" not in support_case_columns:
+            conn.execute("ALTER TABLE web_support_cases ADD COLUMN customer_waiting_since TEXT")
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS web_support_messages (
@@ -1016,10 +1553,100 @@ def ensure_copyfast_schema() -> None:
             "CREATE INDEX IF NOT EXISTS idx_web_support_cases_state_updated ON web_support_cases(state, updated_at DESC, id DESC)"
         )
         conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_cases_state_customer_waiting ON web_support_cases(state, customer_waiting_since ASC, id ASC)"
+        )
+        conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_support_messages_case_visibility_created ON web_support_messages(case_id, visibility, created_at ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_support_events_case_created ON web_support_events(case_id, created_at ASC, id ASC)"
+        )
+        # Evidence attachments deliberately link an already-private Asset
+        # Vault record instead of accepting a second file-upload route in
+        # Support Desk.  The snapshots keep a historical, bounded display
+        # projection without ever exposing the Asset Vault storage key, hash
+        # or original filename through a case/event/audit response.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_case_attachments (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                asset_id TEXT NOT NULL,
+                display_name_snapshot TEXT NOT NULL,
+                content_type_snapshot TEXT NOT NULL,
+                byte_size_snapshot INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(case_id, asset_id),
+                CHECK(byte_size_snapshot > 0 AND byte_size_snapshot <= 5242880),
+                CHECK(content_type_snapshot IN ('image/png', 'image/jpeg', 'image/webp', 'text/plain')),
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_case_attachments_case_created ON web_support_case_attachments(case_id, created_at ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_case_attachments_account_case ON web_support_case_attachments(account_id, case_id, created_at ASC)"
+        )
+        # Customer Care control data is deliberately additive to the original
+        # Web Support Desk case table.  It records only Web-native internal
+        # queue, assignment, SLA and escalation metadata; it never becomes a
+        # Bot ticket, payment/refund record, provider retry or outbound
+        # notification.  Keeping it in separate tables preserves existing
+        # case rows and makes the customer-facing projection fail closed: only
+        # staff handlers join and return this metadata.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_case_controls (
+                case_id TEXT PRIMARY KEY,
+                team_queue TEXT NOT NULL DEFAULT 'general',
+                assigned_account_id TEXT,
+                sla_class TEXT NOT NULL DEFAULT 'standard',
+                first_staff_touched_at TEXT,
+                escalation_state TEXT NOT NULL DEFAULT 'none',
+                escalation_reason TEXT NOT NULL DEFAULT '',
+                escalation_requested_at TEXT,
+                escalation_acknowledged_at TEXT,
+                escalation_resolved_at TEXT,
+                escalation_actor_account_id TEXT,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(assigned_account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(escalation_actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_case_control_events (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                actor_account_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                action TEXT NOT NULL,
+                previous_value TEXT NOT NULL DEFAULT '',
+                next_value TEXT NOT NULL DEFAULT '',
+                reason TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_case_controls_queue_sla_updated ON web_support_case_controls(team_queue, sla_class, updated_at DESC, case_id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_case_controls_assignee_updated ON web_support_case_controls(assigned_account_id, updated_at DESC, case_id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_case_control_events_case_created ON web_support_case_control_events(case_id, created_at ASC, id ASC)"
         )
         # Prompt Library is a private Web-owned template vault.  It does not
         # reuse the frozen Bot's global prompt seed or mutable JSON path:
@@ -1095,6 +1722,29 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_prompt_templates_account_state_updated ON web_prompt_templates(account_id, state, updated_at DESC, id DESC)"
+        )
+        # A saved Free Prompt Gallery seed is still a normal, private Prompt
+        # Library template.  This tiny owner-scoped provenance map only
+        # prevents an explicit Web save click from creating duplicate copies
+        # of the same immutable Gallery item.  It has no Bot/global-library
+        # relationship, no content payload, no provider/job/payment field and
+        # cascades away if the owner deliberately purges the template.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_prompt_gallery_saves (
+                account_id TEXT NOT NULL,
+                gallery_prompt_id TEXT NOT NULL,
+                snapshot_version TEXT NOT NULL,
+                template_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                PRIMARY KEY(account_id, gallery_prompt_id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(template_id) REFERENCES web_prompt_templates(id) ON DELETE CASCADE
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_prompt_gallery_saves_template ON web_prompt_gallery_saves(template_id, account_id)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_prompt_template_versions_template_revision ON web_prompt_template_versions(template_id, account_id, revision DESC)"
@@ -1331,6 +1981,83 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_content_events_account_created ON web_content_studio_events(account_id, created_at DESC, id DESC)"
+        )
+        # Channel Strategy is the Web-owned, revisioned replacement for the
+        # Bot's lightweight ``channel_profiles`` conversation.  These tables
+        # deliberately store only account-authored profile metadata and small
+        # snapshots: never Bot IDs/state, social tokens, remote URL fetches,
+        # platform analytics, provider handles, jobs, payments, Xu/PayOS,
+        # media outputs or publication receipts.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_channel_strategy_profiles (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                channel_name TEXT NOT NULL,
+                platform TEXT NOT NULL,
+                channel_url TEXT NOT NULL DEFAULT '',
+                niche TEXT NOT NULL,
+                target_audience TEXT NOT NULL,
+                content_style TEXT NOT NULL,
+                tone TEXT NOT NULL DEFAULT '',
+                language TEXT NOT NULL DEFAULT 'vi',
+                allowed_topics_json TEXT NOT NULL DEFAULT '[]',
+                blocked_topics_json TEXT NOT NULL DEFAULT '[]',
+                brand_keywords_json TEXT NOT NULL DEFAULT '[]',
+                cta_default TEXT NOT NULL DEFAULT '',
+                affiliate_allowed INTEGER NOT NULL DEFAULT 0,
+                product_categories_json TEXT NOT NULL DEFAULT '[]',
+                posting_frequency TEXT NOT NULL DEFAULT '',
+                preferred_aspect_ratio TEXT NOT NULL DEFAULT '9:16',
+                preferred_duration_seconds INTEGER NOT NULL DEFAULT 18,
+                primary_goal TEXT NOT NULL DEFAULT 'content',
+                notes TEXT NOT NULL DEFAULT '',
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_channel_strategy_profile_versions (
+                id TEXT PRIMARY KEY,
+                profile_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(profile_id, revision),
+                FOREIGN KEY(profile_id) REFERENCES web_channel_strategy_profiles(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_channel_strategy_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                profile_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(profile_id) REFERENCES web_channel_strategy_profiles(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_channel_strategy_profiles_account_state_updated ON web_channel_strategy_profiles(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_channel_strategy_versions_profile_revision ON web_channel_strategy_profile_versions(profile_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_channel_strategy_events_profile_created ON web_channel_strategy_events(profile_id, account_id, created_at DESC, id DESC)"
         )
         # Voice Studio is an independently owned authoring surface.  The
         # tables intentionally store only text/metadata, version snapshots
@@ -2340,6 +3067,7 @@ def ensure_copyfast_schema() -> None:
                 sha256 TEXT NOT NULL,
                 storage_key TEXT NOT NULL UNIQUE,
                 state TEXT NOT NULL DEFAULT 'active',
+                lifecycle_revision INTEGER NOT NULL DEFAULT 1,
                 created_at TEXT NOT NULL,
                 updated_at TEXT NOT NULL,
                 archived_at TEXT,
@@ -2348,6 +3076,12 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Older Asset Vault databases predate the explicit lifecycle token.
+        # Keep this additive: archive/restore use it as an optimistic
+        # concurrency guard rather than treating a generic timestamp as one.
+        asset_file_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_asset_files)").fetchall()}
+        if "lifecycle_revision" not in asset_file_columns:
+            conn.execute("ALTER TABLE web_asset_files ADD COLUMN lifecycle_revision INTEGER NOT NULL DEFAULT 1")
         # Project Packages are immutable Web-owned snapshots and private ZIP
         # artifacts.  They intentionally do not reuse Asset Vault metadata:
         # Asset Vault holds customer sources/references while this table holds
@@ -2541,8 +3275,764 @@ def ensure_copyfast_schema() -> None:
         image_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_image_operation_events)").fetchall()}
         if "sequence" not in image_event_columns:
             conn.execute("ALTER TABLE web_image_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+        # Workboard is a private, Web-native planning surface.  These tables
+        # never store remote URLs, Bot/provider handles, execution output,
+        # wallet/payment data or notification-delivery state.  A reference is
+        # deliberately an opaque UUID plus a closed source type; the router
+        # validates that the referenced Project/Campaign/Analytics/Note/Draft
+        # belongs to the same signed account before every write.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_items (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL DEFAULT '',
+                priority TEXT NOT NULL DEFAULT 'normal',
+                due_at TEXT,
+                state TEXT NOT NULL DEFAULT 'backlog',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_item_references (
+                id TEXT PRIMARY KEY,
+                item_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ref_type TEXT NOT NULL,
+                ref_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(item_id, ref_type, ref_id),
+                UNIQUE(item_id, ordinal),
+                FOREIGN KEY(item_id) REFERENCES web_workboard_items(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_checklist_items (
+                id TEXT PRIMARY KEY,
+                item_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ordinal INTEGER NOT NULL,
+                body TEXT NOT NULL,
+                is_done INTEGER NOT NULL DEFAULT 0,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                completed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                UNIQUE(item_id, ordinal),
+                FOREIGN KEY(item_id) REFERENCES web_workboard_items(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Snapshots are append-only evidence for an item as a whole.  They
+        # include the active and archived checklist/reference set at the
+        # revision, allowing a recovery action to create a new revision
+        # without ever overwriting history.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_item_versions (
+                id TEXT PRIMARY KEY,
+                item_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(item_id, revision),
+                FOREIGN KEY(item_id) REFERENCES web_workboard_items(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Checklist snapshots remain independently append-only as well.  An
+        # item snapshot is sufficient to restore the complete board card,
+        # while this table gives a checklist row its own traceable history.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_checklist_versions (
+                id TEXT PRIMARY KEY,
+                checklist_id TEXT NOT NULL,
+                item_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                snapshot_json TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(checklist_id, revision),
+                FOREIGN KEY(checklist_id) REFERENCES web_workboard_checklist_items(id),
+                FOREIGN KEY(item_id) REFERENCES web_workboard_items(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Events deliberately contain only operation metadata and IDs, never
+        # private descriptions/checklist text.  This makes the board timeline
+        # auditable without duplicating sensitive authoring content.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_events (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                item_id TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT,
+                action TEXT NOT NULL,
+                item_revision INTEGER NOT NULL,
+                entity_revision INTEGER,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(item_id) REFERENCES web_workboard_items(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # A Workboard schedule intent is an explicit, account-owned request
+        # to create one future *in-app* Inbox record.  It stores only opaque
+        # item coordinates and a snapshot hash; title, description,
+        # checklist, references and all delivery/provider data deliberately
+        # stay out of this table.  The Notification tick must re-check the
+        # revision and snapshot before it can materialize anything.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workboard_schedule_intents (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                item_id TEXT NOT NULL,
+                source_revision INTEGER NOT NULL,
+                source_snapshot_hash TEXT NOT NULL,
+                trigger_local_at TEXT NOT NULL,
+                timezone TEXT NOT NULL,
+                trigger_at TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'active',
+                revision INTEGER NOT NULL DEFAULT 1,
+                created_by_account_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                dispatched_at TEXT,
+                guarded_at TEXT,
+                guard_code TEXT,
+                cancelled_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(created_by_account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(item_id) REFERENCES web_workboard_items(id)
+            )
+            """
+        )
+        # Notification Center owns only durable, in-app inbox metadata. It is
+        # deliberately separate from Browser/Telegram/email/web-push delivery
+        # and stores no source title/body, provider/payment/job payload,
+        # external URL, credential or raw support narrative.  A scheduler can
+        # materialize an allow-listed occurrence while a signed account owns
+        # the read/dismiss lifecycle.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_nonces (
+                nonce_hash TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL UNIQUE,
+                key_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_leases (
+                name TEXT PRIMARY KEY,
+                owner_run_id TEXT NOT NULL,
+                fence_token INTEGER NOT NULL,
+                acquired_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_runs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL UNIQUE,
+                trigger TEXT NOT NULL,
+                schedule_slot TEXT NOT NULL,
+                state TEXT NOT NULL,
+                fence_token INTEGER NOT NULL,
+                policy_version INTEGER NOT NULL,
+                input_hash TEXT NOT NULL,
+                action_count INTEGER NOT NULL DEFAULT 0,
+                candidate_count INTEGER NOT NULL DEFAULT 0,
+                deadline_at TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                finished_at TEXT,
+                error_code TEXT,
+                receipt_json TEXT NOT NULL DEFAULT '{}'
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_run_steps (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                sequence INTEGER NOT NULL,
+                playbook TEXT NOT NULL,
+                state TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL UNIQUE,
+                input_hash TEXT NOT NULL,
+                result_code TEXT NOT NULL DEFAULT '',
+                started_at TEXT NOT NULL,
+                finished_at TEXT,
+                UNIQUE(run_id, sequence),
+                FOREIGN KEY(run_id) REFERENCES web_notification_runs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_items (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                source_kind TEXT NOT NULL,
+                source_id TEXT NOT NULL,
+                source_revision INTEGER NOT NULL,
+                occurrence_at TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'unread',
+                revision INTEGER NOT NULL DEFAULT 1,
+                dedupe_fingerprint TEXT NOT NULL UNIQUE,
+                created_by_run_id TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                read_at TEXT,
+                dismissed_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(created_by_run_id) REFERENCES web_notification_runs(id)
+            )
+            """
+        )
+        # Tombstones retain only an opaque occurrence fingerprint and source
+        # coordinates after an explicitly dismissed Inbox row ages out. They
+        # prevent an unchanged overdue reminder from being re-materialized
+        # forever while allowing the UI/event payload itself to stay bounded.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_dedupes (
+                dedupe_fingerprint TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_kind TEXT NOT NULL,
+                source_id TEXT NOT NULL,
+                source_revision INTEGER NOT NULL,
+                occurrence_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """INSERT OR IGNORE INTO web_notification_dedupes
+               (dedupe_fingerprint, account_id, source_kind, source_id, source_revision, occurrence_at, created_at)
+               SELECT dedupe_fingerprint, account_id, source_kind, source_id, source_revision, occurrence_at, created_at
+               FROM web_notification_items"""
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_notification_events (
+                id TEXT PRIMARY KEY,
+                notification_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                actor_account_id TEXT,
+                action TEXT NOT NULL,
+                state TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(notification_id) REFERENCES web_notification_items(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Operations Autopilot is intentionally an append-oriented, Web-only
+        # observability surface.  It records signed scheduler receipts,
+        # deterministic support triage and operator approval metadata, but
+        # never persists provider payloads, payment records, wallet state,
+        # Bot jobs, customer secrets or raw exception narratives.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_nonces (
+                nonce_hash TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL UNIQUE,
+                key_id TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_leases (
+                name TEXT PRIMARY KEY,
+                owner_run_id TEXT NOT NULL,
+                fence_token INTEGER NOT NULL,
+                acquired_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_runs (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL UNIQUE,
+                trigger TEXT NOT NULL,
+                schedule_slot TEXT NOT NULL,
+                state TEXT NOT NULL,
+                fence_token INTEGER NOT NULL,
+                policy_version INTEGER NOT NULL,
+                input_hash TEXT NOT NULL,
+                action_count INTEGER NOT NULL DEFAULT 0,
+                triaged_case_count INTEGER NOT NULL DEFAULT 0,
+                incident_count INTEGER NOT NULL DEFAULT 0,
+                deadline_at TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                finished_at TEXT,
+                error_code TEXT,
+                receipt_json TEXT NOT NULL DEFAULT '{}'
+            )
+            """
+        )
+        # This row is deliberately separate from Operations run history.  A
+        # heartbeat is armed only from a run that has already completed under
+        # the current Web-process/configuration snapshot; historical rows
+        # must never become an implicit baseline when the optional feature is
+        # first enabled or the process is redeployed.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_heartbeat_baselines (
+                scope TEXT PRIMARY KEY,
+                config_fingerprint TEXT NOT NULL,
+                process_epoch TEXT NOT NULL,
+                last_completed_run_id TEXT,
+                last_completed_at TEXT,
+                armed_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY(last_completed_run_id) REFERENCES web_ops_runs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_run_steps (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                sequence INTEGER NOT NULL,
+                playbook TEXT NOT NULL,
+                state TEXT NOT NULL,
+                idempotency_key TEXT NOT NULL,
+                input_hash TEXT NOT NULL,
+                result_code TEXT NOT NULL DEFAULT '',
+                started_at TEXT NOT NULL,
+                finished_at TEXT,
+                UNIQUE(run_id, sequence),
+                UNIQUE(idempotency_key),
+                FOREIGN KEY(run_id) REFERENCES web_ops_runs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_incidents (
+                id TEXT PRIMARY KEY,
+                fingerprint TEXT NOT NULL UNIQUE,
+                kind TEXT NOT NULL,
+                scope_kind TEXT NOT NULL,
+                account_id TEXT,
+                support_case_id TEXT,
+                state TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                auto_close_eligible INTEGER NOT NULL DEFAULT 0,
+                healthy_streak INTEGER NOT NULL DEFAULT 0,
+                observation_count INTEGER NOT NULL DEFAULT 0,
+                last_failure_at TEXT,
+                first_observed_at TEXT NOT NULL,
+                last_observed_at TEXT NOT NULL,
+                resolved_at TEXT,
+                closed_at TEXT,
+                revision INTEGER NOT NULL DEFAULT 1,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(support_case_id) REFERENCES web_support_cases(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_incident_observations (
+                id TEXT PRIMARY KEY,
+                incident_id TEXT NOT NULL,
+                run_id TEXT NOT NULL,
+                observation TEXT NOT NULL,
+                result_code TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(incident_id) REFERENCES web_ops_incidents(id),
+                FOREIGN KEY(run_id) REFERENCES web_ops_runs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_playbook_runs (
+                id TEXT PRIMARY KEY,
+                run_id TEXT NOT NULL,
+                incident_id TEXT,
+                playbook TEXT NOT NULL,
+                state TEXT NOT NULL,
+                attempt INTEGER NOT NULL DEFAULT 1,
+                idempotency_key TEXT NOT NULL UNIQUE,
+                input_hash TEXT NOT NULL,
+                result_code TEXT NOT NULL DEFAULT '',
+                started_at TEXT NOT NULL,
+                finished_at TEXT,
+                FOREIGN KEY(run_id) REFERENCES web_ops_runs(id),
+                FOREIGN KEY(incident_id) REFERENCES web_ops_incidents(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_approvals (
+                id TEXT PRIMARY KEY,
+                proposal_fingerprint TEXT NOT NULL UNIQUE,
+                action_type TEXT NOT NULL,
+                account_id TEXT,
+                support_case_id TEXT,
+                incident_id TEXT,
+                risk TEXT NOT NULL,
+                required_role TEXT NOT NULL,
+                state TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1,
+                payload_hash TEXT NOT NULL,
+                proposed_by_run_id TEXT,
+                proposed_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                decided_at TEXT,
+                decided_by_account_id TEXT,
+                decision_code TEXT NOT NULL DEFAULT '',
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(support_case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(incident_id) REFERENCES web_ops_incidents(id),
+                FOREIGN KEY(proposed_by_run_id) REFERENCES web_ops_runs(id),
+                FOREIGN KEY(decided_by_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_approval_events (
+                id TEXT PRIMARY KEY,
+                approval_id TEXT NOT NULL,
+                actor_account_id TEXT,
+                action TEXT NOT NULL,
+                state TEXT NOT NULL,
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(approval_id) REFERENCES web_ops_approvals(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_triage (
+                case_id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_revision INTEGER NOT NULL,
+                policy_version INTEGER NOT NULL,
+                input_hash TEXT NOT NULL,
+                category TEXT NOT NULL,
+                priority TEXT NOT NULL,
+                case_state TEXT NOT NULL,
+                risk TEXT NOT NULL,
+                disposition TEXT NOT NULL,
+                required_role TEXT NOT NULL,
+                sla_minutes INTEGER NOT NULL,
+                sla_status TEXT NOT NULL,
+                last_run_id TEXT,
+                first_classified_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(last_run_id) REFERENCES web_ops_runs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_support_triage_events (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                run_id TEXT NOT NULL,
+                action TEXT NOT NULL,
+                input_hash TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(case_id, input_hash),
+                FOREIGN KEY(case_id) REFERENCES web_support_cases(id),
+                FOREIGN KEY(run_id) REFERENCES web_ops_runs(id)
+            )
+            """
+        )
+        # Runtime Reliability Follow-up records only opaque, route-family
+        # aggregate signals from explicitly allowed Web-native private APIs.
+        # They deliberately omit raw request paths, query strings, account
+        # input, exception text, credentials and provider/Bot/payment state.
+        # A follow-up is a human-review work item, never evidence of an
+        # automatic repair or a permission to take a high-risk action.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_runtime_signal_buckets (
+                id TEXT PRIMARY KEY,
+                bucket_fingerprint TEXT NOT NULL UNIQUE,
+                route_family TEXT NOT NULL,
+                signal_code TEXT NOT NULL,
+                count INTEGER NOT NULL DEFAULT 0 CHECK(count >= 0),
+                revision INTEGER NOT NULL DEFAULT 1 CHECK(revision >= 1),
+                first_seen_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        # A route-family total is separate from five-minute buckets so its
+        # revision stays monotonic when a resolved follow-up sees a new error
+        # in a later bucket.  The aggregate has no URL, request identity or
+        # diagnostic payload and remains useful even after old buckets expire.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_runtime_signal_totals (
+                route_family TEXT NOT NULL,
+                signal_code TEXT NOT NULL,
+                occurrence_count INTEGER NOT NULL DEFAULT 0 CHECK(occurrence_count >= 0),
+                revision INTEGER NOT NULL DEFAULT 1 CHECK(revision >= 1),
+                first_seen_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                PRIMARY KEY(route_family, signal_code)
+            )
+            """
+        )
+        # Backfill only aggregate counts for installations created before the
+        # total table existed. ``MAX`` makes this additive migration monotonic
+        # when schema checks run again after new buckets have been observed.
+        conn.execute(
+            """
+            INSERT INTO web_ops_runtime_signal_totals
+                (route_family, signal_code, occurrence_count, revision, first_seen_at, last_seen_at, updated_at)
+            SELECT route_family, signal_code, SUM(count), MAX(1, SUM(count)), MIN(first_seen_at), MAX(last_seen_at), MAX(updated_at)
+            FROM web_ops_runtime_signal_buckets
+            GROUP BY route_family, signal_code
+            ON CONFLICT(route_family, signal_code) DO UPDATE SET
+                occurrence_count=MAX(web_ops_runtime_signal_totals.occurrence_count, excluded.occurrence_count),
+                revision=MAX(web_ops_runtime_signal_totals.revision, excluded.revision),
+                first_seen_at=MIN(web_ops_runtime_signal_totals.first_seen_at, excluded.first_seen_at),
+                last_seen_at=MAX(web_ops_runtime_signal_totals.last_seen_at, excluded.last_seen_at),
+                updated_at=MAX(web_ops_runtime_signal_totals.updated_at, excluded.updated_at)
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_followups (
+                id TEXT PRIMARY KEY,
+                fingerprint TEXT NOT NULL UNIQUE,
+                source_kind TEXT NOT NULL,
+                source_id TEXT NOT NULL,
+                account_id TEXT,
+                required_role TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'open'
+                    CHECK(state IN ('open', 'acknowledged', 'resolved', 'superseded')),
+                source_revision INTEGER NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1 CHECK(revision >= 1),
+                created_by_run_id TEXT,
+                opened_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                acknowledged_at TEXT,
+                resolved_at TEXT,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(created_by_run_id) REFERENCES web_ops_runs(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_ops_followup_events (
+                id TEXT PRIMARY KEY,
+                followup_id TEXT NOT NULL,
+                actor_account_id TEXT,
+                action TEXT NOT NULL,
+                state TEXT NOT NULL
+                    CHECK(state IN ('open', 'acknowledged', 'resolved', 'superseded')),
+                revision INTEGER NOT NULL,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(followup_id) REFERENCES web_ops_followups(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Privacy & Data Control stores only a staged customer request and a
+        # compact lifecycle receipt.  There is intentionally no destructive
+        # migration, account deletion cascade, export-file blob, Bot identity,
+        # provider/payment/job field or free-text reason in this schema.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_data_control_requests (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                request_kind TEXT NOT NULL CHECK(request_kind IN ('erasure')),
+                scope_key TEXT NOT NULL CHECK(scope_key IN ('web_authoring_only')),
+                state TEXT NOT NULL CHECK(state IN ('awaiting_review', 'identity_verification_pending', 'cancelled', 'closed')),
+                policy_version TEXT NOT NULL,
+                blocker_summary_json TEXT NOT NULL DEFAULT '{}',
+                requested_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                cancelled_at TEXT,
+                closed_at TEXT,
+                revision INTEGER NOT NULL DEFAULT 1 CHECK(revision >= 1),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_data_control_request_events (
+                id TEXT PRIMARY KEY,
+                request_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK(action IN ('requested', 'cancelled', 'reviewed', 'closed')),
+                state TEXT NOT NULL CHECK(state IN ('awaiting_review', 'identity_verification_pending', 'cancelled', 'closed')),
+                revision INTEGER NOT NULL CHECK(revision >= 1),
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(request_id) REFERENCES web_data_control_requests(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        # Governance Documents are Web-native internal drafts/review records.
+        # They do not mirror Bot ``internal_documents`` and deliberately have
+        # no Telegram file reference, path, bridge, wallet, payment, provider,
+        # job, customer, finance, HR or contract field.  No FK uses CASCADE:
+        # a lifecycle/version/event record must never vanish as a side effect
+        # of an unrelated account/document operation.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_governance_documents (
+                id TEXT PRIMARY KEY,
+                owner_account_id TEXT NOT NULL,
+                department TEXT NOT NULL
+                    CHECK(department IN ('marketing', 'tech_codex', 'legal_policy')),
+                document_type TEXT NOT NULL
+                    CHECK(document_type IN (
+                        'campaign_plan', 'content_caption', 'posting_schedule', 'kpi_report', 'brand_asset',
+                        'codex_task', 'deployment_note', 'bug_report', 'architecture_doc',
+                        'terms', 'privacy', 'data_policy', 'ip_policy', 'customer_notice'
+                    )),
+                title TEXT NOT NULL,
+                summary TEXT NOT NULL DEFAULT '',
+                body TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                retention_label TEXT NOT NULL DEFAULT 'manual_review'
+                    CHECK(retention_label IN ('manual_review', '3_years', '5_years', 'permanent')),
+                confidentiality_level TEXT NOT NULL DEFAULT 'internal'
+                    CHECK(confidentiality_level IN ('internal', 'confidential', 'restricted')),
+                state TEXT NOT NULL DEFAULT 'draft'
+                    CHECK(state IN ('draft', 'in_review', 'approved', 'archived')),
+                review_note TEXT NOT NULL DEFAULT '',
+                reviewer_account_id TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                submitted_at TEXT,
+                reviewed_at TEXT,
+                archived_at TEXT,
+                revision INTEGER NOT NULL DEFAULT 1 CHECK(revision >= 1),
+                FOREIGN KEY(owner_account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(reviewer_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        governance_document_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_governance_documents)").fetchall()}
+        if "retention_label" not in governance_document_columns:
+            conn.execute("ALTER TABLE web_governance_documents ADD COLUMN retention_label TEXT NOT NULL DEFAULT 'manual_review'")
+        if "confidentiality_level" not in governance_document_columns:
+            conn.execute("ALTER TABLE web_governance_documents ADD COLUMN confidentiality_level TEXT NOT NULL DEFAULT 'internal'")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_governance_document_versions (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                revision INTEGER NOT NULL CHECK(revision >= 1),
+                actor_account_id TEXT NOT NULL,
+                action TEXT NOT NULL
+                    CHECK(action IN ('created', 'updated', 'submitted', 'approved', 'rejected', 'archived', 'restored')),
+                state TEXT NOT NULL
+                    CHECK(state IN ('draft', 'in_review', 'approved', 'archived')),
+                department TEXT NOT NULL,
+                document_type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                summary TEXT NOT NULL DEFAULT '',
+                body TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                retention_label TEXT NOT NULL DEFAULT 'manual_review',
+                confidentiality_level TEXT NOT NULL DEFAULT 'internal',
+                review_note TEXT NOT NULL DEFAULT '',
+                created_at TEXT NOT NULL,
+                UNIQUE(document_id, revision),
+                FOREIGN KEY(document_id) REFERENCES web_governance_documents(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        governance_version_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_governance_document_versions)").fetchall()}
+        if "retention_label" not in governance_version_columns:
+            conn.execute("ALTER TABLE web_governance_document_versions ADD COLUMN retention_label TEXT NOT NULL DEFAULT 'manual_review'")
+        if "confidentiality_level" not in governance_version_columns:
+            conn.execute("ALTER TABLE web_governance_document_versions ADD COLUMN confidentiality_level TEXT NOT NULL DEFAULT 'internal'")
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_governance_document_events (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                actor_account_id TEXT NOT NULL,
+                action TEXT NOT NULL
+                    CHECK(action IN ('created', 'updated', 'submitted', 'approved', 'rejected', 'archived', 'restored')),
+                from_state TEXT,
+                to_state TEXT NOT NULL
+                    CHECK(to_state IN ('draft', 'in_review', 'approved', 'archived')),
+                revision INTEGER NOT NULL CHECK(revision >= 1),
+                created_at TEXT NOT NULL,
+                UNIQUE(document_id, revision, action),
+                FOREIGN KEY(document_id) REFERENCES web_governance_documents(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
+        )
+        # Account Security reads/revokes only active, unexpired sessions in
+        # newest-first order. This additive index keeps that owner-scoped
+        # projection bounded without changing the signed-session schema.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_sessions_account_active_recent ON web_sessions(account_id, revoked_at, expires_at, last_seen_at DESC, id)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_audit_created ON web_audit_events(created_at)"
@@ -2567,6 +4057,9 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_asset_files_account_state_updated ON web_asset_files(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_asset_files_owner_state_lifecycle ON web_asset_files(account_id, state, lifecycle_revision, id)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_asset_files_project_account_state ON web_asset_files(project_id, account_id, state, updated_at DESC, id DESC)"
@@ -2625,8 +4118,193 @@ def ensure_copyfast_schema() -> None:
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_campaign_plans_account_status_schedule ON web_campaign_plans(account_id, approval_status, scheduled_for)"
         )
+        # Calendar month reads always begin with the signed Web account and a
+        # local ``scheduled_for`` range. This additive index keeps the
+        # read-only agenda bounded without reusing or migrating any Bot
+        # campaign/calendar schema.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_campaign_plans_account_schedule_window ON web_campaign_plans(account_id, scheduled_for, approval_status, platform, id)"
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_campaign_plans_account_updated ON web_campaign_plans(account_id, updated_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_campaign_schedule_intents_account_plan_state_trigger ON web_campaign_schedule_intents(account_id, plan_id, state, trigger_at ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_campaign_schedule_intents_dispatch_window ON web_campaign_schedule_intents(state, trigger_at ASC, id ASC)"
+        )
+        # One explicit active request may materialize only one in-app record
+        # for the same owner, Campaign revision and normalized UTC trigger.
+        # A cancellation or guarded record does not prevent a later explicit
+        # owner choice from being recorded.
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_web_campaign_schedule_intents_active_source_trigger ON web_campaign_schedule_intents(account_id, plan_id, source_revision, trigger_at) WHERE state='active'"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_items_account_state_updated ON web_workboard_items(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_items_account_priority_due ON web_workboard_items(account_id, priority, due_at, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_refs_account_type_id ON web_workboard_item_references(account_id, ref_type, ref_id, item_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_refs_item_ordinal ON web_workboard_item_references(item_id, account_id, ordinal ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_checklist_item_state_ordinal ON web_workboard_checklist_items(item_id, account_id, state, ordinal ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_item_versions_item_revision ON web_workboard_item_versions(item_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_checklist_versions_item_revision ON web_workboard_checklist_versions(item_id, checklist_id, account_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_events_account_created ON web_workboard_events(account_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_events_item_created ON web_workboard_events(item_id, account_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_schedule_intents_account_item_state_trigger ON web_workboard_schedule_intents(account_id, item_id, state, trigger_at ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workboard_schedule_intents_dispatch_window ON web_workboard_schedule_intents(state, trigger_at ASC, id ASC)"
+        )
+        # A user can cancel and later make a new explicit choice, but an
+        # active source revision/time combination can never fan out into two
+        # independent in-app records.
+        conn.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS uq_web_workboard_schedule_intents_active_source_trigger ON web_workboard_schedule_intents(account_id, item_id, source_revision, trigger_at) WHERE state='active'"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_nonces_expiry ON web_notification_nonces(expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_runs_started ON web_notification_runs(started_at DESC, id DESC)"
+        )
+        # Bounded Inbox scheduler retention selects only old terminal receipts
+        # and must quickly exclude active/current rows. Provenance lookup keeps
+        # any run that created a durable customer Inbox item.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_runs_terminal_finished ON web_notification_runs(state, finished_at ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_steps_run_sequence ON web_notification_run_steps(run_id, sequence ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_items_account_state_created ON web_notification_items(account_id, state, created_at DESC, id DESC)"
+        )
+        # The signed Inbox scheduler reads only opaque overdue unread warnings
+        # for bounded, account-round-robin urgency maintenance. This additive
+        # index does not change row ownership, state or delivery behavior.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_items_unread_warning_occurrence ON web_notification_items(state, severity, account_id, occurrence_at ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_items_account_source ON web_notification_items(account_id, source_kind, source_id, created_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_items_source_occurrence ON web_notification_items(account_id, source_kind, source_id, source_revision, occurrence_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_items_created_by_run ON web_notification_items(created_by_run_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_dedupes_source_occurrence ON web_notification_dedupes(account_id, source_kind, source_id, source_revision, occurrence_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_notification_events_item_created ON web_notification_events(notification_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_nonces_expiry ON web_ops_nonces(expires_at)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_runs_started ON web_ops_runs(started_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_runs_state_started ON web_ops_runs(state, started_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_steps_run_sequence ON web_ops_run_steps(run_id, sequence ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_incidents_state_seen ON web_ops_incidents(state, last_observed_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_incidents_account_case ON web_ops_incidents(account_id, support_case_id, last_observed_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_observations_incident_created ON web_ops_incident_observations(incident_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_playbook_runs_run ON web_ops_playbook_runs(run_id, started_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_approvals_state_expiry ON web_ops_approvals(state, expires_at ASC, proposed_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_approvals_case_state ON web_ops_approvals(support_case_id, state, proposed_at DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_approval_events_approval_created ON web_ops_approval_events(approval_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_triage_account_updated ON web_support_triage(account_id, updated_at DESC, case_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_triage_sla_status ON web_support_triage(sla_status, updated_at DESC, case_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_support_triage_events_case_created ON web_support_triage_events(case_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_runtime_signals_family_seen ON web_ops_runtime_signal_buckets(route_family, signal_code, last_seen_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_runtime_signals_seen ON web_ops_runtime_signal_buckets(last_seen_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_runtime_signal_totals_seen ON web_ops_runtime_signal_totals(last_seen_at DESC, route_family)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_followups_state_severity_updated ON web_ops_followups(state, severity, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_followups_source_updated ON web_ops_followups(source_kind, source_id, source_revision, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_followups_account_state_updated ON web_ops_followups(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_ops_followup_events_followup_created ON web_ops_followup_events(followup_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_data_control_requests_account_state_updated ON web_data_control_requests(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_data_control_events_request_created ON web_data_control_request_events(request_id, account_id, created_at DESC, id DESC)"
+        )
+        # Governance list/review projections are all bounded and admin-scoped.
+        # Keep their fixed filters/select order indexed without introducing a
+        # cross-domain relationship or changing historical data.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_governance_documents_state_department_updated ON web_governance_documents(state, department, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_governance_documents_owner_state_updated ON web_governance_documents(owner_account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_governance_documents_type_updated ON web_governance_documents(document_type, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_governance_versions_document_revision ON web_governance_document_versions(document_id, revision DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_governance_events_document_created ON web_governance_document_events(document_id, created_at DESC, id DESC)"
         )
 
 

@@ -31,7 +31,7 @@ Static audit evidence is the frozen Bot SHA
 | `/support_tickets`, `/support_ticket`, `/support_close`, `/ticket_admin` | `/admin/support` triage, staff-only case detail, public/internal reply and state/priority update | Implemented Web-native; no canonical refund, provider or Bot command is invoked. |
 | Bot `new`, `reviewing`, `waiting_user`, `waiting_provider`, `refund_pending`, `resolved`, `closed` | Same state vocabulary | State is only a Web case lifecycle. `waiting_provider` never proves a provider call. |
 | Bot SLA reports | Admin overdue metric (24h for new/review/refund, 72h waiting-provider) | Local Web calculation, not a Bot or provider SLA claim. |
-| Telegram attachment/file ID flow and notifications | None in this module | Deliberately deferred. There is no fake upload, delivery or notification claim. |
+| Telegram attachment/file ID flow and notifications | Asset Vault evidence link per Web case | Only an existing private Web Asset Vault PNG/JPEG/WebP/TXT can be linked; no Telegram file ID, raw Support upload, OCR, notification or external delivery. |
 | Payment proof/refund/top-up requests | Category may be recorded, but no proof content is accepted | All TXID/bill/QR/account-number/manual-payment handling remains outside this Web module. |
 
 ## State and visibility model
@@ -71,14 +71,17 @@ GET  /api/v1/support/summary
 GET  /api/v1/support/cases?limit=&offset=&state=&category=&q=
 POST /api/v1/support/cases
 GET  /api/v1/support/cases/{case_id}
+POST /api/v1/support/cases/{case_id}/attachments
+GET  /api/v1/support/cases/{case_id}/attachments/{attachment_id}/download
 POST /api/v1/support/cases/{case_id}/reply
 POST /api/v1/support/cases/{case_id}/close
 POST /api/v1/support/cases/{case_id}/reopen
 GET  /api/v1/support/events
 
 GET  /api/v1/support/admin/summary
-GET  /api/v1/support/admin/cases?limit=&offset=&state=&category=&q=
+GET  /api/v1/support/admin/cases?limit=&offset=&state=&category=&q=&team_queue=&assignment=&sla_class=&care_sla_status=&escalation_state=
 GET  /api/v1/support/admin/cases/{case_id}
+GET  /api/v1/support/admin/cases/{case_id}/attachments/{attachment_id}/download
 POST /api/v1/support/admin/cases/{case_id}/reply
 POST /api/v1/support/admin/cases/{case_id}/update
 ```
@@ -86,6 +89,41 @@ POST /api/v1/support/admin/cases/{case_id}/update
 Lists use bounded `limit` and `offset`, returning `has_more` plus
 `next_offset` when more results exist.  Browser state belongs to the mounted
 Portal page and is not written to localStorage or passed to Telegram.
+
+### Customer Care list filters
+
+The staff list accepts only bounded Web-native metadata: `team_queue`
+(`general`, `technical`, `account`, `creative`, `document`, `product`),
+`assignment` (`all`, `mine`, `assigned`, `unassigned`), `sla_class` (`standard`,
+`priority`, `critical`), `care_sla_status` (`all`, `unavailable`, `pending`,
+`within_target`, `breached`, `overdue_unacknowledged`) and `escalation_state`
+(`none`, `requested`, `acknowledged`, `resolved`, `cancelled`).  Cases without a
+control row safely retain the defaults `general` / `unassigned` / `standard` /
+`none`.
+
+`assignment=mine` is resolved exclusively from the signed operator/manager
+account on the server as `ctrl.assigned_account_id = account.id`; the browser
+never receives or submits an assignee ID. It can be combined with every other
+fixed Customer Care filter without turning the list into a staff-directory or
+cross-account query.
+
+`care_sla_status` is evaluated server-side before the bounded list's
+`LIMIT`/`OFFSET`, using the same Web Customer Care **first staff touch** target
+shown on a case (`24h` standard, `8h` priority, `2h` critical). It is a current
+internal triage snapshot, not the separate customer-waiting report, Operations
+Autopilot health state, a customer delivery promise or external notification.
+The browser supplies no timestamp or clock; malformed `created_at` is surfaced
+only by the `unavailable` fixed enum, while a missing/malformed first-touch
+timestamp continues through the normal `pending`/`overdue_unacknowledged`
+branch. No timer, case mutation or notification is created by filtering.
+
+The list does not accept an assignee/account identifier, external queue,
+provider, Bot, payment, ledger, system-clock or timestamp filter.  It returns an assignee display name
+only; the internal assignee ID is available solely to a manager on the
+case-specific detail read where the triage control needs it, while the
+escalation reason remains case-detail-only.  The browser keeps the filter only in mounted page memory, offers
+an explicit **Xóa lọc** action, and does not save staff search terms into
+transient browser state.
 
 ## Support operator authorization
 
@@ -109,9 +147,13 @@ all other `/admin/*` routes retain their canonical Bot-admin guard.
 - Content is bounded and rejects API/GitHub/Google/AWS-style keys, bearer tokens,
   passwords, OTP/verification codes/CVV, every 13–19 digit card-shaped value
   (including spaces, repeated whitespace, dots, slashes or line breaks), and
-  bill/TXID/mã GD/STK/bank-account/QR/payment-proof language.  The server
+  bill/TXID/mã GD/STK/bank-account/QR/payment-proof language. The server
   repeats this check for subject, customer reply, operator reply and internal
-  note; attachments are intentionally not supported yet.
+  note. Evidence does not accept bytes: it links an existing active owner
+  Asset Vault item, requires a redaction attestation, allows at most three
+  PNG/JPEG/WebP/TXT items up to 5 MB, rejects payment/refund/top-up category,
+  scans TXT for the same secret/card/OTP/manual-payment patterns, and never
+  claims image OCR.
 - Every customer case query includes `account_id`; another account receives
   the same guarded not-found result without text leakage.
 - Customer and operator writes are rate-limited before SQLite work, plus
@@ -124,11 +166,17 @@ all other `/admin/*` routes retain their canonical Bot-admin guard.
   to 500 messages.  No mutation creates a fake delivery or outcome.
 - PWA remains restricted to public shell assets; Support Desk routes/API and
   private timelines must never be cached.
+- Evidence downloads re-check attachment → case → Asset Vault ownership and
+  blob integrity server-side, use `no-store, private`, `nosniff`, no-referrer
+  and CSP sandbox headers, and expose no public URL, storage path, hash,
+  original filename or Asset Vault ID in events/audit records. Archiving the
+  source Asset Vault item never makes evidence public or deletes it.
 
 ## Configuration and durability
 
 ```text
 WEBAPP_SUPPORT_DESK_ENABLED=true
+WEBAPP_ASSET_VAULT_ENABLED=true  # only required for evidence links/downloads
 WEBAPP_SESSION_DB_PATH=<persistent-volume database path in production>
 ```
 

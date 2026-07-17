@@ -14,13 +14,13 @@ import re
 import secrets
 import uuid
 from io import BytesIO
-from typing import Any
+from typing import Any, Callable
 from urllib.parse import urlparse
 from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
 from fastapi.responses import RedirectResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import (
     _record_audit,
@@ -34,8 +34,27 @@ from copyfast_auth import (
     require_csrf,
 )
 from copyfast_bridge import bridge_configured, bridge_request
-from copyfast_db import ensure_copyfast_schema, transaction, utc_now
+from copyfast_capability_hub import capability_hub
+from copyfast_campaign_schedule import (
+    MAX_ACTIVE_SCHEDULE_INTENTS_PER_ACCOUNT,
+    MAX_SCHEDULE_INTENTS_PER_ACCOUNT,
+    MAX_SCHEDULE_INTENTS_PER_PLAN,
+    SNAPSHOT_HASH_PATTERN,
+    campaign_source_hash,
+    canonical_json_hash,
+    normalize_schedule_trigger,
+)
+from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_native_read_models import (
+    get_native_job,
+    list_native_assets,
+    list_native_completed_outputs,
+    list_native_jobs,
+    parse_native_asset_id,
+    parse_native_job_id,
+)
 from copyfast_registry import FEATURE_BY_KEY, catalog
+from copyfast_web_engine import engine_descriptor
 
 
 router = APIRouter(prefix="/api/v1", tags=["COPYFAST Core"])
@@ -117,6 +136,13 @@ CAMPAIGN_PLAN_STATUS_LABELS = {
     "scheduled": "đã xếp lịch nội bộ",
     "archived": "đã lưu trữ",
 }
+CAMPAIGN_CALENDAR_MONTH_PATTERN = re.compile(r"^(\d{4})-(\d{2})$")
+# The Calendar is a read-only planning window. Keep one server-enforced cap
+# instead of accepting an arbitrary browser limit so an unusually dense month
+# cannot become an unbounded private-data response.
+CAMPAIGN_CALENDAR_WINDOW_MAX_ITEMS = 200
+CAMPAIGN_SCHEDULE_IDEMPOTENCY_RETENTION = timedelta(hours=24)
+CAMPAIGN_SCHEDULE_MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1_024
 
 # ``web_audit_events`` is intentionally an internal, append-only audit trail.
 # Customers may inspect a bounded history of their *own Web activity*, but the
@@ -136,6 +162,11 @@ ACCOUNT_ACTIVITY_LABELS = {
     "auth.telegram_login_confirm": ("Bot đã xác minh đăng nhập Telegram", "Bảo mật"),
     "auth.telegram_login_complete": ("Hoàn tất đăng nhập Telegram", "Bảo mật"),
     "auth.telegram_account_upgrade": ("Thêm phương thức Email", "Bảo mật"),
+    "auth.mfa_login_challenge": ("Xác minh mật khẩu, chờ mã hai bước", "Bảo mật"),
+    "auth.mfa_login": ("Xác thực hai bước khi đăng nhập", "Bảo mật"),
+    "auth.mfa_enrollment_start": ("Bắt đầu thiết lập xác thực hai bước", "Bảo mật"),
+    "auth.mfa_enrollment_confirm": ("Bật xác thực hai bước", "Bảo mật"),
+    "auth.mfa_disable": ("Tắt xác thực hai bước", "Bảo mật"),
     "oauth.signin": ("Đăng nhập OAuth", "Bảo mật"),
     "oauth.link": ("Liên kết phương thức OAuth", "Bảo mật"),
     "oauth.link_start": ("Bắt đầu liên kết OAuth", "Bảo mật"),
@@ -145,6 +176,9 @@ ACCOUNT_ACTIVITY_LABELS = {
     "campaign.plan.update": ("Cập nhật kế hoạch Web", "Campaign Planner"),
     "campaign.plan.review": ("Tự rà soát kế hoạch Web", "Campaign Planner"),
     "campaign.plan.status": ("Cập nhật trạng thái kế hoạch Web", "Campaign Planner"),
+    "campaign.schedule.create": ("Tạo lịch nhắc Campaign", "Campaign Planner"),
+    "campaign.schedule.cancel": ("Hủy lịch nhắc Campaign", "Campaign Planner"),
+    "campaign.schedule.reconfirm": ("Xác nhận lại lịch nhắc Campaign", "Campaign Planner"),
     "workspace.draft.create": ("Lưu bản nháp Web", "AI Studio"),
     "workspace.draft.update": ("Cập nhật bản nháp Web", "AI Studio"),
     "workspace.draft.archive": ("Lưu trữ bản nháp Web", "AI Studio"),
@@ -186,6 +220,7 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.prompt_library.restore_version": ("Khôi phục phiên bản template", "Prompt Library"),
     "web.prompt_library.duplicate": ("Nhân bản template", "Prompt Library"),
     "web.prompt_library.import": ("Import template Prompt Library", "Prompt Library"),
+    "web.prompt_library.gallery_save": ("Lưu seed Prompt Gallery", "Prompt Library"),
     "web.media.collection.create": ("Tạo Audio Library collection", "Audio Library"),
     "web.media.collection.update": ("Lưu phiên bản Audio Library", "Audio Library"),
     "web.media.collection.collection_archived": ("Lưu trữ Audio Library collection", "Audio Library"),
@@ -238,6 +273,12 @@ WORKSPACE_DRAFT_FORBIDDEN_FIELDS = frozenset({
 WORKSPACE_DRAFT_FIELD_PATTERN = re.compile(r"^[a-z][a-z0-9_]{0,63}$")
 WORKSPACE_DRAFT_MAX_ITEMS = 100
 WORKSPACE_DRAFT_MAX_INPUT_BYTES = 16_000
+# Keep the old all-at-once response shape useful for existing callers while
+# allowing the Portal to ask for smaller, bounded history pages.  Active
+# drafts are capped at 100; archived history is intentionally pageable.
+WORKSPACE_DRAFT_LIST_DEFAULT_LIMIT = 100
+WORKSPACE_DRAFT_LIST_MAX_LIMIT = 100
+WORKSPACE_DRAFT_LIST_MAX_OFFSET = 10_000
 
 
 def _public_account_activity_item(row: tuple[Any, ...]) -> dict[str, str]:
@@ -400,6 +441,10 @@ def _flags() -> dict[str, bool]:
         "provider_calls_enabled": enabled("WEBAPP_PROVIDER_CALLS_ENABLED", False),
         "payment_enabled": enabled("WEBAPP_PAYMENT_ENABLED", False),
         "admin_erp_enabled": enabled("WEBAPP_ADMIN_ERP_ENABLED", True),
+        # TOTP is a separate Web account-security factor. Its flag never
+        # enables Telegram/Bot identity, provider OAuth, wallet/Xu, PayOS,
+        # jobs, delivery, notifications or any external authority.
+        "totp_mfa_enabled": enabled("WEBAPP_TOTP_MFA_ENABLED", False),
         # Admin ERP is intentionally read-only until a separate canonical
         # write adapter is reviewed.  Keeping this false prevents direct API
         # callers from bypassing the presentation shell's read-only posture.
@@ -421,6 +466,9 @@ def _flags() -> dict[str, bool]:
         # Image decoding is a distinct capability and stays disabled until
         # Pillow plus the bounded private storage contract are deployed.
         "image_to_pdf_enabled": enabled("WEBAPP_IMAGE_TO_PDF_ENABLED", False),
+        # Local OCR has a Tesseract binary/language-pack boundary distinct from
+        # generic document parsing or Pillow Image → PDF.
+        "image_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", False),
         # PDF text extraction creates a DOCX artifact with a separate writer
         # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
         # PDF layout converter.
@@ -439,10 +487,30 @@ def _flags() -> dict[str, bool]:
         # database.  This flag is intentionally independent of Bot, wallet,
         # payment, provider and persistent-file capability flags.
         "memory_center_enabled": enabled("WEBAPP_MEMORY_CENTER_ENABLED", True),
+        # Privacy & Data Control is a separate, Web-only authoring-data
+        # surface. It remains opt-in because it can create a private direct
+        # export attachment and record staged review requests; it never grants
+        # Bot/Telegram, wallet, PayOS, provider, job, Asset Vault or deletion
+        # authority.
+        "data_controls_enabled": enabled("WEBAPP_DATA_CONTROLS_ENABLED", False),
+        # Governance Documents is a Web-local Admin ERP module. It requires
+        # the existing umbrella switch and a second false-by-default opt-in so
+        # a historic Admin navigation default never exposes a new durable
+        # internal-record surface accidentally. It does not imply a Bot/Core
+        # bridge, wallet/Xu, PayOS, provider, job, publication or notification
+        # capability.
+        "governance_documents_enabled": (
+            enabled("WEBAPP_ADMIN_ERP_ENABLED", True)
+            and enabled("WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED", False)
+        ),
         # Prompt templates and immutable revisions are owned by the signed
         # Web account. This flag has no Bot bridge, wallet, payment, provider
         # or job-runtime implication.
         "prompt_library_enabled": enabled("WEBAPP_PROMPT_LIBRARY_ENABLED", True),
+        # Prompt Studio returns only a transient deterministic blueprint. It
+        # does not persist templates or enable Bot/Core Bridge, provider,
+        # model, job, wallet/Xu, PayOS, asset, publishing or delivery work.
+        "prompt_studio_enabled": enabled("WEBAPP_PROMPT_STUDIO_ENABLED", True),
         # Audio Library & Briefing is a Web-owned organisation surface. It
         # stores only owner-scoped Asset Vault IDs and authored metadata;
         # enabling it never enables provider search, AI music, a Bot job, Xu,
@@ -453,6 +521,29 @@ def _flags() -> dict[str, bool]:
         # enable Bot execution, an AI/provider, payments, Xu, jobs, publish
         # automation or external delivery.
         "content_studio_enabled": enabled("WEBAPP_CONTENT_STUDIO_ENABLED", True),
+        # Channel Strategy profiles are revisioned data owned by the signed
+        # Web account. This flag never enables a social-account connection,
+        # remote channel lookup, analytics import, Bot/provider execution,
+        # job, Xu/PayOS, publishing or delivery.
+        "channel_strategy_enabled": enabled("WEBAPP_CHANNEL_STRATEGY_ENABLED", True),
+        # Content Handoff records are a private, Web-native coordination
+        # ledger.  This maintenance switch does not enable a social account,
+        # external recipient, Bot/provider action, job, wallet, payment or
+        # publication; `handed_off` has only internal human-handoff meaning.
+        "content_handoff_enabled": enabled("WEBAPP_CONTENT_HANDOFF_ENABLED", True),
+        # Partner & Lead CRM is private Web-owned business metadata.  It is
+        # intentionally not an affiliate/referral, payout, outreach, social
+        # or payment capability, even when the switch is enabled.
+        "partner_crm_enabled": enabled("WEBAPP_PARTNER_CRM_ENABLED", True),
+        # Trend Research is a signed-session, request-only manual checklist.
+        # This maintenance switch never enables live search, social scraping,
+        # Bot/provider work, jobs, wallet/Xu, PayOS, assets or publishing.
+        "trend_research_enabled": enabled("WEBAPP_TREND_RESEARCH_ENABLED", True),
+        # Media Factory Blueprint is the signed, request-only Web conversion
+        # of the Bot's static content/video-pack checklist. It does not enable
+        # live search, provider/Bot execution, jobs, Xu/PayOS, output or
+        # publishing.
+        "media_factory_enabled": enabled("WEBAPP_MEDIA_FACTORY_ENABLED", True),
         # Voice Studio stores Web-owned profile/script metadata and local cue
         # sheets only.  This switch never enables bridge TTS/clone/preview,
         # provider calls, Bot jobs, Xu, PayOS or output delivery.
@@ -480,11 +571,32 @@ def _flags() -> dict[str, bool]:
         # maintenance flag never enables platform data, Bot/provider calls,
         # wallet, PayOS, jobs, publishing, AI insight or report delivery.
         "analytics_workspace_enabled": enabled("WEBAPP_ANALYTICS_WORKSPACE_ENABLED", True),
+        # A finalized manual CSV attachment is intentionally a second,
+        # fail-closed switch.  It is not the Bot's canonical campaign report,
+        # a platform export, a stored Asset Vault artifact or a delivery job.
+        "analytics_workspace_export_enabled": enabled("WEBAPP_ANALYTICS_WORKSPACE_EXPORT_ENABLED", False),
+        # Workboard is an independent, signed-account coordination surface.
+        # The flag can place that private Web-owned feature into maintenance
+        # without enabling Bot work, providers, wallet/Xu, PayOS, jobs,
+        # publishing, notifications or any external automation.
+        "workboard_enabled": enabled("WEBAPP_WORKBOARD_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the
         # legacy bridge compatibility routes.
         "support_desk_enabled": enabled("WEBAPP_SUPPORT_DESK_ENABLED", True),
+        # Controlled Operations Autopilot is independent of the Bot bridge.
+        # These public booleans reveal only the maintenance posture, never a
+        # scheduler endpoint, secret, incident fingerprint or approval data.
+        "autopilot_enabled": enabled("WEBAPP_AUTOPILOT_ENABLED", False),
+        "autopilot_safe_remediation_enabled": enabled("WEBAPP_AUTOPILOT_SAFE_REMEDIATION_ENABLED", False),
+        # Inbox records are private Web metadata.  Automation is a separate
+        # opt-in scheduler and never means Telegram/email/web-push delivery.
+        "notification_center_enabled": enabled("WEBAPP_NOTIFICATION_CENTER_ENABLED", True),
+        "notification_automation_enabled": enabled("WEBAPP_NOTIFICATION_AUTOMATION_ENABLED", False),
+        # Reliability Follow-up is a separately opt-in, Web-native metadata
+        # queue. It never grants external repair/provider/payment authority.
+        "reliability_followup_enabled": enabled("WEBAPP_RELIABILITY_FOLLOWUP_ENABLED", False),
         "pwa_enabled": enabled("WEBAPP_PWA_ENABLED", False),
     }
 
@@ -1727,7 +1839,14 @@ def _campaign_plan_id(value: str) -> str:
         raise HTTPException(status_code=422, detail="Mã kế hoạch không hợp lệ") from exc
 
 
-def _campaign_plan_public(row: tuple[Any, ...]) -> dict[str, str]:
+def _campaign_schedule_intent_id(value: str) -> str:
+    try:
+        return str(uuid.UUID(str(value)))
+    except (TypeError, ValueError, AttributeError) as exc:
+        raise HTTPException(status_code=422, detail="Mã lịch nhắc Campaign không hợp lệ") from exc
+
+
+def _campaign_plan_public(row: tuple[Any, ...]) -> dict[str, Any]:
     """Project only the signed account's Web-owned planning fields to the browser."""
     return {
         "id": str(row[0]),
@@ -1740,6 +1859,249 @@ def _campaign_plan_public(row: tuple[Any, ...]) -> dict[str, str]:
         "review_note": str(row[7] or ""),
         "created_at": str(row[8]),
         "updated_at": str(row[9]),
+        "revision": max(1, int(row[10] or 1)),
+    }
+
+
+def _campaign_plan_source_row(conn: Any, *, plan_id: str, account_id: str) -> tuple[Any, ...] | None:
+    """Read one owner-scoped source row for an explicit schedule intent.
+
+    This projection is intentionally private to server-side source binding.
+    The route never returns its title, URL or review text through the intent
+    list/receipt and the Notification scheduler re-reads it independently at
+    materialization time.
+    """
+    return conn.execute(
+        """SELECT id, account_id, title, destination_url, platform, objective, scheduled_for,
+                  approval_status, review_note, created_at, updated_at, revision
+           FROM web_campaign_plans WHERE id=? AND account_id=?""",
+        (plan_id, account_id),
+    ).fetchone()
+
+
+def _campaign_schedule_actor_allowed(account: dict[str, Any]) -> bool:
+    """Only accept a server-resolved signed account role for local schedules."""
+    return bool(str(account.get("id") or "").strip()) and str(account.get("role") or "user").strip().lower() in {"user", "admin"}
+
+
+def _campaign_schedule_source_coordinates(plan: tuple[Any, ...] | None) -> tuple[int, str] | None:
+    """Return only current revision + digest for an active local Campaign."""
+    if not plan or str(plan[7]) == "archived":
+        return None
+    try:
+        revision = int(plan[11])
+    except (IndexError, TypeError, ValueError):
+        return None
+    if revision < 1:
+        return None
+    digest = campaign_source_hash(
+        title=plan[2],
+        destination_url=plan[3],
+        platform=plan[4],
+        objective=plan[5],
+        scheduled_for=plan[6],
+        approval_status=plan[7],
+        review_note=plan[8],
+    )
+    return (revision, digest) if SNAPSHOT_HASH_PATTERN.fullmatch(digest) else None
+
+
+def _guard_active_campaign_schedule_intents(
+    conn: Any, *, plan_id: str, account_id: str, now: str,
+) -> int:
+    """Fence active private intents whenever their Campaign source changes.
+
+    This runs in the same local transaction as a Campaign edit/status change.
+    It gives the owner a truthful, actionable reconfirmation state while the
+    original future trigger is still valid.  It never changes the Campaign,
+    Calendar marker, trigger time, Inbox, publish state, Bot or any external
+    system.  The notification tick retains its independent digest check as a
+    defence against out-of-band database changes.
+    """
+    updated = conn.execute(
+        """UPDATE web_campaign_schedule_intents
+           SET state='guarded', revision=revision+1, updated_at=?, guarded_at=?,
+               guard_code='CAMPAIGN_SCHEDULE_SOURCE_CHANGED'
+           WHERE plan_id=? AND account_id=? AND state='active'""",
+        (now, now, plan_id, account_id),
+    )
+    return max(0, int(updated.rowcount or 0))
+
+
+def _campaign_schedule_intent_row(
+    conn: Any, *, intent_id: str, plan_id: str, account_id: str,
+) -> tuple[Any, ...] | None:
+    return conn.execute(
+        """SELECT id, account_id, plan_id, source_revision, source_snapshot_hash, trigger_local_at, timezone,
+                  trigger_at, state, revision, created_at, updated_at, dispatched_at, guarded_at, guard_code,
+                  cancelled_at, created_by_account_id
+           FROM web_campaign_schedule_intents
+           WHERE id=? AND plan_id=? AND account_id=?""",
+        (intent_id, plan_id, account_id),
+    ).fetchone()
+
+
+def _campaign_schedule_intent_public(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Return intent metadata without a Campaign source copy or source hash."""
+    state = str(row[8])
+    return {
+        "id": str(row[0]), "plan_id": str(row[2]), "source_revision": int(row[3]),
+        "trigger_local_at": str(row[5]), "timezone": str(row[6]), "trigger_at": str(row[7]),
+        "state": state, "revision": int(row[9]), "created_at": str(row[10]), "updated_at": str(row[11]),
+        "dispatched_at": str(row[12]) if row[12] else None,
+        "guarded_at": str(row[13]) if row[13] else None,
+        "guard_code": str(row[14]) if row[14] else None,
+        "cancelled_at": str(row[15]) if row[15] else None,
+        "reconfirmation_required": state == "guarded",
+        "delivery": "in_app_record_only",
+    }
+
+
+def _campaign_schedule_boundary(**extra: Any) -> dict[str, Any]:
+    """State the narrow Web-only boundary for every schedule response."""
+    return {
+        "execution": "web_native_in_app_record_intent_only",
+        "data_origin": "signed_account_campaign_plan_only",
+        "source_content_copied": False,
+        "scheduled_for_is_inert": True,
+        "bot_called": False,
+        "bridge_called": False,
+        "provider_called": False,
+        "publish_action_created": False,
+        "wallet_mutated": False,
+        "payment_processed": False,
+        "job_created": False,
+        "notification_sent": False,
+        "delivery": "in_app_record_only",
+        **extra,
+    }
+
+
+def _campaign_schedule_guarded(message: str, code: str) -> dict[str, Any]:
+    return envelope(False, message, data=_campaign_schedule_boundary(), status_name="guarded", error_code=code)
+
+
+def _campaign_schedule_safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
+    """Persist a replay-safe receipt without Campaign title/URL/review text."""
+    if not isinstance(response, dict) or response.get("ok") is not True:
+        return response
+    source = response.get("data") if isinstance(response.get("data"), dict) else {}
+    data = _campaign_schedule_boundary()
+    intent = source.get("schedule_intent")
+    if isinstance(intent, dict) and isinstance(intent.get("id"), str):
+        data["schedule_intent"] = {
+            "id": str(intent["id"]),
+            "plan_id": str(intent.get("plan_id") or ""),
+            "source_revision": int(intent.get("source_revision") or 0),
+            "trigger_at": str(intent.get("trigger_at") or ""),
+            "timezone": str(intent.get("timezone") or ""),
+            "state": str(intent.get("state") or ""),
+            "revision": int(intent.get("revision") or 0),
+            "delivery": "in_app_record_only",
+        }
+    for key in ("schedule_intent_recorded",):
+        if key in source:
+            data[key] = source[key]
+    return envelope(
+        True,
+        str(response.get("message") or "Đã lưu lịch nhắc Campaign."),
+        data=data,
+        status_name=str(response.get("status") or "completed"),
+    )
+
+
+def _campaign_schedule_idempotent(
+    scope: str,
+    account_id: str,
+    key: str,
+    request_fingerprint: str,
+    operation: Callable[[Any], dict[str, Any]],
+) -> dict[str, Any]:
+    """Run a local schedule write exactly once for a matching request body."""
+    ensure_copyfast_schema()
+    cutoff = (datetime.now(timezone.utc) - CAMPAIGN_SCHEDULE_IDEMPOTENCY_RETENTION).isoformat(timespec="seconds")
+    with transaction() as conn:
+        conn.execute("DELETE FROM web_idempotency WHERE scope LIKE ? AND created_at<?", ("campaign-schedule:%", cutoff))
+        existing = conn.execute(
+            "SELECT response_json, request_fingerprint FROM web_idempotency WHERE scope=? AND key=?",
+            (scope, key),
+        ).fetchone()
+        if existing:
+            stored_fingerprint = str(existing[1] or "")
+            if not stored_fingerprint or not hmac.compare_digest(stored_fingerprint, request_fingerprint):
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho yêu cầu lịch nhắc khác")
+            try:
+                receipt = json.loads(str(existing[0]))
+            except (TypeError, ValueError, json.JSONDecodeError) as exc:
+                raise HTTPException(status_code=409, detail="Receipt lịch nhắc Campaign không hợp lệ") from exc
+            if not isinstance(receipt, dict):
+                raise HTTPException(status_code=409, detail="Receipt lịch nhắc Campaign không hợp lệ")
+            return receipt
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_idempotency WHERE scope LIKE ?",
+            (f"campaign-schedule:{account_id}:%",),
+        ).fetchone()
+        if int(count[0] or 0) >= CAMPAIGN_SCHEDULE_MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT:
+            return _campaign_schedule_guarded(
+                "Kho receipt lịch nhắc tạm thời đang đầy. Vui lòng thử lại sau.",
+                "CAMPAIGN_SCHEDULE_IDEMPOTENCY_LIMIT",
+            )
+        response = operation(conn)
+        if response.get("ok") is True:
+            receipt = _campaign_schedule_safe_receipt(response)
+            conn.execute(
+                "INSERT INTO web_idempotency (scope, key, response_json, request_fingerprint, created_at) VALUES (?, ?, ?, ?, ?)",
+                (scope, key, json.dumps(receipt, ensure_ascii=False, separators=(",", ":")), request_fingerprint, utc_now()),
+            )
+            return receipt
+        return response
+
+
+def _campaign_calendar_month(value: Any) -> tuple[str, str, str]:
+    """Return an explicit local planning-month range without timezone conversion.
+
+    ``scheduled_for`` deliberately stores an inert, local planning timestamp
+    (``YYYY-MM-DDTHH:MM``), rather than a publisher/reminder timestamp.  Its
+    normalized lexical order is therefore also the correct SQLite range order.
+    Requiring a narrow month value keeps the browser from requesting an
+    accidental all-history calendar or a provider/canonical schedule.
+    """
+    raw = str(value or "").strip()
+    match = CAMPAIGN_CALENDAR_MONTH_PATTERN.fullmatch(raw)
+    if not match:
+        raise HTTPException(status_code=422, detail="Tháng Calendar cần ở định dạng YYYY-MM")
+    year, month = int(match.group(1)), int(match.group(2))
+    if not 2000 <= year <= 2100 or not 1 <= month <= 12:
+        raise HTTPException(status_code=422, detail="Tháng Calendar nằm ngoài phạm vi hợp lệ")
+    start = datetime(year, month, 1)
+    end = datetime(year + 1, 1, 1) if month == 12 else datetime(year, month + 1, 1)
+    return raw, start.isoformat(timespec="minutes"), end.isoformat(timespec="minutes")
+
+
+def _campaign_calendar_filter(value: Any, *, label: str, allowed: frozenset[str]) -> str:
+    normalized = str(value or "all").strip().lower()
+    if normalized == "all":
+        return normalized
+    if normalized not in allowed:
+        raise HTTPException(status_code=422, detail=f"Bộ lọc {label} Calendar không hợp lệ")
+    return normalized
+
+
+def _campaign_calendar_public(row: tuple[Any, ...]) -> dict[str, str]:
+    """Return the narrow projection required by the private Calendar window.
+
+    A Calendar card needs neither the CTA URL nor a self-review note. Keeping
+    those fields off this list response makes the read-only agenda smaller and
+    prevents it from becoming an alternate campaign-detail surface.
+    """
+    return {
+        "id": str(row[0]),
+        "title": str(row[1]),
+        "platform": str(row[2]),
+        "objective": str(row[3]),
+        "scheduled_for": str(row[4]),
+        "approval_status": str(row[5]),
+        "updated_at": str(row[6]),
     }
 
 
@@ -1763,6 +2125,38 @@ def _workspace_draft_title(value: Any, feature: str) -> str:
     if "\x00" in title or any(ord(character) < 32 for character in title) or not 3 <= len(title) <= 120:
         raise HTTPException(status_code=422, detail="Tên bản nháp cần từ 3 đến 120 ký tự hợp lệ")
     return title
+
+
+def _workspace_draft_list_state(value: str | None, *, include_archived: bool) -> str:
+    """Normalize the metadata-only list state without changing legacy reads."""
+    if value is None:
+        # Legacy callers used `include_archived=true`; keep that exact
+        # behavior while allowing the newer explicit state filter to win.
+        return "all" if include_archived else "active"
+    state = str(value or "").strip().lower()
+    if state not in {"all", *WORKSPACE_DRAFT_STATES}:
+        raise HTTPException(status_code=422, detail="Trạng thái lọc bản nháp không hợp lệ")
+    return state
+
+
+def _workspace_draft_list_feature(value: str | None) -> str:
+    """Accept only a known Web-draft workflow key as a list filter."""
+    feature = str(value or "").strip()
+    return _workspace_draft_feature(feature) if feature else ""
+
+
+def _workspace_draft_list_query(value: str | None) -> str:
+    """Keep an ephemeral list query small and safe for an HTTP request path."""
+    query = re.sub(r"\s+", " ", str(value or "")).strip()
+    if "\x00" in query or any(ord(character) < 32 for character in query) or len(query) > 100:
+        raise HTTPException(status_code=422, detail="Từ khóa tìm bản nháp tối đa 100 ký tự hợp lệ")
+    # The query is never persisted/audited, but reject credential/payment-like
+    # text before it can become an accidental request-log disclosure.
+    if query and TICKET_MANUAL_PAYMENT_PROOF_PATTERN.search(query):
+        raise HTTPException(status_code=422, detail="Từ khóa tìm bản nháp không nhận chứng từ hoặc dữ liệu thanh toán")
+    if query and _ticket_contains_sensitive_data(query, query):
+        raise HTTPException(status_code=422, detail="Từ khóa tìm bản nháp không nhận secret, token hoặc số thẻ")
+    return query
 
 
 def _workspace_draft_input(value: Any) -> dict[str, str]:
@@ -1898,6 +2292,41 @@ class CampaignPlanStatusRequest(BaseModel):
     @classmethod
     def normalize_review_note(cls, value: str) -> str:
         return _campaign_text(value, label="Ghi chú rà soát", minimum=0, maximum=1000, allow_empty=True)
+
+
+class CampaignScheduleIntentCreateRequest(BaseModel):
+    """Explicit opt-in for one private, future Campaign Inbox record."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    trigger_local_at: str = Field(min_length=16, max_length=32)
+    timezone: str = Field(min_length=1, max_length=64)
+    expected_plan_revision: int = Field(ge=1, le=1_000_000)
+    opt_in: bool = False
+    confirm: bool = False
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_key(cls, value: str) -> str:
+        return _require_key(value)
+
+
+class CampaignScheduleIntentCancelRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: int = Field(ge=1, le=1_000_000)
+    confirm: bool = False
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_key(cls, value: str) -> str:
+        return _require_key(value)
+
+
+class CampaignScheduleIntentReconfirmRequest(CampaignScheduleIntentCancelRequest):
+    expected_plan_revision: int = Field(ge=1, le=1_000_000)
 
 
 class WorkspaceDraftCreateRequest(BaseModel):
@@ -2157,6 +2586,231 @@ async def _bridge(
     )
 
 
+def _native_job_compatibility_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Adapt one sealed Web-native record to the generic Jobs read shape."""
+
+    public_id = str(record.get("id") or "").strip()
+    if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(public_id):
+        return {}
+    state = str(record.get("status") or record.get("state") or "guarded").strip()[:80] or "guarded"
+    native_kind = str(record.get("kind") or "web-native").strip()[:80] or "web-native"
+    operation_kind = str(record.get("operation_kind") or native_kind).strip()[:120] or native_kind
+    raw_output = record.get("output") if isinstance(record.get("output"), dict) else None
+    output = None
+    if raw_output:
+        filename = str(raw_output.get("filename") or "").replace("\\", "/").rsplit("/", 1)[-1].strip()[:255]
+        # Some otherwise-safe generated filenames include their private row
+        # UUID.  The opaque public ID must be the only identifier exposed by
+        # this generic compatibility surface.
+        parsed_native_id = parse_native_job_id(public_id)
+        internal_id = parsed_native_id[1] if parsed_native_id is not None else ""
+        if internal_id and internal_id.lower() in filename.lower():
+            suffix = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+            filename = f"web-native-{native_kind}{suffix}"
+        content_type = str(raw_output.get("content_type") or "").strip()[:160]
+        byte_size = raw_output.get("byte_size")
+        if filename and content_type and isinstance(byte_size, int) and not isinstance(byte_size, bool) and byte_size > 0:
+            output = {"filename": filename, "content_type": content_type, "byte_size": byte_size}
+    return {
+        "id": public_id,
+        "feature": f"web_native_{native_kind.replace('-', '_')}",
+        "job_type": operation_kind,
+        # Preserve the exact stored lifecycle. A local operation never becomes
+        # a fabricated canonical success record at this compatibility layer.
+        "status": state,
+        "created_at": str(record.get("created_at") or "")[:160],
+        "updated_at": str(record.get("updated_at") or record.get("created_at") or "")[:160],
+        "output_available": output is not None,
+        "download_ready": output is not None,
+        # The generic same-origin route delegates to the existing typed,
+        # owner-scoped handler, which performs the final artifact check.
+        "delivery_ready": output is not None,
+        "source": "web_native",
+        "source_state": "local_only",
+        "native_kind": native_kind,
+        "output": output,
+    }
+
+
+def _native_output_asset_record(job: dict[str, Any]) -> dict[str, Any] | None:
+    """Expose one sealed local job output through the generic Assets list."""
+
+    output = job.get("output") if isinstance(job.get("output"), dict) else None
+    public_id = str(job.get("id") or "").strip()
+    if not output or not CANONICAL_IDENTIFIER_PATTERN.fullmatch(public_id):
+        return None
+    return {
+        "id": public_id,
+        "feature": str(job.get("feature") or "web_native").strip()[:160],
+        "status": str(job.get("status") or "guarded").strip()[:80] or "guarded",
+        "created_at": str(job.get("created_at") or "")[:160],
+        "output_available": True,
+        "download_ready": True,
+        "delivery_ready": True,
+        "source": "web_native",
+        "source_state": "local_only",
+        "filename": str(output.get("filename") or "")[:255],
+        "content_type": str(output.get("content_type") or "")[:160],
+        "byte_size": output.get("byte_size"),
+    }
+
+
+def _native_asset_compatibility_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Show a Web-owned source file without calling it generated output."""
+
+    public_id = str(record.get("id") or "").strip()
+    if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(public_id):
+        return {}
+    state = str(record.get("status") or record.get("state") or "guarded").strip()[:80] or "guarded"
+    return {
+        "id": public_id,
+        "feature": "web_native_asset_vault",
+        # Asset Vault lifecycle is intentionally not mapped to a job status.
+        "status": state,
+        "created_at": str(record.get("created_at") or "")[:160],
+        "output_available": False,
+        # Metadata alone never verifies a private Vault blob.  The opaque
+        # generic route may still be called, but only the existing downloader
+        # may attest to byte-level delivery readiness.
+        "download_ready": False,
+        "delivery_ready": False,
+        "source": "web_native",
+        "source_state": "local_only",
+        "filename": str(record.get("filename") or record.get("name") or "")[:255],
+        "content_type": str(record.get("content_type") or "")[:160],
+        "byte_size": record.get("byte_size"),
+    }
+
+
+def _read_item_timestamp(item: dict[str, Any]) -> str:
+    return str(item.get("updated_at") or item.get("created_at") or "")[:160]
+
+
+def _merge_read_items(*groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge public server read models, bounded independently of browser input."""
+
+    seen: set[str] = set()
+    merged: list[dict[str, Any]] = []
+    for group in groups:
+        for item in group:
+            if not isinstance(item, dict):
+                continue
+            identifier = str(item.get("id") or "").strip()
+            if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(identifier) or identifier in seen:
+                continue
+            seen.add(identifier)
+            merged.append(item)
+    merged.sort(key=lambda item: (_read_item_timestamp(item), str(item.get("id") or "")), reverse=True)
+    return merged[:100]
+
+
+def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
+    return [
+        item
+        for item in (
+            _native_job_compatibility_record(record)
+            for record in list_native_jobs(str(account.get("id") or ""), limit=100)
+        )
+        if item
+    ]
+
+
+def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
+    # Read completed output rows independently. A busy account can have more
+    # than one page of newer queued jobs, which must not hide an older sealed
+    # output from the generic Assets compatibility view.
+    jobs = [
+        item
+        for item in (
+            _native_job_compatibility_record(record)
+            for record in list_native_completed_outputs(str(account.get("id") or ""), limit=100)
+        )
+        if item
+    ]
+    outputs = [item for item in (_native_output_asset_record(job) for job in jobs) if item]
+    sources = [
+        item
+        for item in (
+            _native_asset_compatibility_record(record)
+            for record in list_native_assets(str(account.get("id") or ""), limit=100)
+        )
+        if item
+    ]
+    return _merge_read_items(outputs, sources)
+
+
+def _native_read_envelope(items: list[dict[str, Any]], *, kind: str, canonical_unavailable: bool) -> dict:
+    message = (
+        "Đã tải dữ liệu Web-native. Dữ liệu canonical đang tạm chưa sẵn sàng."
+        if canonical_unavailable
+        else "Đã tải dữ liệu Web-native của tài khoản hiện tại."
+    )
+    return envelope(
+        True,
+        message,
+        data={
+            "items": items,
+            "source": "web_native",
+            "source_state": "local_only",
+            "read_model": kind,
+            "canonical_available": False,
+        },
+        status_name="read_only",
+    )
+
+
+def _canonical_companion_ready(account: dict) -> bool:
+    """Return local bridge/link readiness without exposing either value."""
+
+    return bool(str(account.get("canonical_user_id") or "").strip()) and bridge_configured()
+
+
+def _merge_bridge_list_with_native(response: dict, native_items: list[dict[str, Any]]) -> dict:
+    """Add local records to a successful canonical list without rewriting it."""
+
+    if not native_items or not isinstance(response, dict) or not response.get("ok"):
+        return response
+    source_data = response.get("data") if isinstance(response.get("data"), dict) else {}
+    canonical_items = source_data.get("items") if isinstance(source_data.get("items"), list) else []
+    result = dict(response)
+    result["data"] = {
+        **source_data,
+        "items": _merge_read_items(canonical_items, native_items),
+        "source": "canonical_and_web_native",
+        "web_native_item_count": len(native_items),
+    }
+    return result
+
+
+async def _native_asset_delivery(asset_id: str, account: dict):
+    """Dispatch an opaque local record to its existing verified downloader."""
+
+    native_job = parse_native_job_id(asset_id)
+    if native_job is not None:
+        source, internal_id = native_job
+        record = get_native_job(str(account.get("id") or ""), asset_id)
+        if not record or not isinstance(record.get("output"), dict):
+            return envelope(False, "Tài sản Web-native chưa sẵn sàng để tải.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
+        if source == "project-package":
+            from copyfast_project_packages import download_project_package
+            return await download_project_package(internal_id, account)
+        if source == "document-operation":
+            from copyfast_document_operations import download_document_operation
+            return await download_document_operation(internal_id, account)
+        if source == "image-operation":
+            from copyfast_image_operations import download_image_operation
+            return await download_image_operation(internal_id, account)
+        return envelope(False, "Tài sản Web-native chưa được hỗ trợ.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
+
+    native_asset_id = parse_native_asset_id(asset_id)
+    if native_asset_id is not None:
+        from copyfast_assets import download_asset
+        # This direct call retains the Asset Vault handler's account/state and
+        # integrity checks without exposing a decoded raw ID in a redirect.
+        return await download_asset(native_asset_id, account)
+    return None
+
+
 async def _asset_delivery_redirect(asset_id: str, request: Request, account: dict) -> RedirectResponse | dict:
     """Mint one ownership-checked redirect from an explicit Bot contract.
 
@@ -2207,12 +2861,31 @@ async def feature_catalog():
     # Workspace Draft capability declared by this server-side allowlist so a
     # read-only/history surface never renders a save button which would later
     # be rejected by the owner-scoped API.
+    flags = _flags()
     features = []
     for entry in catalog():
         item = dict(entry)
         item["web_workspace_draft_supported"] = str(item.get("key") or "") in WORKSPACE_DRAFT_ALLOWED_FEATURES
+        # Display-only execution taxonomy.  It cannot grant a provider call,
+        # canonical job, payment, output or delivery; every actionable route
+        # still owns its signed-session, CSRF, ownership and engine checks.
+        item["engine"] = engine_descriptor(str(item.get("key") or ""), flags)
         features.append(item)
-    return envelope(True, "Danh mục tính năng Web App", data={"features": features, "flags": _flags(), "bridge_configured": bridge_configured()})
+    # The Capability Hub is an aggregate of the sanitized static migration
+    # audit.  It deliberately has no raw Bot commands/callbacks, handlers,
+    # source locations, admin entries or runtime readiness claim.  The
+    # existing per-feature capability contract remains authoritative for every
+    # executable button.
+    return envelope(
+        True,
+        "Danh mục tính năng Web App",
+        data={
+            "features": features,
+            "flags": flags,
+            "bridge_configured": bridge_configured(),
+            "capability_hub": capability_hub(),
+        },
+    )
 
 
 @router.get("/core/status")
@@ -2245,7 +2918,7 @@ async def list_campaign_plans(account: dict = Depends(require_account)):
     with transaction() as conn:
         rows = conn.execute(
             """SELECT id, title, destination_url, platform, objective, scheduled_for,
-                      approval_status, review_note, created_at, updated_at
+                      approval_status, review_note, created_at, updated_at, revision
                FROM web_campaign_plans
                WHERE account_id=?
                ORDER BY CASE WHEN scheduled_for IS NULL OR scheduled_for='' THEN 1 ELSE 0 END,
@@ -2259,6 +2932,414 @@ async def list_campaign_plans(account: dict = Depends(require_account)):
         data={"items": [_campaign_plan_public(tuple(row)) for row in rows]},
         status_name="read_only",
     )
+
+
+@router.get("/campaign-calendar/window")
+async def campaign_calendar_window(
+    month: str,
+    status: str = "all",
+    platform: str = "all",
+    account: dict = Depends(require_account),
+):
+    """Read one bounded, account-owned planning month for the Web Calendar.
+
+    This route deliberately has its own narrow projection instead of adding
+    query semantics to ``GET /campaigns``. Campaign Planner and Self-review
+    retain their established list contract, while Calendar can safely browse a
+    selected local month without fetching an account's entire plan history.
+    It does not read Bot campaign/calendar tables, create reminders, enqueue
+    publishing, call a provider, or touch wallet/payment state.
+    """
+    selected_month, start, end = _campaign_calendar_month(month)
+    selected_status = _campaign_calendar_filter(
+        status,
+        label="trạng thái",
+        allowed=CAMPAIGN_PLAN_STATUSES,
+    )
+    selected_platform = _campaign_calendar_filter(
+        platform,
+        label="nền tảng",
+        allowed=CAMPAIGN_PLAN_PLATFORMS,
+    )
+    where = [
+        "account_id=?",
+        "scheduled_for IS NOT NULL",
+        "scheduled_for!=''",
+        "scheduled_for>=?",
+        "scheduled_for<?",
+    ]
+    params: list[Any] = [str(account["id"]), start, end]
+    if selected_status != "all":
+        where.append("approval_status=?")
+        params.append(selected_status)
+    if selected_platform != "all":
+        where.append("platform=?")
+        params.append(selected_platform)
+    predicate = " AND ".join(where)
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        total_row = conn.execute(
+            f"SELECT COUNT(*) FROM web_campaign_plans WHERE {predicate}",
+            tuple(params),
+        ).fetchone()
+        rows = conn.execute(
+            f"""SELECT id, title, platform, objective, scheduled_for,
+                       approval_status, updated_at
+                FROM web_campaign_plans
+                WHERE {predicate}
+                ORDER BY scheduled_for ASC, updated_at DESC, id ASC
+                LIMIT ?""",
+            (*params, CAMPAIGN_CALENDAR_WINDOW_MAX_ITEMS),
+        ).fetchall()
+    total = int(total_row[0] if total_row else 0)
+    items = [_campaign_calendar_public(tuple(row)) for row in rows]
+    return envelope(
+        True,
+        "Lịch nội dung Web của bạn trong tháng đã chọn.",
+        data={
+            "month": selected_month,
+            "filters": {"status": selected_status, "platform": selected_platform},
+            "items": items,
+            "summary": {
+                "total": total,
+                "returned": len(items),
+                "has_more": total > len(items),
+                "limit": CAMPAIGN_CALENDAR_WINDOW_MAX_ITEMS,
+            },
+        },
+        status_name="read_only",
+    )
+
+
+@router.get("/campaigns/{plan_id}/schedule-intents")
+async def list_campaign_schedule_intents(plan_id: str, account: dict = Depends(require_account)):
+    """List opaque schedule metadata for one signed owner's Campaign detail."""
+    plan_id = _campaign_plan_id(plan_id)
+    account_id = str(account["id"])
+    ensure_copyfast_schema()
+    with read_transaction() as conn:
+        if not _campaign_plan_source_row(conn, plan_id=plan_id, account_id=account_id):
+            return _campaign_schedule_guarded(
+                "Không tìm thấy kế hoạch thuộc tài khoản hiện tại.",
+                "CAMPAIGN_SCHEDULE_PLAN_NOT_FOUND",
+            )
+        rows = conn.execute(
+            """SELECT id, account_id, plan_id, source_revision, source_snapshot_hash, trigger_local_at, timezone,
+                      trigger_at, state, revision, created_at, updated_at, dispatched_at, guarded_at, guard_code,
+                      cancelled_at, created_by_account_id
+               FROM web_campaign_schedule_intents
+               WHERE plan_id=? AND account_id=?
+               ORDER BY CASE state WHEN 'active' THEN 0 WHEN 'guarded' THEN 1 WHEN 'dispatched' THEN 2 ELSE 3 END,
+                        trigger_at ASC, created_at DESC, id DESC
+               LIMIT ?""",
+            (plan_id, account_id, MAX_SCHEDULE_INTENTS_PER_PLAN),
+        ).fetchall()
+    return envelope(
+        True,
+        "Lịch nhắc Campaign chỉ hiển thị metadata owner-scoped của kế hoạch hiện tại.",
+        data=_campaign_schedule_boundary(
+            schedule_intents=[_campaign_schedule_intent_public(tuple(row)) for row in rows],
+            max_schedule_intents_per_plan=MAX_SCHEDULE_INTENTS_PER_PLAN,
+        ),
+        status_name="read_only",
+    )
+
+
+@router.post("/campaigns/{plan_id}/schedule-intents")
+async def create_campaign_schedule_intent(
+    plan_id: str,
+    payload: CampaignScheduleIntentCreateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Record an explicit future in-app reminder for a Web Campaign only."""
+    plan_id = _campaign_plan_id(plan_id)
+    if not _campaign_schedule_actor_allowed(account):
+        return _campaign_schedule_guarded(
+            "Phiên Web chưa có role account hợp lệ để tạo lịch nhắc Campaign.",
+            "CAMPAIGN_SCHEDULE_ROLE_REQUIRED",
+        )
+    if not payload.opt_in or not payload.confirm:
+        raise HTTPException(status_code=422, detail="Cần bật opt-in và xác nhận rõ ràng trước khi tạo lịch nhắc Campaign")
+    try:
+        trigger_local_at, zone_name, trigger_at = normalize_schedule_trigger(payload.trigger_local_at, payload.timezone)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from None
+    account_id = str(account["id"])
+    fingerprint = canonical_json_hash(
+        {
+            "plan_id": plan_id,
+            "expected_plan_revision": payload.expected_plan_revision,
+            "trigger_local_at": trigger_local_at,
+            "timezone": zone_name,
+            "trigger_at": trigger_at,
+            "opt_in": bool(payload.opt_in),
+            "confirm": bool(payload.confirm),
+        }
+    )
+    scope = f"campaign-schedule:{account_id}:plan:{plan_id}:create"
+
+    def operation(conn: Any) -> dict[str, Any]:
+        plan = _campaign_plan_source_row(conn, plan_id=plan_id, account_id=account_id)
+        if not plan:
+            return _campaign_schedule_guarded("Không tìm thấy kế hoạch thuộc tài khoản hiện tại.", "CAMPAIGN_SCHEDULE_PLAN_NOT_FOUND")
+        if str(plan[7]) == "archived":
+            return _campaign_schedule_guarded("Kế hoạch đã lưu trữ nên không thể tạo lịch nhắc mới.", "CAMPAIGN_SCHEDULE_PLAN_ARCHIVED")
+        source = _campaign_schedule_source_coordinates(tuple(plan))
+        if not source:
+            return _campaign_schedule_guarded("Revision Campaign chưa được xác minh nên không thể tạo lịch nhắc.", "CAMPAIGN_SCHEDULE_SOURCE_UNVERIFIED")
+        if source[0] != payload.expected_plan_revision:
+            return _campaign_schedule_guarded(
+                "Kế hoạch đã có revision mới. Hãy tải lại và xác nhận lại lịch nhắc.",
+                "CAMPAIGN_SCHEDULE_SOURCE_CONFLICT",
+            )
+        total = conn.execute(
+            "SELECT COUNT(*) FROM web_campaign_schedule_intents WHERE account_id=?", (account_id,),
+        ).fetchone()
+        active_account = conn.execute(
+            "SELECT COUNT(*) FROM web_campaign_schedule_intents WHERE account_id=? AND state='active'", (account_id,),
+        ).fetchone()
+        active_plan = conn.execute(
+            "SELECT COUNT(*) FROM web_campaign_schedule_intents WHERE account_id=? AND plan_id=? AND state='active'",
+            (account_id, plan_id),
+        ).fetchone()
+        if int(total[0] or 0) >= MAX_SCHEDULE_INTENTS_PER_ACCOUNT:
+            return _campaign_schedule_guarded("Kho lịch nhắc Campaign đã đạt giới hạn an toàn của account.", "CAMPAIGN_SCHEDULE_ACCOUNT_LIMIT")
+        if int(active_account[0] or 0) >= MAX_ACTIVE_SCHEDULE_INTENTS_PER_ACCOUNT:
+            return _campaign_schedule_guarded(
+                "Account đã có quá nhiều lịch nhắc đang hoạt động. Hãy hủy hoặc xử lý lịch cũ trước.",
+                "CAMPAIGN_SCHEDULE_ACTIVE_LIMIT",
+            )
+        if int(active_plan[0] or 0) >= MAX_SCHEDULE_INTENTS_PER_PLAN:
+            return _campaign_schedule_guarded("Kế hoạch này đã có đủ lịch nhắc đang hoạt động.", "CAMPAIGN_SCHEDULE_PLAN_LIMIT")
+        intent_id = str(uuid.uuid4())
+        now = utc_now()
+        try:
+            conn.execute(
+                """INSERT INTO web_campaign_schedule_intents
+                   (id, account_id, plan_id, source_revision, source_snapshot_hash, trigger_local_at, timezone,
+                    trigger_at, state, revision, created_by_account_id, created_at, updated_at,
+                    dispatched_at, guarded_at, guard_code, cancelled_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?, ?, NULL, NULL, NULL, NULL)""",
+                (intent_id, account_id, plan_id, source[0], source[1], trigger_local_at, zone_name, trigger_at, account_id, now, now),
+            )
+        except sqlite3.IntegrityError:
+            existing = conn.execute(
+                """SELECT id, account_id, plan_id, source_revision, source_snapshot_hash, trigger_local_at, timezone,
+                          trigger_at, state, revision, created_at, updated_at, dispatched_at, guarded_at, guard_code,
+                          cancelled_at, created_by_account_id
+                   FROM web_campaign_schedule_intents
+                   WHERE account_id=? AND plan_id=? AND source_revision=? AND trigger_at=? AND state='active'""",
+                (account_id, plan_id, source[0], trigger_at),
+            ).fetchone()
+            data = _campaign_schedule_boundary(delivery="in_app_record_only")
+            if existing:
+                data["schedule_intent"] = _campaign_schedule_intent_public(tuple(existing))
+            return envelope(
+                False,
+                "Đã có một lịch nhắc đang hoạt động cho revision và thời điểm này.",
+                data=data,
+                status_name="guarded",
+                error_code="CAMPAIGN_SCHEDULE_DUPLICATE",
+            )
+        created = _campaign_schedule_intent_row(conn, intent_id=intent_id, plan_id=plan_id, account_id=account_id)
+        if not created:
+            raise RuntimeError("Campaign schedule intent missing after insert")
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="campaign.schedule.create",
+            request_id=_request_id(request),
+            target=intent_id,
+            outcome="ok",
+            detail="explicit owner opt-in for one private in-app campaign schedule record",
+        )
+        return envelope(
+            True,
+            "Đã lưu lịch nhắc riêng tư. Chỉ scheduler đã xác thực mới có thể tạo record Inbox in-app khi Campaign vẫn khớp.",
+            data=_campaign_schedule_boundary(
+                schedule_intent=_campaign_schedule_intent_public(created),
+                schedule_intent_recorded=True,
+            ),
+            status_name="completed",
+        )
+
+    return _campaign_schedule_idempotent(scope, account_id, payload.idempotency_key, fingerprint, operation)
+
+
+@router.post("/campaigns/{plan_id}/schedule-intents/{intent_id}/cancel")
+async def cancel_campaign_schedule_intent(
+    plan_id: str,
+    intent_id: str,
+    payload: CampaignScheduleIntentCancelRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    plan_id = _campaign_plan_id(plan_id)
+    intent_id = _campaign_schedule_intent_id(intent_id)
+    if not _campaign_schedule_actor_allowed(account):
+        return _campaign_schedule_guarded(
+            "Phiên Web chưa có role account hợp lệ để quản lý lịch nhắc Campaign.",
+            "CAMPAIGN_SCHEDULE_ROLE_REQUIRED",
+        )
+    if not payload.confirm:
+        raise HTTPException(status_code=422, detail="Cần xác nhận rõ ràng trước khi hủy lịch nhắc Campaign")
+    account_id = str(account["id"])
+    fingerprint = canonical_json_hash(
+        {"plan_id": plan_id, "intent_id": intent_id, "expected_revision": payload.expected_revision, "confirm": True}
+    )
+    scope = f"campaign-schedule:{account_id}:plan:{plan_id}:intent:{intent_id}:cancel"
+
+    def operation(conn: Any) -> dict[str, Any]:
+        if not _campaign_plan_source_row(conn, plan_id=plan_id, account_id=account_id):
+            return _campaign_schedule_guarded("Không tìm thấy kế hoạch thuộc tài khoản hiện tại.", "CAMPAIGN_SCHEDULE_PLAN_NOT_FOUND")
+        current = _campaign_schedule_intent_row(conn, intent_id=intent_id, plan_id=plan_id, account_id=account_id)
+        if not current:
+            return _campaign_schedule_guarded("Không tìm thấy lịch nhắc thuộc kế hoạch và account hiện tại.", "CAMPAIGN_SCHEDULE_NOT_FOUND")
+        if int(current[9]) != payload.expected_revision:
+            return _campaign_schedule_guarded("Lịch nhắc đã có revision mới. Hãy tải lại trước khi hủy.", "CAMPAIGN_SCHEDULE_CONFLICT")
+        state = str(current[8])
+        if state == "dispatched":
+            return _campaign_schedule_guarded("Lịch nhắc đã tạo record Inbox; không thể rút lại record đã materialize.", "CAMPAIGN_SCHEDULE_DISPATCHED")
+        if state == "cancelled":
+            return envelope(
+                True,
+                "Lịch nhắc đã được hủy trước đó.",
+                data=_campaign_schedule_boundary(schedule_intent=_campaign_schedule_intent_public(current)),
+                status_name="completed",
+            )
+        now = utc_now()
+        next_revision = int(current[9]) + 1
+        updated = conn.execute(
+            """UPDATE web_campaign_schedule_intents
+               SET state='cancelled', revision=?, updated_at=?, cancelled_at=?
+               WHERE id=? AND plan_id=? AND account_id=? AND revision=? AND state IN ('active', 'guarded')""",
+            (next_revision, now, now, intent_id, plan_id, account_id, payload.expected_revision),
+        )
+        if int(updated.rowcount or 0) != 1:
+            return _campaign_schedule_guarded("Lịch nhắc đã thay đổi đồng thời. Hãy tải lại trước khi hủy.", "CAMPAIGN_SCHEDULE_CONFLICT")
+        refreshed = _campaign_schedule_intent_row(conn, intent_id=intent_id, plan_id=plan_id, account_id=account_id)
+        if not refreshed:
+            raise RuntimeError("Campaign schedule intent disappeared after cancel")
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="campaign.schedule.cancel",
+            request_id=_request_id(request),
+            target=intent_id,
+            outcome="ok",
+            detail="owner cancelled a web-only in-app campaign schedule intent",
+        )
+        return envelope(
+            True,
+            "Đã hủy lịch nhắc. Không có Inbox record mới hoặc thông báo ngoài Web được gửi.",
+            data=_campaign_schedule_boundary(schedule_intent=_campaign_schedule_intent_public(refreshed)),
+            status_name="completed",
+        )
+
+    return _campaign_schedule_idempotent(scope, account_id, payload.idempotency_key, fingerprint, operation)
+
+
+@router.post("/campaigns/{plan_id}/schedule-intents/{intent_id}/reconfirm")
+async def reconfirm_campaign_schedule_intent(
+    plan_id: str,
+    intent_id: str,
+    payload: CampaignScheduleIntentReconfirmRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Bind a guarded Campaign intent to its current source without rescheduling."""
+    plan_id = _campaign_plan_id(plan_id)
+    intent_id = _campaign_schedule_intent_id(intent_id)
+    if not _campaign_schedule_actor_allowed(account):
+        return _campaign_schedule_guarded(
+            "Phiên Web chưa có role account hợp lệ để xác nhận lại lịch nhắc Campaign.",
+            "CAMPAIGN_SCHEDULE_ROLE_REQUIRED",
+        )
+    if not payload.confirm:
+        raise HTTPException(status_code=422, detail="Cần xác nhận rõ ràng trước khi bind lại lịch nhắc với revision mới")
+    account_id = str(account["id"])
+    fingerprint = canonical_json_hash(
+        {
+            "plan_id": plan_id,
+            "intent_id": intent_id,
+            "expected_revision": payload.expected_revision,
+            "expected_plan_revision": payload.expected_plan_revision,
+            "confirm": True,
+        }
+    )
+    scope = f"campaign-schedule:{account_id}:plan:{plan_id}:intent:{intent_id}:reconfirm"
+
+    def operation(conn: Any) -> dict[str, Any]:
+        plan = _campaign_plan_source_row(conn, plan_id=plan_id, account_id=account_id)
+        if not plan:
+            return _campaign_schedule_guarded("Không tìm thấy kế hoạch thuộc tài khoản hiện tại.", "CAMPAIGN_SCHEDULE_PLAN_NOT_FOUND")
+        if str(plan[7]) == "archived":
+            return _campaign_schedule_guarded("Kế hoạch đã lưu trữ nên không thể xác nhận lại lịch nhắc.", "CAMPAIGN_SCHEDULE_PLAN_ARCHIVED")
+        source = _campaign_schedule_source_coordinates(tuple(plan))
+        if not source:
+            return _campaign_schedule_guarded("Revision Campaign chưa được xác minh nên chưa thể bind lại lịch nhắc.", "CAMPAIGN_SCHEDULE_SOURCE_UNVERIFIED")
+        if source[0] != payload.expected_plan_revision:
+            return _campaign_schedule_guarded(
+                "Kế hoạch đã có revision mới. Hãy tải lại trước khi bind lại lịch nhắc.",
+                "CAMPAIGN_SCHEDULE_SOURCE_CONFLICT",
+            )
+        intent = _campaign_schedule_intent_row(conn, intent_id=intent_id, plan_id=plan_id, account_id=account_id)
+        if not intent:
+            return _campaign_schedule_guarded("Không tìm thấy lịch nhắc thuộc kế hoạch và account hiện tại.", "CAMPAIGN_SCHEDULE_NOT_FOUND")
+        if int(intent[9]) != payload.expected_revision:
+            return _campaign_schedule_guarded("Lịch nhắc đã có revision mới. Hãy tải lại trước khi xác nhận lại.", "CAMPAIGN_SCHEDULE_CONFLICT")
+        if str(intent[8]) != "guarded":
+            return _campaign_schedule_guarded("Chỉ lịch nhắc đang guarded mới cần xác nhận lại source snapshot.", "CAMPAIGN_SCHEDULE_RECONFIRM_NOT_REQUIRED")
+        try:
+            _local, _zone, normalized_trigger = normalize_schedule_trigger(intent[5], intent[6])
+        except ValueError:
+            return _campaign_schedule_guarded(
+                "Thời điểm lịch nhắc đã qua hoặc không còn xác minh được. Hãy tạo lịch mới rõ ràng.",
+                "CAMPAIGN_SCHEDULE_TRIGGER_EXPIRED",
+            )
+        if not hmac.compare_digest(normalized_trigger, str(intent[7])):
+            return _campaign_schedule_guarded(
+                "Thời điểm UTC của lịch nhắc không còn khớp với timezone đã lưu. Hãy tạo lịch mới.",
+                "CAMPAIGN_SCHEDULE_TRIGGER_UNVERIFIED",
+            )
+        now = utc_now()
+        next_revision = int(intent[9]) + 1
+        try:
+            updated = conn.execute(
+                """UPDATE web_campaign_schedule_intents
+                   SET source_revision=?, source_snapshot_hash=?, state='active', revision=?, updated_at=?,
+                       guarded_at=NULL, guard_code=NULL, cancelled_at=NULL
+                   WHERE id=? AND plan_id=? AND account_id=? AND revision=? AND state='guarded'""",
+                (source[0], source[1], next_revision, now, intent_id, plan_id, account_id, payload.expected_revision),
+            )
+        except sqlite3.IntegrityError:
+            return _campaign_schedule_guarded("Đã có lịch nhắc active khác cho revision và thời điểm này.", "CAMPAIGN_SCHEDULE_DUPLICATE")
+        if int(updated.rowcount or 0) != 1:
+            return _campaign_schedule_guarded("Lịch nhắc đã thay đổi đồng thời. Hãy tải lại trước khi xác nhận lại.", "CAMPAIGN_SCHEDULE_CONFLICT")
+        refreshed = _campaign_schedule_intent_row(conn, intent_id=intent_id, plan_id=plan_id, account_id=account_id)
+        if not refreshed:
+            raise RuntimeError("Campaign schedule intent disappeared after reconfirm")
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="campaign.schedule.reconfirm",
+            request_id=_request_id(request),
+            target=intent_id,
+            outcome="ok",
+            detail="owner explicitly rebound a guarded schedule intent to the current campaign snapshot",
+        )
+        return envelope(
+            True,
+            "Đã xác nhận lại source snapshot. Thời điểm cũ được giữ nguyên, không tự đổi lịch.",
+            data=_campaign_schedule_boundary(schedule_intent=_campaign_schedule_intent_public(refreshed)),
+            status_name="completed",
+        )
+
+    return _campaign_schedule_idempotent(scope, account_id, payload.idempotency_key, fingerprint, operation)
 
 
 @router.get("/campaigns/{plan_id}")
@@ -2275,7 +3356,7 @@ async def get_campaign_plan(plan_id: str, account: dict = Depends(require_accoun
     with transaction() as conn:
         row = conn.execute(
             """SELECT id, title, destination_url, platform, objective, scheduled_for,
-                      approval_status, review_note, created_at, updated_at
+                      approval_status, review_note, created_at, updated_at, revision
                FROM web_campaign_plans
                WHERE id=? AND account_id=?""",
             (plan_id, str(account["id"])),
@@ -2317,14 +3398,15 @@ async def create_campaign_plan(payload: CampaignPlanCreateRequest, request: Requ
             "review_note": "",
             "created_at": now,
             "updated_at": now,
+            "revision": 1,
         }
         ensure_copyfast_schema()
         with transaction() as conn:
             conn.execute(
                 """INSERT INTO web_campaign_plans
                    (id, account_id, title, destination_url, platform, objective, scheduled_for,
-                    approval_status, review_note, created_at, updated_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                    approval_status, review_note, created_at, updated_at, revision)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
                 (
                     plan_id,
                     str(account["id"]),
@@ -2337,6 +3419,7 @@ async def create_campaign_plan(payload: CampaignPlanCreateRequest, request: Requ
                     "",
                     now,
                     now,
+                    1,
                 ),
             )
             # The URL/title can contain affiliate/customer information.  The
@@ -2391,7 +3474,7 @@ async def update_campaign_plan(
             now = utc_now()
             conn.execute(
                 """UPDATE web_campaign_plans
-                   SET title=?, destination_url=?, platform=?, objective=?, scheduled_for=?, updated_at=?
+                   SET title=?, destination_url=?, platform=?, objective=?, scheduled_for=?, updated_at=?, revision=revision+1
                    WHERE id=? AND account_id=?""",
                 (
                     payload.title,
@@ -2404,9 +3487,12 @@ async def update_campaign_plan(
                     str(account["id"]),
                 ),
             )
+            guarded_schedule_intents = _guard_active_campaign_schedule_intents(
+                conn, plan_id=plan_id, account_id=str(account["id"]), now=now,
+            )
             updated = conn.execute(
                 """SELECT id, title, destination_url, platform, objective, scheduled_for,
-                          approval_status, review_note, created_at, updated_at
+                          approval_status, review_note, created_at, updated_at, revision
                    FROM web_campaign_plans WHERE id=? AND account_id=?""",
                 (plan_id, str(account["id"])),
             ).fetchone()
@@ -2418,7 +3504,7 @@ async def update_campaign_plan(
                 request_id=_request_id(request),
                 target=plan_id,
                 outcome="ok",
-                detail="web-local planning fields updated",
+                detail=f"web-local planning fields updated; guarded_schedule_intents={guarded_schedule_intents}",
             )
         item = _campaign_plan_public(tuple(updated))
         status_name = str(item["approval_status"])
@@ -2449,7 +3535,7 @@ async def update_campaign_plan_status(
         with transaction() as conn:
             row = conn.execute(
                 """SELECT id, title, destination_url, platform, objective, scheduled_for,
-                          approval_status, review_note, created_at, updated_at
+                          approval_status, review_note, created_at, updated_at, revision
                    FROM web_campaign_plans WHERE id=? AND account_id=?""",
                 (plan_id, str(account["id"])),
             ).fetchone()
@@ -2472,13 +3558,16 @@ async def update_campaign_plan_status(
             now = utc_now()
             conn.execute(
                 """UPDATE web_campaign_plans
-                   SET approval_status=?, review_note=?, updated_at=?
+                   SET approval_status=?, review_note=?, updated_at=?, revision=revision+1
                    WHERE id=? AND account_id=?""",
                 (target, payload.review_note, now, plan_id, str(account["id"])),
             )
+            guarded_schedule_intents = _guard_active_campaign_schedule_intents(
+                conn, plan_id=plan_id, account_id=str(account["id"]), now=now,
+            )
             updated = conn.execute(
                 """SELECT id, title, destination_url, platform, objective, scheduled_for,
-                          approval_status, review_note, created_at, updated_at
+                          approval_status, review_note, created_at, updated_at, revision
                    FROM web_campaign_plans WHERE id=? AND account_id=?""",
                 (plan_id, str(account["id"])),
             ).fetchone()
@@ -2490,7 +3579,7 @@ async def update_campaign_plan_status(
                 request_id=_request_id(request),
                 target=plan_id,
                 outcome="ok",
-                detail=f"web-local planning status:{current}->{target}",
+                detail=f"web-local planning status:{current}->{target}; guarded_schedule_intents={guarded_schedule_intents}",
             )
         item = _campaign_plan_public(tuple(updated))
         return envelope(
@@ -2504,37 +3593,74 @@ async def update_campaign_plan_status(
 
 
 @router.get("/workspace/drafts")
-async def list_workspace_drafts(include_archived: bool = False, account: dict = Depends(require_account)):
+async def list_workspace_drafts(
+    include_archived: bool = False,
+    state: str | None = None,
+    feature_key: str | None = None,
+    q: str | None = None,
+    limit: int = WORKSPACE_DRAFT_LIST_DEFAULT_LIMIT,
+    offset: int = 0,
+    account: dict = Depends(require_account),
+):
     """List only Web-owned drafts belonging to the signed account.
 
     This intentionally does not ask the Bot to reconstruct a feature request,
     quote, upload, job or provider task. Listing keeps input bodies out of the
     response; a separate owner-scoped detail read is required to resume one.
+    Search considers only safe list metadata (title/workflow), never a saved
+    brief value.  Explicit `state` takes precedence over legacy
+    `include_archived` when both are supplied.
     """
+    bounded_limit = max(1, min(int(limit), WORKSPACE_DRAFT_LIST_MAX_LIMIT))
+    bounded_offset = max(0, min(int(offset), WORKSPACE_DRAFT_LIST_MAX_OFFSET))
+    requested_state = _workspace_draft_list_state(state, include_archived=include_archived)
+    requested_feature = _workspace_draft_list_feature(feature_key)
+    needle = _workspace_draft_list_query(q)
+    where = ["account_id=?"]
+    params: list[Any] = [str(account["id"])]
+    if requested_state != "all":
+        where.append("state=?")
+        params.append(requested_state)
+    if requested_feature:
+        where.append("feature_key=?")
+        params.append(requested_feature)
+    if needle:
+        escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        where.append("(title LIKE ? ESCAPE '\\' OR feature_key LIKE ? ESCAPE '\\')")
+        params.extend([f"%{escaped}%", f"%{escaped}%"])
+    predicate = " AND ".join(where)
     ensure_copyfast_schema()
     with transaction() as conn:
-        if include_archived:
-            rows = conn.execute(
-                """SELECT id, feature_key, title, state, created_at, updated_at
-                   FROM web_workspace_drafts
-                   WHERE account_id=?
-                   ORDER BY CASE WHEN state='active' THEN 0 ELSE 1 END, updated_at DESC, id DESC
-                   LIMIT 100""",
-                (str(account["id"]),),
-            ).fetchall()
-        else:
-            rows = conn.execute(
-                """SELECT id, feature_key, title, state, created_at, updated_at
-                   FROM web_workspace_drafts
-                   WHERE account_id=? AND state='active'
-                   ORDER BY updated_at DESC, id DESC
-                   LIMIT 100""",
-                (str(account["id"]),),
-            ).fetchall()
+        rows = conn.execute(
+            f"""SELECT id, feature_key, title, state, created_at, updated_at
+                FROM web_workspace_drafts
+                WHERE {predicate}
+                ORDER BY CASE WHEN state='active' THEN 0 ELSE 1 END, updated_at DESC, id DESC
+                LIMIT ? OFFSET ?""",
+            (*params, bounded_limit + 1, bounded_offset),
+        ).fetchall()
+        summary = {"active": 0, "archived": 0}
+        for count_row in conn.execute(
+            """SELECT state, COUNT(*) FROM web_workspace_drafts
+               WHERE account_id=? GROUP BY state""",
+            (str(account["id"]),),
+        ).fetchall():
+            state_name = str(count_row[0])
+            if state_name in summary:
+                summary[state_name] = int(count_row[1])
+    has_more = len(rows) > bounded_limit
+    items = [_workspace_draft_public(tuple(row)) for row in rows[:bounded_limit]]
     return envelope(
         True,
         "Danh sách bản nháp Web của bạn.",
-        data={"items": [_workspace_draft_public(tuple(row)) for row in rows]},
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": bounded_offset + len(items) if has_more else None,
+            "filters": {"state": requested_state, "feature_key": requested_feature, "q": needle},
+            "pagination": {"limit": bounded_limit, "offset": bounded_offset, "returned": len(items)},
+            "summary": summary,
+        },
         status_name="read_only",
     )
 
@@ -2883,22 +4009,94 @@ async def payment_status(payment_id: str, request: Request, account: dict = Depe
 
 @router.get("/jobs")
 async def list_jobs(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/jobs", account=account, request=request)
+    # The generic Jobs view remains a canonical companion when the signed
+    # account can reach that bridge, but it must not make Web-owned records
+    # disappear merely because this account has not linked Telegram yet.
+    native_items = _native_jobs_for_account(account)
+    if not _flags()["copyfast_enabled"]:
+        return await _bridge("GET", "/internal/v1/jobs", account=account, request=request)
+    if not _canonical_companion_ready(account):
+        return _native_read_envelope(native_items, kind="jobs", canonical_unavailable=True)
+    canonical = await _bridge("GET", "/internal/v1/jobs", account=account, request=request)
+    if canonical.get("ok"):
+        return _merge_bridge_list_with_native(canonical, native_items)
+    # A failed canonical read never becomes a fabricated canonical result.
+    # Return the independently owner-scoped local model with its source
+    # explicitly marked instead of suppressing real Web records.
+    return _native_read_envelope(native_items, kind="jobs", canonical_unavailable=True)
 
 
 @router.get("/jobs/{job_id}")
 async def job_detail(job_id: str, request: Request, account: dict = Depends(require_account)):
+    native_job = parse_native_job_id(job_id)
+    if native_job is not None:
+        record = get_native_job(str(account.get("id") or ""), job_id)
+        if record:
+            item = _native_job_compatibility_record(record)
+            if item:
+                return envelope(
+                    True,
+                    "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+                    data={**item, "read_model": "jobs", "canonical_available": False},
+                    status_name="read_only",
+                )
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
+    # Reserve the typed namespace. A malformed/unknown native-shaped ID must
+    # never be forwarded to the canonical bridge as if it were canonical.
+    if str(job_id or "").strip().startswith(("wnj:", "wna:")):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     job_id = _canonical_route_identifier(job_id, "Mã job")
-    return await _bridge("GET", f"/internal/v1/jobs/{job_id}", account=account, request=request)
+    if not _flags()["copyfast_enabled"] or _canonical_companion_ready(account):
+        return await _bridge("GET", f"/internal/v1/jobs/{job_id}", account=account, request=request)
+    return envelope(
+        False,
+        "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+        status_name="guarded",
+        error_code="WEB_NATIVE_JOB_NOT_FOUND",
+    )
 
 
 @router.get("/assets")
 async def assets(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/assets", account=account, request=request)
+    # Asset Vault source files and sealed Web-native job outputs remain
+    # separate kinds, but the compatibility list can render both with opaque
+    # IDs and the usual generic download fields.
+    native_items = _native_assets_for_account(account)
+    if not _flags()["copyfast_enabled"]:
+        return await _bridge("GET", "/internal/v1/assets", account=account, request=request)
+    if not _canonical_companion_ready(account):
+        return _native_read_envelope(native_items, kind="assets", canonical_unavailable=True)
+    canonical = await _bridge("GET", "/internal/v1/assets", account=account, request=request)
+    if canonical.get("ok"):
+        return _merge_bridge_list_with_native(canonical, native_items)
+    return _native_read_envelope(native_items, kind="assets", canonical_unavailable=True)
 
 
 @router.get("/assets/{asset_id}/download")
 async def asset_download(asset_id: str, request: Request, account: dict = Depends(require_account)):
+    # A typed local ID is never sent to the Bot. The delegated local handlers
+    # recheck owner, lifecycle and the exact private artifact before bytes can
+    # leave the server.
+    native_response = await _native_asset_delivery(asset_id, account)
+    if native_response is not None:
+        return native_response
+    if str(asset_id or "").strip().startswith(("wnj:", "wna:")):
+        return envelope(
+            False,
+            "Tài sản Web-native chưa sẵn sàng để tải.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_ASSET_UNAVAILABLE",
+        )
     # The core either returns an explicit short-lived, ownership-checked
     # delivery contract or stays guarded. The Web App never reconstructs a
     # provider URL from asset/job metadata.

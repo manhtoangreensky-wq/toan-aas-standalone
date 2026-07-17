@@ -20,6 +20,21 @@ Xu, PayOS hoặc provider call.
 | Legacy `/subtitle`, `/translate`, `/dubbing`, `/asr` | Existing guarded/Core compatibility surface | Bị thay bằng alias của native editor hoặc được coi là engine sẵn sàng |
 | Bot provider/job/voice tables | Bot/provider | Bị copy thành Web ledger, provider state, job hoặc output state |
 
+Legacy compatibility pages có thể hiện một **plain navigation link** tới form
+`/subtitle-studio/new`, với một query `intent` cố định đã allowlist:
+
+| Legacy route | New-project query |
+| --- | --- |
+| `/subtitle`, `/subtitle/create` | `?intent=subtitle` |
+| `/translate` | `?intent=translation` |
+| `/asr` | `?intent=asr_review` |
+| `/dubbing` | `?intent=dubbing_direction` |
+
+Query này chỉ chọn sẵn nhãn mục đích cho form project mới. Nó không mang theo
+prompt, caption, upload, media, account state, Core Bridge result hay status
+từ legacy flow; giá trị thiếu/sai luôn về `subtitle`. Đây không phải redirect
+hay alias: legacy route và contract guarded/Core của nó vẫn giữ nguyên.
+
 ## Đối chiếu Bot tĩnh
 
 Inventory tĩnh ghi nhận các command customer như `/translate`,

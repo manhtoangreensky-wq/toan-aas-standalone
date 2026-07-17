@@ -17,13 +17,17 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
+import tempfile
 import uuid
-from typing import Any
+from typing import Any, BinaryIO, Iterator
+from urllib.parse import quote
 from zipfile import ZIP_DEFLATED, ZipFile, ZipInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
+from starlette.background import BackgroundTask
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import (
@@ -140,6 +144,214 @@ def _verify_private_file(path: Path, *, expected_bytes: int, expected_digest: st
         return hmac.compare_digest(digest.hexdigest(), expected_digest)
     except OSError:
         return False
+
+
+def _same_private_file(left: os.stat_result, right: os.stat_result) -> bool:
+    """Compare a private blob by physical identity, never by pathname text."""
+
+    return left.st_dev == right.st_dev and left.st_ino == right.st_ino
+
+
+def _private_directory_fd_supported() -> bool:
+    """Whether this host can pin Project Package path components by descriptor."""
+
+    supported = getattr(os, "supports_dir_fd", set())
+    return bool(
+        getattr(os, "O_DIRECTORY", 0)
+        and getattr(os, "O_NOFOLLOW", 0)
+        and os.open in supported
+        and os.stat in supported
+    )
+
+
+def _open_private_package_directory(path: Path) -> tuple[int, int] | None:
+    """Pin the package root and `packages/` before opening a final ZIP.
+
+    Railway Linux supports descriptor-relative open/stat.  Pinning the
+    intermediate directory eliminates a directory-swap race in addition to a
+    final symlink race.  Platforms without that primitive retain a guarded
+    fallback below; they never use a verified path as an HTTP response path.
+    """
+
+    if not _private_directory_fd_supported():
+        return None
+    root_descriptor = -1
+    packages_descriptor = -1
+    try:
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+        root_descriptor = os.open(path.parent.parent, directory_flags)
+        packages_descriptor = os.open("packages", directory_flags, dir_fd=root_descriptor)
+        return root_descriptor, packages_descriptor
+    except OSError:
+        if packages_descriptor >= 0:
+            os.close(packages_descriptor)
+        if root_descriptor >= 0:
+            os.close(root_descriptor)
+        return None
+
+
+def _close_private_package_directory(descriptors: tuple[int, int] | None) -> None:
+    if descriptors is None:
+        return
+    for descriptor in reversed(descriptors):
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+
+
+def _open_verified_private_package_file(path: Path, *, expected_bytes: int, expected_digest: str) -> BinaryIO | None:
+    """Open, rehash and pin one package ZIP without a path verify/open race.
+
+    The returned descriptor is the authority.  The caller must not reopen
+    `path`: doing so would let an attacker swap a verified pathname before an
+    HTTP response starts.  Delivery seals this pinned descriptor again into an
+    anonymous temporary file before any bytes leave the process.
+    """
+
+    if expected_bytes <= 0 or expected_bytes > _maximum_bytes() or not expected_digest:
+        return None
+    descriptor = -1
+    stream: BinaryIO | None = None
+    try:
+        directories = _open_private_package_directory(path) if _private_directory_fd_supported() else None
+        if _private_directory_fd_supported() and directories is None:
+            return None
+        if directories is not None:
+            _root_descriptor, packages_descriptor = directories
+            try:
+                before = os.stat(path.name, dir_fd=packages_descriptor, follow_symlinks=False)
+                flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+                descriptor = os.open(path.name, flags, dir_fd=packages_descriptor)
+            finally:
+                _close_private_package_directory(directories)
+        else:
+            parent_stat = os.lstat(path.parent)
+            before = os.lstat(path)
+            if (
+                stat.S_ISLNK(parent_stat.st_mode)
+                or not stat.S_ISDIR(parent_stat.st_mode)
+                or stat.S_ISLNK(before.st_mode)
+            ):
+                return None
+            flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(path, flags)
+        if not stat.S_ISREG(before.st_mode):
+            return None
+        pinned = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(pinned.st_mode)
+            or pinned.st_size != expected_bytes
+            or not _same_private_file(before, pinned)
+        ):
+            return None
+        stream = os.fdopen(descriptor, "rb", closefd=True)
+        descriptor = -1
+        digest = hashlib.sha256()
+        read_bytes = 0
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            digest.update(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        stream.seek(0)
+        accepted = stream
+        stream = None
+        return accepted
+    except (OSError, ValueError):
+        return None
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+        if descriptor >= 0:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+
+
+def _seal_verified_private_package_file(
+    stream: BinaryIO,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Copy a pinned verified ZIP into an anonymous, rehashed delivery stream."""
+
+    sealed: BinaryIO | None = None
+    try:
+        if expected_bytes <= 0 or expected_bytes > _maximum_bytes() or not expected_digest:
+            return None
+        sealed = tempfile.TemporaryFile(mode="w+b")
+        digest = hashlib.sha256()
+        read_bytes = 0
+        stream.seek(0)
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            if read_bytes > expected_bytes:
+                return None
+            digest.update(chunk)
+            sealed.write(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        sealed.seek(0)
+        accepted = sealed
+        sealed = None
+        return accepted
+    except (OSError, ValueError):
+        return None
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+        if sealed is not None:
+            try:
+                sealed.close()
+            except OSError:
+                pass
+
+
+def _private_package_chunks(stream: BinaryIO) -> Iterator[bytes]:
+    try:
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        stream.close()
+
+
+def _private_package_attachment_response(stream: BinaryIO, *, byte_size: int, filename: str) -> StreamingResponse:
+    """Serve only a sealed package descriptor as a never-cached attachment."""
+
+    if byte_size <= 0:
+        stream.close()
+        raise ValueError("Kích thước Project Package không hợp lệ")
+    safe_name = str(filename or "project-package.zip").replace("\r", " ").replace("\n", " ").strip() or "project-package.zip"
+    return StreamingResponse(
+        _private_package_chunks(stream),
+        media_type="application/zip",
+        background=BackgroundTask(stream.close),
+        headers={
+            "Content-Length": str(byte_size),
+            "Content-Disposition": f"attachment; filename*=utf-8''{quote(safe_name)}",
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+        },
+    )
 
 
 def _package_public(row: tuple[Any, ...]) -> dict[str, Any]:
@@ -439,7 +651,12 @@ def reconcile_project_package_storage() -> None:
 
 
 @router.get("/projects/{project_id}/packages")
-async def list_project_packages(project_id: str, limit: int = 30, account: dict = Depends(require_account)):
+async def list_project_packages(
+    project_id: str,
+    limit: int = 30,
+    offset: int = Query(0, ge=0, le=10000),
+    account: dict = Depends(require_account),
+):
     """List package metadata for one signed owner's Project, including archive history."""
     _require_enabled()
     project_id = _uuid(project_id, label="Mã Project")
@@ -451,14 +668,28 @@ async def list_project_packages(project_id: str, limit: int = 30, account: dict 
             return _project_not_found()
         rows = conn.execute(
             f"""SELECT {PACKAGE_SELECT} FROM web_project_packages
-                WHERE project_id=? AND account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
-            (project_id, str(account["id"]), bounded_limit),
+                WHERE project_id=? AND account_id=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (project_id, str(account["id"]), bounded_limit + 1, int(offset)),
         ).fetchall()
-    return envelope(True, "Đã tải lịch sử Project Package.", data={"items": [_package_public(tuple(row)) for row in rows], "project_id": project_id})
+    has_more = len(rows) > bounded_limit
+    return envelope(
+        True,
+        "Đã tải lịch sử Project Package.",
+        data={
+            "items": [_package_public(tuple(row)) for row in rows[:bounded_limit]],
+            "project_id": project_id,
+            "has_more": has_more,
+            "next_offset": int(offset) + bounded_limit if has_more else None,
+        },
+    )
 
 
 @router.get("/project-packages")
-async def list_all_project_packages(limit: int = 50, account: dict = Depends(require_account)):
+async def list_all_project_packages(
+    limit: int = 50,
+    offset: int = Query(0, ge=0, le=10000),
+    account: dict = Depends(require_account),
+):
     """List only the signed account's Web-native package artifacts."""
     _require_enabled()
     bounded_limit = max(1, min(int(limit), 100))
@@ -466,10 +697,19 @@ async def list_all_project_packages(limit: int = 50, account: dict = Depends(req
     with transaction() as conn:
         rows = conn.execute(
             f"""SELECT {PACKAGE_SELECT} FROM web_project_packages
-                WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
-            (str(account["id"]), bounded_limit),
+                WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (str(account["id"]), bounded_limit + 1, int(offset)),
         ).fetchall()
-    return envelope(True, "Đã tải Project Packages Web.", data={"items": [_package_public(tuple(row)) for row in rows]})
+    has_more = len(rows) > bounded_limit
+    return envelope(
+        True,
+        "Đã tải Project Packages Web.",
+        data={
+            "items": [_package_public(tuple(row)) for row in rows[:bounded_limit]],
+            "has_more": has_more,
+            "next_offset": int(offset) + bounded_limit if has_more else None,
+        },
+    )
 
 
 @router.post("/projects/{project_id}/packages")
@@ -620,20 +860,26 @@ async def download_project_package(package_id: str, account: dict = Depends(requ
     except RuntimeError:
         _mark_unavailable(package_id, account_id)
         return _package_unavailable()
-    if not _verify_private_file(private_path, expected_bytes=expected_size, expected_digest=expected_digest):
+    pinned = _open_verified_private_package_file(
+        private_path,
+        expected_bytes=expected_size,
+        expected_digest=expected_digest,
+    )
+    if pinned is None:
         _mark_unavailable(package_id, account_id)
         return _package_unavailable()
-    return FileResponse(
-        path=private_path,
-        media_type="application/zip",
+    sealed = _seal_verified_private_package_file(
+        pinned,
+        expected_bytes=expected_size,
+        expected_digest=expected_digest,
+    )
+    if sealed is None:
+        _mark_unavailable(package_id, account_id)
+        return _package_unavailable()
+    return _private_package_attachment_response(
+        sealed,
+        byte_size=expected_size,
         filename=str(row[5] or "project-package.zip"),
-        content_disposition_type="attachment",
-        headers={
-            "Cache-Control": "no-store, private",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
-            "Content-Security-Policy": "sandbox",
-        },
     )
 
 
@@ -648,11 +894,13 @@ async def get_project_package(package_id: str, account: dict = Depends(require_a
             f"SELECT {PACKAGE_SELECT} FROM web_project_packages WHERE id=? AND account_id=?",
             (package_id, str(account["id"])),
         ).fetchone()
+        # Never even read a package's event stream until the package itself
+        # has passed the signed owner's canonical account predicate.
         events = conn.execute(
             """SELECT state, created_at FROM web_project_package_events
                WHERE package_id=? ORDER BY sequence ASC, id ASC LIMIT 20""",
             (package_id,),
-        ).fetchall()
+        ).fetchall() if row else []
     if not row:
         return _package_not_found()
     return envelope(

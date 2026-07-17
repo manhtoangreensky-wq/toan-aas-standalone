@@ -25,9 +25,9 @@ from typing import Any
 import warnings
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from starlette.concurrency import run_in_threadpool
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
@@ -37,6 +37,7 @@ from copyfast_db import (
     asset_vault_enabled,
     document_operations_directory,
     document_operations_enabled,
+    image_ocr_enabled,
     ensure_copyfast_schema,
     image_to_pdf_enabled,
     pdf_to_images_enabled,
@@ -54,6 +55,7 @@ PDF_OPTIMIZE_KIND = "pdf_optimize"
 IMAGE_TO_PDF_KIND = "image_to_pdf"
 PDF_TO_IMAGES_KIND = "pdf_to_images"
 PDF_TO_WORD_KIND = "pdf_to_word_text"
+IMAGE_OCR_KIND = "image_ocr"
 SUPPORTED_KINDS = frozenset({
     PDF_SPLIT_KIND,
     PDF_MERGE_KIND,
@@ -61,13 +63,14 @@ SUPPORTED_KINDS = frozenset({
     IMAGE_TO_PDF_KIND,
     PDF_TO_IMAGES_KIND,
     PDF_TO_WORD_KIND,
+    IMAGE_OCR_KIND,
 })
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 PAGE_RANGE_PATTERN = re.compile(r"^\s*(\d+)\s*(?:-\s*(\d+)\s*)?$")
 ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
-OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?P<suffix>pdf|docx|png|zip)$")
+OUTPUT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?P<suffix>pdf|docx|png|txt|zip)$")
 CHUNK_BYTES = 1024 * 1024
 MAX_INPUT_BYTES = 20 * 1024 * 1024  # Mirrors the current Bot PDF limit.
 MAX_PAGES = 30  # Mirrors Bot `DOC_MAX_PAGES` and bounds parser work.
@@ -101,6 +104,14 @@ _PDF_TO_WORD_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_WORD_MAX_CONCURR
 # per Web process and cannot be bypassed by concurrent accounts.
 PDF_TO_IMAGES_MAX_CONCURRENT = 1
 _PDF_TO_IMAGES_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_IMAGES_MAX_CONCURRENT)
+# OCR opens the same bounded image raster as Image → PDF / Image Operations.
+# Reuse the process-wide decoder gate rather than creating a second OCR-only
+# semaphore that could allow two 16 MP inputs to decode at once.
+IMAGE_OCR_MAX_CONCURRENT = 1
+_IMAGE_OCR_CAPACITY = image_decoder_capacity()
+IMAGE_OCR_LANGUAGES = frozenset({"auto", "vi", "en"})
+MAX_IMAGE_OCR_CHARACTERS = 500_000
+MAX_IMAGE_OCR_OUTPUT_BYTES = 2 * 1024 * 1024
 PDF_TO_IMAGES_RENDER_SCALE = 2.0  # Mirrors Bot `/pdf_to_images` 2× render.
 MAX_PDF_TO_IMAGES_PAGE_PIXELS = 8 * 1024 * 1024
 MAX_PDF_TO_IMAGES_TOTAL_PIXELS = 48 * 1024 * 1024
@@ -144,6 +155,7 @@ OUTPUT_SPEC_BY_KIND = {
     # multi-page outputs use this canonical ZIP contract.
     PDF_TO_IMAGES_KIND: (".zip", "application/zip", "toan-aas-pdf-pages.zip"),
     PDF_TO_WORD_KIND: (".docx", DOCX_MEDIA_TYPE, "toan-aas-pdf-text.docx"),
+    IMAGE_OCR_KIND: (".txt", "text/plain; charset=utf-8", "toan-aas-image-ocr.txt"),
 }
 
 OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, requested_page_range,
@@ -285,6 +297,34 @@ class ImageToPdfRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class ImageOcrRequest(BaseModel):
+    """One owner-scoped image becomes one private, verified text artifact.
+
+    The browser cannot provide an idempotency key, URL, path, bytes or
+    provider option.  The server derives an idempotency identity from the
+    immutable Asset Vault revision and requested local language mode.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    source_asset_id: StrictStr = Field(min_length=36, max_length=36)
+    language: StrictStr = Field(min_length=2, max_length=4)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: StrictStr) -> str:
+        return _uuid(value, label="Asset Vault ID")
+
+    @field_validator("language")
+    @classmethod
+    def valid_language(cls, value: StrictStr) -> str:
+        raw = str(value or "").strip()
+        normalized = raw.lower()
+        if raw != normalized or normalized not in IMAGE_OCR_LANGUAGES:
+            raise ValueError("Ngôn ngữ OCR không hợp lệ")
+        return normalized
+
+
 def _require_enabled() -> None:
     if not document_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
@@ -300,6 +340,17 @@ def _require_image_to_pdf_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Ảnh → PDF chưa được bật; cần private storage và WEBAPP_IMAGE_TO_PDF_ENABLED",
+        )
+
+
+def _require_image_ocr_enabled() -> None:
+    """Keep local OCR explicitly opt-in and independent from PDF utilities."""
+
+    _require_enabled()
+    if not image_ocr_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="OCR ảnh private chưa được bật; cần WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED và local Tesseract runtime",
         )
 
 
@@ -335,6 +386,16 @@ def _reserve_image_to_pdf_capacity() -> None:
         raise HTTPException(
             status_code=429,
             detail="Ảnh → PDF đang bận xử lý một lô khác; vui lòng thử lại sau ít phút",
+        )
+
+
+def _reserve_image_ocr_capacity() -> None:
+    """Reserve the shared decoded-image slot before creating an OCR row."""
+
+    if not _IMAGE_OCR_CAPACITY.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="OCR ảnh đang bận xử lý một ảnh khác; vui lòng thử lại sau ít phút",
         )
 
 
@@ -390,6 +451,76 @@ def _image_classes():
             code="IMAGE_RUNTIME_UNAVAILABLE",
         ) from exc
     return Image, ImageFile, ImageOps, UnidentifiedImageError
+
+
+def _image_ocr_runtime() -> tuple[Any, frozenset[str]]:
+    """Load an explicitly local OCR runtime without making startup depend on it.
+
+    `pytesseract` is only a local adapter around a service-installed Tesseract
+    binary.  A missing binary or language directory is a normal readiness
+    state for this optional feature, not a reason to prevent the entire Web
+    App from starting.  The request handler turns this known condition into a
+    guarded, non-delivery response.
+    """
+
+    try:
+        import pytesseract
+    except ImportError as exc:
+        raise DocumentOperationError(
+            "OCR ảnh chưa có local Tesseract runtime đã được cấu hình.",
+            code="OCR_RUNTIME_UNAVAILABLE",
+        ) from exc
+    try:
+        # Make a small explicit readiness call before any private image is
+        # decoded. `get_languages` also proves the configured tessdata path is
+        # usable without exposing it to the browser.
+        pytesseract.get_tesseract_version()
+        languages = frozenset(
+            str(item or "").strip().lower()
+            for item in pytesseract.get_languages(config="")
+            if str(item or "").strip()
+        )
+    except Exception as exc:
+        raise DocumentOperationError(
+            "OCR ảnh chưa có local Tesseract runtime sẵn sàng.",
+            code="OCR_RUNTIME_UNAVAILABLE",
+        ) from exc
+    if not languages:
+        raise DocumentOperationError(
+            "OCR ảnh chưa có language pack local sẵn sàng.",
+            code="OCR_RUNTIME_UNAVAILABLE",
+        )
+    return pytesseract, languages
+
+
+def _image_ocr_language(language: str, languages: frozenset[str]) -> str:
+    """Resolve only documented public language choices to installed packs."""
+
+    available = frozenset(str(item or "").strip().lower() for item in languages if str(item or "").strip())
+    if language == "vi":
+        if "vie" not in available:
+            raise DocumentOperationError(
+                "OCR ảnh chưa có language pack tiếng Việt local.",
+                code="OCR_LANGUAGE_UNAVAILABLE",
+            )
+        return "vie"
+    if language == "en":
+        if "eng" not in available:
+            raise DocumentOperationError(
+                "OCR ảnh chưa có language pack tiếng Anh local.",
+                code="OCR_LANGUAGE_UNAVAILABLE",
+            )
+        return "eng"
+    if "vie" in available and "eng" in available:
+        return "vie+eng"
+    if "eng" in available:
+        return "eng"
+    if "vie" in available:
+        return "vie"
+    raise DocumentOperationError(
+        "OCR ảnh chưa có language pack local phù hợp.",
+        code="OCR_LANGUAGE_UNAVAILABLE",
+    )
 
 
 def _word_classes():
@@ -624,6 +755,15 @@ def _selected_pages(page_range: str, page_count: int) -> tuple[list[int], int, i
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     state = str(row[4])
     kind = str(row[3])
+    requested_page_range = str(row[5])
+    # OCR stores its deliberately narrow language selector with operation
+    # metadata. Expose only the allow-listed selector for an OCR history
+    # item; never turn a request metadata field into a generic public input.
+    ocr_language = None
+    if kind == IMAGE_OCR_KIND and requested_page_range.startswith("ocr:"):
+        candidate = requested_page_range.removeprefix("ocr:")
+        if candidate in IMAGE_OCR_LANGUAGES:
+            ocr_language = candidate
     byte_size = int(row[12]) if row[12] is not None else None
     source_byte_size = int(row[22]) if row[22] is not None else None
     source_count = max(1, int(row[23] or 1)) if len(row) > 23 else 1
@@ -639,7 +779,8 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "project_id": str(row[2]) if row[2] else None,
         "kind": kind,
         "state": state,
-        "requested_page_range": str(row[5]),
+        "requested_page_range": requested_page_range,
+        "language": ocr_language,
         "selected_start_page": int(row[6]) if row[6] is not None else None,
         "selected_end_page": int(row[7]) if row[7] is not None else None,
         "source_page_count": int(row[8]) if row[8] is not None else None,
@@ -662,6 +803,10 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
             round((optimization_saved_bytes / source_byte_size) * 100, 1)
             if optimization_saved_bytes is not None and source_byte_size else None
         ),
+        # Used only by _operation_response to choose a safe guarded message.
+        # That helper strips private keys before sending the operation object
+        # to a browser.
+        "_failure_code": str(row[18] or ""),
     }
 
 
@@ -689,6 +834,30 @@ def _image_source_not_found() -> dict[str, Any]:
         "Không tìm thấy ảnh private đang hoạt động thuộc Web account hiện tại.",
         status_name="guarded",
         error_code="WEB_IMAGE_TO_PDF_SOURCE_NOT_FOUND",
+    )
+
+
+def _ocr_source_not_found() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Không tìm thấy ảnh private đang hoạt động thuộc Web account hiện tại.",
+        status_name="guarded",
+        error_code="WEB_DOCUMENT_OCR_SOURCE_NOT_FOUND",
+    )
+
+
+def _ocr_readiness_guard(exc: DocumentOperationError) -> dict[str, Any]:
+    """Return an honest no-artifact state when optional local OCR is absent."""
+
+    codes = {
+        "OCR_RUNTIME_UNAVAILABLE": "WEB_DOCUMENT_OCR_RUNTIME_UNAVAILABLE",
+        "OCR_LANGUAGE_UNAVAILABLE": "WEB_DOCUMENT_OCR_LANGUAGE_UNAVAILABLE",
+    }
+    return envelope(
+        False,
+        exc.public_message,
+        status_name="guarded",
+        error_code=codes.get(exc.code, "WEB_DOCUMENT_OCR_UNAVAILABLE"),
     )
 
 
@@ -771,6 +940,30 @@ def _image_to_pdf_request_fingerprint(sources: list[dict[str, Any]]) -> str:
     return hashlib.sha256(payload).hexdigest()
 
 
+def _image_ocr_request_fingerprint(
+    *,
+    source_asset_id: str,
+    source_sha256: str,
+    source_bytes: int,
+    language: str,
+) -> str:
+    """Bind server-side OCR replay to one private source revision and mode."""
+
+    payload = json.dumps(
+        {
+            "kind": IMAGE_OCR_KIND,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+            "language": language,
+            "engine": "local_tesseract_text_only",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _optimize_request_fingerprint(*, source_asset_id: str, source_sha256: str, source_bytes: int) -> str:
     """Bind one structural optimize intent to its verified source revision."""
     payload = json.dumps(
@@ -839,6 +1032,8 @@ def _quota_available(conn, *, account_id: str, additional_bytes: int) -> bool:
 def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
     state = str(operation.get("state") or "failed")
     kind = str(operation.get("kind") or PDF_SPLIT_KIND)
+    failure_code = str(operation.get("_failure_code") or "")
+    public_operation = {key: value for key, value in operation.items() if not key.startswith("_")}
     label, completed_message = {
         PDF_SPLIT_KIND: ("PDF Split", "Đã tách và xác minh PDF riêng tư."),
         PDF_MERGE_KIND: ("PDF Merge", "Đã gộp và xác minh PDF riêng tư."),
@@ -846,16 +1041,17 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
         IMAGE_TO_PDF_KIND: ("Ảnh → PDF", "Đã tạo và xác minh PDF riêng tư từ ảnh."),
         PDF_TO_IMAGES_KIND: ("PDF → ảnh", "Đã render và xác minh PNG riêng tư từ PDF."),
         PDF_TO_WORD_KIND: ("PDF có text → Word", "Đã trích xuất text và xác minh DOCX riêng tư."),
+        IMAGE_OCR_KIND: ("OCR ảnh", "Đã trích xuất và xác minh văn bản OCR private."),
     }.get(kind, ("Document Operation", "Đã xác minh artifact tài liệu riêng tư."))
     if state == "completed":
-        return envelope(True, completed_message, data={"operation": operation}, status_name="completed")
+        return envelope(True, completed_message, data={"operation": public_operation}, status_name="completed")
     if state in {"queued", "processing"}:
-        return envelope(True, f"{label} đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
+        return envelope(True, f"{label} đang được máy chủ xử lý.", data={"operation": public_operation}, status_name=state)
     if state == "guarded" and kind == PDF_OPTIMIZE_KIND:
         return envelope(
             False,
             "Không có bản PDF nhỏ hơn đạt chuẩn an toàn; file gốc không thay đổi.",
-            data={"operation": operation},
+            data={"operation": public_operation},
             status_name="guarded",
             error_code="WEB_DOCUMENT_OPERATION_NOT_REDUCED",
         )
@@ -863,11 +1059,35 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
         return envelope(
             False,
             "PDF chưa có văn bản trích xuất được. File scan/ảnh cần OCR riêng; Web không phát DOCX giả.",
-            data={"operation": operation},
+            data={"operation": public_operation},
             status_name="guarded",
             error_code="WEB_DOCUMENT_OPERATION_TEXT_NOT_FOUND",
         )
-    return envelope(False, f"{label} chưa thể hoàn tất an toàn.", data={"operation": operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
+    if state == "guarded" and kind == IMAGE_OCR_KIND:
+        if failure_code == "OCR_RUNTIME_UNAVAILABLE":
+            return envelope(
+                False,
+                "OCR chưa có local runtime sẵn sàng để chạy lại an toàn. Không có file text được phát hành.",
+                data={"operation": public_operation},
+                status_name="guarded",
+                error_code="WEB_DOCUMENT_OCR_RUNTIME_UNAVAILABLE",
+            )
+        if failure_code == "OCR_LANGUAGE_UNAVAILABLE":
+            return envelope(
+                False,
+                "Language pack OCR đã chọn chưa sẵn sàng. Không có file text được phát hành.",
+                data={"operation": public_operation},
+                status_name="guarded",
+                error_code="WEB_DOCUMENT_OCR_LANGUAGE_UNAVAILABLE",
+            )
+        return envelope(
+            False,
+            "OCR không đọc được văn bản đủ để phát hành. Web không tạo file text giả.",
+            data={"operation": public_operation},
+            status_name="guarded",
+            error_code="WEB_DOCUMENT_OCR_TEXT_NOT_FOUND",
+        )
+    return envelope(False, f"{label} chưa thể hoàn tất an toàn.", data={"operation": public_operation}, status_name="failed", error_code="WEB_DOCUMENT_OPERATION_FAILED")
 
 
 def _mark_failed(operation_id: str, account_id: str, *, kind: str, request: Request, code: str) -> None:
@@ -950,7 +1170,8 @@ def _mark_sources_unavailable(asset_ids: list[str], account_id: str) -> None:
     with transaction() as conn:
         placeholders = ", ".join("?" for _ in unique_ids)
         conn.execute(
-            f"""UPDATE web_asset_files SET state='unavailable', updated_at=?
+            f"""UPDATE web_asset_files
+               SET state='unavailable', updated_at=?, lifecycle_revision=lifecycle_revision + 1
                WHERE id IN ({placeholders}) AND account_id=? AND state='active'""",
             (utc_now(), *unique_ids, account_id),
         )
@@ -1220,6 +1441,118 @@ def _render_image_page(source_copy: Path, page_pdf: Path, *, extension: str) -> 
         raise DocumentOperationError("Ảnh không hợp lệ hoặc bị hỏng", code="IMAGE_PARSE_FAILED") from exc
     except MemoryError as exc:
         raise DocumentOperationError("Ảnh vượt giới hạn bộ nhớ xử lý an toàn", code="IMAGE_RESOURCE_LIMIT") from exc
+
+
+def _normalized_ocr_text(value: Any) -> str:
+    """Keep a private OCR artifact readable, bounded and text-only.
+
+    OCR may return arbitrary controls from malformed fonts.  Preserve normal
+    newlines and tabs for a useful download, but remove other controls before
+    the server creates an attachment.  The recognized text is never projected
+    into an API response, audit event or browser state.
+    """
+
+    if not isinstance(value, str):
+        raise DocumentOperationError("OCR không trả về văn bản hợp lệ", code="OCR_PARSE_FAILED")
+    cleaned = value.replace("\r\n", "\n").replace("\r", "\n").replace("\x00", "")
+    cleaned = "".join(character for character in cleaned if character in {"\n", "\t"} or ord(character) >= 32)
+    cleaned = "\n".join(line.rstrip() for line in cleaned.split("\n")).strip()
+    if not cleaned:
+        raise DocumentOperationError("OCR không tìm thấy văn bản để phát hành", code="OCR_TEXT_NOT_FOUND")
+    if len(cleaned) > MAX_IMAGE_OCR_CHARACTERS:
+        raise DocumentOperationError("Văn bản OCR vượt giới hạn artifact an toàn", code="OCR_OUTPUT_LIMIT")
+    encoded = f"{cleaned}\n".encode("utf-8")
+    if len(encoded) < 1 or len(encoded) > min(MAX_IMAGE_OCR_OUTPUT_BYTES, _maximum_output_bytes()):
+        raise DocumentOperationError("Văn bản OCR vượt giới hạn artifact an toàn", code="OCR_OUTPUT_LIMIT")
+    return cleaned + "\n"
+
+
+def _build_image_ocr_output(
+    root: Path,
+    source_copy: Path,
+    extension: str,
+    *,
+    language: str,
+    ocr_module: Any,
+) -> tuple[Path, str, int, str, int, int]:
+    """Run local OCR over one inspected image and retain only verified text.
+
+    This boundary deliberately has no remote URL, browser file, model choice,
+    OCR result preview or generated-media behavior.  It receives a staged,
+    integrity-checked Asset Vault copy and only publishes a private `.txt`
+    after the text bytes have been re-read and hashed.
+    """
+
+    temporary_output = _staging_path(root, ".txt")
+    final_path: Path | None = None
+    try:
+        Image, _, ImageOps, UnidentifiedImageError = _image_classes()
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", Image.DecompressionBombWarning)
+            pixels = _inspect_image_source(source_copy, extension=extension)
+            with Image.open(source_copy) as decoded:
+                if not _image_format_matches(extension, decoded.format):
+                    raise DocumentOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+                if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                    raise DocumentOperationError("Ảnh động chưa được hỗ trợ cho OCR an toàn", code="IMAGE_ANIMATED")
+                decoded.load()
+                normalized = ImageOps.exif_transpose(decoded)
+                raster = None
+                try:
+                    raster = normalized.convert("RGB")
+                    try:
+                        raw_text = ocr_module.image_to_string(
+                            raster,
+                            lang=language,
+                            config="--oem 1 --psm 6",
+                            timeout=30,
+                        )
+                    except Exception as exc:
+                        raise DocumentOperationError(
+                            "Local Tesseract không thể hoàn tất OCR ảnh an toàn.",
+                            code="OCR_RUNTIME_UNAVAILABLE",
+                        ) from exc
+                finally:
+                    if raster is not None:
+                        raster.close()
+                    if normalized is not decoded:
+                        normalized.close()
+
+        text = _normalized_ocr_text(raw_text)
+        encoded = text.encode("utf-8")
+        with temporary_output.open("xb") as stream:
+            stream.write(encoded)
+        byte_size = temporary_output.stat().st_size
+        if byte_size != len(encoded) or byte_size < 1 or byte_size > min(MAX_IMAGE_OCR_OUTPUT_BYTES, _maximum_output_bytes()):
+            raise DocumentOperationError("Văn bản OCR vượt giới hạn artifact an toàn", code="OCR_OUTPUT_LIMIT")
+        digest = hashlib.sha256(encoded).hexdigest()
+        # Re-read/decode the exact staged artifact before publishing it. This
+        # catches disk races/truncation and keeps the delivery contract UTF-8.
+        if temporary_output.read_bytes() != encoded:
+            raise DocumentOperationError("Văn bản OCR đầu ra không vượt qua kiểm tra", code="OCR_OUTPUT_INVALID")
+        try:
+            temporary_output.read_bytes().decode("utf-8", errors="strict")
+        except UnicodeDecodeError as exc:
+            raise DocumentOperationError("Văn bản OCR đầu ra không hợp lệ", code="OCR_OUTPUT_INVALID") from exc
+
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}.txt"
+        final_path = _output_path(root, storage_key, expected_suffix=".txt")
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn OCR đầu ra không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=digest):
+            raise DocumentOperationError("Văn bản OCR đầu ra không vượt qua kiểm tra integrity", code="OCR_OUTPUT_INVALID")
+        return final_path, storage_key, byte_size, digest, pixels, len(text.rstrip("\n"))
+    except DocumentOperationError:
+        _safe_unlink(final_path)
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise DocumentOperationError("Độ phân giải ảnh vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
+    except (UnidentifiedImageError, OSError, ValueError, MemoryError) as exc:
+        raise DocumentOperationError("Không thể xử lý ảnh OCR an toàn", code="OCR_PARSE_FAILED") from exc
+    finally:
+        _safe_unlink(temporary_output)
 
 
 def _build_image_to_pdf_output(
@@ -1973,7 +2306,12 @@ def reconcile_document_operation_storage() -> None:
 
 
 @router.get("")
-async def list_document_operations(limit: int = 50, kind: str | None = None, account: dict = Depends(require_account)):
+async def list_document_operations(
+    limit: int = 50,
+    kind: str | None = None,
+    offset: int = Query(0, ge=0, le=10000),
+    account: dict = Depends(require_account),
+):
     _require_enabled()
     bounded_limit = max(1, min(int(limit), 100))
     requested_kind = str(kind or "").strip().lower()
@@ -1981,19 +2319,40 @@ async def list_document_operations(limit: int = 50, kind: str | None = None, acc
         raise HTTPException(status_code=422, detail="Loại Document Operation không hợp lệ")
     ensure_copyfast_schema()
     with transaction() as conn:
+        # ``utc_now`` intentionally has second precision.  Keep a monotonic
+        # SQLite insertion-order tie-breaker so two operations accepted in
+        # the same second still appear newest-first instead of being ordered
+        # by their random UUIDs.  This is a read-only presentation detail;
+        # it does not affect an operation's state, ownership, or output.
         if requested_kind:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, rowid DESC LIMIT ?""",
-                (str(account["id"]), requested_kind, bounded_limit),
+                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, rowid DESC LIMIT ? OFFSET ?""",
+                (str(account["id"]), requested_kind, bounded_limit + 1, int(offset)),
             ).fetchall()
         else:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_document_operations
-                    WHERE account_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ?""",
-                (str(account["id"]), bounded_limit),
+                    WHERE account_id=? ORDER BY updated_at DESC, rowid DESC LIMIT ? OFFSET ?""",
+                (str(account["id"]), bounded_limit + 1, int(offset)),
             ).fetchall()
-    return envelope(True, "Đã tải thao tác tài liệu Web.", data={"items": [_operation_public(tuple(row)) for row in rows]})
+    has_more = len(rows) > bounded_limit
+    items: list[dict[str, Any]] = []
+    for row in rows[:bounded_limit]:
+        # `_failure_code` is a private branch helper for the one-operation
+        # response. A history list must not disclose internal failure detail.
+        public_operation = _operation_public(tuple(row))
+        public_operation.pop("_failure_code", None)
+        items.append(public_operation)
+    return envelope(
+        True,
+        "Đã tải thao tác tài liệu Web.",
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": int(offset) + bounded_limit if has_more else None,
+        },
+    )
 
 
 @router.post("/pdf-split")
@@ -2549,6 +2908,248 @@ async def image_to_pdf(
             _safe_unlink(source_copy)
         if capacity_reserved:
             _IMAGE_TO_PDF_CAPACITY.release()
+
+
+@router.post("/ocr-image")
+async def ocr_image(payload: ImageOcrRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Extract text from one private image with local, opt-in OCR only.
+
+    The server derives replay protection from the immutable Asset Vault source
+    revision.  No request field can select a provider, upload bytes, reference
+    a URL/path or pass a browser idempotency token into this execution path.
+    """
+
+    _require_image_ocr_enabled()
+    try:
+        ocr_module, installed_languages = _image_ocr_runtime()
+        ocr_language = _image_ocr_language(payload.language, installed_languages)
+    except DocumentOperationError as exc:
+        return _ocr_readiness_guard(exc)
+
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    source_asset_id = payload.source_asset_id
+    source: dict[str, Any] | None = None
+    capacity_reserved = False
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            try:
+                sources, scoped_project_id = _image_sources_for_account(
+                    conn,
+                    source_asset_ids=[source_asset_id],
+                    account_id=account_id,
+                )
+            except DocumentOperationError as exc:
+                if exc.code == "IMAGE_SOURCE_NOT_FOUND":
+                    return _ocr_source_not_found()
+                status_code = 413 if exc.code in {
+                    "IMAGE_INPUT_TOO_LARGE",
+                    "IMAGE_TO_PDF_INPUT_LIMIT",
+                } else 422
+                raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+            source = sources[0]
+            request_fingerprint = _image_ocr_request_fingerprint(
+                source_asset_id=source_asset_id,
+                source_sha256=str(source["sha256"]),
+                source_bytes=int(source["byte_size"]),
+                language=payload.language,
+            )
+            # The client never controls this key. It only identifies the same
+            # owner-scoped source revision + language selection, so refreshes
+            # cannot start concurrent duplicate OCR work or artifacts.
+            server_idempotency_key = f"ocr-{request_fingerprint}"
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_OCR_KIND, server_idempotency_key),
+            ).fetchone()
+            if existing:
+                if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                    raise RuntimeError("Idempotency OCR không khớp fingerprint nguồn")
+                existing_operation = _operation_public(tuple(existing[:-1]))
+                # A true empty-text result is a final truthful outcome for the
+                # same immutable source.  A local runtime/language failure is
+                # transient instead: once readiness above succeeds, allow the
+                # same derived idempotency record to resume rather than making
+                # the owner create a changed source merely to retry.
+                if not (
+                    existing_operation.get("state") == "guarded"
+                    and str(existing_operation.get("_failure_code") or "")
+                    in {"OCR_RUNTIME_UNAVAILABLE", "OCR_LANGUAGE_UNAVAILABLE"}
+                ):
+                    return _operation_response(existing_operation)
+                _reserve_image_ocr_capacity()
+                capacity_reserved = True
+                operation_id = str(existing_operation["id"])
+                now = utc_now()
+                conn.execute(
+                    """UPDATE web_document_operations
+                       SET state='processing', failure_code=NULL, storage_key=NULL, original_filename=NULL,
+                           content_type=NULL, byte_size=NULL, sha256=NULL, completed_at=NULL,
+                           started_at=?, updated_at=?
+                       WHERE id=? AND account_id=? AND kind=? AND state='guarded'""",
+                    (now, now, operation_id, account_id, IMAGE_OCR_KIND),
+                )
+                _record_event(conn, operation_id=operation_id, state="processing", when=now)
+            else:
+                _reserve_image_ocr_capacity()
+                capacity_reserved = True
+                operation_id = str(uuid.uuid4())
+                now = utc_now()
+                conn.execute(
+                    """INSERT INTO web_document_operations
+                       (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                        request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
+                        created_at, queued_at, started_at, updated_at)
+                       VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)""",
+                    (
+                        operation_id,
+                        account_id,
+                        source_asset_id,
+                        scoped_project_id,
+                        IMAGE_OCR_KIND,
+                        server_idempotency_key,
+                        request_fingerprint,
+                        str(source["sha256"]),
+                        int(source["byte_size"]),
+                        f"ocr:{payload.language}",
+                        now,
+                        now,
+                        now,
+                        now,
+                    ),
+                )
+                _record_event(conn, operation_id=operation_id, state="queued", when=now)
+                conn.execute(
+                    "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                    (now, operation_id, account_id),
+                )
+                _record_event(conn, operation_id=operation_id, state="processing", when=now)
+    except Exception:
+        if capacity_reserved:
+            _IMAGE_OCR_CAPACITY.release()
+        raise
+
+    try:
+        if source is None:
+            raise RuntimeError("OCR image source không còn sẵn sàng")
+        source_path = _asset_path(asset_vault_directory(), str(source["storage_key"]))
+        source_copy = _staging_path(root, f".source{source['extension']}")
+        await run_in_threadpool(
+            _copy_verified_image_source,
+            source_path,
+            source_copy,
+            extension=str(source["extension"]),
+            expected_bytes=int(source["byte_size"]),
+            expected_digest=str(source["sha256"]),
+        )
+        (
+            final_path,
+            output_storage_key,
+            output_bytes,
+            output_digest,
+            pixels,
+            characters,
+        ) = await run_in_threadpool(
+            _build_image_ocr_output,
+            root,
+            source_copy,
+            str(source["extension"]),
+            language=ocr_language,
+            ocr_module=ocr_module,
+        )
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, IMAGE_OCR_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("OCR ảnh không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', source_page_count=1, output_page_count=NULL, storage_key=?,
+                       original_filename='toan-aas-image-ocr.txt', content_type='text/plain; charset=utf-8',
+                       byte_size=?, sha256=?, completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    output_storage_key,
+                    output_bytes,
+                    output_digest,
+                    now,
+                    now,
+                    operation_id,
+                    account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.image_ocr",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=(
+                    f"language={payload.language};pixels={pixels};characters={characters};bytes={output_bytes}"
+                ),
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc OCR ảnh vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code in {"OCR_TEXT_NOT_FOUND", "OCR_RUNTIME_UNAVAILABLE", "OCR_LANGUAGE_UNAVAILABLE"}:
+            _mark_guarded(operation_id, account_id, kind=IMAGE_OCR_KIND, request=request, code=exc.code)
+            with transaction() as conn:
+                guarded = conn.execute(
+                    f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                    (operation_id, account_id),
+                ).fetchone()
+            if guarded:
+                return _operation_response(_operation_public(tuple(guarded)))
+        if exc.code == "IMAGE_SOURCE_UNAVAILABLE":
+            _mark_source_unavailable(source_asset_id, account_id)
+        _mark_failed(operation_id, account_id, kind=IMAGE_OCR_KIND, request=request, code=exc.code)
+        status_code = 413 if exc.code in {
+            "IMAGE_INPUT_TOO_LARGE",
+            "IMAGE_DIMENSION_LIMIT",
+            "IMAGE_ASPECT_RATIO_LIMIT",
+            "IMAGE_PIXEL_LIMIT",
+            "IMAGE_RESOURCE_LIMIT",
+            "OCR_OUTPUT_LIMIT",
+        } else 422
+        raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            kind=IMAGE_OCR_KIND,
+            request=request,
+            code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION",
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, kind=IMAGE_OCR_KIND, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể OCR ảnh an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+        if capacity_reserved:
+            _IMAGE_OCR_CAPACITY.release()
 
 
 @router.post("/pdf-to-images")
@@ -3144,11 +3745,15 @@ async def get_document_operation(operation_id: str, account: dict = Depends(requ
         ).fetchall()
     if not row:
         return _operation_not_found()
+    operation = _operation_public(tuple(row))
+    # Failure codes are internal branch metadata. The signed owner may see
+    # lifecycle/status, but never a parser/runtime implementation hint.
+    operation.pop("_failure_code", None)
     return envelope(
         True,
         "Đã tải trạng thái thao tác tài liệu.",
         data={
-            "operation": _operation_public(tuple(row)),
+            "operation": operation,
             "events": [{"state": str(event[0]), "created_at": str(event[1])} for event in events],
         },
         status_name=str(row[4]) if str(row[4]) in OPERATION_STATES else "guarded",

@@ -31,7 +31,9 @@ def test_prompt_library_hydration_and_actions_use_owner_scoped_web_api_only() ->
         "validPromptTemplateId",
         "promptTemplateIdFromPath",
         "promptLibraryFilterPayload",
+        "promptLibraryListOffset",
         "promptLibraryListPath",
+        "promptLibraryListingProjection",
         "promptTemplatePayload",
         "promptLibraryImportPayload",
         "hydratePromptLibrary",
@@ -48,6 +50,10 @@ def test_prompt_library_hydration_and_actions_use_owner_scoped_web_api_only() ->
     assert 'method: "POST", credentials: "same-origin", headers' in INTEGRATION
     assert 'fetch(`${API}/prompt-library/export`' in INTEGRATION
     assert 'promptLibrarySummary: {}, promptTemplates: [], promptTemplateDetail: {}, promptTemplatePreview: {}, promptLibraryEvents: []' in INTEGRATION
+    assert "PROMPT_LIBRARY_LIST_LIMIT = 50" in INTEGRATION
+    assert '"prompt-library-page"' in PORTAL
+    assert "function promptLibraryListing(context)" in PORTAL
+    assert "function renderPromptLibraryPagination(listing)" in PORTAL
 
     start = INTEGRATION.index('if (action === "prompt-library-filter"')
     # Stop before the next independent native workspace action group; this
@@ -72,6 +78,7 @@ def test_prompt_library_hydration_and_actions_use_owner_scoped_web_api_only() ->
         "prompt-template-preview",
         "prompt-library-import",
         "prompt-library-export",
+        "prompt-library-page",
     ):
         assert action in actions
 
@@ -95,7 +102,10 @@ def test_prompt_library_privacy_controls_and_pwa_boundary_are_staticly_enforced(
     assert "URL.revokeObjectURL(objectUrl)" in INTEGRATION
     assert "/api/v1/prompt-library" not in SERVICE_WORKER
     assert '"/prompt-library"' not in SERVICE_WORKER
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "private_prompt_export" in APP
     assert '"prompt-library-write" if prompt_library_write' in APP
     assert '"prompt-library-read" if prompt_library_read' in APP
@@ -104,6 +114,7 @@ def test_prompt_library_privacy_controls_and_pwa_boundary_are_staticly_enforced(
     assert "PROMPT_LIBRARY_IMPORT_BODY_MAX_BYTES" in APP
     assert ".portal-prompt-library-intro" in CSS
     assert ".portal-prompt-library-filter" in CSS
+    assert ".portal-prompt-library-pagination" in CSS
     assert ".portal-prompt-library-preview-result" in CSS
     assert ".portal-prompt-library-detail-grid" in CSS
     assert ".portal-prompt-library-grid { grid-template-columns: 1fr; }" in CSS
@@ -114,3 +125,8 @@ def test_prompt_library_archives_disable_preview_and_clipboard_actions() -> None
     assert 'const canCopy = state === "active";' in PORTAL
     assert 'data-portal-action="prompt-template-copy"' in PORTAL
     assert 'String(template.state || "") !== "active"' in INTEGRATION
+
+
+def test_prompt_library_filter_and_pagination_do_not_restore_browser_drafts() -> None:
+    assert 'data-portal-no-transient data-portal-action="prompt-library-filter"' in PORTAL
+    assert '__promptLibraryOffset: source.getAttribute("data-prompt-library-offset") || ""' in PORTAL

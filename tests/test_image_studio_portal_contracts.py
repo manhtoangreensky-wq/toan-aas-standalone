@@ -46,7 +46,16 @@ def test_image_studio_uses_only_signed_owner_scoped_api_contracts() -> None:
         "imageArtboardPayload",
         "imageDirectionPayload",
         "imageStudioBoundaryIsSafe",
+        "imageStudioArtboardFilterPayload",
+        "imageStudioReferenceFilterPayload",
+        "imageStudioListOffset",
+        "imageStudioArtboardListPath",
+        "imageStudioReferenceListPath",
+        "imageStudioListingProjection",
+        "imageStudioReferenceListingProjection",
+        "imageStudioReferenceStateWithPage",
         "hydrateImageStudio",
+        "hydrateImageStudioReferences",
         "hydrateImageArtboard",
         "imageStudioMutation",
     ):
@@ -54,9 +63,10 @@ def test_image_studio_uses_only_signed_owner_scoped_api_contracts() -> None:
 
     for endpoint in (
         'api("/image-studio/summary")',
-        'api("/image-studio/artboards")',
+        'api(imageStudioArtboardListPath(filter, offset))',
         'api("/image-studio/events?limit=50")',
-        'api("/image-studio/references")',
+        'api(imageStudioReferenceListPath("projects", projectRequest.filter, projectRequest.offset))',
+        'api(imageStudioReferenceListPath("image_assets", assetRequest.filter, assetRequest.offset))',
         'api("/image-studio/policy")',
         'api("/image-studio/artboards/" + encodeURIComponent(String(artboardId)))',
         '"/image-studio/artboards/" + encodeURIComponent(String(artboardId)) + "/estimate"',
@@ -64,11 +74,15 @@ def test_image_studio_uses_only_signed_owner_scoped_api_contracts() -> None:
         '`/image-studio/artboards/${encodeURIComponent(artboardId)}/directions`',
         '`/image-studio/artboards/${encodeURIComponent(artboardId)}/directions/${encodeURIComponent(directionId)}`',
         '`/image-studio/artboards/${encodeURIComponent(artboardId)}/directions/${encodeURIComponent(directionId)}/restore-version`',
+        'return "/image-studio/artboards?" + query.toString();',
+        'return "/image-studio/references/" + normalizedKind.replace("_", "-") + "?" + query.toString();',
     ):
         assert endpoint in INTEGRATION
 
     for capability in (
         '"image-studio-view": Boolean(account && imageStudioEnabled)',
+        '"image-studio-page": Boolean(account && imageStudioEnabled)',
+        '"image-studio-reference-page": Boolean(account && imageStudioEnabled)',
         '"image-artboard-create": Boolean(account && me.csrf_token && imageStudioEnabled)',
         '"image-artboard-update": Boolean(account && me.csrf_token && imageStudioEnabled)',
         '"image-direction-create": Boolean(account && me.csrf_token && imageStudioEnabled)',
@@ -84,6 +98,51 @@ def test_image_studio_uses_only_signed_owner_scoped_api_contracts() -> None:
     assert "reference_asset_id: referenceAssetId || null" in INTEGRATION
     image_studio_surface = PORTAL[PORTAL.index("const IMAGE_STUDIO_INTENTS"):PORTAL.index("const SUBTITLE_STUDIO_FORMATS")]
     assert "original_filename" not in image_studio_surface
+
+
+def test_image_studio_portal_pagination_actions_keep_owner_scoped_reference_state() -> None:
+    """Old artboards/references must be browsable without a client-side cache."""
+    for value in (
+        "IMAGE_STUDIO_ARTBOARD_LIST_LIMIT = 50",
+        "IMAGE_STUDIO_REFERENCE_LIST_LIMIT = 50",
+        "IMAGE_STUDIO_MAX_LIST_OFFSET = 10000",
+        '"projects", "image_assets"',
+        "imageStudioReferencesWithPinned",
+        "imageStudioReferenceHydrationEpoch",
+        "imageStudioReferenceRequestState",
+        "imageStudioReferenceStateWithPage(existing, normalizedKind, filter, offset, data)",
+    ):
+        assert value in INTEGRATION
+
+    # The browser receives bounded metadata pages only.  Current selections
+    # are pinned from the signed detail response so an old reference never
+    # silently switches to the first option after a page/filter change.
+    assert "imageStudioReferenceListPath(\"projects\", projectRequest.filter, projectRequest.offset)" in INTEGRATION
+    assert "imageStudioReferenceListPath(\"image_assets\", assetRequest.filter, assetRequest.offset)" in INTEGRATION
+    assert "imageStudioReferencesWithPinned(" in INTEGRATION
+
+    action_start = INTEGRATION.index('if (action === "image-studio-filter")')
+    action_end = INTEGRATION.index('if (action === "subtitle-studio-refresh")')
+    actions = INTEGRATION[action_start:action_end]
+    for action in (
+        "image-studio-filter",
+        "image-studio-filter-clear",
+        "image-studio-page",
+        "image-studio-project-reference-filter",
+        "image-studio-project-reference-filter-clear",
+        "image-studio-project-reference-page",
+        "image-studio-asset-reference-filter",
+        "image-studio-asset-reference-filter-clear",
+        "image-studio-asset-reference-page",
+    ):
+        assert action in actions
+    assert "hydrateImageStudio(filter, 0)" in actions
+    assert "hydrateImageStudio(undefined, imageStudioListOffset(" in actions
+    assert "hydrateImageStudioReferences(kind, filter, 0)" in actions
+    assert "hydrateImageStudioReferences(kind, undefined, imageStudioListOffset(" in actions
+    assert "data-image-studio-offset" in PORTAL
+    assert "data-image-studio-project-reference-offset" in PORTAL
+    assert "data-image-studio-asset-reference-offset" in PORTAL
 
 
 def test_image_studio_action_block_has_idempotency_and_child_revision_cas() -> None:
@@ -169,7 +228,10 @@ def test_image_studio_private_routes_and_api_are_not_in_pwa_shell_cache() -> Non
     assert "private `/image-studio/*` routes" in SERVICE_WORKER
     assert "/api/v1/image-studio" not in shell
     assert '"/image-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v15"' in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
 
     for selector in (
@@ -185,3 +247,35 @@ def test_image_studio_private_routes_and_api_are_not_in_pwa_shell_cache() -> Non
         ".portal-image-version-list > article { align-items: flex-start; flex-direction: column; }",
     ):
         assert selector in CSS
+
+
+def test_image_studio_artboard_and_reference_reads_ignore_stale_responses() -> None:
+    for epoch in ("imageStudioSessionEpoch", "imageStudioHydrationEpoch", "imageStudioDetailHydrationEpoch"):
+        assert f"let {epoch} = 0;" in INTEGRATION
+        assert f"++{epoch};" in INTEGRATION
+    assert "imageStudioReferenceHydrationEpoch.projects += 1;" in INTEGRATION
+    assert "imageStudioReferenceHydrationEpoch.image_assets += 1;" in INTEGRATION
+
+    helper_start = INTEGRATION.index("function imageStudioRequestIsCurrent")
+    helper_end = INTEGRATION.index("function isNativeImagePromptComposerPath", helper_start)
+    helper = INTEGRATION[helper_start:helper_end]
+    for requirement in (
+        "sessionEpoch === imageStudioSessionEpoch",
+        "currentPortalPath() === expectedPath",
+        "isNativeImageStudioPath(expectedPath)",
+        "base().imageStudioEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+
+    list_start = INTEGRATION.index("async function hydrateImageStudio(")
+    references_start = INTEGRATION.index("async function hydrateImageStudioReferences", list_start)
+    detail_start = INTEGRATION.index("async function hydrateImageArtboard", references_start)
+    listing = INTEGRATION[list_start:references_start]
+    references = INTEGRATION[references_start:detail_start]
+    detail = INTEGRATION[detail_start:INTEGRATION.index("const CHAT_WORKSPACE_LIST_LIMIT", detail_start)]
+    assert "const sessionEpoch = imageStudioSessionEpoch;" in listing
+    assert "imageStudioRequestIsCurrent(epoch, imageStudioHydrationEpoch, sessionEpoch, expectedPath)" in listing
+    assert "imageStudioRequestIsCurrent(epoch, imageStudioReferenceHydrationEpoch[normalizedKind], sessionEpoch, expectedPath)" in references
+    assert "const requestEpoch = ++imageStudioDetailHydrationEpoch;" in detail
+    assert "imageStudioRequestIsCurrent(requestEpoch, imageStudioDetailHydrationEpoch, sessionEpoch, route)" in detail

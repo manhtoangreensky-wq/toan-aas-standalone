@@ -10,20 +10,24 @@ is calculated only from data the account saved in this Web workspace.
 
 from __future__ import annotations
 
+import csv
 from datetime import date, datetime, timedelta, timezone
 from decimal import Decimal, InvalidOperation
 import hashlib
 import hmac
+import io
 import json
 import re
+import sqlite3
 import uuid
-from typing import Any, Callable
+from typing import Any, Callable, Iterable
 
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import Response
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import analytics_workspace_enabled, ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_db import analytics_workspace_enabled, analytics_workspace_export_enabled, best_effort_transaction, ensure_copyfast_schema, read_transaction, transaction, utc_now
 
 
 router = APIRouter(prefix="/api/v1/analytics-workspace", tags=["Web Analytics Workspace"])
@@ -80,6 +84,18 @@ MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1_024
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 ARCHIVED_ORDINAL_BASE = 1_000_000
 MAX_DECIMAL_ABS = Decimal("1000000000000")
+# A manual report can legally contain 30,000 snapshots.  A CSV attachment is
+# intentionally a separate delivery boundary, so refuse a complete export
+# that would exceed this bounded memory/response ceiling rather than emitting
+# a silently truncated file.  It remains below the existing private Prompt
+# Library export ceiling while leaving enough room for a real manual report.
+MAX_MANUAL_CSV_EXPORT_BYTES = 24 * 1024 * 1024
+MAX_MANUAL_CSV_EXPORT_ROWS = 32_000
+# Some spreadsheet programs trim invisible order/format characters before
+# evaluating a cell. Treat those prefixes like ordinary whitespace too; the
+# serializer still prepends an apostrophe before emitting any matching cell.
+CSV_FORMULA_PREFIX_PATTERN = re.compile(r"^[\s\ufeff\u200b\u200c\u200d\u2060]*[=+\-@]")
+MANUAL_CSV_SCHEMA = "toan-aas-web-manual-analytics-csv-v1"
 
 
 def _require_enabled() -> None:
@@ -87,6 +103,16 @@ def _require_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Analytics Workspace đang tạm dừng để bảo trì. WEBAPP_ANALYTICS_WORKSPACE_ENABLED chưa được bật.",
+        )
+
+
+def _require_manual_csv_export_enabled() -> None:
+    """Fail closed unless the separately reviewed attachment switch is on."""
+
+    if not analytics_workspace_export_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Xuất CSV thủ công đang tạm dừng. WEBAPP_ANALYTICS_WORKSPACE_EXPORT_ENABLED chưa được bật.",
         )
 
 
@@ -342,6 +368,20 @@ class LifecycleRequest(ReportRevisionRequest):
         if normalized not in REPORT_STATES:
             raise ValueError("Trạng thái báo cáo không hợp lệ")
         return normalized
+
+
+class ManualCsvExportRequest(BaseModel):
+    """A narrow concurrency receipt for one private CSV attachment.
+
+    Exporting a finalized report is deliberately not an idempotent stored
+    mutation.  The revision proves the browser is still looking at the same
+    owner-scoped finalized report immediately before the server serializes
+    data; the server never accepts report content from the browser.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: int = Field(ge=1)
 
 
 class RestoreVersionRequest(ReportRevisionRequest):
@@ -1071,6 +1111,178 @@ def _report_lifecycle_allowed(current: str, target: str) -> bool:
     return target in transitions.get(current, set())
 
 
+def _manual_csv_export_error(message: str, code: str, *, status_code: int) -> Response:
+    """Return a private JSON guard instead of a partial/broken attachment."""
+
+    return Response(
+        content=json.dumps(_guarded(message, code), ensure_ascii=False, separators=(",", ":")),
+        media_type="application/json",
+        status_code=status_code,
+        headers={
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+        },
+    )
+
+
+def _csv_cell(value: Any) -> str:
+    """Make every legacy/manual cell inert when opened in a spreadsheet.
+
+    The Analytics authoring validators block most formula prefixes, but an
+    attachment must defend independently because legacy rows and multiline
+    narrative fields can still begin with a spreadsheet expression.  Prefix
+    an apostrophe before *any* leading whitespace + formula sigil; CSV quoting
+    alone does not stop Excel/Sheets formula evaluation.
+    """
+
+    text = "" if value is None else str(value)
+    return f"'{text}" if CSV_FORMULA_PREFIX_PATTERN.search(text) else text
+
+
+def _manual_csv_bytes(
+    *,
+    report: tuple[Any, ...],
+    metrics: Iterable[tuple[Any, ...]],
+    snapshots: Iterable[tuple[Any, ...]],
+    findings: Iterable[tuple[Any, ...]],
+    row_count: int,
+    exported_at: str,
+) -> tuple[bytes, int] | None:
+    """Build one bounded, complete manual-report CSV in memory.
+
+    ``None`` means the full attachment crossed a hard row/byte bound.  The
+    caller must return a guarded error rather than emitting a partial report;
+    a partial CSV would look complete to a customer and undermine the review
+    record.  Only the current *active* manual records are serialized.  UUIDs,
+    account identity, campaign/project references, versions, events, audit
+    records, paths and all external authority fields remain server-side.
+    """
+
+    if row_count > MAX_MANUAL_CSV_EXPORT_ROWS:
+        return None
+
+    report_values = {
+        "title": str(report[3]),
+        "state": str(report[10]),
+        "revision": int(report[11]),
+        "period_start": str(report[6]),
+        "period_end": str(report[7]),
+        "context_label": str(report[5]),
+        "tags": ", ".join(_decode_tags(report[9])),
+        "objective": str(report[4]),
+        "summary_note": str(report[8]),
+    }
+    columns = (
+        "schema", "exported_at", "record_type", "report_title", "report_state", "report_revision",
+        "period_start", "period_end", "context_label", "tags", "objective", "summary_note",
+        "metric_ordinal", "metric_name", "metric_unit", "metric_direction", "metric_description", "metric_state",
+        "observed_on", "metric_value", "source_label", "snapshot_note", "snapshot_state",
+        "finding_ordinal", "finding_kind", "finding_body", "finding_state",
+    )
+    # Keep the live serializer itself within the byte bound.  Checking only
+    # after a large StringIO was complete would still let a legacy report
+    # allocate far beyond the advertised attachment limit in process memory.
+    buffer = io.BytesIO()
+    buffer.write(b"\xef\xbb\xbf")
+    text_buffer = io.TextIOWrapper(buffer, encoding="utf-8", newline="", write_through=True)
+    writer = csv.writer(text_buffer, lineterminator="\r\n")
+    writer.writerow(columns)
+    if buffer.tell() > MAX_MANUAL_CSV_EXPORT_BYTES:
+        return None
+
+    def write(record_type: str, *values: Any) -> bool:
+        writer.writerow([_csv_cell(value) for value in (MANUAL_CSV_SCHEMA, exported_at, record_type, *values)])
+        return buffer.tell() <= MAX_MANUAL_CSV_EXPORT_BYTES
+
+    report_prefix = (
+        report_values["title"], report_values["state"], report_values["revision"],
+        report_values["period_start"], report_values["period_end"], report_values["context_label"],
+        report_values["tags"], report_values["objective"], report_values["summary_note"],
+    )
+    blanks = ("",) * 15
+    if not write("report", *report_prefix, *blanks):
+        return None
+    for metric in metrics:
+        metric_values = (
+            int(metric[0]), str(metric[1]), str(metric[2]), str(metric[3]), str(metric[4]), str(metric[5]),
+        )
+        if not write("metric", *report_prefix, *metric_values, *(("",) * 9)):
+            return None
+    for snapshot in snapshots:
+        metric_values = (
+            int(snapshot[0]), str(snapshot[1]), str(snapshot[2]), str(snapshot[3]), str(snapshot[4]), str(snapshot[5]),
+        )
+        snapshot_values = (str(snapshot[6]), str(snapshot[7]), str(snapshot[8]), str(snapshot[9]), str(snapshot[10]))
+        if not write("snapshot", *report_prefix, *metric_values, *snapshot_values, *(("",) * 4)):
+            return None
+    for finding in findings:
+        finding_values = (int(finding[0]), str(finding[1]), str(finding[2]), str(finding[3]))
+        if not write("finding", *report_prefix, *(("",) * 11), *finding_values):
+            return None
+
+    text_buffer.flush()
+    content = buffer.getvalue()
+    return (content, row_count) if len(content) <= MAX_MANUAL_CSV_EXPORT_BYTES else None
+
+
+def _manual_csv_records(
+    conn: Any, *, report_id: str, account_id: str
+) -> tuple[int, Iterable[tuple[Any, ...]], Iterable[tuple[Any, ...]], Iterable[tuple[Any, ...]]] | None:
+    """Preflight and stream active, owner-scoped records without ``fetchall``.
+
+    A completed attachment may be at most 32,000 rows, yet legacy data can
+    predate application-level creation limits. Count the exact active query
+    shapes first, refusing oversized data before any narrative rows are read.
+    The three cursors remain lazy so the byte-capped serializer never holds a
+    30k-row report (or a malicious legacy equivalent) in process memory.
+    """
+
+    counts = conn.execute(
+        """SELECT
+               (SELECT COUNT(*) FROM web_analytics_metrics
+                WHERE report_id=? AND account_id=? AND state='active'),
+               (SELECT COUNT(*)
+                FROM web_analytics_snapshots s
+                INNER JOIN web_analytics_metrics m
+                  ON m.id=s.metric_id AND m.report_id=s.report_id AND m.account_id=s.account_id
+                WHERE s.report_id=? AND s.account_id=? AND s.state='active' AND m.state='active'),
+               (SELECT COUNT(*) FROM web_analytics_findings
+                WHERE report_id=? AND account_id=? AND state='active')""",
+        (report_id, account_id, report_id, account_id, report_id, account_id),
+    ).fetchone()
+    row_count = 1 + sum(int(value or 0) for value in (counts or (0, 0, 0)))
+    if row_count > MAX_MANUAL_CSV_EXPORT_ROWS:
+        return None
+
+    metrics = conn.execute(
+        """SELECT ordinal, name, unit, direction, description, state
+           FROM web_analytics_metrics
+           WHERE report_id=? AND account_id=? AND state='active'
+           ORDER BY ordinal ASC, id ASC""",
+        (report_id, account_id),
+    )
+    snapshots = conn.execute(
+        """SELECT m.ordinal, m.name, m.unit, m.direction, m.description, m.state,
+                      s.observed_on, s.value_decimal, s.source_label, s.note, s.state
+           FROM web_analytics_snapshots s
+           INNER JOIN web_analytics_metrics m
+             ON m.id=s.metric_id AND m.report_id=s.report_id AND m.account_id=s.account_id
+           WHERE s.report_id=? AND s.account_id=? AND s.state='active' AND m.state='active'
+           ORDER BY m.ordinal ASC, s.observed_on ASC, s.id ASC""",
+        (report_id, account_id),
+    )
+    findings = conn.execute(
+        """SELECT ordinal, kind, body, state
+           FROM web_analytics_findings
+           WHERE report_id=? AND account_id=? AND state='active'
+           ORDER BY ordinal ASC, id ASC""",
+        (report_id, account_id),
+    )
+    return row_count, metrics, snapshots, findings
+
+
 @router.get("/summary")
 async def analytics_workspace_summary(account: dict = Depends(require_account)):
     _require_enabled()
@@ -1112,9 +1324,16 @@ async def analytics_workspace_policy(account: dict = Depends(require_account)):
         True,
         "Analytics Workspace chỉ lưu metric, snapshot và nhận định do bạn tự nhập.",
         data={
-            "allowed": ["manual_metric_definition", "manual_snapshot", "deterministic_comparison", "human_authored_finding", "web_project_reference", "web_campaign_reference"],
-            "guarded": ["social_platform_api", "live_analytics", "bot_report", "provider_analytics", "ai_insight", "revenue", "wallet", "payment", "job", "publish", "file_export"],
-            "notice": "Nhãn nguồn chỉ là mô tả do bạn tự ghi; Web không kết nối, đồng bộ hoặc xác minh dữ liệu của bất kỳ nền tảng nào.",
+            "allowed": [
+                "manual_metric_definition", "manual_snapshot", "deterministic_comparison", "human_authored_finding",
+                "web_project_reference", "web_campaign_reference", "finalized_manual_csv_export",
+            ],
+            "guarded": [
+                "social_platform_api", "live_analytics", "bot_report", "canonical_campaign_report", "provider_analytics",
+                "ai_insight", "revenue", "wallet", "payment", "job", "publish", "csv_import",
+                "pdf_delivery", "stored_report_file_export",
+            ],
+            "notice": "Nhãn nguồn chỉ là mô tả do bạn tự ghi; Web không kết nối, đồng bộ hoặc xác minh dữ liệu của bất kỳ nền tảng nào. Khi feature flag riêng được bật, chỉ report finalized mới được xuất CSV attachment tạm thời từ dữ liệu Web tự nhập; đó không phải CSV Campaign/Bot canonical.",
             **_boundary(),
         },
         status_name="read_only",
@@ -1198,6 +1417,131 @@ async def analytics_workspace_detail(report_id: str, account: dict = Depends(req
     if not data:
         return _report_not_found()
     return envelope(True, "Đã tải báo cáo số liệu Web-owned.", data=data, status_name="read_only")
+
+
+@router.post("/reports/{report_id}/export.csv")
+async def analytics_workspace_manual_csv_export(
+    report_id: str, payload: ManualCsvExportRequest, request: Request, account: dict = Depends(require_csrf)
+):
+    """Return a bounded manual-only CSV attachment for one finalized report.
+
+    The server re-reads every row from the signed owner's database; browser
+    detail state is never used as source data.  This is intentionally not a
+    Bot campaign report, platform export, asset, job, stored file or delivery
+    record.  Finalized reports are child-write locked, and the second revision
+    check below closes a lifecycle change between initial read and attachment.
+    """
+
+    _require_enabled()
+    _require_manual_csv_export_enabled()
+    try:
+        resolved = _uuid(report_id, label="Report ID")
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    ensure_copyfast_schema()
+    account_id = str(account["id"])
+    row_count = 0
+    with read_transaction() as conn:
+        report = _report_row(conn, report_id=resolved, account_id=account_id)
+        if not report:
+            return _manual_csv_export_error(
+                "Không tìm thấy báo cáo thuộc Web account hiện tại.",
+                "WEB_ANALYTICS_REPORT_NOT_FOUND",
+                status_code=404,
+            )
+        if int(report[11]) != payload.expected_revision:
+            return _manual_csv_export_error(
+                "Dữ liệu đã thay đổi ở một phiên khác. Hãy tải lại trước khi xuất CSV.",
+                "WEB_ANALYTICS_REVISION_CONFLICT",
+                status_code=409,
+            )
+        if str(report[10]) != "finalized":
+            return _manual_csv_export_error(
+                "Chỉ report đã chốt nội bộ mới có thể xuất CSV dữ liệu Web thủ công.",
+                "WEB_ANALYTICS_MANUAL_CSV_FINALIZED_REQUIRED",
+                status_code=409,
+            )
+        records = _manual_csv_records(conn, report_id=resolved, account_id=account_id)
+        if records is None:
+            serialized = None
+        else:
+            row_count, metrics, snapshots, findings = records
+            serialized = _manual_csv_bytes(
+                report=report,
+                metrics=metrics,
+                snapshots=snapshots,
+                findings=findings,
+                row_count=row_count,
+                exported_at=utc_now(),
+            )
+    if serialized is None:
+        return _manual_csv_export_error(
+            "Báo cáo vượt giới hạn CSV an toàn. Không có file một phần được tạo; hãy giảm dữ liệu active rồi thử lại.",
+            "WEB_ANALYTICS_MANUAL_CSV_EXPORT_LIMIT",
+            status_code=413,
+        )
+    content, row_count = serialized
+
+    # Do not release an attachment after its lifecycle/revision changed.
+    # Child data cannot be written while finalized, so this recheck proves the
+    # complete read above is still the same signed owner's final review.
+    try:
+        # The audit/recheck is observability rather than an account mutation.
+        # Do not let an unrelated long SQLite writer turn a CSV click into a
+        # 30-second wait or an unhandled failure. If this short transaction
+        # cannot prove-and-audit the same finalized revision, release no file.
+        with best_effort_transaction(timeout_seconds=0.25) as conn:
+            current = _report_row(conn, report_id=resolved, account_id=account_id)
+            if not current:
+                return _manual_csv_export_error(
+                    "Không tìm thấy báo cáo thuộc Web account hiện tại.",
+                    "WEB_ANALYTICS_REPORT_NOT_FOUND",
+                    status_code=404,
+                )
+            if int(current[11]) != payload.expected_revision:
+                return _manual_csv_export_error(
+                    "Dữ liệu đã thay đổi ở một phiên khác. Hãy tải lại trước khi xuất CSV.",
+                    "WEB_ANALYTICS_REVISION_CONFLICT",
+                    status_code=409,
+                )
+            if str(current[10]) != "finalized":
+                return _manual_csv_export_error(
+                    "Chỉ report đã chốt nội bộ mới có thể xuất CSV dữ liệu Web thủ công.",
+                    "WEB_ANALYTICS_MANUAL_CSV_FINALIZED_REQUIRED",
+                    status_code=409,
+                )
+            _audit(
+                conn,
+                request=request,
+                account=account,
+                action="analytics_report_manual_csv_exported",
+                target=resolved,
+                detail=f"manual_csv;revision={payload.expected_revision};rows={row_count};bytes={len(content)}",
+            )
+    except sqlite3.OperationalError:
+        # A bounded lock refusal is an expected protection response, not an
+        # application crash. Keep it out of the Web reliability incident feed
+        # that records unexpected 5xx responses after this router returns.
+        request.state.reliability_expected_failure = True
+        return _manual_csv_export_error(
+            "Hệ thống đang đồng bộ dữ liệu. CSV chưa được xác nhận audit; vui lòng thử lại sau ít phút.",
+            "WEB_ANALYTICS_MANUAL_CSV_RETRY_LATER",
+            status_code=503,
+        )
+
+    return Response(
+        content=content,
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Length": str(len(content)),
+            "Content-Disposition": 'attachment; filename="toan-aas-manual-analytics.csv"',
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+            "Cross-Origin-Resource-Policy": "same-origin",
+        },
+    )
 
 
 @router.post("/reports")

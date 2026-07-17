@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Safe Web surface coverage: **93.2%**. This is an actionable migration baseline, not a LIVE or engine-success claim.
+Safe Web surface coverage: **94.38%**. This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -123,7 +123,7 @@ Safe Web surface coverage: **93.2%**. This is an actionable migration baseline, 
 | command | /content_policy | /legal | COPIED_GUARDED |
 | command | /costs | /admin/costs | COPIED_GUARDED |
 | command | /create_media | /studio | COPIED_GUARDED |
-| command | /creative_flow | /studio | COPIED_GUARDED |
+| command | /creative_flow | /creative-flow | MAPPED_TO_EXISTING_ROUTE |
 | command | /creative_report | /admin/creative_report | COPIED_GUARDED |
 | command | /creative_select | /admin/creative_select | COPIED_GUARDED |
 | command | /creative_test | /admin/creative_test | COPIED_GUARDED |
@@ -141,7 +141,7 @@ Safe Web surface coverage: **93.2%**. This is an actionable migration baseline, 
 | command | /dub_public_open | /admin/dub_public_open | COPIED_GUARDED |
 | command | /dub_quote_test | /admin/dub_quote_test | COPIED_GUARDED |
 | command | /dub_status | /admin/dub_status | COPIED_GUARDED |
-| command | /dubbing_help | /features/subtitle | COPIED_GUARDED |
+| command | /dubbing_help | /guides/source-rights | COPIED_GUARDED |
 | command | /duyet | /admin/duyet | COPIED_GUARDED |
 | command | /emergency_lock | TELEGRAM_ONLY | TELEGRAM_ONLY |
 | command | /emergency_status | TELEGRAM_ONLY | TELEGRAM_ONLY |

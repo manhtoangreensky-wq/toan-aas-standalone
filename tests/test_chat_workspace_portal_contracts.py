@@ -5,6 +5,7 @@ the old generic `/chat` Core Bridge estimate surface or pretending to run AI.
 """
 
 from pathlib import Path
+import re
 
 
 ROOT = Path(__file__).parents[1]
@@ -138,8 +139,10 @@ def test_chat_library_filter_and_pagination_keep_private_state_consistent() -> N
         "function chatWorkspaceListOptions(overrides)",
         "function chatWorkspaceThreadsPath(options)",
         "function chatWorkspacePagination(data, requested)",
-        "let chatWorkspaceHydrationEpoch = 0",
-        "if (requestEpoch !== chatWorkspaceHydrationEpoch) return { stale: true }",
+        "let chatWorkspaceSessionEpoch = 0",
+        "let chatWorkspaceListHydrationEpoch = 0",
+        "let chatWorkspaceDetailHydrationEpoch = 0",
+        "function chatWorkspaceRequestIsCurrent(",
         "Máy chủ trả số lượng hội thoại không nhất quán.",
     ):
         assert helper in INTEGRATION
@@ -160,9 +163,43 @@ def test_chat_library_filter_and_pagination_keep_private_state_consistent() -> N
         assert selector in CSS
 
 
+def test_chat_hydration_fences_session_list_detail_and_current_signed_path() -> None:
+    """A delayed signed response must not cross a session, route, or detail read.
+
+    This is deliberately a static contract: the portal hydration helpers are
+    private client code and are not exercised through a browser/provider test.
+    It pins the three independent invalidation channels needed to keep a prior
+    account's thread title, context, turn, or listing filter out of a new view.
+    """
+    for name in (
+        "chatWorkspaceSessionEpoch",
+        "chatWorkspaceListHydrationEpoch",
+        "chatWorkspaceDetailHydrationEpoch",
+    ):
+        assert re.search(r"(?:\+\+|\+=\s*1)" + re.escape(name), INTEGRATION), name
+    assert INTEGRATION.count("chatWorkspaceRequestIsCurrent(") >= 3
+    assert "const sessionEpoch = chatWorkspaceSessionEpoch;" in INTEGRATION
+    assert "const requestEpoch = ++chatWorkspaceListHydrationEpoch;" in INTEGRATION
+    assert "const requestEpoch = ++chatWorkspaceDetailHydrationEpoch;" in INTEGRATION
+    assert "if (!chatWorkspaceRequestIsCurrent(" in INTEGRATION
+    assert "currentPortalPath()" in INTEGRATION
+
+    # Presentation normalization must retain the signed list projection. If it
+    # drops this field, a correct API response is silently rendered as page 0
+    # and a refresh can reuse an unsafe/default filter instead.
+    start = PORTAL.index("// AI Chat Workspace is an owner-scoped")
+    end = PORTAL.index("// Analytics Workspace is a manual-only", start)
+    normalizer = PORTAL[start:end]
+    assert "chatWorkspaceListing:" in normalizer
+    assert "source.chatWorkspaceListing" in normalizer
+
+
 def test_chat_private_cache_and_responsive_ui_contract() -> None:
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v15"' in SERVICE_WORKER
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
     assert "api/v1/chat-workspace" in SERVICE_WORKER
     assert '"/chat"' in SERVICE_WORKER
     assert "private `/chat/*` routes" in SERVICE_WORKER

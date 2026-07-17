@@ -24,7 +24,7 @@ from typing import Any
 import uuid
 import warnings
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field, field_validator
 from starlette.background import BackgroundTask
@@ -806,7 +806,8 @@ def _mark_source_unavailable(asset_id: str, account_id: str) -> None:
         return
     with transaction() as conn:
         conn.execute(
-            """UPDATE web_asset_files SET state='unavailable', updated_at=?
+            """UPDATE web_asset_files
+               SET state='unavailable', updated_at=?, lifecycle_revision=lifecycle_revision + 1
                WHERE id=? AND account_id=? AND state='active'""",
             (utc_now(), asset_id, account_id),
         )
@@ -1426,7 +1427,12 @@ def _operation_dimensions(operation_id: str, account_id: str) -> tuple[int, int]
 
 
 @router.get("")
-async def list_image_operations(limit: int = 50, kind: str | None = None, account: dict = Depends(require_account)):
+async def list_image_operations(
+    limit: int = 50,
+    kind: str | None = None,
+    offset: int = Query(0, ge=0, le=10000),
+    account: dict = Depends(require_account),
+):
     _require_enabled()
     bounded_limit = max(1, min(int(limit), 100))
     normalized_kind = str(kind or "").strip().lower()
@@ -1437,19 +1443,24 @@ async def list_image_operations(limit: int = 50, kind: str | None = None, accoun
         if normalized_kind:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_image_operations
-                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
-                (str(account["id"]), normalized_kind, bounded_limit),
+                    WHERE account_id=? AND kind=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+                (str(account["id"]), normalized_kind, bounded_limit + 1, int(offset)),
             ).fetchall()
         else:
             rows = conn.execute(
                 f"""SELECT {OPERATION_SELECT} FROM web_image_operations
-                    WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ?""",
-                (str(account["id"]), bounded_limit),
+                    WHERE account_id=? ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+                (str(account["id"]), bounded_limit + 1, int(offset)),
             ).fetchall()
+    has_more = len(rows) > bounded_limit
     return envelope(
         True,
         "Đã tải các thao tác ảnh riêng tư.",
-        data={"items": [_operation_public(tuple(row)) for row in rows]},
+        data={
+            "items": [_operation_public(tuple(row)) for row in rows[:bounded_limit]],
+            "has_more": has_more,
+            "next_offset": int(offset) + bounded_limit if has_more else None,
+        },
         status_name="completed",
     )
 

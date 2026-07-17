@@ -19,6 +19,7 @@ import argparse
 import ast
 import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -176,9 +177,13 @@ COMMAND_ROUTE_OVERRIDES = {
     "tool_public_status": "/status",
     "tool_status": "/status",
     "create_media": "/studio",
-    "creative_flow": "/studio",
+    "creative_flow": "/creative-flow",
     "film": "/studio",
-    "media_factory": "/studio",
+    "media_factory": "/media-factory",
+    "trend_research": "/trend-research",
+    "video_factory_flow": "/video-studio/workflow",
+    "story_video_factory": "/video-studio/story-video-plan",
+    "story_motion_prompt": "/video-studio/story-video-plan",
     "pipeline": "/studio",
     "produce": "/studio",
     "quick": "/studio",
@@ -273,7 +278,8 @@ COMMAND_ROUTE_OVERRIDES = {
     "add_voice_to_video": "/video/add-ons",
     "video_music": "/video/add-ons",
     "help": "/guides",
-    "source_help": "/guides",
+    "source_help": "/guides/source-rights",
+    "dubbing_help": "/guides/source-rights",
     "commands": "/guides",
     "huongdan": "/guides",
     "guide": "/guides",
@@ -293,6 +299,72 @@ COMMAND_ROUTE_OVERRIDES = {
     "uudai": "/rewards",
     "cancel": "/jobs",
 }
+
+# Dynamic Bot callbacks are intentionally inventory-only by default: the
+# auditor must never evaluate their formatted values.  A small number of
+# namespaces have nevertheless been manually reviewed against real signed Web
+# surfaces.  These entries therefore mean only "this callback family has a
+# guarded Web counterpart"; they do not prove a particular dynamic identifier,
+# provider action, payment, job, delivery or admin permission works at runtime.
+#
+# Keep the routes at a workflow boundary rather than inventing a query-string
+# deep link from a Telegram object ID.  The Web must obtain any record through
+# its own signed, owner/role-checked API after navigation.
+DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
+    ("memory|", "/notes", "customer"),
+    ("ticket|", "/support", "customer"),
+    ("support|", "/support", "customer"),
+    ("pipe|", "/workboard", "customer"),
+    ("task|", "/workboard", "customer"),
+    ("storyboard|", "/video-studio/storyboard-composer", "customer"),
+    ("videodub|", "/dubbing", "customer"),
+    ("tr_target|", "/dubbing", "customer"),
+    ("tr_pick|", "/dubbing", "customer"),
+    ("tr_more|", "/dubbing", "customer"),
+    ("adconcept|", "/video-studio/cinematic-concept", "customer"),
+    ("creative|", "/content-studio", "customer"),
+    ("vproduct|", "/video/product", "customer"),
+    ("videoaddon|", "/video/add-ons", "customer"),
+    ("framevideo|", "/video-studio", "customer"),
+    ("videoedit|", "/video-studio", "customer"),
+    ("vfinal|", "/video/export", "customer"),
+    ("license_music|", "/media-workspace", "customer"),
+    ("select_media|", "/media-workspace", "customer"),
+    ("play_media|", "/media-workspace", "customer"),
+    ("create_media|", "/media-factory", "customer"),
+    ("imgtool|", "/image", "customer"),
+    ("prov|", "/image", "customer"),
+    # Payment namespaces stay at a canonical, explicitly guarded entry point.
+    # This does not turn the Web into a second PayOS/manual-payment writer.
+    ("manual|", "/wallet/topup", "customer"),
+    ("shopai|", "/wallet/topup", "customer"),
+    ("shopai_video_job|", "/wallet/topup", "customer"),
+    ("pkgbuy|", "/wallet/topup", "customer"),
+    ("storage|", "/wallet/topup", "customer"),
+    ("job|", "/jobs", "customer"),
+    ("menu|", "/dashboard", "customer"),
+    ("archive|", "/admin", "admin"),
+    ("opmenu|", "/admin", "admin"),
+)
+
+# These public Bot commands can contain words such as ``factory`` or mention
+# an admin review in their handler, which the generic static heuristic sees as
+# an admin signal.  Their command registrations and customer-facing handlers
+# are nevertheless public.  Keep this narrow, explicit list next to the
+# route overrides so the audit does not incorrectly point a customer command
+# at a non-existent ``/admin/<command>`` page.
+PUBLIC_CUSTOMER_COMMAND_OVERRIDES = frozenset(
+    {
+        "creative_flow",
+        "media_factory",
+        "trend_research",
+        "video_factory_flow",
+        "story_video_factory",
+        "story_motion_prompt",
+        "source_help",
+        "dubbing_help",
+    }
+)
 SECRET_VALUE_PATTERNS = (
     re.compile(r"\b\d{6,12}:[A-Za-z0-9_-]{20,}\b"),  # Telegram-style token
     re.compile(r"(?i)\b(?:sk|pk|rk|ghp|xox[baprs]|eyJ)[-_A-Za-z0-9]{12,}\b"),
@@ -319,6 +391,55 @@ CALLBACK_PATTERN_RE = re.compile(
     r"\bCallbackQueryHandler\s*\(\s*(?P<handler>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)[\s\S]{0,360}?\bpattern\s*=\s*(['\"])(?P<pattern>[^'\"\r\n]+)\2"
 )
 CALLBACK_DATA_RE = re.compile(r"\bcallback_data\s*=\s*(['\"])(?P<token>[^'\"\r\n]+)\1")
+# Keep f-string callbacks separate from literal callback data.  A template such
+# as ``f\"{prefix}|save\"`` is useful audit evidence, but it is not proof of a
+# concrete browser action and must never be evaluated by this static tool.
+CALLBACK_DYNAMIC_DATA_RE = re.compile(
+    r"\bcallback_data\s*=\s*f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)"
+)
+# The Bot's keyboard builders also accept ``(label, callback_token)`` rows.
+# Its canonical monolithic source is deliberately handled by the bounded regex
+# extractor below, so inventorying only ``callback_data=...`` would omit most
+# of those buttons.  Keep this intentionally narrow: a two-value tuple must
+# have a callback-shaped second literal (``namespace|action`` or
+# ``namespace:action``), never an arbitrary display/data pair.
+CALLBACK_TUPLE_TOKEN_RE = re.compile(
+    r"(?<![A-Za-z0-9_])\((?:[^()\r\n]|\\.)*?,\s*(?P<quote>['\"])(?P<token>"
+    r"[A-Za-z0-9][A-Za-z0-9_.-]*(?:[|:][A-Za-z0-9_.:-]+)+)(?P=quote)\s*\)"
+)
+CALLBACK_LITERAL_TOKEN_RE = re.compile(
+    r"^[A-Za-z0-9][A-Za-z0-9_.-]*(?:[|:][A-Za-z0-9_.:-]+)+$"
+)
+CALLBACK_DYNAMIC_TUPLE_RE = re.compile(
+    r"(?<![A-Za-z0-9_])\((?:[^()\r\n]|\\.)*?,\s*f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)\s*\)"
+)
+CALLBACK_TEMPLATE_SEGMENT_RE = r"(?:[A-Za-z0-9][A-Za-z0-9_.-]*|\{\*\})"
+CALLBACK_TEMPLATE_TOKEN_RE = re.compile(
+    rf"^{CALLBACK_TEMPLATE_SEGMENT_RE}(?:[|:]{CALLBACK_TEMPLATE_SEGMENT_RE})+$"
+)
+CALLBACK_TEMPLATE_FORMATTED_VALUE_RE = re.compile(r"\{[^{}]*\}")
+# The three helpers below deliberately share the same reviewed, literal Web
+# planner prefixes.  Their raw f-string callback templates remain in the
+# inventory, but a source-only pass may derive the two concrete callback
+# families only when it sees a direct literal caller.  It must never follow a
+# variable ``flow``/``prefix`` value or turn ``{*}|...`` into a generic browser
+# callback namespace.
+GUIDED_VIDEO_KEYBOARD_HELPER_RE = re.compile(
+    r"(?ms)^\s*def\s+(?P<helper>guided_video_(?:motion|music|result)_keyboard)\s*\(\s*prefix\b"
+    r"(?P<body>.*?)(?=^\s*(?:async\s+)?def\s|\Z)"
+)
+GUIDED_VIDEO_LITERAL_PREFIX_CALL_RE = re.compile(
+    r"\b(?P<helper>guided_video_(?:motion|music|result)_keyboard)\s*\(\s*"
+    r"(?P<quote>['\"])(?P<prefix>promptvideo|imagevideo)(?P=quote)"
+)
+GUIDED_VIDEO_BACK_TEMPLATE_EXPANSIONS = {
+    # ``back_action`` is selected locally in this one reviewed helper.  Do not
+    # try to evaluate arbitrary formatted callback segments elsewhere.
+    ("guided_video_motion_keyboard", "{*}|{*}"): {
+        "promptvideo": "promptvideo|back_choices",
+        "imagevideo": "imagevideo|back_style",
+    },
+}
 CONVERSATION_RE = re.compile(r"\bConversationHandler\s*\(")
 DECORATOR_ROUTE_RE = re.compile(
     r"@(?P<app>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\.(?P<verb>get|post|put|patch|delete|options|head)\s*\(\s*(['\"])(?P<path>/[^'\"\r\n]*)\3",
@@ -460,18 +581,38 @@ def _sanitize(value: Any) -> Any:
     return value
 
 
+def _is_excluded_source_dir(name: str) -> bool:
+    """Return whether a directory is outside the canonical static inventory.
+
+    Pytest creates temporary copied project trees such as ``_pytest_*`` in a
+    checkout.  Those copies can contain valid-looking FastAPI routes and would
+    otherwise inflate the Web inventory.  Prune them before walking so an
+    audit only describes source-of-truth files and does not need permission to
+    inspect a stale test artifact.
+    """
+
+    return name in EXCLUDED_DIRS or name.startswith("_pytest_")
+
+
 def _source_files(root: Path) -> list[Path]:
     files: list[Path] = []
-    for path in root.rglob("*"):
-        if not path.is_file() or path.suffix.lower() not in SOURCE_SUFFIXES:
-            continue
-        try:
-            relative_parts = path.relative_to(root).parts
-        except ValueError:
-            continue
-        if any(part in EXCLUDED_DIRS for part in relative_parts):
-            continue
-        files.append(path)
+    # ``Path.rglob`` cannot prune child directories.  ``os.walk`` lets this
+    # static-only audit skip generated snapshots before attempting to read
+    # them, which also keeps inaccessible temporary test directories harmless.
+    for directory, child_dirs, filenames in os.walk(root, topdown=True, onerror=lambda _error: None):
+        child_dirs[:] = [name for name in child_dirs if not _is_excluded_source_dir(name)]
+        base = Path(directory)
+        for filename in filenames:
+            path = base / filename
+            if path.suffix.lower() not in SOURCE_SUFFIXES:
+                continue
+            try:
+                if path.is_file():
+                    files.append(path)
+            except OSError:
+                # The source audit is read-only and must not fail merely
+                # because an unrelated generated artifact disappeared.
+                continue
     return sorted(files)
 
 
@@ -527,6 +668,64 @@ def _literal_string(node: ast.AST | None) -> str | None:
     if isinstance(node, ast.Name):
         return f"<dynamic:{node.id}>"
     return None
+
+
+def _callback_template_from_text(value: str) -> str | None:
+    """Canonicalise a callback f-string without evaluating any expression.
+
+    The inventory only retains callback-shaped literal segments and replaces
+    every formatted expression with ``{*}``.  This is deliberately weaker than
+    constant propagation: a template is an unresolved source marker, not a
+    list of values that could be sent by a browser.
+    """
+
+    template = CALLBACK_TEMPLATE_FORMATTED_VALUE_RE.sub("{*}", str(value or ""))
+    if not CALLBACK_TEMPLATE_TOKEN_RE.fullmatch(template):
+        return None
+    return _redact_text(template)
+
+
+def _callback_template_from_ast(node: ast.AST | None) -> str | None:
+    """Return a callback f-string template from AST without evaluating it."""
+
+    if not isinstance(node, ast.JoinedStr):
+        return None
+    values: list[str] = []
+    for value in node.values:
+        if isinstance(value, ast.Constant) and isinstance(value.value, str):
+            values.append(value.value)
+        elif isinstance(value, ast.FormattedValue):
+            values.append("{*}")
+        else:
+            return None
+    return _callback_template_from_text("".join(values))
+
+
+def _tuple_callback_token(node: ast.AST) -> str | None:
+    """Return a static keyboard-row callback token without evaluating source.
+
+    The Bot keeps many keyboards as literal ``(label, callback_token)`` rows
+    for helper functions such as ``build_2col_keyboard``.  A tuple is only
+    treated as a callback row when it has exactly two values and the second is
+    a conservative callback-shaped literal.  This avoids inventing callback
+    inventory entries from arbitrary application tuples while keeping this
+    audit text/AST-only.
+    """
+
+    if not isinstance(node, ast.Tuple) or len(node.elts) != 2:
+        return None
+    token = _literal_string(node.elts[1])
+    if token and CALLBACK_LITERAL_TOKEN_RE.fullmatch(token):
+        return token
+    return None
+
+
+def _tuple_callback_template(node: ast.AST) -> str | None:
+    """Return a dynamic keyboard-row callback template, never a concrete token."""
+
+    if not isinstance(node, ast.Tuple) or len(node.elts) != 2:
+        return None
+    return _callback_template_from_ast(node.elts[1])
 
 
 def _kwarg(call: ast.Call, name: str) -> ast.AST | None:
@@ -642,6 +841,7 @@ def _extract_large_python_file(
     commands: list[dict[str, Any]],
     callback_handlers: list[dict[str, Any]],
     callback_data: list[dict[str, Any]],
+    callback_templates: list[dict[str, Any]],
     conversations: list[dict[str, Any]],
     routes: list[dict[str, Any]],
     background_jobs: list[dict[str, Any]],
@@ -680,6 +880,20 @@ def _extract_large_python_file(
     for match in CALLBACK_DATA_RE.finditer(text):
         record = {"token": _redact_text(match.group("token")), **location(match)}
         _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+    for match in CALLBACK_TUPLE_TOKEN_RE.finditer(text):
+        record = {"token": _redact_text(match.group("token")), **location(match)}
+        _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+    for expression in (CALLBACK_DYNAMIC_DATA_RE, CALLBACK_DYNAMIC_TUPLE_RE):
+        for match in expression.finditer(text):
+            template = _callback_template_from_text(match.group("body"))
+            if not template:
+                continue
+            record = {
+                "template": template,
+                "resolution": "unresolved_dynamic_template",
+                **location(match),
+            }
+            _append_unique(callback_templates, seen["callback_template"], record, ("template", "file", "line"))
     for match in CONVERSATION_RE.finditer(text):
         record = {"handler": "ConversationHandler", **location(match)}
         _append_unique(conversations, seen["conversation"], record, ("file", "line"))
@@ -711,10 +925,104 @@ def _extract_large_python_file(
         _append_unique(background_jobs, seen["job"], record, ("kind", "target", "file", "line"))
 
 
+def _guided_video_helper_tokens(helper: str, template: str, prefixes: set[str]) -> list[tuple[str, str]]:
+    """Expand one reviewed helper template from direct literal callers only.
+
+    The caller set is deliberately supplied by the source scanner and contains
+    only ``promptvideo`` and ``imagevideo``.  A variable prefix, a future
+    namespace, or a second formatted segment therefore cannot enter this
+    function as a browser callback.
+    """
+
+    special = GUIDED_VIDEO_BACK_TEMPLATE_EXPANSIONS.get((helper, template))
+    if special is not None:
+        return [(prefix, special[prefix]) for prefix in sorted(prefixes) if prefix in special]
+    if not template.startswith("{*}|") or template.count("{*}") != 1:
+        return []
+    return [(prefix, template.replace("{*}", prefix, 1)) for prefix in sorted(prefixes)]
+
+
+def _resolve_reviewed_guided_video_helper_callbacks(
+    *,
+    text: str,
+    root: Path,
+    path: Path,
+    callback_templates: list[dict[str, Any]],
+    callback_data: list[dict[str, Any]],
+    seen: dict[str, set[tuple[Any, ...]]],
+) -> None:
+    """Annotate reviewed helper templates and derive direct literal callbacks.
+
+    This is a deliberately bounded static transformation, not symbolic
+    execution.  It only considers f-string templates physically inside the
+    three inspected helpers and the literal ``promptvideo``/``imagevideo``
+    call sites.  The raw template record, its source line and its unresolved
+    source marker are retained in inventory with the derivation evidence.
+    """
+
+    relative_path = _relative(path, root)
+    records = [record for record in callback_templates if record.get("file") == relative_path]
+    if not records:
+        return
+
+    for helper_match in GUIDED_VIDEO_KEYBOARD_HELPER_RE.finditer(text):
+        helper = str(helper_match.group("helper") or "")
+        start_line = _line_for_offset(text, helper_match.start())
+        end_line = _line_for_offset(text, helper_match.end())
+        calls = [
+            {
+                "prefix": str(call.group("prefix")),
+                "file": relative_path,
+                "line": _line_for_offset(text, call.start()),
+            }
+            for call in GUIDED_VIDEO_LITERAL_PREFIX_CALL_RE.finditer(text)
+            if call.group("helper") == helper
+        ]
+        prefixes = {str(call["prefix"]) for call in calls}
+        if not prefixes:
+            continue
+
+        for template_record in records:
+            template_line = int(template_record.get("line") or 0)
+            if template_line < start_line or template_line > end_line:
+                continue
+            template = str(template_record.get("template") or "")
+            derived = _guided_video_helper_tokens(helper, template, prefixes)
+            if not derived:
+                continue
+
+            derived_tokens = [token for _, token in derived]
+            literal_calls = [call for call in calls if call["prefix"] in {prefix for prefix, _ in derived}]
+            template_record.update(
+                {
+                    "resolution": "reviewed_literal_prefix_helper_calls",
+                    "helper": helper,
+                    "derived_callback_tokens": sorted(set(derived_tokens)),
+                    "literal_prefix_call_evidence": literal_calls,
+                }
+            )
+            for prefix, token in derived:
+                for call in literal_calls:
+                    if call["prefix"] != prefix:
+                        continue
+                    record = {
+                        "token": token,
+                        "resolution": "reviewed_literal_prefix_helper_call",
+                        "template": template,
+                        "template_file": relative_path,
+                        "template_line": template_line,
+                        "helper": helper,
+                        "file": relative_path,
+                        "line": int(call["line"]),
+                    }
+                    _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+
+
 def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
     commands: list[dict[str, Any]] = []
     callback_handlers: list[dict[str, Any]] = []
     callback_data: list[dict[str, Any]] = []
+    callback_templates: list[dict[str, Any]] = []
     conversations: list[dict[str, Any]] = []
     routes: list[dict[str, Any]] = []
     background_jobs: list[dict[str, Any]] = []
@@ -734,6 +1042,7 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
                 commands,
                 callback_handlers,
                 callback_data,
+                callback_templates,
                 conversations,
                 routes,
                 background_jobs,
@@ -799,9 +1108,33 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
 
                 for keyword in node.keywords:
                     if keyword.arg == "callback_data":
-                        token = _literal_string(keyword.value) or "<dynamic-callback-data>"
-                        record = {"token": token, **location}
-                        _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+                        template = _callback_template_from_ast(keyword.value)
+                        if template:
+                            record = {
+                                "template": template,
+                                "resolution": "unresolved_dynamic_template",
+                                **location,
+                            }
+                            _append_unique(callback_templates, seen["callback_template"], record, ("template", "file", "line"))
+                        else:
+                            token = _literal_string(keyword.value) or "<dynamic-callback-data>"
+                            record = {"token": token, **location}
+                            _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+
+            if isinstance(node, ast.Tuple):
+                token = _tuple_callback_token(node)
+                if token:
+                    record = {"token": token, **_record_location(root, path, node)}
+                    _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+                else:
+                    template = _tuple_callback_template(node)
+                    if template:
+                        record = {
+                            "template": template,
+                            "resolution": "unresolved_dynamic_template",
+                            **_record_location(root, path, node),
+                        }
+                        _append_unique(callback_templates, seen["callback_template"], record, ("template", "file", "line"))
 
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 lowered = node.name.lower()
@@ -820,10 +1153,27 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
                         record = {"path": route, "methods": [verb.upper()], "endpoint": node.name, **_record_location(root, path, node)}
                         _append_unique(routes, seen["route"], record, ("path", "methods", "file", "line"))
 
+    # This pass stays source-only and is deliberately scoped to the reviewed
+    # helpers plus their literal callers.  It runs for both AST and large-file
+    # paths, never follows a variable flow/prefix and keeps raw templates in
+    # the inventory as source evidence.
+    for path in files:
+        if path.suffix.lower() != ".py":
+            continue
+        _resolve_reviewed_guided_video_helper_callbacks(
+            text=_read_source(path),
+            root=root,
+            path=path,
+            callback_templates=callback_templates,
+            callback_data=callback_data,
+            seen=seen,
+        )
+
     return {
         "commands": sorted(commands, key=lambda item: (item["command"], item["file"], item["line"])),
         "callback_handlers": sorted(callback_handlers, key=lambda item: (item["pattern"], item["file"], item["line"])),
         "callback_data": sorted(callback_data, key=lambda item: (item["token"], item["file"], item["line"])),
+        "callback_templates": sorted(callback_templates, key=lambda item: (item["template"], item["file"], item["line"])),
         "conversations": sorted(conversations, key=lambda item: (item["file"], item["line"])),
         "routes": sorted(routes, key=lambda item: (item["path"], item["file"], item["line"])),
         "background_jobs": sorted(background_jobs, key=lambda item: (item["target"], item["file"], item["line"])),
@@ -936,6 +1286,7 @@ def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
             "commands": len(python_inventory["commands"]),
             "callback_handlers": len(python_inventory["callback_handlers"]),
             "callback_data": len(python_inventory["callback_data"]),
+            "callback_templates": len(python_inventory["callback_templates"]),
             "conversations": len(python_inventory["conversations"]),
             "routes": len(python_inventory["routes"]),
             "background_jobs": len(python_inventory["background_jobs"]),
@@ -1209,6 +1560,8 @@ def _telegram_link_callback_contract(bot_root: Path, web_root: Path) -> dict[str
 
 
 def _is_admin_command(command: str, handler: str, *, admin_guarded: bool = False) -> bool:
+    if str(command or "").casefold() in PUBLIC_CUSTOMER_COMMAND_OVERRIDES:
+        return False
     if admin_guarded:
         return True
     haystack = f"{command} {handler}".casefold()
@@ -1286,10 +1639,10 @@ def _compatibility_surface_exists(candidate: str, routes: set[str]) -> bool:
         return False
     normalized = candidate.rstrip("/") or "/"
     prefixes = (
-        "/dashboard", "/account", "/onboarding", "/wallet", "/packages", "/jobs", "/assets", "/support", "/tickets",
-        "/membership", "/status", "/studio",
-        "/notes", "/reminders", "/referrals", "/rewards", "/community", "/guides", "/growth", "/campaign",
-        "/pricing", "/legal", "/privacy", "/content", "/image", "/video", "/voice", "/music", "/subtitle",
+        "/dashboard", "/account", "/onboarding", "/wallet", "/packages", "/jobs", "/assets", "/asset-vault", "/support", "/tickets", "/analytics",
+        "/membership", "/status", "/studio", "/workboard", "/trend-research", "/media-factory", "/media-workspace", "/creative-flow", "/video-studio",
+        "/notes", "/reminders", "/referrals", "/rewards", "/community", "/guides", "/growth", "/campaign", "/calendar", "/approvals",
+        "/pricing", "/legal", "/privacy", "/prompt-library", "/free-prompt-gallery", "/content", "/image", "/video", "/voice", "/music", "/subtitle",
         "/translate", "/dubbing", "/asr", "/documents", "/features", "/admin", "/tools", "/prompts",
         "/caption", "/hashtag", "/hook", "/script", "/storyboard",
     )
@@ -1330,8 +1683,371 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     token = identifier.casefold()
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
-    if admin and not telegram_only:
+    if token == "payosalert|remind_later":
+        # This is not a customer reminder.  The Bot emits it only in its
+        # owner/admin PayOS-expiry alert keyboard and
+        # ``handle_payos_alert_callback`` first enforces ``is_admin_user``.
+        # Its only effect is dismissing that Telegram message; there is no
+        # account reminder or Web-owned payment state to recreate.
+        admin = True
+        telegram_only = True
+        target = "TELEGRAM_ONLY"
+    elif admin and not telegram_only:
         target = "/admin/callbacks"
+    elif token == "adconcept|message|memory":
+        # ``memory`` is one selectable *creative message theme* in the Bot's
+        # cinematic-ad wizard (alongside success, confidence and luxury), not
+        # a request to create or open a Memory Center note.
+        target = "/video-studio/cinematic-concept"
+    elif token == "freehub|meta":
+        # The main Free Hub Meta button starts the Bot's small, deterministic
+        # three-prompt pack.  Keep it separate from the later wizard steps so
+        # the audit does not incorrectly erase that useful route mapping.
+        target = "/content/prompt-pack"
+    elif token in {"freehub|caption", "freehub|ideas", "freehub|prompts", "freehub|hook"}:
+        # These are pure Free Hub text recipes: caption/hashtag, ideas,
+        # image/video prompt guidance and Hook & Script.  The signed Web
+        # Content Prompt Pack now owns their Web-native equivalents.
+        target = "/content/prompt-pack"
+    elif token == "freehub|publish_package":
+        # The frozen Bot formatted its most recent Telegram pending result as
+        # a review package.  The Web never imports that hidden state: its
+        # explicit, signed input form returns a bounded text-only review
+        # receipt and cannot schedule or publish any social content.
+        target = "/content/publish-review"
+    elif token == "freehub|library" or token.startswith("freehub|lib_"):
+        # The Free Hub global seed is intentionally not copied into the
+        # account-owned Prompt Library.  The dedicated signed Gallery exposes
+        # the reviewed static snapshot with filter/detail/copy only.
+        target = "/free-prompt-gallery"
+    elif token == "freehub|upload":
+        # The Bot's temporary Telegram-media slot has no safe Web equivalent.
+        # Route the customer to the independently owned, validated Asset Vault
+        # instead; it does not recreate a hidden Bot pending chain.
+        target = "/asset-vault"
+    elif token in {"freehub|docs", "freehub|notes"}:
+        # Bot opens its memory/doc menu.  Web Notes is the direct Web-owned
+        # counterpart; document transforms retain separate private routes.
+        target = "/notes"
+    elif token in {"freehub|docs_split_merge", "freehub|docs_summary_guard"}:
+        # Summary stays guarded and split/merge remains separately scoped;
+        # this parent menu maps only to the Web document hub.
+        target = "/documents"
+    elif token in {
+        "freehub|suggest_pick1", "freehub|suggest_pick2", "freehub|suggest_pick3",
+        "freehub|suggest_more", "freehub|suggest_custom", "freehub|copy",
+        "freehub|edit", "freehub|variant", "freehub|prompt_back", "freehub|use_prompt1",
+        "freehub|use_prompt2", "freehub|use_prompt3", "freehub|to_caption", "freehub|to_ideas",
+        "freehub|to_prompts",
+    }:
+        # These are local Free Hub text-selection transitions.  The Web
+        # Prompt Pack provides explicit topic suggestions and an ephemeral
+        # deterministic receipt, without importing Telegram pending state.
+        target = "/content/prompt-pack"
+    elif token == "freehub|to_cinematic":
+        target = "/video-studio/cinematic-concept"
+    elif token == "freehub|image_prompt":
+        target = "/image/prompt-composer"
+    elif token == "freehub|video_prompt":
+        target = "/video-studio/prompt-planner"
+    elif token == "freehub|use_video":
+        # This route is a planner, not a claim that a video render is ready.
+        target = "/video-studio/prompt-planner"
+    elif token.startswith("promptvideo|"):
+        # The Bot's prompt-to-video wizard is a finite deterministic planning
+        # sequence (topic, prompt, motion, music, strength and optional save).
+        # Web presents those selections together in the signed Video Prompt
+        # Planner; saving there recomputes a private Video Plan rather than
+        # accepting Telegram pending state or triggering a render/provider.
+        target = "/video-studio/prompt-planner"
+    elif token in {"imagevideo|await_image", "imagevideo|back_image", "imagevideo|back_style"}:
+        # The Web cannot reuse the Bot's transient Telegram upload slot.
+        # Image Studio owns the explicit art direction and Image Vault image
+        # reference that must exist before motion planning can begin.
+        target = "/image-studio"
+    elif token == "imagevideo|start" or token == "imagevideo|back_motion" or token.startswith("imagevideo|style_"):
+        # These Bot wizard steps are represented by the one explicit Web
+        # Image Motion Planner form. It never imports the Bot pending image;
+        # the customer selects an owner-scoped Image Studio direction instead.
+        target = "/video-studio/image-motion-planner"
+    elif token == "imagevideo|save":
+        # The sibling Bot callback retained a plan after a Telegram image
+        # choice.  The Web equivalent deliberately does not accept that Bot
+        # file slot: Image Motion Planner rechecks an owner-scoped Image
+        # Studio direction with an active Image Vault image and only creates
+        # an explicit, server-recomputed Video Plan draft.
+        target = "/video-studio/image-motion-planner"
+    elif token.startswith("imagevideo|"):
+        # Remaining Image → Video choices (motion/music/strength/edit and
+        # finalization guards) belong to the same explicit Image Motion
+        # Planner. It works from a signed, owner-scoped Web asset/direction
+        # rather than a Telegram file slot and never implies media execution.
+        target = "/video-studio/image-motion-planner"
+    elif token in {
+        "selfscene|await_video",
+        "selfscene|use_recent_video",
+        "selfscene|input|video",
+        "selfscene|back_upload",
+        "selfscene|video_guard",
+        "selfscene|frame_hint",
+        "selfscene|finalization",
+    }:
+        # The frozen Bot implementation uses a Telegram video/file id or
+        # recent-media slot for these transitions. ``frame_hint`` can also
+        # enter the Bot's image-slideshow route, while ``video_guard`` and
+        # ``finalization`` leave planning for its package/invoice/runtime
+        # flow. A browser route must not imply source ingestion, media
+        # inspection, rendering, payment, preview, output or delivery.
+        telegram_only = True
+        target = "TELEGRAM_ONLY"
+    elif token in {
+        "selfscene|start",
+        "selfscene|plan_without_video",
+        "selfscene|direction|context",
+        "selfscene|direction|cinematic",
+        "selfscene|direction|ad",
+        "selfscene|direction_choice|1",
+        "selfscene|direction_choice|2",
+        "selfscene|direction_choice|3",
+        "selfscene|direction_refresh",
+        "selfscene|direction_custom",
+        "selfscene|object|person",
+        "selfscene|object|product",
+        "selfscene|object|pet",
+        "selfscene|object|custom",
+        "selfscene|input|person",
+        "selfscene|input|product",
+        "selfscene|input|pet",
+        "selfscene|input|custom",
+        "selfscene|back_direction",
+        "selfscene|back_object",
+        "selfscene|back_context",
+        "selfscene|back_style",
+        "selfscene|back_music",
+        "selfscene|context|1",
+        "selfscene|context|2",
+        "selfscene|context|3",
+        "selfscene|context_refresh",
+        "selfscene|context_custom",
+        "selfscene|style_choice|1",
+        "selfscene|style_choice|2",
+        "selfscene|style_choice|3",
+        "selfscene|style_refresh",
+        "selfscene|style_custom",
+        "selfscene|music|none",
+        "selfscene|music_refresh",
+        "selfscene|music_custom",
+        "selfscene|plan",
+        "selfscene|image_guard",
+        "selfscene|music_guard",
+        "selfscene|save",
+    }:
+        # These are the reviewed, finite text-direction choices in Bot
+        # ``selfscene``: a subject to preserve, new scene, camera motion and
+        # prompt/music guidance. The designated Web planner deliberately
+        # starts from fresh text plus an explicit consent/right-to-use
+        # acknowledgement. It does not receive a Telegram file id, inspect
+        # media, read Bot state, invoke a provider or persist a plan merely
+        # because Bot's transient ``save`` label was pressed.
+        #
+        # Keep the list literal. Any new ``selfscene`` action needs source
+        # evidence and an independently reviewed Web contract; it cannot
+        # inherit this route through a namespace wildcard.
+        target = "/video-studio/self-shot-planner"
+    elif token in {"videoref|link", "videoref|catalog", "videoref|save_catalog"}:
+        # The Bot's private reference catalog/link flow cannot be copied as a
+        # Telegram file-id or an external fetch.  Web starts from a validated
+        # account-owned Asset Vault upload instead.
+        target = "/asset-vault"
+    elif token == "videoref|manual":
+        # The Bot allowed a manual written reference description.  The
+        # Storyboard Composer is the explicit Web text-only counterpart; it
+        # does not pretend that a video was uploaded or analyzed.
+        target = "/video-studio/storyboard-composer"
+    elif token == "videoref|image_prompts":
+        target = "/image/prompt-composer"
+    elif token == "videoref|video_prompts":
+        target = "/video-studio/prompt-planner"
+    elif token in {"videoref|finalization", "videoref|frame_plan", "videoref|generate"}:
+        # No Web provider/render adapter is being claimed.  The durable Video
+        # Studio plan editor is the appropriate guarded next surface.
+        target = "/video-studio"
+    elif token in {
+        "videoref|hub", "videoref|start", "videoref|await_video", "videoref|back_upload",
+        "videoref|back_direction", "videoref|direction_custom", "videoref|back_topics",
+        "videoref|topic_custom", "videoref|topic_refresh", "videoref|topic_choice", "videoref|sample_segments",
+        "videoref|plan", "videoref|save", "videoref|version_refresh", "videoref|format",
+        "videoref|profile", "videoref|profile_create", "videoref|profile_platform",
+        "videoref|profile_affiliate", "videoref|profile_goal",
+    } or token.startswith("videoref|direction|") or token.startswith("videoref|topic_choice|") or token.startswith("videoref|profile_platform|") or token.startswith("videoref|profile_affiliate|") or token.startswith("videoref|profile_goal|"):
+        # Bot ``videoref`` retained a Telegram upload/file id plus temporary
+        # channel choices, then emitted a text plan.  Web replaces the core
+        # planning grammar with one explicit signed form: an active
+        # owner-scoped Asset Vault video selector, a newly supplied topic,
+        # audience/platform/goal/tone and server-recomputed three-scene plan.
+        # It does not import Bot pending state, fetch a link or analyze a
+        # source video, so the route spells that boundary out in the UI.
+        target = "/video-studio/reference-format-planner"
+    elif token in {"videoref|publish_package", "videoref|auto_publish"}:
+        # Bot's package is text formatting and its auto-publish button is
+        # guarded.  Web's explicit review package remains manual-only and
+        # does not connect social accounts or publish content.
+        target = "/content/publish-review"
+    elif token == "videoref|performance":
+        # Performance data must be entered and owned in the Web analytics
+        # workspace; Web never reads the Bot's pending/video state.
+        target = "/analytics"
+    elif token in {
+        "longvideo|finalization",
+        "longvideo|frame_video",
+        "longvideo|render_segments",
+    }:
+        # These buttons leave the Bot's finite editorial planning flow.
+        # ``finalization`` opens the Bot invoice/finalization path,
+        # ``frame_video`` may use Bot-held image file ids, and
+        # ``render_segments`` observes/starts the Bot provider job flow.
+        # A standalone Web planner has no canonical bridge/runtime contract
+        # for those effects, so navigation must not imply render, payment,
+        # preview, output or delivery.
+        telegram_only = True
+        target = "TELEGRAM_ONLY"
+    elif token in {
+        "longvideo|start",
+        "longvideo|topic|sales",
+        "longvideo|topic|education",
+        "longvideo|topic|story",
+        "longvideo|topic_custom",
+        "longvideo|topic_choice|1",
+        "longvideo|topic_choice|2",
+        "longvideo|topic_choice|3",
+        "longvideo|topic_refresh",
+        "longvideo|back_topic_suggestions",
+        "longvideo|duration|3 phút",
+        "longvideo|duration|5 phút",
+        "longvideo|duration|10 phút",
+        "longvideo|duration|30 phút",
+        "longvideo|duration|60 phút",
+        "longvideo|duration_custom",
+        "longvideo|back_duration",
+        "longvideo|style|professional",
+        "longvideo|style|viral",
+        "longvideo|style|cinematic",
+        "longvideo|style_custom",
+        "longvideo|back_style",
+        "longvideo|structure|1",
+        "longvideo|structure|2",
+        "longvideo|structure|3",
+        "longvideo|structure_custom",
+        "longvideo|back_structure",
+        "longvideo|storyboard",
+        "longvideo|image_prompts",
+        "longvideo|video_prompts",
+        "longvideo|music",
+        "longvideo|save",
+    }:
+        # These are the reviewed, literal editorial transitions in the Bot's
+        # long-video roadmap: topic → duration → style → structure, followed
+        # by deterministic storyboard/prompt/audio text and the plan-save
+        # intent.  The proposed signed Web surface must use fresh Web form
+        # fields and its own owner-scoped persistence; it must never import
+        # Bot pending state, project rows or scene rows.
+        #
+        # Keep this finite list deliberately literal.  A new ``longvideo``
+        # action needs source evidence and an explicit Web contract instead
+        # of being swallowed by a namespace wildcard.
+        target = "/video-studio/long-form-planner"
+    elif token in {
+        "videoidea|finalization",
+        "videoidea|frame_video",
+        "videoidea|render_ai",
+        "videoidea|platform|tiktok",
+        "videoidea|platform|youtube",
+        "videoidea|platform|facebook",
+        "videoidea|platform_custom",
+        "videoidea|trend_type|before_after",
+        "videoidea|trend_type|problem_solution",
+        "videoidea|trend_type|pov",
+    }:
+        # ``finalization`` opens the Bot's paid/runtime path, ``frame_video``
+        # can assemble Bot-held scene images, and ``render_ai`` queries the
+        # Bot job/provider flow.  The standalone planner deliberately has no
+        # such execution adapter.  The platform/trend callbacks are legacy
+        # keyboard literals with no matching branch in
+        # ``handle_video_idea_callback``; mapping them to a Web form would
+        # incorrectly claim that their Bot state transition exists.
+        telegram_only = True
+        target = "TELEGRAM_ONLY"
+    elif token in {
+        "videoidea|start",
+        "videoidea|kind|ad",
+        "videoidea|kind|cinema",
+        "videoidea|kind|custom",
+        "videoidea|cinema_refresh",
+        "videoidea|cinema_custom",
+        "videoidea|cinema_choice|1",
+        "videoidea|cinema_choice|2",
+        "videoidea|cinema_choice|3",
+        "videoidea|product_type|physical",
+        "videoidea|product_type|service",
+        "videoidea|product_type|affiliate",
+        "videoidea|product_type|custom",
+        "videoidea|product_refresh",
+        "videoidea|product_custom",
+        "videoidea|product_choice|1",
+        "videoidea|product_choice|2",
+        "videoidea|product_choice|3",
+        "videoidea|back_product_type",
+        "videoidea|back_description",
+        "videoidea|back_goal",
+        "videoidea|back_context",
+        "videoidea|back_choices",
+        "videoidea|idea_refresh",
+        "videoidea|goal_custom",
+        "videoidea|goal|sales",
+        "videoidea|goal|brand",
+        "videoidea|goal|viral",
+        "videoidea|context_custom",
+        "videoidea|context|1",
+        "videoidea|context|2",
+        "videoidea|context|3",
+        "videoidea|genre|scifi",
+        "videoidea|genre|fantasy",
+        "videoidea|genre|drama",
+        "videoidea|choose|1",
+        "videoidea|choose|2",
+        "videoidea|choose|3",
+        "videoidea|choice_custom",
+        "videoidea|storyboard",
+        "videoidea|image_prompts",
+        "videoidea|video_prompts",
+        "videoidea|music",
+        "videoidea|save",
+    }:
+        # These are the finite text-planning choices handled by the frozen
+        # Bot ``videoidea`` conversation: idea kind, product/topic, goal,
+        # context, concept choice and its text-only storyboard/prompt/audio
+        # follow-ups.  The signed Web Idea Planner replaces their temporary
+        # Telegram state with original bounded form values and can explicitly
+        # save a server-recomputed private Video Plan draft.  No Bot state,
+        # provider, media, job, wallet, payment, publish or delivery path is
+        # implied by this navigation mapping.
+        target = "/video-studio/idea-planner"
+    elif token == "freehub|save":
+        # ``freehub|save`` is the terminal action for the five deterministic
+        # Free Hub text packs (Meta prompt, caption/hashtag, ideas, hook/script
+        # and image/video direction).  The Web counterpart keeps that useful
+        # intent without importing the Bot's transient pending state: Prompt
+        # Pack submits only its bounded original selection, recomputes the
+        # reviewed text inside the server transaction, then writes an
+        # owner-scoped Memory note with CSRF and idempotency.  It never accepts
+        # a browser-supplied rendered result or calls Bot/provider/payment code.
+        target = "/content/prompt-pack"
+    elif token.startswith("freehub|meta_"):
+        # The frozen Bot's contextual Meta wizard is a callback-only pending
+        # flow.  Web replaces those transient buttons with one signed form at
+        # the explicit contextual prompt surface, never an admin/dashboard
+        # fallback or a claim of a Meta provider call.
+        target = "/content/contextual-prompt"
     else:
         target = _feature_route(token)
     status = _mapping_status(target, existing_routes, telegram_only)
@@ -1343,6 +2059,126 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         "status": status,
         "evidence": evidence,
     }
+
+
+def _map_reviewed_guided_video_helper_template(
+    record: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map a raw helper marker through its reviewed literal callback evidence.
+
+    A raw marker can fan out to the Prompt and Image Motion planners, so it
+    deliberately carries ``target_routes`` and per-token evidence instead of
+    pretending that one broad ``{*}|`` namespace has a single Web endpoint.
+    """
+
+    if record.get("resolution") != "reviewed_literal_prefix_helper_calls":
+        return None
+    template = str(record.get("template") or "")
+    tokens = [str(token) for token in record.get("derived_callback_tokens", []) if str(token)]
+    if not template or not tokens:
+        return None
+    evidence = {"file": str(record.get("file") or ""), "line": int(record.get("line") or 0)}
+    derived = [
+        _map_callback(token, "callback_data", evidence, existing_routes)
+        for token in tokens
+    ]
+    safe_statuses = {"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED"}
+    if not derived or any(item["status"] not in safe_statuses for item in derived):
+        return None
+    target_routes = sorted({str(item["target"]) for item in derived})
+    status = "MAPPED_TO_EXISTING_ROUTE" if all(item["status"] == "MAPPED_TO_EXISTING_ROUTE" for item in derived) else "COPIED_GUARDED"
+    return {
+        "source_kind": "callback_template",
+        "source": template,
+        "target": target_routes[0] if len(target_routes) == 1 else "DERIVED_LITERAL_PREFIX_CALLBACKS",
+        "target_routes": target_routes,
+        "derived_callbacks": [
+            {
+                "source": item["source"],
+                "target": item["target"],
+                "status": item["status"],
+                "classification": item["classification"],
+            }
+            for item in derived
+        ],
+        "classification": "customer",
+        "status": status,
+        "resolution": "reviewed_literal_prefix_helper_calls",
+        "helper": str(record.get("helper") or ""),
+        "literal_prefix_call_evidence": list(record.get("literal_prefix_call_evidence") or []),
+        "evidence": evidence,
+    }
+
+
+def _map_callback_template(template: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any] | None:
+    """Map only reviewed *namespace* templates to a guarded Web workflow.
+
+    ``{*}`` deliberately stays opaque.  This helper never derives a resource
+    id, looks up a Bot state value or turns a template into a browser action.
+    It merely records that a fixed callback family has a signed Web surface
+    where the account can continue in a matching workflow.  Unlisted templates
+    remain ``NEEDS_WEB_IMPLEMENTATION`` in the generated parity report.
+    """
+
+    token = str(template or "").casefold()
+    if "{*}" not in token:
+        return _map_callback(token, "callback_template", evidence, existing_routes)
+    if token == "longvideo|structure|{*}":
+        # The only dynamic value is a bounded position (1–3) emitted by the
+        # reviewed long-video structure keyboard.  Web's Long-form Roadmap
+        # owns an equivalent bounded structure selection; this does not copy
+        # Bot project rows, finalization, rendering or provider behavior.
+        target = "/video-studio/long-form-planner"
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False),
+            "resolution": "reviewed_bounded_longvideo_structure_template",
+            "evidence": evidence,
+        }
+    if token.startswith("trend|video|"):
+        # This dynamic button belongs to the Bot's admin-only live trend
+        # search → calendar → production-job pipeline. A local Web research
+        # checklist is not an equivalent executor, so do not claim a route
+        # mapping until a role-checked read/write contract exists.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "admin",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_admin_only_dynamic_flow",
+            "evidence": evidence,
+        }
+    if token.startswith("adconcept|admin_") or token.startswith("manual|approve") or token.startswith("manual|reject"):
+        # Provider smoke/video execution and manual-payment approval mutate
+        # canonical Bot/provider/wallet state. They stay out of the browser
+        # and cannot be represented by a navigation-only compatibility route.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "admin",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_canonical_admin_dynamic_flow",
+            "evidence": evidence,
+        }
+    for prefix, target, classification in DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES:
+        if not token.startswith(prefix):
+            continue
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": target,
+            "classification": classification,
+            "status": _mapping_status(target, existing_routes, telegram_only=False),
+            "resolution": "reviewed_namespace_compatibility_route",
+            "evidence": evidence,
+        }
+    return None
 
 
 def _runtime_web_route_paths(web: dict[str, Any], web_root: Path) -> set[str]:
@@ -1385,6 +2221,25 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
         _map_callback(record["token"], "callback_data", {"file": record["file"], "line": record["line"]}, existing_routes)
         for record in bot["callback_data"]
     )
+    callback_template_mappings = []
+    for record in bot.get("callback_templates", []):
+        evidence = {"file": record["file"], "line": record["line"]}
+        mapped = _map_reviewed_guided_video_helper_template(record, existing_routes)
+        if mapped is None:
+            mapped = _map_callback_template(str(record["template"]), evidence, existing_routes)
+        if mapped is None:
+            mapped = {
+                "source_kind": "callback_template",
+                "source": str(record["template"]),
+                "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE",
+                "classification": "unknown",
+                "status": "NEEDS_WEB_IMPLEMENTATION",
+                "resolution": str(record.get("resolution") or "unresolved_dynamic_template"),
+                "evidence": evidence,
+            }
+        elif "resolution" not in mapped:
+            mapped["resolution"] = "reviewed_namespace_compatibility_route"
+        callback_template_mappings.append(mapped)
     conversation_mappings = [
         {
             "source_kind": "conversation",
@@ -1396,10 +2251,14 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
         }
         for record in bot["conversations"]
     ]
-    mappings = command_mappings + callback_mappings + conversation_mappings
+    mappings = command_mappings + callback_mappings + callback_template_mappings + conversation_mappings
     status_counts = Counter(item["status"] for item in mappings)
     mapped = status_counts["MAPPED_TO_EXISTING_ROUTE"] + status_counts["COPIED_GUARDED"]
     source_total = len(mappings)
+    unresolved_callback_templates = sum(
+        1 for item in callback_template_mappings if item["status"] == "NEEDS_WEB_IMPLEMENTATION"
+    )
+    resolved_static_source_count = source_total - unresolved_callback_templates
     bot_tables = set(bot["database_tables"])
     web_tables = set(web["database_tables"])
     observed_private_route = bool(bot.get("private_core_bridge_present")) or any(
@@ -1417,6 +2276,12 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "severity": "high",
             "detail": "Bot source mappings that do not have an observed Web App route or guarded compatibility surface.",
             "count": status_counts["NEEDS_WEB_IMPLEMENTATION"],
+        },
+        {
+            "area": "dynamic_callback_templates",
+            "severity": "high",
+            "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
+            "count": unresolved_callback_templates,
         },
         {
             "area": "private_core_bridge",
@@ -1452,21 +2317,25 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "commands": len(command_mappings),
                 "callback_handlers": len(bot["callback_handlers"]),
                 "callback_data": len(bot["callback_data"]),
+                "callback_templates": unresolved_callback_templates,
                 "conversations": len(conversation_mappings),
                 "total_mappings": source_total,
+                "resolved_static_source_count": resolved_static_source_count,
             },
             "mapping_status_counts": dict(sorted(status_counts.items())),
             "implemented_coverage_percent": round((mapped / source_total * 100), 2) if source_total else 0.0,
             "guarded_surface_coverage_percent": round(((mapped + status_counts["TELEGRAM_ONLY"]) / source_total * 100), 2) if source_total else 100.0,
-            "mapping_coverage_percent": 100.0 if source_total == len(mappings) else 0.0,
+            "mapping_coverage_percent": round((resolved_static_source_count / source_total * 100), 2) if source_total else 100.0,
             "bridge_contract": bridge_contract,
             "telegram_link_callback_contract": telegram_link_contract,
             "command_mappings": command_mappings,
             "callback_mappings": callback_mappings,
+            "callback_template_mappings": callback_template_mappings,
             "conversation_mappings": conversation_mappings,
             "gaps": gaps,
             "notes": [
-                "Every statically discovered command/callback/conversation is represented in this matrix.",
+                "Every statically discovered command/callback/conversation/template is represented in this matrix.",
+                "Unresolved callback templates are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
                 "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision.",
@@ -1529,14 +2398,34 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "The generated parity matrix is an implementation backlog, not a claim that surfaces are live or safe to enable.\n\n"
         + "## Web implementation contracts\n\n"
         + "- [`FEATURE_FAMILY_NAVIGATION.md`](FEATURE_FAMILY_NAVIGATION.md) — navigation-only feature families.\n"
+        + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
+        + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
+        + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
+        + "- [`CONTENT_PROMPT_PACK_CONTRACT.md`](CONTENT_PROMPT_PACK_CONTRACT.md) — signed, stateless deterministic content-planning drafts adapted from Bot text recipes without Bot/provider/job/payment/publish claims.\n"
+        + "- [`PUBLISH_REVIEW_PACK_CONTRACT.md`](PUBLISH_REVIEW_PACK_CONTRACT.md) — signed, stateless text-only review package adapted from the Bot’s pending-result formatter, with no social account/scheduler/provider/Bot/job/payment/asset/publish/delivery claim.\n"
+        + "- [`CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md`](CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md) — signed, stateless contextual ad-prompt wizard adapted from Bot goal/platform/ratio/style choices, with no Meta/provider/Bot/job/payment/media-output/publish claim.\n"
+        + "- [`TREND_RESEARCH_CONTRACT.md`](TREND_RESEARCH_CONTRACT.md) — signed, stateless manual trend-research checklist adapted from Bot keyword/selection/originality guidance, with no live search/scraping/provider/Bot/job/payment claim.\n"
+        + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
+        + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
+        + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
+        + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
+        + "- [`SOURCE_RIGHTS_GUIDE_CONTRACT.md`](SOURCE_RIGHTS_GUIDE_CONTRACT.md) — signed, read-only source/license/dubbing guidance adapted from Bot public safety commands, with no rights-verification/provider/Bot/job/payment/output/publish claim.\n"
+        + "- [`IMAGE_PROMPT_COMPOSER_CONTRACT.md`](IMAGE_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless image-prompt drafting adapted from Bot templates without image/vision/provider/job/payment/asset/publish claims.\n"
+        + "- [`VIDEO_PROMPT_PLANNER_CONTRACT.md`](VIDEO_PROMPT_PLANNER_CONTRACT.md) — signed, stateless deterministic video planning adapted from Bot prompt/shot rules without source-media/provider/preview/job/payment/asset/publish claims.\n"
+        + "- [`CINEMATIC_AD_CONCEPT_CONTRACT.md`](CINEMATIC_AD_CONCEPT_CONTRACT.md) — signed, stateless Bot-derived cinematic ad concept, storyboard and prompt direction with no media/provider/job/payment/asset/publish claim.\n"
+        + "- [`STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md`](STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived storyboard prompt-pack planning with a visual canon and no render/provider/job/payment/asset/publish claim.\n"
+        + "- [`VOICE_DIRECTION_COMPOSER_CONTRACT.md`](VOICE_DIRECTION_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived voice delivery directions with no clone/TTS/provider/audio/job/payment/asset/Telegram action.\n"
+        + "- [`MUSIC_PROMPT_COMPOSER_CONTRACT.md`](MUSIC_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived music prompt directions with no Suno/provider/audio/job/payment/asset/collection/Telegram action.\n"
         + "- [`JOB_SUPPORT_RECOVERY.md`](JOB_SUPPORT_RECOVERY.md) — safe job-to-ticket recovery handoff.\n"
         + "- [`CONTENT_OPERATIONS_ADMIN.md`](CONTENT_OPERATIONS_ADMIN.md) — guarded Campaign/Calendar/Publishing/Admin navigation.\n"
+        + "- [`ADMIN_DOMAIN_CENTERS_CONTRACT.md`](ADMIN_DOMAIN_CENTERS_CONTRACT.md) — safe first-class Admin navigation for Publishing, Growth, Finance and Trends.\n"
         + "- [`ASSET_VAULT_CONTRACT.md`](ASSET_VAULT_CONTRACT.md) — private Web-owned source storage and owner-scoped delivery.\n"
         + "- [`PROJECT_PACKAGE_CONTRACT.md`](PROJECT_PACKAGE_CONTRACT.md) — private immutable Project ZIP exports.\n"
         + "- [`PDF_SPLIT_CONTRACT.md`](PDF_SPLIT_CONTRACT.md), [`PDF_MERGE_CONTRACT.md`](PDF_MERGE_CONTRACT.md) and [`PDF_OPTIMIZE_CONTRACT.md`](PDF_OPTIMIZE_CONTRACT.md) — bounded private PDF structure operations.\n"
         + "- [`IMAGE_TO_PDF_CONTRACT.md`](IMAGE_TO_PDF_CONTRACT.md) — ordered private image-to-PDF delivery.\n"
         + "- [`PDF_TO_IMAGES_CONTRACT.md`](PDF_TO_IMAGES_CONTRACT.md) — Bot-compatible 2× PDF raster delivery as verified private PNG or deterministic PNG ZIP.\n"
         + "- [`PDF_TO_WORD_CONTRACT.md`](PDF_TO_WORD_CONTRACT.md) — real text-only private PDF-to-DOCX extraction.\n"
+        + "- [`IMAGE_OCR_CONTRACT.md`](IMAGE_OCR_CONTRACT.md) — opt-in local private image OCR with verified TXT delivery; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
         + "- [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) and [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — bounded local private image artifacts.\n"
         + "- [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"
@@ -1557,6 +2446,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
                 ["Commands", str(bot["counts"]["commands"]), "n/a"],
                 ["Callback handlers", str(bot["counts"]["callback_handlers"]), "n/a"],
                 ["Callback-data values", str(bot["counts"]["callback_data"]), "n/a"],
+                ["Unresolved callback templates", str(bot["counts"].get("callback_templates", 0)), "n/a"],
                 ["Conversation handlers", str(bot["counts"]["conversations"]), "n/a"],
                 ["FastAPI routes", str(bot["counts"]["routes"]), str(web["counts"]["routes"])],
                 ["Background/job signals", str(bot["counts"]["background_jobs"]), str(web["counts"]["background_jobs"])],
@@ -1571,7 +2461,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "bot-inventory.md",
         "# Telegram bot inventory\n\n"
-        f"Discovered `{bot['counts']['commands']}` registered commands, `{bot['counts']['callback_handlers']}` callback handlers, and `{bot['counts']['callback_data']}` callback-data values from static source.\n\n"
+        f"Discovered `{bot['counts']['commands']}` registered commands, `{bot['counts']['callback_handlers']}` callback handlers, `{bot['counts']['callback_data']}` concrete callback-data values, and `{bot['counts'].get('callback_templates', 0)}` unresolved callback templates from static source.\n\n"
         + ("Excluded clearly named Bot drafts: `" + "`, `".join(bot.get("excluded_noncanonical_source_files", [])) + "`.\n\n" if bot.get("excluded_noncanonical_source_files") else "")
         + _markdown_table(["Command", "Handler", "Source"], sampled_commands or [["None discovered", "", ""]])
         + "\n\nThe full command/callback inventory is in `reports/migration/bot_inventory.json`.\n",
@@ -1631,12 +2521,13 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     )
     parity_rows = [
         [item["source_kind"], item["source"], item["target"], item["status"]]
-        for item in (gap["command_mappings"] + gap["callback_mappings"] + gap["conversation_mappings"])[:200]
+        for item in (gap["command_mappings"] + gap["callback_mappings"] + gap.get("callback_template_mappings", []) + gap["conversation_mappings"])[:200]
     ]
     write(
         "parity-matrix.md",
         "# Parity matrix\n\n"
         f"Safe Web surface coverage: **{gap['implemented_coverage_percent']}%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). "
+        f"Static mapping coverage: **{gap['mapping_coverage_percent']}%**; unresolved callback templates lower this value until they have a typed disposition. "
         "All source items are represented in the JSON matrix; this page shows the first 200 records.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows or [["None discovered", "", "", ""]])
         + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NEEDS_WEB_IMPLEMENTATION` remains actionable.\n",
@@ -1774,8 +2665,24 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "ADMIN_ERP_MAP.md",
         "# Admin ERP map\n\n"
-        "Every admin page requires signed session, canonical role, CSRF on writes, confirmation, idempotency where applicable, and audit events.\n\n"
-        + _markdown_table(["Bot command", "Handler", "Planned Web target"], [[f"/{item['command']}", item["handler"], f"/admin/{item['command']}"] for item in admin_commands[:200]] or [["None discovered", "", ""]]),
+        "## Authority model\n\n"
+        "Admin navigation is an ERP information architecture, not a browser-issued permission. "
+        "All server write actions require a signed session, CSRF, confirmation, permission check, "
+        "idempotency where applicable, optimistic revision where applicable, and an audit event.\n\n"
+        + _markdown_table(
+            ["Authority domain", "Server authorizes", "May do", "Must not do"],
+            [
+                ["Canonical Bot admin", "Core Bridge canonical role", "Read canonical users/jobs/payments/providers and request the existing guarded Bot actions.", "Accept a browser `admin_id`, duplicate wallet/PayOS state, call a provider from the browser, or create a second webhook/ledger."],
+                ["Web Support Desk", "Signed server-side staff role", "Operate owner-scoped Web support cases, triage and review handoffs.", "Become canonical Bot admin or perform wallet/payment/provider actions without a canonical bridge contract."],
+                ["Web CRM manager", "Signed server-side local admin role", "Read redacted, Web-owned Partner & Lead CRM pipeline records.", "Read another account's private content, impersonate a canonical admin, or mutate Bot canonical data."],
+            ],
+        )
+        + "\n\n`WEBAPP_ADMIN_ERP_ENABLED` is the umbrella navigation gate. `WEBAPP_CONTENT_HANDOFF_ENABLED` and "
+        "`WEBAPP_PARTNER_CRM_ENABLED` gate their Web-native modules. These flags do not create authority; "
+        "the server still checks the signed role on every request.\n\n"
+        + "The following is a Bot command compatibility map. A target is a signed guarded Web surface or a "
+        "canonical bridge projection; it is never proof that a browser may execute the Bot command directly.\n\n"
+        + _markdown_table(["Bot command", "Handler", "Compatibility target"], [[f"/{item['command']}", item["handler"], f"/admin/{item['command']}"] for item in admin_commands[:200]] or [["None discovered", "", ""]]),
     )
     write(
         "ENV_AND_PROVIDER_MAP.md",
@@ -1814,6 +2721,11 @@ def _git_read(root: Path, *args: str) -> tuple[int, str]:
     revision commands; it never fetches, checks out, changes config, imports
     Python, or starts any application/provider.
     """
+    # Do not let `git -C` walk upward into an unrelated parent checkout.  The
+    # audited Bot root must itself be a worktree (directory or worktree-file
+    # `.git`) before we attach revision metadata to the report.
+    if not (root / ".git").exists():
+        return 1, ""
     try:
         completed = subprocess.run(
             ["git", "-C", str(root), *args],

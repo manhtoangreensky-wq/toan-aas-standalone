@@ -222,27 +222,62 @@ class StudioDocumentRestoreRequest(BaseModel):
 
 
 @router.get("")
-async def list_projects(limit: int = 30, account: dict = Depends(require_account)):
-    """List only the signed account's Web-owned projects."""
+async def list_projects(
+    q: str | None = None,
+    state: str = "all",
+    limit: int = 30,
+    offset: int = 0,
+    account: dict = Depends(require_account),
+):
+    """List only the signed account's Web-owned projects.
+
+    Search, state and paging remain bounded and owner-scoped so the portal can
+    browse a mature workspace without caching or reconstructing a project
+    index in the browser.
+    """
     bounded_limit = max(1, min(int(limit), 100))
+    bounded_offset = max(0, min(int(offset), 10_000))
+    requested_state = str(state or "all").strip().lower()
+    if requested_state not in {"all", *PROJECT_STATES}:
+        raise HTTPException(status_code=422, detail="Trạng thái lọc Project không hợp lệ")
+    needle = _clean_text(q, label="Từ khóa tìm Project", minimum=0, maximum=100, allow_empty=True)
+    if needle and (SECRET_ASSIGNMENT_PATTERN.search(needle) or CARD_LIKE_PATTERN.search(needle)):
+        raise HTTPException(status_code=422, detail="Từ khóa tìm Project không nhận secret, token hoặc số thẻ")
+    where = ["p.account_id=?"]
+    params: list[Any] = [str(account["id"])]
+    if requested_state != "all":
+        where.append("p.state=?")
+        params.append(requested_state)
+    if needle:
+        escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        where.append("(p.title LIKE ? ESCAPE '\\' OR p.summary LIKE ? ESCAPE '\\' OR p.objective LIKE ? ESCAPE '\\')")
+        params.extend([f"%{escaped}%", f"%{escaped}%", f"%{escaped}%"])
+    predicate = " AND ".join(where)
     ensure_copyfast_schema()
     with transaction() as conn:
         rows = conn.execute(
-            """SELECT p.id, p.title, p.summary, p.objective, p.state, p.created_at, p.updated_at,
+            f"""SELECT p.id, p.title, p.summary, p.objective, p.state, p.created_at, p.updated_at,
                       COUNT(d.id) AS document_count
                FROM web_projects p
                LEFT JOIN web_studio_documents d ON d.project_id=p.id AND d.account_id=p.account_id AND d.state='active'
-               WHERE p.account_id=?
+               WHERE {predicate}
                GROUP BY p.id
                ORDER BY CASE WHEN p.state='active' THEN 0 ELSE 1 END, p.updated_at DESC, p.id DESC
-               LIMIT ?""",
-            (str(account["id"]), bounded_limit + 1),
+               LIMIT ? OFFSET ?""",
+            (*params, bounded_limit + 1, bounded_offset),
         ).fetchall()
     has_more = len(rows) > bounded_limit
+    items = [_project_public(tuple(row)) for row in rows[:bounded_limit]]
     return envelope(
         True,
         "Danh sách Project của Web Workspace.",
-        data={"items": [_project_public(tuple(row)) for row in rows[:bounded_limit]], "has_more": has_more},
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": bounded_offset + len(items) if has_more else None,
+            "filters": {"q": needle, "state": requested_state},
+            "pagination": {"limit": bounded_limit, "offset": bounded_offset, "returned": len(items)},
+        },
         status_name="read_only",
     )
 

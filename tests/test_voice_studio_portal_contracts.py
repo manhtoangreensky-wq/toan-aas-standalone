@@ -58,6 +58,9 @@ def test_voice_studio_hydrates_and_mutates_only_via_private_native_api() -> None
         "voiceVaultPayload",
         "voiceScriptPayload",
         "voiceStudioFilterPayload",
+        "voiceStudioListOffset",
+        "voiceStudioVaultListPath",
+        "voiceStudioListingProjection",
         "hydrateVoiceStudio",
         "hydrateVoiceVault",
         "hydrateVoiceCueSheet",
@@ -70,6 +73,7 @@ def test_voice_studio_hydrates_and_mutates_only_via_private_native_api() -> None
         'api("/voice-studio/policy")',
         'api("/voice-studio/events?limit=50")',
         'api("/voice-studio/references")',
+        'api(voiceStudioVaultListPath(filter, offset))',
         'path: "/voice-studio/vaults"',
         'api("/voice-studio/vaults/" + encodeURIComponent(String(vaultId)))',
     ):
@@ -77,6 +81,7 @@ def test_voice_studio_hydrates_and_mutates_only_via_private_native_api() -> None
 
     for capability in (
         '"voice-studio-view": Boolean(account && voiceStudioEnabled)',
+        '"voice-studio-page": Boolean(account && voiceStudioEnabled)',
         '"voice-vault-create": Boolean(account && me.csrf_token && voiceStudioEnabled)',
         '"voice-script-create": Boolean(account && me.csrf_token && voiceStudioEnabled)',
         '"voice-script-cue-sheet": Boolean(account && voiceStudioEnabled)',
@@ -96,12 +101,13 @@ def test_voice_studio_hydrates_and_mutates_only_via_private_native_api() -> None
     # a future UI cannot silently expose Bot jobs, payments, or bridge voice
     # profiles by appending actions here.
     start = INTEGRATION.index('if (action === "voice-studio-filter"')
-    end = INTEGRATION.index('if (action === "support-cases-filter")')
+    end = INTEGRATION.index('if (action === "support-cases-filter" ||')
     actions = INTEGRATION[start:end].lower()
     for forbidden in ("bridgeavailable", "core bridge", "payos", "/payments", "/jobs", "/voice/profiles"):
         assert forbidden not in actions
     for action in (
         "voice-studio-filter",
+        "voice-studio-page",
         "voice-studio-refresh",
         "voice-vault-create",
         "voice-vault-update",
@@ -124,6 +130,11 @@ def test_voice_studio_hydrates_and_mutates_only_via_private_native_api() -> None
     assert "local_deterministic_draft_only" in actions
     assert "provider_called !== false" in actions
     assert "audio_created !== false" in actions
+    assert "data-voice-studio-offset" in PORTAL
+    assert "function renderVoiceStudioPagination" in PORTAL
+    assert "portal-voice-studio-pagination" in PORTAL
+    assert "portal-voice-studio-pagination" in (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+    assert "LIMIT ? OFFSET ?" in ROUTER
 
 
 def test_voice_studio_cannot_become_provider_or_private_pwa_storage() -> None:
@@ -140,3 +151,40 @@ def test_voice_studio_cannot_become_provider_or_private_pwa_storage() -> None:
     assert "/api/v1/voice-studio" not in shell
     assert '"/voice-studio"' not in shell
     assert "SHELL_PATHS.has(url.pathname)" in SERVICE_WORKER
+
+
+def test_voice_studio_private_reads_ignore_stale_vault_and_cue_sheet_responses() -> None:
+    for epoch in (
+        "voiceStudioSessionEpoch",
+        "voiceStudioListHydrationEpoch",
+        "voiceStudioDetailHydrationEpoch",
+        "voiceStudioCueSheetHydrationEpoch",
+    ):
+        assert f"let {epoch} = 0;" in INTEGRATION
+        assert f"++{epoch};" in INTEGRATION
+
+    helper_start = INTEGRATION.index("function voiceStudioRequestIsCurrent")
+    helper_end = INTEGRATION.index("function voiceStudioPolicyIsSafe", helper_start)
+    helper = INTEGRATION[helper_start:helper_end]
+    for requirement in (
+        "sessionEpoch === voiceStudioSessionEpoch",
+        "currentPortalPath() === expectedPath",
+        "isNativeVoiceStudioPath(expectedPath)",
+        "!isNativeVoiceDirectionComposerPath(expectedPath)",
+        "base().voiceStudioEnabled === true",
+        "base().session && base().session.authenticated === true",
+    ):
+        assert requirement in helper
+
+    list_start = INTEGRATION.index("async function hydrateVoiceStudio")
+    detail_start = INTEGRATION.index("async function hydrateVoiceVault", list_start)
+    cue_start = INTEGRATION.index("async function hydrateVoiceCueSheet", detail_start)
+    list_read = INTEGRATION[list_start:detail_start]
+    detail_read = INTEGRATION[detail_start:cue_start]
+    cue_read = INTEGRATION[cue_start:INTEGRATION.index("async function hydrateImageMotionPlannerReferences", cue_start)]
+    assert "const requestEpoch = ++voiceStudioListHydrationEpoch;" in list_read
+    assert "voiceStudioRequestIsCurrent(requestEpoch, voiceStudioListHydrationEpoch, sessionEpoch, path)" in list_read
+    assert "const requestEpoch = ++voiceStudioDetailHydrationEpoch;" in detail_read
+    assert "voiceStudioRequestIsCurrent(requestEpoch, voiceStudioDetailHydrationEpoch, sessionEpoch, route)" in detail_read
+    assert "const requestEpoch = ++voiceStudioCueSheetHydrationEpoch;" in cue_read
+    assert "voiceStudioRequestIsCurrent(requestEpoch, voiceStudioCueSheetHydrationEpoch, sessionEpoch, route)" in cue_read

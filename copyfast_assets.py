@@ -17,12 +17,17 @@ import json
 import os
 from pathlib import Path
 import re
+import stat
+import tempfile
 import uuid
-from typing import Annotated, Any
+from typing import Annotated, Any, BinaryIO, Iterator
+from urllib.parse import quote
 from zipfile import BadZipFile, ZipFile
 
 from fastapi import APIRouter, Depends, File, Form, Header, HTTPException, Request, UploadFile
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
+from pydantic import BaseModel, ConfigDict, Field, field_validator
+from starlette.background import BackgroundTask
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import (
@@ -41,6 +46,7 @@ ARCHIVED_STATE = "archived"
 UNAVAILABLE_STATE = "unavailable"
 VISIBLE_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE})
 ALL_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE, UNAVAILABLE_STATE})
+REFERENCE_KINDS = frozenset({"all", "pdf", "image"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 ASSET_ID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -74,6 +80,13 @@ ACCEPTED_MIME_BY_EXTENSION = {
     ".docx": frozenset({"application/vnd.openxmlformats-officedocument.wordprocessingml.document"}),
 }
 TEXT_EXTENSIONS = frozenset({".txt", ".srt", ".vtt"})
+SEARCH_SECRET_PATTERN = re.compile(
+    r"\b(?:api[ _-]?(?:key|token)|access[ _-]?token|refresh[ _-]?token|"
+    r"client[ _-]?secret|password|passphrase|authorization)\b\s*(?:[:=]|\bis\b)\s*"
+    r"(?:bearer\s+)?[A-Za-z0-9_./+=:-]{8,}",
+    re.IGNORECASE,
+)
+CARD_LIKE_PATTERN = re.compile(r"\b(?:\d[ -]?){13,19}\b")
 
 
 def _require_enabled() -> None:
@@ -116,6 +129,33 @@ def _idempotency_key(value: str | None) -> str:
     return key
 
 
+class AssetRestoreRequest(BaseModel):
+    """The narrow, replay-safe intent to reactivate one archived Web blob."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: int = Field(ge=1, le=2_147_483_647)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
+class AssetArchiveRequest(BaseModel):
+    """The compare-and-set intent to archive one active Web blob.
+
+    Archive is a lifecycle mutation just like restore. Keeping the revision in
+    the JSON body prevents a stale browser action from overwriting a newer
+    lifecycle decision.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    expected_revision: int = Field(ge=1, le=2_147_483_647)
+
+
 def _safe_filename(value: str | None) -> tuple[str, str]:
     name = str(value or "").strip()
     has_control = any(ord(character) < 32 or ord(character) == 127 for character in name)
@@ -145,6 +185,36 @@ def _safe_display_name(value: str | None, *, source_name: str) -> str:
     return compact
 
 
+def _list_search(value: str | None) -> str:
+    """Normalize a short private-library search term without retaining secrets.
+
+    Asset names themselves remain owner-scoped metadata, but a query reaches
+    request logs/proxies more readily than a body.  Keep the library search
+    intentionally small and reject credential/card-shaped input rather than
+    letting the Portal turn the Vault into a secret lookup surface.
+    """
+    query = re.sub(r"\s+", " ", str(value or "")).strip()
+    if "\x00" in query or len(query) > 100:
+        raise HTTPException(status_code=422, detail="Từ khóa tìm Asset Vault tối đa 100 ký tự hợp lệ")
+    if query and (SEARCH_SECRET_PATTERN.search(query) or CARD_LIKE_PATTERN.search(query)):
+        raise HTTPException(status_code=422, detail="Từ khóa tìm Asset Vault không nhận secret, token hoặc số thẻ")
+    return query
+
+
+def _reference_kind(value: str | None) -> str:
+    """Return the narrow, server-side type filter used by native pickers.
+
+    The Asset Vault remains a general library.  Native document and image
+    operations, however, must not fetch an arbitrary first page and attempt
+    to infer a usable source in the browser.  Keep the vocabulary allowlisted
+    so a caller cannot turn it into a SQL fragment or an unbounded MIME query.
+    """
+    selected = str(value or "all").strip().lower()
+    if selected not in REFERENCE_KINDS:
+        raise HTTPException(status_code=422, detail="Loại reference Asset Vault không hợp lệ")
+    return selected
+
+
 def _canonical_media_type(extension: str, supplied: str | None) -> str:
     canonical = CANONICAL_MIME_BY_EXTENSION.get(extension)
     accepted = ACCEPTED_MIME_BY_EXTENSION.get(extension)
@@ -159,9 +229,16 @@ def _canonical_media_type(extension: str, supplied: str | None) -> str:
 def _storage_path(root: Path, storage_key: str) -> Path:
     if not STORAGE_KEY_PATTERN.fullmatch(storage_key):
         raise RuntimeError("Storage key Asset Vault không hợp lệ")
-    candidate = (root / storage_key).resolve()
+    # Do not resolve the final blob path here.  Resolving it would follow a
+    # final-component symlink before the descriptor-pinning check below gets a
+    # chance to reject it.  The storage-key grammar is fixed to
+    # ``objects/<random>.blob``, so joining it underneath the resolved root is
+    # both traversal-safe and preserves the physical final component for
+    # ``lstat``/``O_NOFOLLOW``.
+    resolved_root = root.resolve()
+    candidate = resolved_root / storage_key
     try:
-        candidate.relative_to(root.resolve())
+        candidate.relative_to(resolved_root)
     except ValueError as exc:
         raise RuntimeError("Storage key Asset Vault vượt ngoài thư mục riêng") from exc
     return candidate
@@ -207,10 +284,35 @@ def _asset_unavailable() -> dict[str, Any]:
     )
 
 
+def _asset_lifecycle_conflict() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Tệp đã thay đổi vòng đời. Hãy tải lại thông tin trước khi khôi phục.",
+        status_name="guarded",
+        error_code="WEB_ASSET_LIFECYCLE_CONFLICT",
+    )
+
+
+def _asset_restore_unavailable() -> dict[str, Any]:
+    """A deliberately non-forensic restore failure projection.
+
+    The browser receives neither a storage location nor an integrity detail.
+    Operators can correlate the bounded audit action with server diagnostics
+    without turning the public API into an oracle for private blob layout.
+    """
+    return envelope(
+        False,
+        "Không thể khôi phục tệp an toàn. Tệp đã được đánh dấu không sẵn sàng.",
+        status_name="guarded",
+        error_code="WEB_ASSET_UNAVAILABLE",
+    )
+
+
 def _row_for_account(conn, asset_id: str, account_id: str) -> tuple[Any, ...] | None:
     return conn.execute(
         """SELECT id, project_id, display_name, original_filename, extension, content_type,
-                  byte_size, state, created_at, updated_at, archived_at, sha256, storage_key
+                  byte_size, state, created_at, updated_at, archived_at, sha256, storage_key,
+                  lifecycle_revision
            FROM web_asset_files WHERE id=? AND account_id=?""",
         (asset_id, account_id),
     ).fetchone()
@@ -218,6 +320,123 @@ def _row_for_account(conn, asset_id: str, account_id: str) -> tuple[Any, ...] | 
 
 def _visible_asset(row: tuple[Any, ...]) -> dict[str, Any]:
     return _asset_public(row[:11])
+
+
+def _lifecycle_revision(row: tuple[Any, ...]) -> int:
+    """Read the additive optimistic-concurrency token from a private row."""
+    try:
+        return max(1, int(row[13]))
+    except (IndexError, TypeError, ValueError):
+        # Schema initialization always supplies this column.  Fail closed to
+        # the first revision only for a legacy test/durable row, never by
+        # interpreting a timestamp or caller-provided value as a revision.
+        return 1
+
+
+def _lifecycle_reference_summary(conn, *, asset_id: str, account_id: str) -> dict[str, Any]:
+    """Return only owner-scoped counts and reasons for retained references.
+
+    This deliberately omits case/project/operation identifiers, blob keys,
+    hashes and filenames. Support evidence is a hard retention blocker for a
+    future purge workflow, not a reason to break archived-download behavior or
+    deny a safe restore today.
+    """
+    definitions = (
+        (
+            "support_evidence_retention",
+            True,
+            "SELECT COUNT(*) FROM web_support_case_attachments WHERE asset_id=? AND account_id=?",
+            (asset_id, account_id),
+        ),
+        (
+            "media_library_reference",
+            False,
+            "SELECT COUNT(*) FROM web_media_items WHERE asset_id=? AND account_id=?",
+            (asset_id, account_id),
+        ),
+        (
+            "image_direction_reference",
+            False,
+            "SELECT COUNT(*) FROM web_image_directions "
+            "WHERE account_id=? AND (asset_id=? OR reference_asset_id=?)",
+            (account_id, asset_id, asset_id),
+        ),
+        (
+            "document_plan_reference",
+            False,
+            "SELECT COUNT(*) FROM web_document_plans "
+            "WHERE account_id=? AND (source_asset_id=? OR reference_asset_id=?)",
+            (account_id, asset_id, asset_id),
+        ),
+        (
+            "document_operation_source",
+            False,
+            "SELECT COUNT(*) FROM web_document_operations WHERE source_asset_id=? AND account_id=?",
+            (asset_id, account_id),
+        ),
+        (
+            "document_operation_input",
+            False,
+            "SELECT COUNT(*) FROM web_document_operation_sources AS source "
+            "JOIN web_document_operations AS operation ON operation.id=source.operation_id "
+            "WHERE source.source_asset_id=? AND operation.account_id=?",
+            (asset_id, account_id),
+        ),
+        (
+            "image_operation_source",
+            False,
+            "SELECT COUNT(*) FROM web_image_operations WHERE source_asset_id=? AND account_id=?",
+            (asset_id, account_id),
+        ),
+    )
+    references: list[dict[str, Any]] = []
+    total_count = 0
+    hard_blocker_count = 0
+    for reason, hard_blocker, query, params in definitions:
+        row = conn.execute(query, params).fetchone()
+        count = max(0, int(row[0] or 0)) if row else 0
+        if not count:
+            continue
+        total_count += count
+        if hard_blocker:
+            hard_blocker_count += count
+        references.append({"reason": reason, "count": count, "hard_blocker": hard_blocker})
+    return {
+        "total_count": total_count,
+        "hard_blocker_count": hard_blocker_count,
+        "references": references,
+    }
+
+
+def _lifecycle_public(row: tuple[Any, ...], *, reference_summary: dict[str, Any]) -> dict[str, Any]:
+    state = str(row[7])
+    reason_by_state = {
+        ACTIVE_STATE: "available",
+        ARCHIVED_STATE: "owner_archived",
+        UNAVAILABLE_STATE: "integrity_unavailable",
+    }
+    return {
+        "state": state,
+        "state_reason": reason_by_state.get(state, "guarded"),
+        "lifecycle_revision": _lifecycle_revision(row),
+        "created_at": str(row[8]),
+        "updated_at": str(row[9]),
+        "archived_at": str(row[10]) if row[10] else None,
+        "restore_available": state == ARCHIVED_STATE,
+        "reference_summary": reference_summary,
+    }
+
+
+def _row_with_lifecycle_state(
+    row: tuple[Any, ...],
+    *,
+    state: str,
+    updated_at: str,
+    archived_at: str | None,
+    lifecycle_revision: int,
+) -> tuple[Any, ...]:
+    """Create a private-row-shaped value after a bounded lifecycle write."""
+    return (*row[:7], state, row[8], updated_at, archived_at, row[11], row[12], lifecycle_revision)
 
 
 async def _stream_upload(file: UploadFile, destination: Path) -> tuple[int, str, bytes]:
@@ -456,28 +675,375 @@ def _safe_unlink(path: Path) -> None:
         pass
 
 
-def _verify_private_file(path: Path, *, expected_bytes: int, expected_digest: str) -> bool:
+def _same_private_file(left: os.stat_result, right: os.stat_result) -> bool:
+    """Compare the identity of two file stats rather than their path text."""
+
+    return left.st_dev == right.st_dev and left.st_ino == right.st_ino
+
+
+def _private_directory_fd_supported() -> bool:
+    """Whether this runtime can pin each private-storage path component."""
+
+    supported = getattr(os, "supports_dir_fd", set())
+    return bool(
+        getattr(os, "O_DIRECTORY", 0)
+        and getattr(os, "O_NOFOLLOW", 0)
+        and os.open in supported
+        and os.stat in supported
+    )
+
+
+def _open_private_objects_directory(path: Path) -> tuple[int, int] | None:
+    """Pin the Vault root and `objects/` directory on POSIX systems.
+
+    Opening `objects` relative to an already-open root descriptor prevents a
+    sibling process from swapping that intermediate component for a symlink
+    between a preliminary check and the final blob open.  The fallback is
+    intentionally only for platforms without `dir_fd`; production Railway
+    Linux uses this hardened branch.
+    """
+
+    if not _private_directory_fd_supported():
+        return None
+    root_descriptor = -1
+    objects_descriptor = -1
     try:
-        if not path.is_file() or path.is_symlink() or path.stat().st_size != expected_bytes:
-            return False
-        digest = hashlib.sha256()
-        with path.open("rb") as stream:
-            while True:
-                chunk = stream.read(CHUNK_BYTES)
-                if not chunk:
-                    break
-                digest.update(chunk)
-        return hmac.compare_digest(digest.hexdigest(), expected_digest)
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+        root_descriptor = os.open(path.parent.parent, directory_flags)
+        objects_descriptor = os.open("objects", directory_flags, dir_fd=root_descriptor)
+        return root_descriptor, objects_descriptor
     except OSError:
+        if objects_descriptor >= 0:
+            os.close(objects_descriptor)
+        if root_descriptor >= 0:
+            os.close(root_descriptor)
+        return None
+
+
+def _close_private_objects_directory(descriptors: tuple[int, int] | None) -> None:
+    if descriptors is None:
+        return
+    for descriptor in reversed(descriptors):
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+
+
+def _private_blob_stat(path: Path) -> os.stat_result | None:
+    """Read final-component metadata without following an intermediate link."""
+
+    if _private_directory_fd_supported():
+        directories = _open_private_objects_directory(path)
+        if directories is None:
+            return None
+        _root_descriptor, objects_descriptor = directories
+        try:
+            return os.stat(path.name, dir_fd=objects_descriptor, follow_symlinks=False)
+        except OSError:
+            return None
+        finally:
+            _close_private_objects_directory(directories)
+    try:
+        return os.lstat(path)
+    except OSError:
+        return None
+
+
+def _open_verified_private_file(path: Path, *, expected_bytes: int, expected_digest: str) -> BinaryIO | None:
+    """Open, hash and pin one private blob without a check/open race.
+
+    The file descriptor, not its pathname, becomes the authority after this
+    function returns.  On Linux, both the Vault root and `objects/` are pinned
+    with directory descriptors and the final component is opened relative to
+    that pinned directory with ``O_NOFOLLOW``.  This removes the intermediate
+    directory-swap window as well as the final symlink/pathname race.
+    """
+
+    if expected_bytes <= 0 or not expected_digest:
+        return None
+    descriptor = -1
+    stream: BinaryIO | None = None
+    try:
+        directories = _open_private_objects_directory(path) if _private_directory_fd_supported() else None
+        if _private_directory_fd_supported() and directories is None:
+            return None
+        if directories is not None:
+            _root_descriptor, objects_descriptor = directories
+            try:
+                before = os.stat(path.name, dir_fd=objects_descriptor, follow_symlinks=False)
+                flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+                descriptor = os.open(path.name, flags, dir_fd=objects_descriptor)
+            finally:
+                _close_private_objects_directory(directories)
+        else:
+            parent_stat = os.lstat(path.parent)
+            before = os.lstat(path)
+            if (
+                stat.S_ISLNK(parent_stat.st_mode)
+                or not stat.S_ISDIR(parent_stat.st_mode)
+                or stat.S_ISLNK(before.st_mode)
+            ):
+                return None
+            flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(path, flags)
+        if not stat.S_ISREG(before.st_mode):
+            return None
+        pinned = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(pinned.st_mode)
+            or pinned.st_size != expected_bytes
+            or not _same_private_file(before, pinned)
+        ):
+            return None
+        stream = os.fdopen(descriptor, "rb", closefd=True)
+        descriptor = -1
+        digest = hashlib.sha256()
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            digest.update(chunk)
+        if not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        stream.seek(0)
+        accepted = stream
+        stream = None
+        return accepted
+    except (OSError, ValueError):
+        return None
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
+        if descriptor >= 0:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+
+
+def _pinned_private_file_is_current(stream: BinaryIO, path: Path) -> bool:
+    """Confirm that a pinned, already-hashed descriptor still names the blob.
+
+    This is deliberately used immediately before an archived blob transitions
+    back to active.  A later download independently opens and hashes a fresh
+    pinned descriptor, so a post-transition filesystem mutation also fails
+    closed instead of ever being served by pathname.
+    """
+
+    try:
+        current = _private_blob_stat(path)
+        if current is None:
+            return False
+        pinned = os.fstat(stream.fileno())
+        return (
+            not stat.S_ISLNK(current.st_mode)
+            and stat.S_ISREG(current.st_mode)
+            and stat.S_ISREG(pinned.st_mode)
+            and _same_private_file(current, pinned)
+        )
+    except (OSError, ValueError):
         return False
+
+
+def _verify_pinned_private_file(stream: BinaryIO, *, expected_bytes: int, expected_digest: str) -> bool:
+    """Rehash a descriptor that is already pinned to one physical blob."""
+
+    try:
+        pinned = os.fstat(stream.fileno())
+        if not stat.S_ISREG(pinned.st_mode) or pinned.st_size != expected_bytes:
+            return False
+        stream.seek(0)
+        digest = hashlib.sha256()
+        read_bytes = 0
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            digest.update(chunk)
+        stream.seek(0)
+        return read_bytes == expected_bytes and hmac.compare_digest(digest.hexdigest(), expected_digest)
+    except (OSError, ValueError):
+        return False
+
+
+def seal_verified_private_file(
+    stream: BinaryIO,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Copy a verified source into an anonymous, rehashed stream for delivery.
+
+    A pinned source descriptor prevents path swaps, but a hostile process with
+    write access to the same inode could still mutate it while an HTTP response
+    is streaming.  Before any private download leaves the process, copy it to
+    an unnamed temporary file while hashing again.  The response then streams
+    the sealed descriptor, never the mutable Vault object.
+    """
+
+    sealed: BinaryIO | None = None
+    try:
+        if expected_bytes <= 0 or expected_bytes > _maximum_bytes() or not expected_digest:
+            return None
+        sealed = tempfile.TemporaryFile(mode="w+b")
+        digest = hashlib.sha256()
+        read_bytes = 0
+        stream.seek(0)
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            if read_bytes > expected_bytes:
+                return None
+            digest.update(chunk)
+            sealed.write(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        sealed.seek(0)
+        accepted = sealed
+        sealed = None
+        return accepted
+    except (OSError, ValueError):
+        return None
+    finally:
+        try:
+            stream.close()
+        except OSError:
+            pass
+        if sealed is not None:
+            try:
+                sealed.close()
+            except OSError:
+                pass
+
+
+def _verify_private_file(path: Path, *, expected_bytes: int, expected_digest: str) -> bool:
+    """Compatibility predicate backed by a descriptor-pinned verification."""
+
+    stream = _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return False
+    try:
+        return True
+    finally:
+        stream.close()
+
+
+def open_verified_private_asset_stream(
+    *,
+    storage_key: str,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Return a descriptor-pinned verified stream for a trusted Web caller.
+
+    The caller owns and must close the returned stream.  It intentionally does
+    not return a pathname: HTTP delivery must not verify one blob and later
+    reopen another by path.
+    """
+
+    try:
+        path = _storage_path(asset_vault_directory(), str(storage_key or ""))
+    except (OSError, RuntimeError):
+        return None
+    return _open_verified_private_file(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=str(expected_digest),
+    )
+
+
+def _pinned_private_file_chunks(stream: BinaryIO) -> Iterator[bytes]:
+    try:
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        stream.close()
+
+
+def private_asset_attachment_response(
+    stream: BinaryIO,
+    *,
+    byte_size: int,
+    media_type: str,
+    filename: str,
+) -> StreamingResponse:
+    """Serve one already-pinned private file as a never-cached attachment."""
+
+    if byte_size <= 0:
+        stream.close()
+        raise ValueError("Kích thước private Asset Vault không hợp lệ")
+    safe_name = str(filename or "download").replace("\r", " ").replace("\n", " ").strip() or "download"
+    return StreamingResponse(
+        _pinned_private_file_chunks(stream),
+        media_type=media_type,
+        background=BackgroundTask(stream.close),
+        headers={
+            "Content-Length": str(byte_size),
+            "Content-Disposition": f"attachment; filename*=utf-8''{quote(safe_name)}",
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+        },
+    )
+
+
+def read_verified_private_asset_bytes(
+    *,
+    storage_key: str,
+    expected_bytes: int,
+    expected_digest: str,
+    maximum_bytes: int,
+) -> bytes | None:
+    """Read a small verified private blob without creating a public handle.
+
+    The bounded helper is used only to safety-scan a pre-existing text Asset
+    Vault record before it is linked as Support Desk evidence.  It verifies
+    the byte count and digest again after reading, closing the check/read
+    window without retaining content in any audit/event record.
+    """
+    if expected_bytes <= 0 or expected_bytes > maximum_bytes:
+        return None
+    stream = open_verified_private_asset_stream(
+        storage_key=storage_key,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if stream is None:
+        return None
+    try:
+        content = stream.read(expected_bytes + 1)
+    except OSError:
+        return None
+    finally:
+        stream.close()
+    if len(content) != expected_bytes:
+        return None
+    digest = hashlib.sha256(content).hexdigest()
+    return content if hmac.compare_digest(digest, expected_digest) else None
 
 
 def _mark_unavailable(asset_id: str, account_id: str) -> None:
     with transaction() as conn:
         conn.execute(
-            """UPDATE web_asset_files SET state=?, updated_at=?
-               WHERE id=? AND account_id=? AND state=?""",
-            (UNAVAILABLE_STATE, utc_now(), asset_id, account_id, ACTIVE_STATE),
+            """UPDATE web_asset_files
+               SET state=?, updated_at=?, lifecycle_revision=lifecycle_revision + 1
+               WHERE id=? AND account_id=? AND state IN (?, ?)""",
+            (UNAVAILABLE_STATE, utc_now(), asset_id, account_id, ACTIVE_STATE, ARCHIVED_STATE),
         )
 
 
@@ -519,24 +1085,124 @@ def reconcile_asset_vault_storage() -> None:
 @router.get("")
 async def list_assets(
     state: str = ACTIVE_STATE,
+    q: str | None = None,
+    project_id: str | None = None,
+    reference_kind: str = "all",
+    limit: int = 30,
+    offset: int = 0,
     account: dict = Depends(require_account),
 ):
+    """Return a bounded, owner-scoped Asset Vault library projection.
+
+    The listing never contains blob paths, checksums, or a delivery URL.  It
+    is deliberately page-based so an account with more than one hundred files
+    does not silently lose older private records in the Web UI.
+    """
     _require_enabled()
     selected_state = str(state or ACTIVE_STATE).strip().lower()
-    if selected_state not in VISIBLE_STATES:
+    if selected_state not in {*VISIBLE_STATES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái Asset Vault không hợp lệ")
+    bounded_limit = max(1, min(int(limit), 100))
+    bounded_offset = max(0, min(int(offset), 10_000))
+    needle = _list_search(q)
+    selected_reference_kind = _reference_kind(reference_kind)
+    scoped_project_id = _validate_id(project_id, label="Project ID") if str(project_id or "").strip() else None
+    where = ["account_id=?"]
+    params: list[Any] = [str(account["id"])]
+    if selected_state == "all":
+        # `unavailable` is an internal integrity result.  It is never a
+        # browseable library state, even when the customer asks for all files.
+        where.append("state IN (?, ?)")
+        params.extend([ACTIVE_STATE, ARCHIVED_STATE])
+    else:
+        where.append("state=?")
+        params.append(selected_state)
+    if scoped_project_id:
+        where.append("project_id=?")
+        params.append(scoped_project_id)
+    if selected_reference_kind == "pdf":
+        # Uploads canonicalize these two fields together.  Keep the exact
+        # pair here rather than accepting a MIME prefix so a malformed row
+        # cannot masquerade as a document-operation source.
+        where.append("lower(extension)=? AND lower(content_type)=?")
+        params.extend([".pdf", "application/pdf"])
+    elif selected_reference_kind == "image":
+        # Match only the raster formats native operations can decode.  Each
+        # extension is paired with its canonical MIME type, avoiding a loose
+        # `image/*` query that could surface unsupported or inconsistent rows.
+        where.append(
+            "("
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?)"
+            ")"
+        )
+        params.extend([
+            ".jpg", "image/jpeg", ".jpeg", "image/jpeg",
+            ".png", "image/png", ".webp", "image/webp",
+        ])
+    if needle:
+        escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        where.append("(display_name LIKE ? ESCAPE '\\' OR original_filename LIKE ? ESCAPE '\\')")
+        params.extend([f"%{escaped}%", f"%{escaped}%"])
+    predicate = " AND ".join(where)
     ensure_copyfast_schema()
     with transaction() as conn:
         rows = conn.execute(
-            """SELECT id, project_id, display_name, original_filename, extension, content_type,
-                      byte_size, state, created_at, updated_at, archived_at
-               FROM web_asset_files
-               WHERE account_id=? AND state=?
-               ORDER BY updated_at DESC, id DESC LIMIT 100""",
-            (str(account["id"]), selected_state),
+            f"""SELECT id, project_id, display_name, original_filename, extension, content_type,
+                        byte_size, state, created_at, updated_at, archived_at
+                 FROM web_asset_files
+                 WHERE {predicate}
+                 ORDER BY updated_at DESC, id DESC
+                 LIMIT ? OFFSET ?""",
+            (*params, bounded_limit + 1, bounded_offset),
         ).fetchall()
-    items = [_asset_public(row) for row in rows]
-    return envelope(True, "Đã tải Asset Vault Web.", data={"items": items, "state": selected_state})
+    has_more = len(rows) > bounded_limit
+    items = [_asset_public(row) for row in rows[:bounded_limit]]
+    return envelope(
+        True,
+        "Đã tải Asset Vault Web.",
+        data={
+            "items": items,
+            "state": selected_state,
+            "has_more": has_more,
+            "next_offset": bounded_offset + len(items) if has_more else None,
+            "filters": {
+                "q": needle,
+                "state": selected_state,
+                "project_id": scoped_project_id,
+                "reference_kind": selected_reference_kind,
+            },
+            "pagination": {"limit": bounded_limit, "offset": bounded_offset, "returned": len(items)},
+        },
+    )
+
+
+@router.get("/{asset_id}/lifecycle")
+async def get_asset_lifecycle(asset_id: str, account: dict = Depends(require_account)):
+    """Inspect the current retained lifecycle without exposing blob internals.
+
+    There is intentionally no fabricated timeline: this is a current-state
+    inspection endpoint backed by the canonical Asset Vault metadata and its
+    owner-scoped retained-reference summary.
+    """
+    _require_enabled()
+    asset_id = _validate_id(asset_id, label="Asset Vault ID")
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = _row_for_account(conn, asset_id, str(account["id"]))
+        if not row:
+            return _asset_not_found()
+        lifecycle = _lifecycle_public(
+            row,
+            reference_summary=_lifecycle_reference_summary(
+                conn,
+                asset_id=asset_id,
+                account_id=str(account["id"]),
+            ),
+        )
+    return envelope(True, "Đã tải vòng đời Asset Vault.", data={"lifecycle": lifecycle})
 
 
 @router.get("/{asset_id}")
@@ -669,35 +1335,241 @@ async def download_asset(asset_id: str, account: dict = Depends(require_account)
     except RuntimeError:
         _mark_unavailable(asset_id, str(account["id"]))
         return _asset_unavailable()
-    if not _verify_private_file(private_path, expected_bytes=int(row[6]), expected_digest=str(row[11])):
+    stream = _open_verified_private_file(
+        private_path,
+        expected_bytes=int(row[6]),
+        expected_digest=str(row[11]),
+    )
+    if stream is None:
         _mark_unavailable(asset_id, str(account["id"]))
         return _asset_unavailable()
-    return FileResponse(
-        path=private_path,
+    sealed_stream = seal_verified_private_file(
+        stream,
+        expected_bytes=int(row[6]),
+        expected_digest=str(row[11]),
+    )
+    if sealed_stream is None:
+        _mark_unavailable(asset_id, str(account["id"]))
+        return _asset_unavailable()
+    return private_asset_attachment_response(
+        sealed_stream,
+        byte_size=int(row[6]),
         media_type=str(row[5]),
         filename=str(row[3]),
-        content_disposition_type="attachment",
-        headers={
-            "Cache-Control": "no-store, private",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
-            "Content-Security-Policy": "sandbox",
-        },
     )
+
+
+@router.post("/{asset_id}/restore")
+async def restore_asset(
+    asset_id: str,
+    payload: AssetRestoreRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Restore only a verified archived blob for its signed owner.
+
+    The integrity check intentionally happens before the state becomes active.
+    A missing, malformed, symlinked, size-mismatched or digest-mismatched blob
+    is fail-closed as ``unavailable`` and cannot be revived by a retry.
+    """
+    _require_enabled()
+    asset_id = _validate_id(asset_id, label="Asset Vault ID")
+    account_id = str(account["id"])
+    expected_revision = int(payload.expected_revision)
+    key = _idempotency_key(payload.idempotency_key)
+    scope = f"web.asset_vault.restore:{account_id}:{asset_id}"
+    fingerprint = hashlib.sha256(
+        f"restore:{asset_id}:{expected_revision}".encode("utf-8")
+    ).hexdigest()
+    reservation, cached, marker = _reserve_idempotency(scope, key, fingerprint)
+    if reservation == "cached" and cached is not None:
+        return cached
+    if reservation == "pending":
+        raise HTTPException(status_code=409, detail="Yêu cầu khôi phục tệp đang được xử lý")
+
+    verified_stream: BinaryIO | None = None
+    try:
+        # Do not hold a SQLite write transaction while hashing a private blob.
+        # The second transaction rechecks the state and revision, so this gap
+        # cannot reactivate an asset that was changed after inspection.
+        with transaction() as conn:
+            row = _row_for_account(conn, asset_id, account_id)
+            if not row or str(row[7]) != ARCHIVED_STATE:
+                response = _asset_not_found()
+                _store_response(conn, scope=scope, key=key, marker=marker, fingerprint=fingerprint, response=response)
+                return response
+            if _lifecycle_revision(row) != expected_revision:
+                response = _asset_lifecycle_conflict()
+                _record_audit(
+                    conn,
+                    account_id=account_id,
+                    canonical_user_id=None,
+                    action="web.asset_vault.restore",
+                    request_id=_request_id(request),
+                    outcome="guarded",
+                )
+                _store_response(conn, scope=scope, key=key, marker=marker, fingerprint=fingerprint, response=response)
+                return response
+
+        private_path: Path | None = None
+        try:
+            private_path = _storage_path(asset_vault_directory(), str(row[12]))
+            verified_stream = _open_verified_private_file(
+                private_path,
+                expected_bytes=int(row[6]),
+                expected_digest=str(row[11]),
+            )
+        except (OSError, RuntimeError):
+            verified_stream = None
+
+        with transaction() as conn:
+            latest = _row_for_account(conn, asset_id, account_id)
+            if not latest or str(latest[7]) != ARCHIVED_STATE:
+                response = _asset_not_found()
+            elif _lifecycle_revision(latest) != expected_revision:
+                response = _asset_lifecycle_conflict()
+                _record_audit(
+                    conn,
+                    account_id=account_id,
+                    canonical_user_id=None,
+                    action="web.asset_vault.restore",
+                    request_id=_request_id(request),
+                    outcome="guarded",
+                )
+            # Keep the descriptor opened, compare it to the current entry and
+            # rehash that same descriptor immediately before activation. This
+            # closes the prior verify-by-path → activate window; later
+            # downloads independently pin and hash again before streaming.
+            elif (
+                verified_stream is None
+                or private_path is None
+                or not _pinned_private_file_is_current(verified_stream, private_path)
+                or not _verify_pinned_private_file(
+                    verified_stream,
+                    expected_bytes=int(latest[6]),
+                    expected_digest=str(latest[11]),
+                )
+            ):
+                now = utc_now()
+                next_revision = _lifecycle_revision(latest) + 1
+                updated = conn.execute(
+                    """UPDATE web_asset_files
+                       SET state=?, updated_at=?, lifecycle_revision=lifecycle_revision + 1
+                       WHERE id=? AND account_id=? AND state=? AND lifecycle_revision=?""",
+                    (
+                        UNAVAILABLE_STATE,
+                        now,
+                        asset_id,
+                        account_id,
+                        ARCHIVED_STATE,
+                        expected_revision,
+                    ),
+                )
+                if updated.rowcount != 1:
+                    response = _asset_lifecycle_conflict()
+                else:
+                    unavailable_row = _row_with_lifecycle_state(
+                        latest,
+                        state=UNAVAILABLE_STATE,
+                        updated_at=now,
+                        archived_at=str(latest[10]) if latest[10] else None,
+                        lifecycle_revision=next_revision,
+                    )
+                    response = _asset_restore_unavailable()
+                    response["data"] = {
+                        "lifecycle": _lifecycle_public(
+                            unavailable_row,
+                            reference_summary=_lifecycle_reference_summary(
+                                conn,
+                                asset_id=asset_id,
+                                account_id=account_id,
+                            ),
+                        )
+                    }
+                    _record_audit(
+                        conn,
+                        account_id=account_id,
+                        canonical_user_id=None,
+                        action="web.asset_vault.restore",
+                        request_id=_request_id(request),
+                        outcome="guarded",
+                    )
+            else:
+                now = utc_now()
+                next_revision = _lifecycle_revision(latest) + 1
+                updated = conn.execute(
+                    """UPDATE web_asset_files
+                       SET state=?, archived_at=NULL, updated_at=?, lifecycle_revision=lifecycle_revision + 1
+                       WHERE id=? AND account_id=? AND state=? AND lifecycle_revision=?""",
+                    (
+                        ACTIVE_STATE,
+                        now,
+                        asset_id,
+                        account_id,
+                        ARCHIVED_STATE,
+                        expected_revision,
+                    ),
+                )
+                if updated.rowcount != 1:
+                    response = _asset_lifecycle_conflict()
+                else:
+                    restored_row = _row_with_lifecycle_state(
+                        latest,
+                        state=ACTIVE_STATE,
+                        updated_at=now,
+                        archived_at=None,
+                        lifecycle_revision=next_revision,
+                    )
+                    response = envelope(
+                        True,
+                        "Đã khôi phục tệp vào Asset Vault đang hoạt động.",
+                        data={
+                            "asset": _visible_asset(restored_row),
+                            "lifecycle": _lifecycle_public(
+                                restored_row,
+                                reference_summary=_lifecycle_reference_summary(
+                                    conn,
+                                    asset_id=asset_id,
+                                    account_id=account_id,
+                                ),
+                            ),
+                        },
+                    )
+                    _record_audit(
+                        conn,
+                        account_id=account_id,
+                        canonical_user_id=None,
+                        action="web.asset_vault.restore",
+                        request_id=_request_id(request),
+                    )
+            _store_response(conn, scope=scope, key=key, marker=marker, fingerprint=fingerprint, response=response)
+        return response
+    except Exception:
+        _release_idempotency(scope, key, marker)
+        raise
+    finally:
+        if verified_stream is not None:
+            try:
+                verified_stream.close()
+            except OSError:
+                pass
 
 
 @router.post("/{asset_id}/archive")
 async def archive_asset(
     asset_id: str,
+    payload: AssetArchiveRequest,
     request: Request,
     idempotency_key: Annotated[str | None, Header(alias="Idempotency-Key")] = None,
     account: dict = Depends(require_csrf),
 ):
     _require_enabled()
     asset_id = _validate_id(asset_id, label="Asset Vault ID")
+    account_id = str(account["id"])
+    expected_revision = int(payload.expected_revision)
     key = _idempotency_key(idempotency_key)
-    scope = f"web.asset_vault.archive:{account['id']}:{asset_id}"
-    fingerprint = hashlib.sha256(f"archive:{asset_id}".encode("utf-8")).hexdigest()
+    scope = f"web.asset_vault.archive:{account_id}:{asset_id}"
+    fingerprint = hashlib.sha256(f"archive:{asset_id}:{expected_revision}".encode("utf-8")).hexdigest()
     reservation, cached, marker = _reserve_idempotency(scope, key, fingerprint)
     if reservation == "cached" and cached is not None:
         return cached
@@ -705,27 +1577,49 @@ async def archive_asset(
         raise HTTPException(status_code=409, detail="Yêu cầu lưu trữ tệp đang được xử lý")
     try:
         with transaction() as conn:
-            row = _row_for_account(conn, asset_id, str(account["id"]))
+            row = _row_for_account(conn, asset_id, account_id)
             if not row or str(row[7]) != ACTIVE_STATE:
                 response = _asset_not_found()
-            else:
-                now = utc_now()
-                conn.execute(
-                    """UPDATE web_asset_files SET state=?, archived_at=?, updated_at=?
-                       WHERE id=? AND account_id=? AND state=?""",
-                    (ARCHIVED_STATE, now, now, asset_id, str(account["id"]), ACTIVE_STATE),
-                )
-                public = _visible_asset((*row[:7], ARCHIVED_STATE, row[8], now, now))
-                response = envelope(True, "Đã lưu trữ tệp khỏi Asset Vault đang hoạt động.", data={"asset": public})
+            elif _lifecycle_revision(row) != expected_revision:
+                response = _asset_lifecycle_conflict()
                 _record_audit(
                     conn,
-                    account_id=str(account["id"]),
+                    account_id=account_id,
                     canonical_user_id=None,
                     action="web.asset_vault.archive",
                     request_id=_request_id(request),
-                    target=asset_id,
-                    detail="state=archived",
+                    outcome="guarded",
                 )
+            else:
+                now = utc_now()
+                next_revision = _lifecycle_revision(row) + 1
+                updated = conn.execute(
+                    """UPDATE web_asset_files
+                        SET state=?, archived_at=?, updated_at=?, lifecycle_revision=lifecycle_revision + 1
+                        WHERE id=? AND account_id=? AND state=? AND lifecycle_revision=?""",
+                    (ARCHIVED_STATE, now, now, asset_id, account_id, ACTIVE_STATE, expected_revision),
+                )
+                if updated.rowcount != 1:
+                    response = _asset_lifecycle_conflict()
+                else:
+                    archived_row = _row_with_lifecycle_state(
+                        row,
+                        state=ARCHIVED_STATE,
+                        updated_at=now,
+                        archived_at=now,
+                        lifecycle_revision=next_revision,
+                    )
+                    public = _visible_asset(archived_row)
+                    response = envelope(True, "Đã lưu trữ tệp khỏi Asset Vault đang hoạt động.", data={"asset": public})
+                    _record_audit(
+                        conn,
+                        account_id=account_id,
+                        canonical_user_id=None,
+                        action="web.asset_vault.archive",
+                        request_id=_request_id(request),
+                        target=asset_id,
+                        detail="state=archived",
+                    )
             _store_response(conn, scope=scope, key=key, marker=marker, fingerprint=fingerprint, response=response)
         return response
     except Exception:

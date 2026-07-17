@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib
 import sqlite3
 import sys
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -260,6 +261,116 @@ def test_media_workspace_accepts_only_owned_active_audio_and_keeps_delivery_priv
             )
             assert cross_owner.status_code == 200
             assert cross_owner.json()["error_code"] == "WEB_MEDIA_AUDIO_ASSET_NOT_FOUND"
+
+
+def test_media_audio_listing_filters_before_pagination_and_is_owner_scoped(tmp_path, monkeypatch):
+    """Older Vault audio stays searchable even after hundreds of non-audio files."""
+    db_path = tmp_path / "copyfast-media-workspace-test.db"
+    with make_client(tmp_path, monkeypatch) as client:
+        register_and_login(client, "media-audio-list-owner@example.com")
+        with sqlite3.connect(db_path) as conn:
+            account_id = conn.execute(
+                "SELECT id FROM web_accounts WHERE email=?",
+                ("media-audio-list-owner@example.com",),
+            ).fetchone()[0]
+            noise_rows = [
+                (
+                    str(uuid.uuid4()), account_id, None, f"Noise asset {index}", f"noise-{index}.txt", ".txt",
+                    "text/plain", 12, f"{index:064x}", f"noise-storage-{index}", "active",
+                    "2099-01-01T00:00:00+00:00", "2099-01-01T00:00:00+00:00", None,
+                )
+                for index in range(301)
+            ]
+            newer_audio_id = str(uuid.uuid4())
+            older_audio_id = str(uuid.uuid4())
+            audio_rows = [
+                (
+                    newer_audio_id, account_id, None, "Needle audio mới", "needle-new.wav", ".wav",
+                    "audio/wav", 44, "a" * 64, "needle-storage-new", "active",
+                    "2001-01-01T00:00:00+00:00", "2001-01-01T00:00:00+00:00", None,
+                ),
+                (
+                    older_audio_id, account_id, None, "Needle audio cũ", "needle-old.wav", ".wav",
+                    "audio/wav", 44, "b" * 64, "needle-storage-old", "active",
+                    "2000-01-01T00:00:00+00:00", "2000-01-01T00:00:00+00:00", None,
+                ),
+            ]
+            conn.executemany(
+                """INSERT INTO web_asset_files (
+                    id, account_id, project_id, display_name, original_filename, extension, content_type,
+                    byte_size, sha256, storage_key, state, created_at, updated_at, archived_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                [*noise_rows, *audio_rows],
+            )
+
+        first = client.get(
+            "/api/v1/media-workspace/audio-assets",
+            params={"q": "Needle audio", "limit": 1, "offset": 0},
+        )
+        assert first.status_code == 200
+        first_data = first.json()["data"]
+        assert [item["id"] for item in first_data["items"]] == [newer_audio_id]
+        assert first_data["has_more"] is True
+        assert first_data["next_offset"] == 1
+        assert first_data["filters"] == {"q": "Needle audio"}
+        assert first_data["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+
+        second = client.get(
+            "/api/v1/media-workspace/audio-assets",
+            params={"q": "Needle audio", "limit": 1, "offset": 1},
+        )
+        assert second.status_code == 200
+        second_data = second.json()["data"]
+        assert [item["id"] for item in second_data["items"]] == [older_audio_id]
+        assert second_data["has_more"] is False
+        assert second_data["next_offset"] is None
+
+        with make_client(tmp_path, monkeypatch) as other:
+            register_and_login(other, "media-audio-list-other@example.com")
+            hidden = other.get("/api/v1/media-workspace/audio-assets", params={"q": "Needle audio", "limit": 1})
+            assert hidden.status_code == 200
+            assert hidden.json()["data"]["items"] == []
+
+
+def test_media_collections_are_paginated_and_owner_scoped(tmp_path, monkeypatch):
+    """Every collection remains reachable through bounded owner-scoped pages."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "media-collection-list-owner@example.com")
+        created = [
+            create_collection(
+                client,
+                csrf,
+                f"media-collection-browse-{index:04d}",
+                title=f"Browse pagination {index}",
+            )
+            for index in range(1, 4)
+        ]
+        pages = [
+            client.get(
+                "/api/v1/media-workspace/collections",
+                params={"state": "all", "q": "Browse pagination", "limit": 1, "offset": offset},
+            )
+            for offset in range(3)
+        ]
+        assert all(page.status_code == 200 for page in pages)
+        page_data = [page.json()["data"] for page in pages]
+        seen_ids = {item["id"] for data in page_data for item in data["items"]}
+        assert seen_ids == {item["id"] for item in created}
+        assert page_data[0]["has_more"] is True
+        assert page_data[0]["next_offset"] == 1
+        assert page_data[1]["next_offset"] == 2
+        assert page_data[2]["has_more"] is False
+        assert page_data[2]["next_offset"] is None
+        assert page_data[0]["filters"] == {
+            "q": "Browse pagination", "tag": "", "prompt_mode": "", "state": "all",
+        }
+        assert page_data[0]["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+
+        with make_client(tmp_path, monkeypatch) as other:
+            register_and_login(other, "media-collection-list-other@example.com")
+            hidden = other.get("/api/v1/media-workspace/collections", params={"state": "all", "limit": 1})
+            assert hidden.status_code == 200
+            assert hidden.json()["data"]["items"] == []
 
 
 def test_media_workspace_blocks_imitation_and_never_claims_generation_or_delivery(tmp_path, monkeypatch):

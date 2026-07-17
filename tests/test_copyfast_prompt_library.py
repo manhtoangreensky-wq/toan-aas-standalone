@@ -15,7 +15,8 @@ MODULES = [
     "app", "copyfast_db", "copyfast_auth", "copyfast_bridge", "copyfast_registry",
     "copyfast_api", "copyfast_pages", "copyfast_projects", "copyfast_assets",
     "copyfast_project_packages", "copyfast_document_operations", "copyfast_image_runtime",
-    "copyfast_image_operations", "copyfast_memory", "copyfast_support", "copyfast_prompt_library",
+    "copyfast_image_operations", "copyfast_memory", "copyfast_support", "copyfast_free_prompt_gallery",
+    "copyfast_prompt_library",
 ]
 
 
@@ -75,6 +76,139 @@ def create_template(client: TestClient, csrf: str, key: str = "prompt-template-c
     assert response.status_code == 200
     assert response.json()["ok"] is True
     return response.json()["data"]["template"]
+
+
+def save_gallery_prompt(client: TestClient, csrf: str, prompt_id: str, key: str) -> dict:
+    response = client.post(
+        f"/api/v1/prompt-library/gallery-items/{prompt_id}/save",
+        headers={"X-CSRF-Token": csrf},
+        json={"idempotency_key": key},
+    )
+    assert response.status_code == 200
+    assert response.json()["ok"] is True
+    return response.json()["data"]
+
+
+def test_gallery_seed_save_is_csrf_owned_server_resolved_deduplicated_and_audited(tmp_path, monkeypatch):
+    prompt_id = "caption_cta_food_cafe_1"
+    initial_key = "gallery-save-initial-0001"
+    with make_client(tmp_path, monkeypatch) as client:
+        assert client.post(
+            f"/api/v1/prompt-library/gallery-items/{prompt_id}/save",
+            json={"idempotency_key": initial_key},
+        ).status_code == 401
+        csrf = register_and_login(client, "gallery-save-owner@example.com")
+        no_csrf = client.post(
+            f"/api/v1/prompt-library/gallery-items/{prompt_id}/save",
+            json={"idempotency_key": initial_key},
+        )
+        assert no_csrf.status_code == 403
+        assert client.post(
+            "/api/v1/prompt-library/gallery-items/not-valid-id!/save",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "gallery-save-invalid-id-0001"},
+        ).status_code == 422
+        assert client.post(
+            "/api/v1/prompt-library/gallery-items/caption_cta_notreal_1/save",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "gallery-save-missing-id-0001"},
+        ).status_code == 404
+        assert client.post(
+            f"/api/v1/prompt-library/gallery-items/{prompt_id}/save",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "gallery-save-extra-field-0001", "prompt_text": "browser must not control this"},
+        ).status_code == 422
+
+        saved = save_gallery_prompt(client, csrf, prompt_id, initial_key)
+        template = saved["template"]
+        assert saved["created"] is True
+        assert saved["deduplicated"] is False
+        assert saved["gallery"] == {"prompt_id": prompt_id, "snapshot_version": "2026-07-15.1"}
+        assert "prompt_text" not in template
+        assert saved["boundaries"] == {
+            "execution": "web_native_prompt_library_gallery_save",
+            "source_snapshot_read_only": True,
+            "template_persisted": True,
+            "gallery_state_persisted": False,
+            "pending_bot_save_created": False,
+            "telegram_state_changed": False,
+            "provider_called": False,
+            "bot_called": False,
+            "bridge_called": False,
+            "job_created": False,
+            "wallet_mutated": False,
+            "payment_started": False,
+            "asset_saved": False,
+            "publish_action_created": False,
+            "delivery_created": False,
+        }
+        detail = client.get(f"/api/v1/prompt-library/templates/{template['id']}")
+        assert detail.status_code == 200
+        source = detail.json()["data"]["template"]
+        assert source["prompt_text"].startswith("Viết caption ngắn cho món ăn hoặc đồ uống nổi bật")
+        assert source["source"] == "TOAN AAS Web Free Prompt Gallery | snapshot 2026-07-15.1 | caption_cta_food_cafe_1"
+        assert source["tags"] == ["free-prompt-gallery", "caption_cta", "food_cafe"]
+
+        # The same retry returns the durable receipt. A fresh idempotency key
+        # still reaches the owner-scoped Gallery map and cannot create a copy.
+        replay = save_gallery_prompt(client, csrf, prompt_id, initial_key)
+        assert replay["template"]["id"] == template["id"]
+        assert replay["created"] is True
+        deduplicated = save_gallery_prompt(client, csrf, prompt_id, "gallery-save-deduplicate-0001")
+        assert deduplicated["template"]["id"] == template["id"]
+        assert deduplicated["created"] is False
+        assert deduplicated["deduplicated"] is True
+        collision = client.post(
+            "/api/v1/prompt-library/gallery-items/hook_script_food_cafe_1/save",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": initial_key},
+        )
+        assert collision.status_code == 409
+
+        db_path = tmp_path / "copyfast-prompt-library-test.db"
+        with sqlite3.connect(db_path) as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_prompt_templates").fetchone()[0] == 1
+            assert conn.execute(
+                "SELECT gallery_prompt_id, snapshot_version, template_id FROM web_prompt_gallery_saves"
+            ).fetchone() == (prompt_id, "2026-07-15.1", template["id"])
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_prompt_template_events WHERE template_id=? AND action='gallery_prompt_saved'",
+                (template["id"],),
+            ).fetchone()[0] == 1
+            assert conn.execute(
+                "SELECT COUNT(*) FROM web_audit_events WHERE target=? AND action='web.prompt_library.gallery_save'",
+                (template["id"],),
+            ).fetchone()[0] == 1
+
+        # A normal archive/purge is still owner-controlled. Cascade removes
+        # the provenance row so a later explicit save can intentionally start
+        # a fresh private template rather than retaining a dangling map.
+        archived = client.post(
+            f"/api/v1/prompt-library/templates/{template['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": 1, "idempotency_key": "gallery-save-archive-0001"},
+        )
+        assert archived.json()["ok"] is True
+        purged = client.post(
+            f"/api/v1/prompt-library/templates/{template['id']}/purge",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": 2, "confirm": True, "idempotency_key": "gallery-save-purge-0001"},
+        )
+        assert purged.json()["ok"] is True
+        with sqlite3.connect(db_path) as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_prompt_gallery_saves").fetchone()[0] == 0
+        resaved = save_gallery_prompt(client, csrf, prompt_id, "gallery-save-after-purge-0001")
+        assert resaved["created"] is True
+        assert resaved["template"]["id"] != template["id"]
+
+    # The mapping is account-scoped: a second signed account may save its own
+    # private copy but cannot read the first account's template or map.
+    with make_client(tmp_path, monkeypatch) as second:
+        second_csrf = register_and_login(second, "gallery-save-other@example.com")
+        other = save_gallery_prompt(second, second_csrf, prompt_id, "gallery-save-other-account-0001")
+        assert other["template"]["id"] != resaved["template"]["id"]
+        hidden = second.get(f"/api/v1/prompt-library/templates/{resaved['template']['id']}")
+        assert hidden.json()["error_code"] == "WEB_PROMPT_TEMPLATE_NOT_FOUND"
 
 
 def test_prompt_library_is_csrf_owned_versioned_and_private(tmp_path, monkeypatch):
@@ -179,6 +313,70 @@ def test_prompt_library_is_csrf_owned_versioned_and_private(tmp_path, monkeypatc
                 json={"expected_revision": 5, "idempotency_key": "prompt-template-other-archive-0001"},
             )
             assert denied_mutation.json()["error_code"] == "WEB_PROMPT_TEMPLATE_NOT_FOUND"
+
+
+def test_prompt_library_listing_is_paginated_filtered_and_owner_scoped(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as owner:
+        csrf = register_and_login(owner, "prompt-library-pages@example.com")
+        created = [
+            create_template(
+                owner,
+                csrf,
+                f"prompt-template-page-{index:04d}",
+                title=f"Pagination template {index}",
+                category="Library pagination",
+                tags=["pages", "private"],
+            )
+            for index in range(3)
+        ]
+
+        first = owner.get("/api/v1/prompt-library/templates", params={"q": "Pagination template", "limit": 1})
+        assert first.status_code == 200
+        first_data = first.json()["data"]
+        assert first_data["filters"] == {
+            "q": "Pagination template",
+            "category": "",
+            "platform": "",
+            "product_context": "",
+            "tag": "",
+            "state": "active",
+        }
+        assert first_data["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+        assert first_data["has_more"] is True
+        assert first_data["next_offset"] == 1
+
+        second = owner.get("/api/v1/prompt-library/templates", params={"q": "Pagination template", "limit": 1, "offset": 1})
+        assert second.status_code == 200
+        second_data = second.json()["data"]
+        assert second_data["pagination"] == {"limit": 1, "offset": 1, "returned": 1}
+        assert second_data["has_more"] is True
+        assert second_data["next_offset"] == 2
+        assert first_data["items"][0]["id"] != second_data["items"][0]["id"]
+
+        all_ids = {item["id"] for item in first_data["items"] + second_data["items"]}
+        third = owner.get("/api/v1/prompt-library/templates", params={"q": "Pagination template", "limit": 1, "offset": 2})
+        third_data = third.json()["data"]
+        assert third_data["pagination"] == {"limit": 1, "offset": 2, "returned": 1}
+        assert third_data["has_more"] is False
+        assert third_data["next_offset"] is None
+        all_ids.update(item["id"] for item in third_data["items"])
+        assert all_ids == {item["id"] for item in created}
+
+        filtered = owner.get("/api/v1/prompt-library/templates", params={"category": "Library pagination", "tag": "pages"})
+        assert {item["id"] for item in filtered.json()["data"]["items"]} == {item["id"] for item in created}
+
+        with make_client(tmp_path, monkeypatch) as other:
+            other_csrf = register_and_login(other, "prompt-library-pages-other@example.com")
+            foreign = create_template(
+                other,
+                other_csrf,
+                "prompt-template-page-other-0001",
+                title="Pagination template foreign",
+                category="Library pagination",
+                tags=["pages"],
+            )
+            visible_to_owner = owner.get("/api/v1/prompt-library/templates", params={"q": "Pagination template", "state": "all"})
+            assert foreign["id"] not in {item["id"] for item in visible_to_owner.json()["data"]["items"]}
 
 
 def test_prompt_library_rejects_sensitive_content_and_unknown_preview_values(tmp_path, monkeypatch):

@@ -43,12 +43,25 @@ def test_resize_hydration_and_write_use_only_private_image_operation_routes() ->
     assert "function imageResizePrivateReadPageState(assetState, operationState)" in INTEGRATION
     assert '"/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading"))' in INTEGRATION
     assert '"/image/resize": imageResizePrivateReadPageState(String(base().assetVaultReadState || "loading"), "ready")' in INTEGRATION
-    assert "async function hydrateImageOperations()" in INTEGRATION
+    # Resize history is now paged, while preserving the same owner-scoped
+    # Web-native API boundary.
+    assert "async function hydrateImageOperations(offsetValue)" in INTEGRATION
     assert 'assetVaultReadState: account && assetVaultEnabled ? "loading" : "guarded"' in INTEGRATION
     assert 'imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded"' in INTEGRATION
     assert 'assetVaultReadState: "failed"' in INTEGRATION
     assert 'imageOperationsReadState: "failed"' in INTEGRATION
-    assert 'api("/image-operations?kind=image_resize&limit=100")' in INTEGRATION
+    history_start = INTEGRATION.index("function imageOperationHistoryPath(kind, offset)")
+    history_end = INTEGRATION.index("function operationHistoryRequestIsCurrent", history_start)
+    history_path = INTEGRATION[history_start:history_end]
+    resize_reader_start = INTEGRATION.index("async function hydrateImageOperations(offsetValue)")
+    resize_reader_end = INTEGRATION.index("async function hydrateImageEnhanceOperations", resize_reader_start)
+    resize_reader = INTEGRATION[resize_reader_start:resize_reader_end]
+    assert 'return "/image-operations?" + new URLSearchParams({' in history_path
+    assert "kind: normalizedKind" in history_path
+    assert "limit: String(OPERATION_HISTORY_LIST_LIMIT)" in history_path
+    assert "offset: String(operationHistoryListOffset(offset))" in history_path
+    assert 'const kind = "image_resize"' in resize_reader
+    assert "api(imageOperationHistoryPath(kind, offset))" in resize_reader
     assert 'api("/image-operations/resize"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "image-operation-resize")'):

@@ -200,6 +200,51 @@ def test_project_package_marks_tampered_artifact_unavailable(tmp_path, monkeypat
         assert detail.json()["data"]["package"]["download_ready"] is False
 
 
+def test_project_package_download_stream_is_sealed_before_a_source_path_swap(tmp_path, monkeypatch):
+    """The response must never reopen a verified mutable package pathname."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        import copyfast_project_packages as project_packages
+
+        csrf = register_and_login(client, "package-sealed-download@example.com")
+        project, _document = create_project_with_document(client, csrf)
+        package = client.post(
+            f"/api/v1/projects/{project['id']}/packages",
+            headers={"X-CSRF-Token": csrf},
+            json={"idempotency_key": "project-package-sealed-download-0001"},
+        ).json()["data"]["package"]
+        with sqlite3.connect(tmp_path / "copyfast-project-packages-test.db") as conn:
+            storage_key, expected_size = conn.execute(
+                "SELECT storage_key, byte_size FROM web_project_packages WHERE id=?",
+                (package["id"],),
+            ).fetchone()
+        private_file = Path(tmp_path / "private-project-packages") / storage_key
+        original_bytes = private_file.read_bytes()
+        original_seal = project_packages._seal_verified_private_package_file
+
+        def seal_then_replace_source(stream, *, expected_bytes, expected_digest):
+            sealed = original_seal(stream, expected_bytes=expected_bytes, expected_digest=expected_digest)
+            assert sealed is not None
+            # This is deliberately after descriptor verification + sealing but
+            # before the route constructs its HTTP response.  A FileResponse
+            # path delivery would now serve these replacement bytes instead.
+            private_file.write_bytes(b"replacement bytes that must never be delivered")
+            return sealed
+
+        monkeypatch.setattr(project_packages, "_seal_verified_private_package_file", seal_then_replace_source)
+        delivered = client.get(f"/api/v1/project-packages/{package['id']}/download")
+        assert delivered.status_code == 200
+        assert delivered.headers["content-length"] == str(expected_size)
+        assert delivered.content == original_bytes
+        with ZipFile(BytesIO(delivered.content)) as archive:
+            assert "documents/001-script.txt" in archive.namelist()
+
+        # The source is now tampered for the following request, which fails
+        # closed rather than serving replacement bytes from a pathname.
+        unavailable = client.get(f"/api/v1/project-packages/{package['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_PROJECT_PACKAGE_UNAVAILABLE"
+
+
 def test_project_package_requires_a_separate_private_production_root(tmp_path, monkeypatch):
     database = importlib.import_module("copyfast_db")
     monkeypatch.setenv("WEBAPP_PROJECT_PACKAGE_ENABLED", "true")
@@ -227,4 +272,7 @@ def test_project_package_never_imports_bot_bridge_or_exposes_static_storage():
     assert "from copyfast_bridge" not in source
     assert "import copyfast_bridge" not in source
     assert "bridge_request(" not in source
+    assert "FileResponse" not in source
+    assert "_open_verified_private_package_file" in source
+    assert "_seal_verified_private_package_file" in source
     assert 'app.mount("/project-packages"' not in Path("app.py").read_text(encoding="utf-8")

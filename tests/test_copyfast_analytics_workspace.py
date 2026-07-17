@@ -3,14 +3,19 @@
 The suite deliberately exercises only durable security and accounting-adjacent
 behaviour: signed ownership, CSRF/idempotency, bounded input, deterministic
 manual calculations and lifecycle locks.  It never calls a Bot, provider,
-social platform, wallet, PayOS, job, publishing, import or export surface.
+social platform, wallet, PayOS, job, publishing or import surface.  The one
+CSV check below covers a bounded, signed Web-only attachment rather than an
+external export, canonical Campaign report or stored delivery artifact.
 """
 
 from __future__ import annotations
 
 import importlib
+import csv
+import io
 import sqlite3
 import sys
+from contextlib import contextmanager
 
 from fastapi.testclient import TestClient
 
@@ -25,10 +30,11 @@ MODULES = [
 ]
 
 
-def make_client(tmp_path, monkeypatch, *, enabled: bool = True) -> TestClient:
+def make_client(tmp_path, monkeypatch, *, enabled: bool = True, export_enabled: bool = False) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "analytics-workspace-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "analytics-workspace-test-session-secret")
     monkeypatch.setenv("WEBAPP_ANALYTICS_WORKSPACE_ENABLED", "true" if enabled else "false")
+    monkeypatch.setenv("WEBAPP_ANALYTICS_WORKSPACE_EXPORT_ENABLED", "true" if export_enabled else "false")
     for name in ("APP_ENV", "ENVIRONMENT", "RAILWAY_ENVIRONMENT", "RAILWAY_VOLUME_MOUNT_PATH"):
         monkeypatch.delenv(name, raising=False)
     monkeypatch.delenv("CORE_BRIDGE_BASE_URL", raising=False)
@@ -100,6 +106,21 @@ def create_metric(client: TestClient, csrf: str, report: dict, key: str = "analy
     assert response.status_code == 200 and response.json()["ok"] is True
     data = response.json()["data"]
     return data["report"], data["metric"]
+
+
+def transition_report(client: TestClient, csrf: str, report: dict, state: str, key: str) -> dict:
+    response = client.post(
+        f"/api/v1/analytics-workspace/reports/{report['id']}/lifecycle",
+        headers={"X-CSRF-Token": csrf},
+        json={"state": state, "expected_revision": report["revision"], "idempotency_key": key},
+    )
+    assert response.status_code == 200 and response.json()["ok"] is True
+    return response.json()["data"]["report"]
+
+
+def finalize_report(client: TestClient, csrf: str, report: dict, *, prefix: str) -> dict:
+    reviewed = transition_report(client, csrf, report, "review", f"{prefix}-review-0001")
+    return transition_report(client, csrf, reviewed, "finalized", f"{prefix}-finalized-0001")
 
 
 def snapshot_payload(key: str, report_revision: int, **overrides) -> dict:
@@ -201,6 +222,212 @@ def test_analytics_workspace_is_owner_scoped_and_lifecycle_prevents_writes(tmp_p
         )
         assert denied.status_code == 200
         assert denied.json()["error_code"] == "WEB_ANALYTICS_REPORT_NOT_FOUND"
+
+
+def test_analytics_manual_csv_export_is_fail_closed_until_separately_enabled(tmp_path, monkeypatch):
+    """The attachment feature has its own default-off switch, after session + CSRF."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "analytics-csv-flag@example.com")
+        guarded = client.post(
+            "/api/v1/analytics-workspace/reports/00000000-0000-4000-8000-000000000001/export.csv",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": 1},
+        )
+        assert guarded.status_code == 503
+        assert "WEBAPP_ANALYTICS_WORKSPACE_EXPORT_ENABLED" in guarded.text
+        assert "Content-Disposition" not in guarded.headers
+
+
+def test_analytics_manual_csv_export_requires_finalized_owner_current_revision_and_csrf(tmp_path, monkeypatch):
+    """Only one signed owner can receive a complete, formula-safe CSV attachment."""
+    db_path = tmp_path / "analytics-workspace-test.db"
+    with make_client(tmp_path, monkeypatch, export_enabled=True) as client:
+        csrf = login(client, "analytics-csv-owner@example.com")
+        report_title = "Báo cáo chỉ số tăng trưởng tháng bảy"
+        report = create_report(
+            client,
+            csrf,
+            "analytics-csv-report-create-0001",
+            summary_note="-Ghi chú nội bộ bắt đầu bằng dấu trừ phải không thành công thức bảng tính.",
+        )
+        report, metric = create_metric(client, csrf, report, "analytics-csv-metric-create-0001")
+        snapshot = client.post(
+            f"/api/v1/analytics-workspace/reports/{report['id']}/metrics/{metric['id']}/snapshots",
+            headers={"X-CSRF-Token": csrf},
+            json=snapshot_payload(
+                "analytics-csv-snapshot-create-0001",
+                report["revision"],
+                note="=SUM(1,1)",
+            ),
+        )
+        assert snapshot.status_code == 200 and snapshot.json()["ok"] is True
+        finding = client.post(
+            f"/api/v1/analytics-workspace/reports/{report['id']}/findings",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "kind": "finding", "body": "@SUM(1,1)",
+                "expected_report_revision": report["revision"], "idempotency_key": "analytics-csv-finding-create-0001",
+            },
+        )
+        assert finding.status_code == 200 and finding.json()["ok"] is True
+        endpoint = f"/api/v1/analytics-workspace/reports/{report['id']}/export.csv"
+
+        missing_csrf = client.post(endpoint, json={"expected_revision": report["revision"]})
+        assert missing_csrf.status_code == 403
+        before_finalized = client.post(endpoint, headers={"X-CSRF-Token": csrf}, json={"expected_revision": report["revision"]})
+        assert before_finalized.status_code == 409
+        assert before_finalized.json()["error_code"] == "WEB_ANALYTICS_MANUAL_CSV_FINALIZED_REQUIRED"
+        assert before_finalized.headers["Cache-Control"] == "no-store, private"
+
+        finalized = finalize_report(client, csrf, report, prefix="analytics-csv-report")
+        assert finalized["state"] == "finalized"
+        stale = client.post(
+            endpoint,
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": finalized["revision"] - 1},
+        )
+        assert stale.status_code == 409
+        assert stale.json()["error_code"] == "WEB_ANALYTICS_REVISION_CONFLICT"
+
+        exported = client.post(
+            endpoint,
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": finalized["revision"]},
+        )
+        assert exported.status_code == 200
+        assert exported.headers["Content-Type"].startswith("text/csv")
+        assert exported.headers["Content-Disposition"] == 'attachment; filename="toan-aas-manual-analytics.csv"'
+        assert exported.headers["Content-Length"] == str(len(exported.content))
+        assert exported.headers["Cache-Control"] == "no-store, private"
+        assert exported.headers["X-Content-Type-Options"] == "nosniff"
+        assert exported.headers["Referrer-Policy"] == "no-referrer"
+        assert exported.headers["Content-Security-Policy"] == "sandbox"
+        assert exported.headers["Cross-Origin-Resource-Policy"] == "same-origin"
+        assert exported.content.startswith(b"\xef\xbb\xbf")
+        csv_text = exported.content.decode("utf-8-sig")
+        rows = list(csv.DictReader(io.StringIO(csv_text, newline="")))
+        assert {row["record_type"] for row in rows} == {"report", "metric", "snapshot", "finding"}
+        assert any(row["summary_note"] == "'-Ghi chú nội bộ bắt đầu bằng dấu trừ phải không thành công thức bảng tính." for row in rows)
+        assert any(row["snapshot_note"] == "'=SUM(1,1)" for row in rows)
+        assert any(row["finding_body"] == "'@SUM(1,1)" for row in rows)
+        assert report["id"] not in csv_text
+        assert "analytics-csv-owner@example.com" not in csv_text
+
+        second_csrf = login(client, "analytics-csv-other@example.com")
+        foreign = client.post(
+            endpoint,
+            headers={"X-CSRF-Token": second_csrf},
+            json={"expected_revision": finalized["revision"]},
+        )
+        assert foreign.status_code == 404
+        assert foreign.json()["error_code"] == "WEB_ANALYTICS_REPORT_NOT_FOUND"
+        assert report_title not in foreign.text
+
+    with sqlite3.connect(db_path) as conn:
+        audit = conn.execute(
+            "SELECT target, detail FROM web_audit_events WHERE action='analytics_report_manual_csv_exported'"
+        ).fetchone()
+    assert audit is not None
+    assert audit[0] == report["id"]
+    assert f"revision={finalized['revision']}" in audit[1]
+    assert report_title not in audit[1]
+    assert "=SUM(1,1)" not in audit[1]
+
+
+def test_analytics_manual_csv_export_refuses_oversized_complete_attachment_without_partial_file(tmp_path, monkeypatch):
+    """A hard cap must fail atomically: no attachment and no export audit record."""
+    db_path = tmp_path / "analytics-workspace-test.db"
+    with make_client(tmp_path, monkeypatch, export_enabled=True) as client:
+        csrf = login(client, "analytics-csv-limit@example.com")
+        report = create_report(client, csrf, "analytics-csv-limit-report-create-0001")
+        finalized = finalize_report(client, csrf, report, prefix="analytics-csv-limit-report")
+        workspace = importlib.import_module("copyfast_analytics_workspace")
+        monkeypatch.setattr(workspace, "MAX_MANUAL_CSV_EXPORT_BYTES", 1)
+        refused = client.post(
+            f"/api/v1/analytics-workspace/reports/{report['id']}/export.csv",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": finalized["revision"]},
+        )
+        assert refused.status_code == 413
+        assert refused.json()["ok"] is False
+        assert refused.json()["error_code"] == "WEB_ANALYTICS_MANUAL_CSV_EXPORT_LIMIT"
+        assert refused.headers["Cache-Control"] == "no-store, private"
+        assert "Content-Disposition" not in refused.headers
+        assert b"toan-aas-manual-analytics.csv" not in refused.content
+
+    with sqlite3.connect(db_path) as conn:
+        count = conn.execute(
+            "SELECT COUNT(*) FROM web_audit_events WHERE action='analytics_report_manual_csv_exported'"
+        ).fetchone()[0]
+    assert count == 0
+
+
+def test_analytics_manual_csv_export_fails_closed_when_audit_recheck_is_write_locked(tmp_path, monkeypatch):
+    """A concurrent SQLite writer must not delay or release an unaudited CSV."""
+    with make_client(tmp_path, monkeypatch, export_enabled=True) as client:
+        csrf = login(client, "analytics-csv-lock@example.com")
+        report = create_report(client, csrf, "analytics-csv-lock-report-create-0001")
+        finalized = finalize_report(client, csrf, report, prefix="analytics-csv-lock-report")
+        workspace = importlib.import_module("copyfast_analytics_workspace")
+
+        @contextmanager
+        def locked_audit_transaction(*, timeout_seconds):
+            assert timeout_seconds <= 0.25
+            raise sqlite3.OperationalError("database is locked")
+            yield None  # pragma: no cover - required to make this a generator context manager
+
+        monkeypatch.setattr(workspace, "best_effort_transaction", locked_audit_transaction)
+        refused = client.post(
+            f"/api/v1/analytics-workspace/reports/{report['id']}/export.csv",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": finalized["revision"]},
+        )
+        assert refused.status_code == 503
+        assert refused.json()["error_code"] == "WEB_ANALYTICS_MANUAL_CSV_RETRY_LATER"
+        assert "Content-Disposition" not in refused.headers
+        assert refused.headers["Cache-Control"] == "no-store, private"
+        assert refused.headers["Referrer-Policy"] == "no-referrer"
+        assert refused.headers["Content-Security-Policy"] == "sandbox"
+        assert refused.headers["Cross-Origin-Resource-Policy"] == "same-origin"
+
+
+def test_analytics_report_library_paginates_owner_scoped_metadata_only(tmp_path, monkeypatch):
+    """The report library must page deterministically without widening its boundary."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "analytics-pagination@example.com")
+        created = [
+            create_report(client, csrf, f"analytics-pagination-report-{index:04d}", title=f"Báo cáo phân trang {index}")
+            for index in range(1, 4)
+        ]
+        owned_ids = {item["id"] for item in created}
+
+        first = client.get("/api/v1/analytics-workspace/reports", params={"state": "all", "limit": 1, "offset": 0})
+        second = client.get("/api/v1/analytics-workspace/reports", params={"state": "all", "limit": 1, "offset": 1})
+        last = client.get("/api/v1/analytics-workspace/reports", params={"state": "all", "limit": 1, "offset": 10_000})
+        for response in (first, second, last):
+            assert response.status_code == 200 and response.json()["ok"] is True
+            assert_manual_only(response.json()["data"])
+
+        first_data = first.json()["data"]
+        second_data = second.json()["data"]
+        last_data = last.json()["data"]
+        assert first_data["filter"] == {"state": "all", "q": ""}
+        assert first_data["pagination"] == {
+            "total": 3, "limit": 1, "offset": 0, "returned": 1,
+            "has_more": True, "next_offset": 1, "previous_offset": None,
+        }
+        assert second_data["pagination"]["offset"] == 1
+        assert second_data["pagination"]["previous_offset"] == 0
+        assert second_data["pagination"]["has_more"] is True
+        assert last_data["pagination"]["offset"] == 2
+        assert last_data["pagination"]["has_more"] is False
+        assert last_data["pagination"]["next_offset"] is None
+        listed_ids = {
+            first_data["items"][0]["id"],
+            second_data["items"][0]["id"],
+            last_data["items"][0]["id"],
+        }
+        assert listed_ids == owned_ids
 
 
 def test_analytics_workspace_rejects_sensitive_transport_values_and_invalid_decimal(tmp_path, monkeypatch):

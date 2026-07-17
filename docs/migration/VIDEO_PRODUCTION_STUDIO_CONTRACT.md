@@ -37,6 +37,14 @@ provider ID, Telegram file ID, job, Xu, PayOS hay trạng thái thanh toán.
   input không an toàn bị chặn trước persistence.
 - Archive plan khóa toàn bộ scene mutation/reorder/estimate ở server. Archive
   scene khóa các thao tác con tương ứng. Version/event history là immutable.
+- Sau mỗi Portal remount, browser chỉ giữ projection đã allow-list của signed
+  read: summary count, plan/scene authoring bounded, revision, event label,
+  Project reference và runtime arithmetic. Projection phải giữ archive ordinal
+  riêng của scene history (kể cả history legacy trước lần server repair kế
+  tiếp), đồng thời loại account ID, boundary payload, storage key,
+  media/provider URL, output, delivery, job và action/destination do server
+  trả về. Estimate chỉ được hiển thị khi plan ID và phép trừ thời lượng đã
+  được kiểm tra lại.
 - PWA chỉ cache public shell; route/API Video Studio và mọi data private không
   nằm trong manifest cache.
 
@@ -52,6 +60,20 @@ wallet, PayOS, worker hay Telegram. Không có player, preview URL, download,
 completed status hay video output giả. Một engine/delivery integration tương
 lai phải được xây thành contract riêng có authentication, ownership, policy,
 quote/charge, output validation và review độc lập.
+
+## Điều hướng Studio
+
+Sidebar nhóm các route Video Studio theo quyết định tiếp theo của người dùng:
+
+1. **Video Studio** — kế hoạch sản xuất và điểm bắt đầu workflow.
+2. **Ý tưởng & kịch bản** — idea, story, prompt và cinematic concept.
+3. **Phim & storyboard** — Script-to-Screen/Phim dài tập, long-form,
+   self-shot và storyboard.
+4. **Tư liệu & chuyển động** — image-motion và reference-format.
+
+Đây chỉ là cấu trúc điều hướng có progressive disclosure. URL, signed
+session/CSRF, owner check, capability và execution boundary của từng route
+không thay đổi; menu không cấp render, provider, job, payment hay delivery.
 
 ## Kiểm thử trọng yếu
 

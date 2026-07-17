@@ -219,8 +219,14 @@ def test_memory_reminders_keep_explicit_lifecycle_without_delivery_claims(tmp_pa
             json={"expected_revision": 4, "idempotency_key": "memory-reminder-cancel-0001"},
         )
         assert cancelled.json()["data"]["reminder"]["state"] == "cancelled"
-        listing = client.get("/api/v1/memory/reminders?state=all")
-        assert listing.json()["data"]["notification_delivery"] == "web_view_only"
+        listing = client.get("/api/v1/memory/reminders?state=all&limit=1")
+        listing_data = listing.json()["data"]
+        assert listing_data["notification_delivery"] == "web_view_only"
+        assert listing_data["filters"] == {"state": "all"}
+        assert listing_data["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+        assert listing_data["has_more"] is True and listing_data["next_offset"] == 1
+        second_page = client.get("/api/v1/memory/reminders?state=all&limit=1&offset=1")
+        assert second_page.json()["data"]["items"][0]["id"] != listing_data["items"][0]["id"]
         assert client.get("/api/v1/memory/summary").json()["data"]["notification_delivery"] == "web_view_only"
         assert client.post(
             "/api/v1/memory/reminders",
@@ -267,7 +273,11 @@ def test_memory_rejects_sensitive_content_and_keeps_audit_sanitized(tmp_path, mo
         source = open("copyfast_memory.py", encoding="utf-8").read().lower()
         assert "copyfast_bridge" not in source
         assert "payos" not in source
-        assert "wallet" not in source
+        # A public result may truthfully expose ``wallet_mutated: false`` as
+        # a boundary fact. What matters here is that Memory Center has no
+        # wallet runtime/client dependency or call path.
+        assert "copyfast_wallet" not in source
+        assert "wallet_client" not in source
         assert "telegram_send" not in source
         # The module may describe its no-provider policy in prose, but it must
         # not import or invoke a provider integration.
@@ -275,6 +285,49 @@ def test_memory_rejects_sensitive_content_and_keeps_audit_sanitized(tmp_path, mo
         assert "import httpx" not in source
         assert "provider_request" not in source
         assert note["id"]
+
+
+def test_memory_note_pagination_remains_filtered_and_owner_scoped(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "memory-pagination@example.com")
+        for index, title in enumerate(("Library alpha", "Library beta", "Library gamma"), start=1):
+            response = client.post(
+                "/api/v1/memory/notes",
+                headers={"X-CSRF-Token": csrf},
+                json=note_payload(
+                    f"memory-page-create-{index:04d}",
+                    title=title,
+                    content="Metadata riêng cho kiểm thử phân trang.",
+                    category="Library",
+                    priority="normal",
+                ),
+            )
+            assert response.status_code == 200
+
+        first = client.get(
+            "/api/v1/memory/notes",
+            params={"state": "all", "q": "Library", "category": "Library", "limit": 1},
+        )
+        assert first.status_code == 200 and first.json()["ok"] is True
+        first_data = first.json()["data"]
+        assert first_data["filters"] == {"state": "all", "q": "Library", "priority": "", "category": "Library"}
+        assert first_data["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+        assert first_data["has_more"] is True and first_data["next_offset"] == 1
+        assert "content" not in first_data["items"][0]
+
+        second = client.get(
+            "/api/v1/memory/notes",
+            params={"state": "all", "q": "Library", "category": "Library", "limit": 1, "offset": first_data["next_offset"]},
+        )
+        second_data = second.json()["data"]
+        assert second.status_code == 200
+        assert second_data["items"][0]["id"] != first_data["items"][0]["id"]
+        assert second_data["pagination"] == {"limit": 1, "offset": 1, "returned": 1}
+
+        register_and_login(client, "memory-pagination-other@example.com")
+        isolated = client.get("/api/v1/memory/notes", params={"state": "all", "q": "Library", "limit": 100})
+        assert isolated.status_code == 200
+        assert isolated.json()["data"]["items"] == []
 
 
 def test_memory_search_filters_and_reminder_update_are_owner_scoped(tmp_path, monkeypatch):
@@ -325,13 +378,33 @@ def test_memory_search_filters_and_reminder_update_are_owner_scoped(tmp_path, mo
             json={"expected_revision": 1, "idempotency_key": "memory-filter-archive-0001"},
         )
         assert archived.status_code == 200
-        blocked = client.post(
+        retained = client.post(
             f"/api/v1/memory/reminders/{reminder['id']}/update",
             headers={"X-CSRF-Token": csrf},
             json={
-                "note_id": second["id"], "title": "Không được cập nhật", "body": "", "due_at": future_local(150),
+                "note_id": second["id"], "title": "Giữ liên kết ghi chú đã archive", "body": "", "due_at": future_local(150),
                 "timezone": "Asia/Ho_Chi_Minh", "repeat_rule": "daily", "expected_revision": 2,
-                "idempotency_key": "memory-update-reminder-archived-0001",
+                "idempotency_key": "memory-update-reminder-archived-retained-0001",
+            },
+        )
+        assert retained.status_code == 200
+        assert retained.json()["data"]["reminder"]["note_id"] == second["id"]
+
+        other_reminder = client.post(
+            "/api/v1/memory/reminders",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "note_id": first["id"], "title": "Không đổi sang ghi chú archive", "body": "", "due_at": future_local(180),
+                "timezone": "Asia/Ho_Chi_Minh", "repeat_rule": "none", "idempotency_key": "memory-update-reminder-other-0001",
+            },
+        ).json()["data"]["reminder"]
+        blocked = client.post(
+            f"/api/v1/memory/reminders/{other_reminder['id']}/update",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "note_id": second["id"], "title": "Không được đổi sang ghi chú archive", "body": "", "due_at": future_local(210),
+                "timezone": "Asia/Ho_Chi_Minh", "repeat_rule": "none", "expected_revision": 1,
+                "idempotency_key": "memory-update-reminder-archived-blocked-0001",
             },
         )
         assert blocked.json()["error_code"] == "WEB_MEMORY_NOTE_NOT_FOUND"

@@ -15,6 +15,7 @@ import re
 import time
 import uuid
 from typing import Any
+from urllib.parse import urlsplit
 
 import anyio
 import httpx
@@ -30,6 +31,7 @@ _SENSITIVE_KEY_PARTS = frozenset({
     "outputpath", "filesystempath", "providertask", "rawresponse", "privatekey",
     "password", "cookie", "telegramfileid",
 })
+_REQUIRED_BRIDGE_TRUE_VALUES = frozenset({"1", "true", "yes", "on"})
 
 
 def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: str = "completed", error_code: str | None = None) -> dict:
@@ -48,8 +50,58 @@ def _hmac_secret() -> str:
     return os.environ.get("CORE_BRIDGE_HMAC_SECRET", "").strip()
 
 
+def _valid_base_url(value: str) -> bool:
+    """Accept only a root HTTPS origin for the server-to-server bridge.
+
+    The bridge signs requests with its bearer credential, so accepting a
+    loosely shaped URL here could send that credential to an unintended
+    location.  Keep the contract deliberately small: the canonical bridge is
+    a secure origin and the request path is supplied separately below.
+    """
+    if not value or any(character.isspace() for character in value):
+        return False
+    try:
+        parsed = urlsplit(value)
+        # Accessing ``port`` validates malformed port strings too.
+        _ = parsed.port
+    except ValueError:
+        return False
+    return bool(
+        parsed.scheme.lower() == "https"
+        and parsed.hostname
+        and not parsed.username
+        and not parsed.password
+        and parsed.path in {"", "/"}
+        and not parsed.query
+        and not parsed.fragment
+    )
+
+
+def _configuration_error(base_url: str, token: str, hmac_secret: str) -> str | None:
+    if not base_url or not token or not hmac_secret:
+        return "CORE_BRIDGE_NOT_CONFIGURED"
+    if not _valid_base_url(base_url):
+        return "CORE_BRIDGE_INVALID_CONFIGURATION"
+    return None
+
+
 def bridge_configured() -> bool:
-    return bool(_base_url() and _token() and _hmac_secret())
+    return _configuration_error(_base_url(), _token(), _hmac_secret()) is None
+
+
+def core_bridge_required() -> bool:
+    """Whether this deployment explicitly opts into canonical bridge readiness."""
+    return os.environ.get("WEBAPP_REQUIRE_CORE_BRIDGE", "").strip().lower() in _REQUIRED_BRIDGE_TRUE_VALUES
+
+
+def ensure_core_bridge_readiness() -> None:
+    """Fail startup only for an explicit release-readiness opt-in.
+
+    Do not include a URL or credential-derived detail in this error: process
+    startup logs are often retained more broadly than application secrets.
+    """
+    if core_bridge_required() and not bridge_configured():
+        raise RuntimeError("WEBAPP_REQUIRE_CORE_BRIDGE requires a valid canonical Core Bridge configuration")
 
 
 def _safe_error_code(status_code: int) -> str:
@@ -73,7 +125,11 @@ class CoreBridgeClient:
 
     @property
     def configured(self) -> bool:
-        return bool(self.base_url and self.token and self.hmac_secret)
+        return self.configuration_error is None
+
+    @property
+    def configuration_error(self) -> str | None:
+        return _configuration_error(self.base_url, self.token, self.hmac_secret)
 
     def _headers(self, method: str, path: str, body: bytes, *, request_id: str, actor_id: str = "") -> dict[str, str]:
         timestamp = str(int(time.time()))
@@ -94,8 +150,9 @@ class CoreBridgeClient:
         return headers
 
     async def request(self, method: str, path: str, *, payload: dict | None = None, params: dict | None = None, request_id: str | None = None, actor_id: str = "") -> dict:
-        if not self.configured:
-            return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code="CORE_BRIDGE_NOT_CONFIGURED")
+        configuration_error = self.configuration_error
+        if configuration_error:
+            return envelope(False, PUBLIC_GUARD, status_name="guarded", error_code=configuration_error)
         normalized_path = "/" + path.lstrip("/")
         # ``request_id`` is a public Web correlation value.  The bot treats
         # X-TOAN-AAS-Request-ID as an HMAC nonce, so reusing a browser-supplied
@@ -129,7 +186,11 @@ class CoreBridgeClient:
                 )
                 async with httpx.AsyncClient(base_url=self.base_url, timeout=httpx.Timeout(12.0, connect=4.0), transport=self.transport) as client:
                     response = await client.request(method.upper(), normalized_path, content=body or None, params=params, headers=headers)
-            except (httpx.ConnectError, httpx.TimeoutException, httpx.NetworkError):
+            except (httpx.HTTPError, httpx.InvalidURL, ValueError):
+                # Invalid URLs and client/request construction errors must
+                # stay on the same public guard as connectivity failures.  In
+                # particular, never interpolate a URL, request, or exception:
+                # either may contain the configured bridge credential.
                 if attempt + 1 < attempts:
                     await anyio.sleep(0.05)
                     continue

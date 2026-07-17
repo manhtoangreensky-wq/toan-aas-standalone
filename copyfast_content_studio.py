@@ -23,7 +23,14 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import content_studio_enabled, ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_db import (
+    content_studio_enabled,
+    ensure_copyfast_schema,
+    memory_center_enabled,
+    read_transaction,
+    transaction,
+    utc_now,
+)
 
 
 router = APIRouter(prefix="/api/v1/content-studio", tags=["Web Creative Content Studio"])
@@ -33,6 +40,47 @@ CONTENT_KINDS = frozenset({"caption_hashtag", "content_ideas", "hook_script", "c
 VARIANT_KINDS = frozenset({"caption", "hashtag_set", "hook", "script", "storyboard", "content_pack", "content_ideas", "custom"})
 VARIANT_STATES = frozenset({"active", "archived"})
 SOURCE_KINDS = frozenset({"manual", "local_deterministic_draft_only"})
+PROMPT_PACK_KINDS = frozenset({"meta_ai_prompt", "caption_hashtag", "content_ideas", "hook_script", "image_video_prompt"})
+CONTEXTUAL_AD_PROMPT_GOALS = {
+    "sell": "bán hàng",
+    "engage": "tăng tương tác",
+    "brand": "giới thiệu thương hiệu",
+    "story": "kể chuyện",
+}
+CONTEXTUAL_AD_PROMPT_PLATFORMS = {
+    "facebook": "Facebook",
+    "reels": "Instagram/Reels",
+    "tiktok": "TikTok",
+    "shorts": "YouTube Shorts",
+}
+CONTEXTUAL_AD_PROMPT_RATIOS = frozenset({"9:16", "16:9", "1:1", "4:5"})
+CONTEXTUAL_AD_PROMPT_STYLES = {
+    "real": "chân thật",
+    "cinematic": "cinematic",
+    "fun": "vui nhộn",
+    "luxury": "sang trọng",
+    "ugc": "UGC đời thường",
+}
+# Preserve the frozen Bot helper's ordered industry inference as a local,
+# transparent text hint.  This is not market research, audience enrichment or
+# a profile lookup: it only checks the topic submitted in this request.
+CONTEXTUAL_AD_PROMPT_INDUSTRIES = (
+    ("beauty_fragrance", ("nước hoa", "nuoc hoa", "fragrance"), "Làm đẹp / nước hoa", "nam và nữ 18-35 quan tâm phong cách cá nhân"),
+    ("spa_beauty", ("spa", "thẩm mỹ", "tham my"), "Spa / thẩm mỹ", "khách địa phương muốn cải thiện ngoại hình"),
+    ("food_cafe", ("cafe", "cà phê", "quan an", "đồ ăn"), "Đồ ăn / quán cafe", "người trẻ thích trải nghiệm địa điểm mới"),
+    ("real_estate", ("bất động sản", "nội thất", "can ho"), "Bất động sản / nội thất", "người đang tìm không gian sống hoặc đầu tư"),
+    ("education", ("khóa học", "khoa hoc", "giáo dục"), "Giáo dục / kỹ năng", "người mới muốn học nhanh và áp dụng thực tế"),
+    ("software_saas", ("phần mềm", "saas", "app ai", "công cụ ai"), "Phần mềm / SaaS", "creator, shop nhỏ và người làm nội dung"),
+    ("fashion", ("thời trang", "quần áo", "túi", "giày"), "Thời trang", "người mua online quan tâm phong cách và độ phù hợp"),
+    ("affiliate", ("affiliate", "tiếp thị liên kết"), "Affiliate", "người mới tìm công cụ và cách làm thực tế"),
+    ("fitness", ("fitness", "gym", "thể thao"), "Fitness", "người muốn cải thiện sức khỏe và vóc dáng"),
+    ("family_pet", ("mẹ và bé", "thú cưng", "pet"), "Gia đình / thú cưng", "gia đình trẻ và người nuôi thú cưng"),
+)
+CONTEXTUAL_AD_PROMPT_DEFAULT_INDUSTRY = (
+    "shop_online",
+    "Shop online / dịch vụ",
+    "khách hàng 18-35 trên TikTok, Facebook và Instagram",
+)
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UNSAFE_CONTROL_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
 SECRET_ASSIGNMENT_PATTERN = re.compile(
@@ -104,6 +152,17 @@ MAX_VARIANT_TEXT = 20_000
 MAX_VARIANT_NOTE = 2_000
 MAX_TAGS = 20
 MAX_TAG_LENGTH = 48
+MAX_PROMPT_PACK_TOPIC = 180
+MAX_PROMPT_PACK_SECTIONS = 6
+MAX_PROMPT_PACK_ITEMS = 6
+MAX_PROMPT_PACK_ITEM_CHARS = 3_200
+# A server-composed Prompt Pack note intentionally uses the same bounded Web
+# storage envelope as Memory Center.  The value lives here rather than being
+# imported from a private Memory implementation, so this route cannot create a
+# runtime dependency on a different router.
+MAX_MEMORY_NOTE_TITLE = 160
+MAX_MEMORY_NOTE_CONTENT = 12_000
+MAX_MEMORY_NOTES_PER_ACCOUNT = 1_000
 IDEMPOTENCY_RETENTION = timedelta(hours=24)
 MAX_IDEMPOTENCY_RECORDS_PER_ACCOUNT = 1_024
 
@@ -113,6 +172,21 @@ def _require_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Creative Content Studio đang tạm dừng để bảo trì. WEBAPP_CONTENT_STUDIO_ENABLED chưa được bật.",
+        )
+
+
+def _require_memory_handoff_enabled() -> None:
+    """Keep an explicit handoff unavailable when Memory Center is disabled.
+
+    Content Prompt Pack creation remains a request-only tool.  The separate
+    durable save action is a Web-owned Memory Center feature, so it must not
+    silently bypass that feature's operational switch.
+    """
+
+    if not memory_center_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Memory Center đang tạm dừng để bảo trì. WEBAPP_MEMORY_CENTER_ENABLED chưa được bật.",
         )
 
 
@@ -258,7 +332,41 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
     ids = source.get("variant_ids")
     if isinstance(ids, list):
         data["variant_ids"] = [str(item) for item in ids if isinstance(item, str)][:3]
-    for field in ("history_snapshot_recorded", "variant_count", "execution", "provider_called", "charge_started"):
+    note = source.get("note")
+    if isinstance(note, dict) and isinstance(note.get("id"), str):
+        # A replay receipt must never contain a title, excerpt, tag or body
+        # derived from the account's prompt.  The owner can open Memory Center
+        # to read that private material after the explicit write succeeds.
+        data["note"] = {
+            "id": note["id"],
+            "revision": int(note.get("revision") or 0),
+            "state": str(note.get("state") or ""),
+            "category": str(note.get("category") or ""),
+            "priority": str(note.get("priority") or ""),
+        }
+    for field in (
+        "destination",
+        "history_snapshot_recorded",
+        "variant_count",
+        "execution",
+        "provider_called",
+        "charge_started",
+        "draft_recomputed_on_server",
+        "web_note_persisted",
+        "browser_result_persisted",
+        "pending_bot_save_created",
+        "telegram_state_changed",
+        "bot_called",
+        "bridge_called",
+        "job_created",
+        "wallet_mutated",
+        "payment_started",
+        "asset_saved",
+        "publish_action_created",
+        "delivery_created",
+        "fact_checked",
+        "rights_verified",
+    ):
         if field in source:
             data[field] = source[field]
     return envelope(True, str(response.get("message") or "Đã lưu thao tác Content Studio."), data=data, status_name=str(response.get("status") or "draft"))
@@ -770,6 +878,337 @@ class SelectVariantRequest(RevisionMutationRequest):
     @classmethod
     def validate_variant_id(cls, value: str) -> str:
         return _uuid(value, label="Content piece ID")
+
+
+class ContentPromptPackRequest(BaseModel):
+    """Small, stateless request for the deterministic Content Prompt Pack.
+
+    The tool intentionally accepts only a short topic and a bounded local
+    variant selector.  It has no project, asset, URL, file, provider, Bot,
+    wallet, payment, job, publish or delivery field, and never persists the
+    request.  A user may later create/review a Content Studio brief explicitly
+    if they want to retain editable material.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    kind: str
+    topic: str
+    variant_seed: int = Field(default=0, ge=0, le=1_000_000)
+
+    @field_validator("kind")
+    @classmethod
+    def validate_kind(cls, value: str) -> str:
+        normalized = _single_line(value, label="Loại Prompt Pack", minimum=1, maximum=32).lower()
+        if normalized not in PROMPT_PACK_KINDS:
+            raise ValueError("Loại Content Prompt Pack không hợp lệ")
+        return normalized
+
+    @field_validator("topic")
+    @classmethod
+    def validate_topic(cls, value: str) -> str:
+        return _single_line(value, label="Chủ đề", minimum=2, maximum=MAX_PROMPT_PACK_TOPIC)
+
+
+class ContentPromptPackMemorySaveRequest(ContentPromptPackRequest):
+    """An explicit save handoff for a reviewed Prompt Pack selection.
+
+    The browser provides only the bounded ingredients needed to re-run the
+    deterministic template.  It cannot submit an arbitrary result/body, pick
+    another account, or ask the endpoint to act on a Bot pending record.
+    """
+
+    destination: str
+    idempotency_key: str
+
+    @field_validator("destination")
+    @classmethod
+    def validate_destination(cls, value: str) -> str:
+        if _single_line(value, label="Đích lưu", minimum=1, maximum=32).lower() != "memory_note":
+            raise ValueError("Content Prompt Pack hiện chỉ hỗ trợ lưu vào Memory Center")
+        return "memory_note"
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
+class ContentPromptPackSection(BaseModel):
+    """Bounded display-only section used by the stateless tool response."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    label: str
+    items: list[str] = Field(min_length=1, max_length=MAX_PROMPT_PACK_ITEMS)
+
+    @field_validator("label")
+    @classmethod
+    def validate_label(cls, value: str) -> str:
+        return _single_line(value, label="Nhãn kết quả", minimum=1, maximum=120)
+
+    @field_validator("items")
+    @classmethod
+    def validate_items(cls, value: list[str]) -> list[str]:
+        if not isinstance(value, list) or not value:
+            raise ValueError("Kết quả Content Prompt Pack cần có ít nhất một mục")
+        return [
+            _content(item, label="Nội dung kết quả", maximum=MAX_PROMPT_PACK_ITEM_CHARS)
+            for item in value
+        ]
+
+
+class ContentPromptPackResult(BaseModel):
+    """Strict internal schema so a template change cannot expand the API."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    kind: str
+    topic: str
+    sections: list[ContentPromptPackSection] = Field(min_length=1, max_length=MAX_PROMPT_PACK_SECTIONS)
+    verify_before_publish: list[str] = Field(min_length=1, max_length=6)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: str) -> str:
+        return _single_line(value, label="Tiêu đề kết quả", minimum=1, maximum=320)
+
+    @field_validator("kind")
+    @classmethod
+    def validate_result_kind(cls, value: str) -> str:
+        if value not in PROMPT_PACK_KINDS:
+            raise ValueError("Loại kết quả Content Prompt Pack không hợp lệ")
+        return value
+
+    @field_validator("topic")
+    @classmethod
+    def validate_result_topic(cls, value: str) -> str:
+        return _single_line(value, label="Chủ đề kết quả", minimum=2, maximum=MAX_PROMPT_PACK_TOPIC)
+
+    @field_validator("verify_before_publish")
+    @classmethod
+    def validate_verify_before_publish(cls, value: list[str]) -> list[str]:
+        if not isinstance(value, list) or not value:
+            raise ValueError("Kết quả cần ghi rõ yêu cầu kiểm tra trước khi xuất bản")
+        return [
+            _single_line(item, label="Ghi chú kiểm tra", minimum=2, maximum=260)
+            for item in value
+        ]
+
+
+def _publish_review_hashtags(value: Any) -> list[str]:
+    """Normalize a small hashtag set without accepting arbitrary copy data."""
+
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise ValueError("Hashtag phải là một danh sách")
+    if len(value) > 12:
+        raise ValueError("Tối đa 12 hashtag")
+    normalized: list[str] = []
+    seen: set[str] = set()
+    for item in value:
+        compact = re.sub(r"\s+", "", _single_line(item, label="Hashtag", minimum=2, maximum=48))
+        if not compact.startswith("#"):
+            compact = f"#{compact}"
+        if not re.fullmatch(r"#[A-Za-z0-9À-ỹ_]{2,48}", compact):
+            raise ValueError("Hashtag chỉ dùng chữ, số hoặc dấu gạch dưới")
+        fingerprint = compact.casefold()
+        if fingerprint not in seen:
+            seen.add(fingerprint)
+            normalized.append(compact)
+    return normalized
+
+
+class PublishReviewPackRequest(BaseModel):
+    """Explicit Web replacement for the Bot's last-result publish package.
+
+    Telegram assembled this from an in-memory pending result.  Web never
+    imports that state: the account deliberately supplies the review copy in
+    one signed request, and the tool returns only a non-persistent package for
+    human review.  It cannot contact a social account or publish anything.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    title: str
+    caption: str
+    hashtags: list[str] = Field(default_factory=list)
+    cta: str = ""
+    source_prompt: str = ""
+
+    @field_validator("title")
+    @classmethod
+    def validate_publish_review_title(cls, value: str) -> str:
+        return _single_line(value, label="Tiêu đề gói review", minimum=2, maximum=MAX_TITLE)
+
+    @field_validator("caption")
+    @classmethod
+    def validate_publish_review_caption(cls, value: str) -> str:
+        return _content(value, label="Caption", maximum=2_000)
+
+    @field_validator("hashtags")
+    @classmethod
+    def validate_publish_review_hashtags(cls, value: list[str]) -> list[str]:
+        return _publish_review_hashtags(value)
+
+    @field_validator("cta")
+    @classmethod
+    def validate_publish_review_cta(cls, value: str) -> str:
+        return _single_line(value, label="CTA", minimum=0, maximum=240, allow_empty=True)
+
+    @field_validator("source_prompt")
+    @classmethod
+    def validate_publish_review_source_prompt(cls, value: str) -> str:
+        return _content(value, label="Prompt nền", maximum=3_200, allow_empty=True)
+
+
+class PublishReviewPack(BaseModel):
+    """Strict, display-only package; it is not a social publishing receipt."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    caption: str
+    hashtags: list[str] = Field(max_length=12)
+    cta: str
+    source_prompt: str
+    review_checklist: list[str] = Field(min_length=4, max_length=6)
+    copy_instruction: str
+
+    @field_validator("title", "cta", "copy_instruction")
+    @classmethod
+    def validate_publish_review_line(cls, value: str) -> str:
+        return _single_line(value, label="Nội dung gói review", minimum=1, maximum=900)
+
+    @field_validator("caption", "source_prompt")
+    @classmethod
+    def validate_publish_review_content(cls, value: str) -> str:
+        return _content(value, label="Nội dung gói review", maximum=3_200, allow_empty=True)
+
+    @field_validator("hashtags")
+    @classmethod
+    def validate_publish_review_result_hashtags(cls, value: list[str]) -> list[str]:
+        return _publish_review_hashtags(value)
+
+    @field_validator("review_checklist")
+    @classmethod
+    def validate_publish_review_checklist(cls, value: list[str]) -> list[str]:
+        if not isinstance(value, list) or not value:
+            raise ValueError("Gói review cần checklist")
+        return [_single_line(item, label="Checklist review", minimum=2, maximum=280) for item in value]
+
+
+class ContextualAdPromptRequest(BaseModel):
+    """Strict Web adaptation of the Bot's contextual Meta prompt choices.
+
+    The Telegram conversation stored its intermediate values in a short-lived
+    pending record.  The Web equivalent accepts all five choices in one
+    signed, CSRF-protected request and intentionally persists none of them.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    topic: str
+    goal: str
+    platform: str
+    aspect_ratio: str
+    style: str
+
+    @field_validator("topic")
+    @classmethod
+    def validate_contextual_topic(cls, value: str) -> str:
+        return _single_line(value, label="Sản phẩm hoặc chủ đề", minimum=2, maximum=MAX_PROMPT_PACK_TOPIC)
+
+    @field_validator("goal")
+    @classmethod
+    def validate_contextual_goal(cls, value: str) -> str:
+        normalized = _single_line(value, label="Mục tiêu", minimum=2, maximum=24).lower()
+        if normalized not in CONTEXTUAL_AD_PROMPT_GOALS:
+            raise ValueError("Mục tiêu Contextual Ad Prompt không hợp lệ")
+        return normalized
+
+    @field_validator("platform")
+    @classmethod
+    def validate_contextual_platform(cls, value: str) -> str:
+        normalized = _single_line(value, label="Nền tảng", minimum=2, maximum=24).lower()
+        if normalized not in CONTEXTUAL_AD_PROMPT_PLATFORMS:
+            raise ValueError("Nền tảng Contextual Ad Prompt không hợp lệ")
+        return normalized
+
+    @field_validator("aspect_ratio")
+    @classmethod
+    def validate_contextual_ratio(cls, value: str) -> str:
+        normalized = _single_line(value, label="Tỷ lệ khung hình", minimum=3, maximum=8)
+        if normalized not in CONTEXTUAL_AD_PROMPT_RATIOS:
+            raise ValueError("Tỷ lệ Contextual Ad Prompt không hợp lệ")
+        return normalized
+
+    @field_validator("style")
+    @classmethod
+    def validate_contextual_style(cls, value: str) -> str:
+        normalized = _single_line(value, label="Phong cách", minimum=3, maximum=24).lower()
+        if normalized not in CONTEXTUAL_AD_PROMPT_STYLES:
+            raise ValueError("Phong cách Contextual Ad Prompt không hợp lệ")
+        return normalized
+
+
+class ContextualAdPromptPlan(BaseModel):
+    """Bounded response for a prompt-only ad direction, never a media result."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: str
+    topic: str
+    industry_id: str
+    industry: str
+    audience: str
+    goal: str
+    platform: str
+    aspect_ratio: str
+    style: str
+    duration_seconds: int = Field(ge=5, le=60)
+    primary_prompt: str
+    variants: list[str] = Field(min_length=3, max_length=3)
+    caption: str
+    hashtags: list[str] = Field(min_length=3, max_length=6)
+    cta: str
+    shot_list: list[str] = Field(min_length=3, max_length=4)
+    negative_prompt: str
+    music_sfx: str
+    copy_instruction: str
+    review_before_use: list[str] = Field(min_length=3, max_length=5)
+
+    @field_validator("title", "topic", "industry_id", "industry", "audience", "goal", "platform", "aspect_ratio", "style", "caption", "cta", "negative_prompt", "music_sfx", "copy_instruction")
+    @classmethod
+    def validate_contextual_line(cls, value: str) -> str:
+        return _single_line(value, label="Nội dung Contextual Ad Prompt", minimum=1, maximum=900)
+
+    @field_validator("primary_prompt")
+    @classmethod
+    def validate_contextual_primary_prompt(cls, value: str) -> str:
+        return _content(value, label="Prompt chính", maximum=3_200)
+
+    @field_validator("variants")
+    @classmethod
+    def validate_contextual_variants(cls, value: list[str]) -> list[str]:
+        return [_content(item, label="Biến thể prompt", maximum=3_200) for item in value]
+
+    @field_validator("hashtags")
+    @classmethod
+    def validate_contextual_hashtags(cls, value: list[str]) -> list[str]:
+        return [_single_line(item, label="Hashtag", minimum=2, maximum=64) for item in value]
+
+    @field_validator("shot_list")
+    @classmethod
+    def validate_contextual_shot_list(cls, value: list[str]) -> list[str]:
+        return [_single_line(item, label="Shot list", minimum=2, maximum=420) for item in value]
+
+    @field_validator("review_before_use")
+    @classmethod
+    def validate_contextual_review(cls, value: list[str]) -> list[str]:
+        return [_single_line(item, label="Rà soát", minimum=2, maximum=260) for item in value]
 
 
 def _payload_references(payload: BriefPayload) -> dict[str, str | None]:
@@ -1535,6 +1974,621 @@ def _compose_scaffolds(row: tuple[Any, ...]) -> list[dict[str, Any]]:
     ]
 
 
+def _content_prompt_pack(payload: ContentPromptPackRequest) -> dict[str, Any]:
+    """Adapt four pure Bot-era text recipes into a Web-native draft tool.
+
+    The source routines were deterministic string templates.  This adaptation
+    keeps their useful planning structure but removes Bot-specific wording,
+    provider affiliation, credit/payment language, hard-coded brand tags and
+    inbox calls-to-action.  The return shape is deliberately unified so the
+    browser cannot mistake a prompt draft for an executed model result.
+    """
+
+    topic = payload.topic
+    kind = payload.kind
+    seed = int(payload.variant_seed)
+    verification = [
+        "Biên tập và kiểm tra tính chính xác của mọi claim, số liệu và so sánh trước khi xuất bản.",
+        "Xác nhận quyền sử dụng thương hiệu, hình ảnh, âm thanh và các tài sản liên quan trước khi dùng bên ngoài.",
+        "Bản nháp không xác minh chất lượng, hiệu quả, xu hướng, quyền sở hữu hoặc kết quả tạo media.",
+    ]
+
+    if kind == "meta_ai_prompt":
+        styles = (
+            ("lịch lãm, cuốn hút và phù hợp nội dung ngắn", "chuyên gia marketing", "cinematic"),
+            ("chân thật, gần gũi và ưu tiên góc nhìn người dùng", "content strategist", "UGC đời thường"),
+            ("sang trọng, rõ lợi ích và CTA nhẹ", "creative director", "premium brand"),
+        )
+        style_short, expert, ad_style = styles[seed % len(styles)]
+        result = {
+            "title": f"Prompt content cho: {topic}",
+            "kind": kind,
+            "topic": topic,
+            "sections": [
+                {"label": "Prompt ngắn", "items": [
+                    f"Hãy gợi ý ý tưởng nội dung cho {topic}, phong cách {style_short}, có hook ngắn và phù hợp cho kênh mạng xã hội đã chọn."
+                ]},
+                {"label": "Prompt chi tiết", "items": [
+                    f"Hãy đóng vai {expert}. Tôi đang xây nội dung cho {topic}. Tạo 5 góc triển khai gồm hook, insight cần kiểm chứng, kịch bản ngắn, CTA và hướng hình ảnh."
+                ]},
+                {"label": "Prompt concept", "items": [
+                    f"Hãy phác thảo concept {ad_style} cho {topic}: hook 3 giây đầu, cảm xúc chính, bối cảnh, chuyển động máy quay, CTA và gợi ý caption/hashtag. Đánh dấu rõ các chi tiết cần người dùng xác minh."
+                ]},
+            ],
+            "verify_before_publish": verification,
+        }
+    elif kind == "caption_hashtag":
+        openings = (
+            ("Đừng chọn vội khi bạn chưa biết điều này.", "Một thay đổi nhỏ có thể làm trải nghiệm rõ ràng hơn."),
+            ("Một lựa chọn nhỏ, cảm giác khác hẳn.", "Khi mọi thứ gọn hơn và dễ dùng hơn, trải nghiệm cũng thay đổi."),
+            ("Có những thứ nhìn đơn giản nhưng dùng rồi mới thấy khác.", "Điểm đáng chú ý thường nằm ở chi tiết phù hợp nhu cầu hằng ngày."),
+        )
+        hook_a, hook_b = openings[seed % len(openings)]
+        shared_tags = "#ContentMarketing #SocialContent #CreatorTips #BrandStory"
+        result = {
+            "title": f"Caption & hashtag cho: {topic}",
+            "kind": kind,
+            "topic": topic,
+            "sections": [
+                {"label": "Caption ngắn", "items": [
+                    f"Hook: {hook_a}\n\nNội dung: {topic} có thể được giới thiệu bằng một thông điệp rõ ràng, dễ hiểu và đúng bối cảnh người xem.\n\nCTA: Khám phá thêm thông tin phù hợp trước khi quyết định.\n\nHashtag: {shared_tags}"
+                ]},
+                {"label": "Caption theo nhu cầu", "items": [
+                    f"Hook: Nếu bạn đang cân nhắc {topic}, hãy bắt đầu từ nhu cầu thực tế.\n\nNội dung: Nêu vấn đề, lợi ích có thể kiểm chứng, điểm khác biệt và giới hạn cần lưu ý.\n\nCTA: Lưu lại để đối chiếu khi cần.\n\nHashtag: {shared_tags} #CustomerJourney"
+                ]},
+                {"label": "Caption kể chuyện", "items": [
+                    f"Hook: {hook_b}\n\nNội dung: Kể một tình huống đời thường, để {topic} xuất hiện như một phương án cần cân nhắc thay vì một lời hứa tuyệt đối.\n\nCTA: Điều chỉnh câu chuyện theo trải nghiệm thật của bạn.\n\nHashtag: #Storytelling #SocialContent #CreatorTips #BrandStory"
+                ]},
+            ],
+            "verify_before_publish": verification,
+        }
+    elif kind == "content_ideas":
+        angles = [
+            ("dễ làm", "quay một tình huống đời thường, nêu vấn đề và mô tả cách tiếp cận phù hợp"),
+            ("giá trị", "mở bằng lợi ích có thể kiểm chứng, bổ sung ví dụ rõ ngữ cảnh rồi chốt CTA nhẹ"),
+            ("tạo niềm tin", "dùng checklist, sai lầm thường gặp hoặc câu hỏi phổ biến để giải thích điều cần cân nhắc"),
+        ]
+        if seed % 2:
+            angles.reverse()
+        result = {
+            "title": f"Ý tưởng content cho: {topic}",
+            "kind": kind,
+            "topic": topic,
+            "sections": [
+                {"label": "Ý tưởng video", "items": [
+                    f"Video {label}: {detail} cho {topic}." for label, detail in angles
+                ]},
+                {"label": "Ý tưởng bài viết", "items": [
+                    f"Checklist: 5 điều cần biết trước khi cân nhắc {topic}.",
+                    f"So sánh có điều kiện: trước/sau khi áp dụng một cách phù hợp cho {topic}.",
+                    f"FAQ: trả lời 3 câu hỏi người dùng thường hỏi về {topic}.",
+                ]},
+                {"label": "Hook để biên tập", "items": [
+                    f"Bạn đang hiểu sai điều gì về {topic}?",
+                    f"3 dấu hiệu bạn nên xem lại cách tiếp cận với {topic}.",
+                    f"Nếu chỉ có 15 giây để nói về {topic}, đâu là điều cần làm rõ trước tiên?",
+                ]},
+                {"label": "Ưu tiên thử trước", "items": [
+                    f"Bắt đầu bằng video {angles[0][0]}: dễ chuẩn bị, dễ lấy phản hồi và có thể phát triển thành caption hoặc hướng dẫn visual sau khi review."
+                ]},
+            ],
+            "verify_before_publish": verification,
+        }
+    elif kind == "hook_script":
+        # This is a direct Web adaptation of the Bot's pure
+        # ``free_tools_hub.hook_script_pack`` helper.  It keeps the useful
+        # topic/audience/CTA grammar but does not carry Telegram pending
+        # state, Bot identity, quota, provider, job, wallet or publish logic.
+        audience = CONTEXTUAL_AD_PROMPT_DEFAULT_INDUSTRY[2]
+        topic_marker = topic.casefold()
+        for _industry_id, markers, _industry, candidate_audience in CONTEXTUAL_AD_PROMPT_INDUSTRIES:
+            if any(marker in topic_marker for marker in markers):
+                audience = candidate_audience
+                break
+        cta = "Khám phá thêm và chọn phiên bản phù hợp với bạn"
+        result = {
+            "title": f"Hook & kịch bản cho: {topic}",
+            "kind": kind,
+            "topic": topic,
+            "sections": [
+                {"label": "3 hook mở đầu", "items": [
+                    f"Nếu bạn đang dùng {topic} theo cách này, có thể bạn đang bỏ lỡ phần hữu ích nhất.",
+                    f"Đây là lý do {audience} đang chú ý đến {topic}.",
+                    f"Chỉ trong 15 giây, đây là cách {topic} giải quyết một vấn đề quen thuộc.",
+                ]},
+                {"label": "Kịch bản 15 giây", "items": [
+                    f"0–3s: Nêu vấn đề quen thuộc. 3–9s: Cho thấy {topic} trong hành động thực tế. "
+                    f"9–13s: Chốt lợi ích chính cần tự kiểm chứng. 13–15s: {cta}."
+                ]},
+                {"label": "Kịch bản 30 giây", "items": [
+                    f"0–4s: Hook. 4–10s: Bối cảnh hoặc vấn đề. 10–20s: Demo {topic}. "
+                    "20–26s: Kết quả, ví dụ hoặc proof cần tự kiểm chứng. 26–30s: CTA nhẹ."
+                ]},
+                {"label": "CTA", "items": [cta]},
+            ],
+            "verify_before_publish": verification,
+        }
+    else:
+        mood = ("chân thật, hiện đại", "cinematic với ánh sáng mềm", "UGC sạch, gần gũi")[seed % 3]
+        constraints = "không dùng watermark hoặc logo không được cấp quyền, tránh chữ méo, biến dạng chủ thể, chi tiết sai và chuyển động nhấp nháy"
+        result = {
+            "title": f"Hướng dẫn prompt visual cho: {topic}",
+            "kind": kind,
+            "topic": topic,
+            "sections": [
+                {"label": "Mô tả ảnh dọc 9:16", "items": [
+                    f"Hướng dẫn ảnh dọc 9:16 cho {topic}: chủ thể rõ ở trung tâm, bố cục mobile-first, phong cách {mood}, ánh sáng cân bằng, nền gọn và khoảng trống đủ cho caption. {constraints}."
+                ]},
+                {"label": "Mô tả ảnh vuông 1:1", "items": [
+                    f"Hướng dẫn ảnh vuông 1:1 cho {topic}: layout social rõ ràng, chủ thể dễ nhận diện, khoảng trống vừa đủ cho caption, màu sắc hài hòa và composition có chủ đích. {constraints}."
+                ]},
+                {"label": "Storyboard video ngắn", "items": [
+                    f"Storyboard text-only 9:16 cho {topic}: mở bằng close-up hook, chuyển sang hành động hoặc ngữ cảnh sử dụng, kết bằng hero frame để đặt CTA. Ghi rõ mọi motion, asset và claim cần review. {constraints}."
+                ]},
+                {"label": "Sequence từ khung hình", "items": [
+                    f"Phác thảo 3–5 khung hình cho {topic}: khung 1 nêu câu hỏi/vấn đề, khung 2 làm rõ giá trị, khung 3 đưa ví dụ có thể kiểm chứng, khung cuối dành cho CTA. Chỉ là kế hoạch text, không tạo render hoặc tệp video."
+                ]},
+            ],
+            "verify_before_publish": verification,
+        }
+    return ContentPromptPackResult.model_validate(result).model_dump()
+
+
+def _content_prompt_pack_memory_note(pack: dict[str, Any]) -> tuple[str, str, list[str]]:
+    """Build the complete server-recomputed draft that a Web account saves.
+
+    This deliberately serializes the reviewed deterministic pack rather than
+    accepting a client-provided ``content`` field.  It parallels the useful
+    Bot "save last result" intent while remaining independent from Telegram's
+    short-lived pending state and from every provider/job/payment workflow.
+    """
+
+    kind = str(pack.get("kind") or "")
+    kind_labels = {
+        "meta_ai_prompt": "Prompt Meta AI",
+        "caption_hashtag": "Caption & hashtag",
+        "content_ideas": "Ý tưởng nội dung",
+        "hook_script": "Hook & kịch bản",
+        "image_video_prompt": "Prompt hình ảnh & video",
+    }
+    label = kind_labels.get(kind)
+    if not label:
+        raise HTTPException(status_code=422, detail="Loại Content Prompt Pack không thể lưu")
+    try:
+        title = _single_line(
+            f"Content Prompt Pack · {label}",
+            label="Tiêu đề ghi chú",
+            minimum=3,
+            maximum=MAX_MEMORY_NOTE_TITLE,
+        )
+        lines = [
+            "Content Prompt Pack — bản nháp Web đã được dựng lại trên máy chủ.",
+            f"Loại: {label}",
+            f"Chủ đề: {str(pack.get('topic') or '')}",
+            "",
+        ]
+        for section in list(pack.get("sections") or []):
+            section_label = _single_line(
+                str(section.get("label") or ""),
+                label="Nhãn Content Prompt Pack",
+                minimum=1,
+                maximum=120,
+            )
+            lines.extend((f"## {section_label}",))
+            for item in list(section.get("items") or []):
+                lines.append(f"- {str(item)}")
+            lines.append("")
+        lines.append("## Kiểm tra trước khi sử dụng hoặc xuất bản")
+        for item in list(pack.get("verify_before_publish") or []):
+            lines.append(f"- {str(item)}")
+        lines.extend(("", "Ghi chú này không tạo tác vụ, tài sản, thanh toán, publish hay gửi Telegram."))
+        content = _content(
+            "\n".join(lines),
+            label="Nội dung ghi chú Content Prompt Pack",
+            maximum=MAX_MEMORY_NOTE_CONTENT,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return title, content, ["content-prompt-pack", f"prompt-{kind}"]
+
+
+def _content_prompt_pack_memory_boundaries(
+    *,
+    draft_recomputed_on_server: bool = True,
+    web_note_persisted: bool = True,
+) -> dict[str, bool | str]:
+    """Facts that distinguish a Web note handoff from Bot/pipeline execution."""
+
+    return {
+        "execution": "web_native_memory_note_server_recomputed",
+        "draft_recomputed_on_server": draft_recomputed_on_server,
+        "web_note_persisted": web_note_persisted,
+        "browser_result_persisted": False,
+        "pending_bot_save_created": False,
+        "telegram_state_changed": False,
+        "bot_called": False,
+        "bridge_called": False,
+        "provider_called": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+        "fact_checked": False,
+        "rights_verified": False,
+    }
+
+
+def _publish_review_pack(payload: PublishReviewPackRequest) -> dict[str, Any]:
+    """Create the Bot-derived review package without a Bot pending record.
+
+    The original Free Hub formatter used a previous in-memory result.  This
+    Web-native form requires every input explicitly, which avoids browser
+    hidden state and makes the operator's review context visible.  It does not
+    schedule, authenticate to, or deliver to any publishing destination.
+    """
+
+    hashtags = payload.hashtags or ["#ContentDraft", "#ReviewBeforePost"]
+    cta = payload.cta or "Xem thêm thông tin phù hợp trước khi quyết định."
+    result = {
+        "title": payload.title,
+        "caption": payload.caption,
+        "hashtags": hashtags,
+        "cta": cta,
+        "source_prompt": payload.source_prompt,
+        "review_checklist": [
+            "Đọc lại tiêu đề, caption, hashtag và CTA theo đúng bối cảnh kênh trước khi dùng bên ngoài.",
+            "Tự kiểm chứng mọi claim, số liệu, so sánh, giá, ưu đãi và lời hứa trong caption trước khi công bố.",
+            "Xác nhận quyền sử dụng thương hiệu, hình ảnh, âm thanh, người xuất hiện và mọi asset liên quan.",
+            "Kiểm tra format, tỷ lệ, accessibility, disclosure và chính sách của kênh đích; Web chưa kiểm tra thay bạn.",
+        ],
+        "copy_instruction": "Đây là gói text để bạn biên tập và tự đăng ở nơi được cấp quyền. Web không kết nối tài khoản social, không lên lịch, không gửi hay publish nội dung này.",
+    }
+    return PublishReviewPack.model_validate(result).model_dump()
+
+
+def _contextual_ad_prompt(payload: ContextualAdPromptRequest) -> dict[str, Any]:
+    """Translate the Bot's five-choice Meta prompt wizard into one Web plan.
+
+    This preserves the useful deterministic composition grammar from
+    ``free_tools_hub.generate_contextual_prompt`` while removing Telegram
+    pending-state, quota accounting, Bot branding, provider language and any
+    implication that Meta, a renderer or an ad account has been contacted.
+    """
+
+    topic = payload.topic
+    topic_marker = topic.casefold()
+    industry_id, industry, audience = CONTEXTUAL_AD_PROMPT_DEFAULT_INDUSTRY
+    for candidate_id, markers, candidate_industry, candidate_audience in CONTEXTUAL_AD_PROMPT_INDUSTRIES:
+        if any(marker in topic_marker for marker in markers):
+            industry_id, industry, audience = candidate_id, candidate_industry, candidate_audience
+            break
+    goal = CONTEXTUAL_AD_PROMPT_GOALS[payload.goal]
+    platform = CONTEXTUAL_AD_PROMPT_PLATFORMS[payload.platform]
+    ratio = payload.aspect_ratio
+    style = CONTEXTUAL_AD_PROMPT_STYLES[payload.style]
+    duration = 12
+    cta = "Khám phá thêm và chọn phiên bản phù hợp với bạn"
+    primary_prompt = (
+        f"Tạo video quảng cáo {ratio}, dài khoảng {duration} giây cho {topic}. "
+        f"Mục tiêu: {goal}; nền tảng: {platform}; khán giả: {audience}. "
+        "Cảnh 1 mở bằng close-up chủ thể trong bối cảnh đời thực sạch, có hành động rõ ràng ngay 2 giây đầu. "
+        "Cảnh 2 dùng medium shot để cho thấy lợi ích qua thao tác hoặc tình huống sử dụng tự nhiên. "
+        "Cảnh 3 chuyển sang hero shot sản phẩm/kết quả, camera slow push-in rồi orbit nhẹ 10-15 độ. "
+        f"Ánh sáng mềm có key light định hướng, viền sáng tinh tế, màu sắc {style}; vật liệu và chuyển động phải chân thật. "
+        "Không chèn chữ sai chính tả, không logo giả, không watermark, không thêm ngón tay/vật thể méo, "
+        "không chuyển động giật hoặc thay đổi hình dạng chủ thể. Kết thúc bằng khung hình sạch để ghép CTA."
+    )
+    variants = [
+        primary_prompt.replace("close-up chủ thể", "POV tình huống đời thường").replace("slow push-in", "handheld nhẹ ổn định"),
+        primary_prompt.replace("Cảnh 1 mở bằng", "Mở theo cấu trúc before/after bằng").replace("orbit nhẹ 10-15 độ", "match cut mượt"),
+        primary_prompt.replace("hero shot", "UGC reaction shot rồi product reveal").replace("Ánh sáng mềm", "Ánh sáng cinematic tương phản vừa"),
+    ]
+    platform_tag = {
+        "tiktok": "#TikTokContent",
+        "reels": "#ReelsContent",
+        "shorts": "#ShortsContent",
+        "facebook": "#FacebookContent",
+    }[payload.platform]
+    industry_tag = re.sub(r"[^A-Za-z0-9À-ỹ]", "", industry.title().replace(" ", ""))[:30] or "Content"
+    result = {
+        "title": f"Prompt {industry} - {topic[:70]}",
+        "topic": topic,
+        "industry_id": industry_id,
+        "industry": industry,
+        "audience": audience,
+        "goal": goal,
+        "platform": platform,
+        "aspect_ratio": ratio,
+        "style": style,
+        "duration_seconds": duration,
+        "primary_prompt": primary_prompt,
+        "variants": variants,
+        "caption": f"{topic}: một cách trực quan để biến nhu cầu hằng ngày thành trải nghiệm gọn hơn. Phù hợp với {audience}. {cta}.",
+        "hashtags": ["#TOANAAS", "#ContentAI", "#VideoMarketing", f"#{industry_tag}", platform_tag],
+        "cta": cta,
+        "shot_list": [
+            "0–2s: close-up hoặc POV hook, hành động chính xuất hiện ngay.",
+            "2–7s: medium shot minh họa cách dùng hoặc lợi ích trong ngữ cảnh tự nhiên.",
+            f"7–{duration}s: hero shot/kết quả, camera push-in và khung CTA sạch.",
+        ],
+        "negative_prompt": (
+            "low quality, blurry subject, deformed hands, duplicate objects, unstable identity, "
+            "warped product, flicker, jitter, unreadable text, fake logo, watermark, abrupt camera motion"
+        ),
+        "music_sfx": "Nhạc hiện đại nhịp vừa; SFX whoosh nhẹ ở chuyển cảnh và soft impact ở product reveal.",
+        "copy_instruction": "Copy prompt này sang Meta AI/Facebook/Instagram hoặc một công cụ được cấp riêng. TOAN AAS Web chưa gọi API Meta và chưa tạo video.",
+        "review_before_use": [
+            "Thay mọi claim, lợi ích, con số và so sánh bằng nội dung có thể tự xác minh trước khi dùng bên ngoài.",
+            "Chỉ dùng sản phẩm, thương hiệu, người xuất hiện, hình ảnh, âm thanh và tư liệu mà bạn có quyền sử dụng.",
+            "Prompt này chỉ là direction text; không chứng minh chất lượng render, hiệu quả quảng cáo, quyền sử dụng hoặc kết quả kinh doanh.",
+        ],
+    }
+    return ContextualAdPromptPlan.model_validate(result).model_dump()
+
+
+@router.post("/tools/prompt-pack")
+async def create_content_prompt_pack(payload: ContentPromptPackRequest, account: dict = Depends(require_csrf)):
+    """Return a non-persistent deterministic content-planning draft.
+
+    Session/CSRF and the shared Content Studio route-family body/rate limits are
+    enforced before this point.  Do not add database, audit-detail, bridge,
+    provider, payment, job, asset or publish behavior to this endpoint: the
+    customer-authored topic and generated text are intentionally request-only.
+    """
+
+    _require_enabled()
+    del account  # Authentication is the whole ownership boundary for this stateless response.
+    guard = _policy_guard(_marker(payload.topic))
+    if guard:
+        return guard
+    pack = _content_prompt_pack(payload)
+    return envelope(
+        True,
+        "Đã tạo bản nháp Content Prompt Pack cục bộ để bạn biên tập. Không có AI engine, job, tài sản, thanh toán hoặc publish action nào được tạo.",
+        data={
+            "pack": pack,
+            "execution": "local_deterministic_text_only",
+            "input_persisted": False,
+            "provider_called": False,
+            "job_created": False,
+            "payment_started": False,
+            "publish_action_created": False,
+            "fact_checked": False,
+            "rights_verified": False,
+        },
+        status_name="draft",
+    )
+
+
+@router.post("/tools/prompt-pack/save")
+async def save_content_prompt_pack_to_memory(
+    payload: ContentPromptPackMemorySaveRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Save a reviewed deterministic Prompt Pack as a private Web note.
+
+    This is intentionally a separate action from ``/tools/prompt-pack``.  The
+    browser sends only the bounded selection and an idempotency key; the server
+    derives the whole saved body again.  It never reads Telegram's pending
+    result, writes Bot tables, calls a bridge/provider, creates a job, changes
+    wallet/payment state, saves an asset or publishes anything.
+    """
+
+    _require_enabled()
+    _require_memory_handoff_enabled()
+    marker = _marker(payload.topic)
+    if marker:
+        return envelope(
+            False,
+            "Chủ đề cần được viết lại theo hướng nguyên bản trước khi lưu vào Memory Center.",
+            data={
+                "destination": "memory_note",
+                **_content_prompt_pack_memory_boundaries(
+                    draft_recomputed_on_server=False,
+                    web_note_persisted=False,
+                ),
+            },
+            status_name="guarded",
+            error_code="WEB_CONTENT_ORIGINALITY_GUARD",
+        )
+
+    account_id = str(account["id"])
+    key = _idempotency_key(payload.idempotency_key)
+    fingerprint = _fingerprint(
+        {
+            "action": "prompt_pack_memory_save",
+            "destination": payload.destination,
+            "kind": payload.kind,
+            "topic": payload.topic,
+            "variant_seed": payload.variant_seed,
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        # Repeat the deterministic computation inside the write transaction;
+        # no browser-authored generated copy is accepted or persisted.
+        pack = _content_prompt_pack(payload)
+        note_title, note_content, tags = _content_prompt_pack_memory_note(pack)
+        active_count = conn.execute(
+            "SELECT COUNT(*) FROM web_memory_notes WHERE account_id=? AND state='active'",
+            (account_id,),
+        ).fetchone()
+        if int(active_count[0] or 0) >= MAX_MEMORY_NOTES_PER_ACCOUNT:
+            return envelope(
+                False,
+                "Memory Center đã đạt giới hạn ghi chú đang hoạt động cho Web account này.",
+                data={
+                    "destination": "memory_note",
+                    **_content_prompt_pack_memory_boundaries(
+                        draft_recomputed_on_server=True,
+                        web_note_persisted=False,
+                    ),
+                },
+                status_name="guarded",
+                error_code="WEB_MEMORY_NOTE_LIMIT",
+            )
+        note_id = str(uuid.uuid4())
+        now = utc_now()
+        category = "Content Prompt Pack"
+        priority = "normal"
+        tags_json = json.dumps(tags, ensure_ascii=False, separators=(",", ":"))
+        conn.execute(
+            """INSERT INTO web_memory_notes
+               (id, account_id, title, content, tags_json, category, priority, state, revision, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)""",
+            (note_id, account_id, note_title, note_content, tags_json, category, priority, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_note_versions
+               (id, note_id, account_id, revision, title, content, tags_json, category, priority, created_at)
+               VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?)""",
+            (str(uuid.uuid4()), note_id, account_id, note_title, note_content, tags_json, category, priority, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_events (id, account_id, note_id, reminder_id, action, created_at)
+               VALUES (?, ?, ?, NULL, ?, ?)""",
+            (str(uuid.uuid4()), account_id, note_id, "note_created", now),
+        )
+        _audit(
+            conn,
+            request=request,
+            account=account,
+            action="web.content_studio.prompt_pack.save_memory",
+            target=note_id,
+            detail="server-recomputed content prompt pack saved as web-owned memory note",
+        )
+        note = {
+            "id": note_id,
+            "revision": 1,
+            "state": "active",
+            "category": category,
+            "priority": priority,
+        }
+        return envelope(
+            True,
+            "Đã lưu bản nháp vào Memory Center của Web. Không tạo pending Telegram, job, tài sản, thanh toán hay publish.",
+            data={
+                "note": note,
+                "destination": "memory_note",
+                **_content_prompt_pack_memory_boundaries(),
+            },
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-content-studio:{account_id}:prompt-pack:save-memory",
+        account_id,
+        key,
+        fingerprint,
+        operation,
+    )
+
+
+@router.post("/tools/publish-review-pack")
+async def create_publish_review_pack(payload: PublishReviewPackRequest, account: dict = Depends(require_csrf)):
+    """Return a text-only publish review package from explicit Web input.
+
+    This is deliberately not an implementation of social publishing.  It
+    replaces the Bot's ephemeral ``freehub|publish_package`` formatter with a
+    signed, CSRF-protected and non-persistent review receipt, so the browser
+    cannot accidentally treat a composition draft as a queued or delivered
+    post.
+    """
+
+    _require_enabled()
+    del account
+    marker = _marker(payload.title, payload.caption, payload.cta, payload.source_prompt, *payload.hashtags)
+    boundary = {
+        "execution": "web_native_publish_review_text_only",
+        "input_persisted": False,
+        "provider_called": False,
+        "bot_called": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "media_output_created": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+        "fact_checked": False,
+        "rights_verified": False,
+    }
+    if marker:
+        return envelope(
+            False,
+            "Nội dung cần được viết lại theo hướng nguyên bản, không mô phỏng tác giả, nghệ sĩ, bài hát hoặc phong cách cụ thể.",
+            data=boundary,
+            status_name="guarded",
+            error_code="WEB_PUBLISH_REVIEW_ORIGINALITY_GUARD",
+        )
+    package = _publish_review_pack(payload)
+    return envelope(
+        True,
+        "Đã chuẩn bị gói review text. Web không kết nối social, không tạo lịch, job, thanh toán hoặc publish action.",
+        data={"package": package, **boundary},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/contextual-ad-prompt")
+async def create_contextual_ad_prompt(payload: ContextualAdPromptRequest, account: dict = Depends(require_csrf)):
+    """Return the Bot-derived prompt direction without a conversation state.
+
+    No user input or response is written to Content Studio, Project, audit
+    detail, browser storage, a provider, Bot bridge, job, wallet, payment,
+    asset, media engine or publishing surface.  Authentication and CSRF stay
+    mandatory because the request body can still contain private product text.
+    """
+
+    _require_enabled()
+    del account
+    if _marker(payload.topic):
+        return envelope(
+            False,
+            "Chủ đề cần được viết lại theo hướng nguyên bản, không mô phỏng tác giả, nghệ sĩ, bài hát hoặc phong cách cụ thể.",
+            data={
+                "execution": "web_native_deterministic_contextual_ad_prompt_only",
+                "input_persisted": False,
+                "provider_called": False,
+                "bot_called": False,
+                "job_created": False,
+                "wallet_mutated": False,
+                "payment_started": False,
+                "asset_saved": False,
+                "media_output_created": False,
+                "publish_action_created": False,
+                "fact_checked": False,
+                "rights_verified": False,
+            },
+            status_name="guarded",
+            error_code="WEB_CONTEXTUAL_AD_PROMPT_ORIGINALITY_GUARD",
+        )
+    plan = _contextual_ad_prompt(payload)
+    return envelope(
+        True,
+        "Đã tạo Contextual Ad Prompt để bạn review và tự dùng ở công cụ được cấp riêng. Web chưa gọi provider, Bot, engine, job, thanh toán hoặc publish.",
+        data={
+            "plan": plan,
+            "execution": "web_native_deterministic_contextual_ad_prompt_only",
+            "input_persisted": False,
+            "provider_called": False,
+            "bot_called": False,
+            "job_created": False,
+            "wallet_mutated": False,
+            "payment_started": False,
+            "asset_saved": False,
+            "media_output_created": False,
+            "publish_action_created": False,
+            "fact_checked": False,
+            "rights_verified": False,
+        },
+        status_name="draft",
+    )
+
+
 @router.get("/summary")
 async def content_studio_summary(account: dict = Depends(require_account)):
     _require_enabled()
@@ -1576,6 +2630,7 @@ async def content_studio_references(account: dict = Depends(require_account)):
 @router.get("/briefs")
 async def list_briefs(
     limit: int = 30,
+    offset: int = 0,
     state: str = "active",
     q: str = "",
     tag: str = "",
@@ -1584,6 +2639,7 @@ async def list_briefs(
 ):
     _require_enabled()
     bounded = max(1, min(int(limit), MAX_LIST_LIMIT))
+    bounded_offset = max(0, min(int(offset), 10_000))
     state_filter = str(state or "active").strip().lower()
     if state_filter not in {*BRIEF_STATES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái content brief không hợp lệ")
@@ -1613,14 +2669,20 @@ async def list_briefs(
                        title, content_kind, subject, objective, audience, platform, tone, language,
                        call_to_action, brief_text, constraints, tags_json, rights_note, policy_marker,
                        state, selected_variant_id, revision, created_at, updated_at, archived_at
-                FROM web_content_briefs WHERE {' AND '.join(clauses)}
-                ORDER BY updated_at DESC, id DESC LIMIT ?""",
-            (*params, bounded + 1),
+                 FROM web_content_briefs WHERE {' AND '.join(clauses)}
+                 ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded + 1, bounded_offset),
         ).fetchall()
     return envelope(
         True,
         "Đã tải danh sách Content Studio riêng tư.",
-        data={"items": [_brief_public(row) for row in rows[:bounded]], "has_more": len(rows) > bounded},
+        data={
+            "items": [_brief_public(row) for row in rows[:bounded]],
+            "has_more": len(rows) > bounded,
+            "next_offset": bounded_offset + min(len(rows), bounded) if len(rows) > bounded else None,
+            "filters": {"q": query, "tag": tag_filter, "content_kind": kind_filter, "state": state_filter},
+            "pagination": {"limit": bounded, "offset": bounded_offset, "returned": min(len(rows), bounded)},
+        },
         status_name="read_only",
     )
 

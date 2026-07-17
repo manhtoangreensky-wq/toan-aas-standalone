@@ -20,10 +20,10 @@ import uuid
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import ensure_copyfast_schema, music_media_workspace_enabled, read_transaction, transaction, utc_now
+from copyfast_db import ensure_copyfast_schema, memory_center_enabled, music_media_workspace_enabled, read_transaction, transaction, utc_now
 
 
 router = APIRouter(prefix="/api/v1/media-workspace", tags=["Web Audio Library & Briefing"])
@@ -78,6 +78,39 @@ COPYRIGHT_BLOCK_MARKERS = (
     "clone giọng", "nhái giọng", "bắt chước giọng", "sound like", "sounds like",
     "in the style of", "voice clone", "clone voice", "copy melody", "cover song",
     "remix song", "artist style", "same melody",
+)
+
+# A compact, text-only translation of the Bot's music prompt suggestions.  It
+# deliberately contains no model, provider, catalog, URL or delivery setting.
+# The first and second halves reproduce the Bot's "first three / next three"
+# rotation without carrying forward its Telegram pending state.
+MUSIC_PROMPT_COMPOSER_MODES = frozenset({"background", "lyrics", "melody", "script", "custom"})
+MUSIC_PROMPT_COMPOSER_LANGUAGES = frozenset({"vi", "en"})
+MUSIC_PROMPT_COMPOSER_SETS = frozenset({"primary", "alternate"})
+MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION = 500
+MUSIC_PROMPT_COMPOSER_MAX_TEXT = 2_400
+# The explicit Composer-to-Memory handoff owns its write in this router, but
+# remains bounded by the same durable envelope as Memory Center. Do not import
+# private Memory router helpers: this handoff stays independent at runtime.
+MAX_MEMORY_NOTE_TITLE = 160
+MAX_MEMORY_NOTE_CONTENT = 12_000
+MAX_MEMORY_NOTES_PER_ACCOUNT = 1_000
+MUSIC_PROMPT_COMPOSER_MARKUP_PATTERN = re.compile(
+    r"(?:<\s*/?\s*[A-Za-z][^>\r\n]{0,240}>|\[[^\]\r\n]{1,160}\]\([^\)\r\n]{1,480}\)|```|\bon[a-z]+\s*=)",
+    re.IGNORECASE,
+)
+MUSIC_PROMPT_COMPOSER_URL_OR_FILE_PATTERN = re.compile(
+    r"(?:\b(?:https?|ftp)://|\bwww\.|\b(?:file|data|javascript|tg):|(?:^|\s)[A-Za-z]:[\\/]|(?:^|\s)/(?:[A-Za-z0-9_.-]+/){1,})",
+    re.IGNORECASE,
+)
+MUSIC_PROMPT_COMPOSER_HANDLE_PATTERN = re.compile(
+    r"\b(?:(?:provider|model|engine|bot|telegram|render|job|media|asset|file|output|preview|audio|music)[ _-]*"
+    r"(?:id|ref(?:erence)?|token|handle|url|path)|(?:upload|download)[ _-]*(?:id|url|path))\b|(?:^|\s)@[A-Za-z0-9_]{3,}",
+    re.IGNORECASE,
+)
+MUSIC_PROMPT_COMPOSER_COPYRIGHT_MARKERS = COPYRIGHT_BLOCK_MARKERS + (
+    "giọng của", "voice of ", "in the voice of", "ca khúc của", "song by ",
+    "bài của", "artist's voice", "artist voice", "singer voice",
 )
 
 AUDIO_EXTENSIONS = frozenset({".mp3", ".wav", ".m4a", ".ogg"})
@@ -266,6 +299,18 @@ def _receipt_safe(response: dict[str, Any]) -> dict[str, Any]:
         if isinstance(item, dict):
             for field in ("title_override", "attribution", "license_note"):
                 item.pop(field, None)
+        note = data.get("note")
+        if isinstance(note, dict):
+            # The short-lived generic idempotency table is not a second copy
+            # of a Music Prompt Composer description or selected direction.
+            # The signed owner can hydrate the actual note from Memory Center.
+            data["note"] = {
+                "id": str(note.get("id") or ""),
+                "revision": int(note.get("revision") or 0),
+                "state": str(note.get("state") or ""),
+                "category": str(note.get("category") or ""),
+                "priority": str(note.get("priority") or ""),
+            }
     return receipt
 
 
@@ -862,6 +907,692 @@ def _composer_directions(snapshot: dict[str, Any]) -> list[dict[str, str]]:
     return output
 
 
+def _music_prompt_composer_line(
+    value: Any,
+    *,
+    label: str,
+    minimum: int,
+    maximum: int,
+    allow_empty: bool = False,
+) -> str:
+    """Validate one transient music-plan field without widening collections.
+
+    Durable Media Workspace collections intentionally support a broader owned
+    authoring surface.  This request/response-only composer cannot accept
+    markup, source media, opaque handles, secrets or payment artefacts because
+    it must never become an implicit provider or delivery interface.
+    """
+
+    text = _single_line(value, label=label, minimum=minimum, maximum=maximum, allow_empty=allow_empty)
+    if text and (
+        MUSIC_PROMPT_COMPOSER_MARKUP_PATTERN.search(text)
+        or MUSIC_PROMPT_COMPOSER_URL_OR_FILE_PATTERN.search(text)
+        or MUSIC_PROMPT_COMPOSER_HANDLE_PATTERN.search(text)
+    ):
+        raise ValueError(f"{label} không nhận markup, URL/file, handle hoặc mã/tham chiếu hệ thống ngoài")
+    return text
+
+
+def _music_prompt_composer_code(value: Any, *, label: str, allowed: frozenset[str] | set[str]) -> str:
+    raw = _music_prompt_composer_line(value, label=label, minimum=1, maximum=64)
+    normalized = raw.lower()
+    # Codes are part of the public API contract, so accepting an implicit
+    # case-folded alias would make the strict client/server schema ambiguous.
+    if raw != normalized or normalized not in allowed:
+        raise ValueError(f"{label} không hợp lệ")
+    return normalized
+
+
+def _music_prompt_composer_output_line(
+    value: Any,
+    *,
+    label: str,
+    minimum: int = 2,
+    maximum: int = MUSIC_PROMPT_COMPOSER_MAX_TEXT,
+) -> str:
+    """Revalidate local deterministic response text before rendering it."""
+
+    return _music_prompt_composer_line(value, label=label, minimum=minimum, maximum=maximum)
+
+
+def _music_prompt_composer_marker(*parts: Any) -> str:
+    """Return a narrow copyright/originality guard marker, if present.
+
+    This does not perform rights clearance.  It only prevents the static
+    suggestion catalog from turning a request to imitate a song, artist,
+    singer, beat, melody or vocal identity into a generic workaround prompt.
+    """
+
+    normalized = re.sub(r"\s+", " ", " ".join(str(part or "") for part in parts)).strip().casefold()[:12_000]
+    for marker in MUSIC_PROMPT_COMPOSER_COPYRIGHT_MARKERS:
+        if marker in normalized:
+            return marker
+    return ""
+
+
+def _music_prompt_composer_boundary() -> dict[str, Any]:
+    """Return the exact no-execution boundary for this planning receipt."""
+
+    return {
+        "execution": "web_native_deterministic_music_prompt_only",
+        "input_persisted": False,
+        "source_audio_inspected": False,
+        "provider_called": False,
+        "ai_music_called": False,
+        "lyrics_generated": False,
+        "audio_created": False,
+        "preview_created": False,
+        "output_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "collection_saved": False,
+        "publish_action_created": False,
+        "telegram_called": False,
+        "rights_verified": False,
+    }
+
+
+def _music_prompt_composer_guard(marker: str) -> dict[str, Any] | None:
+    if not marker:
+        return None
+    return envelope(
+        False,
+        "Mô tả cần được viết lại theo hướng nguyên bản, không mô phỏng nghệ sĩ, ca sĩ, bài hát, beat, giai điệu hoặc giọng cụ thể.",
+        data=_music_prompt_composer_boundary(),
+        status_name="guarded",
+        error_code="WEB_MUSIC_PROMPT_COPYRIGHT_GUARD",
+    )
+
+
+def _music_prompt_composer_excerpt(value: Any, limit: int = 180) -> str:
+    text = re.sub(r"\s+", " ", str(value or "")).strip()
+    return text if len(text) <= limit else f"{text[: max(1, limit - 1)].rstrip()}…"
+
+
+def _music_prompt_composer_catalog(mode: str, language: str) -> list[dict[str, str]]:
+    """Return six local Bot-inspired directions for first/next-three rotation."""
+
+    catalog_mode = "lyrics" if mode in {"lyrics", "script"} else "melody" if mode == "melody" else "background"
+    if catalog_mode == "lyrics":
+        vi_rows = [
+            ("Pop hook bán hàng", "tươi, dễ nhớ, có năng lượng mua hàng", "105-125 BPM", "pop drums, clean bass, synth hook, clap nhẹ", "30-45s", "vocal rõ hook, không mô phỏng nghệ sĩ", "Hook một câu, verse nêu vấn đề, chorus nhắc lợi ích, CTA nhẹ.", "TikTok/Reels quảng cáo sản phẩm, affiliate, launch offer"),
+            ("Storytelling acoustic", "ấm, chân thật, kể chuyện", "75-95 BPM", "acoustic guitar, piano pad, soft percussion", "45-60s", "vocal tự nhiên, cảm xúc nhẹ", "Mở bằng tình huống đời thường, chuyển sang giải pháp, kết bằng câu nhớ thương hiệu.", "Brand story, UGC cảm xúc, before/after"),
+            ("Jingle thương hiệu ngắn", "sáng, gọn, dễ thuộc", "115-130 BPM", "pluck, bell, light beat, simple bass", "18-25s", "vocal hook ngắn, giai điệu nguyên bản", "Tên sản phẩm, lợi ích chính và nhịp slogan ngắn; không bịa claim.", "Intro/outro quảng cáo, brand recall, shop nhỏ"),
+            ("Luxury vocal nhẹ", "sang, tiết chế, cảm xúc nhẹ", "70-88 BPM", "felt piano, cinematic pad, soft strings", "30-50s", "vocal premium nhẹ, ít lời", "Ít lời, nhiều khoảng nghỉ, nhấn cảm xúc và hình ảnh thương hiệu.", "Nước hoa, mỹ phẩm, thời trang, cinematic ad"),
+            ("Viral chant ngắn", "bắt tai, nhanh, nhớ ngay", "125-145 BPM", "short drums, punchy bass, original vocal texture", "10-20s", "chant ngắn, phrase nguyên bản", "Một câu hook lặp lại có kiểm soát, câu sau là lợi ích đã review hoặc CTA mềm.", "Shorts/Reels, video bán hàng nhanh"),
+            ("Corporate anthem mini", "tin cậy, tích cực, chuyên nghiệp", "90-110 BPM", "piano, light drums, warm pad, clean guitar", "45-60s", "vocal truyền cảm hứng, nguyên bản", "Tầm nhìn, niềm tin và lời mời hợp tác; không hứa hẹn tuyệt đối.", "SaaS, doanh nghiệp, video giới thiệu dịch vụ"),
+        ]
+        en_rows = [
+            ("Sales pop hook", "bright, memorable, purchase-oriented", "105-125 BPM", "pop drums, clean bass, synth hook, light claps", "30-45s", "clear hook vocal, no artist imitation", "One-line hook, problem verse, benefit chorus, gentle CTA.", "TikTok/Reels product ads, affiliate, launch offer"),
+            ("Storytelling acoustic", "warm, grounded, narrative", "75-95 BPM", "acoustic guitar, piano pad, soft percussion", "45-60s", "natural vocal with gentle emotion", "Open on an everyday situation, move to a solution, end with a brand-memory line.", "Brand story, emotional UGC, before/after"),
+            ("Short brand jingle", "bright, concise, easy to recall", "115-130 BPM", "pluck, bell, light beat, simple bass", "18-25s", "short vocal hook, original melody", "Product name, reviewed benefit, and a short slogan rhythm; no invented claim.", "Ad intro/outro, brand recall, small shops"),
+            ("Light luxury vocal", "premium, restrained, softly emotional", "70-88 BPM", "felt piano, cinematic pad, soft strings", "30-50s", "minimal premium vocal", "Few words, more breathing room, emphasize emotion and brand imagery.", "Fragrance, cosmetics, fashion, cinematic ads"),
+            ("Short viral chant", "catchy, quick, immediately memorable", "125-145 BPM", "short drums, punchy bass, original vocal texture", "10-20s", "short original chant", "Use one controlled repeated hook, then a reviewed benefit or gentle CTA.", "Shorts/Reels, fast sales video"),
+            ("Mini corporate anthem", "trustworthy, positive, professional", "90-110 BPM", "piano, light drums, warm pad, clean guitar", "45-60s", "original inspirational vocal", "Vision, trust, and an invitation to collaborate; no absolute promise.", "SaaS, companies, service introduction video"),
+        ]
+    elif catalog_mode == "melody":
+        vi_rows = [
+            ("Motif 3 nốt dễ nhớ", "sáng, gọn, có nhận diện", "100-118 BPM", "piano pluck, bell, soft synth", "10-20s", "không vocal hoặc hum placeholder nhẹ", "Không lời; giữ motif nguyên bản ba nốt, không dựa vào giai điệu có sẵn.", "Logo sound, intro ngắn, brand cue"),
+            ("Cinematic rise", "tăng dần, cảm xúc, mở rộng", "75-90 BPM", "strings, piano, airy pad, low hit", "20-40s", "không vocal", "Không lời; phát triển motif nguyên bản từ chi tiết nhỏ sang reveal.", "Reveal sản phẩm, before/after, ad premium"),
+            ("Clean tech pulse", "hiện đại, sạch, tự động hóa", "105-124 BPM", "digital pulse, minimal synth, soft kick", "18-30s", "không vocal", "Không lời; nhịp motif sạch, chừa khoảng cho voice-over.", "AI tool, app, dashboard, tutorial"),
+            ("Warm acoustic motif", "ấm, gần gũi, tin cậy", "78-96 BPM", "acoustic guitar, piano, brushed percussion", "20-45s", "không vocal", "Không lời; motif mộc nguyên bản, ưu tiên mạch kể chuyện nhẹ.", "Review, storytelling, gia đình/cảm xúc"),
+            ("Viral loop", "ngắn, bắt nhịp, dễ loop", "128-140 BPM", "snappy drums, bass stab, synth lead", "8-18s", "không vocal", "Không lời; loop nguyên bản gọn, không tái tạo hook nhận diện.", "Hook đầu video, UGC, reels ngắn"),
+            ("Luxury minimal", "tĩnh, cao cấp, ít nốt", "62-82 BPM", "felt piano, deep pad, subtle texture", "20-35s", "không vocal", "Không lời; tối giản khoảng nghỉ và texture nguyên bản.", "Nước hoa, mỹ phẩm, fashion, hero shot"),
+        ]
+        en_rows = [
+            ("Memorable three-note motif", "bright, concise, identifiable", "100-118 BPM", "piano pluck, bell, soft synth", "10-20s", "no vocal or a light placeholder hum", "Instrumental only; keep an original three-note motif with no borrowed melody.", "Logo sound, short intro, brand cue"),
+            ("Cinematic rise", "expanding, emotional, gradual", "75-90 BPM", "strings, piano, airy pad, low hit", "20-40s", "no vocal", "Instrumental only; grow an original motif from a small detail into a reveal.", "Product reveal, before/after, premium ad"),
+            ("Clean tech pulse", "modern, clean, automated", "105-124 BPM", "digital pulse, minimal synth, soft kick", "18-30s", "no vocal", "Instrumental only; use a clean original pulse with room for voice-over.", "AI tool, app, dashboard, tutorial"),
+            ("Warm acoustic motif", "warm, relatable, trustworthy", "78-96 BPM", "acoustic guitar, piano, brushed percussion", "20-45s", "no vocal", "Instrumental only; use an original acoustic motif and gentle story flow.", "Review, storytelling, family/emotion"),
+            ("Viral loop", "short, rhythmic, loop-friendly", "128-140 BPM", "snappy drums, bass stab, synth lead", "8-18s", "no vocal", "Instrumental only; keep an original concise loop without recreating a recognizable hook.", "Opening hook, UGC, short reels"),
+            ("Luxury minimal", "calm, premium, sparse", "62-82 BPM", "felt piano, deep pad, subtle texture", "20-35s", "no vocal", "Instrumental only; use sparse pauses and original texture.", "Fragrance, cosmetics, fashion, hero shot"),
+        ]
+    else:
+        vi_rows = [
+            ("Vui tươi / bán hàng", "sáng, tích cực, tạo cảm giác dễ mua", "110-125 BPM", "light drums, soft synth, pluck, clap nhẹ", "18-30s", "không vocal", "Không lời; ưu tiên nhạc nền gọn để voice và CTA rõ.", "TikTok/Reels/Shorts, review sản phẩm, CTA rõ"),
+            ("Cinematic / cao cấp", "sang, cảm xúc vừa phải, thương hiệu", "80-95 BPM", "piano, soft strings, ambient pad, sub bass nhẹ", "30-60s", "không vocal", "Không lời; giữ không gian cảm xúc và không lấn lời đọc.", "Quảng cáo premium, key visual, reveal sản phẩm"),
+            ("Nhẹ nhàng / cảm xúc", "ấm, tin cậy, kể chuyện", "70-90 BPM", "acoustic guitar, piano nhẹ, pad mềm", "30-45s", "không vocal", "Không lời; giữ câu nhạc đơn giản để kể chuyện tự nhiên.", "Voice-over, review chân thật, before/after"),
+            ("Công nghệ / tương lai", "sạch, hiện đại, tự động hóa", "100-118 BPM", "minimal synth, digital pulse, clean percussion", "18-30s", "không vocal", "Không lời; nhịp sạch, không che thao tác hoặc voice-over.", "AI tool, SaaS, dashboard, automation"),
+            ("Viral short / bắt tai", "nhanh, bắt nhịp, trẻ trung", "125-140 BPM", "snappy drums, bass ngắn, hook synth nguyên bản", "10-20s", "không vocal", "Không lời; hook nhạc nguyên bản ngắn, tránh motif nhận diện.", "Hook đầu video, trend, UGC ngắn"),
+            ("Luxury tối giản", "tĩnh, cao cấp, ít chi tiết", "65-85 BPM", "felt piano, deep pad, soft ticks", "20-40s", "không vocal", "Không lời; khoảng nghỉ tối giản, ưu tiên hình ảnh và sản phẩm.", "Nước hoa, mỹ phẩm, thời trang, brand ad"),
+        ]
+        en_rows = [
+            ("Bright sales", "bright, positive, purchase-friendly", "110-125 BPM", "light drums, soft synth, pluck, light claps", "18-30s", "no vocal", "Instrumental only; keep the bed concise so voice and CTA remain clear.", "TikTok/Reels/Shorts, product review, clear CTA"),
+            ("Cinematic premium", "premium, moderately emotional, brand-led", "80-95 BPM", "piano, soft strings, ambient pad, light sub bass", "30-60s", "no vocal", "Instrumental only; retain emotional space without overtaking narration.", "Premium ad, key visual, product reveal"),
+            ("Warm emotional", "warm, trustworthy, narrative", "70-90 BPM", "acoustic guitar, light piano, soft pad", "30-45s", "no vocal", "Instrumental only; keep a simple phrase for natural storytelling.", "Voice-over, honest review, before/after"),
+            ("Technology future", "clean, modern, automated", "100-118 BPM", "minimal synth, digital pulse, clean percussion", "18-30s", "no vocal", "Instrumental only; use a clean pulse that does not mask actions or narration.", "AI tool, SaaS, dashboard, automation"),
+            ("Viral short", "quick, rhythmic, youthful", "125-140 BPM", "snappy drums, short bass, original synth hook", "10-20s", "no vocal", "Instrumental only; use a short original hook and avoid a recognizable motif.", "Opening hook, trend, short UGC"),
+            ("Minimal luxury", "calm, premium, sparse", "65-85 BPM", "felt piano, deep pad, soft ticks", "20-40s", "no vocal", "Instrumental only; use minimal rests and prioritize imagery and product detail.", "Fragrance, cosmetics, fashion, brand ad"),
+        ]
+    rows = vi_rows if language == "vi" else en_rows
+    return [
+        {
+            "name": name,
+            "mood": mood,
+            "tempo": tempo,
+            "instruments": instruments,
+            "duration": duration,
+            "vocal": vocal,
+            "lyric_direction": lyric_direction,
+            "use_case": use_case,
+        }
+        for name, mood, tempo, instruments, duration, vocal, lyric_direction, use_case in rows
+    ]
+
+
+class MusicPromptComposerRequest(BaseModel):
+    """Strict input for the Bot-derived, non-persistent music prompt tool."""
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    description: StrictStr
+    mode: StrictStr
+    language: StrictStr
+    suggestion_set: StrictStr
+    selected_suggestion: StrictInt = Field(ge=1, le=3)
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_line(
+            value,
+            label="Mô tả nhạc",
+            minimum=2,
+            maximum=MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION,
+        )
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Chế độ prompt nhạc", allowed=MUSIC_PROMPT_COMPOSER_MODES)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Ngôn ngữ", allowed=MUSIC_PROMPT_COMPOSER_LANGUAGES)
+
+    @field_validator("suggestion_set")
+    @classmethod
+    def validate_suggestion_set(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Nhóm gợi ý", allowed=MUSIC_PROMPT_COMPOSER_SETS)
+
+
+def _require_memory_handoff_enabled() -> None:
+    """Require the Web-owned Memory capability for an explicit durable save.
+
+    The stateless Composer remains usable while Memory Center is under
+    maintenance. The separate save route must not bypass that maintenance
+    switch or create a second note store in Media Workspace.
+    """
+
+    if not memory_center_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Memory Center đang tạm dừng để bảo trì. WEBAPP_MEMORY_CENTER_ENABLED chưa được bật.",
+        )
+
+
+class MusicPromptComposerMemorySaveRequest(MusicPromptComposerRequest):
+    """Narrow, explicit save of one reviewed deterministic direction.
+
+    The browser supplies only the original bounded Composer inputs plus its
+    confirmation destination and idempotency key. It cannot send a generated
+    prompt/body/title, select another account, attach an audio asset, or point
+    this route at a Telegram pending record.
+    """
+
+    destination: StrictStr
+    idempotency_key: StrictStr
+
+    @field_validator("destination")
+    @classmethod
+    def validate_destination(cls, value: StrictStr) -> str:
+        if _music_prompt_composer_line(value, label="Đích lưu", minimum=1, maximum=32).lower() != "memory_note":
+            raise ValueError("Music Prompt Composer hiện chỉ hỗ trợ lưu vào Memory Center")
+        return "memory_note"
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def validate_idempotency_key(cls, value: StrictStr) -> str:
+        return _idempotency_key(value)
+
+
+class MusicPromptComposerSuggestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    choice: StrictInt = Field(ge=1, le=3)
+    name: StrictStr
+    mood: StrictStr
+    tempo: StrictStr
+    instruments: StrictStr
+    duration: StrictStr
+    vocal: StrictStr
+    lyric_direction: StrictStr
+    use_case: StrictStr
+    prompt: StrictStr
+
+    @field_validator("name", "mood", "tempo", "instruments", "duration", "vocal", "lyric_direction", "use_case", "prompt")
+    @classmethod
+    def validate_text(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(value, label="Nội dung hướng nhạc")
+
+
+class MusicPromptComposerUsageNotes(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    voice_mix_notes: StrictStr
+    edit_notes: StrictStr
+    rights_notes: StrictStr
+    delivery_notes: StrictStr
+
+    @field_validator("voice_mix_notes", "edit_notes", "rights_notes", "delivery_notes")
+    @classmethod
+    def validate_notes(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(value, label="Ghi chú dùng prompt nhạc")
+
+
+class MusicPromptComposerResult(BaseModel):
+    """Exact browser schema for a deterministic, copy-only music receipt."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    title: StrictStr
+    description: StrictStr
+    mode: StrictStr
+    language: StrictStr
+    suggestion_set: StrictStr
+    selected_suggestion: StrictInt = Field(ge=1, le=3)
+    suggestions: list[MusicPromptComposerSuggestion] = Field(min_length=3, max_length=3)
+    selected_direction: MusicPromptComposerSuggestion
+    usage_notes: MusicPromptComposerUsageNotes
+    cautions: list[StrictStr] = Field(default_factory=list, max_length=6)
+    review_before_use: list[StrictStr] = Field(min_length=1, max_length=6)
+
+    @field_validator("title")
+    @classmethod
+    def validate_title(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(value, label="Tiêu đề prompt nhạc", maximum=180)
+
+    @field_validator("description")
+    @classmethod
+    def validate_description(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_output_line(
+            value,
+            label="Mô tả prompt nhạc kết quả",
+            maximum=MUSIC_PROMPT_COMPOSER_MAX_DESCRIPTION,
+        )
+
+    @field_validator("mode")
+    @classmethod
+    def validate_mode(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Chế độ prompt nhạc kết quả", allowed=MUSIC_PROMPT_COMPOSER_MODES)
+
+    @field_validator("language")
+    @classmethod
+    def validate_language(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Ngôn ngữ kết quả", allowed=MUSIC_PROMPT_COMPOSER_LANGUAGES)
+
+    @field_validator("suggestion_set")
+    @classmethod
+    def validate_suggestion_set(cls, value: StrictStr) -> str:
+        return _music_prompt_composer_code(value, label="Nhóm gợi ý kết quả", allowed=MUSIC_PROMPT_COMPOSER_SETS)
+
+    @field_validator("cautions", "review_before_use")
+    @classmethod
+    def validate_lists(cls, value: list[StrictStr], info: Any) -> list[str]:
+        if not isinstance(value, list):
+            raise ValueError("Danh sách review prompt nhạc không hợp lệ")
+        label = "Lưu ý prompt nhạc" if info.field_name == "cautions" else "Checklist review prompt nhạc"
+        return [_music_prompt_composer_output_line(item, label=label) for item in value]
+
+    def model_post_init(self, __context: Any) -> None:
+        if [item.choice for item in self.suggestions] != [1, 2, 3]:
+            raise ValueError("Suggestions phải có đúng ba lựa chọn theo thứ tự")
+        if self.selected_direction.model_dump() != self.suggestions[self.selected_suggestion - 1].model_dump():
+            raise ValueError("Selected direction phải khớp selected suggestion")
+
+
+def _music_prompt_composer_suggestions(payload: MusicPromptComposerRequest) -> list[dict[str, Any]]:
+    catalog = _music_prompt_composer_catalog(payload.mode, payload.language)
+    offset = 0 if payload.suggestion_set == "primary" else 3
+    selected = catalog[offset:offset + 3]
+    description = _music_prompt_composer_excerpt(payload.description, 180)
+    result: list[dict[str, Any]] = []
+    for choice, item in enumerate(selected, start=1):
+        if payload.language == "vi":
+            prompt = (
+                f"Hướng nhạc nguyên bản để biên tập, không tạo audio: {item['name']} cho {description}; "
+                f"mood {item['mood']}; tempo {item['tempo']}; nhạc cụ {item['instruments']}; "
+                f"thời lượng {item['duration']}; vocal {item['vocal']}; hướng lời {item['lyric_direction']}; "
+                "không mô phỏng nghệ sĩ, bài hát, giai điệu, beat hoặc giọng cụ thể."
+            )
+        else:
+            prompt = (
+                f"Original editorial music direction only, no audio creation: {item['name']} for {description}; "
+                f"mood {item['mood']}; tempo {item['tempo']}; instruments {item['instruments']}; "
+                f"duration {item['duration']}; vocal {item['vocal']}; lyric direction {item['lyric_direction']}; "
+                "do not imitate a named artist, song, melody, beat, or voice."
+            )
+        result.append({"choice": choice, **item, "prompt": prompt})
+    return result
+
+
+def _music_prompt_composer_usage_notes(*, language: str, mode: str) -> dict[str, str]:
+    if language == "vi":
+        return {
+            "voice_mix_notes": "Giữ nhạc thấp hơn lời đọc và chừa khoảng nghỉ; đây chỉ là note biên tập, không xử lý hoặc mix audio.",
+            "edit_notes": f"Dùng hướng {mode} để review nhịp, hook, tempo và điểm chuyển cảnh trước khi chuyển sang workflow riêng.",
+            "rights_notes": "Tự xác nhận license, attribution, quyền thương mại, thương hiệu và mọi reference; tool này không xác minh quyền.",
+            "delivery_notes": "Prompt chỉ để copy hoặc biên tập. Không có audio, preview, output, job hoặc delivery nào được tạo từ receipt này.",
+        }
+    return {
+        "voice_mix_notes": "Keep music below narration and leave breathing room; this is editorial guidance only and does not mix or process audio.",
+        "edit_notes": f"Use the {mode} direction to review pacing, hook, tempo, and transitions before moving to a separate workflow.",
+        "rights_notes": "Independently confirm license, attribution, commercial rights, brands, and every reference; this tool verifies none of them.",
+        "delivery_notes": "Prompts are for copying or editing only. This receipt creates no audio, preview, output, job, or delivery.",
+    }
+
+
+def _compose_music_prompt(payload: MusicPromptComposerRequest) -> dict[str, Any]:
+    """Build the Bot-derived suggestion receipt without creating music/media."""
+
+    suggestions = _music_prompt_composer_suggestions(payload)
+    if payload.language == "vi":
+        title = "Gói gợi ý prompt nhạc"
+        cautions = [
+            "Đây là hướng prompt dạng văn bản; không tạo nhạc, lyrics, audio, preview, output hoặc job.",
+            "Không dùng hướng này để mô phỏng nghệ sĩ, ca sĩ, bài hát, beat, giai điệu hoặc giọng cụ thể.",
+            "Mọi claim, tên riêng, thương hiệu, lời bài hát, license và điều khoản phát hành cần được review riêng.",
+        ]
+        review = [
+            "Rà soát tính nguyên bản và tính chính xác của description trước khi dùng ở nơi khác.",
+            "Xác nhận quyền với lời, thương hiệu, người, reference, sample và quyền thương mại trước khi tạo audio ở workflow riêng.",
+            "Kiểm tra nhạc không che voice, CTA hoặc thông tin quan trọng trước khi biên tập bản phát hành.",
+        ]
+    else:
+        title = "Music prompt direction pack"
+        cautions = [
+            "This is a text-only prompt direction; it creates no music, lyrics, audio, preview, output, or job.",
+            "Do not use this direction to imitate a named artist, singer, song, beat, melody, or voice.",
+            "Every claim, name, brand, lyric, license, and release term needs separate review.",
+        ]
+        review = [
+            "Review originality and the accuracy of the description before use elsewhere.",
+            "Confirm rights for lyrics, brands, people, references, samples, and commercial use before a separate audio workflow.",
+            "Check that music does not mask narration, CTA, or important information before release editing.",
+        ]
+    result = {
+        "title": title,
+        "description": payload.description,
+        "mode": payload.mode,
+        "language": payload.language,
+        "suggestion_set": payload.suggestion_set,
+        "selected_suggestion": payload.selected_suggestion,
+        "suggestions": suggestions,
+        "selected_direction": dict(suggestions[payload.selected_suggestion - 1]),
+        "usage_notes": _music_prompt_composer_usage_notes(language=payload.language, mode=payload.mode),
+        "cautions": cautions,
+        "review_before_use": review,
+    }
+    return MusicPromptComposerResult.model_validate(result).model_dump()
+
+
+def _music_prompt_composer_memory_note(composer: dict[str, Any]) -> tuple[str, str, list[str]]:
+    """Serialize the server-recomputed selected direction as one Web note.
+
+    This is not a generic note body sent by the browser. The persisted text is
+    derived from the same strict Composer result inside the write transaction,
+    so the selected direction remains canonical and cannot be replaced with
+    arbitrary browser-authored content.
+    """
+
+    try:
+        result = MusicPromptComposerResult.model_validate(composer).model_dump()
+        selected = dict(result["selected_direction"])
+        usage = dict(result["usage_notes"])
+        title = _single_line(
+            "Music Prompt Composer",
+            label="Tiêu đề ghi chú",
+            minimum=3,
+            maximum=MAX_MEMORY_NOTE_TITLE,
+        )
+        lines = [
+            "Music Prompt Composer — bản nháp Web đã được dựng lại trên máy chủ.",
+            f"Mô tả: {result['description']}",
+            f"Chế độ: {result['mode']}",
+            f"Ngôn ngữ: {result['language']}",
+            f"Nhóm gợi ý: {result['suggestion_set']}",
+            f"Lựa chọn đã lưu: {result['selected_suggestion']}",
+            "",
+            "## Hướng nhạc đã chọn",
+            f"Tên: {selected['name']}",
+            f"Mood: {selected['mood']}",
+            f"Tempo: {selected['tempo']}",
+            f"Nhạc cụ: {selected['instruments']}",
+            f"Thời lượng: {selected['duration']}",
+            f"Vocal: {selected['vocal']}",
+            f"Hướng lời: {selected['lyric_direction']}",
+            f"Ngữ cảnh dùng: {selected['use_case']}",
+            "",
+            "## Prompt đã chọn",
+            str(selected["prompt"]),
+            "",
+            "## Ghi chú biên tập",
+            f"- Voice/mix: {usage['voice_mix_notes']}",
+            f"- Biên tập: {usage['edit_notes']}",
+            f"- Quyền: {usage['rights_notes']}",
+            f"- Delivery: {usage['delivery_notes']}",
+            "",
+            "## Lưu ý",
+        ]
+        lines.extend(f"- {item}" for item in result["cautions"])
+        lines.extend(("", "## Kiểm tra trước khi sử dụng"))
+        lines.extend(f"- {item}" for item in result["review_before_use"])
+        lines.extend(
+            (
+                "",
+                "Ghi chú này không tạo nhạc, lyrics, audio, preview, output, job, tài sản, thanh toán, publish hay gửi Telegram.",
+            )
+        )
+        content = _content(
+            "\n".join(lines),
+            label="Nội dung ghi chú Music Prompt Composer",
+            maximum=MAX_MEMORY_NOTE_CONTENT,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    return title, content, [
+        "music-prompt-composer",
+        f"music-mode-{result['mode']}",
+        f"music-language-{result['language']}",
+    ]
+
+
+def _music_prompt_composer_memory_boundaries(
+    *,
+    draft_recomputed_on_server: bool = True,
+    web_note_persisted: bool = True,
+) -> dict[str, bool | str]:
+    """State the exact side effects of Composer-to-Memory handoff."""
+
+    return {
+        "execution": "web_native_memory_note_server_recomputed",
+        "draft_recomputed_on_server": draft_recomputed_on_server,
+        "web_note_persisted": web_note_persisted,
+        "browser_result_persisted": False,
+        "pending_bot_save_created": False,
+        "telegram_state_changed": False,
+        "bot_called": False,
+        "bridge_called": False,
+        "source_audio_inspected": False,
+        "provider_called": False,
+        "ai_music_called": False,
+        "lyrics_generated": False,
+        "audio_created": False,
+        "preview_created": False,
+        "output_created": False,
+        "job_created": False,
+        "wallet_mutated": False,
+        "payment_started": False,
+        "asset_saved": False,
+        "collection_saved": False,
+        "publish_action_created": False,
+        "delivery_created": False,
+        "fact_checked": False,
+        "rights_verified": False,
+    }
+
+
+@router.post("/tools/music-prompt-composer")
+async def compose_music_prompt(
+    payload: MusicPromptComposerRequest,
+    account: dict = Depends(require_csrf),
+):
+    """Return a transient music direction receipt with no media execution."""
+
+    _require_enabled()
+    del account  # Signed session/CSRF is the only account boundary for this tool.
+    guarded = _music_prompt_composer_guard(_music_prompt_composer_marker(payload.description))
+    if guarded:
+        return guarded
+    composer = _compose_music_prompt(payload)
+    return envelope(
+        True,
+        "Đã tạo ba hướng prompt nhạc dạng văn bản để review. Không có nhạc, lyrics, audio, preview, output, job, thanh toán hoặc Telegram action nào được tạo.",
+        data={"composer": composer, **_music_prompt_composer_boundary()},
+        status_name="draft",
+    )
+
+
+@router.post("/tools/music-prompt-composer/save")
+async def save_music_prompt_composer_to_memory(
+    payload: MusicPromptComposerMemorySaveRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist one server-recomputed music direction as a private Web note.
+
+    This is deliberately separate from the stateless Composer preview. It
+    never reads or creates Bot pending state, calls a bridge/provider, creates
+    a job, changes wallet/payment state, stores an audio asset, writes a media
+    collection, publishes content, or delivers media. Only the signed Web
+    account receives an owner-scoped Memory Center note.
+    """
+
+    _require_enabled()
+    _require_memory_handoff_enabled()
+    marker = _music_prompt_composer_marker(payload.description)
+    if marker:
+        return envelope(
+            False,
+            "Mô tả cần được viết lại theo hướng nguyên bản trước khi lưu vào Memory Center.",
+            data={
+                "destination": "memory_note",
+                **_music_prompt_composer_memory_boundaries(
+                    draft_recomputed_on_server=False,
+                    web_note_persisted=False,
+                ),
+            },
+            status_name="guarded",
+            error_code="WEB_MUSIC_PROMPT_COPYRIGHT_GUARD",
+        )
+
+    account_id = str(account["id"])
+    key = _idempotency_key(payload.idempotency_key)
+    fingerprint = _fingerprint(
+        {
+            "action": "music_prompt_composer_memory_save",
+            "destination": payload.destination,
+            "description": payload.description,
+            "mode": payload.mode,
+            "language": payload.language,
+            "suggestion_set": payload.suggestion_set,
+            "selected_suggestion": payload.selected_suggestion,
+        }
+    )
+
+    def operation(conn: Any) -> dict[str, Any]:
+        # Recompute the exact selected direction inside the write transaction.
+        # The browser never sends generated prompt/body/title material.
+        composer = _compose_music_prompt(payload)
+        note_title, note_content, tags = _music_prompt_composer_memory_note(composer)
+        active_count = conn.execute(
+            "SELECT COUNT(*) FROM web_memory_notes WHERE account_id=? AND state='active'",
+            (account_id,),
+        ).fetchone()
+        if int(active_count[0] or 0) >= MAX_MEMORY_NOTES_PER_ACCOUNT:
+            return envelope(
+                False,
+                "Memory Center đã đạt giới hạn ghi chú đang hoạt động cho Web account này.",
+                data={
+                    "destination": "memory_note",
+                    **_music_prompt_composer_memory_boundaries(
+                        draft_recomputed_on_server=True,
+                        web_note_persisted=False,
+                    ),
+                },
+                status_name="guarded",
+                error_code="WEB_MEMORY_NOTE_LIMIT",
+            )
+        note_id = str(uuid.uuid4())
+        now = utc_now()
+        category = "Music Prompt Composer"
+        priority = "normal"
+        tags_json = json.dumps(tags, ensure_ascii=False, separators=(",", ":"))
+        conn.execute(
+            """INSERT INTO web_memory_notes
+               (id, account_id, title, content, tags_json, category, priority, state, revision, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, 'active', 1, ?, ?)""",
+            (note_id, account_id, note_title, note_content, tags_json, category, priority, now, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_note_versions
+               (id, note_id, account_id, revision, title, content, tags_json, category, priority, created_at)
+               VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, ?)""",
+            (str(uuid.uuid4()), note_id, account_id, note_title, note_content, tags_json, category, priority, now),
+        )
+        conn.execute(
+            """INSERT INTO web_memory_events (id, account_id, note_id, reminder_id, action, created_at)
+               VALUES (?, ?, ?, NULL, ?, ?)""",
+            (str(uuid.uuid4()), account_id, note_id, "note_created", now),
+        )
+        _record_audit(
+            conn,
+            account_id=account_id,
+            canonical_user_id=str(account.get("canonical_user_id") or "") or None,
+            action="web.media_workspace.music_prompt_composer.save_memory",
+            request_id=_request_id(request),
+            target=note_id,
+            detail="server-recomputed music prompt direction saved as web-owned memory note",
+        )
+        return envelope(
+            True,
+            "Đã lưu hướng prompt nhạc vào Memory Center của Web. Không tạo pending Telegram, nhạc, audio, job, tài sản, thanh toán hay publish.",
+            data={
+                "note": {
+                    "id": note_id,
+                    "revision": 1,
+                    "state": "active",
+                    "category": category,
+                    "priority": priority,
+                },
+                "destination": "memory_note",
+                **_music_prompt_composer_memory_boundaries(),
+            },
+            status_name="completed",
+        )
+
+    return _idempotent(
+        f"web-media-workspace:{account_id}:music-prompt-composer:save-memory",
+        account_id,
+        key,
+        fingerprint,
+        operation,
+    )
+
+
 @router.get("/summary")
 async def media_workspace_summary(account: dict = Depends(require_account)):
     _require_enabled()
@@ -890,27 +1621,55 @@ async def media_workspace_policy(account: dict = Depends(require_account)):
 
 
 @router.get("/audio-assets")
-async def list_audio_assets(q: str = "", limit: int = 50, account: dict = Depends(require_account)):
+async def list_audio_assets(
+    q: str = "",
+    limit: int = 50,
+    offset: int = 0,
+    account: dict = Depends(require_account),
+):
     _require_enabled()
     query = _safe_filter(q, label="Từ khóa audio", maximum=100)
     bounded = max(1, min(int(limit), MAX_LIST_LIMIT))
+    bounded_offset = max(0, min(int(offset), 10_000))
+    audio_clauses: list[str] = []
+    audio_params: list[Any] = []
+    # Keep the SQL predicate exactly aligned with ``_is_audio_asset``.  The
+    # old implementation fetched the newest 300 arbitrary Vault files and
+    # filtered them in Python, which made an older valid audio impossible to
+    # find or attach once a user had a busy Asset Vault.
+    for extension in sorted(AUDIO_EXTENSIONS):
+        content_types = sorted(AUDIO_CONTENT_TYPES.get(extension, frozenset()))
+        placeholders = ", ".join("?" for _ in content_types)
+        audio_clauses.append(f"(LOWER(extension)=? AND LOWER(content_type) IN ({placeholders}))")
+        audio_params.extend([extension, *content_types])
+    clauses = ["account_id=?", "state='active'", f"({' OR '.join(audio_clauses)})"]
+    params: list[Any] = [str(account["id"]), *audio_params]
+    if query:
+        like = f"%{_escaped_like(query)}%"
+        clauses.append("(display_name LIKE ? ESCAPE '\\' OR original_filename LIKE ? ESCAPE '\\')")
+        params.extend([like, like])
     with read_transaction() as conn:
         rows = conn.execute(
             """SELECT id, project_id, display_name, original_filename, extension, content_type, byte_size,
                       state, created_at, updated_at, archived_at
                FROM web_asset_files
-               WHERE account_id=? AND state='active'
-               ORDER BY updated_at DESC, id DESC LIMIT 300""",
-            (str(account["id"]),),
+               WHERE """ + " AND ".join(clauses) + """
+               ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded + 1, bounded_offset),
         ).fetchall()
-    items = [_audio_asset_public(row) for row in rows if _is_audio_asset(row[4], row[5])]
-    if query:
-        needle = query.casefold()
-        items = [item for item in items if needle in f"{item['display_name']} {item['original_filename']}".casefold()]
+    items = [_audio_asset_public(row) for row in rows[:bounded]]
+    has_more = len(rows) > bounded
     return envelope(
         True,
         "Đã tải audio Asset Vault thuộc Web account hiện tại.",
-        data={"items": items[:bounded], "has_more": len(items) > bounded, "source": "asset_vault_owner_scoped"},
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": bounded_offset + bounded if has_more else None,
+            "filters": {"q": query},
+            "pagination": {"limit": bounded, "offset": bounded_offset, "returned": len(items)},
+            "source": "asset_vault_owner_scoped",
+        },
         status_name="read_only",
     )
 
@@ -918,6 +1677,7 @@ async def list_audio_assets(q: str = "", limit: int = 50, account: dict = Depend
 @router.get("/collections")
 async def list_collections(
     limit: int = 30,
+    offset: int = 0,
     state: str = "active",
     q: str = "",
     tag: str = "",
@@ -926,6 +1686,7 @@ async def list_collections(
 ):
     _require_enabled()
     bounded = max(1, min(int(limit), MAX_LIST_LIMIT))
+    bounded_offset = max(0, min(int(offset), 10_000))
     state_filter = str(state or "active").strip().lower()
     if state_filter not in {*COLLECTION_STATES, "all"}:
         raise HTTPException(status_code=422, detail="Bộ lọc trạng thái collection không hợp lệ")
@@ -954,13 +1715,21 @@ async def list_collections(
             f"""SELECT id, project_id, title, description, creative_brief, prompt_mode, use_context, tags_json,
                        rights_note, policy_marker, state, revision, created_at, updated_at, archived_at
                 FROM web_media_collections WHERE {' AND '.join(clauses)}
-                ORDER BY updated_at DESC, id DESC LIMIT ?""",
-            (*params, bounded + 1),
+                ORDER BY updated_at DESC, id DESC LIMIT ? OFFSET ?""",
+            (*params, bounded + 1, bounded_offset),
         ).fetchall()
+    items = [_collection_public(row) for row in rows[:bounded]]
+    has_more = len(rows) > bounded
     return envelope(
         True,
         "Đã tải Audio Library & Briefing riêng tư.",
-        data={"items": [_collection_public(row) for row in rows[:bounded]], "has_more": len(rows) > bounded},
+        data={
+            "items": items,
+            "has_more": has_more,
+            "next_offset": bounded_offset + bounded if has_more else None,
+            "filters": {"q": query, "tag": tag_filter, "prompt_mode": mode_filter, "state": state_filter},
+            "pagination": {"limit": bounded, "offset": bounded_offset, "returned": len(items)},
+        },
         status_name="read_only",
     )
 

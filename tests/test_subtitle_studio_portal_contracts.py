@@ -14,6 +14,7 @@ INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding
 SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
+CONTRACT = (ROOT / "docs" / "migration" / "SUBTITLE_TRANSCRIPT_WORKSPACE_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_subtitle_studio_is_native_and_does_not_alias_legacy_routes() -> None:
@@ -34,6 +35,65 @@ def test_subtitle_studio_is_native_and_does_not_alias_legacy_routes() -> None:
     assert 'botCompanionPage("/subtitle-studio"' not in PORTAL
 
 
+def test_legacy_subtitle_routes_offer_only_a_plain_text_editor_navigation_link() -> None:
+    start = PORTAL.index("const SUBTITLE_STUDIO_COMPANION_INTENTS")
+    end = PORTAL.index("function renderWorkspace", start)
+    companion = PORTAL[start:end]
+    expected_intents = {
+        "/subtitle": "subtitle",
+        "/subtitle/create": "subtitle",
+        "/translate": "translation",
+        "/dubbing": "dubbing_direction",
+        "/asr": "asr_review",
+    }
+    for route, intent in expected_intents.items():
+        assert f'"{route}": "{intent}"' in companion
+    assert "function renderSubtitleStudioCompanionLink(page)" in companion
+    assert 'const href = `/subtitle-studio/new?intent=${encodeURIComponent(intent)}`;' in companion
+    assert "Biên tập transcript/cue thủ công" in companion
+    assert "không chuyển prompt, upload, media hoặc trạng thái" in companion
+    assert "không chạy ASR, dịch máy, TTS hoặc dubbing" in companion
+    for forbidden in ("data-portal-action", "data-portal-form", "data-portal-route", "api(", "fetch(", "window.location"):
+        assert forbidden not in companion
+
+    workspace_start = PORTAL.index("function renderWorkspace(page, context)")
+    workspace_end = PORTAL.index("function renderVoiceVault", workspace_start)
+    workspace = PORTAL[workspace_start:workspace_end]
+    assert "renderSubtitleStudioCompanionLink(page)" in workspace
+    assert "${subtitleStudioCompanion}" in workspace
+
+    # The compatibility flows stay intact; the link is deliberately not a
+    # redirect/alias and does not remove their bridge mapping or intake rules.
+    feature_start = INTEGRATION.index("const FEATURE_BY_PATH")
+    feature_end = INTEGRATION.index("  };", feature_start) + len("  };")
+    feature_map = INTEGRATION[feature_start:feature_end]
+    for route in ("/subtitle", "/subtitle/create", "/translate", "/dubbing", "/asr"):
+        assert f'"{route}"' in feature_map
+
+
+def test_subtitle_studio_new_project_query_is_allowlisted_and_form_only() -> None:
+    start = PORTAL.index("const SUBTITLE_STUDIO_INTENTS")
+    end = PORTAL.index("function subtitleStudioCueFields", start)
+    new_project = PORTAL[start:end]
+    assert "const SUBTITLE_STUDIO_INTENT_KEYS = new Set" in new_project
+    assert "function subtitleStudioNewProjectIntentFromQuery(page)" in new_project
+    assert 'if (route !== "/subtitle-studio/new") return "subtitle";' in new_project
+    assert 'new URLSearchParams(window.location.search).get("intent")' in new_project
+    assert 'SUBTITLE_STUDIO_INTENT_KEYS.has(candidate) ? candidate : "subtitle"' in new_project
+    assert 'intent: subtitleStudioNewProjectIntentFromQuery(page)' in PORTAL
+    for forbidden in ("api(", "fetch(", "bridge", "payos", "/payments", "/jobs", "provider"):
+        assert forbidden not in new_project.lower()
+    for mapping in (
+        "`/subtitle`, `/subtitle/create` | `?intent=subtitle`",
+        "`/translate` | `?intent=translation`",
+        "`/asr` | `?intent=asr_review`",
+        "`/dubbing` | `?intent=dubbing_direction`",
+    ):
+        assert mapping in CONTRACT
+    assert "không mang theo" in CONTRACT
+    assert "không phải redirect\nhay alias" in CONTRACT
+
+
 def test_subtitle_studio_uses_private_text_only_api_and_server_revision_controls() -> None:
     for helper in (
         "subtitleProjectIdFromPath",
@@ -50,7 +110,7 @@ def test_subtitle_studio_uses_private_text_only_api_and_server_revision_controls
 
     for endpoint in (
         'api("/subtitle-studio/summary")',
-        'api("/subtitle-studio/projects")',
+        'api(subtitleStudioProjectsPath(requested))',
         'api("/subtitle-studio/events?limit=50")',
         'api("/subtitle-studio/references")',
         'api("/subtitle-studio/projects/" + encodeURIComponent(String(projectId)))',
@@ -131,7 +191,12 @@ def test_subtitle_studio_stays_text_only_and_draft_editable() -> None:
     assert "/api/v1/subtitle-studio" in SERVICE_WORKER
     assert "/api/v1/subtitle-studio" not in shell
     assert '"/subtitle-studio"' not in shell
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v15"' in SERVICE_WORKER
+    # The build-scoped cache must retire only obsolete portal shell generations;
+    # private Subtitle routes remain outside it.
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-";' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
+    assert ".filter((key) => key.startsWith(CACHE_PREFIX) && key !== CACHE_NAME)" in SERVICE_WORKER
 
     for selector in (
         ".portal-subtitle-studio-intro",

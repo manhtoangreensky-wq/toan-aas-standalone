@@ -177,6 +177,80 @@ def test_project_center_rejects_sensitive_content_invalid_kind_and_archived_writ
         assert blocked.json()["error_code"] == "WEB_PROJECT_ARCHIVED"
 
 
+def test_project_list_filter_pagination_and_owner_scope(tmp_path, monkeypatch):
+    """Project search stays server-side, bounded and private to its owner."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "project-listing@example.com")
+        created = []
+        for index, title in enumerate(("Portfolio 2026 Alpha", "Portfolio 2026 Beta", "Portfolio 2026 Archive"), start=1):
+            response = client.post(
+                "/api/v1/projects",
+                headers={"X-CSRF-Token": csrf},
+                json={
+                    "title": title,
+                    "summary": "Danh sách Project owner-scoped",
+                    "objective": "Kiểm tra bộ lọc",
+                    "idempotency_key": f"project-list-create-{index:04d}",
+                },
+            )
+            assert response.status_code == 200
+            created.append(response.json()["data"]["project"])
+
+        archived = created[-1]
+        archived_response = client.patch(
+            f"/api/v1/projects/{archived['id']}",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "title": archived["title"],
+                "summary": archived["summary"],
+                "objective": archived["objective"],
+                "state": "archived",
+                "idempotency_key": "project-list-archive-0001",
+            },
+        )
+        assert archived_response.status_code == 200
+
+        active_page_one = client.get(
+            "/api/v1/projects",
+            params={"q": "Portfolio 2026", "state": "active", "limit": 1},
+        )
+        assert active_page_one.status_code == 200 and active_page_one.json()["ok"] is True
+        page_one = active_page_one.json()["data"]
+        assert page_one["filters"] == {"q": "Portfolio 2026", "state": "active"}
+        assert page_one["pagination"] == {"limit": 1, "offset": 0, "returned": 1}
+        assert page_one["has_more"] is True and page_one["next_offset"] == 1
+
+        active_page_two = client.get(
+            "/api/v1/projects",
+            params={"q": "Portfolio 2026", "state": "active", "limit": 1, "offset": page_one["next_offset"]},
+        )
+        page_two = active_page_two.json()["data"]
+        assert active_page_two.status_code == 200 and page_two["has_more"] is False
+        assert page_two["items"][0]["id"] != page_one["items"][0]["id"]
+
+        archived_only = client.get("/api/v1/projects", params={"q": "Portfolio 2026", "state": "archived", "limit": 10})
+        assert [item["id"] for item in archived_only.json()["data"]["items"]] == [archived["id"]]
+
+        literal_title = client.post(
+            "/api/v1/projects",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "title": "Literal 100% Project",
+                "summary": "Ký tự wildcard phải là ký tự thường",
+                "objective": "Kiểm tra escape LIKE",
+                "idempotency_key": "project-list-literal-0001",
+            },
+        ).json()["data"]["project"]
+        literal_search = client.get("/api/v1/projects", params={"q": "%", "limit": 100})
+        assert [item["id"] for item in literal_search.json()["data"]["items"]] == [literal_title["id"]]
+        assert client.get("/api/v1/projects", params={"state": "unknown"}).status_code == 422
+
+        register_and_login(client, "project-listing-other@example.com")
+        isolated = client.get("/api/v1/projects", params={"q": "Portfolio 2026", "limit": 100})
+        assert isolated.status_code == 200
+        assert isolated.json()["data"]["items"] == []
+
+
 def test_project_center_has_no_bot_bridge_or_payment_dependency():
     source = open("copyfast_projects.py", encoding="utf-8").read()
     assert "from copyfast_bridge" not in source

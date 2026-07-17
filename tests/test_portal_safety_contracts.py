@@ -197,12 +197,14 @@ def test_workflow_forms_follow_the_supported_bot_contracts_before_staging() -> N
     assert "Image-to-Video chỉ nhận JPG, PNG hoặc WebP" in INTEGRATION
 
 
-def test_storyboard_and_image_to_image_keep_their_bot_specific_intake_contracts() -> None:
+def test_storyboard_shortcut_uses_the_native_text_composer_while_image_transform_keeps_its_contract() -> None:
     assert "contentStoryboard" in PORTAL
     assert 'name: "template"' in PORTAL
     assert 'name: "duration", label: "Thời lượng mục tiêu (giây)"' in PORTAL
-    assert 'featurePage("/content/storyboard"' in PORTAL
-    assert "FIELD_SETS.contentStoryboard" in PORTAL
+    assert 'contentPromptPackShortcutPage("/content/storyboard"' in PORTAL
+    assert '"image_video_prompt", ["/storyboard"]' in PORTAL
+    assert 'featurePage("/content/storyboard"' not in PORTAL
+    assert "function contentPromptPackKindForPage(page)" in PORTAL
     assert "imageTransform" in PORTAL
     assert 'featurePage("/image/transform"' in PORTAL
     assert "FIELD_SETS.imageTransform" in PORTAL
@@ -304,7 +306,10 @@ def test_command_palette_is_session_scoped_navigation_without_data_actions() -> 
     assert "function renderCommandPalette(page, context)" in PORTAL
     palette = PORTAL[PORTAL.index("function commandPaletteItems(context, page)"):PORTAL.index("function renderSidebar(page, context)")]
     assert 'candidate.access === "public"' in palette
-    assert 'candidate.access === "admin" && !(context && context.isAdmin === true)' in palette
+    # Admin destinations are no longer inferred from a cached browser role.
+    # They must be in the server-issued, session-scoped ERP navigation grant.
+    assert "const authorizedAdminRoutes = adminErpNavigation(context).routes;" in palette
+    assert 'candidate.access === "admin" && !authorizedAdminRoutes.has(path)' in palette
     assert "fetch(" not in palette
     assert "dispatchAction(" not in palette
     assert 'role="dialog" aria-modal="true"' in palette
@@ -321,16 +326,22 @@ def test_command_palette_is_session_scoped_navigation_without_data_actions() -> 
 
 def test_nav_highlights_route_families_instead_of_only_each_launch_route() -> None:
     assert "function matchesRouteFamily(path, root)" in PORTAL
-    assert 'if (linkPath === "/image/create") return path === "/image" || matchesRouteFamily(path, "/image");' in PORTAL
+    # The Web-native prompt composer is a separate navigation destination, so
+    # the legacy Image launch item never announces both items as current.
+    assert 'if (linkPath === "/image/prompt-composer") return path === "/image/prompt-composer";' in PORTAL
+    assert 'if (linkPath === "/image/create") return path !== "/image/prompt-composer" && (path === "/image" || matchesRouteFamily(path, "/image"));' in PORTAL
     # `/video-studio` is a separate native workspace, not a legacy `/video/*`
     # child.  Keep the historical Video nav matcher exact so it cannot claim
     # the new route merely because both names share the `video` prefix.
     assert 'if (linkPath === "/video/create") return path === "/video" || path.startsWith("/video/");' in PORTAL
-    assert 'if (linkPath === "/video-studio") return matchesRouteFamily(path, "/video-studio");' in PORTAL
+    assert 'if (linkPath === "/video-studio") return !["/video-studio/workflow", "/video-studio/story-video-plan"' in PORTAL
     assert 'if (linkPath === "/voice/tts") return path === "/tts" || matchesRouteFamily(path, "/voice");' in PORTAL
     assert 'if (linkPath === "/subtitle") return matchesRouteFamily(path, "/subtitle") || ["/translate", "/dubbing", "/asr"].includes(path);' in PORTAL
     assert 'if (linkPath === "/admin") {' in PORTAL
-    assert '["/admin", "Tất cả module", ICONS.admin]' in PORTAL
+    # ERP navigation is not a static client-side directory. It is appended
+    # only from the signed, server-issued module projection.
+    assert "erp.groups.forEach((group) =>" in PORTAL
+    assert "serverAuthorizesAdminRoute(context, page.routePath || page.path)" in PORTAL
     assert '["/video/create", "Video", ICONS.video]' in PORTAL
 
 
@@ -412,7 +423,15 @@ def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:
 def test_pending_link_code_hides_duplicate_hero_action_and_requires_confirmation() -> None:
     assert "const linkPending = page.action === \"start-telegram-link\"" in PORTAL
     assert 'data-portal-confirm="Tạo mã mới sẽ hủy mã đang hiển thị.' in PORTAL
-    assert "if (confirmation && !window.confirm(confirmation)) return;" in PORTAL
+    # The confirmation branch also clears password fields for the one
+    # sensitive form that can reach it, so it is deliberately block-shaped
+    # rather than the former one-line early return.
+    confirmation_guard = PORTAL[
+        PORTAL.index("const confirmation = source.getAttribute(\"data-portal-confirm\") || \"\";"):
+        PORTAL.index("// Search/filter text is intentionally ephemeral.")
+    ]
+    assert "if (confirmation && !window.confirm(confirmation)) {" in confirmation_guard
+    assert "return;" in confirmation_guard
 
 
 def test_account_uses_scoped_profile_metadata_and_server_side_logout() -> None:
@@ -457,6 +476,7 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     assert "function renderWorkspaceDrafts(page, context)" in PORTAL
     normalizer = PORTAL[PORTAL.index("function normalizeBootstrap(raw)"):PORTAL.index("function getBootstrap()")]
     assert "workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : []" in normalizer
+    assert "workspaceDraftListing: normalizeWorkspaceDraftListing(source.workspaceDraftListing)" in normalizer
     assert "function restoreWorkspaceDraft(route, input, draftId)" in PORTAL
     assert 'data-portal-action="workspace-draft-save"' in PORTAL
     form = PORTAL[PORTAL.index("function renderFormCard(page, context)"):PORTAL.index("function renderHero")]
@@ -485,16 +505,38 @@ def test_workspace_drafts_are_web_owned_and_never_resume_canonical_state() -> No
     assert "item.web_workspace_draft_supported === true" in INTEGRATION
     assert "webWorkspaceDraftFeatures" in INTEGRATION
     assert "function workspaceDraftInput(fields)" in INTEGRATION
-    assert "async function hydrateWorkspaceDrafts()" in INTEGRATION
-    assert 'api("/workspace/drafts?include_archived=true")' in INTEGRATION
+    assert "async function hydrateWorkspaceDrafts(filterValue, offsetValue)" in INTEGRATION
+    assert "function workspaceDraftListPath(filter, offset, limit)" in INTEGRATION
+    assert "function workspaceDraftListingProjection(filter, offset, source, returned, limit)" in INTEGRATION
+    assert "new URLSearchParams" in INTEGRATION
+    assert "workspace-drafts-filter" in INTEGRATION
+    assert "workspace-drafts-page" in INTEGRATION
+    assert "refreshWorkspaceDraftLibraryAfterMutation" in INTEGRATION
     assert 'api(`/workspace/drafts/${encodeURIComponent(draftId)}`)' in INTEGRATION
     assert "workspace-draft-resume" in INTEGRATION
     assert "workspace-draft-archive" in INTEGRATION
     assert 'action === "workspace-draft-save" || action === "workspace-draft-update"' in INTEGRATION
     assert 'method: updating ? "PATCH" : "POST"' in INTEGRATION
     assert "restoreWorkspaceDraft(item.route, item.input, item.id)" in INTEGRATION
+    workspace_render = PORTAL[PORTAL.index("function renderWorkspaceDrafts(page, context)"):PORTAL.index("const PROJECT_DOCUMENT_KINDS")]
+    assert 'data-portal-no-transient data-portal-action="workspace-drafts-filter"' in workspace_render
+    assert "workspace-drafts-filter-clear" in workspace_render
+    assert "renderWorkspaceDraftPagination(listing)" in workspace_render
+    assert '"workspace-drafts-page"' in PORTAL
+    assert "item.input" not in workspace_render
+    assert "input_json" not in workspace_render
     api = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
     start = api.index('@router.get("/workspace/drafts")')
+    list_end = api.index('@router.get("/workspace/drafts/{draft_id}")', start)
+    list_api = api[start:list_end]
+    assert "input_json" not in list_api
+    assert "title LIKE ?" in list_api
+    assert "feature_key LIKE ?" in list_api
+    assert "LIMIT ? OFFSET ?" in list_api
+    assert '"has_more": has_more' in list_api
+    assert '"next_offset"' in list_api
+    assert '"pagination"' in list_api
+    assert '"summary"' in list_api
     end = api.index('@router.get("/core/me")')
     workspace_api = api[start:end]
     assert '@router.get("/workspace/drafts/{draft_id}")' in workspace_api
@@ -515,11 +557,13 @@ def test_portal_normalizer_preserves_owner_scoped_hydration_state() -> None:
     normalizer = PORTAL[PORTAL.index("function normalizeBootstrap(raw)"):PORTAL.index("function getBootstrap()")]
     for expected in (
         "workspaceDrafts: Array.isArray(source.workspaceDrafts) ? source.workspaceDrafts.slice(0, 100) : []",
+        "workspaceDraftListing: normalizeWorkspaceDraftListing(source.workspaceDraftListing)",
         "vaultItems: Array.isArray(source.vaultItems) ? source.vaultItems.slice(0, 100) : []",
         "campaignPlanDetail: source.campaignPlanDetail && typeof source.campaignPlanDetail === \"object\" ? source.campaignPlanDetail : {}",
         "accountActivity: Array.isArray(source.accountActivity) ? source.accountActivity.slice(0, 50) : []",
         "assetFilter: typeof source.assetFilter === \"string\" ? source.assetFilter : \"all\"",
         "ticketFilter: typeof source.ticketFilter === \"string\" ? source.ticketFilter : \"all\"",
+        "projectListing: {",
         "pwaEnabled: source.pwaEnabled === true",
     ):
         assert expected in normalizer
@@ -550,10 +594,19 @@ def test_project_center_is_a_web_owned_versioned_workspace_without_bot_execution
     assert 'case "project-center": return renderProjectCenter(page, context);' in PORTAL
     assert 'case "project-detail": return renderProjectDetail(page, context);' in PORTAL
     assert '"project-create": Boolean(account && me.csrf_token)' in INTEGRATION
-    assert "async function hydrateProjects()" in INTEGRATION
+    assert "async function hydrateProjects(filterValue, offsetValue)" in INTEGRATION
     assert "async function hydrateProjectDetail(path)" in INTEGRATION
     assert "async function hydrateStudioDocument(documentId)" in INTEGRATION
-    assert 'api("/projects")' in INTEGRATION
+    assert "function projectFilterPayload(value)" in INTEGRATION
+    assert "function projectListPath(filter, offset)" in INTEGRATION
+    assert "function projectListingProjection(filter, offset, source, returned)" in INTEGRATION
+    assert "api(projectListPath(filter, offset))" in INTEGRATION
+    for action in ("projects-filter", "projects-filter-clear", "projects-page"):
+        assert f'action === \"{action}\"' in INTEGRATION
+        assert action in PORTAL
+    assert "data-portal-no-transient" in PORTAL
+    assert ".portal-project-filter" in PORTAL_CSS
+    assert ".portal-project-pagination" in PORTAL_CSS
     assert 'api(`/projects/${encodeURIComponent(projectId)}`)' in INTEGRATION
 
 
@@ -576,13 +629,25 @@ def test_asset_vault_is_a_separate_private_web_surface() -> None:
     vault_renderer = PORTAL[PORTAL.index("function renderAssetVault(page, context)"):PORTAL.index("function renderTickets(page, context)")]
     assert 'data-portal-action="asset-vault-upload"' in vault_renderer
     assert 'data-portal-action="asset-vault-archive"' in vault_renderer
+    assert 'data-portal-action="asset-vault-filter"' in vault_renderer
+    assert 'data-portal-action="asset-vault-filter-clear"' in vault_renderer
+    assert 'data-portal-action="asset-vault-page"' in PORTAL
+    assert 'data-portal-no-transient' in vault_renderer
+    assert 'Tệp đã lưu trữ; tải về đang khóa.' in vault_renderer
     assert "/api/v1/assets/" not in vault_renderer
-    assert 'api("/asset-vault")' in INTEGRATION
-    assert "async function hydrateAssetVault()" in INTEGRATION
+    assert "function assetVaultFilterPayload(value)" in INTEGRATION
+    assert "function assetVaultListPath(filter, offset)" in INTEGRATION
+    assert "function assetVaultListingProjection(filter, offset, source, returned)" in INTEGRATION
+    assert "api(assetVaultListPath(filter, offset))" in INTEGRATION
+    assert "async function hydrateAssetVault(filterValue, offsetValue)" in INTEGRATION
+    for action in ("asset-vault-filter", "asset-vault-filter-clear", "asset-vault-page"):
+        assert f'action === \"{action}\"' in INTEGRATION
     assert '"asset-vault-upload": Boolean(account && me.csrf_token && assetVaultEnabled)' in INTEGRATION
     assert "FormData()" in INTEGRATION
     assert "/api/v1/asset-vault" in SERVICE_WORKER
     assert ".portal-vault-dropzone" in PORTAL_CSS
+    assert ".portal-vault-filter" in PORTAL_CSS
+    assert ".portal-vault-pagination" in PORTAL_CSS
 
 
 def test_registration_explains_real_login_methods_and_profile_defaults() -> None:
@@ -733,9 +798,13 @@ def test_pwa_caches_only_the_fixed_public_shell() -> None:
     assert 'cache.put(' not in SERVICE_WORKER
     assert '"/api/' not in SERVICE_WORKER
     assert 'wallet, payment, admin' in SERVICE_WORKER
-    assert 'fetch(request).catch(() => caches.match(url.pathname).then((cached) => cached || Response.error()))' in SERVICE_WORKER
-    # A public-shell change must invalidate the prior PWA shell bundle.
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    assert 'const OFFLINE_FALLBACK = "/static/portal/offline.html";' in SERVICE_WORKER
+    assert 'const PUBLIC_NAVIGATION_PATHS = Object.freeze([' in SERVICE_WORKER
+    assert 'if (!PUBLIC_NAVIGATION_PATHS.includes(url.pathname)) return;' in SERVICE_WORKER
+    assert 'matchCurrentShell(OFFLINE_FALLBACK)' in SERVICE_WORKER
+    assert 'fetch(request).catch(() => matchCurrentShell(url.pathname).then((cached) => cached || Response.error()))' in SERVICE_WORKER
+    # Every deployment receives a validated public-shell cache generation.
+    assert 'const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;' in SERVICE_WORKER
 
 
 def test_public_landing_hides_authenticated_shell_without_leaving_a_layout_slot() -> None:
@@ -779,10 +848,14 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert "function localAdminCompatibilityGuard(target)" in INTEGRATION
     assert "async function readAdminPath(path)" in INTEGRATION
     assert "return target.supported ? api(target.endpoint) : localAdminCompatibilityGuard(target);" in INTEGRATION
-    assert "const admin = await readAdminPath(path);" in INTEGRATION
+    assert "async function hydrateCanonicalAdminData(path)" in INTEGRATION
+    assert "const admin = await readAdminPath(expectedPath);" in INTEGRATION
+    assert "await hydrateCanonicalAdminData(path);" in INTEGRATION
     assert "ADMIN_MODULE_ADAPTER_NOT_PUBLISHED" in INTEGRATION
     assert '"/admin/jobs/failed": "/admin/modules/failed-jobs"' in INTEGRATION
-    assert '"/admin/providers": "/admin/modules/providers"' in INTEGRATION
+    # Providers has a dedicated canonical, redacted read endpoint; it is not
+    # widened into a generic module request from the browser.
+    assert '"/admin/providers": "/admin/providers"' in INTEGRATION
     assert "compatibility_guarded" in PORTAL
     assert "Web không gọi một module Bot chưa công bố" in PORTAL
     assert '"Worker jobs"' in PORTAL
@@ -791,7 +864,9 @@ def test_admin_route_aliases_use_existing_read_only_bridge_modules() -> None:
     assert 'adminPage("/admin/backups"' in PORTAL
     assert "const ADMIN_DIRECTORY_GROUPS" in PORTAL
     assert "function adminDirectoryEntries()" in PORTAL
-    assert 'if (context.isAdmin !== true) return "";' in PORTAL
+    assert "const authorized = adminErpNavigation(context);" in PORTAL
+    assert "const groups = authorized.groups;" in PORTAL
+    assert "if (!groups.length) return \"\";" in PORTAL
     assert "renderAdminDirectory(context)" in PORTAL
     assert "Danh mục Admin ERP" in PORTAL
 
@@ -822,7 +897,10 @@ def test_content_operations_admin_modules_are_explicit_navigation_not_browser_au
         assert f'WebFeature("admin_{route.rsplit("/", 1)[-1]}", "{title}", "admin", "{route}", "admin")' in (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
     assert 'key: "content-ops", title: "Content & Publishing"' in PORTAL
     assert 'return "content-ops";' in PORTAL
-    section = PORTAL[PORTAL.index('adminPage("/admin/campaigns"'):PORTAL.index('adminPage("/admin/audit"')]
+    # Keep the content operations slice independent of nearby Finance/Trends
+    # ERP pages so an authority-boundary assertion cannot be affected by
+    # harmless page ordering changes.
+    section = PORTAL[PORTAL.index('adminPage("/admin/campaigns"'):PORTAL.index('adminPage("/admin/growth"')]
     assert 'action: "none"' not in section  # adminPage enforces this centrally rather than each declaration
     assert "không tự gửi bài" in section
     assert "không tạo hoặc publish lịch giả" in section
@@ -986,7 +1064,9 @@ def test_account_exposes_bot_preferences_only_as_safe_handoffs() -> None:
     assert 'command: "/data_delete"' in account
     assert 'data-portal-action="copy-bot-companion-command"' in account
     assert "Web không giả đồng bộ" in account
-    assert "Xóa dữ liệu, đổi quyền hay thay Telegram identity" in account
+    assert "gửi Telegram ID sang Bot" in account
+    assert "không mang theo session, identity, token hoặc dữ liệu riêng tư từ Web" in account
+    assert "Web không tự xóa account hay dữ liệu Telegram" in account
     assert "fetch(" not in account
     assert '"/language", "/mode", "/profile", "/mydata"' in INTEGRATION
     assert '"/tickets", "/ticket_status", "/data_delete"' in INTEGRATION
@@ -1333,7 +1413,9 @@ def test_welcome_is_an_explicit_marketing_route_while_root_stays_in_app_mode() -
     assert 'if normalized in {"/", "/app"}:' in app
     assert 'return RedirectResponse("/login", status_code=307)' in app
     assert 'return RedirectResponse("/dashboard", status_code=307)' in app
-    assert 'public_pages = {"/welcome", "/legal", "/privacy"}' in app
+    # Password recovery intentionally remains an explicit public route; its
+    # one-time proof is protected by the narrower no-referrer route boundary.
+    assert 'public_pages = {"/welcome", "/legal", "/privacy", "/password-recovery"}' in app
     railway = (ROOT / "railway.json").read_text(encoding="utf-8")
     assert '"healthcheckPath": "/health"' in railway
 
@@ -1473,6 +1555,7 @@ def test_campaign_planner_is_a_web_owned_account_scoped_board_not_bot_campaign_a
     assert "localStorage" not in calendar + approvals
     assert '"/calendar": "Content Calendar"' in pages
     assert '"/approvals": "Self-review Queue"' in pages
-    assert '["/campaigns", "/calendar", "/approvals"].includes(currentPath)' in INTEGRATION
+    assert 'currentPath === "/calendar") await hydrateCampaignCalendar()' in INTEGRATION
+    assert '["/campaigns", "/approvals"].includes(currentPath)' in INTEGRATION
     assert ".portal-calendar-grid" in PORTAL_CSS
     assert ".portal-calendar-event" in PORTAL_CSS

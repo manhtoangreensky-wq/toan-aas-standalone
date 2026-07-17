@@ -45,8 +45,21 @@ def test_enhance_hydration_and_write_use_only_private_image_operation_routes() -
     assert '"image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled)' in INTEGRATION
     assert '"/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded"' in INTEGRATION
     assert "function imageEnhancePrivateReadPageState(assetState, operationState)" in INTEGRATION
-    assert "async function hydrateImageEnhanceOperations()" in INTEGRATION
-    assert 'api("/image-operations?kind=image_enhance&limit=100")' in INTEGRATION
+    # History paging was added after the original surface.  The reader stays
+    # private; its optional offset is not a generic bridge fallback.
+    assert "async function hydrateImageEnhanceOperations(offsetValue)" in INTEGRATION
+    history_start = INTEGRATION.index("function imageOperationHistoryPath(kind, offset)")
+    history_end = INTEGRATION.index("function operationHistoryRequestIsCurrent", history_start)
+    history_path = INTEGRATION[history_start:history_end]
+    enhance_reader_start = INTEGRATION.index("async function hydrateImageEnhanceOperations(offsetValue)")
+    enhance_reader_end = INTEGRATION.index("async function hydrateProjectDetail", enhance_reader_start)
+    enhance_reader = INTEGRATION[enhance_reader_start:enhance_reader_end]
+    assert 'return "/image-operations?" + new URLSearchParams({' in history_path
+    assert "kind: normalizedKind" in history_path
+    assert "limit: String(OPERATION_HISTORY_LIST_LIMIT)" in history_path
+    assert "offset: String(operationHistoryListOffset(offset))" in history_path
+    assert 'const kind = "image_enhance"' in enhance_reader
+    assert "api(imageOperationHistoryPath(kind, offset))" in enhance_reader
     assert 'api("/image-operations/enhance"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "image-operation-enhance")'):

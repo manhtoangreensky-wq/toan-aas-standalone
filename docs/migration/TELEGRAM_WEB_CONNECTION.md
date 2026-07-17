@@ -162,8 +162,8 @@ credential is shared in this handoff.
 
 The Web-only database holds signed sessions, CSRF tokens, one-time link/login
 code hashes and callback replay nonces. It is **not** a Bot wallet/job/PayOS
-database, but it must survive a normal deploy/restart. Production startup now
-fails closed unless either:
+database, but it must survive a normal deploy/restart. In `production`,
+`prod` and `live`, startup fails closed unless either:
 
 ```text
 WEBAPP_SESSION_DB_PATH=/data/toanaas_webapp_session.db
@@ -171,12 +171,22 @@ WEBAPP_SESSION_DB_PATH=/data/toanaas_webapp_session.db
 
 points to a persistent Railway volume, a persistent `/data` mount exists, or
 Railway exposes an existing absolute `RAILWAY_VOLUME_MOUNT_PATH` in the **Web
-service itself**. `WEBAPP_SESSION_DB_PATH` always takes precedence. The Web
-App verifies that the Railway mount directory exists before using it; a value
-inherited from another service is not enough.
+service itself**. `WEBAPP_SESSION_DB_PATH` always takes precedence, but when
+set it must resolve to a *file below that verified mount*; an arbitrary
+absolute container path such as `/app/toanaas.db`, the mount directory itself,
+or a symlink/path that escapes the mount is rejected. The Web App verifies
+that the Railway mount directory exists before using it; a value inherited
+from another service is not enough.
 
-Use an absolute path for `WEBAPP_SESSION_DB_PATH`; do not rely on the project
-working directory or an ephemeral container filesystem.
+Use an absolute child-file path for `WEBAPP_SESSION_DB_PATH`; do not rely on
+the project working directory or an ephemeral container filesystem.
+
+After critical auth/configuration, persistence/schema and enabled-runtime
+checks pass, private Asset Vault, Project Package, Document Operations and
+Image Operations reconciliation runs serially in a guarded background task.
+That best-effort integrity work never delays Railway health readiness and an
+individual reconciliation failure is logged and isolated; it does not make
+the application claim the related feature is healthy or invoke a provider.
 
 ## Returning to the requested workflow
 

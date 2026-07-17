@@ -32,6 +32,7 @@ PROJECT_STATES = frozenset({"draft", "review", "approved", "archived"})
 WRITABLE_PROJECT_STATES = frozenset({"draft"})
 INTENTS = frozenset({"subtitle", "translation", "asr_review", "dubbing_direction"})
 CAPTION_FORMATS = frozenset({"srt", "vtt"})
+FORMAT_TOOL_MODES = frozenset({"srt_to_vtt", "vtt_to_srt", "text_to_srt"})
 CUE_STATES = frozenset({"active", "archived"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UNSAFE_CONTROL_PATTERN = re.compile(r"[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]")
@@ -70,6 +71,11 @@ MAX_CUES_PER_PROJECT = 500
 MAX_VERSIONS_PER_ENTITY = 100
 MAX_EVENT_LIMIT = 50
 MAX_LIST_LIMIT = 100
+# Keep offset pagination bounded even though an account currently has a
+# smaller project quota.  The bound is part of the public API contract and
+# prevents an untrusted query string from becoming an unbounded SQLite scan
+# if that quota is raised later.
+MAX_LIST_OFFSET = 10_000
 MAX_IMPORT_CHARS = 120_000
 MAX_IMPORT_UTF8_BYTES = 96 * 1024
 MAX_EXPORT_UTF8_BYTES = 96 * 1024
@@ -365,6 +371,37 @@ class ImportRequest(RevisionRequest):
         text = str(value or "").replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff").strip()
         if UNSAFE_CONTROL_PATTERN.search(text) or not text or len(text) > MAX_IMPORT_CHARS or len(text.encode("utf-8")) > MAX_IMPORT_UTF8_BYTES:
             raise ValueError("Nội dung import không hợp lệ hoặc vượt giới hạn")
+        return text
+
+
+class SubtitleFormatToolRequest(BaseModel):
+    """Stateless, text-only SRT/VTT conversion request.
+
+    This deliberately has no project, asset, URL, file, provider, Bot, job,
+    wallet or payment field.  It is an immediate deterministic transform of
+    customer-authored text, not an output-delivery workflow.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    mode: str
+    content: str = Field(min_length=1, max_length=MAX_IMPORT_CHARS)
+    duration_seconds: int = Field(default=0, ge=0, le=86_400)
+
+    @field_validator("mode")
+    @classmethod
+    def _mode(cls, value: str) -> str:
+        normalized = _metadata_text(value, label="Chế độ chuyển đổi", minimum=1, maximum=24).lower()
+        if normalized not in FORMAT_TOOL_MODES:
+            raise ValueError("Chế độ chuyển đổi SRT/VTT không hợp lệ")
+        return normalized
+
+    @field_validator("content")
+    @classmethod
+    def _content(cls, value: str) -> str:
+        text = str(value or "").replace("\r\n", "\n").replace("\r", "\n").lstrip("\ufeff").strip()
+        if UNSAFE_CONTROL_PATTERN.search(text) or not text or len(text) > MAX_IMPORT_CHARS or len(text.encode("utf-8")) > MAX_IMPORT_UTF8_BYTES:
+            raise ValueError("Nội dung chuyển đổi không hợp lệ hoặc vượt giới hạn")
         return text
 
 
@@ -763,6 +800,57 @@ def _export_caption_text(fmt: str, cues: list[tuple[Any, ...]], *, track: str) -
     return "\n".join(items).rstrip() + "\n"
 
 
+def _render_caption_snapshots(fmt: str, cues: list[dict[str, Any]]) -> str:
+    """Render validated in-memory cue snapshots without creating a file.
+
+    ``_export_caption_text`` intentionally consumes database rows.  Format
+    Lab is stateless and must not manufacture rows or touch persistence just
+    to re-use that helper, so it has this small equivalent renderer.
+    """
+
+    items: list[str] = ["WEBVTT", ""] if fmt == "vtt" else []
+    for index, cue in enumerate(cues, start=1):
+        if fmt == "srt":
+            items.append(str(index))
+        items.append(
+            f"{_format_timestamp(int(cue['start_ms']), fmt=fmt)} --> "
+            f"{_format_timestamp(int(cue['end_ms']), fmt=fmt)}"
+        )
+        items.append(str(cue["source_text"]).strip())
+        items.append("")
+    return "\n".join(items).rstrip() + "\n"
+
+
+def _text_to_srt_snapshots(content: str, duration_seconds: int) -> list[dict[str, Any]]:
+    """Port the Bot's safe 12-word cue grouping as an integer-only transform.
+
+    The Bot helper is used as a static semantic reference only.  This Web
+    implementation does not import Bot code and adds cue/output limits plus
+    integer millisecond math so every generated interval is deterministic.
+    """
+
+    words = str(content or "").split()
+    if not words:
+        raise HTTPException(status_code=422, detail="Cần có văn bản để tạo SRT")
+    chunks = [" ".join(words[index:index + 12]) for index in range(0, len(words), 12)]
+    if len(chunks) > MAX_CUES_PER_PROJECT:
+        raise HTTPException(status_code=422, detail=f"Tạo SRT tối đa {MAX_CUES_PER_PROJECT} cues")
+    # Two seconds per caption is the Bot's existing conservative baseline.
+    # Integer endpoints avoid repeated/overlapping timestamps from float
+    # rounding and always remain within CuePayload's one-day limit.
+    duration_ms = max(len(chunks) * 2_000, int(duration_seconds) * 1_000, 2_000)
+    snapshots: list[dict[str, Any]] = []
+    for index, chunk in enumerate(chunks):
+        start_ms = (duration_ms * index) // len(chunks)
+        end_ms = (duration_ms * (index + 1)) // len(chunks)
+        try:
+            cue = CuePayload(start_ms=start_ms, end_ms=end_ms, source_text=chunk)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+        snapshots.append(_cue_snapshot(cue))
+    return snapshots
+
+
 def _summary_data(conn: Any, *, account_id: str) -> dict[str, Any]:
     counts = {str(row[0]): int(row[1]) for row in conn.execute(
         "SELECT lifecycle, COUNT(*) FROM web_subtitle_projects WHERE account_id=? GROUP BY lifecycle", (account_id,)
@@ -891,9 +979,62 @@ async def subtitle_summary(account: dict = Depends(require_account)):
 async def subtitle_policy(account: dict = Depends(require_account)):
     _require_enabled()
     return envelope(True, "Subtitle Studio chỉ quản lý cue text do Web account tự soạn.", data={
-        "allowed": ["manual_cues", "bounded_srt_vtt_text_import", "text_export", "self_review", "revision_history"],
+        "allowed": ["manual_cues", "bounded_srt_vtt_text_import", "srt_vtt_format_transform", "text_export", "self_review", "revision_history"],
         "guarded": ["file_upload", "media_path", "media_url", "asr", "translation", "tts", "dubbing", "provider", "bot", "jobs", "payment", "delivery"],
         **_boundary()}, status_name="read_only")
+
+
+@router.post("/format-tools/convert")
+async def subtitle_format_convert(payload: SubtitleFormatToolRequest, _account: dict = Depends(require_csrf)):
+    """Convert author-supplied subtitle text without a job, file or provider.
+
+    The endpoint intentionally remains stateless: signed session + CSRF prove
+    that a browser is permitted to use the Web tool, while no account ID or
+    content is persisted, audited, sent to Bot, or used to create a delivery.
+    """
+
+    _require_enabled()
+    if payload.mode == "srt_to_vtt":
+        snapshots = _parse_caption_text("srt", payload.content)
+        output_format = "vtt"
+    elif payload.mode == "vtt_to_srt":
+        snapshots = _parse_caption_text("vtt", payload.content)
+        output_format = "srt"
+    else:
+        snapshots = _text_to_srt_snapshots(payload.content, payload.duration_seconds)
+        output_format = "srt"
+    text = _render_caption_snapshots(output_format, snapshots)
+    if len(text.encode("utf-8")) > MAX_EXPORT_UTF8_BYTES:
+        return envelope(
+            False,
+            "Văn bản sau chuyển đổi vượt giới hạn an toàn; hãy chia nhỏ nội dung trước khi thử lại.",
+            data={
+                "mode": payload.mode,
+                "format": output_format,
+                "cue_count": len(snapshots),
+                "job_created": False,
+                "payment_charged": False,
+                **_boundary(execution="web_native_text_transform", output_delivery="none"),
+            },
+            status_name="guarded",
+            error_code="WEB_SUBTITLE_FORMAT_OUTPUT_TOO_LARGE",
+        )
+    return envelope(
+        True,
+        "Đã chuyển đổi văn bản subtitle bằng Web-native Format Lab. Không có tệp, job, provider, thanh toán hoặc delivery nào được tạo.",
+        data={
+            "mode": payload.mode,
+            "format": output_format,
+            "cue_count": len(snapshots),
+            "text": text,
+            "notice": "Kết quả là văn bản đã chuẩn hóa để bạn sao chép. Đây không phải output ASR, dịch, TTS, dubbing hoặc file media.",
+            "text_transform_completed": True,
+            "job_created": False,
+            "payment_charged": False,
+            **_boundary(execution="web_native_text_transform", output_delivery="none"),
+        },
+        status_name="completed",
+    )
 
 
 @router.get("/references")
@@ -907,7 +1048,9 @@ async def subtitle_references(account: dict = Depends(require_account)):
 @router.get("/projects")
 async def subtitle_projects(
     state: str = Query(default="active", max_length=20), q: str = Query(default="", max_length=180),
-    limit: int = Query(default=30, ge=1, le=MAX_LIST_LIMIT), account: dict = Depends(require_account),
+    limit: int = Query(default=30, ge=1, le=MAX_LIST_LIMIT),
+    offset: int = Query(default=0, ge=0, le=MAX_LIST_OFFSET),
+    account: dict = Depends(require_account),
 ):
     _require_enabled()
     ensure_copyfast_schema()
@@ -929,15 +1072,40 @@ async def subtitle_projects(
         where.append("(p.title LIKE ? ESCAPE '\\' OR p.context LIKE ? ESCAPE '\\')")
         wildcard = "%" + needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_") + "%"
         values.extend([wildcard, wildcard])
-    values.append(limit)
+    # Read one extra row so the client can move forward without receiving a
+    # count of the owner's full private library.  Ownership and filters stay
+    # inside the SQL predicate before pagination is applied.
+    safe_limit = min(limit, MAX_LIST_LIMIT)
+    values.extend([safe_limit + 1, offset])
     with read_transaction() as conn:
         rows = conn.execute(
             f"""SELECT p.id, p.linked_project_id, p.title, p.source_language, p.target_language, p.caption_format,
                        p.context, p.tags_json, p.intent, p.lifecycle, p.revision, p.created_at, p.updated_at, p.archived_at,
                        (SELECT COUNT(*) FROM web_subtitle_cues c WHERE c.subtitle_project_id=p.id AND c.account_id=p.account_id AND c.state='active')
-                FROM web_subtitle_projects p WHERE {' AND '.join(where)} ORDER BY p.updated_at DESC, p.id DESC LIMIT ?""", values
+                FROM web_subtitle_projects p WHERE {' AND '.join(where)} ORDER BY p.updated_at DESC, p.id DESC LIMIT ? OFFSET ?""", values
         ).fetchall()
-        return envelope(True, "Đã tải subtitle projects.", data={"items": [_project_public(row[:14], cue_count=int(row[14] or 0)) for row in rows], **_boundary()}, status_name="read_only")
+        has_more = len(rows) > safe_limit
+        page = rows[:safe_limit]
+        returned = len(page)
+        next_offset = offset + returned if has_more else None
+        previous_offset = max(0, offset - safe_limit) if offset > 0 else None
+        return envelope(
+            True,
+            "Đã tải subtitle projects.",
+            data={
+                "items": [_project_public(row[:14], cue_count=int(row[14] or 0)) for row in page],
+                # Do not echo q: it can contain a private phrase used to
+                # search metadata server-side.  State is a finite public
+                # filter value, not authored project content.
+                "filters": {"state": normalized_state},
+                "pagination": {"limit": safe_limit, "offset": offset, "returned": returned},
+                "has_more": has_more,
+                "next_offset": next_offset,
+                "previous_offset": previous_offset,
+                **_boundary(),
+            },
+            status_name="read_only",
+        )
 
 
 @router.get("/projects/{project_id}")

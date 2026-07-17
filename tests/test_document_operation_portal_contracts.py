@@ -54,8 +54,9 @@ def test_pdf_split_hydration_and_write_are_signed_web_only_not_bridge_backed() -
     assert "const documentOperationsEnabled" in INTEGRATION
     assert '"document-operation-view": Boolean(account && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
     assert '"document-operation-pdf-split": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
-    assert "async function hydrateDocumentOperations()" in INTEGRATION
-    assert 'api("/document-operations")' in INTEGRATION
+    assert "async function hydrateDocumentOperations(offsetValue)" in INTEGRATION
+    assert "function documentOperationHistoryPath(kind, offset)" in INTEGRATION
+    assert "api(documentOperationHistoryPath(kind, offset))" in INTEGRATION
     assert 'api("/document-operations/pdf-split"' in INTEGRATION
     assert "validDocumentOperationId" in INTEGRATION
     action = INTEGRATION[
@@ -92,7 +93,15 @@ def test_pdf_merge_replaces_the_generic_bot_feature_form_with_an_ordered_native_
 def test_pdf_merge_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
     assert '"document-operation-pdf-merge": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled)' in INTEGRATION
     assert '"/documents/merge"' in INTEGRATION
-    assert '["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text"].includes(String(item.kind || ""))' in INTEGRATION
+    # Hydration remains a signed Web-only surface while new verified document
+    # operation kinds are added.  Assert the required PDF kinds rather than
+    # freezing the exact allow-list ordering/length.
+    hydration = INTEGRATION[
+        INTEGRATION.index('function documentOperationHistoryPath(kind, offset)'):INTEGRATION.index('async function hydrateImageOperations(offsetValue)')
+    ]
+    for kind in ("pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text"):
+        assert f'"{kind}"' in hydration
+    assert 'bridge_request' not in hydration
     assert 'api("/document-operations/pdf-merge"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-merge")'):
@@ -153,9 +162,11 @@ def test_document_operation_shell_is_responsive_and_never_pwa_cached_as_private_
     assert ".portal-document-operation-grid { grid-template-columns: 1fr; }" in CSS
     assert "/api/v1/document-operations" in SERVICE_WORKER
     assert "SHELL_PATHS" in SERVICE_WORKER
-    # The Support Desk public-shell change deliberately rolls the cache so an
-    # installed PWA cannot keep a stale integration bundle.
-    assert 'const CACHE_NAME = "toan-aas-portal-shell-v' in SERVICE_WORKER
+    # Public cache generations are derived from a validated build ID so an
+    # installed PWA cannot keep a stale integration bundle after a release.
+    assert 'const CACHE_PREFIX = "toan-aas-portal-shell-"' in SERVICE_WORKER
+    assert "const BUILD_ID = workerBuildId();" in SERVICE_WORKER
+    assert "const CACHE_NAME = `${CACHE_PREFIX}${BUILD_ID}`;" in SERVICE_WORKER
 
 
 def test_pdf_split_contract_records_separate_private_storage_and_no_bot_payment_provider_execution() -> None:
@@ -238,7 +249,8 @@ def test_image_to_pdf_hydration_and_write_are_signed_web_only_not_bridge_backed(
     assert "const nativeDocumentPageStates = {" in INTEGRATION
     assert '"/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded"' in INTEGRATION
     assert "function documentOperationKindForCurrentRoute()" in INTEGRATION
-    assert '"/document-operations?kind=image_to_pdf&limit=100"' in INTEGRATION
+    assert 'if (currentPath === "/documents/image-to-pdf") return "image_to_pdf";' in INTEGRATION
+    assert 'return "/document-operations?" + query.toString();' in INTEGRATION
     assert 'api("/document-operations/image-to-pdf"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-image-to-pdf")'):
@@ -314,7 +326,8 @@ def test_pdf_to_word_hydration_and_write_are_signed_web_only_not_bridge_backed()
     assert '"document-operation-pdf-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled)' in INTEGRATION
     assert '"/documents/pdf-to-word"' in INTEGRATION
     assert '"/documents/pdf-to-word": base().pdfToWordEnabled === true ? "ready" : "guarded"' in INTEGRATION
-    assert '"/document-operations?kind=pdf_to_word_text&limit=100"' in INTEGRATION
+    assert 'if (currentPath === "/documents/pdf-to-word") return "pdf_to_word_text";' in INTEGRATION
+    assert 'return "/document-operations?" + query.toString();' in INTEGRATION
     assert 'api("/document-operations/pdf-to-word"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-to-word")'):
@@ -386,7 +399,8 @@ def test_pdf_to_images_hydration_and_write_are_signed_web_only_not_bridge_backed
     assert '"document-operation-pdf-to-images": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled)' in INTEGRATION
     assert '"/documents/pdf-to-images"' in INTEGRATION
     assert '"/documents/pdf-to-images": base().pdfToImagesEnabled === true ? "ready" : "guarded"' in INTEGRATION
-    assert '"/document-operations?kind=pdf_to_images&limit=100"' in INTEGRATION
+    assert 'if (currentPath === "/documents/pdf-to-images") return "pdf_to_images";' in INTEGRATION
+    assert 'return "/document-operations?" + query.toString();' in INTEGRATION
     assert 'api("/document-operations/pdf-to-images"' in INTEGRATION
     action = INTEGRATION[
         INTEGRATION.index('if (action === "document-operation-pdf-to-images")'):
@@ -426,3 +440,19 @@ def test_pdf_to_images_contract_records_renderer_bounds_private_delivery_and_no_
     assert "bridge_request(" not in operation_source
     assert "web_native_pdf_to_images_required" in api_source
     assert '"pdf_to_images_enabled": enabled("WEBAPP_PDF_TO_IMAGES_ENABLED", False)' in api_source
+
+
+def test_document_feature_flags_survive_the_portal_bootstrap_projection() -> None:
+    """Enabled server runtimes must not be rendered as guarded after remount."""
+
+    bootstrap = PORTAL[
+        PORTAL.index("function normalizeBootstrap") : PORTAL.index("function getBootstrap")
+    ]
+    for field in (
+        "documentOperationsEnabled: source.documentOperationsEnabled === true",
+        "imageToPdfEnabled: source.imageToPdfEnabled === true",
+        "pdfToImagesEnabled: source.pdfToImagesEnabled === true",
+        "pdfToWordEnabled: source.pdfToWordEnabled === true",
+        "imageOcrEnabled: source.imageOcrEnabled === true",
+    ):
+        assert field in bootstrap
