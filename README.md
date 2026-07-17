@@ -97,6 +97,14 @@ Production Web App for `app.toanaas.vn`.
   local colour/detail adjustments (and optional deterministic basic upscale),
   never AI edit/upscale, a Bot job, provider request or payment path. See
   [`IMAGE_ENHANCE_CONTRACT.md`](docs/migration/IMAGE_ENHANCE_CONTRACT.md).
+- `WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED` defaults to `false`. Brand Overlay
+  Studio creates a new verified private PNG from an Asset Vault source plus
+  optional owner-scoped logo and/or bounded text; it does not enable browser
+  canvas, Bot jobs, provider calls, Xu or payment logic. It shares the
+  isolated Image Operations root and may use
+  `WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH` to pin a server Unicode font for
+  text. See
+  [`IMAGE_BRAND_OVERLAY_CONTRACT.md`](docs/migration/IMAGE_BRAND_OVERLAY_CONTRACT.md).
 - `WEBAPP_MEMORY_CENTER_ENABLED` defaults to `true`. `/notes` and
   `/reminders` are a signed-account, Web-owned workspace for private notes,
   version history and view-only reminders. It does not read or mutate Bot

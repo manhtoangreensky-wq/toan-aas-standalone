@@ -108,6 +108,7 @@
   let documentOperationHistoryHydrationEpoch = 0;
   let imageOperationHistoryHydrationEpoch = 0;
   let imageEnhanceOperationHistoryHydrationEpoch = 0;
+  let imageBrandOverlayOperationHistoryHydrationEpoch = 0;
   let imageHistoryOperationHydrationEpoch = 0;
   // Asset Vault is shared by private owner workflows, but it is never a
   // shared browser cache. Session and request fences keep a late vault or
@@ -1621,7 +1622,7 @@
     "/documents/split", "/documents/merge", "/documents/compress",
     "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", IMAGE_OCR_ROUTE
   ]);
-  const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit"]);
+  const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit", "/image/brand-overlay"]);
   const documentAssetReferenceHydrationEpoch = { pdf: 0, image: 0 };
   let imageOperationAssetReferenceHydrationEpoch = 0;
 
@@ -8868,6 +8869,7 @@
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
+    const imageBrandOverlayEnabled = Boolean(status.flags && status.flags.image_brand_overlay_enabled === true);
     // Memory Center is a signed-account Web-native capability. Its flag does
     // not imply Bot bridge, Telegram, wallet, payment or provider readiness.
     const memoryCenterEnabled = Boolean(status.flags && status.flags.memory_center_enabled === true);
@@ -9058,6 +9060,7 @@
       // server-enabled native page can truthfully show a ready badge.
       "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded",
       "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded",
+      "/image/brand-overlay": account && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled ? "processing" : "guarded",
       // History only reads already verified output. It remains available when a
       // specific creation flag is paused, but still requires the same private
       // storage and operation-service gates.
@@ -9204,6 +9207,9 @@
       "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-enhance": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled),
       "image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-brand-overlay-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-brand-overlay-run": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled),
+      "image-brand-overlay-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       // Notes and reminders are private browser-account data, protected by
       // server-side session/CSRF/ownership/revision checks. They must remain
       // usable without a Telegram link and never announce external delivery.
@@ -9705,6 +9711,7 @@
       imageOperationsEnabled,
       imageResizeEnabled,
       imageEnhanceEnabled,
+      imageBrandOverlayEnabled,
       memoryCenterEnabled,
       promptLibraryEnabled,
       promptStudioEnabled,
@@ -10146,6 +10153,7 @@
       imageOperationAssetReferenceReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageEnhanceOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
+      imageBrandOverlayOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: [],
       documentOperationListing: operationHistoryListingProjection("", 0, {}, 0),
@@ -10155,6 +10163,8 @@
       // Enhance history is loading. The UI deliberately renders no form or
       // artifact until both private reads settle.
       imageEnhanceOperations: [],
+      imageBrandOverlayOperations: [],
+      imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
       imageHistoryOperations: [],
       imageHistoryListing: operationHistoryListingProjection("", 0, {}, 0),
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
@@ -10269,8 +10279,8 @@
       projectPackageListing: projectPackageListingProjection("", 0, {}, 0),
       pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" }
     });
-    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/image/resize", "/image/edit"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
-    else if (account && ["/asset-vault", "/documents/ocr", "/image/resize", "/image/edit"].includes(currentPath)) merge({
+    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultListing: assetVaultListingProjection({ q: "", state: "active" }, 0, {}, 0),
       assetVaultReadState: "guarded",
@@ -10301,6 +10311,15 @@
       imageEnhanceOperations: [],
       imageEnhanceOperationListing: operationHistoryListingProjection("image_enhance", 0, {}, 0),
       imageEnhanceOperationsReadState: "guarded",
+      imageOperationAssetReferences: emptyImageOperationAssetReferences(),
+      imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/brand-overlay") await Promise.all([hydrateImageBrandOverlayOperations(), hydrateImageOperationAssetReferences()]);
+    else if (account && currentPath === "/image/brand-overlay") merge({
+      imageBrandOverlayOperations: [],
+      imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
+      imageBrandOverlayOperationsReadState: "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
       imageOperationAssetReferenceReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
@@ -14193,6 +14212,13 @@
     return "guarded";
   }
 
+  function imageBrandOverlayPrivateReadPageState(assetState, operationState) {
+    if (base().imageBrandOverlayEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading") return "processing";
+    return "guarded";
+  }
+
   async function hydrateAssetVault(filterValue, offsetValue) {
     const requestEpoch = ++assetVaultListHydrationEpoch;
     const sessionEpoch = assetVaultSessionEpoch;
@@ -14223,7 +14249,8 @@
           ...(base().pageStates || {}),
           "/asset-vault": "ready",
           "/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading")),
-          "/image/edit": imageEnhancePrivateReadPageState("ready", String(base().imageEnhanceOperationsReadState || "loading"))
+          "/image/edit": imageEnhancePrivateReadPageState("ready", String(base().imageEnhanceOperationsReadState || "loading")),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("ready", String(base().imageBrandOverlayOperationsReadState || "loading"))
         }
       });
       return items;
@@ -14239,7 +14266,8 @@
           ...(base().pageStates || {}),
           "/asset-vault": "guarded",
           "/image/resize": imageResizePrivateReadPageState("failed", String(base().imageOperationsReadState || "loading")),
-          "/image/edit": imageEnhancePrivateReadPageState("failed", String(base().imageEnhanceOperationsReadState || "loading"))
+          "/image/edit": imageEnhancePrivateReadPageState("failed", String(base().imageEnhanceOperationsReadState || "loading")),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("failed", String(base().imageBrandOverlayOperationsReadState || "loading"))
         }
       });
       return [];
@@ -14347,7 +14375,7 @@
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
     "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr"
   ]);
-  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance"]);
+  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay"]);
 
   function operationHistoryListOffset(value) {
     const offset = Number(value);
@@ -14547,6 +14575,45 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/image/edit": imageEnhancePrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageBrandOverlayOperations(offsetValue) {
+    const kind = "image_brand_overlay";
+    const offset = operationHistoryOffsetForKind(base().imageBrandOverlayOperationListing, kind, offsetValue);
+    const requestEpoch = ++imageBrandOverlayOperationHistoryHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    try {
+      const result = await api(imageOperationHistoryPath(kind, offset));
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageBrandOverlayOperationHistoryHydrationEpoch, sessionEpoch)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => item && validImageOperationId(item.id) && String(item.kind || "") === kind).slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      merge({
+        imageBrandOverlayOperations: items,
+        imageBrandOverlayOperationListing: operationHistoryListingProjection(kind, offset, data, items.length),
+        imageBrandOverlayOperationsReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState(String(base().assetVaultReadState || "loading"), "ready")
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageBrandOverlayOperationHistoryHydrationEpoch, sessionEpoch)) return null;
+      // Owner-scoped Brand Overlay history never falls back to a generic
+      // image list, Bot artifact, provider result or browser composition.
+      merge({
+        imageBrandOverlayOperations: [],
+        imageBrandOverlayOperationListing: operationHistoryListingProjection(kind, offset, {}, 0),
+        imageBrandOverlayOperationsReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
         }
       });
       return [];
@@ -22060,6 +22127,84 @@
         }
         return;
       }
+      if (action === "image-brand-overlay") {
+        // This browser contract contains only owner-scoped Asset Vault IDs
+        // and bounded presentation choices. It never sends a logo/source URL,
+        // raw image bytes, path, font, canvas result or a provider option.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const logoAssetId = String(fields.logo_asset_id || "").trim();
+        const overlayText = String(fields.overlay_text || "").replace(/\s+/g, " ").trim();
+        const textPosition = String(fields.text_position || "bottom_center").trim().toLowerCase();
+        const logoPosition = String(fields.logo_position || "bottom_right").trim().toLowerCase();
+        const scaleText = String(fields.logo_scale_percent || "18").trim();
+        const opacityText = String(fields.logo_opacity_percent || "78").trim();
+        const positions = new Set([
+          "top_left", "top_center", "top_right", "center_left", "center", "center_right",
+          "bottom_left", "bottom_center", "bottom_right"
+        ]);
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn ảnh nguồn private hợp lệ từ Asset Vault.");
+        if (logoAssetId && !validVaultAssetId(logoAssetId)) throw new Error("Logo phải là ảnh private hợp lệ từ Asset Vault.");
+        if (logoAssetId && logoAssetId === sourceAssetId) throw new Error("Logo phải khác ảnh nguồn.");
+        if (!overlayText && !logoAssetId) throw new Error("Hãy nhập chữ thương hiệu hoặc chọn logo private.");
+        if (overlayText.length > 260) throw new Error("Chữ thương hiệu tối đa 260 ký tự.");
+        if (!positions.has(textPosition) || !positions.has(logoPosition)) throw new Error("Vị trí chữ hoặc logo chưa hợp lệ.");
+        if (!/^(?:12|18|22)$/.test(scaleText)) throw new Error("Kích thước logo chỉ có thể là 12%, 18% hoặc 22%.");
+        if (!/^\d{2,3}$/.test(opacityText)) throw new Error("Độ mờ logo phải là số nguyên từ 25 đến 100.");
+        const logoScalePercent = Number(scaleText);
+        const logoOpacityPercent = Number(opacityText);
+        if (!Number.isInteger(logoOpacityPercent) || logoOpacityPercent < 25 || logoOpacityPercent > 100) {
+          throw new Error("Độ mờ logo phải là số nguyên từ 25 đến 100.");
+        }
+        // Keep raw overlay text out of the in-memory idempotency map.  The
+        // text itself is sent only in the signed request body; this compact
+        // transient fingerprint merely distinguishes a changed form while a
+        // request is awaiting a server acknowledgement.
+        let textFingerprint = 2166136261;
+        for (let index = 0; index < overlayText.length; index += 1) {
+          textFingerprint = Math.imul(textFingerprint ^ overlayText.charCodeAt(index), 16777619) >>> 0;
+        }
+        const scope = `image-operation:brand-overlay:${sourceAssetId}:${logoAssetId}`;
+        const requestFingerprint = `${textFingerprint.toString(36)}:${overlayText.length}:${textPosition}:${logoPosition}:${logoScalePercent}:${logoOpacityPercent}`;
+        const submission = acquireSubmission(scope, requestFingerprint);
+        if (!submission) {
+          toast("Brand Overlay Studio đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/image-operations/brand-overlay", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              logo_asset_id: logoAssetId || null,
+              overlay_text: overlayText || null,
+              text_position: textPosition,
+              logo_position: logoPosition,
+              logo_scale_percent: logoScalePercent,
+              logo_opacity_percent: logoOpacityPercent,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validImageOperationId(operation.id) || String(operation.kind || "") !== "image_brand_overlay") {
+            throw new Error("Máy chủ chưa trả metadata Brand Overlay Studio hợp lệ.");
+          }
+          await Promise.all([hydrateImageBrandOverlayOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã ghép và xác minh PNG thương hiệu private.");
+        } catch (error) {
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateImageBrandOverlayOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-enhance") {
         const sourceAssetId = String(fields.source_asset_id || "").trim();
         const preset = String(fields.preset || "photo_clear_detail").trim();
@@ -22218,6 +22363,19 @@
         }
         const refreshed = await hydrateImageEnhanceOperations(operationHistoryListOffset(fields.__imageEnhanceOperationOffset));
         if (!refreshed) throw new Error("Không thể tải trang lịch sử Image Enhance Studio.");
+        return;
+      }
+      if (action === "image-brand-overlay-refresh") {
+        await Promise.all([hydrateImageBrandOverlayOperations(), hydrateAssetVault()]);
+        toast("Đã làm mới Brand Overlay Studio.");
+        return;
+      }
+      if (action === "image-brand-overlay-page") {
+        if (!(base().capabilities && base().capabilities["image-brand-overlay-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử Brand Overlay Studio.");
+        }
+        const refreshed = await hydrateImageBrandOverlayOperations(operationHistoryListOffset(fields.__imageBrandOverlayOperationOffset));
+        if (!refreshed) throw new Error("Không thể tải trang lịch sử Brand Overlay Studio.");
         return;
       }
       if (action === "image-history-refresh") {

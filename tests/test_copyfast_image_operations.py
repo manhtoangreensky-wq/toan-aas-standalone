@@ -26,6 +26,7 @@ def make_client(
     *,
     image_resize_enabled: bool = True,
     image_enhance_enabled: bool = True,
+    image_brand_overlay_enabled: bool = True,
 ) -> TestClient:
     monkeypatch.setenv("WEBAPP_SESSION_DB_PATH", str(tmp_path / "copyfast-image-operations-test.db"))
     monkeypatch.setenv("WEB_SESSION_SECRET", "test-image-operations-session-secret")
@@ -39,6 +40,7 @@ def make_client(
     monkeypatch.setenv("WEBAPP_IMAGE_OPERATIONS_QUOTA_MB", "100")
     monkeypatch.setenv("WEBAPP_IMAGE_RESIZE_ENABLED", "true" if image_resize_enabled else "false")
     monkeypatch.setenv("WEBAPP_IMAGE_ENHANCE_ENABLED", "true" if image_enhance_enabled else "false")
+    monkeypatch.setenv("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "true" if image_brand_overlay_enabled else "false")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "false")
@@ -178,6 +180,45 @@ def enhance(
             **settings,
         },
     )
+
+
+def brand_overlay(
+    client: TestClient,
+    csrf: str,
+    *,
+    asset_id: str,
+    key: str,
+    overlay_text: str | None = None,
+    logo_asset_id: str | None = None,
+    text_position: str = "bottom_center",
+    logo_position: str = "bottom_right",
+    logo_scale_percent: int = 18,
+    logo_opacity_percent: int = 78,
+):
+    return client.post(
+        "/api/v1/image-operations/brand-overlay",
+        headers={"X-CSRF-Token": csrf},
+        json={
+            "source_asset_id": asset_id,
+            "overlay_text": overlay_text,
+            "text_position": text_position,
+            "logo_asset_id": logo_asset_id,
+            "logo_position": logo_position,
+            "logo_scale_percent": logo_scale_percent,
+            "logo_opacity_percent": logo_opacity_percent,
+            "idempotency_key": key,
+        },
+    )
+
+
+def logo_bytes(*, size: tuple[int, int] = (80, 40)) -> bytes:
+    image = Image.new("RGBA", size, (232, 36, 70, 255))
+    stream = BytesIO()
+    try:
+        image.save(stream, format="PNG")
+        return stream.getvalue()
+    finally:
+        image.close()
 
 
 def output_image(client: TestClient, operation_id: str) -> Image.Image:
@@ -980,3 +1021,159 @@ def test_image_operation_settings_migration_is_append_only_and_preserves_old_res
             ).fetchone()
         assert columns[-1] == "settings_json"
         assert migrated == ("old-resize-operation", "image_resize", "failed", 128, 128, "{}")
+
+
+def test_brand_overlay_is_private_idempotent_and_keeps_logo_metadata_internal(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "brand-owner@example.com")
+        assert client.get("/image/brand-overlay").status_code == 200
+        source = upload_image(
+            client,
+            csrf,
+            key="brand-source-0001",
+            body=image_bytes("JPEG", size=(400, 240)),
+            name="source.jpg",
+            content_type="image/jpeg",
+        )
+        logo = upload_image(
+            client,
+            csrf,
+            key="brand-logo-0001",
+            body=logo_bytes(),
+            name="brand-logo.png",
+            content_type="image/png",
+        )
+        denied = client.post(
+            "/api/v1/image-operations/brand-overlay",
+            json={"source_asset_id": source["id"], "overlay_text": "TOAN AAS", "idempotency_key": "brand-denied-0001"},
+        )
+        assert denied.status_code == 403
+
+        created = brand_overlay(
+            client,
+            csrf,
+            asset_id=source["id"],
+            logo_asset_id=logo["id"],
+            overlay_text="  TOAN   AAS\nprivate workspace  ",
+            text_position="top_left",
+            logo_position="bottom_right",
+            logo_scale_percent=18,
+            logo_opacity_percent=100,
+            key="brand-create-0001",
+        )
+        assert created.status_code == 200
+        payload = created.json()
+        assert payload["ok"] is True
+        assert payload["status"] == "completed"
+        operation = payload["data"]["operation"]
+        assert operation["kind"] == "image_brand_overlay"
+        assert operation["state"] == "completed"
+        assert (operation["source_width"], operation["source_height"]) == (400, 240)
+        assert (operation["target_width"], operation["target_height"]) == (400, 240)
+        assert operation["fit_mode"] == "brand_overlay"
+        assert operation["settings"] == {
+            "text_present": True,
+            "text_position": "top_left",
+            "logo_present": True,
+            "logo_position": "bottom_right",
+            "logo_scale_percent": 18,
+            "logo_opacity_percent": 100,
+        }
+        assert operation["download_ready"] is True
+        assert logo["id"] not in created.text
+        assert "private workspace" not in created.text.lower()
+        for forbidden in ("storage_key", "sha256", "text_digest", "logo_asset_id", "filesystem", "provider", "payment", "payos", "xu"):
+            assert forbidden not in created.text.lower()
+
+        replay = brand_overlay(
+            client,
+            csrf,
+            asset_id=source["id"],
+            logo_asset_id=logo["id"],
+            overlay_text="TOAN AAS private workspace",
+            text_position="top_left",
+            logo_position="bottom_right",
+            logo_scale_percent=18,
+            logo_opacity_percent=100,
+            key="brand-create-0001",
+        )
+        assert replay.status_code == 200
+        assert replay.json()["data"]["operation"]["id"] == operation["id"]
+        conflict = brand_overlay(
+            client,
+            csrf,
+            asset_id=source["id"],
+            logo_asset_id=logo["id"],
+            overlay_text="TOAN AAS another composition",
+            text_position="top_left",
+            logo_position="bottom_right",
+            logo_scale_percent=18,
+            logo_opacity_percent=100,
+            key="brand-create-0001",
+        )
+        assert conflict.status_code == 409
+
+        history = client.get("/api/v1/image-operations?kind=image_brand_overlay&limit=100")
+        assert history.status_code == 200
+        assert [item["id"] for item in history.json()["data"]["items"]] == [operation["id"]]
+        combined_history = client.get("/api/v1/image-operations?limit=100")
+        assert combined_history.status_code == 200
+        assert operation["id"] not in [item["id"] for item in combined_history.json()["data"]["items"]]
+
+        downloaded = client.get(f"/api/v1/image-operations/{operation['id']}/download")
+        assert downloaded.status_code == 200
+        assert "toan-aas-image-brand-overlay.png" in downloaded.headers["content-disposition"]
+        assert downloaded.headers["cache-control"] == "no-store, private"
+        with Image.open(BytesIO(downloaded.content)) as rendered:
+            rendered.load()
+            assert rendered.format == "PNG"
+            assert rendered.mode == "RGB"
+            assert rendered.size == (400, 240)
+            # The opaque red logo is placed at the verified lower-right slot.
+            assert rendered.getpixel((320, 200))[0] > 180
+            assert rendered.getexif() == {}
+
+        with sqlite3.connect(tmp_path / "copyfast-image-operations-test.db") as conn:
+            stored_settings = conn.execute("SELECT settings_json FROM web_image_operations WHERE id=?", (operation["id"],)).fetchone()[0]
+            audit = conn.execute("SELECT detail FROM web_audit_events WHERE action='web.image_operation.image_brand_overlay'").fetchone()
+        assert "private workspace" not in stored_settings.lower()
+        assert logo["id"] in stored_settings
+        assert audit and "text=1;logo=1;text_position=top_left;logo_position=bottom_right" in audit[0]
+
+        with make_client(tmp_path, monkeypatch) as other:
+            csrf_other = register_and_login(other, "brand-other@example.com")
+            hidden = other.get(f"/api/v1/image-operations/{operation['id']}")
+            assert hidden.json()["error_code"] == "WEB_IMAGE_OPERATION_NOT_FOUND"
+            rejected = brand_overlay(other, csrf_other, asset_id=source["id"], key="brand-other-0001", overlay_text="No access")
+            assert rejected.json()["error_code"] == "WEB_IMAGE_BRAND_OVERLAY_SOURCE_NOT_FOUND"
+
+
+def test_brand_overlay_validates_asset_ownership_input_and_feature_gate(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "brand-guarded@example.com")
+        source = upload_image(client, csrf, key="brand-guarded-source-0001", body=image_bytes("JPEG"))
+        missing = brand_overlay(client, csrf, asset_id=source["id"], key="brand-missing-0001")
+        assert missing.status_code == 422
+        same_asset = brand_overlay(client, csrf, asset_id=source["id"], logo_asset_id=source["id"], key="brand-same-0001")
+        assert same_asset.status_code == 422
+        invalid_position = brand_overlay(
+            client,
+            csrf,
+            asset_id=source["id"],
+            overlay_text="TOAN AAS",
+            text_position="outside",
+            key="brand-position-0001",
+        )
+        assert invalid_position.status_code == 422
+        too_long = brand_overlay(client, csrf, asset_id=source["id"], overlay_text="x" * 261, key="brand-length-0001")
+        assert too_long.status_code == 422
+
+    disabled_root = tmp_path / "brand-disabled"
+    disabled_root.mkdir()
+    with make_client(disabled_root, monkeypatch, image_brand_overlay_enabled=False) as disabled:
+        csrf = register_and_login(disabled, "brand-disabled@example.com")
+        source = upload_image(disabled, csrf, key="brand-disabled-source-0001", body=image_bytes("JPEG"))
+        blocked = brand_overlay(disabled, csrf, asset_id=source["id"], overlay_text="TOAN AAS", key="brand-disabled-0001")
+        assert blocked.status_code == 503
+        with sqlite3.connect(disabled_root / "copyfast-image-operations-test.db") as conn:
+            assert conn.execute("SELECT COUNT(*) FROM web_image_operations").fetchone()[0] == 0

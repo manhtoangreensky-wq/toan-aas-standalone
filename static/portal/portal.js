@@ -1115,6 +1115,15 @@
       "Công cụ áp preset màu/làm nét cục bộ deterministic. Nó không tạo chi tiết AI, không xóa vật thể/nền, không gọi provider và không thay đổi file gốc."
     ]
   });
+  customerPage("/image/brand-overlay", "Brand Overlay Studio", "Thêm chữ thương hiệu và logo private lên bản sao PNG đã xác minh; không gọi AI, Bot job hoặc provider.", ICONS.image, {
+    // The page stays guarded until its own owner-scoped history has hydrated.
+    // It never borrows a Resize/Enhance record or an Asset Vault preview.
+    layout: "image-brand-overlay", type: "image-operation", action: "none", status: "guarded", fields: [],
+    notes: [
+      "Chọn ảnh nguồn và logo từ Asset Vault của signed Web account hiện tại. Browser chỉ gửi UUID cùng thông số đã giới hạn; không gửi URL, raw path hoặc bytes ảnh.",
+      "Brand Overlay Studio tạo PNG private mới sau hash-copy, decode và kiểm tra output. File nguồn/logo không bị sửa; không có browser canvas, preview công khai hoặc output giả."
+    ]
+  });
   customerPage("/image/resize", "Resize & Aspect Studio", "Tạo PNG private từ Asset Vault bằng crop, pad hoặc blur nền đã được kiểm tra; không phải AI upscale, Bot job hay provider call.", ICONS.image, {
     // This page has two owner-scoped reads before it can become usable. Start
     // fail-closed so the first paint never advertises readiness before the
@@ -3688,6 +3697,10 @@
     "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr"
   ]);
   const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance"]);
+  // Brand overlays have a separate owner-scoped projection.  Do not add this
+  // kind to the generic image history, which intentionally remains Resize +
+  // Enhance only and must never accidentally show a route it did not hydrate.
+  const IMAGE_BRAND_OVERLAY_HISTORY_KINDS = new Set(["image_brand_overlay"]);
 
   function operationHistorySafeInteger(value, maximum) {
     const number = Number(value);
@@ -6144,6 +6157,15 @@
       imageEnhanceOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageEnhanceOperationsReadState || ""))
         ? String(source.imageEnhanceOperationsReadState)
         : "guarded",
+      // Brand Overlay has an independent private output projection.  Keep it
+      // isolated from both generic Image History and Enhance so a previous
+      // route cannot make another operation look ready while hydration runs.
+      imageBrandOverlayOperations: Array.isArray(source.imageBrandOverlayOperations) ? source.imageBrandOverlayOperations.slice(0, OPERATION_HISTORY_LIST_LIMIT) : [],
+      imageBrandOverlayOperationListing: normalizeOperationHistoryListing(source.imageBrandOverlayOperationListing, IMAGE_BRAND_OVERLAY_HISTORY_KINDS, "image_brand_overlay"),
+      imageBrandOverlayEnabled: source.imageBrandOverlayEnabled === true,
+      imageBrandOverlayOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageBrandOverlayOperationsReadState || ""))
+        ? String(source.imageBrandOverlayOperationsReadState)
+        : "guarded",
       // Image History is a third, combined read-only projection. It must not
       // borrow Resize/Enhance state from a prior route or degrade into a Bot
       // asset list when its own signed request is still loading.
@@ -7123,7 +7145,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "image-resize", "image-enhance"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -13545,6 +13567,14 @@
     return normalizeOperationHistoryListing(context && context.imageEnhanceOperationListing, IMAGE_OPERATION_HISTORY_KINDS, "image_enhance");
   }
 
+  function imageBrandOverlayOperationHistoryListing(context) {
+    return normalizeOperationHistoryListing(
+      context && context.imageBrandOverlayOperationListing,
+      IMAGE_BRAND_OVERLAY_HISTORY_KINDS,
+      "image_brand_overlay"
+    );
+  }
+
   function imageHistoryOperationHistoryListing(context) {
     return normalizeOperationHistoryListing(context && context.imageHistoryListing, IMAGE_OPERATION_HISTORY_KINDS, "");
   }
@@ -13571,6 +13601,21 @@
       route,
       enhance ? "data-image-enhance-operation-offset" : "data-image-operation-offset",
       enhance ? "Phân trang lịch sử Image Enhance" : "Phân trang lịch sử Resize Studio"
+    );
+  }
+
+  function renderImageBrandOverlayOperationHistoryPagination(context, enabled, route) {
+    const listing = imageBrandOverlayOperationHistoryListing(context);
+    const pagination = listing.pagination || {};
+    if (!pagination.returned && !pagination.has_more && pagination.previous_offset === null) return "";
+    return renderOperationsPagination(
+      listing,
+      enabled,
+      "Brand Overlay Studio",
+      "image-brand-overlay-page",
+      route,
+      "data-image-brand-overlay-offset",
+      "Phân trang lịch sử Brand Overlay Studio"
     );
   }
 
@@ -13720,6 +13765,13 @@
       .slice(0, OPERATION_HISTORY_LIST_LIMIT);
   }
 
+  function imageBrandOverlayOperationItems(context) {
+    return (Array.isArray(context.imageBrandOverlayOperations) ? context.imageBrandOverlayOperations : [])
+      .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
+        && String(item.kind || "") === "image_brand_overlay")
+      .slice(0, OPERATION_HISTORY_LIST_LIMIT);
+  }
+
   function imageHistoryOperationItems(context) {
     return (Array.isArray(context.imageHistoryOperations) ? context.imageHistoryOperations : [])
       .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
@@ -13852,6 +13904,72 @@
     ];
   }
 
+  const IMAGE_BRAND_OVERLAY_POSITION_OPTIONS = Object.freeze([
+    { value: "top_left", label: "Trên trái" },
+    { value: "top_center", label: "Trên giữa" },
+    { value: "top_right", label: "Trên phải" },
+    { value: "center_left", label: "Giữa trái" },
+    { value: "center", label: "Chính giữa" },
+    { value: "center_right", label: "Giữa phải" },
+    { value: "bottom_left", label: "Dưới trái" },
+    { value: "bottom_center", label: "Dưới giữa" },
+    { value: "bottom_right", label: "Dưới phải" }
+  ]);
+  const IMAGE_BRAND_OVERLAY_POSITION_LABELS = Object.freeze(
+    Object.fromEntries(IMAGE_BRAND_OVERLAY_POSITION_OPTIONS.map((item) => [item.value, item.label]))
+  );
+
+  function imageBrandOverlayFormValues(values) {
+    // Brand wording is request-only.  Unlike ordinary workflow forms, this
+    // route never restores a generic tab-memory draft, including one that
+    // may have been created by an older portal bundle.
+    const current = values && typeof values === "object" ? values : {};
+    return {
+      text_position: "bottom_center",
+      logo_position: "bottom_right",
+      logo_scale_percent: "18",
+      logo_opacity_percent: "78",
+      ...current
+    };
+  }
+
+  function imageBrandOverlayFormFields() {
+    return [
+      {
+        name: "source_asset_id", label: "Ảnh nguồn trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: "Chọn ảnh private", required: true,
+        help: "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn. Ảnh nguồn luôn giữ nguyên."
+      },
+      {
+        name: "logo_asset_id", label: "Logo / watermark từ Asset Vault (tùy chọn)", control: "select", optionsFrom: "imageVaultAssets",
+        emptyLabel: "Không dùng logo", help: "Chọn một ảnh logo private khác ảnh nguồn. Server kiểm tra ownership, định dạng và hash-copy logo trước khi ghép."
+      },
+      {
+        name: "overlay_text", label: "Chữ thương hiệu (tùy chọn)", control: "textarea", placeholder: "Ví dụ: © TOAN AAS · 2026", maxLength: 260,
+        help: "Nhập chữ hoặc chọn logo; cần ít nhất một trong hai. Nội dung chỉ đi trong request signed, không được dựng preview hay lưu vào browser."
+      },
+      {
+        name: "text_position", label: "Vị trí chữ", control: "select", options: IMAGE_BRAND_OVERLAY_POSITION_OPTIONS,
+        help: "Vị trí trong lưới 3 × 3 đã giới hạn. Nếu không nhập chữ, server bỏ qua lựa chọn này."
+      },
+      {
+        name: "logo_position", label: "Vị trí logo", control: "select", options: IMAGE_BRAND_OVERLAY_POSITION_OPTIONS,
+        help: "Vị trí trong lưới 3 × 3 đã giới hạn. Nếu không chọn logo, server bỏ qua lựa chọn này."
+      },
+      {
+        name: "logo_scale_percent", label: "Kích thước logo", control: "select", options: [
+          { value: "12", label: "Nhỏ · 12% chiều rộng canvas" },
+          { value: "18", label: "Vừa · 18% chiều rộng canvas" },
+          { value: "22", label: "Lớn · 22% chiều rộng canvas" }
+        ], help: "Scale được giới hạn theo chiều rộng canvas và khung đặt logo; không có resize tự do hoặc browser canvas."
+      },
+      {
+        name: "logo_opacity_percent", label: "Độ mờ logo (%)", type: "number", min: 25, max: 100, step: 1, inputMode: "numeric",
+        help: "Chỉ nhận số nguyên 25–100. Nếu không dùng logo, server bỏ qua giá trị này."
+      }
+    ];
+  }
+
   function imageEnhanceSettings(item) {
     const raw = item && item.settings && typeof item.settings === "object" ? item.settings : {};
     const values = ["brightness", "contrast", "saturation", "sharpness"].map((key) => {
@@ -13884,6 +14002,51 @@
           ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
           : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
       return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">✦</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã chỉnh"))}</h2><p class="portal-card-subtitle">${safeText(IMAGE_ENHANCE_PRESET_LABELS[preset] || preset)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}</dd></div><div><dt>Thông số</dt><dd>${safeText(imageEnhanceSettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function imageBrandOverlaySettings(item) {
+    const raw = item && item.settings && typeof item.settings === "object" ? item.settings : {};
+    // Do not render raw overlay text, source identifiers, hashes, paths, URLs
+    // or the original logo filename. The private API may expose only these
+    // coarse, safe settings for a completed owner-scoped operation.
+    const textApplied = raw.text_applied === true || raw.text_present === true || raw.overlay_text_present === true;
+    const logoApplied = raw.logo_applied === true || raw.logo_present === true;
+    const textPosition = IMAGE_BRAND_OVERLAY_POSITION_LABELS[String(raw.text_position || "")] || "";
+    const logoPosition = IMAGE_BRAND_OVERLAY_POSITION_LABELS[String(raw.logo_position || "")] || "";
+    const logoScale = Number(raw.logo_scale_percent);
+    const logoOpacity = Number(raw.logo_opacity_percent);
+    const values = [];
+    if (textApplied) values.push(`Chữ${textPosition ? ` · ${textPosition}` : ""}`);
+    if (logoApplied) {
+      const logoParts = ["Logo"];
+      if (logoPosition) logoParts.push(logoPosition);
+      if ([12, 18, 22].includes(logoScale)) logoParts.push(`${logoScale}%`);
+      if (Number.isInteger(logoOpacity) && logoOpacity >= 25 && logoOpacity <= 100) logoParts.push(`mờ ${logoOpacity}%`);
+      values.push(logoParts.join(" · "));
+    }
+    return values.join(" | ") || "Thông số overlay đã được server xác minh";
+  }
+
+  function renderImageBrandOverlayOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có PNG thương hiệu", "Bản sao chỉ xuất hiện sau khi server hash-copy nguồn/logo, ghép text/logo, strict-reparse PNG và xác minh integrity. Không có preview hoặc output mô phỏng.", "▣");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const status = imageOperationState(item);
+      const downloadPath = imageOperationDownloadPath(item);
+      const sourceWidth = Number(item.source_width);
+      const sourceHeight = Number(item.source_height);
+      const targetWidth = Number(item.target_width);
+      const targetHeight = Number(item.target_height);
+      const sourceGeometry = Number.isInteger(sourceWidth) && Number.isInteger(sourceHeight) ? `${sourceWidth} × ${sourceHeight}` : "Đang kiểm tra";
+      const targetGeometry = Number.isInteger(targetWidth) && Number.isInteger(targetHeight) ? `${targetWidth} × ${targetHeight}` : "PNG an toàn";
+      const pendingMessage = status === "failed" || status === "unavailable"
+        ? "Không có PNG tải xuống; kiểm tra ảnh nguồn/logo private và tạo bản sao mới."
+        : status === "guarded"
+          ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
+          : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▣</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã gắn thương hiệu"))}</h2><p class="portal-card-subtitle">Brand Overlay Studio · deterministic</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>Overlay</dt><dd>${safeText(imageBrandOverlaySettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -14245,6 +14408,48 @@
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã xử lý</h2><p class="portal-card-subtitle">Không dùng URL tĩnh, preview công khai, PWA cache hoặc lịch sử Asset/Bot thay thế khi một đọc private thất bại.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-history-refresh" data-portal-route="/image/history"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageHistoryOperationCards(operations)}${renderImageHistoryOperationPagination(context, canView, "/image/history")}</section>
       <section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2>Ranh giới dữ liệu</h2><p>Đây là output storage riêng của Web Workspace, không phải delivery center chung.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không gọi Bot/Core Bridge, provider, PayOS, ví Xu hoặc webhook.</li><li>Không ghi đè file gốc, không tạo preview và không suy đoán output từ Asset Vault.</li><li>Muốn tạo bản mới, mở <a href="/image/resize">Resize &amp; Aspect Studio</a> hoặc <a href="/image/edit">Image Enhance Studio</a>.</li></ul></section>
       ${renderNotes(page)}
+    </article>`;
+  }
+
+  function renderImageBrandOverlay(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["image-brand-overlay-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["image-brand-overlay-run"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["image-brand-overlay-refresh"] === true);
+    if (!canView) {
+      return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Brand Overlay Studio đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi Asset Vault, storage output private và signed capability riêng được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có preview công khai</span></div></div></div></section></article>`;
+    }
+    const assetReadState = String(context.assetVaultReadState || "loading");
+    const operationReadState = String(context.imageBrandOverlayOperationsReadState || "loading");
+    const privateReadsReady = assetReadState === "ready" && operationReadState === "ready";
+    if (!privateReadsReady) {
+      const loading = assetReadState === "loading" || operationReadState === "loading";
+      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const message = loading
+        ? "Brand Overlay Studio đang tải Asset Vault và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi cả hai phản hồi server-side hoàn tất."
+        : "Asset Vault hoặc lịch sử Brand Overlay chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, output hay dữ liệu thay thế.";
+      const retry = !loading && canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+    }
+    const sources = imageVaultItems(context);
+    const operations = imageBrandOverlayOperationItems(context);
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = imageBrandOverlayFormValues();
+    const runReason = !canRunCapability
+      ? (context.imageBrandOverlayEnabled === true
+        ? "Cần signed session, CSRF và capability Brand Overlay Studio từ server."
+        : "Brand Overlay Studio đang được server giữ guarded cho đến khi WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED được bật có chủ đích.")
+      : sources.length === 0
+        ? "Hãy lưu JPEG, PNG hoặc WebP private vào Asset Vault trước khi tạo bản sao."
+        : "Nguồn/logo → hash-copy cô lập → overlay deterministic → PNG được mở lại và xác minh trước khi tải.";
+    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-image-brand-overlay">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Image Operations</span><h2>Gắn thương hiệu lên ảnh private, không đưa media ra ngoài</h2><p>Chọn một ảnh nguồn từ Asset Vault, rồi thêm chữ, logo hoặc cả hai lên bản sao PNG mới. Server kiểm tra ownership của từng asset, hash-copy cô lập, giới hạn decoder, chuẩn hóa orientation và chỉ phát output sau strict re-parse + hash integrity. Không có AI generation, provider call, preview browser hoặc file public.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>PNG thương hiệu sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo bản sao thương hiệu</h2><p class="portal-card-subtitle">Chọn ít nhất chữ hoặc logo. Browser chỉ gửi Asset Vault UUID và thông số đã giới hạn; không upload bytes, URL hoặc raw file path.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-brand-overlay" data-portal-route="/image/brand-overlay" data-portal-confirm="Tạo PNG private mới với chữ/logo thương hiệu đã chọn? Ảnh nguồn và logo trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageBrandOverlayFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG thương hiệu</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới có thể kiểm tra</h2><p class="portal-card-subtitle">Đây là ghép lớp cục bộ deterministic, không phải lời hứa AI design hoặc nhận diện thương hiệu.</p></div></div><ol class="portal-project-steps"><li><strong>1. Asset Vault riêng tư</strong><span>Nguồn và logo đều phải thuộc signed account, active, đúng định dạng và không thể là cùng một asset.</span></li><li><strong>2. Lưới vị trí có giới hạn</strong><span>Chữ và logo chỉ dùng vị trí 3 × 3, cùng ba scale logo và opacity 25–100%; không có drag/drop, canvas hoặc URL tùy ý.</span></li><li><strong>3. Delivery đã xác minh</strong><span>PNG mới được strict-reparse, hash lại và tải qua signed session; không có public URL, preview công khai hay PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã gắn thương hiệu</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download bị khóa nếu ownership, state hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageBrandOverlayOperationCards(operations)}${renderImageBrandOverlayOperationHistoryPagination(context, canView, "/image/brand-overlay")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Brand Overlay Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook. Nó cũng không xác nhận quyền sở hữu logo, license hoặc quyền thương hiệu thay bạn.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -18377,6 +18582,7 @@
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
       case "image-enhance": return renderImageEnhance(page, context);
+      case "image-brand-overlay": return renderImageBrandOverlay(page, context);
       case "image-operation-history": return renderImageOperationHistory(page, context);
       case "support-desk": return renderSupportDesk(page, context);
       case "support-cases": return renderSupportCases(page, context);
@@ -18562,7 +18768,7 @@
     const source = fields && typeof fields === "object" ? fields : {};
     const seen = new Set();
     return Object.entries(source).map(([name, value]) => {
-      if (!(name === "source_asset_id" || /^source_asset_id_[1-8]$/.test(name))) return "";
+      if (!(name === "source_asset_id" || name === "logo_asset_id" || /^source_asset_id_[1-8]$/.test(name))) return "";
       return String(value || "").trim();
     }).filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true)).slice(0, 8);
   }
@@ -18616,11 +18822,11 @@
     // Search/filter text is intentionally ephemeral. Unlike an authoring
     // draft, it must not be copied into the generic transient form cache.
     if (form && !documentWorkspaceLibraryAction && action !== "memory-note-filter" && !String(action || "").startsWith("analytics-") && !["chat-workspace-refresh", "chat-thread-create", "chat-thread-update", "chat-thread-lifecycle", "chat-thread-restore-version", "chat-context-create", "chat-context-update", "chat-context-state", "chat-turn-create", "chat-turn-state", "prompt-library-filter", "workboard-filter", "workboard-filter-clear", "prompt-library-import", "media-workspace-filter", "media-audio-filter", "media-collection-compose", "media-item-detach", "content-studio-filter", "content-brief-compose", "content-variant-select", "content-brief-archive", "content-brief-restore", "content-brief-duplicate", "content-brief-restore-version", "content-variant-archive", "content-variant-restore", "image-studio-refresh", "image-studio-filter", "image-studio-filter-clear", "image-studio-page", "image-studio-project-reference-filter", "image-studio-project-reference-filter-clear", "image-studio-project-reference-page", "image-studio-asset-reference-filter", "image-studio-asset-reference-filter-clear", "image-studio-asset-reference-page", "image-artboard-state", "image-artboard-restore-version", "image-direction-archive", "image-direction-restore", "image-direction-restore-version", "document-workspace-refresh", "document-workspace-state", "document-workspace-restore-version", "document-plan-archive", "document-plan-restore", "document-plan-restore-version", "document-plan-reorder", "video-studio-refresh", "video-plan-state", "video-plan-restore-version", "video-scene-archive", "video-scene-restore", "video-scene-restore-version", "video-scene-reorder", "subtitle-studio-refresh", "subtitle-project-state", "subtitle-project-restore-version", "subtitle-cue-archive", "subtitle-cue-restore", "subtitle-cue-reorder", "voice-studio-filter", "voice-studio-filter-clear", "voice-vault-archive", "voice-vault-restore", "voice-vault-duplicate", "voice-vault-restore-version", "voice-vault-compose", "voice-script-archive", "voice-script-restore", "voice-script-duplicate", "voice-script-restore-version", "voice-script-cue-sheet"].includes(action)) rememberTransientFormDraft(form);
-    // A Chat Run payload is private user-authored text.  It must never remain
-    // in the generic tab-memory draft map while a server receipt is pending
-    // or after the request returns; the signed run endpoint is the only
-    // source of any visible timeline.
-    if (form && action === "chat-run-submit") clearTransientFormDraft(route);
+    // Chat Run and Brand Overlay both include private user-authored text.
+    // Neither may remain in the generic tab-memory draft map while a server
+    // receipt is pending or after it returns.  Their signed endpoints are
+    // the only source of visible result state.
+    if (form && ["chat-run-submit", "image-brand-overlay"].includes(action)) clearTransientFormDraft(route);
     const fields = collectFormFields(form);
     // The picker never stores selection outside the tab.  Pass its current
     // Asset Vault UUID choices only to the hydration action so selected rows
@@ -18658,6 +18864,11 @@
     if (String(action || "").startsWith("image-enhance-operation-")) {
       Object.assign(fields, {
         __imageEnhanceOperationOffset: source.getAttribute("data-image-enhance-operation-offset") || ""
+      });
+    }
+    if (String(action || "").startsWith("image-brand-overlay-")) {
+      Object.assign(fields, {
+        __imageBrandOverlayOperationOffset: source.getAttribute("data-image-brand-overlay-offset") || ""
       });
     }
     if (String(action || "").startsWith("image-history-operation-")) {

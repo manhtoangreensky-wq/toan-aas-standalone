@@ -165,6 +165,17 @@ def image_enhance_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_ENHANCE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def image_brand_overlay_enabled() -> bool:
+    """Whether the private Image Brand Overlay Studio executor is enabled.
+
+    The switch is deliberately narrower than Image Operations itself.  It
+    unlocks only a bounded server-side Pillow composition from owner-scoped
+    Asset Vault images; it never grants browser canvas rendering, a Bot job,
+    provider access, wallet mutation or payment action.
+    """
+    return os.environ.get("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def memory_center_enabled() -> bool:
     """Whether the Web-owned Memory Center is available to signed accounts.
 

@@ -37,6 +37,7 @@ from copyfast_db import (
     ensure_copyfast_schema,
     image_operations_directory,
     image_operations_enabled,
+    image_brand_overlay_enabled,
     image_enhance_enabled,
     image_resize_enabled,
     transaction,
@@ -49,7 +50,8 @@ router = APIRouter(prefix="/api/v1/image-operations", tags=["Web Image Operation
 
 IMAGE_RESIZE_KIND = "image_resize"
 IMAGE_ENHANCE_KIND = "image_enhance"
-SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})
+IMAGE_BRAND_OVERLAY_KIND = "image_brand_overlay"
+SUPPORTED_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND, IMAGE_BRAND_OVERLAY_KIND})
 # An omitted kind is the combined history contract used by `/image/history`.
 # Keep it explicit rather than treating every present/future table value as a
 # public Web history row. New operation kinds require a deliberate UI/API
@@ -58,7 +60,20 @@ IMAGE_HISTORY_KINDS = frozenset({IMAGE_RESIZE_KIND, IMAGE_ENHANCE_KIND})
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 FIT_MODES = frozenset({"crop", "pad", "blur"})
 ENHANCE_FIT_MODE = "enhance"
+BRAND_OVERLAY_FIT_MODE = "brand_overlay"
+BRAND_OVERLAY_PRESET = "brand_overlay_v1"
+BRAND_OVERLAY_RENDERER_VERSION = "brand_overlay_v1"
 ENHANCE_TONES = frozenset({"neutral", "warm", "cool", "clean"})
+OVERLAY_POSITIONS = frozenset({
+    "top_left", "top_center", "top_right",
+    "center_left", "center", "center_right",
+    "bottom_left", "bottom_center", "bottom_right",
+})
+LOGO_SCALE_PERCENTAGES = frozenset({12, 18, 22})
+DEFAULT_LOGO_SCALE_PERCENT = 18
+DEFAULT_LOGO_OPACITY_PERCENT = 78
+MIN_LOGO_OPACITY_PERCENT = 25
+MAX_LOGO_OPACITY_PERCENT = 100
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 UUID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 ASSET_STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -131,6 +146,7 @@ IMAGE_INPUT_MIME_BY_EXTENSION = {
 PNG_MEDIA_TYPE = "image/png"
 OUTPUT_FILENAME = "toan-aas-image-resized.png"
 ENHANCE_OUTPUT_FILENAME = "toan-aas-image-enhanced.png"
+BRAND_OVERLAY_OUTPUT_FILENAME = "toan-aas-image-brand-overlay.png"
 
 # Values and visual treatment intentionally match the Bot's local image editor
 # baseline.  The Web uses the stricter Image Operations source/output limits
@@ -248,6 +264,70 @@ class ImageEnhanceRequest(BaseModel):
         return _idempotency_key(value)
 
 
+class ImageBrandOverlayRequest(BaseModel):
+    """Create a private branded copy from one source and an optional logo asset.
+
+    Text is intentionally plain text only.  The browser never supplies markup,
+    font paths, image bytes, URLs or arbitrary composition coordinates.
+    """
+
+    source_asset_id: str = Field(min_length=36, max_length=36)
+    overlay_text: str | None = Field(default=None, max_length=520)
+    text_position: str = Field(default="bottom_center", min_length=3, max_length=24)
+    logo_asset_id: str | None = Field(default=None, min_length=36, max_length=36)
+    logo_position: str = Field(default="bottom_right", min_length=3, max_length=24)
+    logo_scale_percent: int = Field(default=DEFAULT_LOGO_SCALE_PERCENT, ge=12, le=22)
+    logo_opacity_percent: int = Field(default=DEFAULT_LOGO_OPACITY_PERCENT, ge=MIN_LOGO_OPACITY_PERCENT, le=MAX_LOGO_OPACITY_PERCENT)
+    idempotency_key: str = Field(min_length=12, max_length=160)
+
+    @field_validator("source_asset_id")
+    @classmethod
+    def valid_source_asset_id(cls, value: str) -> str:
+        return _uuid(value, label="Asset Vault ID")
+
+    @field_validator("logo_asset_id")
+    @classmethod
+    def valid_logo_asset_id(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        return _uuid(value, label="Logo Asset Vault ID")
+
+    @field_validator("overlay_text")
+    @classmethod
+    def valid_overlay_text(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        normalized = re.sub(r"\s+", " ", str(value).strip())
+        if not normalized:
+            return None
+        if any(ord(character) < 32 or ord(character) == 127 for character in normalized):
+            raise ValueError("Chữ thương hiệu không được chứa ký tự điều khiển")
+        if len(normalized) > 260:
+            raise ValueError("Chữ thương hiệu tối đa 260 ký tự")
+        return normalized
+
+    @field_validator("text_position", "logo_position")
+    @classmethod
+    def valid_overlay_position(cls, value: str) -> str:
+        normalized = re.sub(r"[\s-]+", "_", str(value or "").strip().lower())
+        if normalized not in OVERLAY_POSITIONS:
+            raise ValueError("Vị trí overlay không hợp lệ")
+        return normalized
+
+    @field_validator("logo_scale_percent")
+    @classmethod
+    def valid_logo_scale_percent(cls, value: int) -> int:
+        normalized = int(value)
+        if normalized not in LOGO_SCALE_PERCENTAGES:
+            raise ValueError("Kích thước logo chỉ nhận 12, 18 hoặc 22 phần trăm")
+        return normalized
+
+    @field_validator("idempotency_key")
+    @classmethod
+    def valid_idempotency_key(cls, value: str) -> str:
+        return _idempotency_key(value)
+
+
 def _require_enabled() -> None:
     if not image_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
@@ -271,6 +351,15 @@ def _require_enhance_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Image Enhance Studio chưa được bật; cần WEBAPP_IMAGE_ENHANCE_ENABLED và private storage",
+        )
+
+
+def _require_brand_overlay_enabled() -> None:
+    _require_enabled()
+    if not image_brand_overlay_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Brand Overlay Studio chưa được bật; cần WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED và private storage",
         )
 
 
@@ -578,6 +667,24 @@ def _normalized_enhance_spec(payload: ImageEnhanceRequest) -> tuple[str, dict[st
     return preset, config
 
 
+def _normalized_brand_overlay_spec(payload: ImageBrandOverlayRequest) -> dict[str, str | int | None]:
+    """Remove irrelevant controls so one logical composition has one fingerprint."""
+    overlay_text = payload.overlay_text
+    logo_asset_id = payload.logo_asset_id
+    if not overlay_text and not logo_asset_id:
+        raise HTTPException(status_code=422, detail="Brand Overlay cần ít nhất chữ thương hiệu hoặc logo private")
+    if logo_asset_id and logo_asset_id == payload.source_asset_id:
+        raise HTTPException(status_code=422, detail="Logo phải là Asset Vault image khác với ảnh nguồn")
+    return {
+        "overlay_text": overlay_text,
+        "text_position": payload.text_position if overlay_text else "bottom_center",
+        "logo_asset_id": logo_asset_id,
+        "logo_position": payload.logo_position if logo_asset_id else "bottom_right",
+        "logo_scale_percent": int(payload.logo_scale_percent) if logo_asset_id else DEFAULT_LOGO_SCALE_PERCENT,
+        "logo_opacity_percent": int(payload.logo_opacity_percent) if logo_asset_id else DEFAULT_LOGO_OPACITY_PERCENT,
+    }
+
+
 def _request_fingerprint(
     *,
     source_asset_id: str,
@@ -630,15 +737,178 @@ def _enhance_request_fingerprint(
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _operation_settings(value: Any) -> dict[str, float | str | bool]:
-    """Expose only server-normalized settings, never arbitrary stored JSON."""
+def _brand_overlay_text_digest(value: str | None) -> str:
+    return hashlib.sha256(str(value or "").encode("utf-8")).hexdigest()
+
+
+def _brand_overlay_request_fingerprint(
+    *,
+    source_asset_id: str,
+    source_sha256: str,
+    source_bytes: int,
+    logo_asset_id: str | None,
+    logo_sha256: str | None,
+    logo_bytes: int,
+    overlay_text: str | None,
+    text_position: str,
+    logo_position: str,
+    logo_scale_percent: int,
+    logo_opacity_percent: int,
+) -> str:
+    """Bind every rendering input without persisting branded text in a row.
+
+    The normalized text itself stays in the request lifecycle only.  The
+    stored request fingerprint and settings carry its SHA-256 digest so an
+    idempotency replay remains deterministic even after its source/logo asset
+    has later been archived.
+    """
+    encoded = json.dumps(
+        {
+            "kind": IMAGE_BRAND_OVERLAY_KIND,
+            "renderer_version": BRAND_OVERLAY_RENDERER_VERSION,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+            "logo_asset_id": logo_asset_id or "",
+            "logo_sha256": logo_sha256 or "",
+            "logo_bytes": logo_bytes,
+            "overlay_text_digest": _brand_overlay_text_digest(overlay_text),
+            "text_position": text_position,
+            "logo_position": logo_position,
+            "logo_scale_percent": logo_scale_percent,
+            "logo_opacity_percent": logo_opacity_percent,
+            "output_format": "png",
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def _brand_overlay_storage_settings(
+    *,
+    overlay_text: str | None,
+    text_position: str,
+    logo_asset_id: str | None,
+    logo_sha256: str | None,
+    logo_bytes: int,
+    logo_position: str,
+    logo_scale_percent: int,
+    logo_opacity_percent: int,
+) -> dict[str, str | int | bool]:
+    """Store replay-only metadata; public operation views get an allow-list."""
+    return {
+        "renderer_version": BRAND_OVERLAY_RENDERER_VERSION,
+        "text_present": bool(overlay_text),
+        "text_digest": _brand_overlay_text_digest(overlay_text),
+        "text_position": text_position,
+        "logo_present": bool(logo_asset_id),
+        "logo_asset_id": logo_asset_id or "",
+        "logo_sha256": logo_sha256 or "",
+        "logo_byte_size": int(logo_bytes),
+        "logo_position": logo_position,
+        "logo_scale_percent": int(logo_scale_percent),
+        "logo_opacity_percent": int(logo_opacity_percent),
+    }
+
+
+def _brand_overlay_internal_settings(value: Any) -> dict[str, Any]:
     try:
         decoded = json.loads(str(value or "{}"))
     except (TypeError, ValueError):
         return {}
     if not isinstance(decoded, dict):
         return {}
-    settings: dict[str, float | str | bool] = {}
+    return decoded
+
+
+def _brand_overlay_settings_are_valid(settings: dict[str, Any]) -> bool:
+    """Validate stored replay metadata without trusting arbitrary old JSON."""
+    try:
+        logo_scale_percent = int(settings.get("logo_scale_percent") or 0)
+        logo_opacity_percent = int(settings.get("logo_opacity_percent") or 0)
+        logo_byte_size = int(settings.get("logo_byte_size") or 0)
+    except (TypeError, ValueError):
+        return False
+    return (
+        str(settings.get("renderer_version") or "") == BRAND_OVERLAY_RENDERER_VERSION
+        and isinstance(settings.get("text_present"), bool)
+        and isinstance(settings.get("logo_present"), bool)
+        and isinstance(settings.get("text_digest"), str)
+        and re.fullmatch(r"[0-9a-f]{64}", str(settings.get("text_digest") or "")) is not None
+        and str(settings.get("text_position") or "") in OVERLAY_POSITIONS
+        and str(settings.get("logo_position") or "") in OVERLAY_POSITIONS
+        and logo_scale_percent in LOGO_SCALE_PERCENTAGES
+        and MIN_LOGO_OPACITY_PERCENT <= logo_opacity_percent <= MAX_LOGO_OPACITY_PERCENT
+        and (not bool(settings.get("logo_present")) or (
+            UUID_PATTERN.fullmatch(str(settings.get("logo_asset_id") or "")) is not None
+            and re.fullmatch(r"[0-9a-f]{64}", str(settings.get("logo_sha256") or "")) is not None
+            and logo_byte_size > 0
+        ))
+    )
+
+
+def _brand_overlay_replay_matches(
+    operation: tuple[Any, ...],
+    stored_fingerprint: Any,
+    *,
+    source_asset_id: str,
+    overlay_text: str | None,
+    text_position: str,
+    logo_asset_id: str | None,
+    logo_position: str,
+    logo_scale_percent: int,
+    logo_opacity_percent: int,
+) -> bool:
+    """Check a replay from persisted immutable fingerprints, not live assets."""
+    if len(operation) <= 24 or str(operation[1] or "") != source_asset_id:
+        return False
+    source_sha256 = str(operation[23] or "")
+    source_bytes = int(operation[22] or 0)
+    if re.fullmatch(r"[0-9a-f]{64}", source_sha256) is None or source_bytes < 1:
+        return False
+    settings = _brand_overlay_internal_settings(operation[24])
+    if not _brand_overlay_settings_are_valid(settings):
+        return False
+    text_present = bool(settings["text_present"])
+    logo_present = bool(settings["logo_present"])
+    if text_present != bool(overlay_text) or logo_present != bool(logo_asset_id):
+        return False
+    if text_present and not hmac.compare_digest(str(settings["text_digest"]), _brand_overlay_text_digest(overlay_text)):
+        return False
+    if logo_present and not hmac.compare_digest(str(settings["logo_asset_id"]), str(logo_asset_id or "")):
+        return False
+    expected = _brand_overlay_request_fingerprint(
+        source_asset_id=source_asset_id,
+        source_sha256=source_sha256,
+        source_bytes=source_bytes,
+        logo_asset_id=str(settings["logo_asset_id"]) if logo_present else None,
+        logo_sha256=str(settings["logo_sha256"]) if logo_present else None,
+        logo_bytes=int(settings["logo_byte_size"]) if logo_present else 0,
+        overlay_text=overlay_text,
+        text_position=text_position,
+        logo_position=logo_position,
+        logo_scale_percent=logo_scale_percent,
+        logo_opacity_percent=logo_opacity_percent,
+    )
+    return hmac.compare_digest(str(stored_fingerprint or ""), expected)
+
+
+def _operation_settings(kind: str, value: Any) -> dict[str, Any]:
+    """Expose only server-normalized settings, never arbitrary stored JSON."""
+    decoded = _brand_overlay_internal_settings(value)
+    if kind == IMAGE_BRAND_OVERLAY_KIND:
+        if not _brand_overlay_settings_are_valid(decoded):
+            return {}
+        return {
+            "text_present": bool(decoded["text_present"]),
+            "text_position": str(decoded["text_position"]),
+            "logo_present": bool(decoded["logo_present"]),
+            "logo_position": str(decoded["logo_position"]),
+            "logo_scale_percent": int(decoded["logo_scale_percent"]),
+            "logo_opacity_percent": int(decoded["logo_opacity_percent"]),
+        }
+    settings: dict[str, Any] = {}
     for key in ENHANCE_ADJUSTMENT_KEYS:
         candidate = decoded.get(key)
         if isinstance(candidate, (int, float)) and not isinstance(candidate, bool) and math.isfinite(float(candidate)) and 0.5 <= float(candidate) <= 2.0:
@@ -652,7 +922,11 @@ def _operation_settings(value: Any) -> dict[str, float | str | bool]:
 
 
 def _operation_output_filename(kind: str) -> str:
-    return ENHANCE_OUTPUT_FILENAME if kind == IMAGE_ENHANCE_KIND else OUTPUT_FILENAME
+    if kind == IMAGE_ENHANCE_KIND:
+        return ENHANCE_OUTPUT_FILENAME
+    if kind == IMAGE_BRAND_OVERLAY_KIND:
+        return BRAND_OVERLAY_OUTPUT_FILENAME
+    return OUTPUT_FILENAME
 
 
 def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
@@ -679,7 +953,7 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
         "completed_at": str(row[17]) if row[17] else None,
         "updated_at": str(row[18]),
         "download_ready": state == "completed" and bool(row[20]) and byte_size is not None,
-        "settings": _operation_settings(row[24] if len(row) > 24 else "{}"),
+        "settings": _operation_settings(str(row[3]), row[24] if len(row) > 24 else "{}"),
     }
 
 
@@ -687,9 +961,14 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
     state = str(operation.get("state") or "failed")
     kind = str(operation.get("kind") or "")
     is_enhance = kind == IMAGE_ENHANCE_KIND
-    label = "Image Enhance Studio" if is_enhance else "Resize & Aspect Studio"
+    is_brand_overlay = kind == IMAGE_BRAND_OVERLAY_KIND
+    label = "Brand Overlay Studio" if is_brand_overlay else ("Image Enhance Studio" if is_enhance else "Resize & Aspect Studio")
     if state == "completed":
-        message = "Đã nâng chất lượng cơ bản và xác minh PNG riêng tư." if is_enhance else "Đã resize và xác minh PNG riêng tư."
+        message = (
+            "Đã ghép lớp thương hiệu và xác minh PNG riêng tư."
+            if is_brand_overlay
+            else ("Đã nâng chất lượng cơ bản và xác minh PNG riêng tư." if is_enhance else "Đã resize và xác minh PNG riêng tư.")
+        )
         return envelope(True, message, data={"operation": operation}, status_name="completed")
     if state in {"queued", "processing"}:
         return envelope(True, f"{label} đang được máy chủ xử lý.", data={"operation": operation}, status_name=state)
@@ -712,7 +991,20 @@ def _source_not_found(kind: str = IMAGE_RESIZE_KIND) -> dict[str, Any]:
         False,
         "Không tìm thấy ảnh private đang hoạt động thuộc Web account hiện tại.",
         status_name="guarded",
-        error_code="WEB_IMAGE_ENHANCE_SOURCE_NOT_FOUND" if kind == IMAGE_ENHANCE_KIND else "WEB_IMAGE_RESIZE_SOURCE_NOT_FOUND",
+        error_code=(
+            "WEB_IMAGE_BRAND_OVERLAY_SOURCE_NOT_FOUND"
+            if kind == IMAGE_BRAND_OVERLAY_KIND
+            else ("WEB_IMAGE_ENHANCE_SOURCE_NOT_FOUND" if kind == IMAGE_ENHANCE_KIND else "WEB_IMAGE_RESIZE_SOURCE_NOT_FOUND")
+        ),
+    )
+
+
+def _logo_not_found() -> dict[str, Any]:
+    return envelope(
+        False,
+        "Không tìm thấy logo private đang hoạt động thuộc Web account hiện tại.",
+        status_name="guarded",
+        error_code="WEB_IMAGE_BRAND_OVERLAY_LOGO_NOT_FOUND",
     )
 
 
@@ -735,7 +1027,7 @@ def _image_operation_error_status(code: str) -> int:
         "IMAGE_OUTPUT_LIMIT",
     }:
         return 413
-    if code in {"IMAGE_RUNTIME_UNAVAILABLE", "IMAGE_STAGING_UNAVAILABLE"}:
+    if code in {"IMAGE_RUNTIME_UNAVAILABLE", "IMAGE_STAGING_UNAVAILABLE", "IMAGE_OVERLAY_FONT_UNAVAILABLE"}:
         # Runtime/storage boundary failures are retriable service conditions,
         # not invalid user input and never evidence against its source.
         return 503
@@ -1012,6 +1304,16 @@ def _inspect_enhance_geometry(
         raise ImageOperationError("Không thể đọc thông số ảnh nguồn an toàn", code="IMAGE_PARSE_FAILED") from exc
 
 
+def _inspect_brand_overlay_geometry(source_copy: Path, *, extension: str) -> tuple[int, int, int, int]:
+    """Reuse the bounded output geometry without exposing Enhance semantics."""
+    try:
+        return _inspect_enhance_geometry(source_copy, extension=extension, basic_upscale=False)
+    except ImageOperationError as exc:
+        if exc.code == "IMAGE_ANIMATED":
+            raise ImageOperationError("Ảnh động chưa được hỗ trợ trong Brand Overlay Studio", code=exc.code) from exc
+        raise
+
+
 def _apply_enhance_tone(image, *, tone: str, Image):
     if tone not in {"warm", "cool", "clean"}:
         return image
@@ -1113,6 +1415,383 @@ def _render_enhance(
     finally:
         if working is not None:
             working.close()
+
+
+def _overlay_image_classes():
+    """Load the text compositor separately from the shared image decoder."""
+    try:
+        from PIL import ImageDraw, ImageFont
+    except ImportError as exc:  # pragma: no cover - deployment configuration
+        raise ImageOperationError(
+            "Brand Overlay Studio chưa có runtime text renderer an toàn",
+            code="IMAGE_OVERLAY_FONT_UNAVAILABLE",
+        ) from exc
+    return ImageDraw, ImageFont
+
+
+def _overlay_font_paths() -> tuple[Path, ...]:
+    """Return deterministic, operator-controlled font candidates.
+
+    No browser-provided font path is ever accepted.  A production deployment
+    can pin a font through ``WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH``; otherwise
+    common DejaVu locations are tried first and local Windows paths only make
+    development/test behaviour deterministic. A configured path remains
+    strict; otherwise the pinned Pillow runtime provides its packaged Unicode
+    FreeType fallback when no host font is installed.
+    """
+    configured = os.environ.get("WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH", "").strip()
+    if configured:
+        return (Path(configured),)
+    return (
+        Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
+        Path("/usr/share/fonts/dejavu/DejaVuSans-Bold.ttf"),
+        Path(r"C:\Windows\Fonts\arialbd.ttf"),
+        Path(r"C:\Windows\Fonts\segoeuib.ttf"),
+    )
+
+
+def _load_overlay_font(ImageFont, *, size: int):
+    configured = os.environ.get("WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH", "").strip()
+    for candidate in _overlay_font_paths():
+        try:
+            if not candidate.is_file() or candidate.is_symlink():
+                continue
+            return ImageFont.truetype(str(candidate), size=size)
+        except (OSError, ValueError):
+            continue
+    # A configured production path is an explicit operator assertion. Do not
+    # quietly select a different face if it is absent or invalid. Without that
+    # assertion, Pillow's packaged FreeType default is a deterministic Unicode
+    # fallback in the pinned runtime (and avoids assuming a host font exists).
+    if not configured:
+        try:
+            fallback = ImageFont.load_default(size=size)
+            if getattr(fallback, "getbbox", None) is not None:
+                return fallback
+        except (OSError, TypeError, ValueError):
+            pass
+    raise ImageOperationError(
+        "Brand Overlay Studio chưa có font Unicode được server xác nhận",
+        code="IMAGE_OVERLAY_FONT_UNAVAILABLE",
+    )
+
+
+def _overlay_text_width(draw, value: str, *, font) -> int:
+    left, _, right, _ = draw.textbbox((0, 0), value, font=font, stroke_width=1)
+    return max(0, int(right) - int(left))
+
+
+def _wrap_overlay_text(draw, text: str, *, font, maximum_width: int) -> list[str]:
+    """Greedily wrap words without silently discarding the supplied text."""
+    words = text.split(" ")
+    lines: list[str] = []
+    current = ""
+    for word in words:
+        if _overlay_text_width(draw, word, font=font) > maximum_width:
+            raise ImageOperationError(
+                "Chữ thương hiệu có từ quá dài để đặt an toàn lên ảnh",
+                code="IMAGE_OVERLAY_TEXT_FIT",
+            )
+        candidate = word if not current else f"{current} {word}"
+        if _overlay_text_width(draw, candidate, font=font) <= maximum_width:
+            current = candidate
+            continue
+        if current:
+            lines.append(current)
+        current = word
+    if current:
+        lines.append(current)
+    return lines
+
+
+def _fit_overlay_text(draw, text: str, *, image_width: int, image_height: int, ImageFont):
+    """Choose a readable bounded font or truthfully reject non-fitting text."""
+    margin = max(16, round(0.035 * min(image_width, image_height)))
+    padding_x = max(18, round(0.025 * image_width))
+    padding_y = max(14, round(0.018 * image_height))
+    available_width = min(round(image_width * 0.82), image_width - (2 * margin) - (2 * padding_x))
+    available_height = image_height - (2 * margin)
+    if available_width < 24 or available_height < 32:
+        raise ImageOperationError("Ảnh quá nhỏ để đặt chữ thương hiệu an toàn", code="IMAGE_OVERLAY_TEXT_FIT")
+    baseline_size = max(20, min(72, image_width // 18))
+    candidate_sizes = list(range(baseline_size, 15, -2))
+    if 16 not in candidate_sizes:
+        candidate_sizes.append(16)
+    for size in candidate_sizes:
+        font = _load_overlay_font(ImageFont, size=size)
+        lines = _wrap_overlay_text(draw, text, font=font, maximum_width=available_width)
+        line_height = max(28, round(int(getattr(font, "size", size)) * 1.25))
+        if len(lines) > 4:
+            continue
+        block_width = max(_overlay_text_width(draw, line, font=font) for line in lines) + (2 * padding_x)
+        block_height = (line_height * len(lines)) + (2 * padding_y)
+        if block_width <= image_width - (2 * margin) and block_height <= available_height:
+            return font, lines, block_width, block_height, line_height, margin, padding_x, padding_y
+    raise ImageOperationError(
+        "Chữ thương hiệu không vừa trong tối đa bốn dòng trên ảnh này",
+        code="IMAGE_OVERLAY_TEXT_FIT",
+    )
+
+
+def _overlay_xy(
+    *,
+    canvas_width: int,
+    canvas_height: int,
+    overlay_width: int,
+    overlay_height: int,
+    position: str,
+    margin: int,
+) -> tuple[int, int]:
+    if position not in OVERLAY_POSITIONS:
+        raise ImageOperationError("Vị trí overlay không hợp lệ", code="IMAGE_OVERLAY_POSITION")
+    if overlay_width < 1 or overlay_height < 1 or overlay_width + (2 * margin) > canvas_width or overlay_height + (2 * margin) > canvas_height:
+        raise ImageOperationError("Overlay không vừa trong ảnh nguồn", code="IMAGE_OVERLAY_FIT")
+    if position.startswith("top_"):
+        y = margin
+    elif position.startswith("bottom_"):
+        y = canvas_height - overlay_height - margin
+    else:
+        y = (canvas_height - overlay_height) // 2
+    if position.endswith("_left"):
+        x = margin
+    elif position.endswith("_right"):
+        x = canvas_width - overlay_width - margin
+    else:
+        x = (canvas_width - overlay_width) // 2
+    return max(margin, min(x, canvas_width - overlay_width - margin)), max(margin, min(y, canvas_height - overlay_height - margin))
+
+
+def _overlay_base_canvas(source_copy: Path, *, extension: str, target_width: int, target_height: int):
+    """Decode, orient and flatten the immutable source into an RGB canvas."""
+    Image, _, _, ImageOps, UnidentifiedImageError = _image_classes()
+    try:
+        _inspect_image_source(source_copy, extension=extension)
+        with Image.open(source_copy) as decoded:
+            if not _image_format_matches(extension, decoded.format):
+                raise ImageOperationError("Định dạng ảnh nguồn không khớp Asset Vault", code="IMAGE_SOURCE_INVALID")
+            if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                raise ImageOperationError("Ảnh động chưa được hỗ trợ trong Brand Overlay Studio", code="IMAGE_ANIMATED")
+            decoded.load()
+            normalized = ImageOps.exif_transpose(decoded)
+            try:
+                rgba = normalized.convert("RGBA")
+            finally:
+                if normalized is not decoded:
+                    normalized.close()
+            try:
+                source_rgb = Image.new("RGB", rgba.size, (255, 255, 255))
+                source_alpha = rgba.getchannel("A")
+                try:
+                    source_rgb.paste(rgba, mask=source_alpha)
+                finally:
+                    source_alpha.close()
+            finally:
+                rgba.close()
+        if source_rgb.size != (target_width, target_height):
+            resized = source_rgb.resize((target_width, target_height), resample=Image.Resampling.LANCZOS)
+            source_rgb.close()
+            source_rgb = resized
+        if source_rgb.mode != "RGB" or source_rgb.size != (target_width, target_height):
+            source_rgb.close()
+            raise ImageOperationError("Canvas Brand Overlay không hợp lệ", code="IMAGE_OUTPUT_INVALID")
+        return source_rgb
+    except ImageOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise ImageOperationError("Độ phân giải ảnh nguồn vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ImageOperationError("Không thể decode ảnh nguồn an toàn", code="IMAGE_PARSE_FAILED") from exc
+
+
+def _overlay_logo_layer(
+    logo_copy: Path,
+    *,
+    extension: str,
+    canvas_width: int,
+    canvas_height: int,
+    scale_percent: int,
+    opacity_percent: int,
+):
+    """Return one bounded transparent logo layer from its verified staging copy."""
+    Image, _, _, ImageOps, UnidentifiedImageError = _image_classes()
+    logo = None
+    try:
+        _inspect_image_source(logo_copy, extension=extension)
+        with Image.open(logo_copy) as decoded:
+            if not _image_format_matches(extension, decoded.format):
+                raise ImageOperationError("Định dạng logo không khớp Asset Vault", code="IMAGE_LOGO_INVALID")
+            if int(getattr(decoded, "n_frames", 1) or 1) != 1 or bool(getattr(decoded, "is_animated", False)):
+                raise ImageOperationError("Logo động chưa được hỗ trợ", code="IMAGE_ANIMATED")
+            decoded.load()
+            normalized = ImageOps.exif_transpose(decoded)
+            try:
+                logo = normalized.convert("RGBA")
+            finally:
+                if normalized is not decoded:
+                    normalized.close()
+        margin = max(16, round(0.025 * min(canvas_width, canvas_height)))
+        maximum_width = min(canvas_width - (2 * margin), max(24, round(canvas_width * scale_percent / 100)))
+        maximum_height = min(canvas_height - (2 * margin), max(24, round(canvas_height * min(18, scale_percent * 0.82) / 100)))
+        if maximum_width < 1 or maximum_height < 1:
+            logo.close()
+            raise ImageOperationError("Ảnh quá nhỏ để đặt logo an toàn", code="IMAGE_OVERLAY_FIT")
+        logo.thumbnail((maximum_width, maximum_height), resample=Image.Resampling.LANCZOS)
+        if logo.width < 1 or logo.height < 1:
+            logo.close()
+            raise ImageOperationError("Logo không có kích thước hợp lệ", code="IMAGE_LOGO_INVALID")
+        alpha = logo.getchannel("A")
+        try:
+            adjusted_alpha = alpha.point(lambda value: max(0, min(255, round(value * opacity_percent / 100))))
+        finally:
+            alpha.close()
+        logo.putalpha(adjusted_alpha)
+        adjusted_alpha.close()
+        rendered_logo = logo
+        logo = None
+        return rendered_logo
+    except ImageOperationError:
+        raise
+    except (Image.DecompressionBombWarning, Image.DecompressionBombError) as exc:
+        raise ImageOperationError("Độ phân giải logo vượt giới hạn xử lý an toàn", code="IMAGE_PIXEL_LIMIT") from exc
+    except (UnidentifiedImageError, OSError, ValueError) as exc:
+        raise ImageOperationError("Không thể decode logo an toàn", code="IMAGE_LOGO_INVALID") from exc
+    finally:
+        if logo is not None:
+            logo.close()
+
+
+def _render_brand_overlay(
+    source_copy: Path,
+    *,
+    source_extension: str,
+    target_width: int,
+    target_height: int,
+    overlay_text: str | None,
+    text_position: str,
+    logo_copy: Path | None,
+    logo_extension: str | None,
+    logo_position: str,
+    logo_scale_percent: int,
+    logo_opacity_percent: int,
+):
+    """Compose Bot-parity text first, then a private logo, into a fresh PNG."""
+    Image, _, _, _, _ = _image_classes()
+    ImageDraw, ImageFont = _overlay_image_classes()
+    canvas = _overlay_base_canvas(
+        source_copy,
+        extension=source_extension,
+        target_width=target_width,
+        target_height=target_height,
+    )
+    composed = None
+    try:
+        composed = canvas.convert("RGBA")
+        if overlay_text:
+            draw = ImageDraw.Draw(composed, "RGBA")
+            font, lines, block_width, block_height, line_height, margin, padding_x, padding_y = _fit_overlay_text(
+                draw,
+                overlay_text,
+                image_width=composed.width,
+                image_height=composed.height,
+                ImageFont=ImageFont,
+            )
+            x, y = _overlay_xy(
+                canvas_width=composed.width,
+                canvas_height=composed.height,
+                overlay_width=block_width,
+                overlay_height=block_height,
+                position=text_position,
+                margin=margin,
+            )
+            radius = min(18, max(1, block_height // 2))
+            draw.rounded_rectangle((x, y, x + block_width, y + block_height), radius=radius, fill=(0, 0, 0, 145))
+            for index, line in enumerate(lines):
+                line_width = _overlay_text_width(draw, line, font=font)
+                text_x = x + ((block_width - line_width) // 2)
+                text_y = y + padding_y + (index * line_height)
+                draw.text(
+                    (text_x, text_y),
+                    line,
+                    font=font,
+                    fill=(255, 255, 255, 245),
+                    stroke_width=1,
+                    stroke_fill=(0, 0, 0, 180),
+                )
+        if logo_copy is not None:
+            if not logo_extension:
+                raise ImageOperationError("Logo không có định dạng hợp lệ", code="IMAGE_LOGO_INVALID")
+            logo = _overlay_logo_layer(
+                logo_copy,
+                extension=logo_extension,
+                canvas_width=composed.width,
+                canvas_height=composed.height,
+                scale_percent=logo_scale_percent,
+                opacity_percent=logo_opacity_percent,
+            )
+            try:
+                margin = max(16, round(0.025 * min(composed.width, composed.height)))
+                x, y = _overlay_xy(
+                    canvas_width=composed.width,
+                    canvas_height=composed.height,
+                    overlay_width=logo.width,
+                    overlay_height=logo.height,
+                    position=logo_position,
+                    margin=margin,
+                )
+                composed.alpha_composite(logo, (x, y))
+            finally:
+                logo.close()
+        rendered = Image.new("RGB", composed.size, (255, 255, 255))
+        output_alpha = composed.getchannel("A")
+        try:
+            rendered.paste(composed, mask=output_alpha)
+        finally:
+            output_alpha.close()
+        if rendered.size != (target_width, target_height):
+            rendered.close()
+            raise ImageOperationError("Kết quả Brand Overlay không hợp lệ", code="IMAGE_OUTPUT_INVALID")
+        return rendered
+    finally:
+        canvas.close()
+        if composed is not None:
+            composed.close()
+
+
+def _build_brand_overlay_output(
+    root: Path,
+    source_copy: Path,
+    *,
+    source_extension: str,
+    target_width: int,
+    target_height: int,
+    overlay_text: str | None,
+    text_position: str,
+    logo_copy: Path | None,
+    logo_extension: str | None,
+    logo_position: str,
+    logo_scale_percent: int,
+    logo_opacity_percent: int,
+) -> tuple[Path, str, int, str, int, int]:
+    rendered = _render_brand_overlay(
+        source_copy,
+        source_extension=source_extension,
+        target_width=target_width,
+        target_height=target_height,
+        overlay_text=overlay_text,
+        text_position=text_position,
+        logo_copy=logo_copy,
+        logo_extension=logo_extension,
+        logo_position=logo_position,
+        logo_scale_percent=logo_scale_percent,
+        logo_opacity_percent=logo_opacity_percent,
+    )
+    final_path, storage_key, output_bytes, output_digest = _publish_verified_png(
+        root,
+        rendered,
+        target_width=target_width,
+        target_height=target_height,
+    )
+    return final_path, storage_key, output_bytes, output_digest, target_width, target_height
 
 
 def _parser_copy(stream):
@@ -1996,6 +2675,371 @@ async def enhance_image(payload: ImageEnhanceRequest, request: Request, account:
         raise HTTPException(status_code=500, detail="Không thể chỉnh ảnh an toàn") from exc
     finally:
         _safe_unlink(source_copy)
+        if capacity_reserved:
+            image_decoder_capacity().release()
+
+
+@router.post("/brand-overlay")
+async def create_brand_overlay(
+    payload: ImageBrandOverlayRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Create a verified private PNG with local text and/or logo composition.
+
+    The operation deliberately accepts only Asset Vault IDs.  It never accepts
+    browser image bytes, URLs, paths or fonts, never alters the source asset,
+    and does not call the Bot, a provider, PayOS, wallet or job system.
+    """
+    _require_brand_overlay_enabled()
+    root = image_operations_directory()
+    account_id = str(account["id"])
+    spec = _normalized_brand_overlay_spec(payload)
+    overlay_text = str(spec["overlay_text"]) if spec["overlay_text"] else None
+    text_position = str(spec["text_position"])
+    logo_asset_id = str(spec["logo_asset_id"]) if spec["logo_asset_id"] else None
+    logo_position = str(spec["logo_position"])
+    logo_scale_percent = int(spec["logo_scale_percent"])
+    logo_opacity_percent = int(spec["logo_opacity_percent"])
+    source_asset_id = payload.source_asset_id
+    operation_id = ""
+    source_copy: Path | None = None
+    logo_copy: Path | None = None
+    final_path: Path | None = None
+    capacity_reserved = False
+    source_storage_key = ""
+    source_project_id: str | None = None
+    source_extension = ""
+    source_bytes = 0
+    source_sha256 = ""
+    logo_storage_key = ""
+    logo_extension = ""
+    logo_bytes = 0
+    logo_sha256 = ""
+    source_width = 0
+    source_height = 0
+    target_width = 0
+    target_height = 0
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            # A prior immutable request must replay before any live asset
+            # lookup.  This lets an owner retrieve the original verified PNG
+            # even after the original source/logo was archived.
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_image_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_BRAND_OVERLAY_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                existing_operation = tuple(existing[:-1])
+                if _brand_overlay_replay_matches(
+                    existing_operation,
+                    existing[-1],
+                    source_asset_id=source_asset_id,
+                    overlay_text=overlay_text,
+                    text_position=text_position,
+                    logo_asset_id=logo_asset_id,
+                    logo_position=logo_position,
+                    logo_scale_percent=logo_scale_percent,
+                    logo_opacity_percent=logo_opacity_percent,
+                ):
+                    return _operation_response(_operation_public(existing_operation))
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Brand Overlay khác")
+
+            source_row = conn.execute(
+                """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+                   FROM web_asset_files WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if not source_row or str(source_row[7]) != "active":
+                return _source_not_found(IMAGE_BRAND_OVERLAY_KIND)
+            source_extension = str(source_row[2] or "").lower()
+            expected_source_mime = IMAGE_INPUT_MIME_BY_EXTENSION.get(source_extension)
+            if expected_source_mime is None or str(source_row[3] or "") != expected_source_mime:
+                raise HTTPException(status_code=422, detail="Brand Overlay Studio chỉ nhận JPEG, PNG hoặc WebP private hợp lệ trong Asset Vault")
+            source_bytes = int(source_row[4] or 0)
+            source_sha256 = str(source_row[5] or "")
+            source_storage_key = str(source_row[6] or "")
+            source_project_id = str(source_row[1]) if source_row[1] else None
+            if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+                raise HTTPException(status_code=413, detail="Ảnh nguồn vượt giới hạn 20 MB")
+            if re.fullmatch(r"[0-9a-f]{64}", source_sha256) is None or not ASSET_STORAGE_KEY_PATTERN.fullmatch(source_storage_key):
+                raise HTTPException(status_code=422, detail="Ảnh nguồn không còn sẵn sàng")
+
+            if logo_asset_id:
+                logo_row = conn.execute(
+                    """SELECT id, extension, content_type, byte_size, sha256, storage_key, state
+                       FROM web_asset_files WHERE id=? AND account_id=?""",
+                    (logo_asset_id, account_id),
+                ).fetchone()
+                if not logo_row or str(logo_row[6]) != "active":
+                    return _logo_not_found()
+                logo_extension = str(logo_row[1] or "").lower()
+                expected_logo_mime = IMAGE_INPUT_MIME_BY_EXTENSION.get(logo_extension)
+                if expected_logo_mime is None or str(logo_row[2] or "") != expected_logo_mime:
+                    raise HTTPException(status_code=422, detail="Logo chỉ nhận JPEG, PNG hoặc WebP private hợp lệ trong Asset Vault")
+                logo_bytes = int(logo_row[3] or 0)
+                logo_sha256 = str(logo_row[4] or "")
+                logo_storage_key = str(logo_row[5] or "")
+                if logo_bytes < 1 or logo_bytes > MAX_INPUT_BYTES:
+                    raise HTTPException(status_code=413, detail="Logo vượt giới hạn 20 MB")
+                if re.fullmatch(r"[0-9a-f]{64}", logo_sha256) is None or not ASSET_STORAGE_KEY_PATTERN.fullmatch(logo_storage_key):
+                    raise HTTPException(status_code=422, detail="Logo không còn sẵn sàng")
+
+            # One shared decoder slot covers both source and logo decoding.
+            # This serializes the decoder-heavy path while allowing prior
+            # idempotent requests to return instantly above.
+            capacity = image_decoder_capacity()
+            if not capacity.acquire(blocking=False):
+                raise HTTPException(status_code=429, detail="Brand Overlay Studio đang bận xử lý một ảnh khác; vui lòng thử lại sau ít phút")
+            capacity_reserved = True
+    except Exception:
+        if capacity_reserved:
+            image_decoder_capacity().release()
+        raise
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, f".brand-source{source_extension}")
+        await run_in_threadpool(
+            _copy_verified_image_source,
+            source_path,
+            source_copy,
+            extension=source_extension,
+            expected_bytes=source_bytes,
+            expected_digest=source_sha256,
+        )
+        await run_in_threadpool(_inspect_image_source, source_copy, extension=source_extension)
+        source_width, source_height, target_width, target_height = await run_in_threadpool(
+            _inspect_brand_overlay_geometry,
+            source_copy,
+            extension=source_extension,
+        )
+        if logo_asset_id:
+            logo_path = _asset_path(asset_vault_directory(), logo_storage_key)
+            logo_copy = _staging_path(root, f".brand-logo{logo_extension}")
+            try:
+                await run_in_threadpool(
+                    _copy_verified_image_source,
+                    logo_path,
+                    logo_copy,
+                    extension=logo_extension,
+                    expected_bytes=logo_bytes,
+                    expected_digest=logo_sha256,
+                )
+            except ImageOperationError as exc:
+                if exc.code == "IMAGE_SOURCE_UNAVAILABLE":
+                    raise ImageOperationError("Logo private không còn sẵn sàng", code="IMAGE_LOGO_UNAVAILABLE") from exc
+                raise
+            await run_in_threadpool(_inspect_image_source, logo_copy, extension=logo_extension)
+
+        with transaction() as conn:
+            # Recheck after isolated copies: the source and optional logo must
+            # still be the same active immutable blobs before an operation row
+            # can be accepted.
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_image_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, IMAGE_BRAND_OVERLAY_KIND, payload.idempotency_key),
+            ).fetchone()
+            if existing:
+                existing_operation = tuple(existing[:-1])
+                if _brand_overlay_replay_matches(
+                    existing_operation,
+                    existing[-1],
+                    source_asset_id=source_asset_id,
+                    overlay_text=overlay_text,
+                    text_position=text_position,
+                    logo_asset_id=logo_asset_id,
+                    logo_position=logo_position,
+                    logo_scale_percent=logo_scale_percent,
+                    logo_opacity_percent=logo_opacity_percent,
+                ):
+                    return _operation_response(_operation_public(existing_operation))
+                raise HTTPException(status_code=409, detail="Idempotency key đã được dùng cho Brand Overlay khác")
+            current_source = conn.execute(
+                """SELECT byte_size, sha256, storage_key, state FROM web_asset_files
+                   WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if (
+                not current_source
+                or str(current_source[3]) != "active"
+                or int(current_source[0] or 0) != source_bytes
+                or not hmac.compare_digest(str(current_source[1] or ""), source_sha256)
+                or not hmac.compare_digest(str(current_source[2] or ""), source_storage_key)
+            ):
+                return _source_not_found(IMAGE_BRAND_OVERLAY_KIND)
+            if logo_asset_id:
+                current_logo = conn.execute(
+                    """SELECT byte_size, sha256, storage_key, state FROM web_asset_files
+                       WHERE id=? AND account_id=?""",
+                    (logo_asset_id, account_id),
+                ).fetchone()
+                if (
+                    not current_logo
+                    or str(current_logo[3]) != "active"
+                    or int(current_logo[0] or 0) != logo_bytes
+                    or not hmac.compare_digest(str(current_logo[1] or ""), logo_sha256)
+                    or not hmac.compare_digest(str(current_logo[2] or ""), logo_storage_key)
+                ):
+                    return _logo_not_found()
+            storage_settings = _brand_overlay_storage_settings(
+                overlay_text=overlay_text,
+                text_position=text_position,
+                logo_asset_id=logo_asset_id,
+                logo_sha256=logo_sha256 if logo_asset_id else None,
+                logo_bytes=logo_bytes if logo_asset_id else 0,
+                logo_position=logo_position,
+                logo_scale_percent=logo_scale_percent,
+                logo_opacity_percent=logo_opacity_percent,
+            )
+            request_fingerprint = _brand_overlay_request_fingerprint(
+                source_asset_id=source_asset_id,
+                source_sha256=source_sha256,
+                source_bytes=source_bytes,
+                logo_asset_id=logo_asset_id,
+                logo_sha256=logo_sha256 if logo_asset_id else None,
+                logo_bytes=logo_bytes if logo_asset_id else 0,
+                overlay_text=overlay_text,
+                text_position=text_position,
+                logo_position=logo_position,
+                logo_scale_percent=logo_scale_percent,
+                logo_opacity_percent=logo_opacity_percent,
+            )
+            operation_id = str(uuid.uuid4())
+            now = utc_now()
+            conn.execute(
+                """INSERT INTO web_image_operations
+                   (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                    request_fingerprint, source_sha256, source_byte_size, target_width, target_height,
+                    preset, fit_mode, settings_json, created_at, queued_at, started_at, updated_at)
+                   VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    operation_id,
+                    account_id,
+                    source_asset_id,
+                    source_project_id,
+                    IMAGE_BRAND_OVERLAY_KIND,
+                    payload.idempotency_key,
+                    request_fingerprint,
+                    source_sha256,
+                    source_bytes,
+                    target_width,
+                    target_height,
+                    BRAND_OVERLAY_PRESET,
+                    BRAND_OVERLAY_FIT_MODE,
+                    json.dumps(storage_settings, sort_keys=True, separators=(",", ":")),
+                    now,
+                    now,
+                    now,
+                    now,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="queued", when=now)
+            conn.execute(
+                "UPDATE web_image_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                (now, operation_id, account_id),
+            )
+            _record_event(conn, operation_id=operation_id, state="processing", when=now)
+
+        final_path, output_storage_key, output_bytes, output_digest, output_width, output_height = await run_in_threadpool(
+            _build_brand_overlay_output,
+            root,
+            source_copy,
+            source_extension=source_extension,
+            target_width=target_width,
+            target_height=target_height,
+            overlay_text=overlay_text,
+            text_position=text_position,
+            logo_copy=logo_copy,
+            logo_extension=logo_extension if logo_asset_id else None,
+            logo_position=logo_position,
+            logo_scale_percent=logo_scale_percent,
+            logo_opacity_percent=logo_opacity_percent,
+        )
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_image_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, IMAGE_BRAND_OVERLAY_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("Brand Overlay Studio không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Image Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_image_operations
+                   SET state='completed', source_width=?, source_height=?, target_width=?, target_height=?, storage_key=?,
+                       original_filename=?, content_type=?, byte_size=?, sha256=?,
+                       completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_width,
+                    source_height,
+                    output_width,
+                    output_height,
+                    output_storage_key,
+                    BRAND_OVERLAY_OUTPUT_FILENAME,
+                    PNG_MEDIA_TYPE,
+                    output_bytes,
+                    output_digest,
+                    now,
+                    now,
+                    operation_id,
+                    account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.image_operation.image_brand_overlay",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=(
+                    f"text={int(bool(overlay_text))};logo={int(bool(logo_asset_id))};"
+                    f"text_position={text_position};logo_position={logo_position};"
+                    f"logo_scale={logo_scale_percent};logo_opacity={logo_opacity_percent};"
+                    f"source={source_width}x{source_height};output={output_width}x{output_height};bytes={output_bytes}"
+                ),
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_image_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc Brand Overlay Studio vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except ImageOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code == "IMAGE_SOURCE_UNAVAILABLE":
+            _mark_source_unavailable(source_asset_id, account_id)
+        elif exc.code == "IMAGE_LOGO_UNAVAILABLE" and logo_asset_id:
+            _mark_source_unavailable(logo_asset_id, account_id)
+        _mark_failed(operation_id, account_id, request=request, code=exc.code, kind=IMAGE_BRAND_OVERLAY_KIND)
+        raise HTTPException(status_code=_image_operation_error_status(exc.code), detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            request=request,
+            code="IMAGE_QUOTA" if exc.status_code == 413 else "IMAGE_OPERATION",
+            kind=IMAGE_BRAND_OVERLAY_KIND,
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, request=request, code="IMAGE_OPERATION", kind=IMAGE_BRAND_OVERLAY_KIND)
+        raise HTTPException(status_code=500, detail="Không thể tạo Brand Overlay an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+        _safe_unlink(logo_copy)
         if capacity_reserved:
             image_decoder_capacity().release()
 
