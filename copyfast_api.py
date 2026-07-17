@@ -45,6 +45,14 @@ from copyfast_campaign_schedule import (
     normalize_schedule_trigger,
 )
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_native_read_models import (
+    get_native_job,
+    list_native_assets,
+    list_native_completed_outputs,
+    list_native_jobs,
+    parse_native_asset_id,
+    parse_native_job_id,
+)
 from copyfast_registry import FEATURE_BY_KEY, catalog
 from copyfast_web_engine import engine_descriptor
 
@@ -2578,6 +2586,231 @@ async def _bridge(
     )
 
 
+def _native_job_compatibility_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Adapt one sealed Web-native record to the generic Jobs read shape."""
+
+    public_id = str(record.get("id") or "").strip()
+    if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(public_id):
+        return {}
+    state = str(record.get("status") or record.get("state") or "guarded").strip()[:80] or "guarded"
+    native_kind = str(record.get("kind") or "web-native").strip()[:80] or "web-native"
+    operation_kind = str(record.get("operation_kind") or native_kind).strip()[:120] or native_kind
+    raw_output = record.get("output") if isinstance(record.get("output"), dict) else None
+    output = None
+    if raw_output:
+        filename = str(raw_output.get("filename") or "").replace("\\", "/").rsplit("/", 1)[-1].strip()[:255]
+        # Some otherwise-safe generated filenames include their private row
+        # UUID.  The opaque public ID must be the only identifier exposed by
+        # this generic compatibility surface.
+        parsed_native_id = parse_native_job_id(public_id)
+        internal_id = parsed_native_id[1] if parsed_native_id is not None else ""
+        if internal_id and internal_id.lower() in filename.lower():
+            suffix = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+            filename = f"web-native-{native_kind}{suffix}"
+        content_type = str(raw_output.get("content_type") or "").strip()[:160]
+        byte_size = raw_output.get("byte_size")
+        if filename and content_type and isinstance(byte_size, int) and not isinstance(byte_size, bool) and byte_size > 0:
+            output = {"filename": filename, "content_type": content_type, "byte_size": byte_size}
+    return {
+        "id": public_id,
+        "feature": f"web_native_{native_kind.replace('-', '_')}",
+        "job_type": operation_kind,
+        # Preserve the exact stored lifecycle. A local operation never becomes
+        # a fabricated canonical success record at this compatibility layer.
+        "status": state,
+        "created_at": str(record.get("created_at") or "")[:160],
+        "updated_at": str(record.get("updated_at") or record.get("created_at") or "")[:160],
+        "output_available": output is not None,
+        "download_ready": output is not None,
+        # The generic same-origin route delegates to the existing typed,
+        # owner-scoped handler, which performs the final artifact check.
+        "delivery_ready": output is not None,
+        "source": "web_native",
+        "source_state": "local_only",
+        "native_kind": native_kind,
+        "output": output,
+    }
+
+
+def _native_output_asset_record(job: dict[str, Any]) -> dict[str, Any] | None:
+    """Expose one sealed local job output through the generic Assets list."""
+
+    output = job.get("output") if isinstance(job.get("output"), dict) else None
+    public_id = str(job.get("id") or "").strip()
+    if not output or not CANONICAL_IDENTIFIER_PATTERN.fullmatch(public_id):
+        return None
+    return {
+        "id": public_id,
+        "feature": str(job.get("feature") or "web_native").strip()[:160],
+        "status": str(job.get("status") or "guarded").strip()[:80] or "guarded",
+        "created_at": str(job.get("created_at") or "")[:160],
+        "output_available": True,
+        "download_ready": True,
+        "delivery_ready": True,
+        "source": "web_native",
+        "source_state": "local_only",
+        "filename": str(output.get("filename") or "")[:255],
+        "content_type": str(output.get("content_type") or "")[:160],
+        "byte_size": output.get("byte_size"),
+    }
+
+
+def _native_asset_compatibility_record(record: dict[str, Any]) -> dict[str, Any]:
+    """Show a Web-owned source file without calling it generated output."""
+
+    public_id = str(record.get("id") or "").strip()
+    if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(public_id):
+        return {}
+    state = str(record.get("status") or record.get("state") or "guarded").strip()[:80] or "guarded"
+    return {
+        "id": public_id,
+        "feature": "web_native_asset_vault",
+        # Asset Vault lifecycle is intentionally not mapped to a job status.
+        "status": state,
+        "created_at": str(record.get("created_at") or "")[:160],
+        "output_available": False,
+        # Metadata alone never verifies a private Vault blob.  The opaque
+        # generic route may still be called, but only the existing downloader
+        # may attest to byte-level delivery readiness.
+        "download_ready": False,
+        "delivery_ready": False,
+        "source": "web_native",
+        "source_state": "local_only",
+        "filename": str(record.get("filename") or record.get("name") or "")[:255],
+        "content_type": str(record.get("content_type") or "")[:160],
+        "byte_size": record.get("byte_size"),
+    }
+
+
+def _read_item_timestamp(item: dict[str, Any]) -> str:
+    return str(item.get("updated_at") or item.get("created_at") or "")[:160]
+
+
+def _merge_read_items(*groups: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Merge public server read models, bounded independently of browser input."""
+
+    seen: set[str] = set()
+    merged: list[dict[str, Any]] = []
+    for group in groups:
+        for item in group:
+            if not isinstance(item, dict):
+                continue
+            identifier = str(item.get("id") or "").strip()
+            if not CANONICAL_IDENTIFIER_PATTERN.fullmatch(identifier) or identifier in seen:
+                continue
+            seen.add(identifier)
+            merged.append(item)
+    merged.sort(key=lambda item: (_read_item_timestamp(item), str(item.get("id") or "")), reverse=True)
+    return merged[:100]
+
+
+def _native_jobs_for_account(account: dict) -> list[dict[str, Any]]:
+    return [
+        item
+        for item in (
+            _native_job_compatibility_record(record)
+            for record in list_native_jobs(str(account.get("id") or ""), limit=100)
+        )
+        if item
+    ]
+
+
+def _native_assets_for_account(account: dict) -> list[dict[str, Any]]:
+    # Read completed output rows independently. A busy account can have more
+    # than one page of newer queued jobs, which must not hide an older sealed
+    # output from the generic Assets compatibility view.
+    jobs = [
+        item
+        for item in (
+            _native_job_compatibility_record(record)
+            for record in list_native_completed_outputs(str(account.get("id") or ""), limit=100)
+        )
+        if item
+    ]
+    outputs = [item for item in (_native_output_asset_record(job) for job in jobs) if item]
+    sources = [
+        item
+        for item in (
+            _native_asset_compatibility_record(record)
+            for record in list_native_assets(str(account.get("id") or ""), limit=100)
+        )
+        if item
+    ]
+    return _merge_read_items(outputs, sources)
+
+
+def _native_read_envelope(items: list[dict[str, Any]], *, kind: str, canonical_unavailable: bool) -> dict:
+    message = (
+        "Đã tải dữ liệu Web-native. Dữ liệu canonical đang tạm chưa sẵn sàng."
+        if canonical_unavailable
+        else "Đã tải dữ liệu Web-native của tài khoản hiện tại."
+    )
+    return envelope(
+        True,
+        message,
+        data={
+            "items": items,
+            "source": "web_native",
+            "source_state": "local_only",
+            "read_model": kind,
+            "canonical_available": False,
+        },
+        status_name="read_only",
+    )
+
+
+def _canonical_companion_ready(account: dict) -> bool:
+    """Return local bridge/link readiness without exposing either value."""
+
+    return bool(str(account.get("canonical_user_id") or "").strip()) and bridge_configured()
+
+
+def _merge_bridge_list_with_native(response: dict, native_items: list[dict[str, Any]]) -> dict:
+    """Add local records to a successful canonical list without rewriting it."""
+
+    if not native_items or not isinstance(response, dict) or not response.get("ok"):
+        return response
+    source_data = response.get("data") if isinstance(response.get("data"), dict) else {}
+    canonical_items = source_data.get("items") if isinstance(source_data.get("items"), list) else []
+    result = dict(response)
+    result["data"] = {
+        **source_data,
+        "items": _merge_read_items(canonical_items, native_items),
+        "source": "canonical_and_web_native",
+        "web_native_item_count": len(native_items),
+    }
+    return result
+
+
+async def _native_asset_delivery(asset_id: str, account: dict):
+    """Dispatch an opaque local record to its existing verified downloader."""
+
+    native_job = parse_native_job_id(asset_id)
+    if native_job is not None:
+        source, internal_id = native_job
+        record = get_native_job(str(account.get("id") or ""), asset_id)
+        if not record or not isinstance(record.get("output"), dict):
+            return envelope(False, "Tài sản Web-native chưa sẵn sàng để tải.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
+        if source == "project-package":
+            from copyfast_project_packages import download_project_package
+            return await download_project_package(internal_id, account)
+        if source == "document-operation":
+            from copyfast_document_operations import download_document_operation
+            return await download_document_operation(internal_id, account)
+        if source == "image-operation":
+            from copyfast_image_operations import download_image_operation
+            return await download_image_operation(internal_id, account)
+        return envelope(False, "Tài sản Web-native chưa được hỗ trợ.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
+
+    native_asset_id = parse_native_asset_id(asset_id)
+    if native_asset_id is not None:
+        from copyfast_assets import download_asset
+        # This direct call retains the Asset Vault handler's account/state and
+        # integrity checks without exposing a decoded raw ID in a redirect.
+        return await download_asset(native_asset_id, account)
+    return None
+
+
 async def _asset_delivery_redirect(asset_id: str, request: Request, account: dict) -> RedirectResponse | dict:
     """Mint one ownership-checked redirect from an explicit Bot contract.
 
@@ -3776,22 +4009,94 @@ async def payment_status(payment_id: str, request: Request, account: dict = Depe
 
 @router.get("/jobs")
 async def list_jobs(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/jobs", account=account, request=request)
+    # The generic Jobs view remains a canonical companion when the signed
+    # account can reach that bridge, but it must not make Web-owned records
+    # disappear merely because this account has not linked Telegram yet.
+    native_items = _native_jobs_for_account(account)
+    if not _flags()["copyfast_enabled"]:
+        return await _bridge("GET", "/internal/v1/jobs", account=account, request=request)
+    if not _canonical_companion_ready(account):
+        return _native_read_envelope(native_items, kind="jobs", canonical_unavailable=True)
+    canonical = await _bridge("GET", "/internal/v1/jobs", account=account, request=request)
+    if canonical.get("ok"):
+        return _merge_bridge_list_with_native(canonical, native_items)
+    # A failed canonical read never becomes a fabricated canonical result.
+    # Return the independently owner-scoped local model with its source
+    # explicitly marked instead of suppressing real Web records.
+    return _native_read_envelope(native_items, kind="jobs", canonical_unavailable=True)
 
 
 @router.get("/jobs/{job_id}")
 async def job_detail(job_id: str, request: Request, account: dict = Depends(require_account)):
+    native_job = parse_native_job_id(job_id)
+    if native_job is not None:
+        record = get_native_job(str(account.get("id") or ""), job_id)
+        if record:
+            item = _native_job_compatibility_record(record)
+            if item:
+                return envelope(
+                    True,
+                    "Đã tải dữ liệu Job Web-native của tài khoản hiện tại.",
+                    data={**item, "read_model": "jobs", "canonical_available": False},
+                    status_name="read_only",
+                )
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
+    # Reserve the typed namespace. A malformed/unknown native-shaped ID must
+    # never be forwarded to the canonical bridge as if it were canonical.
+    if str(job_id or "").strip().startswith(("wnj:", "wna:")):
+        return envelope(
+            False,
+            "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_JOB_NOT_FOUND",
+        )
     job_id = _canonical_route_identifier(job_id, "Mã job")
-    return await _bridge("GET", f"/internal/v1/jobs/{job_id}", account=account, request=request)
+    if not _flags()["copyfast_enabled"] or _canonical_companion_ready(account):
+        return await _bridge("GET", f"/internal/v1/jobs/{job_id}", account=account, request=request)
+    return envelope(
+        False,
+        "Không tìm thấy Job Web-native thuộc tài khoản hiện tại.",
+        status_name="guarded",
+        error_code="WEB_NATIVE_JOB_NOT_FOUND",
+    )
 
 
 @router.get("/assets")
 async def assets(request: Request, account: dict = Depends(require_account)):
-    return await _bridge("GET", "/internal/v1/assets", account=account, request=request)
+    # Asset Vault source files and sealed Web-native job outputs remain
+    # separate kinds, but the compatibility list can render both with opaque
+    # IDs and the usual generic download fields.
+    native_items = _native_assets_for_account(account)
+    if not _flags()["copyfast_enabled"]:
+        return await _bridge("GET", "/internal/v1/assets", account=account, request=request)
+    if not _canonical_companion_ready(account):
+        return _native_read_envelope(native_items, kind="assets", canonical_unavailable=True)
+    canonical = await _bridge("GET", "/internal/v1/assets", account=account, request=request)
+    if canonical.get("ok"):
+        return _merge_bridge_list_with_native(canonical, native_items)
+    return _native_read_envelope(native_items, kind="assets", canonical_unavailable=True)
 
 
 @router.get("/assets/{asset_id}/download")
 async def asset_download(asset_id: str, request: Request, account: dict = Depends(require_account)):
+    # A typed local ID is never sent to the Bot. The delegated local handlers
+    # recheck owner, lifecycle and the exact private artifact before bytes can
+    # leave the server.
+    native_response = await _native_asset_delivery(asset_id, account)
+    if native_response is not None:
+        return native_response
+    if str(asset_id or "").strip().startswith(("wnj:", "wna:")):
+        return envelope(
+            False,
+            "Tài sản Web-native chưa sẵn sàng để tải.",
+            status_name="guarded",
+            error_code="WEB_NATIVE_ASSET_UNAVAILABLE",
+        )
     # The core either returns an explicit short-lived, ownership-checked
     # delivery contract or stays guarded. The Web App never reconstructs a
     # provider URL from asset/job metadata.

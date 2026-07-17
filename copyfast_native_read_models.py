@@ -1,0 +1,630 @@
+"""Read-only projections for private Web-native jobs and Asset Vault files.
+
+This module is deliberately a small boundary for a future generic Jobs / Assets
+read API.  It reads only existing Web-owned tables and never creates schema,
+touches private blobs, imports a Bot/bridge/provider module, or executes an
+operation.  Callers must already have authenticated the Web account and must
+not turn the metadata-only ``output`` projection into an unverified download.
+"""
+
+from __future__ import annotations
+
+import base64
+import binascii
+import re
+from typing import Any
+
+from copyfast_db import read_transaction
+
+
+MAX_LIST_LIMIT = 100
+MAX_PUBLIC_ID_LENGTH = 160
+
+_JOB_PREFIX = "wnj:v1"
+_ASSET_PREFIX = "wna:v1"
+_JOB_SOURCES = frozenset({"project-package", "document-operation", "image-operation"})
+_PUBLIC_ROUTE_ID_PATTERN = re.compile(rf"^[A-Za-z0-9._:-]{{1,{MAX_PUBLIC_ID_LENGTH}}}$")
+# The longest public job prefix is ``wnj:v1:document-operation:`` (26
+# characters).  One hundred ASCII identifier bytes encode to 134 unpadded
+# base64url characters, producing an exactly 160-character route ID.
+_INTERNAL_IDENTIFIER_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{1,100}$")
+_SHA256_PATTERN = re.compile(r"^[0-9a-f]{64}$")
+_MEDIA_TYPE_PATTERN = re.compile(r"^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$")
+_PACKAGE_STORAGE_KEY_PATTERN = re.compile(r"^packages/[0-9a-f]{32}\.zip$")
+_DOCUMENT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:pdf|docx|png|txt|zip)$")
+_IMAGE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.png$")
+
+# These are exact copies of the direct document-handler output contracts.  Do
+# not normalize a MIME parameter here: ``text/plain`` is *not* the same sealed
+# output as the direct handler's ``text/plain; charset=utf-8`` OCR contract.
+_DOCUMENT_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
+    "pdf_split": (".pdf", "application/pdf", "toan-aas-pdf-split.pdf"),
+    "pdf_merge": (".pdf", "application/pdf", "toan-aas-pdf-merged.pdf"),
+    "pdf_optimize": (".pdf", "application/pdf", "toan-aas-pdf-optimized.pdf"),
+    "image_to_pdf": (".pdf", "application/pdf", "toan-aas-images.pdf"),
+    "pdf_to_images": (".zip", "application/zip", "toan-aas-pdf-pages.zip"),
+    "pdf_to_word_text": (
+        ".docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "toan-aas-pdf-text.docx",
+    ),
+    "image_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-image-ocr.txt"),
+}
+_PDF_TO_IMAGES_SINGLE_PAGE_SPEC = (".png", "image/png", "toan-aas-pdf-page-001.png")
+_PACKAGE_OUTPUT_SPEC = (".zip", "application/zip", "project-package.zip")
+_IMAGE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
+    "image_resize": (".png", "image/png", "toan-aas-image-resized.png"),
+    "image_enhance": (".png", "image/png", "toan-aas-image-enhanced.png"),
+}
+
+
+def _account_id(value: Any) -> str:
+    """Return a non-empty account identifier without exposing it downstream."""
+
+    candidate = str(value or "").strip()
+    return candidate if candidate else ""
+
+
+def _bounded_limit(value: Any) -> int:
+    """Keep all aggregate reads bounded even when called outside a router."""
+
+    try:
+        requested = int(value)
+    except (TypeError, ValueError):
+        requested = MAX_LIST_LIMIT
+    return max(1, min(requested, MAX_LIST_LIMIT))
+
+
+def _text(value: Any) -> str | None:
+    if value is None:
+        return None
+    return str(value)
+
+
+def _timestamp(value: Any) -> str | None:
+    value = _text(value)
+    return value if value else None
+
+
+def _positive_int(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 else None
+
+
+def _integer(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _non_negative_int(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        parsed = int(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed >= 0 else None
+
+
+def _safe_filename(value: Any) -> str | None:
+    """Return only a basename, never a stored local/private path."""
+
+    raw = _text(value)
+    if not raw:
+        return None
+    basename = raw.replace("\\", "/").rsplit("/", 1)[-1]
+    basename = "".join(character for character in basename if ord(character) >= 32 and ord(character) != 127).strip()
+    return basename[:255] or None
+
+
+def _safe_media_type(value: Any) -> str | None:
+    """Keep only a conventional MIME type, dropping parameters and junk."""
+
+    raw = _text(value)
+    if not raw:
+        return None
+    media_type = raw.split(";", 1)[0].strip().lower()
+    return media_type if _MEDIA_TYPE_PATTERN.fullmatch(media_type) else None
+
+
+def _encode_identifier(value: Any) -> str:
+    """Encode a database identifier without placing it directly in a route."""
+
+    internal_id = str(value or "")
+    if not _INTERNAL_IDENTIFIER_PATTERN.fullmatch(internal_id):
+        raise ValueError("Web-native record identifier is not eligible for a public projection")
+    # URL-safe base64 normally uses ``_``, while this app's route grammar does
+    # not.  ``.`` is outside that alphabet, so the substitution is reversible
+    # and remains within the existing [A-Za-z0-9._:-] route contract.
+    return base64.urlsafe_b64encode(internal_id.encode("utf-8")).decode("ascii").rstrip("=").replace("_", ".")
+
+
+def _decode_identifier(value: str) -> str | None:
+    if not value or not re.fullmatch(r"[A-Za-z0-9.-]+", value):
+        return None
+    padded = value.replace(".", "_") + ("=" * (-len(value) % 4))
+    try:
+        decoded = base64.b64decode(padded, altchars=b"-_", validate=True).decode("utf-8")
+    except (UnicodeDecodeError, binascii.Error, ValueError):
+        return None
+    return decoded if _INTERNAL_IDENTIFIER_PATTERN.fullmatch(decoded) else None
+
+
+def encode_native_job_id(source: str, internal_id: Any) -> str:
+    """Create the stable opaque route identifier for one supported job source."""
+
+    if source not in _JOB_SOURCES:
+        raise ValueError("Unknown Web-native job source")
+    public_id = f"{_JOB_PREFIX}:{source}:{_encode_identifier(internal_id)}"
+    if len(public_id) > MAX_PUBLIC_ID_LENGTH:
+        raise ValueError("Web-native public job identifier exceeds the route limit")
+    return public_id
+
+
+def parse_native_job_id(public_id: Any) -> tuple[str, str] | None:
+    """Parse a supported public job ID, returning ``None`` for every unknown ID."""
+
+    if not isinstance(public_id, str) or not _PUBLIC_ROUTE_ID_PATTERN.fullmatch(public_id):
+        return None
+    parts = public_id.split(":")
+    if len(parts) != 4 or parts[0] != "wnj" or parts[1] != "v1" or parts[2] not in _JOB_SOURCES:
+        return None
+    internal_id = _decode_identifier(parts[3])
+    return (parts[2], internal_id) if internal_id else None
+
+
+# A clearer alias for router code and contract readers.  Keep both names so a
+# future adapter need not know this module's internal naming convention.
+parse_public_job_id = parse_native_job_id
+
+
+def encode_native_asset_id(internal_id: Any) -> str:
+    """Create the stable opaque public identifier for an Asset Vault row."""
+
+    public_id = f"{_ASSET_PREFIX}:{_encode_identifier(internal_id)}"
+    if len(public_id) > MAX_PUBLIC_ID_LENGTH:
+        raise ValueError("Web-native public asset identifier exceeds the route limit")
+    return public_id
+
+
+def parse_native_asset_id(public_id: Any) -> str | None:
+    if not isinstance(public_id, str) or not _PUBLIC_ROUTE_ID_PATTERN.fullmatch(public_id):
+        return None
+    parts = public_id.split(":")
+    if len(parts) != 3 or parts[0] != "wna" or parts[1] != "v1":
+        return None
+    return _decode_identifier(parts[2])
+
+
+def _document_output_spec(kind: str, output_page_count: Any) -> tuple[str, str, str] | None:
+    """Mirror the direct handler's exact PDF-to-images page-count branch."""
+
+    if kind == "pdf_to_images" and _integer(output_page_count) == 1:
+        return _PDF_TO_IMAGES_SINGLE_PAGE_SPEC
+    return _DOCUMENT_OUTPUT_SPECS.get(kind)
+
+
+def _sealed_output(
+    *,
+    state: Any,
+    storage_key: Any,
+    storage_pattern: re.Pattern[str],
+    content_type: Any,
+    byte_size: Any,
+    sha256: Any,
+    expected_suffix: str,
+    expected_content_type: str,
+    filename: str,
+    require_stored_content_type: bool = True,
+    required_positive_values: tuple[Any, ...] = (),
+) -> dict[str, Any] | None:
+    """Project a metadata-complete private output without exposing its locator.
+
+    This intentionally does *not* check the filesystem or create a download
+    URL.  Existing download handlers keep the final storage integrity check.
+    """
+
+    if str(state or "") != "completed" or not storage_pattern.fullmatch(str(storage_key or "")):
+        return None
+    safe_byte_size = _positive_int(byte_size)
+    if (
+        safe_byte_size is None
+        or not _SHA256_PATTERN.fullmatch(str(sha256 or "").lower())
+        or not str(storage_key).lower().endswith(expected_suffix)
+        or (require_stored_content_type and str(content_type or "") != expected_content_type)
+        or any(_positive_int(value) is None for value in required_positive_values)
+    ):
+        return None
+    return {
+        "filename": filename,
+        "content_type": expected_content_type,
+        "byte_size": safe_byte_size,
+    }
+
+
+def _project_package(row: tuple[Any, ...]) -> dict[str, Any]:
+    (
+        record_id,
+        state,
+        document_count,
+        asset_reference_count,
+        storage_key,
+        filename,
+        content_type,
+        byte_size,
+        sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    return {
+        "id": encode_native_job_id("project-package", record_id),
+        "kind": "project-package",
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        "summary": {
+            "document_count": _non_negative_int(document_count),
+            "asset_reference_count": _non_negative_int(asset_reference_count),
+        },
+        "output": _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_PACKAGE_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=_PACKAGE_OUTPUT_SPEC[0],
+            expected_content_type=_PACKAGE_OUTPUT_SPEC[1],
+            filename=_safe_filename(filename) or _PACKAGE_OUTPUT_SPEC[2],
+            # The direct package downloader always serves a ZIP and does not
+            # treat its descriptive table MIME as delivery authority.
+            require_stored_content_type=False,
+        ),
+    }
+
+
+def _project_document_operation(row: tuple[Any, ...]) -> dict[str, Any]:
+    (
+        record_id,
+        operation_kind,
+        state,
+        source_count,
+        selected_start_page,
+        selected_end_page,
+        source_page_count,
+        output_page_count,
+        storage_key,
+        filename,
+        content_type,
+        byte_size,
+        sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    kind = str(operation_kind or "")
+    output_spec = _document_output_spec(kind, output_page_count)
+    return {
+        "id": encode_native_job_id("document-operation", record_id),
+        "kind": "document-operation",
+        "operation_kind": kind,
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        "summary": {
+            "source_count": _positive_int(source_count),
+            "selected_start_page": _positive_int(selected_start_page),
+            "selected_end_page": _positive_int(selected_end_page),
+            "source_page_count": _positive_int(source_page_count),
+            "output_page_count": _positive_int(output_page_count),
+        },
+        "output": (
+            _sealed_output(
+                state=state,
+                storage_key=storage_key,
+                storage_pattern=_DOCUMENT_STORAGE_KEY_PATTERN,
+                content_type=content_type,
+                byte_size=byte_size,
+                sha256=sha256,
+                expected_suffix=output_spec[0],
+                expected_content_type=output_spec[1],
+                filename=output_spec[2],
+            )
+            if output_spec is not None
+            else None
+        ),
+    }
+
+
+def _project_image_operation(row: tuple[Any, ...]) -> dict[str, Any]:
+    (
+        record_id,
+        operation_kind,
+        state,
+        target_width,
+        target_height,
+        preset,
+        fit_mode,
+        source_width,
+        source_height,
+        storage_key,
+        filename,
+        content_type,
+        byte_size,
+        sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    kind = str(operation_kind or "")
+    output_spec = _IMAGE_OUTPUT_SPECS.get(kind)
+    return {
+        "id": encode_native_job_id("image-operation", record_id),
+        "kind": "image-operation",
+        "operation_kind": kind,
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        "summary": {
+            "target_width": _positive_int(target_width),
+            "target_height": _positive_int(target_height),
+            "preset": _safe_filename(preset),
+            "fit_mode": _safe_filename(fit_mode),
+            "source_width": _positive_int(source_width),
+            "source_height": _positive_int(source_height),
+        },
+        "output": (
+            _sealed_output(
+                state=state,
+                storage_key=storage_key,
+                storage_pattern=_IMAGE_STORAGE_KEY_PATTERN,
+                content_type=content_type,
+                byte_size=byte_size,
+                sha256=sha256,
+                expected_suffix=output_spec[0],
+                expected_content_type=output_spec[1],
+                filename=output_spec[2],
+                required_positive_values=(target_width, target_height),
+            )
+            if output_spec is not None
+            else None
+        ),
+    }
+
+
+def _project_asset(row: tuple[Any, ...]) -> dict[str, Any]:
+    (
+        record_id,
+        display_name,
+        original_filename,
+        extension,
+        content_type,
+        byte_size,
+        state,
+        created_at,
+        updated_at,
+        archived_at,
+    ) = row
+    safe_filename = _safe_filename(original_filename)
+    safe_name = _safe_filename(display_name) or safe_filename
+    exact_state = str(state or "")
+    return {
+        "id": encode_native_asset_id(record_id),
+        "kind": "asset",
+        "name": safe_name,
+        "filename": safe_filename,
+        "extension": _safe_filename(extension),
+        "content_type": _safe_media_type(content_type),
+        "byte_size": _non_negative_int(byte_size),
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "updated_at": _timestamp(updated_at),
+        "archived_at": _timestamp(archived_at),
+    }
+
+
+_PACKAGE_QUERY = """
+    SELECT id, state, document_count, asset_reference_count, storage_key,
+           original_filename, content_type, byte_size, sha256, created_at,
+           queued_at, started_at, completed_at, updated_at
+      FROM web_project_packages
+     WHERE account_id=?
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
+_DOCUMENT_QUERY = """
+    SELECT id, kind, state, source_count, selected_start_page,
+           selected_end_page, source_page_count, output_page_count,
+           storage_key, original_filename, content_type, byte_size, sha256,
+           created_at, queued_at, started_at, completed_at, updated_at
+      FROM web_document_operations
+     WHERE account_id=?
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
+_IMAGE_QUERY = """
+    SELECT id, kind, state, target_width, target_height, preset, fit_mode,
+           source_width, source_height, storage_key, original_filename,
+           content_type, byte_size, sha256, created_at, queued_at, started_at,
+           completed_at, updated_at
+      FROM web_image_operations
+     WHERE account_id=?
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
+_ASSET_QUERY = """
+    SELECT id, display_name, original_filename, extension, content_type,
+           byte_size, state, created_at, updated_at, archived_at
+      FROM web_asset_files
+     WHERE account_id=?
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
+_PACKAGE_COMPLETED_QUERY = _PACKAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
+_DOCUMENT_COMPLETED_QUERY = _DOCUMENT_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
+_IMAGE_COMPLETED_QUERY = _IMAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
+
+
+def _projected_jobs_for_account(
+    conn: Any,
+    account_id: str,
+    limit: int,
+    *,
+    completed_outputs_only: bool = False,
+) -> list[dict[str, Any]]:
+    """Read each supported source through static SQL, then merge safely."""
+
+    sortable: list[tuple[str, str, str, dict[str, Any]]] = []
+    for source, query, projector in (
+        (
+            "project-package",
+            _PACKAGE_COMPLETED_QUERY if completed_outputs_only else _PACKAGE_QUERY,
+            _project_package,
+        ),
+        (
+            "document-operation",
+            _DOCUMENT_COMPLETED_QUERY if completed_outputs_only else _DOCUMENT_QUERY,
+            _project_document_operation,
+        ),
+        (
+            "image-operation",
+            _IMAGE_COMPLETED_QUERY if completed_outputs_only else _IMAGE_QUERY,
+            _project_image_operation,
+        ),
+    ):
+        for row in conn.execute(query, (account_id, limit)).fetchall():
+            values = tuple(row)
+            try:
+                job = projector(values)
+            except ValueError:
+                # A malformed legacy row must not make unrelated owner data
+                # disappear or create an over-length route identifier.
+                continue
+            if completed_outputs_only and not isinstance(job.get("output"), dict):
+                continue
+            # Raw IDs exist only long enough to make tied timestamps stable;
+            # they are never placed in a public dict.
+            sortable.append((str(values[-1] or ""), source, str(values[0]), job))
+    sortable.sort(key=lambda item: (item[0], item[1], item[2]), reverse=True)
+    return [item[3] for item in sortable[:limit]]
+
+
+def list_native_jobs(account_id: str, *, limit: int = MAX_LIST_LIMIT) -> list[dict[str, Any]]:
+    """Return at most 100 owner-scoped generic Web-native job projections.
+
+    The query is intentionally read-only.  It does not call
+    ``ensure_copyfast_schema`` because schema setup is a write and belongs to
+    application startup, not to a read model.
+    """
+
+    owner_id = _account_id(account_id)
+    if not owner_id:
+        return []
+    bounded_limit = _bounded_limit(limit)
+    with read_transaction() as conn:
+        return _projected_jobs_for_account(conn, owner_id, bounded_limit)
+
+
+def list_native_completed_outputs(account_id: str, *, limit: int = MAX_LIST_LIMIT) -> list[dict[str, Any]]:
+    """Return bounded completed jobs with sealed-output metadata only.
+
+    This deliberately queries completed rows separately from ``list_native_jobs``
+    so a full page of newer queued/processing rows cannot hide a usable local
+    output from the generic Assets projection.
+    """
+
+    owner_id = _account_id(account_id)
+    if not owner_id:
+        return []
+    bounded_limit = _bounded_limit(limit)
+    with read_transaction() as conn:
+        return _projected_jobs_for_account(
+            conn,
+            owner_id,
+            bounded_limit,
+            completed_outputs_only=True,
+        )
+
+
+def get_native_job(account_id: str, public_id: str) -> dict[str, Any] | None:
+    """Return one owner-scoped job projection, or ``None`` for missing/unknown IDs."""
+
+    owner_id = _account_id(account_id)
+    parsed = parse_native_job_id(public_id)
+    if not owner_id or parsed is None:
+        return None
+    source, internal_id = parsed
+    with read_transaction() as conn:
+        if source == "project-package":
+            row = conn.execute(
+                _PACKAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
+                (owner_id, internal_id, 1),
+            ).fetchone()
+            return _project_package(tuple(row)) if row else None
+        if source == "document-operation":
+            row = conn.execute(
+                _DOCUMENT_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
+                (owner_id, internal_id, 1),
+            ).fetchone()
+            return _project_document_operation(tuple(row)) if row else None
+        if source == "image-operation":
+            row = conn.execute(
+                _IMAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
+                (owner_id, internal_id, 1),
+            ).fetchone()
+            return _project_image_operation(tuple(row)) if row else None
+    return None
+
+
+def list_native_assets(account_id: str, *, limit: int = MAX_LIST_LIMIT) -> list[dict[str, Any]]:
+    """Return at most 100 owner-scoped Asset Vault metadata projections."""
+
+    owner_id = _account_id(account_id)
+    if not owner_id:
+        return []
+    bounded_limit = _bounded_limit(limit)
+    with read_transaction() as conn:
+        rows = conn.execute(_ASSET_QUERY, (owner_id, bounded_limit)).fetchall()
+    assets: list[dict[str, Any]] = []
+    for row in rows:
+        try:
+            assets.append(_project_asset(tuple(row)))
+        except ValueError:
+            continue
+    return assets

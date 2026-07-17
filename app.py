@@ -34,6 +34,7 @@ import copyfast_channel_strategy
 import copyfast_content_handoff
 import copyfast_content_studio
 import copyfast_chat_workspace
+from copyfast_bridge import ensure_core_bridge_readiness
 import copyfast_data_controls
 import copyfast_document_operations
 import copyfast_document_workspace
@@ -186,6 +187,10 @@ async def _stop_startup_reconciliation(application: FastAPI) -> None:
 
 @asynccontextmanager
 async def lifespan(application: FastAPI):
+    # Optional release gate: normal Web-only deployments intentionally remain
+    # usable without the canonical Bot bridge, but a release that explicitly
+    # requires it must not advertise readiness with missing/unsafe credentials.
+    ensure_core_bridge_readiness()
     ensure_auth_configuration()
     ensure_oauth_configuration()
     ensure_email_verification_configuration()
@@ -1651,6 +1656,11 @@ async def legacy_b2b_redirect():
 async def page(page_path: str, request: Request):
     normalized = ("/" + page_path.lstrip("/")) if page_path else "/"
     normalized = normalized.rstrip("/") or "/"
+    # This is the final portal fallback.  It must never turn an unknown API or
+    # internal endpoint into a login redirect or an HTML shell, because API
+    # callers require the application's normal JSON error contract.
+    if normalized in {"/api", "/internal"} or normalized.startswith("/api/") or normalized.startswith("/internal/"):
+        raise HTTPException(status_code=404, detail="Không tìm thấy tài nguyên")
     legacy_target = _legacy_html_redirects.get(normalized)
     if legacy_target:
         return RedirectResponse(legacy_target, status_code=307)
