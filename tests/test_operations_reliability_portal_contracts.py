@@ -212,7 +212,10 @@ def test_reliability_support_handoff_is_server_resolved_and_route_constrained() 
     for requirement in (
         "require_support_staff(account)",
         "followup.source_kind='support_triage'",
-        "followup.state IN ('open', 'acknowledged')",
+        "_followup_visibility_clause(staff_role, table_alias=\"followup\")",
+        "followup.state",
+        "str(current[9]) not in {\"open\", \"acknowledged\"}",
+        "OPS_RELIABILITY_HANDOFF_UNAVAILABLE",
         "support_case.revision",
         "triage.source_revision",
         "protected_support_case_navigation_only",
