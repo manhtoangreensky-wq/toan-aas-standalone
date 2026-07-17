@@ -26,6 +26,10 @@
   const transientWorkspaceDraftIds = new Map();
   let sidebarReturnFocus = null;
   let commandPaletteReturnFocus = null;
+  // This is a presentation preference for the current page only. It is never
+  // written to storage, a URL, the signed bootstrap, or an action payload.
+  // A reload intentionally restores the standard discoverable navigation.
+  let desktopNavigationFocusEnabled = false;
   // The browser-supplied install event remains in tab memory only.  It is
   // never persisted with account/session data and is only prompted from an
   // explicit customer click after the server has enabled PWA for the session.
@@ -6935,7 +6939,10 @@
       <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">AI Workspace</span></span>
       <button class="portal-sidebar-close" type="button" aria-label="Đóng điều hướng" data-portal-close-menu>×</button>
     </div>
-    <a class="portal-sidebar-create" href="/features"><span aria-hidden="true">+</span><span>Tạo workflow mới</span><b aria-hidden="true">→</b></a>
+    <div class="portal-sidebar-action-row">
+      <a class="portal-sidebar-create" href="/features"><span aria-hidden="true">+</span><span>Tạo workflow mới</span><b aria-hidden="true">→</b></a>
+      <button class="portal-sidebar-focus-toggle" type="button" aria-label="Bật chế độ tập trung nội dung" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>⇤</span><span class="portal-sr-only" data-portal-focus-navigation-label>Thu gọn điều hướng</span></button>
+    </div>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
@@ -18786,6 +18793,42 @@
     button.setAttribute("aria-label", opened ? "Đóng điều hướng" : "Mở điều hướng");
   }
 
+  function desktopFocusNavigationSupported() {
+    return Boolean(window.matchMedia && window.matchMedia("(min-width: 981px)").matches);
+  }
+
+  function syncDesktopFocusNavigation() {
+    const shell = document.querySelector("[data-portal-shell]");
+    if (!shell) return;
+    const enabled = desktopNavigationFocusEnabled === true && desktopFocusNavigationSupported();
+    shell.classList.toggle("portal-shell--focus", enabled);
+    document.querySelectorAll("[data-portal-focus-navigation]").forEach((control) => {
+      control.setAttribute("aria-pressed", String(enabled));
+      control.setAttribute("aria-label", enabled ? "Khôi phục điều hướng cố định" : "Bật chế độ tập trung nội dung");
+      const icon = control.querySelector("[data-portal-focus-navigation-icon]");
+      if (icon) icon.textContent = enabled ? "☰" : "⇤";
+      const label = control.querySelector("[data-portal-focus-navigation-label]");
+      if (label) label.textContent = enabled ? "Khôi phục điều hướng cố định" : "Thu gọn điều hướng";
+    });
+  }
+
+  function toggleDesktopFocusNavigation() {
+    if (!desktopFocusNavigationSupported()) return;
+    const next = desktopNavigationFocusEnabled !== true;
+    // Leaving focus mode must also remove the overlay/dialog state before the
+    // sidebar becomes a normal sticky landmark again.
+    if (!next) closeSidebar({ restoreFocus: false });
+    desktopNavigationFocusEnabled = next;
+    syncDesktopFocusNavigation();
+    // The control that triggered focus mode may have moved into the hidden
+    // overlay. Move focus to the now-visible menu button instead of leaving
+    // keyboard users on an invisible element.
+    window.requestAnimationFrame(() => {
+      const menu = document.querySelector("[data-portal-menu]");
+      if (menu && typeof menu.focus === "function") menu.focus({ preventScroll: true });
+    });
+  }
+
   function closeSidebar(options) {
     const settings = options && typeof options === "object" ? options : {};
     const sidebar = document.querySelector("[data-portal-sidebar]");
@@ -18829,7 +18872,16 @@
   }
 
   function closeSidebarAboveMobileBreakpoint() {
-    if (!window.matchMedia || !window.matchMedia("(min-width: 981px)").matches) return;
+    if (!desktopFocusNavigationSupported()) {
+      // The dedicated mobile drawer already owns this breakpoint. Do not keep
+      // a desktop-only focus preference active if the layout changes while a
+      // user is interacting with the portal.
+      if (desktopNavigationFocusEnabled) {
+        desktopNavigationFocusEnabled = false;
+        syncDesktopFocusNavigation();
+      }
+      return;
+    }
     const sidebar = document.querySelector("[data-portal-sidebar]");
     if (sidebar && sidebar.classList.contains("is-open")) closeSidebar({ restoreFocus: false });
   }
@@ -19010,6 +19062,7 @@
       if (event.target.closest("[data-portal-command-item]")) { closeCommandPalette({ restoreFocus: false }); return; }
       const menu = event.target.closest("[data-portal-menu]");
       if (menu) { toggleSidebar(); return; }
+      if (event.target.closest("[data-portal-focus-navigation]")) { toggleDesktopFocusNavigation(); return; }
       if (event.target.closest("[data-portal-close-menu]")) { closeSidebar(); return; }
       if (event.target.closest("[data-portal-backdrop]")) { closeSidebar(); return; }
       if (event.target.closest("[data-portal-catalog-clear]")) {
@@ -19120,6 +19173,7 @@
     // visit focused, prevents a misleading "already inside" impression, and
     // leaves the regular navigation intact immediately after a signed login.
     const minimalShell = isLanding || isAuth;
+    if (minimalShell) desktopNavigationFocusEnabled = false;
     const showMobileNav = !minimalShell && context.session && context.session.authenticated === true;
     shell.classList.toggle("portal-shell--landing", isLanding);
     shell.classList.toggle("portal-shell--auth", isAuth);
@@ -19139,6 +19193,7 @@
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
+    syncDesktopFocusNavigation();
     bindInteractions();
     syncPwaInstallControl();
     restoreFocus(focus);
