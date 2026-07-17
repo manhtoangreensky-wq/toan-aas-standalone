@@ -489,6 +489,7 @@ def _flags() -> dict[str, bool]:
         # Local Image Enhance uses the same private output boundary but remains
         # independently guarded; it never implies provider-backed AI editing.
         "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
+        "image_brand_overlay_enabled": enabled("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", False),
         # Notes, versions and reminders live in the signed Web session
         # database.  This flag is intentionally independent of Bot, wallet,
         # payment, provider and persistent-file capability flags.
@@ -1542,6 +1543,8 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "web_native_image_resize_required"
     if feature == "image_edit":
         return "web_native_image_enhance_required"
+    if feature == "image_brand_overlay":
+        return "web_native_image_brand_overlay_required"
     if feature in {"documents", "documents_pdf"}:
         return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
@@ -1595,6 +1598,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "web_native_pdf_ocr_required": "OCR PDF là tiện ích Web-native riêng tư. Chỉ bật khi local PDFium/Tesseract sẵn sàng; không gọi Bot, provider hoặc tạo TXT giả.",
         "web_native_image_resize_required": "Resize & Aspect Studio là tiện ích Web-native riêng tư. Hãy dùng /image/resize để tạo PNG đã được kiểm tra; không gọi Bot, provider hoặc AI upscale.",
         "web_native_image_enhance_required": "Image Enhance Studio là tiện ích Web-native riêng tư. Hãy dùng /image/edit để chỉnh màu/làm nét cơ bản trên Asset Vault; không gọi Bot, provider hoặc AI edit.",
+        "web_native_image_brand_overlay_required": "Brand Overlay Studio là tiện ích Web-native riêng tư. Hãy dùng /image/brand-overlay để tạo PNG đã kiểm tra từ Asset Vault; không gọi Bot, provider hoặc AI edit.",
         "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF private phù hợp trong Document Studio.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
