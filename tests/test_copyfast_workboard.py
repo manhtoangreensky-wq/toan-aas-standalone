@@ -72,6 +72,68 @@ def create_item(client: TestClient, csrf: str, key: str = "workboard-create-item
     return response.json()["data"]["item"]
 
 
+def seed_native_references(db_path, email: str) -> tuple[str, str]:
+    """Create owner-scoped Web-native records without starting a provider/job.
+
+    The queued image row deliberately has no delivered output: Workboard may
+    coordinate it, but the test proves that this never fabricates delivery.
+    """
+
+    with sqlite3.connect(db_path) as conn:
+        account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email.lower(),)).fetchone()
+        assert account
+        account_id = str(account[0])
+        now = "2026-07-17T12:00:00+00:00"
+        asset_id = "workboard-native-asset"
+        job_id = "workboard-native-job"
+        conn.execute(
+            """INSERT INTO web_asset_files
+               (id, account_id, project_id, display_name, original_filename,
+                extension, content_type, byte_size, sha256, storage_key,
+                state, lifecycle_revision, created_at, updated_at, archived_at)
+               VALUES (?, ?, NULL, ?, ?, '.png', 'image/png', 1024, ?, ?, 'active', 1, ?, ?, NULL)""",
+            (
+                asset_id,
+                account_id,
+                "Workboard native source",
+                "workboard-native-source.png",
+                "a" * 64,
+                f"private-workboard/{account_id}/{asset_id}.blob",
+                now,
+                now,
+            ),
+        )
+        conn.execute(
+            """INSERT INTO web_image_operations
+               (id, account_id, source_asset_id, project_id, kind, state,
+                idempotency_key, request_fingerprint, source_sha256,
+                source_byte_size, source_width, source_height, target_width,
+                target_height, preset, fit_mode, storage_key,
+                original_filename, content_type, byte_size, sha256,
+                failure_code, created_at, queued_at, started_at, completed_at,
+                updated_at, settings_json)
+               VALUES (?, ?, ?, NULL, 'image_resize', 'queued', ?, ?, ?,
+                       1024, 1600, 1200, 1024, 1024, '1:1', 'crop', NULL,
+                       NULL, NULL, NULL, NULL, NULL, ?, ?, NULL, NULL, ?, '{}')""",
+            (
+                job_id,
+                account_id,
+                asset_id,
+                "workboard-native-job-create-0001",
+                "workboard-native-fingerprint",
+                "a" * 64,
+                now,
+                now,
+                now,
+            ),
+        )
+    models = importlib.import_module("copyfast_native_read_models")
+    return (
+        models.encode_native_job_id("image-operation", job_id),
+        models.encode_native_asset_id(asset_id),
+    )
+
+
 def test_workboard_requires_signed_session_csrf_bounded_body_and_idempotency(tmp_path, monkeypatch):
     db_path = tmp_path / "workboard-test.db"
     with make_client(tmp_path, monkeypatch) as client:
@@ -210,6 +272,112 @@ def test_workboard_owner_scopes_references_and_revisioned_checklist(tmp_path, mo
         )
         assert foreign_ref.status_code == 200
         assert foreign_ref.json()["error_code"] in {"WEB_WORKBOARD_REFERENCE_NOT_FOUND", "WEB_WORKBOARD_REFERENCE_INVALID"}
+
+
+def test_workboard_native_references_are_opaque_owner_scoped_and_not_delivery(tmp_path, monkeypatch):
+    db_path = tmp_path / "workboard-test.db"
+    owner_email = "workboard-native-owner@example.com"
+    with make_client(tmp_path, monkeypatch) as client:
+        owner_csrf = login(client, owner_email)
+        native_job, native_asset = seed_native_references(db_path, owner_email)
+
+        catalog = client.get("/api/v1/workboard/references")
+        assert catalog.status_code == 200 and catalog.json()["ok"] is True
+        choices = catalog.json()["data"]["references"]
+        assert {choice["ref_id"] for choice in choices["native_job"]} == {native_job}
+        assert {choice["ref_id"] for choice in choices["native_asset"]} == {native_asset}
+        # Public catalog data stays opaque: internal DB IDs and storage keys do
+        # not cross this boundary, and a queued job has no delivery field.
+        serialized_catalog = str(choices)
+        assert "workboard-native-job" not in serialized_catalog
+        assert "workboard-native-asset" not in serialized_catalog
+        assert "private-workboard" not in serialized_catalog
+
+        item = create_item(
+            client,
+            owner_csrf,
+            "workboard-native-reference-create-0001",
+            references=[
+                {"ref_type": "native_job", "ref_id": native_job},
+                {"ref_type": "native_asset", "ref_id": native_asset},
+            ],
+        )
+        detail = client.get(f"/api/v1/workboard/items/{item['id']}")
+        assert detail.status_code == 200 and detail.json()["ok"] is True
+        assert detail.json()["data"]["item"]["references"] == [
+            {"ref_type": "native_job", "ref_id": native_job},
+            {"ref_type": "native_asset", "ref_id": native_asset},
+        ]
+        assert "output" not in detail.json()["data"]["item"]
+        filtered = client.get(
+            "/api/v1/workboard/items",
+            params={"ref_type": "native_output", "ref_id": native_job},
+        )
+        assert filtered.status_code == 200
+        assert [entry["id"] for entry in filtered.json()["data"]["items"]] == [item["id"]]
+        malformed_filter = client.get(
+            "/api/v1/workboard/items",
+            params={"ref_type": "native_job", "ref_id": "not-an-opaque-id"},
+        )
+        assert malformed_filter.status_code == 422
+
+        # A revision restore preserves the typed opaque links while the owner
+        # record remains valid; it does not reconnect through another account.
+        changed = client.patch(
+            f"/api/v1/workboard/items/{item['id']}",
+            headers={"X-CSRF-Token": owner_csrf},
+            json={
+                "description": "Cập nhật metadata điều phối Web-native, không yêu cầu chạy hay giao output.",
+                "expected_revision": item["revision"],
+                "idempotency_key": "workboard-native-reference-update-0001",
+            },
+        )
+        assert changed.status_code == 200 and changed.json()["ok"] is True
+        restored = client.post(
+            f"/api/v1/workboard/items/{item['id']}/restore/1",
+            headers={"X-CSRF-Token": owner_csrf},
+            json={
+                "expected_revision": changed.json()["data"]["item"]["revision"],
+                "idempotency_key": "workboard-native-reference-restore-0001",
+            },
+        )
+        assert restored.status_code == 200 and restored.json()["ok"] is True
+        restored_refs = client.get(f"/api/v1/workboard/items/{item['id']}").json()["data"]["item"]["references"]
+        assert restored_refs == [
+            {"ref_type": "native_job", "ref_id": native_job},
+            {"ref_type": "native_asset", "ref_id": native_asset},
+        ]
+
+        other_csrf = login(client, "workboard-native-other@example.com")
+        denied = client.post(
+            "/api/v1/workboard/items",
+            headers={"X-CSRF-Token": other_csrf},
+            json=payload(
+                "workboard-native-reference-foreign-0001",
+                references=[
+                    {"ref_type": "native_job", "ref_id": native_job},
+                    {"ref_type": "native_asset", "ref_id": native_asset},
+                ],
+            ),
+        )
+        assert denied.status_code == 200
+        assert denied.json()["error_code"] == "WEB_WORKBOARD_REFERENCE_NOT_FOUND"
+
+        # A later archive invalidates the asset reference.  Restore fails
+        # closed instead of preserving a stale cross-lifecycle association.
+        with sqlite3.connect(db_path) as conn:
+            conn.execute("UPDATE web_asset_files SET state='archived' WHERE id='workboard-native-asset'")
+        owner_csrf = login(client, owner_email)
+        blocked_restore = client.post(
+            f"/api/v1/workboard/items/{item['id']}/restore/1",
+            headers={"X-CSRF-Token": owner_csrf},
+            json={
+                "expected_revision": restored.json()["data"]["item"]["revision"],
+                "idempotency_key": "workboard-native-reference-restore-stale-0001",
+            },
+        )
+        assert blocked_restore.status_code == 200
+        assert blocked_restore.json()["error_code"] == "WEB_WORKBOARD_REFERENCE_NOT_FOUND"
 
 
 def test_workboard_rejects_sensitive_or_external_input_and_has_no_fake_automation(tmp_path, monkeypatch):

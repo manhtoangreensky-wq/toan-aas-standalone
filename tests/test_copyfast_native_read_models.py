@@ -432,6 +432,27 @@ def test_native_read_models_keep_jobs_and_assets_owner_scoped(monkeypatch) -> No
     assert connection.total_changes == changes_before
 
 
+def test_native_resolvers_keep_owner_scope_inside_callers_transaction(monkeypatch) -> None:
+    """Write-side modules can validate an opaque reference without a second read."""
+
+    connection = _database()
+    _install_read_transaction(monkeypatch, connection)
+    job_id = models.encode_native_job_id("image-operation", "image-complete")
+    asset_id = models.encode_native_asset_id("asset-owner")
+    changes_before = connection.total_changes
+
+    own_job = models.resolve_native_job(connection, OWNER, job_id)
+    own_asset = models.resolve_native_asset(connection, OWNER, asset_id)
+    foreign_job = models.resolve_native_job(connection, OTHER_OWNER, job_id)
+    foreign_asset = models.resolve_native_asset(connection, OTHER_OWNER, asset_id)
+
+    assert own_job and own_job["id"] == job_id and own_job["output"] is not None
+    assert own_asset and own_asset["id"] == asset_id and own_asset["status"] == "active"
+    assert foreign_job is None
+    assert foreign_asset is None
+    assert connection.total_changes == changes_before
+
+
 def test_native_read_models_redact_private_metadata_and_paths(monkeypatch) -> None:
     connection = _database()
     _install_read_transaction(monkeypatch, connection)

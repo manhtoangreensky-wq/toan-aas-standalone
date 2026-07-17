@@ -582,34 +582,74 @@ def list_native_completed_outputs(account_id: str, *, limit: int = MAX_LIST_LIMI
         )
 
 
-def get_native_job(account_id: str, public_id: str) -> dict[str, Any] | None:
-    """Return one owner-scoped job projection, or ``None`` for missing/unknown IDs."""
+def resolve_native_job(conn: Any, account_id: str, public_id: str) -> dict[str, Any] | None:
+    """Resolve one owner-scoped opaque job using an existing DB connection.
+
+    Write-side coordination modules use this helper inside their own SQLite
+    transaction so reference validation cannot be split into a separate
+    read/validate phase.  It still only projects safe metadata and never
+    reads a blob, calls a provider, or exposes a decoded internal identifier.
+    """
 
     owner_id = _account_id(account_id)
     parsed = parse_native_job_id(public_id)
     if not owner_id or parsed is None:
         return None
     source, internal_id = parsed
+    queries: dict[str, tuple[str, Any]] = {
+        "project-package": (_PACKAGE_QUERY, _project_package),
+        "document-operation": (_DOCUMENT_QUERY, _project_document_operation),
+        "image-operation": (_IMAGE_QUERY, _project_image_operation),
+    }
+    query_and_projector = queries.get(source)
+    if query_and_projector is None:
+        return None
+    query, projector = query_and_projector
+    row = conn.execute(
+        query.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
+        (owner_id, internal_id, 1),
+    ).fetchone()
+    if not row:
+        return None
+    try:
+        return projector(tuple(row))
+    except ValueError:
+        # A legacy row that cannot form a route-safe opaque ID is never a
+        # valid reference target, and must not turn into a 500/error oracle.
+        return None
+
+
+def get_native_job(account_id: str, public_id: str) -> dict[str, Any] | None:
+    """Return one owner-scoped job projection, or ``None`` for missing/unknown IDs."""
+
     with read_transaction() as conn:
-        if source == "project-package":
-            row = conn.execute(
-                _PACKAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
-                (owner_id, internal_id, 1),
-            ).fetchone()
-            return _project_package(tuple(row)) if row else None
-        if source == "document-operation":
-            row = conn.execute(
-                _DOCUMENT_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
-                (owner_id, internal_id, 1),
-            ).fetchone()
-            return _project_document_operation(tuple(row)) if row else None
-        if source == "image-operation":
-            row = conn.execute(
-                _IMAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
-                (owner_id, internal_id, 1),
-            ).fetchone()
-            return _project_image_operation(tuple(row)) if row else None
-    return None
+        return resolve_native_job(conn, account_id, public_id)
+
+
+def resolve_native_asset(conn: Any, account_id: str, public_id: str) -> dict[str, Any] | None:
+    """Resolve one owner-scoped opaque Asset Vault projection in one transaction."""
+
+    owner_id = _account_id(account_id)
+    internal_id = parse_native_asset_id(public_id)
+    if not owner_id or internal_id is None:
+        return None
+    row = conn.execute(
+        _ASSET_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND id=?"),
+        (owner_id, internal_id, 1),
+    ).fetchone()
+    if not row:
+        return None
+    try:
+        return _project_asset(tuple(row))
+    except ValueError:
+        return None
+
+
+def get_native_asset(account_id: str, public_id: str) -> dict[str, Any] | None:
+    """Return one owner-scoped Asset Vault projection without a write transaction."""
+
+    with read_transaction() as conn:
+        return resolve_native_asset(conn, account_id, public_id)
 
 
 def list_native_assets(account_id: str, *, limit: int = MAX_LIST_LIMIT) -> list[dict[str, Any]]:

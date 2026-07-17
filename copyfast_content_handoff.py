@@ -28,6 +28,12 @@ from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, Strict
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
+from copyfast_native_read_models import (
+    parse_native_asset_id,
+    parse_native_job_id,
+    resolve_native_asset,
+    resolve_native_job,
+)
 from copyfast_support import require_support_staff
 
 
@@ -39,6 +45,7 @@ RECORD_STATES = frozenset({"active", "archived"})
 STAFF_DECISIONS = frozenset({"approved_for_handoff", "handed_off", "blocked"})
 MAX_ACTIVE_RECORDS_PER_ACCOUNT = 250
 MAX_ASSETS_PER_RECORD = 12
+MAX_NATIVE_REFS_PER_RECORD = 12
 MAX_LIST_LIMIT = 100
 MAX_LIST_OFFSET = 10_000
 MAX_VERSIONS_PER_RECORD = 100
@@ -72,6 +79,7 @@ EXTERNAL_TARGET_PATTERN = re.compile(
     re.IGNORECASE,
 )
 CARD_LIKE_PATTERN = re.compile(r"(?<![0-9A-Za-z])[0-9](?:[\s./-]*[0-9]){12,18}(?![0-9A-Za-z])")
+NATIVE_REF_TYPES = frozenset({"native_output", "native_asset"})
 
 
 def content_handoff_enabled() -> bool:
@@ -263,6 +271,31 @@ def _ensure_schema() -> None:
         )
 
 
+class HandoffNativeReference(BaseModel):
+    """A typed opaque link to one Web-native job output or Asset Vault row."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    ref_type: StrictStr
+    ref_id: StrictStr
+
+    @field_validator("ref_type")
+    @classmethod
+    def validate_type(cls, value: str) -> str:
+        normalized = _text(value, label="Loại native reference", minimum=2, maximum=32).lower()
+        if normalized not in NATIVE_REF_TYPES:
+            raise ValueError("Loại native reference Content Handoff không được hỗ trợ")
+        return normalized
+
+    @model_validator(mode="after")
+    def validate_opaque_id(self):
+        if self.ref_type == "native_output" and parse_native_job_id(self.ref_id) is None:
+            raise ValueError("Native output ID không hợp lệ")
+        if self.ref_type == "native_asset" and parse_native_asset_id(self.ref_id) is None:
+            raise ValueError("Native asset ID không hợp lệ")
+        return self
+
+
 class HandoffReferences(BaseModel):
     """Only opaque IDs are accepted; labels and external destinations are not."""
 
@@ -271,6 +304,7 @@ class HandoffReferences(BaseModel):
     project_id: StrictStr | None = None
     asset_ids: list[StrictStr] = Field(default_factory=list)
     campaign_id: StrictStr | None = None
+    native_refs: list[HandoffNativeReference] = Field(default_factory=list)
 
     @field_validator("project_id", "campaign_id")
     @classmethod
@@ -293,10 +327,25 @@ class HandoffReferences(BaseModel):
                 result.append(asset_id)
         return result
 
+    @field_validator("native_refs")
+    @classmethod
+    def validate_native_refs(cls, value: list[HandoffNativeReference]) -> list[HandoffNativeReference]:
+        if len(value) > MAX_NATIVE_REFS_PER_RECORD:
+            raise ValueError(f"Tối đa {MAX_NATIVE_REFS_PER_RECORD} native reference cho một handoff")
+        result: list[HandoffNativeReference] = []
+        seen: set[tuple[str, str]] = set()
+        for reference in value:
+            marker = (reference.ref_type, reference.ref_id)
+            if marker in seen:
+                raise ValueError("Native reference Content Handoff bị lặp")
+            seen.add(marker)
+            result.append(reference)
+        return result
+
     @model_validator(mode="after")
     def require_reference(self):
-        if not self.project_id and not self.asset_ids and not self.campaign_id:
-            raise ValueError("Content Handoff cần ít nhất một Project, Asset hoặc Campaign Web-owned")
+        if not self.project_id and not self.asset_ids and not self.campaign_id and not self.native_refs:
+            raise ValueError("Content Handoff cần ít nhất một Project, Asset, Campaign hoặc output Web-native")
         return self
 
 
@@ -383,10 +432,15 @@ def _references_payload(references: HandoffReferences | dict[str, Any]) -> dict[
         source = references.model_dump()
     else:
         source = dict(references)
+    native_refs: list[dict[str, str]] = []
+    for value in source.get("native_refs", []) or []:
+        reference = value if isinstance(value, HandoffNativeReference) else HandoffNativeReference.model_validate(value)
+        native_refs.append({"ref_type": reference.ref_type, "ref_id": reference.ref_id})
     return {
         "project_id": str(source["project_id"]) if source.get("project_id") else None,
         "asset_ids": [str(item) for item in source.get("asset_ids", [])],
         "campaign_id": str(source["campaign_id"]) if source.get("campaign_id") else None,
+        "native_refs": native_refs,
     }
 
 
@@ -394,16 +448,16 @@ def _decode_references(value: Any) -> dict[str, Any]:
     try:
         parsed = json.loads(str(value or "{}"))
     except (TypeError, ValueError, json.JSONDecodeError):
-        return {"project_id": None, "asset_ids": [], "campaign_id": None}
+        return {"project_id": None, "asset_ids": [], "campaign_id": None, "native_refs": []}
     if not isinstance(parsed, dict):
-        return {"project_id": None, "asset_ids": [], "campaign_id": None}
+        return {"project_id": None, "asset_ids": [], "campaign_id": None, "native_refs": []}
     try:
         return _references_payload(HandoffReferences.model_validate(parsed))
     except Exception:
         # Corrupt historical data must never become an external reference or
         # crash a customer's private list.  Existing rows remain visible only
         # as a guarded record until an operator investigates the database.
-        return {"project_id": None, "asset_ids": [], "campaign_id": None}
+        return {"project_id": None, "asset_ids": [], "campaign_id": None, "native_refs": []}
 
 
 def _record_row(conn: Any, *, record_id: str, account_id: str | None = None) -> tuple[Any, ...] | None:
@@ -563,7 +617,89 @@ def _references_owned(conn: Any, *, account_id: str, references: dict[str, Any])
         ).fetchall()
         if len({str(row[0]) for row in rows}) != len(asset_ids):
             return False
+    for raw_reference in references.get("native_refs", []) or []:
+        try:
+            reference = HandoffNativeReference.model_validate(raw_reference)
+        except Exception:
+            return False
+        if reference.ref_type == "native_output":
+            job = resolve_native_job(conn, account_id, reference.ref_id)
+            # ``output`` is created only by the read model after all direct
+            # downloader integrity rules pass. A completed DB state alone is
+            # never enough to treat an output as safe for handoff lineage.
+            if not job or str(job.get("state") or "") != "completed" or not isinstance(job.get("output"), dict):
+                return False
+        elif reference.ref_type == "native_asset":
+            asset = resolve_native_asset(conn, account_id, reference.ref_id)
+            if not asset or str(asset.get("state") or "") != "active":
+                return False
+        else:  # Defensive even though the Pydantic model is closed.
+            return False
     return True
+
+
+_SAFE_LINEAGE_FILENAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._ -]{0,180}$")
+_SAFE_LINEAGE_MEDIA_TYPE = re.compile(
+    r"^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+(?:; charset=(?:utf-8|us-ascii))?$"
+)
+_SAFE_LINEAGE_STATES = frozenset({"draft", "queued", "processing", "completed", "failed", "guarded", "active", "archived"})
+
+
+def _safe_lineage_output(value: Any) -> dict[str, Any] | None:
+    """Select delivery-neutral metadata from an already sealed output dict."""
+
+    if not isinstance(value, dict):
+        return None
+    filename = str(value.get("filename") or "")
+    content_type = str(value.get("content_type") or "")
+    byte_size = value.get("byte_size")
+    if (
+        not _SAFE_LINEAGE_FILENAME.fullmatch(filename)
+        or not _SAFE_LINEAGE_MEDIA_TYPE.fullmatch(content_type)
+        or isinstance(byte_size, bool)
+        or not isinstance(byte_size, int)
+        or byte_size <= 0
+    ):
+        return None
+    return {"filename": filename, "content_type": content_type, "byte_size": byte_size}
+
+
+def _lineage_reference(conn: Any, *, account_id: str, reference: dict[str, str]) -> dict[str, Any]:
+    """Return a private, stable status view without reviving invalid output.
+
+    The stored reference is immutable history. If its source later disappears,
+    is archived, or loses its sealed-output contract, the lineage remains
+    visible as unavailable instead of being turned into a delivery claim.
+    """
+
+    ref_type = str(reference["ref_type"])
+    ref_id = str(reference["ref_id"])
+    if ref_type == "native_output":
+        job = resolve_native_job(conn, account_id, ref_id)
+        raw_state = str(job.get("state") or "") if job else ""
+        state = raw_state if raw_state in _SAFE_LINEAGE_STATES else "unavailable"
+        output = _safe_lineage_output(job.get("output")) if job and raw_state == "completed" else None
+        available = raw_state == "completed" and output is not None
+        return {
+            "ref_type": ref_type,
+            "ref_id": ref_id,
+            "state": state,
+            "status": "completed" if available else "unavailable",
+            "availability": "available" if available else "unavailable",
+            "output": output,
+        }
+    asset = resolve_native_asset(conn, account_id, ref_id)
+    raw_state = str(asset.get("state") or "") if asset else ""
+    state = raw_state if raw_state in _SAFE_LINEAGE_STATES else "unavailable"
+    available = raw_state == "active"
+    return {
+        "ref_type": ref_type,
+        "ref_id": ref_id,
+        "state": state,
+        "status": "active" if available else "unavailable",
+        "availability": "available" if available else "unavailable",
+        "output": None,
+    }
 
 
 def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
@@ -718,7 +854,13 @@ async def content_handoff_policy():
                 "staff": ["approved_for_handoff", "handed_off", "blocked"],
                 "archive": ["active", "archived"],
             },
-            allowed_reference_types=["project_id", "asset_ids", "campaign_id"],
+            allowed_reference_types=["project_id", "asset_ids", "campaign_id", "native_refs"],
+            native_reference_contract={
+                "native_output": "owner-scoped opaque Web-native job ID; must be completed with a sealed output at create or update time",
+                "native_asset": "owner-scoped opaque active Asset Vault ID",
+                "lineage_read": "reveals only availability and filename/content_type/byte_size from a sealed output; never URL, storage key, hash, provider, Bot, payment or raw ID",
+                "external_delivery_implied": False,
+            },
         ),
         status_name="read_only",
     )
@@ -789,6 +931,43 @@ async def get_handoff_record(record_id: str, account: dict = Depends(require_acc
     if not detail:
         return _not_found()
     return envelope(True, "Đã tải Content Handoff, revision và lịch sử nội bộ.", data=_boundary(**detail), status_name="read_only")
+
+
+@router.get("/records/{record_id}/lineage")
+async def get_handoff_lineage(record_id: str, account: dict = Depends(require_account)):
+    """Read current safe availability for native references owned by this user."""
+
+    _require_enabled()
+    record_id = _uuid(record_id, label="Content Handoff ID", http=True)
+    account_id = str(account["id"])
+    _ensure_schema()
+    with read_transaction() as conn:
+        record = _record_row(conn, record_id=record_id, account_id=account_id)
+        if not record:
+            return _not_found()
+        references = _decode_references(record[4])
+        native_refs = list(references.get("native_refs") or [])
+        lineage = [
+            _lineage_reference(conn, account_id=account_id, reference=reference)
+            for reference in native_refs
+            if isinstance(reference, dict)
+            and str(reference.get("ref_type") or "") in NATIVE_REF_TYPES
+            and isinstance(reference.get("ref_id"), str)
+        ]
+    return envelope(
+        True,
+        "Đã tải lineage Web-native hiện tại. Availability không phải bằng chứng publish hoặc delivery bên ngoài.",
+        data=_boundary(
+            record={
+                "id": str(record[0]),
+                "revision": int(record[9]),
+                "handoff_status": str(record[5]),
+                "record_state": str(record[6]),
+            },
+            lineage=lineage,
+        ),
+        status_name="read_only",
+    )
 
 
 @router.post("/records")

@@ -19,10 +19,18 @@ from typing import Any, Callable
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
+from pydantic import BaseModel, ConfigDict, Field, ValidationInfo, field_validator, model_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now, workboard_enabled
+from copyfast_native_read_models import (
+    list_native_assets,
+    list_native_jobs,
+    parse_native_asset_id,
+    parse_native_job_id,
+    resolve_native_asset,
+    resolve_native_job,
+)
 
 
 router = APIRouter(prefix="/api/v1/workboard", tags=["Web Workboard"])
@@ -30,7 +38,7 @@ router = APIRouter(prefix="/api/v1/workboard", tags=["Web Workboard"])
 ITEM_STATES = frozenset({"backlog", "planned", "in_progress", "review", "done", "archived"})
 ACTIVE_ITEM_STATES = frozenset(ITEM_STATES - {"archived"})
 PRIORITIES = frozenset({"low", "normal", "high", "urgent"})
-REFERENCE_TYPES = frozenset({"project", "campaign", "analytics", "note", "draft"})
+REFERENCE_TYPES = frozenset({"project", "campaign", "analytics", "note", "draft", "native_job", "native_asset"})
 REFERENCE_ALIASES = {
     "project": "project",
     "campaign": "campaign",
@@ -41,6 +49,12 @@ REFERENCE_ALIASES = {
     "memory_note": "note",
     "draft": "draft",
     "workspace_draft": "draft",
+    # These are opaque Web-native read-model references only.  A Workboard
+    # card remains coordination metadata: it cannot cause execution,
+    # delivery, a provider call, or a payment/wallet mutation.
+    "native_job": "native_job",
+    "native_output": "native_job",
+    "native_asset": "native_asset",
 }
 # Kanban cards may be deliberately re-prioritized between lanes.  The server
 # still validates the closed vocabulary and blocks `done` while active
@@ -263,6 +277,25 @@ def _reference_type(value: Any) -> str:
     return resolved
 
 
+def _reference_id(value: Any, *, reference_type: str, label: str) -> str:
+    """Validate a reference identifier without treating opaque IDs as UUIDs.
+
+    Native IDs intentionally remain opaque at the API boundary. Parsing them
+    only confirms their public grammar; owner and lifecycle checks happen
+    inside the caller's existing transaction in ``_validate_reference``.
+    """
+
+    if reference_type == "native_job":
+        if parse_native_job_id(value) is None:
+            raise ValueError(f"{label} native job không hợp lệ")
+        return str(value)
+    if reference_type == "native_asset":
+        if parse_native_asset_id(value) is None:
+            raise ValueError(f"{label} native asset không hợp lệ")
+        return str(value)
+    return _uuid(value, label=label)
+
+
 def _query_text(value: str | None) -> str:
     if value is None:
         return ""
@@ -291,8 +324,11 @@ class ReferenceInput(BaseModel):
 
     @field_validator("ref_id")
     @classmethod
-    def _id(cls, value: str) -> str:
-        return _uuid(value, label="Reference ID")
+    def _id(cls, value: str, info: ValidationInfo) -> str:
+        reference_type = str(info.data.get("ref_type") or "")
+        if not reference_type:
+            raise ValueError("Loại reference Workboard không hợp lệ")
+        return _reference_id(value, reference_type=reference_type, label="Reference ID")
 
 
 class ChecklistInput(BaseModel):
@@ -722,6 +758,13 @@ def _source_table(reference_type: str) -> tuple[str, str, str]:
 
 
 def _validate_reference(conn: Any, *, reference: ReferenceInput, account_id: str) -> bool:
+    if reference.ref_type == "native_job":
+        # Any owner-scoped native job state may be coordinated on a card. It
+        # is deliberately not evidence of output readiness or delivery.
+        return resolve_native_job(conn, account_id, reference.ref_id) is not None
+    if reference.ref_type == "native_asset":
+        asset = resolve_native_asset(conn, account_id, reference.ref_id)
+        return bool(asset and asset.get("state") == "active")
     table, state_column, state_value = _source_table(reference.ref_type)
     if reference.ref_type == "analytics":
         row = conn.execute(
@@ -888,6 +931,13 @@ async def policy(account: dict = Depends(require_account)):
             enabled=True,
             item_states=sorted(ITEM_STATES), priorities=sorted(PRIORITIES), reference_types=sorted(REFERENCE_TYPES),
             max_references_per_item=MAX_REFERENCES_PER_ITEM, max_checklist_per_item=MAX_CHECKLIST_PER_ITEM,
+            native_references={
+                "opaque_ids_only": True,
+                "owner_scope_checked_in_write_transaction": True,
+                "native_job_requires_existing_owner_record": True,
+                "native_asset_requires_active_owner_record": True,
+                "execution_or_delivery_implied": False,
+            },
             schedule_intents={
                 "owner_opt_in_required": True,
                 "timezone": "iana_required",
@@ -964,6 +1014,26 @@ async def references(limit: int = 30, account: dict = Depends(require_account)):
         ref_type: [{"ref_type": ref_type, "ref_id": str(row[0]), "label": str(row[1])[:180]} for row in rows]
         for ref_type, rows in groups.items()
     }
+    # Native model queries are read-only and owner-scoped. Expose only a
+    # neutral label, never output URLs, internal IDs, storage metadata,
+    # provider handles, or an implied successful delivery.
+    data["native_job"] = [
+        {
+            "ref_type": "native_job",
+            "ref_id": str(job["id"]),
+            "label": f"Web-native job · {str(job.get('kind') or 'job')} · {str(job.get('state') or 'unknown')}",
+        }
+        for job in list_native_jobs(account_id, limit=bounded)
+    ]
+    data["native_asset"] = [
+        {
+            "ref_type": "native_asset",
+            "ref_id": str(asset["id"]),
+            "label": str(asset.get("name") or "Web-native asset")[:180],
+        }
+        for asset in list_native_assets(account_id, limit=bounded)
+        if str(asset.get("state") or "") == "active"
+    ]
     return envelope(True, "Reference Web-owned có thể liên kết vào Workboard.", data=_boundary(references=data), status_name="read_only")
 
 
@@ -989,8 +1059,11 @@ async def list_items(
     requested_priority = _line(priority, label="Ưu tiên lọc", minimum=2, maximum=16).lower() if priority else ""
     if requested_priority and requested_priority not in PRIORITIES:
         raise HTTPException(status_code=422, detail="Ưu tiên lọc Workboard không hợp lệ")
-    requested_ref_type = _reference_type(ref_type) if ref_type else ""
-    requested_ref_id = _uuid(ref_id, label="Reference ID lọc") if ref_id else ""
+    try:
+        requested_ref_type = _reference_type(ref_type) if ref_type else ""
+        requested_ref_id = _reference_id(ref_id, reference_type=requested_ref_type, label="Reference ID lọc") if ref_id else ""
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
     if bool(requested_ref_type) != bool(requested_ref_id):
         raise HTTPException(status_code=422, detail="Lọc reference cần đủ loại và ID")
     needle = _query_text(q)
