@@ -2432,6 +2432,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
+        + "- [`SUBTITLE_ASSET_OPERATIONS_CONTRACT.md`](SUBTITLE_ASSET_OPERATIONS_CONTRACT.md) — bounded owner-scoped Asset Vault SRT/VTT validation and verified private conversion attachment; no ASR/translation/dubbing/provider/Bot/payment claim.\n"
         + "- [`CONTENT_PROMPT_PACK_CONTRACT.md`](CONTENT_PROMPT_PACK_CONTRACT.md) — signed, stateless deterministic content-planning drafts adapted from Bot text recipes without Bot/provider/job/payment/publish claims.\n"
         + "- [`PUBLISH_REVIEW_PACK_CONTRACT.md`](PUBLISH_REVIEW_PACK_CONTRACT.md) — signed, stateless text-only review package adapted from the Bot’s pending-result formatter, with no social account/scheduler/provider/Bot/job/payment/asset/publish/delivery claim.\n"
         + "- [`CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md`](CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md) — signed, stateless contextual ad-prompt wizard adapted from Bot goal/platform/ratio/style choices, with no Meta/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -2460,13 +2461,15 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PDF_OCR_CONTRACT.md`](PDF_OCR_CONTRACT.md) — opt-in bounded private PDF OCR through local PDFium/Tesseract with verified TXT delivery; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
         + "- [`PDF_OCR_WORD_CONTRACT.md`](PDF_OCR_WORD_CONTRACT.md) — opt-in bounded local scanned-PDF OCR to verified private DOCX; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
         + "- [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) and [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — bounded local private image artifacts.\n"
+        + "- [`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md) — disabled-by-default, bounded private JPEG poster extraction from an owner-scoped Asset Vault video; it is not Video Studio rendering, a Bot job, provider call, wallet/Xu or PayOS flow.\n"
         + "- [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"
         + "- [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.\n"
         + "- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.\n"
         + "- [`FEATURE_CONFIRM_CONTRACT.md`](FEATURE_CONFIRM_CONTRACT.md) — explicit job tracking/confirm contract.\n"
         + "- [`ENGINE_DELIVERY_ADAPTER_BACKLOG.md`](ENGINE_DELIVERY_ADAPTER_BACKLOG.md) — canonical job/output/delivery prerequisites.\n"
-        + "- [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.\n",
+        + "- [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.\n"
+        + "- [`ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md`](ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md) — opt-in local-admin private document archive with isolated immutable versions; it does not migrate or call Bot internal-document state.\n",
     )
     write(
         "inventory.md",
@@ -2570,7 +2573,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "route-map.md",
         "# Route and action map\n\n"
         "This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes.\n\n"
-        + _markdown_table(["Telegram command", "Web route/action", "Status"], route_rows or [["None discovered", "", ""]]),
+        "## Additive Web-native route (not a Telegram command mapping)\n\n"
+        "| Web route/action | Authority | Status |\n"
+        "| --- | --- | --- |\n"
+        "| `/api/v1/video-operations/*` (not yet a public catalogue route) | Signed Web account + private Asset Vault source | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded JPEG poster utility; no Bot/provider/PayOS/wallet delegation and no claim that existing `/video/*` Bot companion routes render media. It stays outside the public registry until the dedicated signed workbench is implemented in the broader video navigation/UI phase. |\n\n"
+        + _markdown_table(["Telegram command", "Web route/action", "Status"], route_rows or [["None discovered", "", ""]])
+        + "\n",
     )
     bot_tables = set(bot["database_tables"])
     web_tables = set(web["database_tables"])
@@ -2586,7 +2594,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
                 ["Bot-only (bridge/read contract required)", str(len(bot_tables - web_tables)), ", ".join(sorted(bot_tables - web_tables)[:30]) or "None"],
             ],
         )
-        + "\n\nNo destructive migration or schema synchronization is authorized by this inventory.\n",
+        + "\n\n## Additive Web-native Video Poster state\n\n"
+        + "| Table | Owner | Purpose | Explicitly not authoritative for |\n"
+        + "| --- | --- | --- | --- |\n"
+        + "| `web_video_operations` | Signed Web account | One bounded private poster request, sealed output metadata and exact lifecycle | Bot jobs, provider execution, wallet/Xu, PayOS, Telegram identity or Asset Vault source ownership |\n"
+        + "| `web_video_operation_attempts` | Web operation | In-request execution attempt/fence audit; future worker seam only | Durable worker lease, automatic retry, provider job or billing attempt |\n"
+        + "| `web_video_operation_events` | Web operation | Ordered lifecycle evidence | Bot audit log, payment ledger, webhook, notification or delivery receipt |\n\n"
+        + "These are additive schema records. They do not migrate, synchronize, infer or\n"
+        + "overwrite any Bot table. The Bot remains the canonical writer for its own\n"
+        + "identity, wallet, PayOS, jobs and provider state.\n\n"
+        + "No destructive migration or schema synchronization is authorized by this inventory.\n",
     )
     wallet_tables = [table for table in sorted(bot_tables) if any(term in table for term in ("payos", "credit", "transaction", "payment", "job", "wallet"))]
     write(
@@ -2621,7 +2638,24 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "## Bot environment names\n\n"
         + "\n".join(f"- `{record['name']}`" for record in bot["env_references"])[:20000]
         + "\n\n## Bot provider markers\n\n"
-        + _markdown_table(["Provider", "Occurrences", "Sample files"], provider_rows or [["None detected", "", ""]]),
+        + _markdown_table(["Provider", "Occurrences", "Sample files"], provider_rows or [["None detected", "", ""]])
+        + "\n\n## Web-native Video Poster environment names\n\n"
+        + "These are Web-local configuration names, not Bot/provider credentials. They\n"
+        + "remain unset/false unless an operator deliberately enables the reviewed local\n"
+        + "runtime:\n\n"
+        + "- `WEBAPP_VIDEO_OPERATIONS_ENABLED` (default `false`)\n"
+        + "- `WEBAPP_VIDEO_POSTER_ENABLED` (default `false`)\n"
+        + "- `WEBAPP_VIDEO_OPERATIONS_ROOT`\n"
+        + "- `WEBAPP_VIDEO_OPERATIONS_MAX_OUTPUT_MB` (default `4`)\n"
+        + "- `WEBAPP_VIDEO_OPERATIONS_QUOTA_MB` (default `50`)\n"
+        + "- `WEBAPP_VIDEO_OPERATIONS_TOPOLOGY` (must be `sqlite_single_replica` when the poster runtime is enabled)\n"
+        + "- one of `RAILWAY_REPLICA_COUNT`, `RAILWAY_REPLICAS` or `WEBAPP_REPLICA_COUNT` (must attest exactly `1` for every enabled runtime)\n"
+        + "- `WEBAPP_VIDEO_FFMPEG_BIN`\n"
+        + "- `WEBAPP_VIDEO_FFPROBE_BIN`\n\n"
+        + "They do not contain an API key and must not be used as a provider, Bot,\n"
+        + "PayOS, wallet, webhook or production-deployment toggle. Enabling the feature\n"
+        + "also requires the existing private Asset Vault gate and a separately supplied\n"
+        + "FFmpeg/ffprobe runtime.\n",
     )
     key4u_features = [
         ("Video", "video_single, video_multiscene, video_long"),
@@ -2642,7 +2676,23 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "known-gaps.md",
         "# Known gaps from static audit\n\n"
         + _markdown_table(["Area", "Severity", "Count", "Finding"], gap_rows)
-        + "\n\nThese are static findings. Resolve each through contracts and tests before marking a Web App flow complete.\n",
+        + "\n\nThese are static findings. Resolve each through contracts and tests before marking a Web App flow complete.\n\n"
+        + "## Additive Web-native guard: Video Poster Lab\n\n"
+        + "Video Poster Lab is intentionally outside the static Telegram mapping counts: it\n"
+        + "is a Web-owned utility, not a replacement for a Telegram command. Its code and\n"
+        + "schema may exist while the operation stays disabled by default. It must remain\n"
+        + "guarded until all of the following are true in the target environment:\n\n"
+        + "- Asset Vault and both Video Poster execution flags are explicitly enabled;\n"
+        + "- the isolated private Video Operations root and trusted `ffmpeg`/`ffprobe`\n"
+        + "  runtime are available; and\n"
+        + "- the deployment explicitly attests `WEBAPP_VIDEO_OPERATIONS_TOPOLOGY=sqlite_single_replica`\n"
+        + "  and an available replica-count variable equals exactly `1`; and\n"
+        + "- the operator accepts the current bounded request-time model. It has no\n"
+        + "  durable queue, retry worker, cross-replica lease or long-form/video-series\n"
+        + "  renderer.\n\n"
+        + "This does not change the Bot authority for Telegram identity, Bot jobs,\n"
+        + "provider state, Xu/wallet or PayOS. See\n"
+        + "[`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).\n",
     )
     # Stable, task-specified document names.  The lower-case documents above
     # are convenient working views; these are the deliverable entry points.
@@ -2735,7 +2785,23 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "KNOWN_GAPS_AND_GUARDS.md",
         "# Known gaps and guards\n\n"
         + _markdown_table(["Area", "Severity", "Count", "Finding"], gap_rows)
-        + "\n\nA guarded feature remains visible with safe Vietnamese copy and must not call a provider or claim an output.\n",
+        + "\n\nA guarded feature remains visible with safe Vietnamese copy and must not call a provider or claim an output.\n\n"
+        + "## Additive Web-native guard: Video Poster Lab\n\n"
+        + "Video Poster Lab is a Web-owned, bounded private JPEG extraction utility, not\n"
+        + "a Telegram command mapping. Its route, schema and read-model integration do\n"
+        + "not make it live: it remains disabled until Asset Vault, the Video Operations\n"
+        + "and Video Poster flags, an isolated private root, and trusted `ffmpeg` and\n"
+        + "`ffprobe` are deliberately available together.\n\n"
+        + "The request-time SQLite executor additionally requires an explicit\n"
+        + "`WEBAPP_VIDEO_OPERATIONS_TOPOLOGY=sqlite_single_replica` acknowledgement. A\n"
+        + "runtime with the feature enabled must attest a replica count of exactly `1`; a\n"
+        + "missing, malformed or multi-replica deployment remains blocked.\n\n"
+        + "The present executor is request-time only. It has no durable queue, retry\n"
+        + "daemon, cross-replica coordination, long-form/video-series renderer or\n"
+        + "provider/Bot fallback. On a missing runtime or interrupted attempt it must\n"
+        + "fail closed instead of claiming an output. It does not change Bot authority\n"
+        + "for Telegram identity, Bot jobs, provider state, Xu/wallet or PayOS. See\n"
+        + "[`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).\n",
     )
     return generated
 

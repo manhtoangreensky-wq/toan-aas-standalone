@@ -90,6 +90,7 @@
 | /banners | POST | add_banner |
 | /banners | GET | get_banners |
 | /blueprint | POST | create_media_factory_blueprint |
+| /brand-overlay | POST | create_brand_overlay |
 | /briefs | GET | list_briefs |
 | /briefs | POST | create_brief |
 | /briefs/{brief_id} | GET | get_brief |
@@ -145,6 +146,7 @@
 | /collections/{collection_id}/restore | POST | restore_collection |
 | /collections/{collection_id}/restore-version | POST | restore_collection_version |
 | /compose | POST | compose_prompt_blueprint |
+| /convert | POST | convert_subtitle_asset |
 | /core/me | GET | core_me |
 | /core/status | GET | core_status |
 | /create | POST | create_campaign |
@@ -157,10 +159,8 @@
 | /dashboard-stats | GET | get_dashboard_stats |
 | /dashboard-stats | GET | get_erp_stats |
 | /documents | GET | list_documents |
+| /documents | GET | list_documents |
 | /documents | POST | create_document |
-| /documents/{document_id} | GET | get_document |
-| /documents/{document_id} | PATCH | update_document |
-| /documents/{document_id} | GET | get_studio_document |
-| /documents/{document_id} | PATCH | update_studio_document |
+| /documents/upload | POST | upload_document |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.
