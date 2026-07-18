@@ -158,9 +158,9 @@
 | /dashboard-stats | GET | get_dashboard_stats |
 | /dashboard-stats | GET | get_erp_stats |
 | /documents | GET | list_documents |
+| /documents | GET | list_documents |
 | /documents | POST | create_document |
+| /documents/upload | POST | upload_document |
 | /documents/{document_id} | GET | get_document |
-| /documents/{document_id} | PATCH | update_document |
-| /documents/{document_id} | GET | get_studio_document |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.
