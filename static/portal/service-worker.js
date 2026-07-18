@@ -3,7 +3,8 @@
    Audio Library & Briefing collections/briefs/Asset Vault references, Creative
    Content Studio briefs/content pieces/history, Voice Studio consent metadata/
    scripts/cue sheets/history, uploads,
-   /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations
+   /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
+   /api/v1/admin/internal-documents
    (including private Image OCR),
    /api/v1/image-operations, /api/v1/account/data-controls (including export
    attachments and erasure-review receipts), /api/v1/media-workspace (including Music Prompt
@@ -137,6 +138,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // accidentally make this family eligible for a shell/offline fallback.
   "/" + "api/v1/admin/governance",
   "/admin/governance",
+  // The binary Admin Internal Document Archive is a private local-admin
+  // surface. Name it independently of the broad /admin guard so page/API
+  // additions cannot ever fall back to an account-agnostic PWA shell.
+  "/" + "api/v1/admin/internal-documents",
+  "/admin/internal-documents",
   "/" + "api/v1/admin",
   "/" + "internal/v1/operations",
   "/operations",

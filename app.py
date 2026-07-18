@@ -24,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
 import copyfast_admin_audit
+import copyfast_admin_document_archive
 import copyfast_admin_erp_navigation
 import copyfast_analytics_workspace
 import copyfast_autopilot
@@ -73,6 +74,7 @@ from copyfast_auth import (
 )
 from copyfast_mfa import ensure_totp_mfa_configuration
 from copyfast_db import (
+    ensure_admin_document_archive_persistence,
     ensure_asset_vault_persistence,
     ensure_copyfast_persistence,
     ensure_copyfast_schema,
@@ -88,6 +90,7 @@ from copyfast_pages import ROOT, render_portal
 LOGGER = logging.getLogger(__name__)
 STARTUP_RECONCILIATION_TASK_NAME = "copyfast-startup-reconciliation"
 STARTUP_RECONCILIATION_STEPS = (
+    ("admin_document_archive", copyfast_admin_document_archive.reconcile_admin_document_archive_storage),
     ("asset_vault", copyfast_assets.reconcile_asset_vault_storage),
     ("project_packages", copyfast_project_packages.reconcile_project_package_storage),
     ("document_operations", copyfast_document_operations.reconcile_document_operation_storage),
@@ -216,6 +219,10 @@ async def lifespan(application: FastAPI):
     ensure_totp_mfa_configuration()
     ensure_copyfast_persistence()
     ensure_copyfast_schema()
+    # The Admin Internal Document Archive owns a separate private root and is
+    # disabled by default. Its preflight stays beside the other storage gates
+    # and cannot make an ordinary deployment require a volume while disabled.
+    ensure_admin_document_archive_persistence()
     ensure_asset_vault_persistence()
     ensure_project_package_persistence()
     ensure_document_operations_persistence()
@@ -331,6 +338,10 @@ DATA_CONTROLS_BODY_MAX_BYTES = 8 * 1024
 # before Pydantic/SQLite sees it. This is not a file import, Bot document, or
 # generic Admin write transport.
 GOVERNANCE_BODY_MAX_BYTES = 96 * 1024
+# A private archive payload may contain one validated 25 MiB file plus bounded
+# multipart metadata.  Count the raw ASGI stream before multipart parsing so
+# a chunked upload cannot bypass either the file contract or process memory.
+ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES = 26 * 1024 * 1024
 # Login and registration accept only a compact email/password/name JSON body.
 # Bound it before FastAPI/Pydantic begins parsing so the durable route-level
 # throttle below never has to inspect an arbitrary-size credential payload.
@@ -377,6 +388,7 @@ class PromptLibraryBodyLimitMiddleware:
         inbox_mutation_max_bytes: int = INBOX_MUTATION_BODY_MAX_BYTES,
         data_controls_max_bytes: int = DATA_CONTROLS_BODY_MAX_BYTES,
         governance_max_bytes: int = GOVERNANCE_BODY_MAX_BYTES,
+        admin_document_archive_upload_max_bytes: int = ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
         auth_credential_max_bytes: int = AUTH_CREDENTIAL_BODY_MAX_BYTES,
     ):
         self.app = app
@@ -407,7 +419,17 @@ class PromptLibraryBodyLimitMiddleware:
         self.inbox_mutation_max_bytes = int(inbox_mutation_max_bytes)
         self.data_controls_max_bytes = int(data_controls_max_bytes)
         self.governance_max_bytes = int(governance_max_bytes)
+        self.admin_document_archive_upload_max_bytes = int(admin_document_archive_upload_max_bytes)
         self.auth_credential_max_bytes = int(auth_credential_max_bytes)
+
+    @staticmethod
+    def _is_admin_document_archive_upload_path(path: str) -> bool:
+        """Match only the two multipart upload routes, never a broad admin path."""
+
+        return path == "/api/v1/admin/internal-documents/documents/upload" or (
+            path.startswith("/api/v1/admin/internal-documents/documents/")
+            and path.endswith("/versions/upload")
+        )
 
     @staticmethod
     def _is_bounded_write(scope) -> bool:
@@ -442,6 +464,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/inbox/items/")
                 or path.startswith("/api/v1/account/data-controls/")
                 or path.startswith("/api/v1/admin/governance/")
+                or PromptLibraryBodyLimitMiddleware._is_admin_document_archive_upload_path(path)
                 or path in {
                     "/api/v1/auth/login",
                     "/api/v1/auth/register",
@@ -459,6 +482,8 @@ class PromptLibraryBodyLimitMiddleware:
 
     def _limit_for(self, scope) -> int:
         path = str(scope.get("path") or "")
+        if self._is_admin_document_archive_upload_path(path):
+            return self.admin_document_archive_upload_max_bytes
         if path.startswith("/api/v1/prompt-studio/"):
             return self.prompt_studio_max_bytes
         if path.startswith("/api/v1/content-studio/"):
@@ -553,6 +578,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_inbox_mutation = path.startswith("/api/v1/inbox/items/")
         is_data_controls = path.startswith("/api/v1/account/data-controls/")
         is_governance = path.startswith("/api/v1/admin/governance/")
+        is_admin_document_archive_upload = self._is_admin_document_archive_upload_path(path)
         is_auth_credential = path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -597,6 +623,8 @@ class PromptLibraryBodyLimitMiddleware:
             if is_growth_review
             else copyfast_data_controls._boundary()
             if is_data_controls
+            else copyfast_admin_document_archive._boundary()
+            if is_admin_document_archive_upload
             else copyfast_governance._boundary()
             if is_governance
             else copyfast_media_factory._boundary()
@@ -655,6 +683,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_inbox_mutation
                     else "Yêu cầu Data Control vượt giới hạn kích thước an toàn."
                     if is_data_controls
+                    else "Tệp kho hồ sơ nội bộ vượt giới hạn kích thước an toàn."
+                    if is_admin_document_archive_upload
                     else "Dữ liệu Governance Documents vượt giới hạn kích thước an toàn."
                     if is_governance
                     else "Dữ liệu Audio Library & Briefing vượt giới hạn kích thước an toàn."
@@ -712,6 +742,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_inbox_mutation
                     else "WEB_DATA_CONTROL_BODY_TOO_LARGE"
                     if is_data_controls
+                    else "WEB_ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_TOO_LARGE"
+                    if is_admin_document_archive_upload
                     else "WEB_GOVERNANCE_BODY_TOO_LARGE"
                     if is_governance
                     else "WEB_MEDIA_WORKSPACE_BODY_TOO_LARGE"
@@ -735,6 +767,11 @@ class PromptLibraryBodyLimitMiddleware:
             # rejects a malformed confirmation before the router runs.
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+            response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
+        elif is_admin_document_archive_upload:
+            # An oversized private archive upload must receive the same
+            # cross-origin boundary as a normal archive response even though
+            # this early raw-body guard bypasses the post-route middleware.
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         await response(scope, receive, send)
 
@@ -833,6 +870,7 @@ app.add_middleware(
     inbox_mutation_max_bytes=INBOX_MUTATION_BODY_MAX_BYTES,
     data_controls_max_bytes=DATA_CONTROLS_BODY_MAX_BYTES,
     governance_max_bytes=GOVERNANCE_BODY_MAX_BYTES,
+    admin_document_archive_upload_max_bytes=ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
     auth_credential_max_bytes=AUTH_CREDENTIAL_BODY_MAX_BYTES,
 )
 
@@ -1071,6 +1109,29 @@ async def security_headers(request: Request, call_next):
     # bridge, wallet, payment, provider, job, publication or notification.
     governance_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/admin/governance/")
     governance_read = request.method == "GET" and request.url.path.startswith("/api/v1/admin/governance/")
+    # Internal Document Archive is an independent Web-local admin service. Its
+    # file writes have a distinctly tighter bucket than metadata transitions;
+    # every route still repeats signed-session, CSRF, revision, confirmation,
+    # idempotency, ownership and file-integrity checks inside the router.
+    admin_document_archive_prefix = "/api/v1/admin/internal-documents/"
+    admin_document_archive_upload = (
+        request.method == "POST"
+        and PromptLibraryBodyLimitMiddleware._is_admin_document_archive_upload_path(request.url.path)
+    )
+    admin_document_archive_write = (
+        request.method in {"POST", "PATCH"}
+        and request.url.path.startswith(admin_document_archive_prefix)
+    )
+    admin_document_archive_download = (
+        request.method == "GET"
+        and request.url.path.startswith(admin_document_archive_prefix)
+        and request.url.path.endswith("/download")
+    )
+    admin_document_archive_read = (
+        request.method == "GET"
+        and request.url.path.startswith(admin_document_archive_prefix)
+        and not request.url.path.endswith("/download")
+    )
     # Workboard is a private Web-only coordination surface. Fixed route-family
     # gates protect owner-scoped SQLite reads/writes before CSRF, revision and
     # idempotency work; they do not enable any Bot, provider, job, payment,
@@ -1173,6 +1234,14 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if governance_read:
         rate_limit = 120
+    if admin_document_archive_write:
+        rate_limit = 30
+    if admin_document_archive_upload:
+        rate_limit = 8
+    if admin_document_archive_download:
+        rate_limit = 20
+    if admin_document_archive_read:
+        rate_limit = 60
     if workboard_write:
         rate_limit = 40
     if workboard_read:
@@ -1232,6 +1301,10 @@ async def security_headers(request: Request, call_next):
             else "data-controls-export" if data_controls_export
             else "data-controls-write" if data_controls_write
             else "data-controls-read" if data_controls_read
+            else "admin-document-archive-upload" if admin_document_archive_upload
+            else "admin-document-archive-download" if admin_document_archive_download
+            else "admin-document-archive-write" if admin_document_archive_write
+            else "admin-document-archive-read" if admin_document_archive_read
             else "governance-write" if governance_write
             else "governance-read" if governance_read
             else "workboard-write" if workboard_write
@@ -1258,6 +1331,11 @@ async def security_headers(request: Request, call_next):
             is_analytics_workspace_request = analytics_workspace_write or analytics_workspace_read
             is_data_controls_request = data_controls_write or data_controls_read
             is_governance_request = governance_write or governance_read
+            is_admin_document_archive_request = (
+                admin_document_archive_write
+                or admin_document_archive_read
+                or admin_document_archive_download
+            )
             is_workboard_request = workboard_write or workboard_read
             is_campaign_schedule_request = campaign_schedule_write or campaign_schedule_read
             is_reliability_request = reliability_followup_write or reliability_followup_read
@@ -1277,6 +1355,8 @@ async def security_headers(request: Request, call_next):
                         if is_analytics_workspace_request
                         else copyfast_data_controls._boundary()
                         if is_data_controls_request
+                        else copyfast_admin_document_archive._boundary()
+                        if is_admin_document_archive_request
                         else copyfast_governance._boundary()
                         if is_governance_request
                         else copyfast_workboard._boundary()
@@ -1307,14 +1387,14 @@ async def security_headers(request: Request, call_next):
                     "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
                 },
             )
-            if analytics_workspace_manual_csv_export or data_controls_export:
+            if analytics_workspace_manual_csv_export or data_controls_export or admin_document_archive_download:
                 # This early return bypasses the normal post-route header
-                # decoration below. Keep a throttled private attachment attempt
-                # inside the same boundary as a successful response.
+                # decoration below. Keep every throttled private attachment
+                # attempt inside the same boundary as a successful response.
                 response.headers["Referrer-Policy"] = "no-referrer"
                 response.headers["Content-Security-Policy"] = "sandbox"
                 response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-            elif is_governance_request:
+            elif is_governance_request or is_admin_document_archive_request:
                 response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
             elif is_mailbox_confirmation:
                 response.headers["Referrer-Policy"] = "no-referrer"
@@ -1367,6 +1447,16 @@ async def security_headers(request: Request, call_next):
         request.method == "POST"
         and request.url.path == "/api/v1/account/data-controls/export.json"
     )
+    # Archive files never receive a direct/public URL. Both the active-version
+    # and historical-version delivery routes are descriptor-pinned by the
+    # archive router, while this layer supplies the browser cache/CORP boundary
+    # even for a guarded or malformed download request.
+    private_admin_document_archive = request.url.path.startswith("/api/v1/admin/internal-documents/")
+    private_admin_document_archive_download = (
+        private_admin_document_archive
+        and request.method == "GET"
+        and request.url.path.endswith("/download")
+    )
     # Both confirmation routes receive a proof in the URL and may render a
     # credential form. Their router intentionally emits a narrow no-referrer
     # CSP; keep middleware from widening it after the endpoint returns.
@@ -1382,7 +1472,7 @@ async def security_headers(request: Request, call_next):
     private_download = (
         private_asset_download or private_package_download or private_document_download
         or private_image_download or private_storyboard_grid_download or private_support_evidence_download or private_prompt_export
-        or private_manual_analytics_csv_export or private_data_controls_export
+        or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
     )
     response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
@@ -1393,7 +1483,7 @@ async def security_headers(request: Request, call_next):
         if mailbox_confirmation
         else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     )
-    if private_download or private_governance or mailbox_confirmation:
+    if private_download or private_governance or private_admin_document_archive or mailbox_confirmation:
         # Cover successful attachments and every normal post-route rejection
         # (CSRF, validation, feature flag, owner, revision or size). The
         # early rate-limit branch sets the same header before its return.
@@ -1446,6 +1536,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
         is_workboard = request.url.path.startswith("/api/v1/workboard/")
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")
+        is_admin_document_archive = request.url.path.startswith("/api/v1/admin/internal-documents/")
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
         is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
         return JSONResponse(
@@ -1461,6 +1552,8 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                     if is_growth_review
                     else copyfast_workboard._boundary()
                     if is_workboard
+                    else copyfast_admin_document_archive._boundary()
+                    if is_admin_document_archive
                     else copyfast_governance._boundary()
                     if is_governance
                     else copyfast_reliability._boundary()
@@ -1485,6 +1578,7 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
         is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")
+        is_admin_document_archive = request.url.path.startswith("/api/v1/admin/internal-documents/")
         is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
         return JSONResponse(
             envelope(
@@ -1499,6 +1593,8 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                     if is_growth_review
                     else copyfast_workboard._boundary()
                     if request.url.path.startswith("/api/v1/workboard/")
+                    else copyfast_admin_document_archive._boundary()
+                    if is_admin_document_archive
                     else copyfast_governance._boundary()
                     if is_governance
                     else copyfast_reliability._boundary()
@@ -1656,6 +1752,7 @@ app.include_router(copyfast_chat_workspace.router)
 app.include_router(copyfast_analytics_workspace.router)
 app.include_router(copyfast_data_controls.router)
 app.include_router(copyfast_governance.router)
+app.include_router(copyfast_admin_document_archive.router)
 app.include_router(copyfast_workboard.router)
 app.include_router(copyfast_partner_crm.router)
 app.include_router(copyfast_support.router)
@@ -1763,6 +1860,12 @@ async def page(page_path: str, request: Request):
     # Web admin role.  No Bot bridge call is appropriate for this one
     # Web-native, read-only view.
     elif normalized == "/admin/crm/leads":
+        copyfast_auth.require_admin(request)
+    # Internal Document Archive is an independently flagged, signed-Web-admin
+    # surface. It has its own owner, CSRF, confirmation, revision, audit and
+    # immutable-file checks; this page guard must not accidentally require or
+    # infer the separate canonical Telegram/Bot-admin authority.
+    elif normalized == "/admin/internal-documents" or normalized.startswith("/admin/internal-documents/"):
         copyfast_auth.require_admin(request)
     # Governance Documents is an independently flagged, Web-native local
     # admin surface.  Its API repeats signed admin + CSRF/revision checks and

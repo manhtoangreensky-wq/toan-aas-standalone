@@ -519,6 +519,14 @@ def _flags() -> dict[str, bool]:
             enabled("WEBAPP_ADMIN_ERP_ENABLED", True)
             and enabled("WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED", False)
         ),
+        # Admin Internal Document Archive owns a separate immutable private
+        # blob root and local-admin record tables. It is not the customer Asset
+        # Vault or Governance text review surface, and cannot unlock Bot,
+        # bridge, Telegram, wallet/Xu, PayOS, provider, job or publication.
+        "admin_document_archive_enabled": (
+            enabled("WEBAPP_ADMIN_ERP_ENABLED", True)
+            and enabled("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", False)
+        ),
         # Prompt templates and immutable revisions are owned by the signed
         # Web account. This flag has no Bot bridge, wallet, payment, provider
         # or job-runtime implication.

@@ -253,6 +253,23 @@ def governance_documents_enabled() -> bool:
     return umbrella and dedicated
 
 
+def admin_document_archive_enabled() -> bool:
+    """Whether the Web-owned Admin Internal Document Archive is enabled.
+
+    This is deliberately separate from text-only Governance Documents and from
+    customer Asset Vaults: it accepts immutable private admin-record blobs.
+    Both the Admin ERP umbrella and this false-by-default gate must be enabled
+    before the archive can touch its own tables or storage root.  It never
+    grants Bot, bridge, Telegram, wallet/Xu, PayOS, provider, job, customer or
+    finance authority.
+    """
+
+    enabled_values = {"1", "true", "yes", "on"}
+    umbrella = os.environ.get("WEBAPP_ADMIN_ERP_ENABLED", "true").strip().lower() in enabled_values
+    dedicated = os.environ.get("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", "false").strip().lower() in enabled_values
+    return umbrella and dedicated
+
+
 def support_desk_enabled() -> bool:
     """Whether the independently owned Web Support Desk is available.
 
@@ -787,6 +804,78 @@ def ensure_image_operations_persistence() -> Path | None:
     if not asset_vault_enabled():
         raise RuntimeError("Image Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
     return image_operations_directory()
+
+
+def admin_document_archive_directory() -> Path:
+    """Resolve the isolated private blob root for Admin Internal Documents.
+
+    Admin records are not customer uploads and must not share Asset Vault,
+    Project Package, generated-document or image-operation storage.  In a
+    production-like deployment this root must be a child of the verified
+    service volume; otherwise a Railway redeploy could silently discard an
+    immutable archive version while its SQLite metadata still exists.
+    """
+
+    if not admin_document_archive_enabled():
+        raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_admin_document_archive"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_admin_document_archive"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT không được nằm trong static")
+
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    if image_operations_enabled():
+        private_roots.append(image_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT phải tách riêng Asset Vault, Project Package, Document Operations và Image Operations"
+            )
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Admin Document Archive production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_admin_document_archive_persistence() -> Path | None:
+    """Validate the dedicated immutable admin-record storage when enabled."""
+
+    if not admin_document_archive_enabled():
+        return None
+    return admin_document_archive_directory()
 
 
 def session_database_path() -> str:
@@ -4255,6 +4344,77 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Admin Internal Document Archive owns immutable private file versions
+        # in a separate root.  It intentionally does not mirror the Bot's
+        # ``internal_documents`` table, Telegram file references, customer
+        # Asset Vault, finance/customer/provider fields or bridge authority.
+        # No FK uses CASCADE: archive history must remain auditable rather than
+        # disappearing after an unrelated account or lifecycle operation.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_admin_archive_documents (
+                id TEXT PRIMARY KEY,
+                owner_account_id TEXT NOT NULL,
+                department TEXT NOT NULL,
+                document_type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                description TEXT NOT NULL DEFAULT '',
+                retention_label TEXT NOT NULL DEFAULT 'manual_review'
+                    CHECK(retention_label IN ('manual_review', '3_years', '5_years', '10_years', 'permanent')),
+                confidentiality_level TEXT NOT NULL DEFAULT 'internal'
+                    CHECK(confidentiality_level IN ('internal', 'confidential', 'restricted')),
+                state TEXT NOT NULL DEFAULT 'active'
+                    CHECK(state IN ('active', 'archived', 'unavailable')),
+                current_version_id TEXT,
+                lifecycle_revision INTEGER NOT NULL DEFAULT 1 CHECK(lifecycle_revision >= 1),
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(owner_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_admin_archive_versions (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                version_number INTEGER NOT NULL CHECK(version_number >= 1),
+                uploader_account_id TEXT NOT NULL,
+                original_filename TEXT NOT NULL,
+                display_name TEXT NOT NULL,
+                extension TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                byte_size INTEGER NOT NULL CHECK(byte_size >= 1),
+                sha256 TEXT NOT NULL,
+                storage_key TEXT NOT NULL UNIQUE,
+                availability TEXT NOT NULL DEFAULT 'available'
+                    CHECK(availability IN ('available', 'unavailable')),
+                created_at TEXT NOT NULL,
+                UNIQUE(document_id, version_number),
+                FOREIGN KEY(document_id) REFERENCES web_admin_archive_documents(id),
+                FOREIGN KEY(uploader_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_admin_archive_events (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                actor_account_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK(action IN ('created', 'version_added', 'metadata_updated', 'archived', 'restored', 'unavailable')),
+                from_state TEXT,
+                to_state TEXT NOT NULL CHECK(to_state IN ('active', 'archived', 'unavailable')),
+                lifecycle_revision INTEGER NOT NULL CHECK(lifecycle_revision >= 1),
+                version_number INTEGER,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(document_id) REFERENCES web_admin_archive_documents(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -4550,6 +4710,21 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_governance_events_document_created ON web_governance_document_events(document_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_documents_owner_state_updated ON web_admin_archive_documents(owner_account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_documents_department_state_updated ON web_admin_archive_documents(department, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_documents_type_updated ON web_admin_archive_documents(document_type, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_versions_document_version ON web_admin_archive_versions(document_id, version_number DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_events_document_created ON web_admin_archive_events(document_id, created_at DESC, id DESC)"
         )
 
 
