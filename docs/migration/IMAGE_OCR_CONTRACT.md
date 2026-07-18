@@ -7,10 +7,11 @@ Bot's Document Tools flow (`bot.py:85114+`) into a signed Web account.  It is
 not a copy of Telegram pending-file state, Telegram file IDs, document costs,
 Xu charging, Bot jobs, or provider execution.
 
-The first Web-native scope is deliberately one private still image only. PDF
-OCR and document translation remain separate future work: they require a
-bounded page renderer / language workflow and must not be implied by this
-image-only surface.
+The first image scope remains deliberately one private still image only. PDF
+OCR is now a separate bounded Web-native route with its own PDFium, page and
+resource limits; it is documented in [`PDF_OCR_CONTRACT.md`](PDF_OCR_CONTRACT.md)
+and must not be inferred from this image-only surface. Document translation
+remains separate future work.
 
 ## Public surface
 

@@ -113,6 +113,18 @@ def image_ocr_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def pdf_ocr_enabled() -> bool:
+    """Whether private, local multi-page PDF OCR is deliberately enabled.
+
+    PDF OCR combines an untrusted PDF rasterizer with the local Tesseract
+    runtime.  It therefore remains independently fail-closed from Image OCR
+    and PDF-to-images; enabling either of those features must not silently
+    enable multi-page OCR work or private text delivery.
+    """
+
+    return os.environ.get("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def pdf_to_word_enabled() -> bool:
     """Whether the private PDF-text-to-DOCX exporter is deliberately enabled.
 

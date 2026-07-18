@@ -40,6 +40,7 @@ def make_client(tmp_path, monkeypatch, *, ocr_enabled: bool = True) -> TestClien
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", "true" if ocr_enabled else "false")
+    monkeypatch.setenv("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_IMAGES_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "false")

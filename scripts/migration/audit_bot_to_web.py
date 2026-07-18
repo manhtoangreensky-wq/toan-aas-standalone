@@ -274,7 +274,7 @@ COMMAND_ROUTE_OVERRIDES = {
     "image_to_pdf": "/documents/pdf",
     "pdf_to_images": "/documents/pdf-to-images",
     "ocr_image": "/documents/ocr",
-    "ocr_pdf": "/documents/ocr",
+    "ocr_pdf": "/documents/pdf-ocr",
     "add_voice_to_video": "/video/add-ons",
     "video_music": "/video/add-ons",
     "help": "/guides",
@@ -2426,6 +2426,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PDF_TO_IMAGES_CONTRACT.md`](PDF_TO_IMAGES_CONTRACT.md) — Bot-compatible 2× PDF raster delivery as verified private PNG or deterministic PNG ZIP.\n"
         + "- [`PDF_TO_WORD_CONTRACT.md`](PDF_TO_WORD_CONTRACT.md) — real text-only private PDF-to-DOCX extraction.\n"
         + "- [`IMAGE_OCR_CONTRACT.md`](IMAGE_OCR_CONTRACT.md) — opt-in local private image OCR with verified TXT delivery; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
+        + "- [`PDF_OCR_CONTRACT.md`](PDF_OCR_CONTRACT.md) — opt-in bounded 2× local private PDF OCR with verified TXT delivery; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
         + "- [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) and [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — bounded local private image artifacts.\n"
         + "- [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"

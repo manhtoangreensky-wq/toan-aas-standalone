@@ -969,6 +969,7 @@ async def security_headers(request: Request, call_next):
             "/api/v1/document-operations/pdf-to-images",
             "/api/v1/document-operations/pdf-to-word",
             "/api/v1/document-operations/ocr-image",
+            "/api/v1/document-operations/ocr-pdf",
             "/api/v1/image-operations/resize",
             "/api/v1/image-operations/enhance",
         }

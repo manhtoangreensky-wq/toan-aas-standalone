@@ -469,6 +469,9 @@ def _flags() -> dict[str, bool]:
         # Local OCR has a Tesseract binary/language-pack boundary distinct from
         # generic document parsing or Pillow Image → PDF.
         "image_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", False),
+        # Multi-page PDF OCR combines PDFium rasterization with the same local
+        # Tesseract runtime and stays opt-in independently from Image OCR.
+        "pdf_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False),
         # PDF text extraction creates a DOCX artifact with a separate writer
         # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
         # PDF layout converter.

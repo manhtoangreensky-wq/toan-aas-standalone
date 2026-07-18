@@ -177,11 +177,12 @@ ENGINE_SPECS.update(_many(("analytics_workspace",), mode=ENGINE_MODE_WEB_NATIVE,
 ENGINE_SPECS.update(_many(("workboard",), mode=ENGINE_MODE_WEB_NATIVE, flags=("workboard_enabled",), handler="workboard"))
 ENGINE_SPECS.update(_many(("support", "tickets"), mode=ENGINE_MODE_WEB_NATIVE, flags=("support_desk_enabled",), handler="support_desk"))
 
-# Initial verified artifact scope. It includes only opt-in local image OCR;
-# PDF OCR, AI edit/upscale, provider generation, translation, TTS, music and
-# video rendering remain outside this direct Web-native execution boundary.
+# Initial verified artifact scope. It includes opt-in local image/PDF OCR;
+# AI edit/upscale, provider generation, translation, TTS, music and video
+# rendering remain outside this direct Web-native execution boundary.
 ENGINE_SPECS.update(_many(("documents_merge", "documents_split", "documents_compress"), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled"), handler="document_operations", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_ocr",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "image_ocr_enabled"), handler="image_ocr", asset_vault=True))
+ENGINE_SPECS.update(_many(("documents_pdf_ocr",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_ocr_enabled"), handler="pdf_ocr", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_image_to_pdf",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "image_to_pdf_enabled"), handler="image_to_pdf", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_pdf_to_images",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_to_images_enabled"), handler="pdf_to_images", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_pdf_to_word",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_to_word_enabled"), handler="pdf_to_word", asset_vault=True))
