@@ -96,7 +96,7 @@
 | /campaign_report | /campaign/report | COPIED_GUARDED |
 | /campaign_stats | /admin/campaign_stats | COPIED_GUARDED |
 | /campaigns | /admin/campaigns | COPIED_GUARDED |
-| /cancel | /jobs | MAPPED_TO_EXISTING_ROUTE |
+| /cancel | /jobs | COPIED_GUARDED |
 | /channel_add | /admin/channel_add | COPIED_GUARDED |
 | /channel_publish_set | /admin/channel_publish_set | COPIED_GUARDED |
 | /channel_router | /admin/channel_router | COPIED_GUARDED |
@@ -121,7 +121,7 @@
 | /content_policy | /legal | COPIED_GUARDED |
 | /costs | /admin/costs | COPIED_GUARDED |
 | /create_media | /studio | COPIED_GUARDED |
-| /creative_flow | /creative-flow | MAPPED_TO_EXISTING_ROUTE |
+| /creative_flow | /creative-flow | COPIED_GUARDED |
 | /creative_report | /admin/creative_report | COPIED_GUARDED |
 | /creative_select | /admin/creative_select | COPIED_GUARDED |
 | /creative_test | /admin/creative_test | COPIED_GUARDED |
