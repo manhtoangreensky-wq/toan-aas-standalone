@@ -63,6 +63,26 @@ def test_app_shell_isolates_all_non_dialog_landmarks_and_keeps_mobile_auth_contr
     assert ".portal-auth-provider-option .portal-button { min-height: 44px; }" in CSS
 
 
+def test_data_tables_expose_mobile_horizontal_overflow_without_changing_table_semantics() -> None:
+    table_helper = _section(PORTAL, "function renderDataTableWrap(tableMarkup)", "function dashboardActiveDrafts(context)")
+    assert 'data-portal-table-scroll tabindex="0" role="region"' in table_helper
+    assert 'aria-label="Bảng dữ liệu có thể cuộn ngang. Dùng phím mũi tên trái và phải để xem toàn bộ cột."' in table_helper
+    assert 'class="portal-data-table-scroll-hint">Cuộn ngang để xem các cột còn lại.</p>' in table_helper
+    assert "return renderDataTableWrap(" in table_helper
+
+    keyboard = _section(PORTAL, 'window.addEventListener("keydown", (event) => {', 'const paletteOpen = isCommandPaletteOpen();')
+    assert 'event.target.matches("[data-portal-table-scroll]")' in keyboard
+    assert 'if (event.key === "ArrowLeft")' in keyboard
+    assert 'if (event.key === "ArrowRight")' in keyboard
+    assert 'if (event.key === "Home")' in keyboard
+    assert 'if (event.key === "End")' in keyboard
+    assert "tableScrollRegion.scrollLeft" in keyboard
+
+    assert ".portal-data-table-scroll-hint { display: none; }" in CSS
+    assert ".portal-data-table th:first-child," in CSS
+    assert "tbody td:first-child:not(.portal-empty-cell)" in CSS
+
+
 def test_customer_surfaces_use_progressive_disclosure_and_ephemeral_password_reveal() -> None:
     # Secondary assurance, payment lookup, and implementation notes stay
     # discoverable without taking attention away from the first useful action.
