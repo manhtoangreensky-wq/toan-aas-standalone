@@ -12787,16 +12787,23 @@
     return `<div class="portal-empty"><span class="portal-empty-icon" aria-hidden="true">${portalIcon(iconText || ICONS.default)}</span><h3>${safeText(title)}</h3><p>${safeText(text)}</p></div>`;
   }
 
+  function renderDataTableWrap(tableMarkup) {
+    // Tables deliberately keep their semantic HTML. The wrapper only exposes
+    // the horizontal overflow as a named, keyboard-focusable region; it never
+    // changes the records, access scope, or action semantics inside the table.
+    return `<div class="portal-data-table-wrap" data-portal-table-scroll tabindex="0" role="region" aria-label="Bảng dữ liệu có thể cuộn ngang. Dùng phím mũi tên trái và phải để xem toàn bộ cột."><p class="portal-data-table-scroll-hint">Cuộn ngang để xem các cột còn lại.</p>${tableMarkup}</div>`;
+  }
+
   function renderTable(columns, emptyTitle, emptyText) {
-    return `<div class="portal-data-table-wrap"><table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead>
-      <tbody><tr><td class="portal-empty-cell" colspan="${columns.length}">${renderEmpty(emptyTitle, emptyText, "○")}</td></tr></tbody></table></div>`;
+    return renderDataTableWrap(`<table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead>
+      <tbody><tr><td class="portal-empty-cell" colspan="${columns.length}">${renderEmpty(emptyTitle, emptyText, "○")}</td></tr></tbody></table>`);
   }
 
   function renderRowsTable(columns, rows, renderRow, emptyTitle, emptyText) {
     const body = Array.isArray(rows) && rows.length
       ? rows.map((row) => `<tr>${renderRow(row)}</tr>`).join("")
       : `<tr><td class="portal-empty-cell" colspan="${columns.length}">${renderEmpty(emptyTitle, emptyText, "○")}</td></tr>`;
-    return `<div class="portal-data-table-wrap"><table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table></div>`;
+    return renderDataTableWrap(`<table class="portal-data-table"><thead><tr>${columns.map((column) => `<th scope="col">${safeText(column)}</th>`).join("")}</tr></thead><tbody>${body}</tbody></table>`);
   }
 
   function dashboardActiveDrafts(context) {
@@ -20049,6 +20056,25 @@
       }
     });
     window.addEventListener("keydown", (event) => {
+      const tableScrollRegion = event.target instanceof HTMLElement && event.target.matches("[data-portal-table-scroll]")
+        ? event.target
+        : null;
+      if (tableScrollRegion && !event.altKey && !event.ctrlKey && !event.metaKey) {
+        const maximumScrollLeft = Math.max(0, tableScrollRegion.scrollWidth - tableScrollRegion.clientWidth);
+        if (maximumScrollLeft > 0) {
+          const step = Math.max(96, Math.round(tableScrollRegion.clientWidth * 0.8));
+          let nextScrollLeft = null;
+          if (event.key === "ArrowLeft") nextScrollLeft = tableScrollRegion.scrollLeft - step;
+          if (event.key === "ArrowRight") nextScrollLeft = tableScrollRegion.scrollLeft + step;
+          if (event.key === "Home") nextScrollLeft = 0;
+          if (event.key === "End") nextScrollLeft = maximumScrollLeft;
+          if (nextScrollLeft !== null) {
+            event.preventDefault();
+            tableScrollRegion.scrollLeft = Math.min(maximumScrollLeft, Math.max(0, nextScrollLeft));
+            return;
+          }
+        }
+      }
       const paletteOpen = isCommandPaletteOpen();
       if ((event.ctrlKey || event.metaKey) && String(event.key || "").toLowerCase() === "k") {
         event.preventDefault();

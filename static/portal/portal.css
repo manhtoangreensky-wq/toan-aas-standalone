@@ -3282,6 +3282,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-data-table th { color: #aebdcb; font-size: 11px; }
 .portal-data-table td { color: #d8e2eb; }
 .portal-data-table tbody tr:hover { background: rgba(45, 212, 191, .045); }
+.portal-data-table-scroll-hint { display: none; }
 .portal-empty { padding: 24px 16px; }
 .portal-empty h3 { font-size: 16px; }
 .portal-empty p { font-size: 14px; }
@@ -3991,4 +3992,30 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-catalog-context { grid-template-columns: 40px minmax(0, 1fr); gap: 11px; padding: 14px; }
   .portal-catalog-context > .portal-module-icon { width: 40px; height: 40px; }
   .portal-catalog-context > .portal-badge { grid-column: 2; justify-self: start; }
+
+  /* A compact visible affordance prevents a clipped table from looking like
+   * missing data. The focused region remains the table wrapper itself. */
+  .portal-data-table-scroll-hint {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    margin: 0;
+    padding: 8px 12px;
+    border-bottom: 1px solid #26384a;
+    color: #aebdcb;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+  .portal-data-table th:first-child,
+  .portal-data-table tbody td:first-child:not(.portal-empty-cell) {
+    position: sticky;
+    left: 0;
+    max-width: min(48vw, 216px);
+    overflow-wrap: anywhere;
+    background: var(--portal-surface);
+    box-shadow: 8px 0 12px -12px rgba(0, 0, 0, .92);
+  }
+  .portal-data-table th:first-child { z-index: 2; }
+  .portal-data-table tbody td:first-child:not(.portal-empty-cell) { z-index: 1; }
+  .portal-data-table tbody tr:hover > td:first-child:not(.portal-empty-cell) { background: #172638; }
 }
