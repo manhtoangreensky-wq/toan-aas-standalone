@@ -98,7 +98,7 @@ Safe Web surface coverage: **94.38%**. This is an actionable migration baseline,
 | command | /campaign_report | /campaign/report | COPIED_GUARDED |
 | command | /campaign_stats | /admin/campaign_stats | COPIED_GUARDED |
 | command | /campaigns | /admin/campaigns | COPIED_GUARDED |
-| command | /cancel | /jobs | MAPPED_TO_EXISTING_ROUTE |
+| command | /cancel | /jobs | COPIED_GUARDED |
 | command | /channel_add | /admin/channel_add | COPIED_GUARDED |
 | command | /channel_publish_set | /admin/channel_publish_set | COPIED_GUARDED |
 | command | /channel_router | /admin/channel_router | COPIED_GUARDED |
@@ -123,7 +123,7 @@ Safe Web surface coverage: **94.38%**. This is an actionable migration baseline,
 | command | /content_policy | /legal | COPIED_GUARDED |
 | command | /costs | /admin/costs | COPIED_GUARDED |
 | command | /create_media | /studio | COPIED_GUARDED |
-| command | /creative_flow | /creative-flow | MAPPED_TO_EXISTING_ROUTE |
+| command | /creative_flow | /creative-flow | COPIED_GUARDED |
 | command | /creative_report | /admin/creative_report | COPIED_GUARDED |
 | command | /creative_select | /admin/creative_select | COPIED_GUARDED |
 | command | /creative_test | /admin/creative_test | COPIED_GUARDED |

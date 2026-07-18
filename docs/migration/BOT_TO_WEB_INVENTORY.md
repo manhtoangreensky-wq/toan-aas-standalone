@@ -5,7 +5,7 @@
 | Commands | 773 | Mapped through feature/route registry |
 | Callbacks | 54 | Mapped or explicitly TELEGRAM_ONLY |
 | Conversations | 0 | Draft/estimate/confirm contract |
-| FastAPI routes | 139 | 571 |
-| DB tables | 97 | 178 |
+| FastAPI routes | 139 | 576 |
+| DB tables | 97 | 181 |
 
 Canonical business state remains in the bot; this inventory never imports runtime code.

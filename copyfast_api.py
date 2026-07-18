@@ -198,6 +198,9 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.document_operation.pdf_optimize": ("Tối ưu PDF riêng tư", "Web Workspace"),
     "web.document_operation.pdf_optimize_failed": ("Tối ưu PDF chưa hoàn tất", "Web Workspace"),
     "web.document_operation.pdf_optimize_guarded": ("PDF không có bản lossless nhỏ hơn", "Web Workspace"),
+    "web.document_operation.pdf_ocr": ("OCR PDF riêng tư", "Web Workspace"),
+    "web.document_operation.pdf_ocr_failed": ("OCR PDF chưa hoàn tất", "Web Workspace"),
+    "web.document_operation.pdf_ocr_guarded": ("OCR PDF đang chờ local runtime", "Web Workspace"),
     # Memory Center is explicitly Web-owned.  Keep its customer-facing audit
     # labels separate from Bot `/note`/`/remind` state so activity history can
     # never imply that Telegram delivered or owns the Web record.
@@ -469,6 +472,9 @@ def _flags() -> dict[str, bool]:
         # Local OCR has a Tesseract binary/language-pack boundary distinct from
         # generic document parsing or Pillow Image → PDF.
         "image_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", False),
+        # PDF OCR combines bounded PDFium rasterization with the same local
+        # Tesseract boundary, so it is a separate opt-in capability.
+        "pdf_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False),
         # PDF text extraction creates a DOCX artifact with a separate writer
         # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
         # PDF layout converter.
@@ -1523,6 +1529,8 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "web_native_pdf_to_word_required"
     if feature in {"documents", "documents_pdf"} and document_operation == "pdf_to_images":
         return "web_native_pdf_to_images_required"
+    if feature in {"documents", "documents_pdf"} and document_operation == "ocr_pdf":
+        return "web_native_pdf_ocr_required"
     # Resize & Aspect Studio owns an immutable Asset Vault → private PNG
     # contract. Never route a crafted generic image request to the bridge: it
     # would create a second lifecycle and could make a Bot/provider artifact
@@ -1584,6 +1592,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "web_native_image_to_pdf_required": "Ảnh sang PDF là tiện ích Web-native riêng tư. Hãy dùng /documents/image-to-pdf để tạo output đã được kiểm tra.",
         "web_native_pdf_to_word_required": "PDF có text → Word là tiện ích Web-native riêng tư. Hãy dùng /documents/pdf-to-word; PDF scan hoặc layout ảnh không được giả OCR.",
         "web_native_pdf_to_images_required": "PDF → ảnh là tiện ích Web-native riêng tư. Hãy dùng /documents/pdf-to-images để nhận PNG hoặc ZIP đã được kiểm tra.",
+        "web_native_pdf_ocr_required": "OCR PDF là tiện ích Web-native riêng tư. Chỉ bật khi local PDFium/Tesseract sẵn sàng; không gọi Bot, provider hoặc tạo TXT giả.",
         "web_native_image_resize_required": "Resize & Aspect Studio là tiện ích Web-native riêng tư. Hãy dùng /image/resize để tạo PNG đã được kiểm tra; không gọi Bot, provider hoặc AI upscale.",
         "web_native_image_enhance_required": "Image Enhance Studio là tiện ích Web-native riêng tư. Hãy dùng /image/edit để chỉnh màu/làm nét cơ bản trên Asset Vault; không gọi Bot, provider hoặc AI edit.",
         "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF private phù hợp trong Document Studio.",

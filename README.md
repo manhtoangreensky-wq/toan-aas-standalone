@@ -74,13 +74,18 @@ Production Web App for `app.toanaas.vn`.
   PDF pages at 2× to a verified PNG or PNG ZIP, not a browser/provider
   fallback. PDF text → Word separately requires
   `WEBAPP_PDF_TO_WORD_ENABLED=true` and `python-docx`; it exports only real
-  selectable text, not OCR or visual layout. See
+  selectable text, not OCR or visual layout. PDF OCR is a separate local-only
+  opt-in: `WEBAPP_DOCUMENT_OCR_PDF_ENABLED=true` requires pypdf, PDFium,
+  Pillow and Tesseract and produces a verified private TXT only when every
+  bounded PDF page has real text; it does not use a browser, Bot or provider
+  fallback. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
   [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
   [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md), and
-  [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
+  [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md), and
+  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md).
 - `WEBAPP_IMAGE_OPERATIONS_ENABLED` defaults to `false`. Resize & Aspect
   Studio additionally needs `WEBAPP_IMAGE_RESIZE_ENABLED=true`, Asset Vault,
   Pillow and its own separate persistent

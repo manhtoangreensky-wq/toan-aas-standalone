@@ -274,7 +274,7 @@ COMMAND_ROUTE_OVERRIDES = {
     "image_to_pdf": "/documents/pdf",
     "pdf_to_images": "/documents/pdf-to-images",
     "ocr_image": "/documents/ocr",
-    "ocr_pdf": "/documents/ocr",
+    "ocr_pdf": "/api/v1/document-operations/ocr-pdf",
     "add_voice_to_video": "/video/add-ons",
     "video_music": "/video/add-ons",
     "help": "/guides",
@@ -2205,7 +2205,38 @@ def _runtime_web_route_paths(web: dict[str, Any], web_root: Path) -> set[str]:
         candidate = f"{module}.py"
         if (web_root / candidate).is_file():
             route_files.add(candidate)
-    return {str(route["path"]) for route in records if str(route.get("file") or "") in route_files}
+
+    router_prefixes: dict[str, str] = {}
+    for route_file in route_files - {"app.py"}:
+        try:
+            module_source = _read_source(web_root / route_file)
+        except OSError:
+            continue
+        router_declaration = re.search(
+            r"\brouter\s*=\s*APIRouter\s*\((?P<arguments>.*?)\)",
+            module_source,
+            flags=re.DOTALL,
+        )
+        if router_declaration is None:
+            continue
+        prefix_match = re.search(
+            r"\bprefix\s*=\s*(['\"])(?P<prefix>[^'\"]+)\1",
+            router_declaration.group("arguments"),
+        )
+        if prefix_match is not None:
+            router_prefixes[route_file] = "/" + prefix_match.group("prefix").strip("/")
+
+    reachable: set[str] = set()
+    for route in records:
+        route_file = str(route.get("file") or "")
+        if route_file not in route_files:
+            continue
+        path = str(route["path"])
+        prefix = router_prefixes.get(route_file)
+        if prefix and path.startswith("/") and not path.startswith(prefix + "/"):
+            path = prefix.rstrip("/") + path
+        reachable.add(path)
+    return reachable
 
 
 def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, web_root: Path) -> dict[str, Any]:
@@ -2426,6 +2457,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PDF_TO_IMAGES_CONTRACT.md`](PDF_TO_IMAGES_CONTRACT.md) — Bot-compatible 2× PDF raster delivery as verified private PNG or deterministic PNG ZIP.\n"
         + "- [`PDF_TO_WORD_CONTRACT.md`](PDF_TO_WORD_CONTRACT.md) — real text-only private PDF-to-DOCX extraction.\n"
         + "- [`IMAGE_OCR_CONTRACT.md`](IMAGE_OCR_CONTRACT.md) — opt-in local private image OCR with verified TXT delivery; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
+        + "- [`PDF_OCR_CONTRACT.md`](PDF_OCR_CONTRACT.md) — opt-in bounded private PDF OCR through local PDFium/Tesseract with verified TXT delivery; no browser OCR, provider, Bot, job, wallet or payment execution.\n"
         + "- [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) and [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — bounded local private image artifacts.\n"
         + "- [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"

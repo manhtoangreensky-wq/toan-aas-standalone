@@ -125,6 +125,18 @@ def image_ocr_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OCR_IMAGE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def pdf_ocr_enabled() -> bool:
+    """Whether bounded local PDF-raster OCR is deliberately enabled.
+
+    PDF OCR combines PDFium rasterization with the service-installed local
+    Tesseract runtime. It remains independent from Image OCR and PDF-to-images
+    so either underlying capability can stay disabled without accidentally
+    enabling a multi-page text extraction workload.
+    """
+
+    return os.environ.get("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def pdf_to_word_enabled() -> bool:
     """Whether the private PDF-text-to-DOCX exporter is deliberately enabled.
 

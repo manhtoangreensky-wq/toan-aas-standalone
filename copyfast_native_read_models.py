@@ -51,6 +51,7 @@ _DOCUMENT_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
         "toan-aas-pdf-text.docx",
     ),
     "image_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-image-ocr.txt"),
+    "pdf_ocr": (".txt", "text/plain; charset=utf-8", "toan-aas-pdf-ocr.txt"),
 }
 _PDF_TO_IMAGES_SINGLE_PAGE_SPEC = (".png", "image/png", "toan-aas-pdf-page-001.png")
 _PACKAGE_OUTPUT_SPEC = (".zip", "application/zip", "project-package.zip")

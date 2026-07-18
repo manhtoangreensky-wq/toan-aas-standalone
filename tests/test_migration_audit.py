@@ -389,6 +389,39 @@ async def status():
     assert mapped["status"] == "COPIED_GUARDED"
 
 
+def test_static_audit_resolves_mounted_router_prefixes_for_native_api_routes(tmp_path: Path) -> None:
+    """A mounted APIRouter prefix is part of the deployed API path."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text("app.add_handler(CommandHandler('ocr_pdf', handler))", encoding="utf-8")
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+app.include_router(document_ops.router)
+""",
+        encoding="utf-8",
+    )
+    (web_root / "document_ops.py").write_text(
+        """
+router = APIRouter(prefix='/api/v1/document-operations')
+@router.post('/ocr-pdf')
+async def ocr_pdf():
+    return {}
+""",
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+
+    mapped = result["parity_gap"]["command_mappings"][0]
+    assert mapped["target"] == "/api/v1/document-operations/ocr-pdf"
+    assert mapped["status"] == "MAPPED_TO_EXISTING_ROUTE"
+
+
 def test_static_audit_classifies_neutrally_named_handlers_with_an_admin_guard_as_admin(tmp_path: Path) -> None:
     audit = _load_audit_module()
     bot_root = tmp_path / "bot"
