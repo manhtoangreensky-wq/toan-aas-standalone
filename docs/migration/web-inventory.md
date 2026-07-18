@@ -90,6 +90,7 @@
 | /banners | POST | add_banner |
 | /banners | GET | get_banners |
 | /blueprint | POST | create_media_factory_blueprint |
+| /brand-overlay | POST | create_brand_overlay |
 | /briefs | GET | list_briefs |
 | /briefs | POST | create_brief |
 | /briefs/{brief_id} | GET | get_brief |
@@ -161,6 +162,5 @@
 | /documents/{document_id} | GET | get_document |
 | /documents/{document_id} | PATCH | update_document |
 | /documents/{document_id} | GET | get_studio_document |
-| /documents/{document_id} | PATCH | update_studio_document |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

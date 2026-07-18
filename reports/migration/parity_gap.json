@@ -10,12 +10,12 @@
     "matched_requests": [],
     "note": "Method/path shapes only. This does not prove Bot deployment, ENV, bearer/HMAC credentials, runtime authorization, schema, payment, provider, job, or delivery readiness.",
     "status": "BOT_BRIDGE_SOURCE_MISSING",
-    "unmatched_request_count": 28,
+    "unmatched_request_count": 30,
     "unmatched_requests": [
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4082,
+        "line": 4402,
         "method": "POST",
         "path": "/internal/v1/admin/features/{*}/freeze",
         "static": true
@@ -23,7 +23,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3980,
+        "line": 4300,
         "method": "GET",
         "path": "/internal/v1/admin/jobs",
         "static": true
@@ -31,7 +31,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4058,
+        "line": 4378,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/refund",
         "static": true
@@ -39,7 +39,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4035,
+        "line": 4355,
         "method": "POST",
         "path": "/internal/v1/admin/jobs/{*}/retry",
         "static": true
@@ -47,7 +47,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 4005,
+        "line": 4325,
         "method": "GET",
         "path": "/internal/v1/admin/modules/{*}",
         "static": true
@@ -55,7 +55,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3985,
+        "line": 4305,
         "method": "GET",
         "path": "/internal/v1/admin/payments",
         "static": true
@@ -63,7 +63,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3990,
+        "line": 4310,
         "method": "GET",
         "path": "/internal/v1/admin/providers",
         "static": true
@@ -71,7 +71,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3970,
+        "line": 4290,
         "method": "GET",
         "path": "/internal/v1/admin/summary",
         "static": true
@@ -79,7 +79,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3995,
+        "line": 4315,
         "method": "GET",
         "path": "/internal/v1/admin/tickets",
         "static": true
@@ -87,7 +87,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3975,
+        "line": 4295,
         "method": "GET",
         "path": "/internal/v1/admin/users",
         "static": true
@@ -95,7 +95,15 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3790,
+        "line": 4091,
+        "method": "GET",
+        "path": "/internal/v1/assets",
+        "static": true
+      },
+      {
+        "call": "_bridge",
+        "file": "copyfast_api.py",
+        "line": 4094,
         "method": "GET",
         "path": "/internal/v1/assets",
         "static": true
@@ -103,7 +111,7 @@
       {
         "call": "bridge_request",
         "file": "copyfast_api.py",
-        "line": 2593,
+        "line": 2841,
         "method": "GET",
         "path": "/internal/v1/assets/{*}/download",
         "static": true
@@ -111,7 +119,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3870,
+        "line": 4190,
         "method": "GET",
         "path": "/internal/v1/features/status",
         "static": true
@@ -119,7 +127,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3912,
+        "line": 4232,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -127,7 +135,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3933,
+        "line": 4253,
         "method": "POST",
         "path": "/internal/v1/features/{*}/{*}",
         "static": true
@@ -135,7 +143,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3779,
+        "line": 4032,
         "method": "GET",
         "path": "/internal/v1/jobs",
         "static": true
@@ -143,7 +151,15 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3785,
+        "line": 4035,
+        "method": "GET",
+        "path": "/internal/v1/jobs",
+        "static": true
+      },
+      {
+        "call": "_bridge",
+        "file": "copyfast_api.py",
+        "line": 4075,
         "method": "GET",
         "path": "/internal/v1/jobs/{*}",
         "static": true
@@ -159,7 +175,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3680,
+        "line": 3928,
         "method": "GET",
         "path": "/internal/v1/packages",
         "static": true
@@ -167,7 +183,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3764,
+        "line": 4012,
         "method": "POST",
         "path": "/internal/v1/payments/create",
         "static": true
@@ -175,7 +191,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3774,
+        "line": 4022,
         "method": "GET",
         "path": "/internal/v1/payments/{*}",
         "static": true
@@ -183,7 +199,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3675,
+        "line": 3923,
         "method": "GET",
         "path": "/internal/v1/pricing",
         "static": true
@@ -191,7 +207,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3847,
+        "line": 4167,
         "method": "GET",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -199,7 +215,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3858,
+        "line": 4178,
         "method": "POST",
         "path": "/internal/v1/support/tickets",
         "static": true
@@ -207,7 +223,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3829,
+        "line": 4149,
         "method": "POST",
         "path": "/internal/v1/uploads",
         "static": true
@@ -215,7 +231,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3804,
+        "line": 4124,
         "method": "GET",
         "path": "/internal/v1/voice/profiles",
         "static": true
@@ -223,7 +239,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3664,
+        "line": 3912,
         "method": "GET",
         "path": "/internal/v1/wallet",
         "static": true
@@ -231,7 +247,7 @@
       {
         "call": "_bridge",
         "file": "copyfast_api.py",
-        "line": 3669,
+        "line": 3917,
         "method": "GET",
         "path": "/internal/v1/wallet/history",
         "static": true
@@ -239,7 +255,7 @@
     ],
     "unresolved_request_count": 0,
     "unresolved_requests": [],
-    "web_request_count": 28
+    "web_request_count": 30
   },
   "callback_mappings": [
     {
