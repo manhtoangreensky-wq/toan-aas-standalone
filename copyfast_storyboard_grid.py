@@ -1567,11 +1567,18 @@ def _read_verified_cell(
         stream.seek(0)
 
 
-def _completed_archive_for_owner(operation_id: str, account_id: str) -> tuple[tuple[Any, ...], list[tuple[Any, ...]]] | None:
+def _archive_for_owner(operation_id: str, account_id: str) -> tuple[tuple[Any, ...], list[tuple[Any, ...]]] | None:
+    """Return an owner-visible archive receipt without leaking another account.
+
+    Startup reconciliation can mark a previously completed archive
+    ``unavailable`` before a user returns to download it.  That state must be
+    distinguishable from a missing/foreign operation so the owner receives the
+    safe remediation message rather than a misleading not-found response.
+    """
     ensure_copyfast_schema()
     with transaction() as conn:
         result = _operation_with_cells(conn, operation_id, account_id)
-    if result is None or str(result[0][4]) != "completed":
+    if result is None or str(result[0][4]) not in {"completed", "unavailable"}:
         return None
     return result
 
@@ -1586,10 +1593,12 @@ async def download_storyboard_grid_cell(
     operation_id = _uuid(operation_id, label="Mã Storyboard Grid")
     cell_id = _uuid(cell_id, label="Mã cảnh Storyboard Grid")
     account_id = str(account["id"])
-    result = _completed_archive_for_owner(operation_id, account_id)
+    result = _archive_for_owner(operation_id, account_id)
     if result is None:
         return _operation_not_found()
     operation, rows = result
+    if str(operation[4]) != "completed":
+        return _operation_unavailable()
     matching = next((row for row in rows if str(row[0]) == cell_id), None)
     if matching is None:
         return _operation_not_found()
@@ -1633,10 +1642,12 @@ async def download_storyboard_grid(operation_id: str, account: dict = Depends(re
     _require_enabled()
     operation_id = _uuid(operation_id, label="Mã Storyboard Grid")
     account_id = str(account["id"])
-    result = _completed_archive_for_owner(operation_id, account_id)
+    result = _archive_for_owner(operation_id, account_id)
     if result is None:
         return _operation_not_found()
     operation, rows = result
+    if str(operation[4]) != "completed":
+        return _operation_unavailable()
     private_path: Path | None = None
     try:
         if str(operation[19] or "") != ZIP_MEDIA_TYPE:
