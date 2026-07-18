@@ -13,6 +13,7 @@ already-persisted, Web-owned records below:
 | Job-like Subtitle Asset conversion | `web_subtitle_asset_operations` while `WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED=true` |
 | Job-like Video Poster output | `web_video_operations` (`kind=video_poster`) |
 | Job-like Frame Video output | `web_frame_video_operations` (`kind=frame_video`) while `WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED=true` |
+| Job-like Video Finishing output | `web_video_transform_operations` (`kind=video_transform`) while `WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ENABLED=true` |
 | Asset Vault metadata | `web_asset_files` |
 
 The module does not create schema, start a transaction capable of writing,

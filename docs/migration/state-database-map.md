@@ -33,3 +33,14 @@ No destructive migration or schema synchronization is authorized by this invento
 
 Frame Video remains additive and Web-local. It never synchronizes, mutates or
 claims authority over any Bot identity/wallet/PayOS/provider/job table.
+
+## Additive Web-native Video Finishing state
+
+| Table | Owner | Purpose | Explicitly not authoritative for |
+| --- | --- | --- | --- |
+| `web_video_transform_operations` | Signed Web account | One immutable Asset Vault source snapshot, closed transform specification and sealed H.264/AAC-or-muted MP4 receipt | Bot jobs, provider execution, wallet/Xu, PayOS, Telegram identity or arbitrary FFmpeg arguments |
+| `web_video_transform_operation_attempts` | Web operation | In-request execution/fence evidence; future worker seam only | Durable worker lease, automatic retry, provider job or billing attempt |
+| `web_video_transform_operation_events` | Web operation | Ordered lifecycle evidence | Bot audit log, payment ledger, webhook, notification or delivery receipt |
+
+Video Finishing is additive and Web-local. It stores no source/output path,
+URL, raw filter graph, Bot/provider handle, wallet/Xu or PayOS state.
