@@ -42,6 +42,7 @@ import copyfast_free_prompt_gallery
 import copyfast_governance
 import copyfast_image_operations
 import copyfast_image_studio
+import copyfast_storyboard_grid
 import copyfast_memory
 import copyfast_media_factory
 import copyfast_mfa
@@ -93,6 +94,7 @@ STARTUP_RECONCILIATION_STEPS = (
     ("document_operations", copyfast_document_operations.reconcile_document_operation_storage),
     ("image_operations", copyfast_image_operations.reconcile_image_operation_storage),
     ("subtitle_asset_operations", copyfast_subtitle_asset_operations.reconcile_subtitle_asset_operation_storage),
+    ("storyboard_grid", copyfast_storyboard_grid.reconcile_storyboard_grid_storage),
 )
 
 
@@ -118,7 +120,7 @@ def _origins() -> list[str]:
 async def _run_startup_reconciliation(application: FastAPI) -> None:
     """Reconcile private filesystem metadata without delaying readiness.
 
-    All four reconciliation functions may walk a private volume.  They are
+    All reconciliation functions may walk a private volume. They are
     useful integrity maintenance, not a prerequisite to authenticate a user
     or answer Railway's health check, so run them serially on a worker thread
     only after the ASGI lifespan has yielded.  Each failure is deliberately
@@ -132,7 +134,7 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            if name in {"image_operations", "subtitle_asset_operations"} and interrupted_before:
+            if name in {"image_operations", "subtitle_asset_operations", "storyboard_grid"} and interrupted_before:
                 # These local transformations run synchronously in a request
                 # and have no worker to resume them. The deferred scan must
                 # only recover work that predates readiness; otherwise a
@@ -224,6 +226,7 @@ async def lifespan(application: FastAPI):
     copyfast_document_operations.ensure_document_operations_runtime()
     copyfast_image_operations.ensure_image_operations_runtime()
     copyfast_subtitle_asset_operations.ensure_subtitle_asset_operations_runtime()
+    copyfast_storyboard_grid.ensure_storyboard_grid_runtime()
     _start_startup_reconciliation(application)
     try:
         yield
@@ -1371,6 +1374,10 @@ async def security_headers(request: Request, call_next):
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
     private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
     private_subtitle_asset_download = request.url.path.startswith("/api/v1/subtitle-asset-operations/") and request.url.path.endswith("/download")
+    # Storyboard Grid owns a distinct verified ZIP/cell delivery route rather
+    # than reusing Image Operations. Its attachments need the same
+    # no-referrer/sandbox/private-cache boundary, including per-cell JPEGs.
+    private_storyboard_grid_download = request.url.path.startswith("/api/v1/storyboard-grid/") and request.url.path.endswith("/download")
     # Support evidence uses the same private attachment boundary as Asset
     # Vault. It has both owner and staff routes under `/api/v1/support/`, so
     # keep the check route-family based rather than trying to infer a case ID
@@ -1400,7 +1407,8 @@ async def security_headers(request: Request, call_next):
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
     private_download = (
         private_asset_download or private_package_download or private_document_download
-        or private_image_download or private_subtitle_asset_download or private_support_evidence_download or private_prompt_export
+        or private_image_download or private_subtitle_asset_download or private_storyboard_grid_download
+        or private_support_evidence_download or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export
     )
     response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"
@@ -1649,6 +1657,7 @@ app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_subtitle_asset_operations.router)
+app.include_router(copyfast_storyboard_grid.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
 app.include_router(copyfast_prompt_studio.router)

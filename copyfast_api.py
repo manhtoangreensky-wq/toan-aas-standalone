@@ -490,6 +490,10 @@ def _flags() -> dict[str, bool]:
         # independently guarded; it never implies provider-backed AI editing.
         "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
         "image_brand_overlay_enabled": enabled("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", False),
+        # Storyboard Grid is a dedicated deterministic JPEG/ZIP operation
+        # from a private Asset Vault source. It does not unlock a Bot, bridge,
+        # provider, wallet/Xu, PayOS or generic image execution path.
+        "storyboard_grid_enabled": enabled("WEBAPP_STORYBOARD_GRID_ENABLED", False),
         # Notes, versions and reminders live in the signed Web session
         # database.  This flag is intentionally independent of Bot, wallet,
         # payment, provider and persistent-file capability flags.
@@ -1545,6 +1549,8 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "web_native_image_enhance_required"
     if feature == "image_brand_overlay":
         return "web_native_image_brand_overlay_required"
+    if feature == "image_storyboard_grid":
+        return "web_native_storyboard_grid_required"
     if feature in {"documents", "documents_pdf"}:
         return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
@@ -1599,6 +1605,7 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "web_native_image_resize_required": "Resize & Aspect Studio là tiện ích Web-native riêng tư. Hãy dùng /image/resize để tạo PNG đã được kiểm tra; không gọi Bot, provider hoặc AI upscale.",
         "web_native_image_enhance_required": "Image Enhance Studio là tiện ích Web-native riêng tư. Hãy dùng /image/edit để chỉnh màu/làm nét cơ bản trên Asset Vault; không gọi Bot, provider hoặc AI edit.",
         "web_native_image_brand_overlay_required": "Brand Overlay Studio là tiện ích Web-native riêng tư. Hãy dùng /image/brand-overlay để tạo PNG đã kiểm tra từ Asset Vault; không gọi Bot, provider hoặc AI edit.",
+        "web_native_storyboard_grid_required": "Storyboard Grid Splitter là tiện ích Web-native riêng tư. Hãy dùng /image/storyboard-grid để tách ảnh Asset Vault thành JPEG scene ZIP/manifest đã kiểm tra; không gọi Bot, provider, Xu hoặc PayOS.",
         "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF private phù hợp trong Document Studio.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",

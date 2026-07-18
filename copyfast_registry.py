@@ -98,6 +98,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("image_edit", "Image Enhance Studio", "image", "/image/edit", description="Chỉnh màu và làm nét cơ bản deterministic từ Asset Vault; không phải AI edit, Bot job hay provider call."),
     WebFeature("image_resize", "Resize & Aspect Studio", "image", "/image/resize", description="Tạo PNG private từ Asset Vault bằng crop, pad hoặc blur nền có kiểm tra; không phải AI upscale, Bot job hay provider call."),
     WebFeature("image_brand_overlay", "Brand Overlay Studio", "image", "/image/brand-overlay", description="Thêm chữ thương hiệu hoặc logo private vào bản sao PNG Web-native đã kiểm tra; không phải AI edit, Bot job hay provider call."),
+    WebFeature("image_storyboard_grid", "Storyboard Grid Splitter", "image", "/image/storyboard-grid", description="Tách một ảnh Asset Vault private thành JPEG scene ZIP/manifest deterministic theo lưới storyboard; không phải AI, Bot job, provider call, Xu hoặc PayOS."),
     WebFeature("image_upscale", "Nâng cấp ảnh", "image", "/image/upscale", input_hint="Tải ảnh cần upscale."),
     WebFeature("image_transform", "Image-to-image", "image", "/image/transform", input_hint="Ảnh nguồn và mô tả biến thể."),
     WebFeature("image_remove_background", "Xóa nền", "image", "/image/remove-background", input_hint="Tải ảnh cần xử lý."),

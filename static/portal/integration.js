@@ -109,6 +109,7 @@
   let imageOperationHistoryHydrationEpoch = 0;
   let imageEnhanceOperationHistoryHydrationEpoch = 0;
   let imageBrandOverlayOperationHistoryHydrationEpoch = 0;
+  let storyboardGridHydrationEpoch = 0;
   let imageHistoryOperationHydrationEpoch = 0;
   // Asset Vault is shared by private owner workflows, but it is never a
   // shared browser cache. Session and request fences keep a late vault or
@@ -1622,7 +1623,7 @@
     "/documents/split", "/documents/merge", "/documents/compress",
     "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", IMAGE_OCR_ROUTE
   ]);
-  const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit", "/image/brand-overlay"]);
+  const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"]);
   const documentAssetReferenceHydrationEpoch = { pdf: 0, image: 0 };
   let imageOperationAssetReferenceHydrationEpoch = 0;
 
@@ -8870,6 +8871,10 @@
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
     const imageBrandOverlayEnabled = Boolean(status.flags && status.flags.image_brand_overlay_enabled === true);
+    // Storyboard Grid is a Web-native utility that shares the server's
+    // hardened Image Operations runtime. Its flag does not imply Bot/Core
+    // Bridge, provider, jobs, wallet/Xu or payment readiness.
+    const storyboardGridEnabled = Boolean(status.flags && status.flags.storyboard_grid_enabled === true);
     // Memory Center is a signed-account Web-native capability. Its flag does
     // not imply Bot bridge, Telegram, wallet, payment or provider readiness.
     const memoryCenterEnabled = Boolean(status.flags && status.flags.memory_center_enabled === true);
@@ -9061,6 +9066,7 @@
       "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded",
       "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded",
       "/image/brand-overlay": account && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled ? "processing" : "guarded",
+      "/image/storyboard-grid": account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled ? "processing" : "guarded",
       // History only reads already verified output. It remains available when a
       // specific creation flag is paused, but still requires the same private
       // storage and operation-service gates.
@@ -9210,6 +9216,9 @@
       "image-brand-overlay-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-brand-overlay-run": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled),
       "image-brand-overlay-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "storyboard-grid-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled),
+      "storyboard-grid-run": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled),
+      "storyboard-grid-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled),
       // Notes and reminders are private browser-account data, protected by
       // server-side session/CSRF/ownership/revision checks. They must remain
       // usable without a Telegram link and never announce external delivery.
@@ -9712,6 +9721,7 @@
       imageResizeEnabled,
       imageEnhanceEnabled,
       imageBrandOverlayEnabled,
+      storyboardGridEnabled,
       memoryCenterEnabled,
       promptLibraryEnabled,
       promptStudioEnabled,
@@ -10150,6 +10160,8 @@
       documentAssetReferences: emptyDocumentAssetReferences(),
       documentAssetReferenceReadState: account && assetVaultEnabled && documentOperationsEnabled ? "loading" : "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
+      // Storyboard Grid uses the same narrow, hardened image source API as
+      // Image Operations. The server requires that shared runtime too.
       imageOperationAssetReferenceReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageEnhanceOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
@@ -10165,6 +10177,9 @@
       imageEnhanceOperations: [],
       imageBrandOverlayOperations: [],
       imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
+      storyboardGridOperations: [],
+      storyboardGridListing: storyboardGridListingProjection(0, {}, 0),
+      storyboardGridReadState: account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled ? "loading" : "guarded",
       imageHistoryOperations: [],
       imageHistoryListing: operationHistoryListingProjection("", 0, {}, 0),
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
@@ -10279,8 +10294,8 @@
       projectPackageListing: projectPackageListingProjection("", 0, {}, 0),
       pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" }
     });
-    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
-    else if (account && ["/asset-vault", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay"].includes(currentPath)) merge({
+    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultListing: assetVaultListingProjection({ q: "", state: "active" }, 0, {}, 0),
       assetVaultReadState: "guarded",
@@ -10320,6 +10335,15 @@
       imageBrandOverlayOperations: [],
       imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
       imageBrandOverlayOperationsReadState: "guarded",
+      imageOperationAssetReferences: emptyImageOperationAssetReferences(),
+      imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled && currentPath === "/image/storyboard-grid") await Promise.all([hydrateStoryboardGridOperations(), hydrateImageOperationAssetReferences()]);
+    else if (account && currentPath === "/image/storyboard-grid") merge({
+      storyboardGridOperations: [],
+      storyboardGridListing: storyboardGridListingProjection(0, {}, 0),
+      storyboardGridReadState: "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
       imageOperationAssetReferenceReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
@@ -14219,6 +14243,13 @@
     return "guarded";
   }
 
+  function storyboardGridPrivateReadPageState(assetState, operationState, referenceState) {
+    if (base().storyboardGridEnabled !== true || base().imageOperationsEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready" && referenceState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading" || referenceState === "loading") return "processing";
+    return "guarded";
+  }
+
   async function hydrateAssetVault(filterValue, offsetValue) {
     const requestEpoch = ++assetVaultListHydrationEpoch;
     const sessionEpoch = assetVaultSessionEpoch;
@@ -14250,7 +14281,8 @@
           "/asset-vault": "ready",
           "/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading")),
           "/image/edit": imageEnhancePrivateReadPageState("ready", String(base().imageEnhanceOperationsReadState || "loading")),
-          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("ready", String(base().imageBrandOverlayOperationsReadState || "loading"))
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("ready", String(base().imageBrandOverlayOperationsReadState || "loading")),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState("ready", String(base().storyboardGridReadState || "loading"), String(base().imageOperationAssetReferenceReadState || "loading"))
         }
       });
       return items;
@@ -14267,7 +14299,8 @@
           "/asset-vault": "guarded",
           "/image/resize": imageResizePrivateReadPageState("failed", String(base().imageOperationsReadState || "loading")),
           "/image/edit": imageEnhancePrivateReadPageState("failed", String(base().imageEnhanceOperationsReadState || "loading")),
-          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("failed", String(base().imageBrandOverlayOperationsReadState || "loading"))
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("failed", String(base().imageBrandOverlayOperationsReadState || "loading")),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState("failed", String(base().storyboardGridReadState || "loading"), String(base().imageOperationAssetReferenceReadState || "loading"))
         }
       });
       return [];
@@ -14352,12 +14385,38 @@
       if (!imageOperationAssetReferenceRequestIsCurrent(epoch, sessionEpoch, expectedPath)) return null;
       const references = operationAssetReferenceStateWithPage(existing, "image_operation", "image", filter, offset, data, selections);
       if (!imageOperationAssetReferenceRequestIsCurrent(epoch, sessionEpoch, expectedPath)) return null;
-      merge({ imageOperationAssetReferences: references, imageOperationAssetReferenceReadState: "ready" });
+      merge({
+        imageOperationAssetReferences: references,
+        imageOperationAssetReferenceReadState: "ready",
+        pageStates: expectedPath === "/image/storyboard-grid"
+          ? {
+            ...(base().pageStates || {}),
+            "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+              String(base().assetVaultReadState || "loading"),
+              String(base().storyboardGridReadState || "loading"),
+              "ready"
+            )
+          }
+          : (base().pageStates || {})
+      });
       return references;
     } catch (_) {
       if (!imageOperationAssetReferenceRequestIsCurrent(epoch, sessionEpoch, expectedPath)) return null;
       const references = operationAssetReferenceStateWithPage(existing, "image_operation", "image", filter, offset, {}, selections);
-      merge({ imageOperationAssetReferences: references, imageOperationAssetReferenceReadState: "failed" });
+      merge({
+        imageOperationAssetReferences: references,
+        imageOperationAssetReferenceReadState: "failed",
+        pageStates: expectedPath === "/image/storyboard-grid"
+          ? {
+            ...(base().pageStates || {}),
+            "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+              String(base().assetVaultReadState || "loading"),
+              String(base().storyboardGridReadState || "loading"),
+              "failed"
+            )
+          }
+          : (base().pageStates || {})
+      });
       return null;
     }
   }
@@ -14432,6 +14491,49 @@
     });
     if (normalizedKind) query.set("kind", normalizedKind);
     return "/image-operations?" + query.toString();
+  }
+
+  function storyboardGridListingProjection(offset, source, returned) {
+    const data = source && typeof source === "object" ? source : {};
+    const pagination = data.pagination && typeof data.pagination === "object" ? data.pagination : data;
+    const currentOffset = operationHistoryListOffset(offset);
+    const rawNextOffset = Number(pagination.next_offset);
+    const nextOffset = pagination.has_more === true && Number.isInteger(rawNextOffset)
+      && rawNextOffset > currentOffset && rawNextOffset <= OPERATION_HISTORY_MAX_LIST_OFFSET
+      ? rawNextOffset
+      : null;
+    return {
+      filters: { kind: "storyboard_grid" },
+      pagination: {
+        limit: OPERATION_HISTORY_LIST_LIMIT,
+        offset: currentOffset,
+        returned: Math.max(0, Math.min(OPERATION_HISTORY_LIST_LIMIT, Number.isInteger(Number(returned)) ? Number(returned) : 0)),
+        has_more: nextOffset !== null,
+        next_offset: nextOffset,
+        previous_offset: currentOffset >= OPERATION_HISTORY_LIST_LIMIT ? currentOffset - OPERATION_HISTORY_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function storyboardGridListOffset(listingValue, offsetValue) {
+    const listing = listingValue && typeof listingValue === "object" ? listingValue : {};
+    const pagination = listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    return operationHistoryListOffset(offsetValue === undefined ? pagination.offset : offsetValue);
+  }
+
+  function storyboardGridListPath(offset) {
+    const query = new URLSearchParams({
+      limit: String(OPERATION_HISTORY_LIST_LIMIT),
+      offset: String(operationHistoryListOffset(offset))
+    });
+    return "/storyboard-grid?" + query.toString();
+  }
+
+  function storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === storyboardGridHydrationEpoch
+      && sessionEpoch === operationHistorySessionEpoch
+      && currentPortalPath() === expectedPath
+      && expectedPath === "/image/storyboard-grid";
   }
 
   function operationHistoryRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch) {
@@ -14614,6 +14716,54 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/image/brand-overlay": imageBrandOverlayPrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateStoryboardGridOperations(offsetValue) {
+    const expectedPath = "/image/storyboard-grid";
+    const offset = storyboardGridListOffset(base().storyboardGridListing, offsetValue);
+    const requestEpoch = ++storyboardGridHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    try {
+      const result = await api(storyboardGridListPath(offset));
+      if (!storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => item && validImageOperationId(item.id)).slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      if (!storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        storyboardGridOperations: items,
+        storyboardGridListing: storyboardGridListingProjection(offset, data, items.length),
+        storyboardGridReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+            String(base().assetVaultReadState || "loading"),
+            "ready",
+            String(base().imageOperationAssetReferenceReadState || "loading")
+          )
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      // The dedicated list must never fall back to Image Operations, a Bot
+      // artifact or browser-made cells after a private read fails.
+      merge({
+        storyboardGridOperations: [],
+        storyboardGridListing: storyboardGridListingProjection(offset, {}, 0),
+        storyboardGridReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+            String(base().assetVaultReadState || "loading"),
+            "failed",
+            String(base().imageOperationAssetReferenceReadState || "loading")
+          )
         }
       });
       return [];
@@ -21822,7 +21972,11 @@
         return;
       }
       if (["image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page"].includes(action)) {
-        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) throw new Error("Cần signed Web session để chọn ảnh riêng tư.");
+        const canUseImageReference = Boolean(base().capabilities && (
+          base().capabilities["image-operation-view"] === true
+          || (route === "/image/storyboard-grid" && base().capabilities["storyboard-grid-view"] === true)
+        ));
+        if (!canUseImageReference) throw new Error("Cần signed Web session để chọn ảnh riêng tư.");
         if (!IMAGE_OPERATION_ASSET_REFERENCE_ROUTES.has(route)) throw new Error("Trang Image Operations không hỗ trợ reference này.");
         const selections = operationAssetReferenceSelectedIds(fields.__imageOperationAssetReferenceSelections);
         const clear = action === "image-operation-asset-reference-filter-clear";
@@ -22205,6 +22359,73 @@
         }
         return;
       }
+      if (action === "storyboard-grid-create") {
+        // This request contains only one owner-scoped Asset Vault UUID and
+        // bounded integer settings.  The browser never crop-renders cells,
+        // sends file bytes/URLs/paths or selects a Bot/provider execution.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const parseInteger = (value, label, minimum, maximum) => {
+          const text = String(value || "").trim();
+          if (!/^\d{1,3}$/.test(text)) throw new Error(`${label} phải là số nguyên từ ${minimum} đến ${maximum}.`);
+          const parsed = Number(text);
+          if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
+            throw new Error(`${label} phải là số nguyên từ ${minimum} đến ${maximum}.`);
+          }
+          return parsed;
+        };
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn ảnh storyboard private hợp lệ từ Asset Vault.");
+        const episode = parseInteger(fields.episode, "Tập", 1, 999);
+        const rows = parseInteger(fields.rows, "Số hàng", 1, 6);
+        const cols = parseInteger(fields.cols, "Số cột", 1, 8);
+        const startScene = parseInteger(fields.start_scene, "Cảnh bắt đầu", 1, 999);
+        const trimPercent = parseInteger(fields.trim_percent, "Cắt mép", 0, 18);
+        // The UI is expressed in familiar whole percentages (0–18), while
+        // the server contract intentionally stores a canonical decimal
+        // fraction (0.00–0.18) to keep grid maths deterministic.
+        const trimFraction = Number((trimPercent / 100).toFixed(2));
+        const scope = `storyboard-grid:${sourceAssetId}:${episode}:${rows}:${cols}:${startScene}:${trimPercent}`;
+        const submission = acquireSubmission(scope, scope);
+        if (!submission) {
+          toast("Storyboard Grid Splitter đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/storyboard-grid", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              episode,
+              rows,
+              cols,
+              start_scene: startScene,
+              trim_percent: trimFraction,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const payload = result.data && typeof result.data === "object" ? result.data : {};
+          const operation = payload.operation && typeof payload.operation === "object" ? payload.operation : payload;
+          if (!operation || !validImageOperationId(operation.id)) {
+            throw new Error("Máy chủ chưa trả metadata Storyboard Grid hợp lệ.");
+          }
+          await Promise.all([hydrateStoryboardGridOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã chia và xác minh các cell storyboard private.");
+        } catch (error) {
+          // A rejected or malformed source stays a server-recorded outcome.
+          // No browser canvas or fake cell can replace it after a request.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateStoryboardGridOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "image-operation-enhance") {
         const sourceAssetId = String(fields.source_asset_id || "").trim();
         const preset = String(fields.preset || "photo_clear_detail").trim();
@@ -22376,6 +22597,25 @@
         }
         const refreshed = await hydrateImageBrandOverlayOperations(operationHistoryListOffset(fields.__imageBrandOverlayOperationOffset));
         if (!refreshed) throw new Error("Không thể tải trang lịch sử Brand Overlay Studio.");
+        return;
+      }
+      if (action === "storyboard-grid-refresh") {
+        if (!(base().capabilities && base().capabilities["storyboard-grid-refresh"] === true)) {
+          throw new Error("Bạn không có quyền làm mới Storyboard Grid Splitter.");
+        }
+        await Promise.all([hydrateStoryboardGridOperations(), hydrateAssetVault(), hydrateImageOperationAssetReferences()]);
+        if (String(base().storyboardGridReadState || "guarded") !== "ready") {
+          throw new Error("Không thể làm mới Storyboard Grid Splitter.");
+        }
+        toast("Đã làm mới Storyboard Grid Splitter.");
+        return;
+      }
+      if (action === "storyboard-grid-page") {
+        if (!(base().capabilities && base().capabilities["storyboard-grid-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử Storyboard Grid Splitter.");
+        }
+        const refreshed = await hydrateStoryboardGridOperations(operationHistoryListOffset(fields.__storyboardGridOffset));
+        if (!refreshed) throw new Error("Không thể tải trang lịch sử Storyboard Grid Splitter.");
         return;
       }
       if (action === "image-history-refresh") {

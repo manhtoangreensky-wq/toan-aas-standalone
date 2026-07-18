@@ -200,6 +200,18 @@ def image_brand_overlay_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def storyboard_grid_enabled() -> bool:
+    """Whether private Web-native storyboard-grid splitting is enabled.
+
+    This is intentionally narrower than the shared Image Operations boundary.
+    It permits only a deterministic, owner-scoped Asset Vault image to be
+    split into verified JPEG scene files and a private ZIP/manifest.  It never
+    enables a Bot job, provider request, wallet/Xu mutation, PayOS action or
+    browser-side rendering fallback.
+    """
+    return os.environ.get("WEBAPP_STORYBOARD_GRID_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def memory_center_enabled() -> bool:
     """Whether the Web-owned Memory Center is available to signed accounts.
 
@@ -3531,6 +3543,83 @@ def ensure_copyfast_schema() -> None:
         }
         if "sequence" not in subtitle_asset_event_columns:
             conn.execute("ALTER TABLE web_subtitle_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+
+        # Storyboard Grid keeps its bounded scene cuts in a purpose-specific
+        # table instead of overloading Web image transforms.  A completed
+        # operation delivers one verified private JPEG-scene ZIP/manifest;
+        # its per-cell evidence remains append-only and never becomes a Bot
+        # job, provider artifact, Asset Vault source, wallet/Xu or PayOS row.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_storyboard_grid_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                project_id TEXT,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_width INTEGER NOT NULL,
+                source_height INTEGER NOT NULL,
+                rows INTEGER NOT NULL,
+                cols INTEGER NOT NULL,
+                episode INTEGER NOT NULL,
+                start_scene INTEGER NOT NULL,
+                trim_percent REAL NOT NULL,
+                scene_count INTEGER NOT NULL,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_storyboard_grid_cells (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                scene_no INTEGER NOT NULL,
+                row_index INTEGER NOT NULL,
+                column_index INTEGER NOT NULL,
+                crop_x INTEGER NOT NULL,
+                crop_y INTEGER NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                original_filename TEXT NOT NULL,
+                byte_size INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                UNIQUE(operation_id, scene_no),
+                UNIQUE(operation_id, row_index, column_index),
+                FOREIGN KEY(operation_id) REFERENCES web_storyboard_grid_operations(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_storyboard_grid_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_storyboard_grid_operations(id)
+            )
+            """
+        )
         # Workboard is a private, Web-native planning surface.  These tables
         # never store remote URLs, Bot/provider handles, execution output,
         # wallet/payment data or notification-delivery state.  A reference is
@@ -4368,6 +4457,21 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operation_events_operation_sequence ON web_subtitle_asset_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_operations_account_updated ON web_storyboard_grid_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_operations_source_account ON web_storyboard_grid_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_cells_operation_scene ON web_storyboard_grid_cells(operation_id, scene_no ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_cells_operation_grid ON web_storyboard_grid_cells(operation_id, row_index ASC, column_index ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_events_operation_sequence ON web_storyboard_grid_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
