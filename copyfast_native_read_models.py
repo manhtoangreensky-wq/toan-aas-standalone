@@ -14,7 +14,8 @@ import binascii
 import re
 from typing import Any
 
-from copyfast_db import read_transaction
+from copyfast_db import read_transaction, subtitle_asset_operations_enabled
+from copyfast_subtitle_asset_operations import verified_subtitle_asset_output_available
 
 
 MAX_LIST_LIMIT = 100
@@ -22,7 +23,7 @@ MAX_PUBLIC_ID_LENGTH = 160
 
 _JOB_PREFIX = "wnj:v1"
 _ASSET_PREFIX = "wna:v1"
-_JOB_SOURCES = frozenset({"project-package", "document-operation", "image-operation"})
+_JOB_SOURCES = frozenset({"project-package", "document-operation", "image-operation", "subtitle-asset-operation"})
 _PUBLIC_ROUTE_ID_PATTERN = re.compile(rf"^[A-Za-z0-9._:-]{{1,{MAX_PUBLIC_ID_LENGTH}}}$")
 # The longest public job prefix is ``wnj:v1:document-operation:`` (26
 # characters).  One hundred ASCII identifier bytes encode to 134 unpadded
@@ -33,6 +34,7 @@ _MEDIA_TYPE_PATTERN = re.compile(r"^[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+$
 _PACKAGE_STORAGE_KEY_PATTERN = re.compile(r"^packages/[0-9a-f]{32}\.zip$")
 _DOCUMENT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:pdf|docx|png|txt|zip)$")
 _IMAGE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.png$")
+_SUBTITLE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:srt|vtt)$")
 
 # These are exact copies of the direct document-handler output contracts.  Do
 # not normalize a MIME parameter here: ``text/plain`` is *not* the same sealed
@@ -55,6 +57,10 @@ _PACKAGE_OUTPUT_SPEC = (".zip", "application/zip", "project-package.zip")
 _IMAGE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     "image_resize": (".png", "image/png", "toan-aas-image-resized.png"),
     "image_enhance": (".png", "image/png", "toan-aas-image-enhanced.png"),
+}
+_SUBTITLE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
+    "srt": (".srt", "application/x-subrip", "toan-aas-subtitle.srt"),
+    "vtt": (".vtt", "text/vtt", "toan-aas-subtitle.vtt"),
 }
 
 
@@ -423,6 +429,86 @@ def _project_image_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     }
 
 
+def _project_subtitle_asset_operation(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Project only bounded metadata for the strict SRT/VTT asset helper.
+
+    A successful validation has no output by design. A conversion becomes an
+    output only while its own feature gate is enabled; this keeps generic
+    Jobs/Assets from advertising a private download whose typed handler is
+    intentionally guarded after an operator disables the executor.
+    """
+
+    (
+        record_id,
+        operation_kind,
+        state,
+        source_format,
+        target_format,
+        cue_count,
+        timed_duration_ms,
+        storage_key,
+        _filename,
+        content_type,
+        byte_size,
+        sha256,
+        semantic_sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    kind = str(operation_kind or "")
+    target = str(target_format or "")
+    output_spec = _SUBTITLE_OUTPUT_SPECS.get(target)
+    output = None
+    if (
+        subtitle_asset_operations_enabled()
+        and kind == "subtitle_convert"
+        and output_spec is not None
+        and _SHA256_PATTERN.fullmatch(str(semantic_sha256 or "").lower())
+        and verified_subtitle_asset_output_available(
+            target_format=target,
+            storage_key=storage_key,
+            content_type=content_type,
+            byte_size=byte_size,
+            digest=sha256,
+            semantic=semantic_sha256,
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_SUBTITLE_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=output_spec[0],
+            expected_content_type=output_spec[1],
+            filename=output_spec[2],
+        )
+    return {
+        "id": encode_native_job_id("subtitle-asset-operation", record_id),
+        "kind": "subtitle-asset-operation",
+        "operation_kind": kind,
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        "summary": {
+            "source_format": source_format if str(source_format or "") in _SUBTITLE_OUTPUT_SPECS else None,
+            "target_format": target if target in _SUBTITLE_OUTPUT_SPECS else None,
+            "cue_count": _positive_int(cue_count),
+            "timed_duration_ms": _non_negative_int(timed_duration_ms),
+        },
+        "output": output,
+    }
+
+
 def _project_asset(row: tuple[Any, ...]) -> dict[str, Any]:
     (
         record_id,
@@ -487,6 +573,17 @@ _IMAGE_QUERY = """
      LIMIT ?
 """
 
+_SUBTITLE_ASSET_OPERATION_QUERY = """
+    SELECT id, kind, state, source_format, target_format, cue_count,
+           timed_duration_ms, storage_key, original_filename, content_type,
+           byte_size, sha256, semantic_sha256, created_at, queued_at,
+           started_at, completed_at, updated_at
+      FROM web_subtitle_asset_operations
+     WHERE account_id=?
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
 _ASSET_QUERY = """
     SELECT id, display_name, original_filename, extension, content_type,
            byte_size, state, created_at, updated_at, archived_at
@@ -499,6 +596,9 @@ _ASSET_QUERY = """
 _PACKAGE_COMPLETED_QUERY = _PACKAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
 _DOCUMENT_COMPLETED_QUERY = _DOCUMENT_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
 _IMAGE_COMPLETED_QUERY = _IMAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
+_SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY = _SUBTITLE_ASSET_OPERATION_QUERY.replace(
+    "WHERE account_id=?", "WHERE account_id=? AND state='completed'"
+)
 
 
 def _projected_jobs_for_account(
@@ -511,7 +611,7 @@ def _projected_jobs_for_account(
     """Read each supported source through static SQL, then merge safely."""
 
     sortable: list[tuple[str, str, str, dict[str, Any]]] = []
-    for source, query, projector in (
+    sources: list[tuple[str, str, Any]] = [
         (
             "project-package",
             _PACKAGE_COMPLETED_QUERY if completed_outputs_only else _PACKAGE_QUERY,
@@ -527,7 +627,19 @@ def _projected_jobs_for_account(
             _IMAGE_COMPLETED_QUERY if completed_outputs_only else _IMAGE_QUERY,
             _project_image_operation,
         ),
-    ):
+    ]
+    # The read model never creates schema. When this optional executor is
+    # disabled, skip its table completely so a pre-feature database remains a
+    # safe read-only source for the already-enabled generic Jobs/Assets page.
+    if subtitle_asset_operations_enabled():
+        sources.append(
+            (
+                "subtitle-asset-operation",
+                _SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY if completed_outputs_only else _SUBTITLE_ASSET_OPERATION_QUERY,
+                _project_subtitle_asset_operation,
+            )
+        )
+    for source, query, projector in sources:
         for row in conn.execute(query, (account_id, limit)).fetchall():
             values = tuple(row)
             try:
@@ -596,10 +708,13 @@ def resolve_native_job(conn: Any, account_id: str, public_id: str) -> dict[str, 
     if not owner_id or parsed is None:
         return None
     source, internal_id = parsed
+    if source == "subtitle-asset-operation" and not subtitle_asset_operations_enabled():
+        return None
     queries: dict[str, tuple[str, Any]] = {
         "project-package": (_PACKAGE_QUERY, _project_package),
         "document-operation": (_DOCUMENT_QUERY, _project_document_operation),
         "image-operation": (_IMAGE_QUERY, _project_image_operation),
+        "subtitle-asset-operation": (_SUBTITLE_ASSET_OPERATION_QUERY, _project_subtitle_asset_operation),
     }
     query_and_projector = queries.get(source)
     if query_and_projector is None:

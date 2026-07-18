@@ -2804,6 +2804,9 @@ async def _native_asset_delivery(asset_id: str, account: dict):
         if source == "image-operation":
             from copyfast_image_operations import download_image_operation
             return await download_image_operation(internal_id, account)
+        if source == "subtitle-asset-operation":
+            from copyfast_subtitle_asset_operations import download_subtitle_asset_operation
+            return await download_subtitle_asset_operation(internal_id, account)
         return envelope(False, "Tài sản Web-native chưa được hỗ trợ.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
 
     native_asset_id = parse_native_asset_id(asset_id)

@@ -16,6 +16,7 @@ NOW = "2026-07-17T10:00:00+00:00"
 VALID_PACKAGE_KEY = "packages/" + ("a" * 32) + ".zip"
 VALID_DOCUMENT_KEY = "outputs/" + ("b" * 32) + ".pdf"
 VALID_IMAGE_KEY = "outputs/" + ("c" * 32) + ".png"
+VALID_SUBTITLE_KEY = "outputs/" + ("e" * 32) + ".vtt"
 VALID_SHA256 = "d" * 64
 SECRET = "provider-token-ultra-secret"
 
@@ -632,3 +633,74 @@ def test_native_read_models_reject_unknown_public_job_ids_without_lookup(monkeyp
     assert len(models.encode_native_job_id("document-operation", "a" * 100)) == 160
     with pytest.raises(ValueError):
         models.encode_native_job_id("document-operation", "a" * 101)
+
+
+def test_subtitle_asset_projection_keeps_validate_outputless_and_hides_private_fields(monkeypatch) -> None:
+    connection = _database()
+    _install_read_transaction(monkeypatch, connection)
+    connection.executescript(
+        """
+        CREATE TABLE web_subtitle_asset_operations (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            state TEXT NOT NULL,
+            source_format TEXT NOT NULL,
+            target_format TEXT,
+            cue_count INTEGER,
+            timed_duration_ms INTEGER,
+            storage_key TEXT,
+            original_filename TEXT,
+            content_type TEXT,
+            byte_size INTEGER,
+            sha256 TEXT,
+            semantic_sha256 TEXT,
+            created_at TEXT NOT NULL,
+            queued_at TEXT NOT NULL,
+            started_at TEXT,
+            completed_at TEXT,
+            updated_at TEXT NOT NULL,
+            source_asset_id TEXT,
+            request_fingerprint TEXT,
+            failure_code TEXT
+        );
+        """
+    )
+    connection.executemany(
+        """INSERT INTO web_subtitle_asset_operations
+           (id, account_id, kind, state, source_format, target_format, cue_count,
+            timed_duration_ms, storage_key, original_filename, content_type,
+            byte_size, sha256, semantic_sha256, created_at, queued_at, started_at,
+            completed_at, updated_at, source_asset_id, request_fingerprint, failure_code)
+           VALUES (?, ?, ?, 'completed', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        [
+            (
+                "subtitle-convert-owner", OWNER, "subtitle_convert", "srt", "vtt", 2,
+                3000, VALID_SUBTITLE_KEY, r"D:\private\output.vtt", "text/vtt", 80,
+                VALID_SHA256, VALID_SHA256, NOW, NOW, NOW, NOW,
+                "2026-07-18T00:00:00+00:00", "asset-owner", SECRET, SECRET,
+            ),
+            (
+                "subtitle-validate-owner", OWNER, "subtitle_validate", "vtt", None, 1,
+                1000, None, None, None, None, None, VALID_SHA256, NOW, NOW, NOW, NOW,
+                "2026-07-18T00:01:00+00:00", "asset-owner", SECRET, SECRET,
+            ),
+        ],
+    )
+    monkeypatch.setattr(models, "subtitle_asset_operations_enabled", lambda: True)
+    monkeypatch.setattr(models, "verified_subtitle_asset_output_available", lambda **_kwargs: True)
+
+    jobs = models.list_native_jobs(OWNER)
+    convert_id = models.encode_native_job_id("subtitle-asset-operation", "subtitle-convert-owner")
+    validate_id = models.encode_native_job_id("subtitle-asset-operation", "subtitle-validate-owner")
+    projected = {job["id"]: job for job in jobs}
+
+    assert projected[convert_id]["output"] == {
+        "filename": "toan-aas-subtitle.vtt",
+        "content_type": "text/vtt",
+        "byte_size": 80,
+    }
+    assert projected[validate_id]["output"] is None
+    serialized = json.dumps(projected, sort_keys=True)
+    for forbidden in (SECRET, "asset-owner", "storage_key", "semantic_sha256", "D:\\private"):
+        assert forbidden not in serialized
