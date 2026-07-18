@@ -19,15 +19,18 @@ import math
 import os
 from pathlib import Path
 import re
+import stat
 import threading
+import tempfile
 import time
 import uuid
-from typing import Any
+from typing import Any, BinaryIO, Callable, Iterator
+from urllib.parse import quote
 import warnings
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from starlette.concurrency import run_in_threadpool
 
@@ -111,6 +114,13 @@ _PDF_TO_WORD_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_WORD_MAX_CONCURR
 # per Web process and cannot be bypassed by concurrent accounts.
 PDF_TO_IMAGES_MAX_CONCURRENT = 1
 _PDF_TO_IMAGES_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_IMAGES_MAX_CONCURRENT)
+# A completed private artifact is copied into an anonymous temporary stream
+# before delivery.  Bound those streams so slow or disconnected clients cannot
+# consume arbitrary temporary storage even when every requested file is valid.
+DOCUMENT_OPERATION_DOWNLOAD_MAX_CONCURRENT = 2
+_DOCUMENT_OPERATION_DOWNLOAD_CAPACITY = threading.BoundedSemaphore(
+    value=DOCUMENT_OPERATION_DOWNLOAD_MAX_CONCURRENT
+)
 # OCR opens the same bounded image raster as Image → PDF / Image Operations.
 # Reuse the process-wide decoder gate rather than creating a second OCR-only
 # semaphore that could allow two 16 MP inputs to decode at once.
@@ -201,6 +211,31 @@ class DocumentOperationError(Exception):
         super().__init__(message)
         self.public_message = message
         self.code = code
+
+
+class _SealedOperationDeliveryError(RuntimeError):
+    """A retryable local temporary-stream failure, not output corruption."""
+
+
+class _SealedOperationStreamingResponse(StreamingResponse):
+    """Streaming response that releases a sealed artifact on every exit path.
+
+    Modern Starlette raises ``ClientDisconnect`` when an ASGI ``send`` fails
+    before it runs a response background task. The outer ``finally`` therefore
+    owns the close/release callback; the callback itself is intentionally
+    idempotent because the synchronous body iterator also finalizes on a
+    normal end-of-stream.
+    """
+
+    def __init__(self, content: Iterator[bytes], *, on_close: Callable[[], None], **kwargs: Any) -> None:
+        self._sealed_operation_on_close = on_close
+        super().__init__(content, **kwargs)
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self._sealed_operation_on_close()
 
 
 class PdfSplitRequest(BaseModel):
@@ -502,6 +537,27 @@ def _reserve_pdf_ocr_capacity() -> None:
 def _release_pdf_ocr_capacity() -> None:
     _IMAGE_OCR_CAPACITY.release()
     _PDF_TO_IMAGES_CAPACITY.release()
+
+
+def _reserve_document_operation_download_capacity() -> None:
+    """Bound sealed private downloads before an anonymous temp copy is made."""
+
+    if not _DOCUMENT_OPERATION_DOWNLOAD_CAPACITY.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="Đang có nhiều lượt tải file private; vui lòng thử lại sau ít phút",
+        )
+
+
+def _release_document_operation_download_capacity() -> None:
+    """Release one reserved sealed-download slot without masking a response."""
+
+    try:
+        _DOCUMENT_OPERATION_DOWNLOAD_CAPACITY.release()
+    except ValueError:
+        # A response finalizer is intentionally idempotent; a second close
+        # must never surface as an application error or over-release the gate.
+        pass
 
 
 def _reserve_pdf_to_word_capacity() -> None:
@@ -822,6 +878,274 @@ def _verify_file(path: Path, *, expected_bytes: int, expected_digest: str) -> bo
         return hmac.compare_digest(digest.hexdigest(), expected_digest)
     except OSError:
         return False
+
+
+def _same_operation_file(left: os.stat_result, right: os.stat_result) -> bool:
+    """Compare filesystem identity instead of relying on a mutable pathname."""
+
+    return left.st_dev == right.st_dev and left.st_ino == right.st_ino
+
+
+def _operation_directory_fd_supported() -> bool:
+    """Whether the current runtime can pin `root/outputs` by descriptor."""
+
+    supported = getattr(os, "supports_dir_fd", set())
+    return bool(
+        getattr(os, "O_DIRECTORY", 0)
+        and getattr(os, "O_NOFOLLOW", 0)
+        and os.open in supported
+        and os.stat in supported
+    )
+
+
+def _open_private_operation_outputs_directory(path: Path) -> tuple[int, int] | None:
+    """Pin the operation root and `outputs/` before opening one artifact.
+
+    Railway runs the descriptor-hardened POSIX branch. The lstat fallback is
+    retained only for environments without `dir_fd` support, never as a second
+    attempt after a hardened open fails.
+    """
+
+    if not _operation_directory_fd_supported():
+        return None
+    root_descriptor = -1
+    outputs_descriptor = -1
+    try:
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+        root_descriptor = os.open(path.parent.parent, directory_flags)
+        outputs_descriptor = os.open("outputs", directory_flags, dir_fd=root_descriptor)
+        return root_descriptor, outputs_descriptor
+    except OSError:
+        if outputs_descriptor >= 0:
+            os.close(outputs_descriptor)
+        if root_descriptor >= 0:
+            os.close(root_descriptor)
+        return None
+
+
+def _close_private_operation_outputs_directory(descriptors: tuple[int, int] | None) -> None:
+    if descriptors is None:
+        return
+    for descriptor in reversed(descriptors):
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+
+
+def _open_verified_operation_output(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Open, hash and pin an artifact without a check/open race.
+
+    A `FileResponse(path=...)` would reopen a verified pathname later. This
+    keeps the opened descriptor as authority, rejects symlink/directory/inode
+    swaps and verifies both size and digest before any attachment can be sent.
+    """
+
+    if expected_bytes <= 0 or expected_bytes > _maximum_output_bytes() or not expected_digest:
+        return None
+    descriptor = -1
+    stream: BinaryIO | None = None
+    try:
+        directories = _open_private_operation_outputs_directory(path) if _operation_directory_fd_supported() else None
+        if _operation_directory_fd_supported() and directories is None:
+            return None
+        if directories is not None:
+            _root_descriptor, outputs_descriptor = directories
+            try:
+                before = os.stat(path.name, dir_fd=outputs_descriptor, follow_symlinks=False)
+                flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+                descriptor = os.open(path.name, flags, dir_fd=outputs_descriptor)
+            finally:
+                _close_private_operation_outputs_directory(directories)
+        else:
+            parent_stat = os.lstat(path.parent)
+            before = os.lstat(path)
+            if (
+                stat.S_ISLNK(parent_stat.st_mode)
+                or not stat.S_ISDIR(parent_stat.st_mode)
+                or stat.S_ISLNK(before.st_mode)
+            ):
+                return None
+            flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(path, flags)
+        if not stat.S_ISREG(before.st_mode):
+            return None
+        pinned = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(pinned.st_mode)
+            or pinned.st_size != expected_bytes
+            or not _same_operation_file(before, pinned)
+        ):
+            return None
+        stream = os.fdopen(descriptor, "rb", closefd=True)
+        descriptor = -1
+        digest = hashlib.sha256()
+        read_bytes = 0
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            digest.update(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        stream.seek(0)
+        accepted = stream
+        stream = None
+        return accepted
+    except (OSError, ValueError):
+        return None
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                pass
+        if descriptor >= 0:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+
+
+def _seal_verified_operation_output(
+    stream: BinaryIO,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Make an anonymous rehashed copy before a private artifact is streamed."""
+
+    sealed: BinaryIO | None = None
+    try:
+        if expected_bytes <= 0 or expected_bytes > _maximum_output_bytes() or not expected_digest:
+            return None
+        sealed = tempfile.TemporaryFile(mode="w+b")
+        digest = hashlib.sha256()
+        read_bytes = 0
+        stream.seek(0)
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            if read_bytes > expected_bytes:
+                return None
+            digest.update(chunk)
+            sealed.write(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        sealed.seek(0)
+        accepted = sealed
+        sealed = None
+        return accepted
+    except (OSError, ValueError) as exc:
+        # The output descriptor was already verified before this separate
+        # anonymous copy began. A temporary filesystem/descriptor failure must
+        # not permanently demote a valid completed artifact to unavailable.
+        raise _SealedOperationDeliveryError("Không thể chuẩn bị luồng tải private") from exc
+    finally:
+        try:
+            stream.close()
+        except (OSError, ValueError):
+            pass
+        if sealed is not None:
+            try:
+                sealed.close()
+            except OSError:
+                pass
+
+
+def _sealed_operation_download_finalizer(stream: BinaryIO, *, release_capacity: bool) -> Callable[[], None]:
+    """Close one sealed stream and release its gate exactly once."""
+
+    lock = threading.Lock()
+    finalized = False
+
+    def finalize() -> None:
+        nonlocal finalized
+        with lock:
+            if finalized:
+                return
+            finalized = True
+        try:
+            stream.close()
+        except (OSError, ValueError):
+            # Cleanup must not hide a client disconnect or delivery error.
+            pass
+        finally:
+            if release_capacity:
+                _release_document_operation_download_capacity()
+
+    return finalize
+
+
+def _operation_output_chunks(stream: BinaryIO, *, finalize: Callable[[], None]) -> Iterator[bytes]:
+    try:
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        finalize()
+
+
+def _operation_attachment_response(
+    stream: BinaryIO,
+    *,
+    byte_size: int,
+    media_type: str,
+    filename: str,
+    on_close: Callable[[], None] | None = None,
+) -> StreamingResponse:
+    """Deliver a sealed private Document Operation artifact as an attachment."""
+
+    finalize = on_close or stream.close
+    if byte_size <= 0:
+        finalize()
+        raise ValueError("Kích thước Document Operation output không hợp lệ")
+    safe_name = str(filename or "download").replace("\r", " ").replace("\n", " ").strip() or "download"
+    return _SealedOperationStreamingResponse(
+        _operation_output_chunks(stream, finalize=finalize),
+        on_close=finalize,
+        media_type=media_type,
+        headers={
+            "Content-Length": str(byte_size),
+            "Content-Disposition": f"attachment; filename*=utf-8''{quote(safe_name)}",
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+        },
+    )
+
+
+def _prepare_sealed_operation_output(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Pin, verify and seal one output away from the async request loop."""
+
+    pinned_stream = _open_verified_operation_output(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if pinned_stream is None:
+        return None
+    return _seal_verified_operation_output(
+        pinned_stream,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
 
 
 def _copy_verified_source(source: Path, destination: Path, *, expected_bytes: int, expected_digest: str) -> None:
@@ -4945,21 +5269,46 @@ async def download_document_operation(operation_id: str, account: dict = Depends
     except RuntimeError:
         _mark_output_unavailable(operation_id, account_id)
         return _operation_unavailable()
-    if not _verify_file(private_path, expected_bytes=int(row[12] or 0), expected_digest=str(row[20] or "")):
+    output_bytes = int(row[12] or 0)
+    output_digest = str(row[20] or "")
+    try:
+        # Reserve before the descriptor hash/copy so the same two-slot limit
+        # bounds both temporary storage and expensive private file I/O.
+        _reserve_document_operation_download_capacity()
+    except HTTPException:
+        raise
+    try:
+        sealed_stream = await run_in_threadpool(
+            _prepare_sealed_operation_output,
+            private_path,
+            expected_bytes=output_bytes,
+            expected_digest=output_digest,
+        )
+    except _SealedOperationDeliveryError as exc:
+        _release_document_operation_download_capacity()
+        raise HTTPException(
+            status_code=503,
+            detail="Không thể chuẩn bị file private để tải ngay lúc này; vui lòng thử lại sau",
+        ) from exc
+    except Exception:
+        _release_document_operation_download_capacity()
+        raise
+    if sealed_stream is None:
+        _release_document_operation_download_capacity()
         _mark_output_unavailable(operation_id, account_id)
         return _operation_unavailable()
-    return FileResponse(
-        path=private_path,
-        media_type=media_type,
-        filename=download_filename,
-        content_disposition_type="attachment",
-        headers={
-            "Cache-Control": "no-store, private",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
-            "Content-Security-Policy": "sandbox",
-        },
-    )
+    finalizer = _sealed_operation_download_finalizer(sealed_stream, release_capacity=True)
+    try:
+        return _operation_attachment_response(
+            sealed_stream,
+            byte_size=output_bytes,
+            media_type=media_type,
+            filename=download_filename,
+            on_close=finalizer,
+        )
+    except Exception:
+        finalizer()
+        raise
 
 
 @router.get("/{operation_id}")

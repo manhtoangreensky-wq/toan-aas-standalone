@@ -63,9 +63,9 @@ is accepted. The server copies and verifies the source into isolated staging
 before it parses or renders it.
 
 - Strict `pypdf` parsing rejects malformed and encrypted PDFs.
-- The source has 1–10 pages. PDFium preflights each page at a fixed 2× scale.
-- Each rendered page is limited to 8 MP and 8,192 pixels on either axis; the
-  entire operation is capped at 48 MP.
+- The source has 1–5 pages. PDFium preflights each page at a fixed 2× scale.
+- Each rendered page is limited to 4 MP and 8,192 pixels on either axis; the
+  entire operation is capped at 20 MP.
 - OCR text is bounded at 500,000 recognized characters before DOCX creation;
   DOCX export then applies the stricter 250,000-character and 10,000-paragraph
   ceiling. DOCX archive/output verification also obeys the configured private
@@ -73,11 +73,11 @@ before it parses or renders it.
 - The route atomically reserves the shared PDF-raster, local-image-OCR and
   DOCX-writer capacity gates. A busy gate returns 429 before a new lifecycle
   row or output is created.
-- Tesseract receives at most 30 seconds per page and only the remaining part
-  of a 120-second whole-operation budget. Timeout is terminal `failed`, not a
+- Tesseract receives at most 15 seconds per page and only the remaining part
+  of a 75-second whole-operation budget. Timeout is terminal `failed`, not a
   temporary readiness condition or an endless replay.
 
-The 120-second deadline is a **soft in-process boundary** around Python and
+The 75-second deadline is a **soft in-process boundary** around Python and
 Tesseract. Python cannot safely hard-kill an in-process native PDFium/Pillow
 call. Production may enable this flag only inside a worker/container with an
 outer wall-time, CPU and memory limit. The Web App never compensates with

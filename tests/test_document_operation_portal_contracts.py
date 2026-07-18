@@ -14,6 +14,7 @@ OPTIMIZE_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OPTIMIZE_CONTRACT.md").r
 IMAGE_TO_PDF_CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_TO_PDF_CONTRACT.md").read_text(encoding="utf-8")
 PDF_TO_WORD_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_WORD_CONTRACT.md").read_text(encoding="utf-8")
 PDF_TO_IMAGES_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_IMAGES_CONTRACT.md").read_text(encoding="utf-8")
+PDF_OCR_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OCR_CONTRACT.md").read_text(encoding="utf-8")
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
@@ -472,7 +473,7 @@ def test_pdf_ocr_is_a_separate_private_pdf_surface_with_no_browser_text_preview(
     surface = PORTAL[
         PORTAL.index("function renderPdfOcr(page, context)"):PORTAL.index("function renderImageToPdf(page, context)")
     ]
-    for phrase in ("Asset Vault", "20 MB", "10 trang", "2×", "Không có TXT giả", "Bot", "PayOS", "Không upload bytes"):
+    for phrase in ("Asset Vault", "20 MB", "5 trang", "2×", "Không có TXT giả", "Bot", "PayOS", "Không upload bytes"):
         assert phrase in surface
     assert "fetch(" not in surface
     assert "api(" not in surface
@@ -511,10 +512,10 @@ def test_pdf_ocr_contract_records_bounded_local_delivery_without_fake_output_or_
     for phrase in (
         "WEBAPP_DOCUMENT_OCR_PDF_ENABLED",
         "20 MiB",
-        "1–10",
+        "1–5",
         "2×",
-        "8 MP",
-        "48 MP",
+        "4 MP",
+        "20 MP",
         "pypdfium2",
         "pytesseract",
         "OCR_TEXT_NOT_FOUND",
@@ -528,7 +529,7 @@ def test_pdf_ocr_contract_records_bounded_local_delivery_without_fake_output_or_
     api_source = (ROOT / "copyfast_api.py").read_text(encoding="utf-8")
     assert '"/api/v1/document-operations/ocr-pdf"' in app_source
     assert "PDF_OCR_KIND" in operation_source
-    assert "PDF_OCR_MAX_PAGES = 10" in operation_source
+    assert "MAX_PDF_OCR_PAGES = 5" in operation_source
     assert "_reserve_pdf_ocr_capacity" in operation_source
     assert "_seal_verified_operation_output" in operation_source
     assert "bridge_request(" not in operation_source
