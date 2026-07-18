@@ -388,3 +388,24 @@ Only environment variable names are recorded. Values are never read and secret-s
 | Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
 | Telegram | 594 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
+
+## Web-native Video Poster environment names
+
+These are Web-local configuration names, not Bot/provider credentials. They
+remain unset/false unless an operator deliberately enables the reviewed local
+runtime:
+
+- `WEBAPP_VIDEO_OPERATIONS_ENABLED` (default `false`)
+- `WEBAPP_VIDEO_POSTER_ENABLED` (default `false`)
+- `WEBAPP_VIDEO_OPERATIONS_ROOT`
+- `WEBAPP_VIDEO_OPERATIONS_MAX_OUTPUT_MB` (default `4`)
+- `WEBAPP_VIDEO_OPERATIONS_QUOTA_MB` (default `50`)
+- `WEBAPP_VIDEO_OPERATIONS_TOPOLOGY` (must be `sqlite_single_replica` when the poster runtime is enabled)
+- one of `RAILWAY_REPLICA_COUNT`, `RAILWAY_REPLICAS` or `WEBAPP_REPLICA_COUNT` (must attest exactly `1` for every enabled runtime)
+- `WEBAPP_VIDEO_FFMPEG_BIN`
+- `WEBAPP_VIDEO_FFPROBE_BIN`
+
+They do not contain an API key and must not be used as a provider, Bot,
+PayOS, wallet, webhook or production-deployment toggle. Enabling the feature
+also requires the existing private Asset Vault gate and a separately supplied
+FFmpeg/ffprobe runtime.

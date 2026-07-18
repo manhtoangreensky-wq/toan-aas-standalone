@@ -498,6 +498,14 @@ def _flags() -> dict[str, bool]:
         # independently guarded; it never implies provider-backed AI editing.
         "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
         "image_brand_overlay_enabled": enabled("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", False),
+        # Video Poster is an isolated, FFmpeg-backed private artifact path.
+        # It does not imply Video Studio rendering, Bot execution, provider
+        # access, wallet/Xu, PayOS or a general media-processing capability.
+        "video_operations_enabled": enabled("WEBAPP_VIDEO_OPERATIONS_ENABLED", False),
+        "video_poster_enabled": (
+            enabled("WEBAPP_VIDEO_OPERATIONS_ENABLED", False)
+            and enabled("WEBAPP_VIDEO_POSTER_ENABLED", False)
+        ),
         # Storyboard Grid is a dedicated deterministic JPEG/ZIP operation
         # from a private Asset Vault source. It does not unlock a Bot, bridge,
         # provider, wallet/Xu, PayOS or generic image execution path.
@@ -2849,6 +2857,9 @@ async def _native_asset_delivery(asset_id: str, account: dict):
         if source == "subtitle-asset-operation":
             from copyfast_subtitle_asset_operations import download_subtitle_asset_operation
             return await download_subtitle_asset_operation(internal_id, account)
+        if source == "video-operation":
+            from copyfast_video_operations import download_video_operation
+            return await download_video_operation(internal_id, account)
         return envelope(False, "Tài sản Web-native chưa được hỗ trợ.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
 
     native_asset_id = parse_native_asset_id(asset_id)

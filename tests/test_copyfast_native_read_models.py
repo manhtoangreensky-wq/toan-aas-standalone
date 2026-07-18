@@ -17,6 +17,7 @@ VALID_PACKAGE_KEY = "packages/" + ("a" * 32) + ".zip"
 VALID_DOCUMENT_KEY = "outputs/" + ("b" * 32) + ".pdf"
 VALID_IMAGE_KEY = "outputs/" + ("c" * 32) + ".png"
 VALID_SUBTITLE_KEY = "outputs/" + ("e" * 32) + ".vtt"
+VALID_VIDEO_KEY = "outputs/" + ("e" * 32) + ".jpg"
 VALID_SHA256 = "d" * 64
 SECRET = "provider-token-ultra-secret"
 
@@ -112,6 +113,38 @@ def _database() -> sqlite3.Connection:
             request_fingerprint TEXT,
             settings_json TEXT,
             failure_code TEXT
+        );
+        CREATE TABLE web_video_operations (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            source_asset_id TEXT NOT NULL,
+            kind TEXT NOT NULL,
+            state TEXT NOT NULL,
+            idempotency_key TEXT,
+            request_fingerprint TEXT,
+            source_sha256 TEXT,
+            source_byte_size INTEGER,
+            source_extension TEXT,
+            source_content_type TEXT,
+            poster_position TEXT NOT NULL,
+            source_duration_ms INTEGER,
+            source_width INTEGER,
+            source_height INTEGER,
+            frame_timestamp_ms INTEGER,
+            output_width INTEGER,
+            output_height INTEGER,
+            storage_key TEXT,
+            original_filename TEXT,
+            content_type TEXT,
+            byte_size INTEGER,
+            sha256 TEXT,
+            failure_code TEXT,
+            created_at TEXT NOT NULL,
+            queued_at TEXT NOT NULL,
+            started_at TEXT,
+            completed_at TEXT,
+            updated_at TEXT NOT NULL,
+            revision INTEGER NOT NULL DEFAULT 0
         );
         """
     )
@@ -360,6 +393,40 @@ def _database() -> sqlite3.Connection:
             ),
         ],
     )
+    connection.executemany(
+        """INSERT INTO web_video_operations
+           (id, account_id, source_asset_id, kind, state, idempotency_key,
+            request_fingerprint, source_sha256, source_byte_size,
+            source_extension, source_content_type, poster_position,
+            source_duration_ms, source_width, source_height,
+            frame_timestamp_ms, output_width, output_height, storage_key,
+            original_filename, content_type, byte_size, sha256, failure_code,
+            created_at, queued_at, started_at, completed_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        [
+            (
+                "video-complete", OWNER, "asset-owner", "video_poster", "completed",
+                SECRET, SECRET, VALID_SHA256, 1_024, ".mp4", "video/mp4", "middle",
+                9_000, 1_920, 1_080, 4_500, 1_280, 720, VALID_VIDEO_KEY,
+                "owner-poster.jpg", "image/jpeg", 384, VALID_SHA256, SECRET,
+                NOW, NOW, NOW, NOW, "2026-07-17T10:08:00+00:00",
+            ),
+            (
+                "video-queued", OWNER, "asset-owner", "video_poster", "queued",
+                SECRET, SECRET, VALID_SHA256, 1_024, ".mp4", "video/mp4", "start",
+                None, None, None, None, None, None, None,
+                None, None, None, None, SECRET,
+                NOW, NOW, None, None, "2026-07-17T10:09:00+00:00",
+            ),
+            (
+                "video-other", OTHER_OWNER, "asset-other", "video_poster", "completed",
+                SECRET, SECRET, VALID_SHA256, 1_024, ".mp4", "video/mp4", "end",
+                9_000, 1_920, 1_080, 8_500, 1_280, 720, VALID_VIDEO_KEY,
+                "other-poster.jpg", "image/jpeg", 384, VALID_SHA256, SECRET,
+                NOW, NOW, NOW, NOW, "2026-07-17T10:10:00+00:00",
+            ),
+        ],
+    )
     return connection
 
 
@@ -426,6 +493,8 @@ def test_native_read_models_keep_jobs_and_assets_owner_scoped(monkeypatch) -> No
         "document-incomplete",
         "image-complete",
         "image-queued",
+        "video-complete",
+        "video-queued",
     }
     assert {models.parse_native_asset_id(asset["id"]) for asset in assets} == {"asset-owner"}
     assert models.get_native_job(OWNER, models.encode_native_job_id("project-package", "package-other")) is None
@@ -489,6 +558,8 @@ def test_native_read_models_preserve_state_and_require_sealed_output_metadata(mo
     incomplete = models.get_native_job(OWNER, models.encode_native_job_id("document-operation", "document-incomplete"))
     completed = models.get_native_job(OWNER, models.encode_native_job_id("image-operation", "image-complete"))
     queued = models.get_native_job(OWNER, models.encode_native_job_id("image-operation", "image-queued"))
+    video_completed = models.get_native_job(OWNER, models.encode_native_job_id("video-operation", "video-complete"))
+    video_queued = models.get_native_job(OWNER, models.encode_native_job_id("video-operation", "video-queued"))
 
     assert incomplete is not None
     assert incomplete["state"] == incomplete["status"] == "completed"
@@ -503,6 +574,14 @@ def test_native_read_models_preserve_state_and_require_sealed_output_metadata(mo
     assert queued is not None
     assert queued["state"] == queued["status"] == "queued"
     assert queued["output"] is None
+    assert video_completed is not None
+    assert video_completed["output"] == {
+        "filename": "toan-aas-video-poster.jpg",
+        "content_type": "image/jpeg",
+        "byte_size": 384,
+    }
+    assert video_queued is not None
+    assert video_queued["output"] is None
 
 
 def test_native_read_models_match_direct_document_mime_and_page_count_contracts(monkeypatch) -> None:

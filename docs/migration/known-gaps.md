@@ -10,3 +10,23 @@
 | feature_surface | medium | 0 | Static feature-token presence differs between bot and Web App; inspect feature-specific routes before enabling a surface. |
 
 These are static findings. Resolve each through contracts and tests before marking a Web App flow complete.
+
+## Additive Web-native guard: Video Poster Lab
+
+Video Poster Lab is intentionally outside the static Telegram mapping counts: it
+is a Web-owned utility, not a replacement for a Telegram command. Its code and
+schema may exist while the operation stays disabled by default. It must remain
+guarded until all of the following are true in the target environment:
+
+- Asset Vault and both Video Poster execution flags are explicitly enabled;
+- the isolated private Video Operations root and trusted `ffmpeg`/`ffprobe`
+  runtime are available; and
+- the deployment explicitly attests `WEBAPP_VIDEO_OPERATIONS_TOPOLOGY=sqlite_single_replica`
+  and an available replica-count variable equals exactly `1`; and
+- the operator accepts the current bounded request-time model. It has no
+  durable queue, retry worker, cross-replica lease or long-form/video-series
+  renderer.
+
+This does not change the Bot authority for Telegram identity, Bot jobs,
+provider state, Xu/wallet or PayOS. See
+[`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).

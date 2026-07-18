@@ -10,3 +10,23 @@
 | feature_surface | medium | 0 | Static feature-token presence differs between bot and Web App; inspect feature-specific routes before enabling a surface. |
 
 A guarded feature remains visible with safe Vietnamese copy and must not call a provider or claim an output.
+
+## Additive Web-native guard: Video Poster Lab
+
+Video Poster Lab is a Web-owned, bounded private JPEG extraction utility, not
+a Telegram command mapping. Its route, schema and read-model integration do
+not make it live: it remains disabled until Asset Vault, the Video Operations
+and Video Poster flags, an isolated private root, and trusted `ffmpeg` and
+`ffprobe` are deliberately available together.
+
+The request-time SQLite executor additionally requires an explicit
+`WEBAPP_VIDEO_OPERATIONS_TOPOLOGY=sqlite_single_replica` acknowledgement. A
+runtime with the feature enabled must attest a replica count of exactly `1`; a
+missing, malformed or multi-replica deployment remains blocked.
+
+The present executor is request-time only. It has no durable queue, retry
+daemon, cross-replica coordination, long-form/video-series renderer or
+provider/Bot fallback. On a missing runtime or interrupted attempt it must
+fail closed instead of claiming an output. It does not change Bot authority
+for Telegram identity, Bot jobs, provider state, Xu/wallet or PayOS. See
+[`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).

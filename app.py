@@ -61,6 +61,7 @@ import copyfast_support
 import copyfast_subtitle_asset_operations
 import copyfast_subtitle_workspace
 import copyfast_trend_research
+import copyfast_video_operations
 import copyfast_video_studio
 import copyfast_voice_studio
 import copyfast_workboard
@@ -83,6 +84,7 @@ from copyfast_db import (
     ensure_image_operations_persistence,
     ensure_project_package_persistence,
     ensure_subtitle_asset_operations_persistence,
+    ensure_video_operations_persistence,
     is_production_like_environment,
     utc_now,
 )
@@ -98,6 +100,7 @@ STARTUP_RECONCILIATION_STEPS = (
     ("document_operations", copyfast_document_operations.reconcile_document_operation_storage),
     ("image_operations", copyfast_image_operations.reconcile_image_operation_storage),
     ("subtitle_asset_operations", copyfast_subtitle_asset_operations.reconcile_subtitle_asset_operation_storage),
+    ("video_operations", copyfast_video_operations.reconcile_video_operation_storage),
     ("storyboard_grid", copyfast_storyboard_grid.reconcile_storyboard_grid_storage),
 )
 
@@ -138,7 +141,7 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            if name in {"image_operations", "subtitle_asset_operations", "storyboard_grid"} and interrupted_before:
+            if name in {"image_operations", "subtitle_asset_operations", "video_operations", "storyboard_grid"} and interrupted_before:
                 # These local transformations run synchronously in a request
                 # and have no worker to resume them. The deferred scan must
                 # only recover work that predates readiness; otherwise a
@@ -234,6 +237,8 @@ async def lifespan(application: FastAPI):
     copyfast_document_operations.ensure_document_operations_runtime()
     copyfast_image_operations.ensure_image_operations_runtime()
     copyfast_subtitle_asset_operations.ensure_subtitle_asset_operations_runtime()
+    ensure_video_operations_persistence()
+    copyfast_video_operations.ensure_video_operations_runtime()
     copyfast_storyboard_grid.ensure_storyboard_grid_runtime()
     _start_startup_reconciliation(application)
     try:
@@ -298,6 +303,11 @@ DOCUMENT_OPERATION_BODY_MAX_BYTES = 16 * 1024
 # receipt.  Enforce a narrow raw-body cap before any private source lookup or
 # SQLite work; the route never accepts subtitle text, uploads, URLs or paths.
 SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES = 16 * 1024
+# Video Poster receives only compact JSON containing an Asset Vault UUID,
+# one fixed position and an idempotency receipt. Count the raw stream before
+# FastAPI parses a potentially chunked body; the source video is never posted
+# to this executor.
+VIDEO_OPERATION_BODY_MAX_BYTES = 16 * 1024
 # Trend Research is a compact, text-only request with a 180-character topic.
 # Retain a small raw-stream cap before Pydantic parses a chunked payload.
 TREND_RESEARCH_BODY_MAX_BYTES = 16 * 1024
@@ -384,6 +394,7 @@ class PromptLibraryBodyLimitMiddleware:
         document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
         document_operation_max_bytes: int = DOCUMENT_OPERATION_BODY_MAX_BYTES,
         subtitle_asset_operation_max_bytes: int = SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES,
+        video_operation_max_bytes: int = VIDEO_OPERATION_BODY_MAX_BYTES,
         trend_research_max_bytes: int = TREND_RESEARCH_BODY_MAX_BYTES,
         growth_review_max_bytes: int = GROWTH_REVIEW_BODY_MAX_BYTES,
         media_factory_max_bytes: int = MEDIA_FACTORY_BODY_MAX_BYTES,
@@ -416,6 +427,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.document_workspace_max_bytes = int(document_workspace_max_bytes)
         self.document_operation_max_bytes = int(document_operation_max_bytes)
         self.subtitle_asset_operation_max_bytes = int(subtitle_asset_operation_max_bytes)
+        self.video_operation_max_bytes = int(video_operation_max_bytes)
         self.trend_research_max_bytes = int(trend_research_max_bytes)
         self.growth_review_max_bytes = int(growth_review_max_bytes)
         self.media_factory_max_bytes = int(media_factory_max_bytes)
@@ -462,6 +474,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/document-workspace/")
                 or path.startswith("/api/v1/document-operations/")
                 or path.startswith("/api/v1/subtitle-asset-operations/")
+                or path.startswith("/api/v1/video-operations/")
                 or path.startswith("/api/v1/trend-research/")
                 or path.startswith("/api/v1/growth-review/")
                 or path.startswith("/api/v1/media-factory/")
@@ -516,6 +529,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.document_operation_max_bytes
         if path.startswith("/api/v1/subtitle-asset-operations/"):
             return self.subtitle_asset_operation_max_bytes
+        if path.startswith("/api/v1/video-operations/"):
+            return self.video_operation_max_bytes
         if path.startswith("/api/v1/trend-research/"):
             return self.trend_research_max_bytes
         if path.startswith("/api/v1/growth-review/"):
@@ -578,6 +593,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_image_studio = path.startswith("/api/v1/image-studio/")
         is_document_operation = path.startswith("/api/v1/document-operations/")
         is_subtitle_asset_operation = path.startswith("/api/v1/subtitle-asset-operations/")
+        is_video_operation = path.startswith("/api/v1/video-operations/")
         is_trend_research = path.startswith("/api/v1/trend-research/")
         is_growth_review = path.startswith("/api/v1/growth-review/")
         is_media_factory = path.startswith("/api/v1/media-factory/")
@@ -674,6 +690,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_operation
                     else "Dữ liệu Subtitle Asset Operations vượt giới hạn kích thước an toàn."
                     if is_subtitle_asset_operation
+                    else "Dữ liệu Video Poster vượt giới hạn kích thước an toàn."
+                    if is_video_operation
                     else "Dữ liệu Trend Research vượt giới hạn kích thước an toàn."
                     if is_trend_research
                     else "Dữ liệu Growth Review vượt giới hạn kích thước an toàn."
@@ -735,6 +753,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_operation
                     else "WEB_SUBTITLE_ASSET_OPERATION_BODY_TOO_LARGE"
                     if is_subtitle_asset_operation
+                    else "WEB_VIDEO_OPERATION_BODY_TOO_LARGE"
+                    if is_video_operation
                     else "WEB_TREND_RESEARCH_BODY_TOO_LARGE"
                     if is_trend_research
                     else "WEB_GROWTH_REVIEW_BODY_TOO_LARGE"
@@ -787,10 +807,11 @@ class PromptLibraryBodyLimitMiddleware:
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-        elif is_admin_document_archive_upload:
+        elif is_admin_document_archive_upload or is_video_operation:
             # An oversized private archive upload must receive the same
-            # cross-origin boundary as a normal archive response even though
-            # this early raw-body guard bypasses the post-route middleware.
+            # cross-origin boundary as a normal archive response. Video Poster
+            # requests likewise identify private Asset Vault work, and this
+            # raw-body guard bypasses the normal post-route middleware.
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         await response(scope, receive, send)
 
@@ -876,6 +897,7 @@ app.add_middleware(
     document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
     document_operation_max_bytes=DOCUMENT_OPERATION_BODY_MAX_BYTES,
     subtitle_asset_operation_max_bytes=SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES,
+    video_operation_max_bytes=VIDEO_OPERATION_BODY_MAX_BYTES,
     trend_research_max_bytes=TREND_RESEARCH_BODY_MAX_BYTES,
     growth_review_max_bytes=GROWTH_REVIEW_BODY_MAX_BYTES,
     media_factory_max_bytes=MEDIA_FACTORY_BODY_MAX_BYTES,
@@ -1059,6 +1081,37 @@ async def security_headers(request: Request, call_next):
         )
         and not subtitle_asset_operation_download
     )
+    # Video Poster uses a fixed local FFmpeg invocation after it has verified
+    # a private Asset Vault source. Keep its creation, status views and private
+    # delivery in distinct family buckets before CSRF/ownership/process work.
+    video_operation_run = (
+        request.method == "POST"
+        and request.url.path == "/api/v1/video-operations/poster"
+    )
+    video_operation_download = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/video-operations/")
+        and request.url.path.endswith("/download")
+    )
+    video_operation_read = (
+        request.method == "GET"
+        and (
+            request.url.path == "/api/v1/video-operations"
+            or request.url.path == "/api/v1/video-operations/"
+            or request.url.path.startswith("/api/v1/video-operations/")
+        )
+        and not video_operation_download
+    )
+    # ``/api/v1/assets/<opaque-native-id>/download`` is the generic
+    # owner-scoped delivery adapter for sealed Web-native output.  It can
+    # dispatch to Video Poster (and other private output families), so it
+    # must never lose the attachment boundary merely because the caller used
+    # the generic Jobs/Assets route instead of a feature-specific URL.
+    native_asset_download = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/assets/")
+        and request.url.path.endswith("/download")
+    )
     # Memory writes are tiny text/state mutations, but remain intentionally
     # rate limited before SQLite work.  GET views stay unthrottled here while
     # signed-session/ownership checks remain mandatory in the router.
@@ -1226,6 +1279,17 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if subtitle_asset_operation_read:
         rate_limit = 120
+    if video_operation_run:
+        # FFmpeg work is additionally serialized and source/output validated;
+        # this pre-DB limit blocks repeat browser execution attempts before an
+        # operation can be created or an existing idempotency receipt loaded.
+        rate_limit = 10
+    if video_operation_download:
+        rate_limit = 20
+    if native_asset_download:
+        rate_limit = 20
+    if video_operation_read:
+        rate_limit = 120
     if memory_write:
         rate_limit = 40
     if prompt_library_write:
@@ -1373,12 +1437,17 @@ async def security_headers(request: Request, call_next):
             else "notification-tick" if notification_tick
             else "inbox-write" if inbox_write
             else "inbox-read" if inbox_read
+            else "video-operation-run" if video_operation_run
+            else "video-operation-download" if video_operation_download
+            else "native-asset-download" if native_asset_download
+            else "video-operation-read" if video_operation_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
         window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < RATE_WINDOW_SECONDS]
         if len(window) >= rate_limit:
             is_document_workspace_request = document_workspace_write or document_workspace_read
+            is_video_operation_request = video_operation_run or video_operation_read or video_operation_download
             is_trend_research_request = trend_research_write
             is_growth_review_request = growth_review_write
             is_media_factory_request = media_factory_write
@@ -1447,6 +1516,8 @@ async def security_headers(request: Request, call_next):
                 or data_controls_export
                 or subtitle_asset_operation_download
                 or admin_document_archive_download
+                or video_operation_download
+                or native_asset_download
             ):
                 # This early return bypasses the normal post-route header
                 # decoration below. Keep every throttled private attachment
@@ -1454,7 +1525,7 @@ async def security_headers(request: Request, call_next):
                 response.headers["Referrer-Policy"] = "no-referrer"
                 response.headers["Content-Security-Policy"] = "sandbox"
                 response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-            elif is_governance_request or is_admin_document_archive_request:
+            elif is_governance_request or is_admin_document_archive_request or is_video_operation_request:
                 response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
             elif is_mailbox_confirmation:
                 response.headers["Referrer-Policy"] = "no-referrer"
@@ -1485,10 +1556,17 @@ async def security_headers(request: Request, call_next):
     # than the portal shell.  Do not overwrite it after the endpoint chose
     # no-referrer / sandbox delivery headers.
     private_asset_download = request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/download")
+    private_native_asset_download = request.url.path.startswith("/api/v1/assets/") and request.url.path.endswith("/download")
     private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
     private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
     private_subtitle_asset_download = request.url.path.startswith("/api/v1/subtitle-asset-operations/") and request.url.path.endswith("/download")
+    private_video_operation = (
+        request.url.path == "/api/v1/video-operations"
+        or request.url.path == "/api/v1/video-operations/"
+        or request.url.path.startswith("/api/v1/video-operations/")
+    )
+    private_video_download = private_video_operation and request.url.path.endswith("/download")
     # Storyboard Grid owns a distinct verified ZIP/cell delivery route rather
     # than reusing Image Operations. Its attachments need the same
     # no-referrer/sandbox/private-cache boundary, including per-cell JPEGs.
@@ -1531,10 +1609,10 @@ async def security_headers(request: Request, call_next):
     # no-store rule below keeps them out of browser/PWA caches.
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
     private_download = (
-        private_asset_download or private_package_download or private_document_download
-        or private_image_download or private_subtitle_asset_download or private_storyboard_grid_download
-        or private_support_evidence_download or private_prompt_export or private_manual_analytics_csv_export
-        or private_data_controls_export or private_admin_document_archive_download
+        private_asset_download or private_native_asset_download or private_package_download or private_document_download
+        or private_image_download or private_subtitle_asset_download or private_video_download or private_storyboard_grid_download
+        or private_support_evidence_download or private_prompt_export
+        or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
     )
     response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"
     response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
@@ -1545,7 +1623,7 @@ async def security_headers(request: Request, call_next):
         if mailbox_confirmation
         else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     )
-    if private_download or private_governance or private_admin_document_archive or mailbox_confirmation:
+    if private_download or private_video_operation or private_governance or private_admin_document_archive or mailbox_confirmation:
         # Cover successful attachments and every normal post-route rejection
         # (CSRF, validation, feature flag, owner, revision or size). The
         # early rate-limit branch sets the same header before its return.
@@ -1794,6 +1872,7 @@ app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_subtitle_asset_operations.router)
+app.include_router(copyfast_video_operations.router)
 app.include_router(copyfast_storyboard_grid.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)

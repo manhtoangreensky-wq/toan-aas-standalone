@@ -102,6 +102,7 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
         "ensure_project_package_persistence",
         "ensure_document_operations_persistence",
         "ensure_image_operations_persistence",
+        "ensure_video_operations_persistence",
     ):
         monkeypatch.setattr(application_module, name, lambda name=name: critical_checks.append(name))
     monkeypatch.setattr(
@@ -114,11 +115,17 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
         "ensure_image_operations_runtime",
         lambda: critical_checks.append("image_runtime"),
     )
+    monkeypatch.setattr(
+        application_module.copyfast_video_operations,
+        "ensure_video_operations_runtime",
+        lambda: critical_checks.append("video_runtime"),
+    )
 
     started = threading.Event()
     release = threading.Event()
     reconciled: list[str] = []
     image_reconciliation_fences: list[str | None] = []
+    video_reconciliation_fences: list[str | None] = []
 
     def slow_asset_reconcile() -> None:
         started.set()
@@ -136,6 +143,10 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
         reconciled.append("image_operations")
         image_reconciliation_fences.append(interrupted_before)
 
+    def video_reconcile(*, interrupted_before: str | None = None) -> None:
+        reconciled.append("video_operations")
+        video_reconciliation_fences.append(interrupted_before)
+
     monkeypatch.setattr(
         application_module,
         "STARTUP_RECONCILIATION_STEPS",
@@ -144,6 +155,7 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
             ("project_packages", package_reconcile),
             ("document_operations", failed_document_reconcile),
             ("image_operations", image_reconcile),
+            ("video_operations", video_reconcile),
         ),
     )
 
@@ -163,8 +175,10 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
                 "ensure_project_package_persistence",
                 "ensure_document_operations_persistence",
                 "ensure_image_operations_persistence",
+                "ensure_video_operations_persistence",
                 "document_runtime",
                 "image_runtime",
+                "video_runtime",
             ]
             assert application.state.copyfast_startup_reconciliation["status"] in {"scheduled", "running"}
             assert application.state.copyfast_startup_reconciliation["interrupted_before"]
@@ -176,6 +190,8 @@ def test_lifespan_makes_critical_readiness_available_before_private_reconciliati
             assert application.state.copyfast_startup_reconciliation["failed_steps"] == ["document_operations"]
 
     asyncio.run(exercise_lifespan())
-    assert reconciled == ["asset_vault", "project_packages", "document_operations", "image_operations"]
+    assert reconciled == ["asset_vault", "project_packages", "document_operations", "image_operations", "video_operations"]
     assert len(image_reconciliation_fences) == 1
     assert image_reconciliation_fences[0]
+    assert len(video_reconciliation_fences) == 1
+    assert video_reconciliation_fences[0]
