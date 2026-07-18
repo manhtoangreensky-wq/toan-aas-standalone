@@ -92,7 +92,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("script", "Kịch bản", "content", "/content/script"),
     WebFeature("storyboard", "Storyboard", "content", "/content/storyboard"),
     WebFeature("content_pack", "Content Pack", "content", "/content/pack"),
-    WebFeature("growth_ai", "Growth AI", "content", "/growth/ai", description="Phân tích hiệu suất và khuyến nghị vẫn chạy trong Bot canonical cho đến khi có adapter report riêng."),
+    WebFeature("growth_ai", "Growth Review", "content", "/growth/ai", description="Chấm điểm và gợi ý rule-based từ số liệu bạn tự nhập, chuyển đúng helper deterministic của Bot nhưng không gọi AI/Bot, không đọc analytics live hoặc doanh thu canonical."),
     WebFeature("campaign_report", "Báo cáo campaign", "content", "/campaign/report", description="Báo cáo campaign/text/CSV tiếp tục được Bot canonical tạo và gửi trong Telegram."),
     WebFeature("image_create", "Tạo ảnh", "image", "/image/create", input_hint="Prompt ảnh và tỉ lệ khung hình."),
     WebFeature("image_edit", "Image Enhance Studio", "image", "/image/edit", description="Chỉnh màu và làm nét cơ bản deterministic từ Asset Vault; không phải AI edit, Bot job hay provider call."),

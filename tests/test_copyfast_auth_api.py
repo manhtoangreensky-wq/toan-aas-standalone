@@ -1886,7 +1886,7 @@ def test_catalog_and_portal_routes_are_available(tmp_path, monkeypatch):
             "/status": "Trạng thái dịch vụ",
             "/tools": "Công cụ &amp; models",
             "/studio": "Media Studio",
-            "/growth/ai": "Growth AI",
+            "/growth/ai": "Growth Review",
             "/campaign/report": "Báo cáo campaign",
         }.items():
             hub = client.get(hub_path)

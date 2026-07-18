@@ -195,6 +195,11 @@ ENGINE_SPECS.update(_many(("image_storyboard_grid",), mode=ENGINE_MODE_WEB_NATIV
 # artifact while new Resize/Enhance submissions are paused.  It is not a Bot
 # delivery history, provider feed, asset-library substitute or payment record.
 ENGINE_SPECS.update(_many(("image_history",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled"), handler="image_operation_history", asset_vault=True))
+# Growth Review is the pure scoring/recommendation helper from the Bot,
+# translated into a manual Web-native receipt. It is not the Bot's live
+# Growth AI conversation and does not imply platform analytics, a model,
+# canonical revenue, wallet/Xu, PayOS, jobs, publishing or delivery.
+ENGINE_SPECS.update(_many(("growth_ai",), mode=ENGINE_MODE_WEB_NATIVE, flags=("growth_review_enabled",), handler="growth_review"))
 
 # Bot companion applies only to canonical/read-only product domains.  The
 # public descriptor remains guarded even if an account happens to be linked:
@@ -202,7 +207,7 @@ ENGINE_SPECS.update(_many(("image_history",), mode=ENGINE_MODE_WEB_NATIVE, flags
 ENGINE_SPECS.update(_many(
     (
         "wallet", "wallet_topup", "packages", "membership", "jobs", "assets",
-        "referrals", "rewards", "community", "guides", "growth_ai",
+        "referrals", "rewards", "community", "guides",
         "campaign_report", "video_progress", "video_preview",
         "video_export", "voice_vault", "voice_preview", "voice_outputs",
         "music_library", "sfx_library", "music_upload", "service_status",

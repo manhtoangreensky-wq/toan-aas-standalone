@@ -11,6 +11,7 @@
    /api/v1/content-handoffs and /api/v1/partner-crm
    (including the stateless Content Prompt Pack draft endpoint),
     /api/v1/trend-research (manual research receipts only),
+    /api/v1/growth-review (manual, account-private Growth Review input and receipt),
     /api/v1/media-factory (transient Media Factory blueprints only),
    /api/v1/voice-studio, /api/v1/video-studio (including the prompt planner), /api/v1/image-studio, /api/v1/subtitle-studio,
     /api/v1/document-workspace, /api/v1/chat-workspace, /api/v1/analytics-workspace, /api/v1/workboard,
@@ -96,6 +97,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/content/contextual-prompt",
   "/" + "api/v1/trend-research",
   "/trend-research",
+  // Growth Review accepts account-private manual performance input and returns
+  // a transient receipt. Keep both its page and API explicit no-cache paths;
+  // the shell allow-list is intentionally not the security boundary here.
+  "/" + "api/v1/growth-review",
+  "/growth/ai",
   "/" + "api/v1/media-factory",
   "/media-factory",
   "/creative-flow",

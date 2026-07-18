@@ -334,6 +334,18 @@ def trend_research_enabled() -> bool:
     return os.environ.get("WEBAPP_TREND_RESEARCH_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def growth_review_enabled() -> bool:
+    """Whether the manual, rule-based Growth Review is available.
+
+    The switch permits only deterministic arithmetic over metric values the
+    signed browser explicitly submits.  It never enables a social/platform
+    connection, Bot/Core Bridge, AI/provider call, canonical revenue, wallet,
+    PayOS, job, asset, publish or delivery capability.
+    """
+
+    return os.environ.get("WEBAPP_GROWTH_REVIEW_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def media_factory_enabled() -> bool:
     """Whether the deterministic Web Media Factory Blueprint is available.
 

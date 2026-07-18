@@ -1090,32 +1090,46 @@ def test_ticket_bot_handoff_never_moves_a_ticket_thread_or_identifier_to_telegra
     assert "fetch(" not in handoff
 
 
-def test_growth_and_campaign_reports_use_the_real_bot_handoff_until_a_report_adapter_exists() -> None:
-    assert 'analyticsBotCompanionPage("/growth/ai", "Growth AI"' in PORTAL
+def test_growth_review_is_web_native_while_campaign_report_stays_in_bot_handoff() -> None:
+    assert 'customerPage("/growth/ai", "Growth Review"' in PORTAL
     assert 'analyticsBotCompanionPage("/campaign/report", "Báo cáo campaign"' in PORTAL
-    assert 'layout: "analytics-bot-companion"' in PORTAL
+    assert 'layout: "growth-review"' in PORTAL
+    growth = PORTAL[PORTAL.index("function renderGrowthReview(page, context)"):PORTAL.index("// Media Factory Blueprint", PORTAL.index("function renderGrowthReview(page, context)"))]
+    assert 'data-portal-action="growth-review-evaluate"' in growth
+    assert 'name="manual_attributed_value_vnd"' in growth
+    assert "Không có tài khoản mạng xã hội nào được kết nối." in growth
+    assert "không phải transaction, doanh thu canonical" in growth
+    assert "fetch(" not in growth
     analytics = PORTAL[PORTAL.index("function renderAnalyticsBotCompanion(page, context)"):PORTAL.index("function renderLanding(page, context)")]
     assert 'data-portal-action="copy-analytics-bot-command"' in analytics
     assert 'name="campaign_id"' in analytics
-    assert 'name="goal"' in analytics
     assert 'name="format"' in analytics
     assert "Không có request analytics, Xu hay file nào gửi từ browser." in analytics
     assert "fetch(" not in analytics
-    assert 'const ANALYTICS_BOT_COMMANDS = new Set(["/growth_ai", "/campaign_report"])' in INTEGRATION
+    assert 'const ANALYTICS_BOT_COMMANDS = new Set(["/campaign_report"])' in INTEGRATION
     assert "function buildAnalyticsBotCommand(fields)" in INTEGRATION
     assert "function copyAnalyticsBotCommand(fields)" in INTEGRATION
     assert 'action === "copy-analytics-bot-command"' in INTEGRATION
     assert "ANALYTICS_BOT_PLATFORMS" in INTEGRATION
-    assert "ANALYTICS_BOT_GOALS" in INTEGRATION
     assert "ANALYTICS_BOT_FORMATS" in INTEGRATION
+    assert "function growthReviewPayload(fields)" in INTEGRATION
+    assert "function growthReviewResultIsSafe(value, submittedPayload)" in INTEGRATION
+    assert "function growthReviewMatchesPayload(review, submittedPayload)" in INTEGRATION
+    assert "growthReviewMatchesPayload(review, submittedPayload)" in INTEGRATION
+    assert 'result.status !== "draft" || !growthReviewResultIsSafe(data, payload)' in INTEGRATION
+    assert '"growth-review-evaluate": false' in INTEGRATION
+    assert '"/growth/ai": disabledBoundary ? "guarded" : "ready"' in INTEGRATION
+    assert 'action === "growth-review-evaluate"' in INTEGRATION
+    assert '"growth-review-evaluate": Boolean(account && me.csrf_token && growthReviewEnabled)' in INTEGRATION
     assert "không tự tính doanh thu, performance hay tạo file xuất giả" in PORTAL
     contract = (ROOT / "docs" / "migration" / "FEATURE_FAMILY_NAVIGATION.md").read_text(encoding="utf-8")
     assert "/growth/ai" in contract
     assert "/campaign/report" in contract
-    assert "tightly allowlisted Bot command" in contract
+    assert "manually enters" in contract
     handoff = (ROOT / "docs" / "migration" / "BOT_COMPANION_HANDOFF.md").read_text(encoding="utf-8")
-    assert "separate closed schema" in handoff
-    assert "The Portal does not read performance data" in handoff
+    assert "manual, non-persistent Growth Review" in handoff
+    assert "live/canonical analytics" in handoff
+    assert "Growth AI trong Bot" not in PORTAL
 
 
 def test_telegram_onboarding_preserves_only_a_safe_local_workflow_continuation() -> None:

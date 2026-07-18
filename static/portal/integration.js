@@ -51,14 +51,14 @@
     "/notes", "/note", "/memory", "/reminders", "/remind", "/referral", "/ref",
     "/gift", "/promos", "/birthday", "/community", "/official_channels", "/menu", "/guide", "/help",
     "/film", "/image_tools", "/create_media", "/music", "/translate", "/doc_tools",
-    "/growth_ai", "/campaign_report", "/language", "/mode", "/profile", "/mydata",
+    "/campaign_report", "/language", "/mode", "/profile", "/mydata",
     "/tickets", "/ticket_status", "/data_delete"
   ]);
   // Analytics commands accept a deliberately tiny, fixed schema. Unlike the
   // zero-argument Bot companion commands above, this permits the customer to
   // choose a harmless report window/filter without turning the Portal into a
   // generic Telegram command transport or a second analytics/ledger writer.
-  const ANALYTICS_BOT_COMMANDS = new Set(["/growth_ai", "/campaign_report"]);
+  const ANALYTICS_BOT_COMMANDS = new Set(["/campaign_report"]);
   const ANALYTICS_BOT_PLATFORMS = new Set(["", "facebook", "tiktok", "youtube", "instagram", "threads", "website"]);
   const ANALYTICS_BOT_GOALS = new Set([
     "kiếm tiền affiliate", "tăng traffic", "tăng chuyển đổi", "tăng doanh thu", "tăng follow"
@@ -3934,6 +3934,107 @@
       && trendResearchString(plan.title, 2, 320) && trendResearchString(plan.topic, 2, 180)
       && TREND_RESEARCH_LANGUAGES.has(plan.language) && plan.research_mode === "manual_content_only"
       && plan.freshness === "not_live_not_verified" && validGroups && validTexts && validWorkflows
+    );
+  }
+
+  // Growth Review has a deliberately closed numeric contract. It mirrors the
+  // Bot's small deterministic helper only; it is not a client-side analytics
+  // calculation, a provider/model prompt or a transport for Bot commands.
+  const GROWTH_REVIEW_PLATFORMS = new Set(["facebook", "instagram", "tiktok", "youtube", "threads", "website", "other"]);
+  const GROWTH_REVIEW_RECOMMENDATION_TYPES = new Set(["scale", "fix_cta", "fix_hook", "add_offer", "pause_or_rewrite"]);
+  const GROWTH_REVIEW_BOUNDARY_FALSE_FIELDS = Object.freeze([
+    "input_persisted", "platform_connected", "platform_data_verified", "canonical_revenue_read", "canonical_revenue_written",
+    "ai_model_called", "provider_called", "bot_called", "bridge_called", "job_created", "wallet_mutated", "payment_started",
+    "asset_saved", "publish_action_created", "delivery_created"
+  ]);
+  const GROWTH_REVIEW_INPUT_KEYS = Object.freeze(["views", "likes", "comments", "shares", "clicks", "manual_attributed_value_vnd"]);
+  const GROWTH_REVIEW_WORKFLOW_ROUTES = Object.freeze(["/content/prompt-pack", "/content/publish-review", "/analytics"]);
+
+  function growthReviewInteger(value, label, maximum) {
+    const raw = String(value === undefined || value === null ? "" : value).trim();
+    if (!/^(?:0|[1-9]\d*)$/.test(raw)) throw new Error(`${label} phải là số nguyên không âm.`);
+    const parsed = Number(raw);
+    if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > maximum) throw new Error(`${label} nằm ngoài giới hạn an toàn.`);
+    return parsed;
+  }
+
+  function growthReviewPayload(fields) {
+    const rawLabel = String(fields.content_label || "");
+    if (/\r|\n/.test(rawLabel)) throw new Error("Nhãn nội dung phải nằm trên một dòng.");
+    const contentLabel = contentStudioLine(rawLabel, "Nhãn nội dung", 2, 160, false);
+    const platform = contentStudioLine(fields.platform || "", "Nền tảng", 2, 24, false).toLowerCase();
+    if (!GROWTH_REVIEW_PLATFORMS.has(platform)) throw new Error("Nền tảng Growth Review không hợp lệ.");
+    return {
+      content_label: contentLabel,
+      platform,
+      views: growthReviewInteger(fields.views, "Lượt xem", 2000000000),
+      likes: growthReviewInteger(fields.likes, "Lượt thích", 2000000000),
+      comments: growthReviewInteger(fields.comments, "Bình luận", 2000000000),
+      shares: growthReviewInteger(fields.shares, "Lượt chia sẻ", 2000000000),
+      clicks: growthReviewInteger(fields.clicks, "Click", 2000000000),
+      manual_attributed_value_vnd: growthReviewInteger(fields.manual_attributed_value_vnd, "Giá trị quy đổi tự nhập", 9000000000000)
+    };
+  }
+
+  function growthReviewBoundaryIsSafe(value) {
+    const data = value && typeof value === "object" ? value : {};
+    return data.execution === "web_native_manual_rule_review_only"
+      && data.manual_metrics_only === true
+      && GROWTH_REVIEW_BOUNDARY_FALSE_FIELDS.every((field) => data[field] === false);
+  }
+
+  function growthReviewSafeText(value, minimum, maximum) {
+    return typeof value === "string" && value.length >= minimum && value.length <= maximum
+      && !TREND_RESEARCH_MARKUP_PATTERN.test(value) && !TREND_RESEARCH_URL_OR_PATH_PATTERN.test(value);
+  }
+
+  function growthReviewMatchesPayload(review, submittedPayload) {
+    const payload = submittedPayload && typeof submittedPayload === "object" ? submittedPayload : {};
+    const inputs = review && review.manual_inputs && typeof review.manual_inputs === "object" && !Array.isArray(review.manual_inputs)
+      ? review.manual_inputs
+      : {};
+    return growthReviewSafeText(payload.content_label, 2, 160)
+      && GROWTH_REVIEW_PLATFORMS.has(payload.platform)
+      && review.content_label === payload.content_label
+      && review.platform === payload.platform
+      && GROWTH_REVIEW_INPUT_KEYS.every((key) => inputs[key] === payload[key])
+      && review.engagement_total === payload.likes + payload.comments + payload.shares;
+  }
+
+  function growthReviewResultIsSafe(value, submittedPayload) {
+    const data = value && typeof value === "object" ? value : {};
+    const review = data.review && typeof data.review === "object" && !Array.isArray(data.review) ? data.review : {};
+    const expectedKeys = ["content_label", "platform", "platform_label", "manual_inputs", "engagement_total", "score", "score_band", "score_breakdown", "recommendation", "rule_version", "provenance", "next_workflows"];
+    const exactKeys = Object.keys(review).sort().join("|") === expectedKeys.sort().join("|");
+    const inputs = review.manual_inputs && typeof review.manual_inputs === "object" && !Array.isArray(review.manual_inputs) ? review.manual_inputs : {};
+    const recommendation = review.recommendation && typeof review.recommendation === "object" && !Array.isArray(review.recommendation) ? review.recommendation : {};
+    const band = review.score_band && typeof review.score_band === "object" && !Array.isArray(review.score_band) ? review.score_band : {};
+    const provenance = review.provenance && typeof review.provenance === "object" && !Array.isArray(review.provenance) ? review.provenance : {};
+    const breakdown = Array.isArray(review.score_breakdown) ? review.score_breakdown : [];
+    const workflows = Array.isArray(review.next_workflows) ? review.next_workflows : [];
+    const validInputs = Object.keys(inputs).sort().join("|") === [...GROWTH_REVIEW_INPUT_KEYS].sort().join("|")
+      && GROWTH_REVIEW_INPUT_KEYS.every((key) => Number.isSafeInteger(inputs[key]) && inputs[key] >= 0 && inputs[key] <= 9000000000000);
+    const validBreakdown = breakdown.length === 4 && breakdown.every((item) => item && typeof item === "object"
+      && growthReviewSafeText(item.key, 2, 64) && growthReviewSafeText(item.label, 2, 120)
+      && Number.isSafeInteger(item.observed) && item.observed >= 0 && Number.isSafeInteger(item.points) && item.points >= 0
+      && Number.isSafeInteger(item.max_points) && item.max_points >= 0 && item.points <= item.max_points);
+    const validWorkflows = workflows.length === 3 && workflows.every((item, index) => item && typeof item === "object"
+      && item.route === GROWTH_REVIEW_WORKFLOW_ROUTES[index] && growthReviewSafeText(item.label, 2, 100)
+      && growthReviewSafeText(item.purpose, 2, 320));
+    return Boolean(
+      exactKeys && growthReviewBoundaryIsSafe(data) && growthReviewMatchesPayload(review, submittedPayload)
+      && growthReviewSafeText(review.content_label, 2, 160)
+      && GROWTH_REVIEW_PLATFORMS.has(review.platform) && growthReviewSafeText(review.platform_label, 2, 64)
+      && validInputs && Number.isSafeInteger(review.engagement_total) && review.engagement_total >= 0
+      && Number.isSafeInteger(review.score) && review.score >= 0 && review.score <= 100
+      && growthReviewSafeText(band.key, 2, 24) && growthReviewSafeText(band.label, 2, 160)
+      && validBreakdown && GROWTH_REVIEW_RECOMMENDATION_TYPES.has(recommendation.type)
+      && growthReviewSafeText(recommendation.title, 2, 180) && growthReviewSafeText(recommendation.reason, 2, 600)
+      && growthReviewSafeText(recommendation.action, 2, 700) && recommendation.score === review.score
+      && review.rule_version === "bot-growth-rules-v1"
+      && provenance.kind === "manual_account_input" && provenance.platform_data_verified === false
+      && provenance.canonical_revenue === false && provenance.input_persisted === false
+      && growthReviewSafeText(provenance.evaluated_at, 20, 40) && validWorkflows
     );
   }
 
@@ -8930,6 +9031,11 @@
     // Bot's manual command. A true flag does not expose live/social search,
     // scraping, a provider, Bot bridge, job, wallet, payment, asset or media.
     const trendResearchEnabled = Boolean(status.flags && status.flags.trend_research_enabled === true);
+    // Growth Review carries only the Bot's deterministic score/rule helper
+    // into a signed manual Web receipt. It does not unlock Bot Growth AI,
+    // platform analytics, canonical revenue, a provider/model, wallet, PayOS,
+    // job, asset, publishing or delivery authority.
+    const growthReviewEnabled = Boolean(status.flags && status.flags.growth_review_enabled === true);
     // Media Factory is a transient orchestration blueprint derived from Bot
     // text. Its flag must never imply live search, provider/Bot work, media
     // output, job, wallet, PayOS, social connection or publishing authority.
@@ -9310,6 +9416,7 @@
       "publish-review-pack-compose": Boolean(account && me.csrf_token && publishReviewPackEnabled),
       "contextual-ad-prompt-compose": Boolean(account && me.csrf_token && contextualAdPromptEnabled),
       "trend-research-plan": Boolean(account && me.csrf_token && trendResearchEnabled),
+      "growth-review-evaluate": Boolean(account && me.csrf_token && growthReviewEnabled),
       "media-factory-blueprint": Boolean(account && me.csrf_token && mediaFactoryEnabled),
       "creative-flow-compose": Boolean(account && me.csrf_token && creativeFlowEnabled),
       "story-video-plan": Boolean(account && me.csrf_token && storyVideoPlanEnabled),
@@ -9890,6 +9997,10 @@
       // Trend Research is also a request-only receipt. It is never restored
       // from browser or account storage after an account/session transition.
       trendResearchResult: {},
+      // Growth Review has the same isolated, request-only lifecycle. Never
+      // leave a previous signed account's label or manual metrics in memory
+      // after bootstrap, a logout or a failed session refresh.
+      growthReviewResult: {},
       // Media Factory Blueprint is likewise a request-only receipt. It is
       // cleared on every signed bootstrap and never restored from storage.
       mediaFactoryResult: {},
@@ -10216,6 +10327,7 @@
         "/content/publish-review": account && publishReviewPackEnabled ? "ready" : "guarded",
         "/content/contextual-prompt": account && contextualAdPromptEnabled ? "ready" : "guarded",
         "/trend-research": account && trendResearchEnabled ? "ready" : "guarded",
+        "/growth/ai": account && growthReviewEnabled ? "ready" : "guarded",
         "/media-factory": account && mediaFactoryEnabled ? "ready" : "guarded",
         "/creative-flow": account && creativeFlowEnabled ? "ready" : "guarded",
         "/guides/source-rights": account && contentStudioEnabled ? "ready" : "guarded",
@@ -17836,6 +17948,51 @@
             pageStates: { ...(base().pageStates || {}), "/trend-research": "guarded" }
           });
           toast(guarded.message || "Chủ đề cần được điều chỉnh trước khi lập checklist research.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "growth-review-evaluate") {
+        // A prior receipt belongs to a prior request. Clear it before even
+        // validating the new form so stale manual metrics cannot remain on
+        // screen after a client validation, CSRF, rate-limit or server error.
+        merge({ growthReviewResult: {} });
+        const payload = growthReviewPayload(fields);
+        // A manual Growth Review creates neither a durable record nor an
+        // external action. Keep it outside generic feature dispatch and
+        // idempotency storage; the server returns a bounded rule receipt only.
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/growth-review/evaluate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status !== "draft" || !growthReviewResultIsSafe(data, payload)) {
+            throw new Error("Máy chủ chưa trả Growth Review Web-native an toàn.");
+          }
+          merge({
+            growthReviewResult: data,
+            pageStates: { ...(base().pageStates || {}), "/growth/ai": "ready" }
+          });
+          toast(result.message || "Đã tạo Growth Review từ số liệu tự nhập.");
+        } catch (error) {
+          // Fail closed for a manual, request-only receipt.  Never leave a
+          // previous account/request's observations visible after an error or
+          // a response that does not match the submitted payload exactly.
+          const disabledBoundary = error && error.status === 503 && error.payload
+            && error.payload.data && growthReviewBoundaryIsSafe(error.payload.data);
+          const current = base();
+          merge({
+            growthReviewResult: {},
+            capabilities: disabledBoundary
+              ? { ...(current.capabilities || {}), "growth-review-evaluate": false }
+              : current.capabilities,
+            pageStates: { ...(current.pageStates || {}), "/growth/ai": disabledBoundary ? "guarded" : "ready" }
+          });
+          throw error;
         } finally {
           setActionBusy(action, route, false);
         }
