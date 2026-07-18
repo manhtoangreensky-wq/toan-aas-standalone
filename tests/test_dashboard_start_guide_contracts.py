@@ -39,6 +39,17 @@ def test_dashboard_places_the_guide_before_private_integration_summaries() -> No
     assert '${renderDashboardStartGuide(context)}<div class="portal-status-grid' in dashboard
 
 
+def test_dashboard_hides_an_empty_work_queue_and_keeps_the_first_action_first() -> None:
+    dashboard = _section("function renderDashboard(page, context)", "function renderWorkspaceActionCenter(context)")
+    action_center = _section("function renderWorkspaceActionCenter(context)", "function renderStudioLaunchpad(context)")
+
+    assert dashboard.index("${renderDashboardWorkspaceSummary(context)}") < dashboard.index("${renderDashboardStartGuide(context)}")
+    assert dashboard.index("${renderDashboardStartGuide(context)}") < dashboard.index('<div class="portal-status-grid">')
+    assert dashboard.index('<div class="portal-status-grid">') < dashboard.index("${renderWorkspaceActionCenter(context)}")
+    assert "const actionableCount = processing + deliveryReady + needsReview + waitingUser;" in action_center
+    assert 'if (!actionableCount) return "";' in action_center
+
+
 def test_dashboard_first_session_guide_has_responsive_keyboard_visible_presentation() -> None:
     for requirement in (
         ".portal-start-guide {",

@@ -120,7 +120,8 @@
     subtitle: "≡", document: "▤", support: "?", pricing: "◇", legal: "§",
     admin: "⌘", users: "◎", payments: "◈", providers: "◫", system: "⚙",
     reports: "◒", security: "◈", ticket: "✉", inbox: "▰", workboard: "▤", default: "·",
-    menu: "portal-menu", search: "portal-search", download: "portal-download", collapse: "portal-collapse"
+    menu: "portal-menu", search: "portal-search", download: "portal-download", collapse: "portal-collapse",
+    close: "portal-close", plus: "portal-plus", arrowRight: "portal-arrow-right"
   });
 
   // The legacy registry uses compact glyph tokens.  The presentation layer
@@ -156,7 +157,10 @@
     [ICONS.menu]: '<path d="M4 7h16M4 12h16M4 17h16"/>',
     [ICONS.search]: '<circle cx="10.5" cy="10.5" r="5.5"/><path d="m15 15 4.5 4.5"/>',
     [ICONS.download]: '<path d="M12 3v11M7.5 10.5 12 15l4.5-4.5M5 20h14"/>',
-    [ICONS.collapse]: '<path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/>'
+    [ICONS.collapse]: '<path d="M8 4H4v4M16 4h4v4M8 20H4v-4M16 20h4v-4"/>',
+    [ICONS.close]: '<path d="m6 6 12 12M18 6 6 18"/>',
+    [ICONS.plus]: '<path d="M12 5v14M5 12h14"/>',
+    [ICONS.arrowRight]: '<path d="M5 12h14M13 6l6 6-6 6"/>'
   });
 
   function portalIcon(icon) {
@@ -7044,12 +7048,12 @@
       return `<a class="portal-command-item" href="${safeText(item.path)}" data-portal-command-item data-command-search="${safeText(search)}"${item.current ? ' aria-current="page"' : ""}>
         <span class="portal-command-item-icon" aria-hidden="true">${portalIcon(item.icon)}</span>
         <span class="portal-command-item-copy"><strong>${safeText(item.title)}</strong><small>${safeText(item.section)} · ${safeText(item.path)}</small></span>
-        <span class="portal-command-item-arrow" aria-hidden="true">→</span>
+        <span class="portal-command-item-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span>
       </a>`;
     }).join("");
     return `<div class="portal-command-palette-backdrop" data-portal-command-close></div>
       <section class="portal-command-dialog" role="dialog" aria-modal="true" aria-labelledby="portal-command-title">
-        <header class="portal-command-header"><div><span class="portal-command-kicker">TOAN AAS workspace</span><h2 id="portal-command-title">Chuyển nhanh</h2></div><button class="portal-command-close" type="button" aria-label="Đóng chuyển nhanh" data-portal-command-close>×</button></header>
+        <header class="portal-command-header"><div><span class="portal-command-kicker">TOAN AAS workspace</span><h2 id="portal-command-title">Chuyển nhanh</h2></div><button class="portal-command-close" type="button" aria-label="Đóng chuyển nhanh" data-portal-command-close>${portalIcon(ICONS.close)}</button></header>
         <label class="portal-command-search"><span class="portal-sr-only">Tìm workspace</span><span class="portal-command-search-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><input type="search" placeholder="Tìm công cụ, jobs, tài sản, tài khoản…" autocomplete="off" data-portal-command-search></label>
         <p class="portal-command-hint"><span><kbd>Ctrl</kbd> <kbd>K</kbd> để mở</span><span><kbd>Esc</kbd> để đóng</span></p>
         <div class="portal-command-results" aria-label="Kết quả chuyển nhanh" data-portal-command-results>${markup}</div>
@@ -7084,10 +7088,10 @@
     return `<div class="portal-brand">
       <span class="portal-brand-mark" aria-hidden="true">TA</span>
       <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">AI Workspace</span></span>
-      <button class="portal-sidebar-close" type="button" aria-label="Đóng điều hướng" data-portal-close-menu>×</button>
+      <button class="portal-sidebar-close" type="button" aria-label="Đóng điều hướng" data-portal-close-menu>${portalIcon(ICONS.close)}</button>
     </div>
     <div class="portal-sidebar-action-row">
-      <a class="portal-sidebar-create" href="/features"><span aria-hidden="true">+</span><span>Tạo workflow mới</span><b aria-hidden="true">→</b></a>
+      <a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>Tạo workflow mới</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>
       <button class="portal-sidebar-focus-toggle" type="button" aria-label="Bật chế độ tập trung nội dung" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>${portalIcon(ICONS.collapse)}</span><span class="portal-sr-only" data-portal-focus-navigation-label>Thu gọn điều hướng</span></button>
     </div>
     <button class="portal-sidebar-search" type="button" aria-label="Tìm mọi workspace" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>Tìm mọi workspace</span><kbd aria-hidden="true">Ctrl K</kbd></button>
@@ -12875,7 +12879,7 @@
           action: "Xem cách liên kết"
         }
     ];
-    return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">First session</span><h2 id="dashboard-start-guide-title">Bắt đầu nhanh, không bị khóa vào Telegram</h2><p>Web Workspace có thể dùng độc lập ngay từ bước đầu. Mỗi bước đều mở trang đích rõ ràng và không tự tạo job, charge hoặc dữ liệu provider.</p></div><span class="portal-start-guide-note">3 bước · tự chọn</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">→</b></em></span></a>`).join("")}</div></section>`;
+    return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">First session</span><h2 id="dashboard-start-guide-title">Bắt đầu nhanh, không bị khóa vào Telegram</h2><p>Web Workspace có thể dùng độc lập ngay từ bước đầu. Mỗi bước đều mở trang đích rõ ràng và không tự tạo job, charge hoặc dữ liệu provider.</p></div><span class="portal-start-guide-note">3 bước · tự chọn</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
   }
 
   function renderDashboard(page, context) {
@@ -12890,7 +12894,7 @@
     // New accounts should see the next steps before the signed integration
     // projection.  The cards remain read-only: they render only server-scoped
     // status and never make provider, wallet, payment or job calls here.
-    return `<article class="portal-page portal-dashboard-app">${renderDashboardWorkspaceSummary(context)}${renderWorkspaceActionCenter(context)}${renderDashboardStartGuide(context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div><details class="portal-dashboard-assurance"><summary>Trạng thái tích hợp và bảo mật</summary><p class="portal-form-note">Các capability ngoài Workspace chỉ hiển thị theo trạng thái do máy chủ xác nhận; Portal không tự tạo job, output, giao dịch hoặc quyền truy cập.</p></details>${quickMetrics}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div>${renderStudioLaunchpad(context)}${activity}</article>`;
+    return `<article class="portal-page portal-dashboard-app">${renderDashboardWorkspaceSummary(context)}${renderDashboardStartGuide(context)}<div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${renderWorkspaceActionCenter(context)}<details class="portal-dashboard-assurance"><summary>Trạng thái tích hợp và bảo mật</summary><p class="portal-form-note">Các capability ngoài Workspace chỉ hiển thị theo trạng thái do máy chủ xác nhận; Portal không tự tạo job, output, giao dịch hoặc quyền truy cập.</p></details>${quickMetrics}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div>${renderStudioLaunchpad(context)}${activity}</article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -12904,6 +12908,8 @@
     const deliveryReady = assets.filter((item) => item && item.download_ready === true && item.delivery_ready === true).length;
     const needsReview = jobs.filter((item) => ["failed", "failed_no_charge"].includes(jobStatus(item))).length;
     const waitingUser = tickets.filter((item) => canonicalTicketStatus(item) === "waiting_user").length;
+    const actionableCount = processing + deliveryReady + needsReview + waitingUser;
+    if (!actionableCount) return "";
     const cards = [
       {
         icon: ICONS.jobs,
@@ -12942,7 +12948,7 @@
         action: "Mở ticket"
       }
     ];
-    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Work Queue</span><h2 id="workspace-action-center-title">Công việc cần chú ý</h2><p>Chỉ tổng hợp metadata canonical thuộc signed session hiện tại; không suy đoán output, charge hay delivery.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Xem tất cả công việc →</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${safeText(card.label)}</h3><p>${safeText(card.detail)}</p><span class="portal-action-card-link">${safeText(card.action)} <b aria-hidden="true">→</b></span></a>`).join("")}</div></section>`;
+    return `<section class="portal-action-center" data-workspace-action-center aria-labelledby="workspace-action-center-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Work Queue</span><h2 id="workspace-action-center-title">Công việc cần chú ý</h2><p>Chỉ tổng hợp metadata canonical thuộc signed session hiện tại; không suy đoán output, charge hay delivery.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Xem tất cả công việc →</a></div><div class="portal-action-center-grid">${cards.map((card) => `<a class="portal-action-card" href="${safeText(card.href)}"><div class="portal-action-card-head"><span class="portal-module-icon" aria-hidden="true">${portalIcon(card.icon)}</span>${badge(card.status)}</div><strong>${safeText(String(card.count))}</strong><h3>${safeText(card.label)}</h3><p>${safeText(card.detail)}</p><span class="portal-action-card-link">${safeText(card.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`).join("")}</div></section>`;
   }
 
   function renderStudioLaunchpad(context) {
@@ -12957,7 +12963,7 @@
     return `<section class="portal-studio-section"><div class="portal-section-heading"><div><span class="portal-section-kicker">TOAN AAS Studio</span><h2>Chọn một workflow rõ ràng</h2><p>Mỗi studio dùng cùng hợp đồng draft → estimate → confirm; browser không gọi provider, ví hay job trực tiếp.</p></div><a class="portal-button portal-button--quiet" href="/pricing">Xem pricing canonical →</a></div><div class="portal-studio-launchpad">${studios.map((studio) => {
       const studioPage = manifest[studio.route] || { path: studio.route, access: "member", action: "none" };
       const state = stateFor(studioPage, context);
-      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span>${badge(state)}</div><div><h3>${safeText(studio.title)}</h3><p>${safeText(studio.description)}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div><span class="portal-studio-open">Mở studio <b aria-hidden="true">→</b></span></a>`;
+      return `<a class="portal-studio-card" href="${studio.route}" data-studio="${safeText(studio.route.slice(1).split("/")[0])}"><div class="portal-studio-card-head"><span class="portal-studio-icon" aria-hidden="true">${portalIcon(studio.icon)}</span>${badge(state)}</div><div><h3>${safeText(studio.title)}</h3><p>${safeText(studio.description)}</p></div><div class="portal-studio-tags">${studio.tags.map((tag) => `<span>${safeText(tag)}</span>`).join("")}</div><span class="portal-studio-open">Mở studio <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></span></a>`;
     }).join("")}</div></section>`;
   }
 
@@ -17786,9 +17792,18 @@
     const adapterMessage = typeof data.message === "string" && data.message
       ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Trạng thái adapter</strong><p>${safeText(data.message)}</p></div></div>`
       : "";
-    const cards = domain.streams.map((stream) => `<a class="portal-admin-domain-card" href="${safeText(stream.route)}"><span class="portal-module-icon" aria-hidden="true">${safeText(stream.icon || ICONS.default)}</span><span><h3>${safeText(stream.title)}</h3><p>${safeText(stream.text)}</p></span><span class="portal-module-arrow" aria-hidden="true">→</span></a>`).join("");
+    // Domain centers are a convenience view, never a browser-side permission
+    // inference.  Keep only the routes the signed server manifest issued.
+    const streams = domain.streams.filter((stream) => serverAuthorizesAdminRoute(context, stream.route));
+    const cards = streams.length
+      ? streams.map((stream) => `<a class="portal-admin-domain-card" href="${safeText(stream.route)}"><span class="portal-module-icon" aria-hidden="true">${portalIcon(stream.icon || ICONS.default)}</span><span><h3>${safeText(stream.title)}</h3><p>${safeText(stream.text)}</p></span><span class="portal-module-arrow" aria-hidden="true">${portalIcon(ICONS.arrowRight)}</span></a>`).join("")
+      : renderEmpty("Chưa có workflow quản trị được cấp", "Role và manifest từ server chưa cấp route nào cho center này. Web không đoán quyền từ URL hoặc browser state.", ICONS.admin);
+    const footerLinks = [
+      serverAuthorizesAdminRoute(context, "/admin") ? '<a class="portal-button portal-button--quiet" href="/admin">Về Admin Overview</a>' : "",
+      serverAuthorizesAdminRoute(context, "/admin/operations") ? '<a class="portal-button portal-button--quiet" href="/admin/operations">Operations</a>' : ""
+    ].filter(Boolean).join("");
     const boundaries = domain.boundaries.map((item) => `<li>${safeText(item)}</li>`).join("");
-    return `<article class="portal-page portal-admin-domain">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-domain-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><span class="portal-section-kicker">${safeText(domain.kicker)}</span><h2>${safeText(domain.title)}</h2><p>${safeText(domain.description)}</p><div class="portal-state-meta"><span>Server-side role check</span><span>Read-only by default</span><span>Không có action giả</span></div></div>${badge("read_only")}</div></section>${adapterMessage}<section class="portal-admin-domain-grid" aria-label="${safeText(domain.kicker)}">${cards}</section><section class="portal-card portal-card-pad portal-admin-domain-boundaries"><div class="portal-card-header"><div><span class="portal-section-kicker">Authority boundary</span><h2 class="portal-card-title">Các giới hạn được giữ cố ý</h2><p class="portal-card-subtitle">Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.</p></div>${badge("guarded")}</div><ul>${boundaries}</ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/admin">Về Admin Overview</a><a class="portal-button portal-button--quiet" href="/admin/operations">Operations</a></div></section></article>`;
+    return `<article class="portal-page portal-admin-domain">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-domain-intro"><div class="portal-state" data-state="read_only"><span class="portal-state-icon" aria-hidden="true">${portalIcon(ICONS.admin)}</span><div><span class="portal-section-kicker">${safeText(domain.kicker)}</span><h2>${safeText(domain.title)}</h2><p>${safeText(domain.description)}</p><div class="portal-state-meta"><span>Server-side role check</span><span>Read-only by default</span><span>Không có action giả</span></div></div>${badge("read_only")}</div></section>${adapterMessage}<section class="portal-admin-domain-grid" aria-label="${safeText(domain.kicker)}">${cards}</section><section class="portal-card portal-card-pad portal-admin-domain-boundaries"><div class="portal-card-header"><div><span class="portal-section-kicker">Authority boundary</span><h2 class="portal-card-title">Các giới hạn được giữ cố ý</h2><p class="portal-card-subtitle">Center này giúp đi đúng workflow; nó không thay thế Bot, provider hoặc financial authority.</p></div>${badge("guarded")}</div><ul>${boundaries}</ul>${footerLinks ? `<div class="portal-form-footer">${footerLinks}</div>` : ""}</section></article>`;
   }
 
   function renderAdmin(page, context) {
@@ -19660,12 +19675,42 @@
       .filter((element) => !element.hidden && element.getAttribute("aria-hidden") !== "true");
   }
 
+  const PORTAL_MODAL_ARIA_HIDDEN = "data-portal-modal-aria-hidden";
+  const PORTAL_MODAL_INERT = "data-portal-modal-inert";
+
+  function setPortalTargetInert(target, opened) {
+    if (!target) return;
+    if (opened) {
+      if (!target.hasAttribute(PORTAL_MODAL_ARIA_HIDDEN)) {
+        const hadAriaHidden = target.hasAttribute("aria-hidden");
+        target.setAttribute(PORTAL_MODAL_ARIA_HIDDEN, hadAriaHidden ? (target.getAttribute("aria-hidden") || "") : "__absent__");
+        if ("inert" in target) target.setAttribute(PORTAL_MODAL_INERT, target.inert ? "true" : "false");
+      }
+      if ("inert" in target) target.inert = true;
+      target.setAttribute("aria-hidden", "true");
+      return;
+    }
+    const previousAriaHidden = target.getAttribute(PORTAL_MODAL_ARIA_HIDDEN);
+    if (previousAriaHidden === "__absent__") target.removeAttribute("aria-hidden");
+    else if (previousAriaHidden !== null) target.setAttribute("aria-hidden", previousAriaHidden);
+    const previousInert = target.getAttribute(PORTAL_MODAL_INERT);
+    if ("inert" in target && previousInert !== null) target.inert = previousInert === "true";
+    target.removeAttribute(PORTAL_MODAL_ARIA_HIDDEN);
+    target.removeAttribute(PORTAL_MODAL_INERT);
+  }
+
+  function setPortalBackgroundInert(opened, includeSidebar) {
+    const targets = [
+      document.querySelector(".skip-link"),
+      includeSidebar ? document.querySelector("[data-portal-sidebar]") : null,
+      document.querySelector(".portal-workspace"),
+      document.querySelector("[data-portal-mobile-nav]")
+    ].filter(Boolean);
+    targets.forEach((target) => setPortalTargetInert(target, opened));
+  }
+
   function setWorkspaceInert(opened) {
-    const workspace = document.querySelector(".portal-workspace");
-    if (!workspace) return;
-    if ("inert" in workspace) workspace.inert = opened;
-    if (opened) workspace.setAttribute("aria-hidden", "true");
-    else workspace.removeAttribute("aria-hidden");
+    setPortalBackgroundInert(opened, false);
   }
 
   function setSidebarMenuState(button, opened) {
@@ -19774,16 +19819,7 @@
   }
 
   function setCommandPaletteBackgroundInert(opened) {
-    const targets = [
-      document.querySelector("[data-portal-sidebar]"),
-      document.querySelector(".portal-workspace"),
-      document.querySelector("[data-portal-mobile-nav]")
-    ].filter(Boolean);
-    targets.forEach((target) => {
-      if ("inert" in target) target.inert = opened;
-      if (opened) target.setAttribute("aria-hidden", "true");
-      else target.removeAttribute("aria-hidden");
-    });
+    setPortalBackgroundInert(opened, true);
     document.body.classList.toggle("portal-body--command-palette", Boolean(opened));
   }
 
