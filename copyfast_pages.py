@@ -116,6 +116,8 @@ def _title_for(path: str) -> str:
         return "PDF có text → Word riêng tư"
     if normalized == "/documents/pdf-ocr":
         return "OCR PDF riêng tư"
+    if normalized == "/documents/pdf-ocr-to-word":
+        return "OCR PDF → Word riêng tư"
     if normalized == "/notes":
         return "Memory Center"
     if normalized == "/reminders":

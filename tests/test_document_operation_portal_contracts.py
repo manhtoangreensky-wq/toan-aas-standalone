@@ -535,3 +535,51 @@ def test_pdf_ocr_contract_records_bounded_local_delivery_without_fake_output_or_
     assert "_seal_verified_operation_output" in operation_source
     assert "bridge_request(" not in operation_source
     assert '"pdf_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False)' in api_source
+
+
+def test_pdf_ocr_to_word_is_a_private_docx_surface_without_browser_text_preview() -> None:
+    assert 'customerPage("/documents/pdf-ocr-to-word", "OCR PDF → Word riêng tư"' in PORTAL
+    assert 'layout: "pdf-ocr-to-word", type: "document-operation", action: "none"' in PORTAL
+    assert 'featurePage("/documents/pdf-ocr-to-word"' not in PORTAL
+    assert "function renderPdfOcrToWord(page, context)" in PORTAL
+    assert 'case "pdf-ocr-to-word": return renderPdfOcrToWord(page, context);' in PORTAL
+    assert "function pdfOcrWordFormFields()" in PORTAL
+    assert 'documentOperationItems(context, "pdf_ocr_word")' in PORTAL
+    assert 'data-portal-action="document-operation-pdf-ocr-to-word"' in PORTAL
+    assert 'data-portal-route="/documents/pdf-ocr-to-word"' in PORTAL
+    surface = PORTAL[
+        PORTAL.index("function renderPdfOcrToWord(page, context)"):PORTAL.index("function renderImageToPdf(page, context)")
+    ]
+    for phrase in ("Asset Vault", "DOCX", "Không có DOCX giả", "Bot", "PayOS", "Không upload bytes"):
+        assert phrase in surface
+    assert "fetch(" not in surface
+    assert "api(" not in surface
+    assert "localStorage" not in surface
+    assert "Text OCR không được render vào browser" in surface
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
+    registry = (ROOT / "copyfast_registry.py").read_text(encoding="utf-8")
+    assert 'if normalized == "/documents/pdf-ocr-to-word":' in pages
+    assert 'return "OCR PDF → Word riêng tư"' in pages
+    assert 'WebFeature("documents_pdf_ocr_word"' in registry
+
+
+def test_pdf_ocr_to_word_hydration_and_write_are_signed_web_only_not_bridge_backed() -> None:
+    assert 'const PDF_OCR_WORD_ROUTE = "/documents/pdf-ocr-to-word";' in INTEGRATION
+    assert "const pdfOcrWordEnabled" in INTEGRATION
+    assert '"document-operation-pdf-ocr-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrWordEnabled)' in INTEGRATION
+    assert '"/documents/pdf-ocr-to-word": base().pdfOcrWordEnabled === true ? "ready" : "guarded"' in INTEGRATION
+    assert 'if (currentPath === PDF_OCR_WORD_ROUTE) return "pdf_ocr_word";' in INTEGRATION
+    assert 'api("/document-operations/pdf-ocr-to-word"' in INTEGRATION
+    assert '"pdf_ocr_word"' in INTEGRATION
+    assert '"/documents/pdf-ocr-to-word"' in SERVICE_WORKER
+    action = INTEGRATION[
+        INTEGRATION.index('if (action === "document-operation-pdf-ocr-to-word")'):
+        INTEGRATION.index('if (action === "document-operation-ocr-image")')
+    ]
+    assert "source_asset_id: sourceAssetId" in action
+    assert "body: JSON.stringify({ source_asset_id: sourceAssetId, language })" in action
+    assert "idempotency_key" not in action
+    assert "hydrateDocumentOperations" in action
+    assert "hydrateAssetVault" in action
+    assert "bridge_request" not in action
+    assert "CORE_BRIDGE" not in action

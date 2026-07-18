@@ -79,14 +79,21 @@ Production Web App for `app.toanaas.vn`.
   `WEBAPP_DOCUMENT_OCR_PDF_ENABLED=true`, `pypdfium2`, `pytesseract`, local
   Tesseract and a local `vie` and/or `eng` language pack; it rasterizes one
   1–10 page private PDF at 2× and only delivers verified non-empty TXT. It
-  never falls back to browser OCR, Bot or a provider. See
+  never falls back to browser OCR, Bot or a provider. Scanned PDF → Word is a
+  separate operation requiring all of
+  `WEBAPP_PDF_OCR_WORD_ENABLED=true`,
+  `WEBAPP_DOCUMENT_OCR_PDF_ENABLED=true` and
+  `WEBAPP_PDF_TO_WORD_ENABLED=true`; it creates a fresh verified DOCX only
+  from real local OCR text, never changes text-only PDF → Word into an OCR
+  fallback. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
   [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
   [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md),
   [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md), and
-  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md).
+  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md) and
+  [`PDF_OCR_WORD_CONTRACT.md`](docs/migration/PDF_OCR_WORD_CONTRACT.md).
 - `WEBAPP_IMAGE_OPERATIONS_ENABLED` defaults to `false`. Resize & Aspect
   Studio additionally needs `WEBAPP_IMAGE_RESIZE_ENABLED=true`, Asset Vault,
   Pillow and its own separate persistent
@@ -275,7 +282,8 @@ private Bot bridge.
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 - `/documents/split`, `/documents/merge`, `/documents/compress`,
   `/documents/image-to-pdf`, `/documents/pdf-to-images`,
-  `/documents/pdf-to-word` and `/documents/pdf-ocr` are distinct
+  `/documents/pdf-to-word`, `/documents/pdf-ocr` and
+  `/documents/pdf-ocr-to-word` are distinct
   Web-native document operations:
   the PDF tools accept only verified private Asset Vault PDFs, while Image to
   PDF accepts ordered, verified private JPEG/PNG/WebP assets. Each writes a
@@ -285,14 +293,17 @@ private Bot bridge.
   PNG or deterministic PNG ZIP; PDF text → Word delivers only when
   the private source contains real extractable text and its fresh DOCX passes
   verification; PDF OCR delivers only non-empty local OCR text after its 2×
-  raster, timeout and artifact checks. See
+  raster, timeout and artifact checks; scanned PDF → Word emits a fresh,
+  verified DOCX only from that same bounded local OCR path and never exposes
+  raw OCR text to the browser. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
   [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
   [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md),
   [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md), and
-  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md).
+  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md) and
+  [`PDF_OCR_WORD_CONTRACT.md`](docs/migration/PDF_OCR_WORD_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially
 `PAYOS_WALLET_JOB_MAP.md`, `FEATURE_CONFIRM_CONTRACT.md`, and

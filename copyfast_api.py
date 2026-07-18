@@ -472,6 +472,14 @@ def _flags() -> dict[str, bool]:
         # Multi-page PDF OCR combines PDFium rasterization with the same local
         # Tesseract runtime and stays opt-in independently from Image OCR.
         "pdf_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False),
+        # Scan PDF → DOCX needs all three local execution boundaries. Expose
+        # only the effective capability so the Portal never promises Word
+        # delivery when its OCR or DOCX prerequisite remains paused.
+        "pdf_ocr_word_enabled": (
+            enabled("WEBAPP_PDF_OCR_WORD_ENABLED", False)
+            and enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False)
+            and enabled("WEBAPP_PDF_TO_WORD_ENABLED", False)
+        ),
         # PDF text extraction creates a DOCX artifact with a separate writer
         # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
         # PDF layout converter.

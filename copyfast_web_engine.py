@@ -183,6 +183,7 @@ ENGINE_SPECS.update(_many(("support", "tickets"), mode=ENGINE_MODE_WEB_NATIVE, f
 ENGINE_SPECS.update(_many(("documents_merge", "documents_split", "documents_compress"), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled"), handler="document_operations", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_ocr",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "image_ocr_enabled"), handler="image_ocr", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_pdf_ocr",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_ocr_enabled"), handler="pdf_ocr", asset_vault=True))
+ENGINE_SPECS.update(_many(("documents_pdf_ocr_word",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_ocr_word_enabled"), handler="pdf_ocr_word", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_image_to_pdf",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "image_to_pdf_enabled"), handler="image_to_pdf", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_pdf_to_images",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_to_images_enabled"), handler="pdf_to_images", asset_vault=True))
 ENGINE_SPECS.update(_many(("documents_pdf_to_word",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "document_operations_enabled", "pdf_to_word_enabled"), handler="pdf_to_word", asset_vault=True))
