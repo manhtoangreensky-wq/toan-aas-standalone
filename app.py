@@ -40,6 +40,7 @@ import copyfast_document_operations
 import copyfast_document_workspace
 import copyfast_free_prompt_gallery
 import copyfast_governance
+import copyfast_growth_review
 import copyfast_image_operations
 import copyfast_image_studio
 import copyfast_storyboard_grid
@@ -284,6 +285,10 @@ DOCUMENT_OPERATION_BODY_MAX_BYTES = 16 * 1024
 # Trend Research is a compact, text-only request with a 180-character topic.
 # Retain a small raw-stream cap before Pydantic parses a chunked payload.
 TREND_RESEARCH_BODY_MAX_BYTES = 16 * 1024
+# Growth Review is a compact, numeric-only request. Apply a separate raw
+# stream ceiling before Pydantic sees its JSON; it never permits platform
+# data, Bot/bridge, AI/provider, revenue ledger, job or payment input.
+GROWTH_REVIEW_BODY_MAX_BYTES = 16 * 1024
 # Media Factory Blueprint is an equally small topic/language planning receipt.
 # The early cap applies before Pydantic parsing and does not enable a media
 # upload, source fetch, provider request, Bot call or execution engine.
@@ -359,6 +364,7 @@ class PromptLibraryBodyLimitMiddleware:
         document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
         document_operation_max_bytes: int = DOCUMENT_OPERATION_BODY_MAX_BYTES,
         trend_research_max_bytes: int = TREND_RESEARCH_BODY_MAX_BYTES,
+        growth_review_max_bytes: int = GROWTH_REVIEW_BODY_MAX_BYTES,
         media_factory_max_bytes: int = MEDIA_FACTORY_BODY_MAX_BYTES,
         chat_workspace_max_bytes: int = CHAT_WORKSPACE_BODY_MAX_BYTES,
         analytics_workspace_max_bytes: int = ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
@@ -388,6 +394,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.document_workspace_max_bytes = int(document_workspace_max_bytes)
         self.document_operation_max_bytes = int(document_operation_max_bytes)
         self.trend_research_max_bytes = int(trend_research_max_bytes)
+        self.growth_review_max_bytes = int(growth_review_max_bytes)
         self.media_factory_max_bytes = int(media_factory_max_bytes)
         self.chat_workspace_max_bytes = int(chat_workspace_max_bytes)
         self.analytics_workspace_max_bytes = int(analytics_workspace_max_bytes)
@@ -422,6 +429,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/document-workspace/")
                 or path.startswith("/api/v1/document-operations/")
                 or path.startswith("/api/v1/trend-research/")
+                or path.startswith("/api/v1/growth-review/")
                 or path.startswith("/api/v1/media-factory/")
                 or path.startswith("/api/v1/chat-workspace/")
                 or path.startswith("/api/v1/analytics-workspace/")
@@ -471,6 +479,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.document_operation_max_bytes
         if path.startswith("/api/v1/trend-research/"):
             return self.trend_research_max_bytes
+        if path.startswith("/api/v1/growth-review/"):
+            return self.growth_review_max_bytes
         if path.startswith("/api/v1/media-factory/"):
             return self.media_factory_max_bytes
         if path.startswith("/api/v1/document-workspace/"):
@@ -529,6 +539,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_image_studio = path.startswith("/api/v1/image-studio/")
         is_document_operation = path.startswith("/api/v1/document-operations/")
         is_trend_research = path.startswith("/api/v1/trend-research/")
+        is_growth_review = path.startswith("/api/v1/growth-review/")
         is_media_factory = path.startswith("/api/v1/media-factory/")
         is_document_workspace = path.startswith("/api/v1/document-workspace/")
         is_chat_workspace = path.startswith("/api/v1/chat-workspace/")
@@ -582,6 +593,8 @@ class PromptLibraryBodyLimitMiddleware:
             if is_reliability_followup
             else copyfast_notification_center._boundary()
             if is_notification_tick or is_inbox_mutation
+            else copyfast_growth_review._boundary()
+            if is_growth_review
             else copyfast_data_controls._boundary()
             if is_data_controls
             else copyfast_governance._boundary()
@@ -618,6 +631,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_operation
                     else "Dữ liệu Trend Research vượt giới hạn kích thước an toàn."
                     if is_trend_research
+                    else "Dữ liệu Growth Review vượt giới hạn kích thước an toàn."
+                    if is_growth_review
                     else "Dữ liệu Media Factory Blueprint vượt giới hạn kích thước an toàn."
                     if is_media_factory
                     else "Dữ liệu Document & PDF Workspace vượt giới hạn kích thước an toàn."
@@ -673,6 +688,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_operation
                     else "WEB_TREND_RESEARCH_BODY_TOO_LARGE"
                     if is_trend_research
+                    else "WEB_GROWTH_REVIEW_BODY_TOO_LARGE"
+                    if is_growth_review
                     else "WEB_MEDIA_FACTORY_BODY_TOO_LARGE"
                     if is_media_factory
                     else "WEB_DOCUMENT_WORKSPACE_BODY_TOO_LARGE"
@@ -803,6 +820,7 @@ app.add_middleware(
     document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
     document_operation_max_bytes=DOCUMENT_OPERATION_BODY_MAX_BYTES,
     trend_research_max_bytes=TREND_RESEARCH_BODY_MAX_BYTES,
+    growth_review_max_bytes=GROWTH_REVIEW_BODY_MAX_BYTES,
     media_factory_max_bytes=MEDIA_FACTORY_BODY_MAX_BYTES,
     chat_workspace_max_bytes=CHAT_WORKSPACE_BODY_MAX_BYTES,
     analytics_workspace_max_bytes=ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
@@ -983,6 +1001,10 @@ async def security_headers(request: Request, call_next):
     # independent early cap before session/CSRF/template work. This never
     # opens live search, scraping, a provider, Bot bridge, job or payment.
     trend_research_write = request.method == "POST" and request.url.path.startswith("/api/v1/trend-research/")
+    # Growth Review is a manual rule calculation. Its own fixed bucket keeps
+    # a repeated numeric request from bypassing the common API throttle; it
+    # never opens platform analytics, Bot/bridge, AI/provider, Xu or PayOS.
+    growth_review_write = request.method == "POST" and request.url.path.startswith("/api/v1/growth-review/")
     # Media Factory Blueprint is also a request-only deterministic plan. Its
     # own bucket prevents repeat template work before session/CSRF handling;
     # it does not open an engine, source fetch, Bot bridge, job or payment.
@@ -1105,6 +1127,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 120
     if trend_research_write:
         rate_limit = 40
+    if growth_review_write:
+        rate_limit = 40
     if media_factory_write:
         rate_limit = 40
     if voice_studio_write:
@@ -1186,6 +1210,7 @@ async def security_headers(request: Request, call_next):
             else "content-studio-write" if content_studio_write
             else "content-studio-read" if content_studio_read
             else "trend-research-write" if trend_research_write
+            else "growth-review-write" if growth_review_write
             else "media-factory-write" if media_factory_write
             else "voice-studio-write" if voice_studio_write
             else "voice-studio-read" if voice_studio_read
@@ -1225,6 +1250,7 @@ async def security_headers(request: Request, call_next):
         if len(window) >= rate_limit:
             is_document_workspace_request = document_workspace_write or document_workspace_read
             is_trend_research_request = trend_research_write
+            is_growth_review_request = growth_review_write
             is_media_factory_request = media_factory_write
             is_chat_workspace_request = chat_workspace_write or chat_workspace_read
             is_analytics_workspace_request = analytics_workspace_write or analytics_workspace_read
@@ -1261,6 +1287,8 @@ async def security_headers(request: Request, call_next):
                         if is_inbox_request
                         else copyfast_trend_research._boundary()
                         if is_trend_research_request
+                        else copyfast_growth_review._boundary()
+                        if is_growth_review_request
                         else copyfast_media_factory._boundary()
                         if is_media_factory_request
                         else copyfast_document_workspace._boundary() if is_document_workspace_request else None
@@ -1413,6 +1441,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         is_media_factory = request.url.path.startswith("/api/v1/media-factory/")
         is_chat_workspace = request.url.path.startswith("/api/v1/chat-workspace/")
         is_analytics_workspace = request.url.path.startswith("/api/v1/analytics-workspace/")
+        is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
         is_workboard = request.url.path.startswith("/api/v1/workboard/")
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
@@ -1426,6 +1455,8 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                     if is_chat_workspace
                     else copyfast_analytics_workspace._boundary()
                     if is_analytics_workspace
+                    else copyfast_growth_review._boundary()
+                    if is_growth_review
                     else copyfast_workboard._boundary()
                     if is_workboard
                     else copyfast_governance._boundary()
@@ -1452,6 +1483,7 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
         is_notification_center = request.url.path.startswith("/api/v1/inbox/") or request.url.path.startswith("/internal/v1/notifications/")
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")
+        is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
         return JSONResponse(
             envelope(
                 False,
@@ -1461,6 +1493,8 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                     if request.url.path.startswith("/api/v1/chat-workspace/")
                     else copyfast_analytics_workspace._boundary()
                     if request.url.path.startswith("/api/v1/analytics-workspace/")
+                    else copyfast_growth_review._boundary()
+                    if is_growth_review
                     else copyfast_workboard._boundary()
                     if request.url.path.startswith("/api/v1/workboard/")
                     else copyfast_governance._boundary()
@@ -1609,6 +1643,7 @@ app.include_router(copyfast_channel_strategy.router)
 app.include_router(copyfast_content_handoff.router)
 app.include_router(copyfast_free_prompt_gallery.router)
 app.include_router(copyfast_trend_research.router)
+app.include_router(copyfast_growth_review.router)
 app.include_router(copyfast_media_factory.router)
 app.include_router(copyfast_voice_studio.router)
 app.include_router(copyfast_video_studio.router)

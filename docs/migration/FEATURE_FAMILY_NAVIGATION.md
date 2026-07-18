@@ -32,7 +32,7 @@ own signed Web routes instead of being silently collapsed into Dashboard:
 | `/media-workspace` | music/SFX brief, personal audio selection and music prompt semantics | Private Audio Asset Vault references, collections and deterministic local brief directions. It never searches a provider, streams audio, creates a music job, charges Xu or claims output delivery. |
 | `/membership` | packages, member/VIP, rank and trial status | Metadata is read only from the canonical wallet/package bridge; grants and Xu effects remain Bot-owned. |
 | `/status` | public AI/tool/Telegram/queue readiness commands | Displays only server-safe Web/Telegram/bridge readiness; no identity, secret, provider payload or control action is exposed. |
-| `/growth/ai` | `growth_ai` | Builds a tightly allowlisted Bot command from a 1–90 day window, optional platform/campaign ID and fixed growth goal. The Web App does not fabricate campaign metrics, recommendations, charge decisions or report output while no report adapter exists. |
+| `/growth/ai` | `growth_ai` | Growth Review Web-native: evaluates only six bounded metrics the signed account manually enters using the Bot-compatible deterministic score/rule tree. It never connects to a platform, calls AI/Bot/provider, reads canonical revenue, changes Xu/PayOS, creates a job or stores the input/result. The Bot's separate live `/growth_ai` conversation remains canonical. |
 | `/campaign/report` | `campaign_report`, `export_report` | Builds a tightly allowlisted Bot command from a 1–90 day window, optional platform/campaign ID and TXT/CSV choice. Text/CSV output and any charge/refund decision remain in the canonical Telegram conversation. |
 
 All customer parity hubs require the normal signed-session and linked-Telegram route gate.

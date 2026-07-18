@@ -140,6 +140,13 @@ Production Web App for `app.toanaas.vn`.
   Bot `/campaign/report`, platform report, stored asset, job or delivery
   artifact. See
   [`ANALYTICS_WORKSPACE_CONTRACT.md`](docs/migration/ANALYTICS_WORKSPACE_CONTRACT.md).
+- `WEBAPP_GROWTH_REVIEW_ENABLED` defaults to `true`. `/growth/ai` is a signed,
+  request-only **Growth Review** that mirrors the Bot's deterministic score
+  and recommendation thresholds over six values the account manually enters.
+  It is not Growth AI: it never connects to a platform, reads canonical
+  revenue, calls Bot/provider/model, changes Xu/PayOS, creates a job or saves
+  the input/result. See
+  [`GROWTH_REVIEW_CONTRACT.md`](docs/migration/GROWTH_REVIEW_CONTRACT.md).
 - `WEBAPP_WORKBOARD_ENABLED` defaults to `true`. `/workboard` is a
   signed-account Kanban and self-review queue for metadata the same Web
   account owns. It can reference verified Web Project, Campaign, Analytics,

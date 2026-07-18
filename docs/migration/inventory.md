@@ -2,17 +2,17 @@
 
 | Area | Bot | Web App |
 | --- | --- | --- |
-| Source files scanned | 172 | 230 |
+| Source files scanned | 172 | 232 |
 | Noncanonical Bot drafts excluded | 4 | n/a |
 | Commands | 773 | n/a |
 | Callback handlers | 54 | n/a |
 | Callback-data values | 2821 | n/a |
 | Unresolved callback templates | 232 | n/a |
 | Conversation handlers | 0 | n/a |
-| FastAPI routes | 139 | 581 |
+| FastAPI routes | 139 | 583 |
 | Background/job signals | 194 | 26 |
 | Database tables | 97 | 184 |
-| Environment names | 364 | 162 |
+| Environment names | 364 | 163 |
 | Provider names | 15 | 16 |
 
 Reports contain the complete machine-readable records. Values matching secret formats are redacted.

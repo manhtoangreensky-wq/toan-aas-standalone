@@ -544,6 +544,12 @@ def _flags() -> dict[str, bool]:
         # This maintenance switch never enables live search, social scraping,
         # Bot/provider work, jobs, wallet/Xu, PayOS, assets or publishing.
         "trend_research_enabled": enabled("WEBAPP_TREND_RESEARCH_ENABLED", True),
+        # Growth Review mirrors only the Bot's deterministic score/recommend
+        # helper over values the signed account enters manually. It does not
+        # enable the Bot's live Growth AI conversation, platform analytics,
+        # canonical revenue, a model/provider, wallet/Xu, PayOS, jobs, assets
+        # or publishing.
+        "growth_review_enabled": enabled("WEBAPP_GROWTH_REVIEW_ENABLED", True),
         # Media Factory Blueprint is the signed, request-only Web conversion
         # of the Bot's static content/video-pack checklist. It does not enable
         # live search, provider/Bot execution, jobs, Xu/PayOS, output or
