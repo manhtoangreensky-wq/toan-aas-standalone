@@ -1231,6 +1231,22 @@
       "TXT chỉ tải qua signed session sau ownership, content và integrity verification; không gọi Bot, provider, job, ví Xu, PayOS hay webhook."
     ]
   });
+  customerPage("/documents/pdf-ocr", "OCR PDF riêng tư", "Đọc text từ PDF private trong Asset Vault bằng runtime local được kiểm tra; chỉ phát TXT sau khi server xác minh output thật.", ICONS.document, {
+    layout: "pdf-ocr", type: "document-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "Browser chỉ gửi Asset Vault ID PDF và lựa chọn ngôn ngữ auto/vi/en. Không có upload bytes, URL, path, OCR browser hoặc preview text cục bộ.",
+        "PDF OCR bị giới hạn 20 MB cùng số trang và tài nguyên an toàn do server kiểm tra. Thiếu runtime/language pack hoặc không đọc được text sẽ giữ trạng thái guarded, không tạo TXT giả.",
+      "TXT chỉ tải qua signed session sau ownership, content và integrity verification; không gọi Bot, provider, job, ví Xu, PayOS hay webhook."
+    ]
+  });
+  customerPage("/documents/pdf-ocr-to-word", "OCR PDF → Word riêng tư", "Đọc text từ PDF scan private bằng runtime local được kiểm tra; chỉ phát DOCX sau khi server xác minh output thật.", ICONS.document, {
+    layout: "pdf-ocr-to-word", type: "document-operation", action: "none", status: "ready", fields: [],
+    notes: [
+      "Browser chỉ gửi Asset Vault ID PDF và lựa chọn ngôn ngữ auto/vi/en. Không có upload bytes, URL, path, OCR browser hoặc preview text cục bộ.",
+      "PDF OCR → Word chỉ chạy trong runtime local do server xác nhận. Thiếu runtime/language pack hoặc không đọc được text sẽ giữ trạng thái guarded, không tạo DOCX giả.",
+      "DOCX chỉ tải qua signed session sau ownership, content và integrity verification; không gọi Bot, provider, job, ví Xu, PayOS hay webhook."
+    ]
+  });
   customerPage("/documents/merge", "Gộp PDF riêng tư", "Gộp nhiều PDF theo thứ tự rõ ràng từ Asset Vault bằng Document Operations độc lập của Web.", ICONS.document, {
     layout: "pdf-merge", type: "document-operation", action: "none", status: "ready", fields: [],
     notes: [
@@ -3707,7 +3723,7 @@
   const OPERATION_HISTORY_LIST_LIMIT = 50;
   const OPERATION_HISTORY_MAX_LIST_OFFSET = 10000;
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
-    "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr"
+    "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"
   ]);
   const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance"]);
   // Brand overlays have a separate owner-scoped projection.  Do not add this
@@ -6155,6 +6171,8 @@
       pdfToImagesEnabled: source.pdfToImagesEnabled === true,
       pdfToWordEnabled: source.pdfToWordEnabled === true,
       imageOcrEnabled: source.imageOcrEnabled === true,
+      pdfOcrEnabled: source.pdfOcrEnabled === true,
+      pdfOcrWordEnabled: source.pdfOcrWordEnabled === true,
       // Resize Studio has its own private output schema and read readiness.
       // Preserve both through normalisation so a successful signed hydration
       // cannot be mistaken for an empty/static browser projection.
@@ -7171,7 +7189,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -13724,7 +13742,7 @@
       .filter((item) => {
         const itemKind = String(item && item.kind || "");
         return item && typeof item === "object" && validDocumentOperationId(item.id)
-          && (kind ? itemKind === kind : ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr"].includes(itemKind));
+          && (kind ? itemKind === kind : ["pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"].includes(itemKind));
       })
       .slice(0, OPERATION_HISTORY_LIST_LIMIT);
   }
@@ -14176,6 +14194,35 @@
     ];
   }
 
+  function pdfOcrFormFields() {
+    return [
+      {
+        name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets", referencePicker: "document-pdf",
+        emptyLabel: "Chọn PDF riêng tư", required: true,
+        help: "Chỉ PDF active thuộc signed Web account hiện tại xuất hiện. Browser chỉ gửi Asset Vault ID, không gửi URL, path hoặc bytes PDF."
+      },
+      {
+        name: "language", label: "Ngôn ngữ OCR", control: "select", required: true,
+        options: [["auto", "Tự nhận diện (auto)"], ["vi", "Tiếng Việt"], ["en", "English"]],
+        help: "Lựa chọn này chỉ được gửi vào runtime OCR local đã bật. Không có OCR trong browser, dịch máy, provider call hoặc preview text cục bộ."
+      }
+    ];
+  }
+
+  function pdfOcrWordFormFields() {
+    return [
+      {
+        name: "source_asset_id", label: "PDF nguồn trong Asset Vault", control: "select", optionsFrom: "pdfVaultAssets", referencePicker: "document-pdf",
+        emptyLabel: "Chọn PDF scan riêng tư", required: true,
+        help: "Chỉ PDF active thuộc signed Web account hiện tại xuất hiện. Browser chỉ gửi Asset Vault ID, không gửi URL, path hoặc bytes PDF."
+      },
+      {
+        name: "language", label: "Ngôn ngữ OCR", control: "select", required: true,
+        options: [["auto", "Tự nhận diện (auto)"], ["vi", "Tiếng Việt"], ["en", "English"]],
+        help: "Lựa chọn này chỉ được gửi vào server OCR → DOCX đã bật. Không có OCR trong browser, provider call hoặc preview text cục bộ."
+      }
+    ];
+  }
   function storyboardGridFormValues(values) {
     const current = values && typeof values === "object"
       ? values
@@ -14409,6 +14456,9 @@
       const isPdfToImages = kind === "pdf_to_images";
       const isPdfToWord = kind === "pdf_to_word_text";
       const isImageOcr = kind === "image_ocr";
+      const isPdfOcr = kind === "pdf_ocr";
+      const isPdfOcrWord = kind === "pdf_ocr_word";
+      const isOcrText = isImageOcr || isPdfOcr;
       const start = Number(item.selected_start_page);
       const end = Number(item.selected_end_page);
       const sourceCount = Math.max(1, Number(item.source_count) || 1);
@@ -14422,8 +14472,10 @@
         ? "Render toàn bộ trang PDF ở 2×"
         : isPdfToWord
         ? "Trích xuất text có thể chọn từ PDF"
-        : isImageOcr
-        ? `OCR ảnh private · ${imageOcrLanguageLabel(item.language || item.requested_language)}`
+        : isPdfOcrWord
+        ? `OCR PDF → DOCX private · ${imageOcrLanguageLabel(item.language || item.requested_language)}`
+        : isOcrText
+        ? `${isPdfOcr ? "OCR PDF private" : "OCR ảnh private"} · ${imageOcrLanguageLabel(item.language || item.requested_language)}`
         : (Number.isInteger(start) && Number.isInteger(end) ? (start === end ? `Trang ${start}` : `Trang ${start}–${end}`) : "Đang xác minh phạm vi");
       const sourcePages = Number(item.source_page_count);
       const outputPages = Number(item.output_page_count);
@@ -14437,6 +14489,8 @@
         ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
         : isPdfToWord
         ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
+        : isPdfOcrWord
+        ? (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang PDF` : "Đang kiểm tra")
         : isImageOcr
         ? "1 ảnh private đã chọn"
         : (Number.isInteger(sourcePages) ? `${safeText(String(sourcePages))} trang` : "Đang kiểm tra");
@@ -14449,22 +14503,24 @@
         ? "Không có bản nhỏ hơn đạt chuẩn an toàn; file gốc không thay đổi và không có artifact tải xuống."
         : isPdfToWord && status === "guarded"
         ? "PDF không có text có thể trích xuất; Web không OCR hoặc tạo DOCX giả."
+        : isPdfOcrWord && status === "guarded"
+        ? "OCR không có text đủ điều kiện hoặc runtime bị chặn an toàn; Web không tạo DOCX giả."
         : isPdfToImages && (status === "failed" || status === "unavailable")
         ? "Không có PNG/ZIP tải xuống; hãy kiểm tra PDF nguồn và chạy thao tác mới."
-        : isImageOcr && status === "guarded"
+        : isOcrText && status === "guarded"
         ? "OCR không có text đủ điều kiện hoặc bị chặn an toàn; Web không tạo TXT giả."
         : (status === "failed" || status === "unavailable" ? "Không có output tải xuống; hãy kiểm tra nguồn và chạy thao tác mới." : "Chỉ tải xuống sau khi server xác minh output.");
-      const outputMetric = isPdfToWord
+      const outputMetric = isPdfToWord || isPdfOcrWord
         ? (status === "completed" && downloadPath ? "DOCX đã xác minh" : "Chưa có")
         : isPdfToImages
         ? (status === "completed" && downloadPath ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG đã xác minh" : `${safeText(String(outputPages || 0))} PNG trong ZIP`) : "Chưa có")
-        : isImageOcr
+        : isOcrText
         ? (status === "completed" && downloadPath ? "TXT đã xác minh" : "Chưa có")
         : (isOptimize ? safeText(item.byte_size ? vaultBytes(item.byte_size) : "Chưa có") : (Number.isInteger(outputPages) ? `${safeText(String(outputPages))} trang` : "Chưa có"));
-      const artifactLabel = isImageOcr ? "TXT" : (isPdfToWord ? "DOCX" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG" : "ZIP") : (isOptimize ? "Đã giảm" : "Artifact")));
-      const downloadLabel = isImageOcr ? "Tải TXT riêng tư" : (isPdfToWord ? "Tải DOCX riêng tư" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "Tải PNG riêng tư" : "Tải ZIP riêng tư") : "Tải PDF riêng tư"));
-      const fallbackFilename = isImageOcr ? "TXT OCR riêng tư" : (isPdfToWord ? "DOCX riêng tư" : (isPdfToImages ? "PNG / ZIP riêng tư" : "PDF riêng tư"));
-      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isImageOcr ? "OCR" : (isPdfToWord ? "DOCX" : (isPdfToImages ? "PNG" : (isImageToPdf ? "ẢNH" : "PDF")))}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+      const artifactLabel = isOcrText ? "TXT" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "PNG" : "ZIP") : (isOptimize ? "Đã giảm" : "Artifact")));
+      const downloadLabel = isOcrText ? "Tải TXT riêng tư" : ((isPdfToWord || isPdfOcrWord) ? "Tải DOCX riêng tư" : (isPdfToImages ? (Number.isInteger(outputPages) && outputPages === 1 ? "Tải PNG riêng tư" : "Tải ZIP riêng tư") : "Tải PDF riêng tư"));
+      const fallbackFilename = isPdfOcrWord ? "DOCX OCR PDF riêng tư" : (isPdfOcr ? "TXT OCR PDF riêng tư" : (isImageOcr ? "TXT OCR riêng tư" : (isPdfToWord ? "DOCX riêng tư" : (isPdfToImages ? "PNG / ZIP riêng tư" : "PDF riêng tư"))));
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-document-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">${isOcrText ? "OCR" : ((isPdfToWord || isPdfOcrWord) ? "DOCX" : (isPdfToImages ? "PNG" : (isImageToPdf ? "ẢNH" : "PDF")))}</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || fallbackFilename))}</h2><p class="portal-card-subtitle">${safeText(selected)}</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${sourceMetric}</dd></div><div><dt>Đầu ra</dt><dd>${outputMetric}</dd></div><div><dt>${artifactLabel}</dt><dd>${thirdMetric}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">${downloadLabel} <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -14477,7 +14533,9 @@
       { href: "/documents/compress", icon: "PDF", title: "Tối ưu PDF", text: "Chỉ phát một bản lossless khi kết quả nhỏ hơn đủ ý nghĩa.", ready: true },
       { href: "/documents/image-to-pdf", icon: "ẢNH", title: "Ảnh sang PDF", text: "Tạo PDF từ JPEG/PNG/WebP private theo thứ tự trang có chủ đích.", ready: Boolean(context.imageToPdfEnabled) },
       { href: "/documents/pdf-to-word", icon: "DOCX", title: "PDF có text → Word", text: "Trích xuất text có thể chọn thành DOCX; không OCR hoặc sao chép layout giả.", ready: Boolean(context.pdfToWordEnabled) },
-      { href: "/documents/ocr", icon: "OCR", title: "OCR ảnh", text: "Đọc text từ một ảnh Asset Vault và chỉ phát TXT private sau khi server xác minh output.", ready: Boolean(context.imageOcrEnabled) }
+      { href: "/documents/ocr", icon: "OCR", title: "OCR ảnh", text: "Đọc text từ một ảnh Asset Vault và chỉ phát TXT private sau khi server xác minh output.", ready: Boolean(context.imageOcrEnabled) },
+      { href: "/documents/pdf-ocr", icon: "OCR", title: "OCR PDF", text: "Đọc text từ PDF private trong giới hạn tài nguyên an toàn của server và chỉ phát TXT đã xác minh.", ready: Boolean(context.pdfOcrEnabled) },
+      { href: "/documents/pdf-ocr-to-word", icon: "DOCX", title: "OCR PDF → Word", text: "Đọc PDF scan private bằng OCR server-side và chỉ phát DOCX đã xác minh; không có preview text.", ready: Boolean(context.pdfOcrWordEnabled) }
     ];
     return `<article class="portal-page portal-document-hub">${renderHero(page, context)}
       <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private Document Studio</span><h2>Công cụ PDF có output thật, không form generic</h2><p>Chọn workflow phù hợp cho PDF của bạn. Mỗi công cụ chỉ đọc Asset Vault của signed account, xử lý trong storage cô lập và chỉ cho tải attachment sau khi server xác minh dữ liệu đầu ra.</p></div><dl><div><dt>${safeText(String(cards.filter((item) => item.ready && privateReady).length))}</dt><dd>Tiện ích private sẵn sàng</dd></div><div><dt>0</dt><dd>Bot job / provider call</dd></div></dl></section>
@@ -14646,6 +14704,57 @@
     </article>`;
   }
 
+  function renderPdfOcr(page, context) {
+    const pdfOcrEnabled = context.pdfOcrEnabled === true;
+    const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true && pdfOcrEnabled);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-ocr-pdf"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true && pdfOcrEnabled);
+    if (!canView) {
+      return `<article class="portal-page portal-pdf-ocr">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>OCR PDF đang ở chế độ an toàn</h2><p>OCR PDF chỉ mở khi server xác nhận feature flag, Asset Vault, storage output private, PDF renderer và runtime/language pack có thể dùng. Không fallback sang OCR browser, Bot, provider hoặc output text mô phỏng.</p><div class="portal-state-meta"><span>Signed session</span><span>Runtime server-side</span><span>Không có TXT giả</span></div></div></div></section></article>`;
+    }
+    const sources = pdfVaultItems(context);
+    const operations = documentOperationItems(context, "pdf_ocr");
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = { language: "auto", ...transientFormValues("/documents/pdf-ocr") };
+    const runReason = !canRunCapability
+      ? "OCR PDF đang được server giữ ở trạng thái guarded. Không có xử lý hoặc output thay thế từ browser."
+      : !sources.length
+        ? "Hãy lưu ít nhất một PDF private vào Asset Vault trước khi chạy OCR."
+        : "Server đọc PDF source trong vùng cô lập, áp giới hạn trang/tài nguyên an toàn và chỉ phát TXT khi text output non-empty được xác minh cùng ownership/integrity.";
+    const completedCount = operations.filter((item) => documentOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-pdf-ocr">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private PDF OCR</span><h2>Đọc text từ PDF private, chỉ giao khi có kết quả thật</h2><p>Chọn một PDF đã có trong Asset Vault. Browser chỉ gửi mã asset và ngôn ngữ auto/vi/en; server kiểm tra ownership, parse/render trong giới hạn trang và tài nguyên an toàn của server, rồi chỉ tạo TXT private sau khi output có nội dung, hash và metadata đều hợp lệ.</p></div><dl><div><dt>${safeText(sources.length === 1 ? "1 PDF đang hoạt động" : `${sources.length} PDF đang hoạt động`)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>TXT sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn PDF và ngôn ngữ</h2><p class="portal-card-subtitle">Không upload bytes, không nhận URL/path và không OCR trong browser. Mỗi request chỉ có một Asset Vault ID PDF private cùng một lựa chọn ngôn ngữ.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-ocr-pdf" data-portal-route="/documents/pdf-ocr" data-portal-confirm="Đọc text từ PDF private đã chọn? Web chỉ phát TXT sau khi server xác minh output; PDF gốc không bị thay đổi." novalidate>${renderFields(pdfOcrFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo TXT riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">PDF OCR là pipeline Web-native server-side, không phải preview hay promise browser.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ một PDF active của signed account hiện tại được đọc từ Asset Vault.</span></li><li><strong>2. Xử lý có giới hạn</strong><span>PDF tối đa 20 MB và 10 trang được parse/render 2× trong runtime local. Thiếu runtime/language pack hoặc không tìm thấy text đủ điều kiện sẽ trả guarded.</span></li><li><strong>3. Delivery riêng tư</strong><span>TXT chỉ được phát sau kiểm tra content và integrity qua signed session; không public URL, PWA cache hoặc preview raw text.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">TXT OCR PDF riêng tư</h2><p class="portal-card-subtitle">Chỉ metadata an toàn và download thuộc signed account hiện tại được hiển thị. Text OCR không được render vào browser để tránh preview hoặc lưu client-side ngoài ý muốn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/pdf-ocr"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có TXT OCR PDF", "TXT chỉ xuất hiện sau khi server đọc được text thực, xác minh output private và xác nhận ownership. Không có text/attachment mô phỏng.")}${renderDocumentOperationHistoryPagination(context, canView, "/documents/pdf-ocr")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không tạo tích hợp ngầm</strong><p>OCR PDF không tạo Bot job, gọi provider, Xu, ví, PayOS, webhook, asset public hoặc Telegram action. OCR ảnh và dịch tài liệu là workflow riêng, không tự được suy diễn từ trang này.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderPdfOcrToWord(page, context) {
+    const pdfOcrWordEnabled = context.pdfOcrWordEnabled === true;
+    const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true && pdfOcrWordEnabled);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-pdf-ocr-to-word"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["document-operation-refresh"] === true && pdfOcrWordEnabled);
+    if (!canView) {
+      return `<article class="portal-page portal-pdf-ocr-to-word">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.document)}</span><div><h2>OCR PDF → Word đang ở chế độ an toàn</h2><p>Cấu hình, Asset Vault hoặc storage output private chưa đủ điều kiện. PDF renderer, OCR runtime, language pack và DOCX writer luôn được kiểm tra lại khi gửi yêu cầu; nếu chưa sẵn sàng, Web giữ guarded thay vì fallback sang OCR browser, Bot, provider hoặc DOCX mô phỏng.</p><div class="portal-state-meta"><span>Signed session</span><span>Runtime server-side</span><span>Không có DOCX giả</span></div></div></div></section></article>`;
+    }
+    const sources = pdfVaultItems(context);
+    const operations = documentOperationItems(context, "pdf_ocr_word");
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = { language: "auto", ...transientFormValues("/documents/pdf-ocr-to-word") };
+    const runReason = !canRunCapability
+      ? "OCR PDF → Word đang được server giữ ở trạng thái guarded. Không có xử lý hoặc DOCX thay thế từ browser."
+      : !sources.length
+        ? "Hãy lưu ít nhất một PDF scan private vào Asset Vault trước khi chạy OCR → Word."
+        : "Server đọc PDF source trong vùng cô lập và chỉ phát DOCX khi text OCR non-empty cùng output, ownership và integrity đều được xác minh.";
+    const completedCount = operations.filter((item) => documentOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-pdf-ocr-to-word">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Private PDF OCR → Word</span><h2>Đọc PDF scan thành DOCX riêng tư, chỉ khi có kết quả thật</h2><p>Chọn PDF đã có trong Asset Vault. Browser chỉ gửi mã asset và ngôn ngữ auto/vi/en; server kiểm tra ownership, xử lý OCR trong vùng cô lập và chỉ tạo DOCX private sau khi text, output và metadata đều hợp lệ.</p></div><dl><div><dt>${safeText(sources.length === 1 ? "1 PDF đang hoạt động" : `${sources.length} PDF đang hoạt động`)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>DOCX sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chọn PDF scan và ngôn ngữ</h2><p class="portal-card-subtitle">Không upload bytes, không nhận URL/path và không OCR trong browser. Mỗi request chỉ có một Asset Vault ID PDF private cùng một lựa chọn ngôn ngữ.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="document-operation-pdf-ocr-to-word" data-portal-route="/documents/pdf-ocr-to-word" data-portal-confirm="Đọc PDF scan private thành DOCX? Web chỉ phát DOCX sau khi server xác minh OCR và output; PDF gốc không bị thay đổi." novalidate>${renderFields(pdfOcrWordFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo DOCX riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới rõ ràng</h2><p class="portal-card-subtitle">OCR → Word là pipeline Web-native server-side, không phải preview hay promise browser.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn có ownership</strong><span>Chỉ một PDF active của signed account hiện tại được đọc từ Asset Vault.</span></li><li><strong>2. Xử lý có kiểm tra</strong><span>Runtime, language pack, PDF source và DOCX cuối cùng phải được server kiểm tra. Không có text đủ điều kiện hoặc runtime chưa sẵn sàng sẽ trả guarded.</span></li><li><strong>3. Delivery riêng tư</strong><span>DOCX chỉ được phát sau kiểm tra content và integrity qua signed session; không public URL, PWA cache hoặc preview raw OCR text.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">DOCX OCR PDF riêng tư</h2><p class="portal-card-subtitle">Chỉ metadata an toàn và download thuộc signed account hiện tại được hiển thị. Text OCR không được render vào browser để tránh preview hoặc lưu client-side ngoài ý muốn.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="document-operation-refresh" data-portal-route="/documents/pdf-ocr-to-word"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderDocumentOperationCards(operations, "Chưa có DOCX OCR PDF", "DOCX chỉ xuất hiện sau khi server đọc được text thực, xác minh output private và xác nhận ownership. Không có text/attachment mô phỏng.")}${renderDocumentOperationHistoryPagination(context, canView, "/documents/pdf-ocr-to-word")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Không tạo tích hợp ngầm</strong><p>OCR PDF → Word không tạo Bot job, gọi provider, Xu, ví, PayOS, webhook, asset public hoặc Telegram action. OCR PDF TXT và PDF có text → Word là workflow riêng, không tự được suy diễn từ trang này.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
   function renderImageToPdf(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["document-operation-view"] === true);
     const canRunCapability = Boolean(context.capabilities && context.capabilities["document-operation-image-to-pdf"] === true);
@@ -18914,6 +19023,8 @@
       case "pdf-to-images": return renderPdfToImages(page, context);
       case "pdf-to-word": return renderPdfToWord(page, context);
       case "image-ocr": return renderImageOcr(page, context);
+      case "pdf-ocr": return renderPdfOcr(page, context);
+      case "pdf-ocr-to-word": return renderPdfOcrToWord(page, context);
       case "image-to-pdf": return renderImageToPdf(page, context);
       case "image-resize": return renderImageResize(page, context);
       case "image-enhance": return renderImageEnhance(page, context);

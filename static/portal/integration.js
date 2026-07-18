@@ -8,6 +8,8 @@
 
   const API = "/api/v1";
   const IMAGE_OCR_ROUTE = "/documents/ocr";
+  const PDF_OCR_ROUTE = "/documents/pdf-ocr";
+  const PDF_OCR_WORD_ROUTE = "/documents/pdf-ocr-to-word";
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -332,7 +334,7 @@
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
     "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
-    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
+    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/pdf-ocr": "documents_pdf_ocr", "/documents/pdf-ocr-to-word": "documents_pdf_ocr_word", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
     "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
@@ -449,6 +451,8 @@
     // for a different signed account.
     if (window.TOANAASPortal && typeof window.TOANAASPortal.clearTransientFormDraft === "function") {
       window.TOANAASPortal.clearTransientFormDraft(IMAGE_OCR_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_WORD_ROUTE);
     }
   }
 
@@ -1621,7 +1625,7 @@
   const OPERATION_ASSET_REFERENCE_MAX_LIST_OFFSET = 10000;
   const DOCUMENT_ASSET_REFERENCE_ROUTES = new Set([
     "/documents/split", "/documents/merge", "/documents/compress",
-    "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", IMAGE_OCR_ROUTE
+    "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", IMAGE_OCR_ROUTE, PDF_OCR_ROUTE, PDF_OCR_WORD_ROUTE
   ]);
   const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"]);
   const documentAssetReferenceHydrationEpoch = { pdf: 0, image: 0 };
@@ -8968,6 +8972,15 @@
     // requested; it never grants browser OCR, a Bot/provider adapter, job,
     // wallet, payment or Telegram capability.
     const imageOcrEnabled = Boolean(status.flags && status.flags.image_ocr_enabled === true);
+    // PDF OCR is an independently guarded local renderer + OCR runtime. A
+    // true flag only allows its server-side private route; it does not grant
+    // browser OCR, Bot/provider execution, jobs, wallet or payment capability.
+    const pdfOcrEnabled = Boolean(status.flags && status.flags.pdf_ocr_enabled === true);
+    // OCR PDF → Word is an isolated local conversion boundary. Its flag only
+    // permits a signed request to the narrow server pipeline; it never grants
+    // browser OCR/DOCX generation, Bot/provider execution, jobs, wallet or
+    // payment capability.
+    const pdfOcrWordEnabled = Boolean(status.flags && status.flags.pdf_ocr_word_enabled === true);
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
@@ -9164,7 +9177,9 @@
       "/documents/image-to-pdf": account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled ? "ready" : "guarded",
       "/documents/pdf-to-images": account && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled ? "ready" : "guarded",
       "/documents/pdf-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled ? "ready" : "guarded",
-      "/documents/ocr": account && assetVaultEnabled && documentOperationsEnabled && imageOcrEnabled ? "ready" : "guarded"
+      "/documents/ocr": account && assetVaultEnabled && documentOperationsEnabled && imageOcrEnabled ? "ready" : "guarded",
+      "/documents/pdf-ocr": account && assetVaultEnabled && documentOperationsEnabled && pdfOcrEnabled ? "ready" : "guarded",
+      "/documents/pdf-ocr-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfOcrWordEnabled ? "ready" : "guarded"
     };
     const nativeImagePageStates = {
       // The private source/history reads still need to complete before a
@@ -9310,6 +9325,8 @@
       "document-operation-pdf-to-images": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled),
       "document-operation-pdf-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled),
       "document-operation-ocr-image": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageOcrEnabled),
+      "document-operation-ocr-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrEnabled),
+      "document-operation-pdf-ocr-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrWordEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       // Resize & Aspect Studio is a separate Web-native image contract. It
       // needs no Telegram link/Core Bridge/provider/wallet, but remains
@@ -9824,6 +9841,8 @@
       pdfToImagesEnabled,
       pdfToWordEnabled,
       imageOcrEnabled,
+      pdfOcrEnabled,
+      pdfOcrWordEnabled,
       imageOperationsEnabled,
       imageResizeEnabled,
       imageEnhanceEnabled,
@@ -10406,8 +10425,8 @@
       projectPackageListing: projectPackageListingProjection("", 0, {}, 0),
       pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" }
     });
-    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
-    else if (account && ["/asset-vault", "/documents/ocr", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath)) merge({
+    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultListing: assetVaultListingProjection({ q: "", state: "active" }, 0, {}, 0),
       assetVaultReadState: "guarded",
@@ -14544,7 +14563,7 @@
   const OPERATION_HISTORY_LIST_LIMIT = 50;
   const OPERATION_HISTORY_MAX_LIST_OFFSET = 10000;
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
-    "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr"
+    "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"
   ]);
   const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay"]);
 
@@ -14662,6 +14681,8 @@
     if (currentPath === "/documents/pdf-to-images") return "pdf_to_images";
     if (currentPath === "/documents/pdf-to-word") return "pdf_to_word_text";
     if (currentPath === IMAGE_OCR_ROUTE) return "image_ocr";
+    if (currentPath === PDF_OCR_ROUTE) return "pdf_ocr";
+    if (currentPath === PDF_OCR_WORD_ROUTE) return "pdf_ocr_word";
     return "";
   }
 
@@ -14690,7 +14711,9 @@
           "/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded",
           "/documents/pdf-to-images": base().pdfToImagesEnabled === true ? "ready" : "guarded",
           "/documents/pdf-to-word": base().pdfToWordEnabled === true ? "ready" : "guarded",
-          "/documents/ocr": base().imageOcrEnabled === true ? "ready" : "guarded"
+          "/documents/ocr": base().imageOcrEnabled === true ? "ready" : "guarded",
+          "/documents/pdf-ocr": base().pdfOcrEnabled === true ? "ready" : "guarded",
+          "/documents/pdf-ocr-to-word": base().pdfOcrWordEnabled === true ? "ready" : "guarded"
         }
       });
       return items;
@@ -14710,7 +14733,9 @@
           "/documents/image-to-pdf": "guarded",
           "/documents/pdf-to-images": "guarded",
           "/documents/pdf-to-word": "guarded",
-          "/documents/ocr": "guarded"
+          "/documents/ocr": "guarded",
+          "/documents/pdf-ocr": "guarded",
+          "/documents/pdf-ocr-to-word": "guarded"
         }
       });
       return [];
@@ -22339,6 +22364,94 @@
           // An empty/scanned PDF is a deliberate guarded result. Re-read the
           // owner-scoped record so the UI never hides it behind a client-side
           // OCR or a fabricated DOCX preview.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-ocr-pdf") {
+        // The request is intentionally only this owner-scoped PDF asset ID
+        // plus the small language allow-list. No upload, URL, path, raw
+        // bytes, provider options, job/payment/wallet fields or browser OCR
+        // result can cross this boundary.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const language = String(fields.language || "").trim().toLowerCase();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF private hợp lệ từ Asset Vault.");
+        if (!IMAGE_OCR_LANGUAGES.has(language)) throw new Error("Ngôn ngữ OCR chỉ có thể là auto, vi hoặc en.");
+        const scope = `document-operation:pdf-ocr:${sourceAssetId}:${language}`;
+        const submission = acquireSubmission(scope, `${sourceAssetId}:${language}`);
+        if (!submission) {
+          toast("OCR PDF đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/ocr-pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_id: sourceAssetId, language })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_ocr") {
+            throw new Error("Máy chủ chưa trả metadata OCR PDF hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã đọc và xác minh TXT OCR PDF riêng tư.");
+        } catch (error) {
+          // A normal guarded envelope may have no operation while local
+          // renderer/runtime/language readiness is unavailable. Re-read only
+          // owner-scoped records; never fabricate a TXT or browser preview.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-pdf-ocr-to-word") {
+        // Keep the browser contract deliberately small: the private PDF asset
+        // ID and an allow-listed OCR language only. OCR text, DOCX bytes,
+        // paths, URLs, provider options, job/payment/wallet fields and a
+        // client idempotency key must never cross this boundary.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const language = String(fields.language || "").trim().toLowerCase();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF scan private hợp lệ từ Asset Vault.");
+        if (!IMAGE_OCR_LANGUAGES.has(language)) throw new Error("Ngôn ngữ OCR chỉ có thể là auto, vi hoặc en.");
+        const scope = `document-operation:pdf-ocr-to-word:${sourceAssetId}:${language}`;
+        const submission = acquireSubmission(scope, `${sourceAssetId}:${language}`);
+        if (!submission) {
+          toast("OCR PDF → Word đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/pdf-ocr-to-word", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_id: sourceAssetId, language })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_ocr_word") {
+            throw new Error("Máy chủ chưa trả metadata OCR PDF → Word hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã đọc và xác minh DOCX OCR PDF riêng tư.");
+        } catch (error) {
+          // A guarded runtime or no-text response may intentionally have no
+          // operation. Re-read only the signed owner projection; never derive
+          // text, build a DOCX or substitute a browser/provider result.
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
           throw error;

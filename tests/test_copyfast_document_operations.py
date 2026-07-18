@@ -42,6 +42,8 @@ def make_client(
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ROOT", str(tmp_path / "private-document-outputs"))
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100")
+    monkeypatch.setenv("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false")
+    monkeypatch.setenv("WEBAPP_PDF_OCR_WORD_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "true" if image_to_pdf_enabled else "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_IMAGES_ENABLED", "true" if pdf_to_images_enabled else "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "true" if pdf_to_word_enabled else "false")

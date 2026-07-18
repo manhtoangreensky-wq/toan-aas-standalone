@@ -137,6 +137,18 @@ def pdf_ocr_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def pdf_ocr_word_enabled() -> bool:
+    """Whether scanned-PDF OCR-to-DOCX is deliberately enabled.
+
+    This combines an untrusted PDF rasterizer, local Tesseract and DOCX
+    writing.  Keep it independent from both TXT OCR and selectable-text PDF
+    export so an operator must explicitly opt in to the larger execution
+    surface and no existing route gains an unstated OCR fallback.
+    """
+
+    return os.environ.get("WEBAPP_PDF_OCR_WORD_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def pdf_to_word_enabled() -> bool:
     """Whether the private PDF-text-to-DOCX exporter is deliberately enabled.
 

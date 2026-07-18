@@ -51,6 +51,7 @@ def make_client(tmp_path, monkeypatch) -> TestClient:
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_IMAGES_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "false")
+    monkeypatch.setenv("WEBAPP_PDF_OCR_WORD_ENABLED", "false")
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ENABLED", raising=False)
     monkeypatch.delenv("WEBAPP_PROJECT_PACKAGE_ROOT", raising=False)
     monkeypatch.delenv("APP_ENV", raising=False)
