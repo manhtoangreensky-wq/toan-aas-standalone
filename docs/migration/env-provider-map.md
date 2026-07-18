@@ -405,6 +405,21 @@ runtime:
 - `WEBAPP_VIDEO_FFMPEG_BIN`
 - `WEBAPP_VIDEO_FFPROBE_BIN`
 
+## Web-native Frame Video Lab environment names
+
+Frame Video Lab is a separate disabled-by-default private image-sequence MP4
+executor. It does not require, read or call a Bot worker, provider, wallet,
+PayOS or webhook environment variable.
+
+- `WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED` (default `false`)
+- `WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT`
+- `WEBAPP_FRAME_VIDEO_MAX_OUTPUT_MB` (default `25`, capped `100`)
+- `WEBAPP_FRAME_VIDEO_QUOTA_MB` (default `250`, capped `5000`)
+- `WEBAPP_FRAME_VIDEO_OPERATIONS_TOPOLOGY` (must be `sqlite_single_replica`)
+- `WEBAPP_FRAME_VIDEO_FFMPEG_BIN` (absolute trusted binary; optional fallback is existing video binary setting)
+- `WEBAPP_FRAME_VIDEO_FFPROBE_BIN` (absolute trusted binary; optional fallback is existing video binary setting)
+- one explicit replica-count attestation: `RAILWAY_REPLICA_COUNT`, `RAILWAY_REPLICAS` or `WEBAPP_REPLICA_COUNT`, equal to `1`
+
 They do not contain an API key and must not be used as a provider, Bot,
 PayOS, wallet, webhook or production-deployment toggle. Enabling the feature
 also requires the existing private Asset Vault gate and a separately supplied

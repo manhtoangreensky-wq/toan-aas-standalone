@@ -30,3 +30,15 @@ guarded until all of the following are true in the target environment:
 This does not change the Bot authority for Telegram identity, Bot jobs,
 provider state, Xu/wallet or PayOS. See
 [`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).
+
+## Additive Web-native guard: Frame Video Lab
+
+Frame Video Lab is also outside static Telegram command counts. It is a
+separate Web-local image-sequence MP4 capability, not a migration of the Bot
+worker, long-form/series renderer or provider video generation. It must remain
+guarded until Asset Vault, `WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED`, a separate
+private root, trusted FFmpeg/ffprobe and explicit one-replica topology are all
+enabled. It shares the local FFmpeg gate with Video Poster but has no durable
+queue, retry worker, cross-replica lease, audio/mux pipeline, provider adapter
+or payment behaviour. See
+[`FRAME_VIDEO_LAB_CONTRACT.md`](FRAME_VIDEO_LAB_CONTRACT.md).

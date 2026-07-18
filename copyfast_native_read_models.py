@@ -14,7 +14,7 @@ import binascii
 import re
 from typing import Any
 
-from copyfast_db import read_transaction, subtitle_asset_operations_enabled
+from copyfast_db import frame_video_operations_enabled, read_transaction, subtitle_asset_operations_enabled
 from copyfast_subtitle_asset_operations import verified_subtitle_asset_output_available
 
 
@@ -30,6 +30,7 @@ _JOB_SOURCES = frozenset(
         "image-operation",
         "subtitle-asset-operation",
         "video-operation",
+        "frame-video-operation",
     }
 )
 _PUBLIC_ROUTE_ID_PATTERN = re.compile(rf"^[A-Za-z0-9._:-]{{1,{MAX_PUBLIC_ID_LENGTH}}}$")
@@ -44,6 +45,7 @@ _DOCUMENT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:pdf|docx|
 _IMAGE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.png$")
 _SUBTITLE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:srt|vtt)$")
 _VIDEO_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.jpg$")
+_FRAME_VIDEO_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.mp4$")
 
 # These are exact copies of the direct document-handler output contracts.  Do
 # not normalize a MIME parameter here: ``text/plain`` is *not* the same sealed
@@ -73,6 +75,7 @@ _SUBTITLE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     "vtt": (".vtt", "text/vtt", "toan-aas-subtitle.vtt"),
 }
 _VIDEO_POSTER_OUTPUT_SPEC = (".jpg", "image/jpeg", "toan-aas-video-poster.jpg")
+_FRAME_VIDEO_OUTPUT_SPEC = (".mp4", "video/mp4", "toan-aas-frame-video.mp4")
 
 
 def _account_id(value: Any) -> str:
@@ -130,6 +133,16 @@ def _non_negative_int(value: Any) -> int | None:
     except (TypeError, ValueError):
         return None
     return parsed if parsed >= 0 else None
+
+
+def _positive_float(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return None
+    try:
+        parsed = float(value)
+    except (TypeError, ValueError):
+        return None
+    return parsed if parsed > 0 and parsed == parsed and parsed not in {float("inf"), float("-inf")} else None
 
 
 def _safe_filename(value: Any) -> str | None:
@@ -590,6 +603,74 @@ def _project_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     }
 
 
+def _project_frame_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Project a sealed Frame Video receipt without source IDs or locator data."""
+
+    (
+        record_id,
+        operation_kind,
+        state,
+        aspect_ratio,
+        seconds_per_image,
+        effect,
+        source_count,
+        source_total_bytes,
+        output_duration_ms,
+        output_width,
+        output_height,
+        storage_key,
+        _filename,
+        content_type,
+        byte_size,
+        sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    kind = str(operation_kind or "")
+    return {
+        "id": encode_native_job_id("frame-video-operation", record_id),
+        "kind": "frame-video-operation",
+        "operation_kind": kind,
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        "summary": {
+            "aspect_ratio": _safe_filename(aspect_ratio),
+            "seconds_per_image": _positive_float(seconds_per_image),
+            "effect": _safe_filename(effect),
+            "source_count": _positive_int(source_count),
+            "source_total_bytes": _non_negative_int(source_total_bytes),
+            "output_duration_ms": _positive_int(output_duration_ms),
+            "output_width": _positive_int(output_width),
+            "output_height": _positive_int(output_height),
+        },
+        "output": (
+            _sealed_output(
+                state=state,
+                storage_key=storage_key,
+                storage_pattern=_FRAME_VIDEO_STORAGE_KEY_PATTERN,
+                content_type=content_type,
+                byte_size=byte_size,
+                sha256=sha256,
+                expected_suffix=_FRAME_VIDEO_OUTPUT_SPEC[0],
+                expected_content_type=_FRAME_VIDEO_OUTPUT_SPEC[1],
+                filename=_FRAME_VIDEO_OUTPUT_SPEC[2],
+                required_positive_values=(output_duration_ms, output_width, output_height),
+            )
+            if kind == "frame_video"
+            else None
+        ),
+    }
+
+
 def _project_asset(row: tuple[Any, ...]) -> dict[str, Any]:
     (
         record_id,
@@ -677,6 +758,18 @@ _VIDEO_QUERY = """
      LIMIT ?
 """
 
+_FRAME_VIDEO_QUERY = """
+    SELECT id, kind, state, aspect_ratio, seconds_per_image, effect,
+           source_count, source_total_bytes, output_duration_ms, output_width,
+           output_height, storage_key, original_filename, content_type,
+           byte_size, sha256, created_at, queued_at, started_at, completed_at,
+           updated_at
+      FROM web_frame_video_operations
+     WHERE account_id=? AND kind='frame_video'
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
 _ASSET_QUERY = """
     SELECT id, display_name, original_filename, extension, content_type,
            byte_size, state, created_at, updated_at, archived_at
@@ -695,6 +788,10 @@ _SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY = _SUBTITLE_ASSET_OPERATION_QUERY.repl
 _VIDEO_COMPLETED_QUERY = _VIDEO_QUERY.replace(
     "WHERE account_id=? AND kind='video_poster'",
     "WHERE account_id=? AND kind='video_poster' AND state='completed'",
+)
+_FRAME_VIDEO_COMPLETED_QUERY = _FRAME_VIDEO_QUERY.replace(
+    "WHERE account_id=? AND kind='frame_video'",
+    "WHERE account_id=? AND kind='frame_video' AND state='completed'",
 )
 
 
@@ -739,6 +836,14 @@ def _projected_jobs_for_account(
                 "subtitle-asset-operation",
                 _SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY if completed_outputs_only else _SUBTITLE_ASSET_OPERATION_QUERY,
                 _project_subtitle_asset_operation,
+            )
+        )
+    if frame_video_operations_enabled():
+        sources.append(
+            (
+                "frame-video-operation",
+                _FRAME_VIDEO_COMPLETED_QUERY if completed_outputs_only else _FRAME_VIDEO_QUERY,
+                _project_frame_video_operation,
             )
         )
     for source, query, projector in sources:
@@ -812,12 +917,15 @@ def resolve_native_job(conn: Any, account_id: str, public_id: str) -> dict[str, 
     source, internal_id = parsed
     if source == "subtitle-asset-operation" and not subtitle_asset_operations_enabled():
         return None
+    if source == "frame-video-operation" and not frame_video_operations_enabled():
+        return None
     queries: dict[str, tuple[str, Any]] = {
         "project-package": (_PACKAGE_QUERY, _project_package),
         "document-operation": (_DOCUMENT_QUERY, _project_document_operation),
         "image-operation": (_IMAGE_QUERY, _project_image_operation),
         "subtitle-asset-operation": (_SUBTITLE_ASSET_OPERATION_QUERY, _project_subtitle_asset_operation),
         "video-operation": (_VIDEO_QUERY, _project_video_operation),
+        "frame-video-operation": (_FRAME_VIDEO_QUERY, _project_frame_video_operation),
     }
     query_and_projector = queries.get(source)
     if query_and_projector is None:

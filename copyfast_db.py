@@ -201,6 +201,17 @@ def video_poster_enabled() -> bool:
     return os.environ.get("WEBAPP_VIDEO_POSTER_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def frame_video_operations_enabled() -> bool:
+    """Whether the bounded Asset Vault image-to-video executor is enabled.
+
+    Frame Video Lab is deliberately not a switch for Video Studio, Bot jobs,
+    remote providers, wallets, PayOS, publishing or arbitrary FFmpeg work.
+    It only enables one private, deterministic image-sequence MP4 boundary.
+    """
+
+    return os.environ.get("WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def image_resize_enabled() -> bool:
     """Whether the Pillow-backed Resize & Aspect Studio executor is enabled.
 
@@ -968,6 +979,86 @@ def ensure_video_operations_persistence() -> Path | None:
     if not asset_vault_enabled():
         raise RuntimeError("Video Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
     return video_operations_directory()
+
+
+def frame_video_operations_directory() -> Path:
+    """Resolve the isolated private output root for Frame Video Lab.
+
+    The image-sequence renderer consumes only immutable Asset Vault images and
+    creates a private MP4.  Its root must remain separate from every existing
+    input/output boundary so a generated video can never be mistaken for an
+    upload, document conversion, image transform, poster, subtitle artifact,
+    package export or Bot-owned delivery.
+    """
+
+    if not frame_video_operations_enabled():
+        raise RuntimeError("WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_frame_video_operations"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_frame_video_operations"
+
+    if candidate.exists() and candidate.is_symlink():
+        raise RuntimeError("WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT không được là symbolic link")
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT không được nằm trong static")
+
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    if image_operations_enabled():
+        private_roots.append(image_operations_directory().resolve())
+    if subtitle_asset_operations_enabled():
+        private_roots.append(subtitle_asset_operations_directory().resolve())
+    if video_operations_enabled():
+        private_roots.append(video_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations, Subtitle Asset Operations và Video Operations"
+            )
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Frame Video Lab production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir() or candidate.is_symlink():
+        raise RuntimeError("WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_frame_video_operations_persistence() -> Path | None:
+    """Validate Frame Video's opt-in private storage boundary at startup."""
+
+    if not frame_video_operations_enabled():
+        return None
+    if not asset_vault_enabled():
+        raise RuntimeError("Frame Video Lab cần WEBAPP_ASSET_VAULT_ENABLED=true")
+    return frame_video_operations_directory()
 
 
 def admin_document_archive_directory() -> Path:
@@ -3880,6 +3971,95 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Frame Video Lab is intentionally independent from single-video
+        # Poster extraction.  It stores an immutable ordered source snapshot
+        # and only a verified private H.264 output receipt; paths, URLs,
+        # FFmpeg arguments, provider handles, wallet/Xu and PayOS state never
+        # belong in these records.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_frame_video_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                aspect_ratio TEXT NOT NULL,
+                seconds_per_image REAL NOT NULL,
+                effect TEXT NOT NULL,
+                source_count INTEGER NOT NULL,
+                source_total_bytes INTEGER NOT NULL,
+                output_duration_ms INTEGER,
+                output_width INTEGER,
+                output_height INTEGER,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1,
+                UNIQUE(account_id, kind, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_frame_video_operation_sources (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                source_index INTEGER NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_extension TEXT NOT NULL,
+                source_content_type TEXT NOT NULL,
+                created_at TEXT NOT NULL,
+                UNIQUE(operation_id, source_index),
+                UNIQUE(operation_id, source_asset_id),
+                FOREIGN KEY(operation_id) REFERENCES web_frame_video_operations(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_frame_video_operation_attempts (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                attempt_no INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                fence_token TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                failure_code TEXT,
+                UNIQUE(operation_id, attempt_no),
+                UNIQUE(operation_id, fence_token),
+                FOREIGN KEY(operation_id) REFERENCES web_frame_video_operations(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_frame_video_operation_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_frame_video_operations(id)
+            )
+            """
+        )
         # Workboard is a private, Web-native planning surface.  These tables
         # never store remote URLs, Bot/provider handles, execution output,
         # wallet/payment data or notification-delivery state.  A reference is
@@ -4800,6 +4980,24 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_video_operation_events_operation_sequence ON web_video_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_frame_video_operations_account_updated ON web_frame_video_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_frame_video_operations_account_state_updated ON web_frame_video_operations(account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_frame_video_operation_sources_operation_order ON web_frame_video_operation_sources(operation_id, source_index ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_frame_video_operation_sources_asset ON web_frame_video_operation_sources(source_asset_id, operation_id)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_frame_video_operation_attempts_operation_attempt ON web_frame_video_operation_attempts(operation_id, attempt_no DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_frame_video_operation_events_operation_sequence ON web_frame_video_operation_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_operations_account_updated ON web_storyboard_grid_operations(account_id, updated_at DESC, id DESC)"

@@ -388,6 +388,14 @@ def _lifecycle_reference_summary(conn, *, asset_id: str, account_id: str) -> dic
             "SELECT COUNT(*) FROM web_image_operations WHERE source_asset_id=? AND account_id=?",
             (asset_id, account_id),
         ),
+        (
+            "frame_video_operation_source",
+            False,
+            "SELECT COUNT(*) FROM web_frame_video_operation_sources AS source "
+            "JOIN web_frame_video_operations AS operation ON operation.id=source.operation_id "
+            "WHERE source.source_asset_id=? AND operation.account_id=?",
+            (asset_id, account_id),
+        ),
     )
     references: list[dict[str, Any]] = []
     total_count = 0
