@@ -47,6 +47,22 @@ def test_app_shell_keeps_touch_focus_motion_and_local_svg_contracts() -> None:
     assert '<svg class="portal-icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">' in icon_helper
 
 
+def test_app_shell_isolates_all_non_dialog_landmarks_and_keeps_mobile_auth_controls_touch_safe() -> None:
+    modal = _section(PORTAL, "function setPortalTargetInert(target, opened)", "function setSidebarMenuState(button, opened)")
+
+    assert 'document.querySelector(".skip-link")' in modal
+    assert 'document.querySelector(".portal-workspace")' in modal
+    assert 'document.querySelector("[data-portal-mobile-nav]")' in modal
+    assert 'document.querySelector("[data-portal-sidebar]")' in modal
+    assert "PORTAL_MODAL_ARIA_HIDDEN" in modal
+    assert "PORTAL_MODAL_INERT" in modal
+    assert "setPortalBackgroundInert(opened, true);" in PORTAL
+    assert "@media (max-width: 980px)" in CSS
+    assert ".portal-sidebar-close, .portal-command-close { width: 44px; height: 44px; }" in CSS
+    assert ".portal-password-toggle { right: 4px; min-width: 52px; min-height: 44px; }" in CSS
+    assert ".portal-auth-provider-option .portal-button { min-height: 44px; }" in CSS
+
+
 def test_customer_surfaces_use_progressive_disclosure_and_ephemeral_password_reveal() -> None:
     # Secondary assurance, payment lookup, and implementation notes stay
     # discoverable without taking attention away from the first useful action.

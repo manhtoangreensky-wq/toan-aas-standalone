@@ -43,3 +43,16 @@ def test_domain_centers_remain_navigation_only_and_do_not_add_a_bridge_adapter()
     assert "provider" in center.lower()
     assert "do not call providers, channel APIs, scrapers, PayOS" in contract
     assert "do not claim" in contract
+
+
+def test_domain_centers_only_render_routes_granted_by_the_signed_server_manifest() -> None:
+    portal = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
+    center = portal[portal.index("function renderAdminDomain(page, context)"):portal.index("function renderAdmin(page, context)")]
+
+    assert "const streams = domain.streams.filter((stream) => serverAuthorizesAdminRoute(context, stream.route));" in center
+    assert "portalIcon(stream.icon || ICONS.default)" in center
+    assert "portalIcon(ICONS.arrowRight)" in center
+    assert "Chưa có workflow quản trị được cấp" in center
+    assert "Web không đoán quyền từ URL hoặc browser state." in center
+    assert 'serverAuthorizesAdminRoute(context, "/admin")' in center
+    assert 'serverAuthorizesAdminRoute(context, "/admin/operations")' in center
