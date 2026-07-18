@@ -105,6 +105,12 @@ Production Web App for `app.toanaas.vn`.
   `WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH` to pin a server Unicode font for
   text. See
   [`IMAGE_BRAND_OVERLAY_CONTRACT.md`](docs/migration/IMAGE_BRAND_OVERLAY_CONTRACT.md).
+- `WEBAPP_STORYBOARD_GRID_ENABLED` defaults to `false`. Storyboard Grid
+  Splitter accepts one verified private Asset Vault image and deterministically
+  writes a verified JPEG-scene ZIP plus manifest using the isolated Image
+  Operations storage boundary. It does not enable AI, Bot jobs, provider
+  calls, Xu, PayOS or browser rendering. See
+  [`STORYBOARD_GRID_SPLITTER_CONTRACT.md`](docs/migration/STORYBOARD_GRID_SPLITTER_CONTRACT.md).
 - `WEBAPP_MEMORY_CENTER_ENABLED` defaults to `true`. `/notes` and
   `/reminders` are a signed-account, Web-owned workspace for private notes,
   version history and view-only reminders. It does not read or mutate Bot

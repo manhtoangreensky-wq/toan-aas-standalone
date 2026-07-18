@@ -188,6 +188,7 @@ ENGINE_SPECS.update(_many(("documents_pdf_to_word",), mode=ENGINE_MODE_WEB_NATIV
 ENGINE_SPECS.update(_many(("image_resize",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled", "image_resize_enabled"), handler="image_resize", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_edit",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled", "image_enhance_enabled"), handler="image_enhance", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_brand_overlay",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled", "image_brand_overlay_enabled"), handler="image_brand_overlay", asset_vault=True))
+ENGINE_SPECS.update(_many(("image_storyboard_grid",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "image_operations_enabled", "storyboard_grid_enabled"), handler="storyboard_grid", asset_vault=True))
 # Image History is a read-only, account-scoped projection of the two verified
 # Web-native PNG operation kinds.  It deliberately does not depend on either
 # execution flag: an account may still need to retrieve a previously verified

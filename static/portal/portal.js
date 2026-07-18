@@ -1124,6 +1124,16 @@
       "Brand Overlay Studio tạo PNG private mới sau hash-copy, decode và kiểm tra output. File nguồn/logo không bị sửa; không có browser canvas, preview công khai hoặc output giả."
     ]
   });
+  customerPage("/image/storyboard-grid", "Storyboard Grid Splitter", "Chia ảnh storyboard private thành các cảnh JPEG riêng theo tập; không gọi AI, Bot job hoặc provider.", ICONS.image, {
+    // This is a dedicated Web-native output surface.  Its history must never
+    // be filled from Image Operations, generic Asset Vault rows or a video
+    // workflow because its downloadable cell records have a distinct contract.
+    layout: "storyboard-grid", type: "storyboard-grid", action: "none", status: "guarded", fields: [],
+    notes: [
+      "Chỉ ảnh JPEG, PNG hoặc WebP active của signed Web account hiện tại được chọn. Browser gửi Asset Vault UUID và lưới số nguyên đã giới hạn; không gửi URL, raw path, bytes ảnh hoặc kết quả crop từ browser.",
+      "Storyboard Grid Splitter tạo JPEG private cho từng cảnh sau khi server kiểm tra ownership, hash-copy nguồn, decode có giới hạn và xác minh từng cell. Không tạo Bot job, provider call, ví Xu, PayOS hoặc output mô phỏng."
+    ]
+  });
   customerPage("/image/resize", "Resize & Aspect Studio", "Tạo PNG private từ Asset Vault bằng crop, pad hoặc blur nền đã được kiểm tra; không phải AI upscale, Bot job hay provider call.", ICONS.image, {
     // This page has two owner-scoped reads before it can become usable. Start
     // fail-closed so the first paint never advertises readiness before the
@@ -3701,6 +3711,10 @@
   // kind to the generic image history, which intentionally remains Resize +
   // Enhance only and must never accidentally show a route it did not hydrate.
   const IMAGE_BRAND_OVERLAY_HISTORY_KINDS = new Set(["image_brand_overlay"]);
+  // Storyboard Grid uses a separate endpoint and output schema.  In
+  // particular, its individual cell downloads are not Image Operation
+  // artifacts and must not be blended into generic Image History.
+  const STORYBOARD_GRID_HISTORY_KINDS = new Set(["storyboard_grid"]);
 
   function operationHistorySafeInteger(value, maximum) {
     const number = Number(value);
@@ -6165,6 +6179,15 @@
       imageBrandOverlayEnabled: source.imageBrandOverlayEnabled === true,
       imageBrandOverlayOperationsReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.imageBrandOverlayOperationsReadState || ""))
         ? String(source.imageBrandOverlayOperationsReadState)
+        : "guarded",
+      // Storyboard cells are an independent owner-scoped artifact list.  Do
+      // not let a previous Image Operation or Asset Vault render stand in for
+      // its pending signed API read.
+      storyboardGridOperations: normalizeStoryboardGridOperations(source.storyboardGridOperations),
+      storyboardGridListing: normalizeOperationHistoryListing(source.storyboardGridListing, STORYBOARD_GRID_HISTORY_KINDS, "storyboard_grid"),
+      storyboardGridEnabled: source.storyboardGridEnabled === true,
+      storyboardGridReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.storyboardGridReadState || ""))
+        ? String(source.storyboardGridReadState)
         : "guarded",
       // Image History is a third, combined read-only projection. It must not
       // borrow Resize/Enhance state from a prior route or degrade into a Bot
@@ -13575,6 +13598,14 @@
     );
   }
 
+  function storyboardGridHistoryListing(context) {
+    return normalizeOperationHistoryListing(
+      context && context.storyboardGridListing,
+      STORYBOARD_GRID_HISTORY_KINDS,
+      "storyboard_grid"
+    );
+  }
+
   function imageHistoryOperationHistoryListing(context) {
     return normalizeOperationHistoryListing(context && context.imageHistoryListing, IMAGE_OPERATION_HISTORY_KINDS, "");
   }
@@ -13616,6 +13647,21 @@
       route,
       "data-image-brand-overlay-offset",
       "Phân trang lịch sử Brand Overlay Studio"
+    );
+  }
+
+  function renderStoryboardGridHistoryPagination(context, enabled, route) {
+    const listing = storyboardGridHistoryListing(context);
+    const pagination = listing.pagination || {};
+    if (!pagination.returned && !pagination.has_more && pagination.previous_offset === null) return "";
+    return renderOperationsPagination(
+      listing,
+      enabled,
+      "Storyboard Grid Splitter",
+      "storyboard-grid-page",
+      route,
+      "data-storyboard-grid-offset",
+      "Phân trang lịch sử Storyboard Grid Splitter"
     );
   }
 
@@ -13751,6 +13797,101 @@
     return validVaultAssetId(value);
   }
 
+  function validStoryboardGridCellId(value) {
+    // A cell identifier is server-generated and path-encoded before use.
+    // Accept UUIDs and compact deterministic ids, but never slash, percent or
+    // control characters that could alter a private download path.
+    return /^[a-z0-9][a-z0-9_-]{0,95}$/i.test(String(value || "").trim());
+  }
+
+  function storyboardGridBoundedInteger(value, minimum, maximum) {
+    const number = Number(value);
+    return Number.isSafeInteger(number) && number >= minimum && number <= maximum ? number : null;
+  }
+
+  function storyboardGridTrimFraction(value) {
+    const number = Number(value);
+    return Number.isFinite(number) && number >= 0 && number <= 0.18
+      ? Number(number.toFixed(6))
+      : null;
+  }
+
+  function storyboardGridSafeText(value, maximum) {
+    const text = typeof value === "string" ? value.trim().replace(/[\u0000-\u001f\u007f]/g, " ") : "";
+    return text ? text.slice(0, maximum) : "";
+  }
+
+  function storyboardGridSafeTimestamp(value) {
+    return storyboardGridSafeText(value, 80);
+  }
+
+  function normalizeStoryboardGridCell(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    if (!validStoryboardGridCellId(id)) return null;
+    const sceneNo = storyboardGridBoundedInteger(source.scene_no, 1, 1000000);
+    const row = storyboardGridBoundedInteger(source.row, 1, 6);
+    const column = storyboardGridBoundedInteger(source.column, 1, 8);
+    const width = storyboardGridBoundedInteger(source.width, 1, 100000);
+    const height = storyboardGridBoundedInteger(source.height, 1, 100000);
+    if (sceneNo === null || row === null || column === null || width === null || height === null) return null;
+    const byteSize = storyboardGridBoundedInteger(source.byte_size, 0, Number.MAX_SAFE_INTEGER);
+    return {
+      id,
+      scene_no: sceneNo,
+      row,
+      column,
+      width,
+      height,
+      byte_size: byteSize === null ? 0 : byteSize,
+      original_filename: storyboardGridSafeText(source.original_filename, 260),
+      download_ready: source.download_ready === true
+    };
+  }
+
+  function normalizeStoryboardGridOperations(value) {
+    return (Array.isArray(value) ? value : []).map((entry) => {
+      const source = entry && typeof entry === "object" ? entry : {};
+      const id = String(source.id || "").trim();
+      const sourceAssetId = String(source.source_asset_id || "").trim();
+      const state = String(source.state || "guarded").trim().toLowerCase();
+      const sourceWidth = storyboardGridBoundedInteger(source.source_width, 1, 100000);
+      const sourceHeight = storyboardGridBoundedInteger(source.source_height, 1, 100000);
+      const rows = storyboardGridBoundedInteger(source.rows, 1, 6);
+      const cols = storyboardGridBoundedInteger(source.cols, 1, 8);
+      const episode = storyboardGridBoundedInteger(source.episode, 1, 999);
+      const startScene = storyboardGridBoundedInteger(source.start_scene, 1, 999);
+      const trimPercent = storyboardGridTrimFraction(source.trim_percent);
+      const sceneCount = storyboardGridBoundedInteger(source.scene_count, 0, 48);
+      const byteSize = storyboardGridBoundedInteger(source.byte_size, 0, Number.MAX_SAFE_INTEGER);
+      if (!validImageOperationId(id) || !validVaultAssetId(sourceAssetId) || !ALLOWED_STATES.has(state)
+        || rows === null || cols === null || episode === null
+        || startScene === null || trimPercent === null || sceneCount === null) return null;
+      return {
+        id,
+        state,
+        source_asset_id: sourceAssetId,
+        // A failed operation may have been recorded before the decoder could
+        // attest source geometry. Retain that honest failure state instead of
+        // dropping it and pretending the request never existed.
+        source_width: sourceWidth === null ? 0 : sourceWidth,
+        source_height: sourceHeight === null ? 0 : sourceHeight,
+        rows,
+        cols,
+        episode,
+        start_scene: startScene,
+        trim_percent: trimPercent,
+        scene_count: sceneCount,
+        byte_size: byteSize === null ? 0 : byteSize,
+        created_at: storyboardGridSafeTimestamp(source.created_at),
+        completed_at: storyboardGridSafeTimestamp(source.completed_at),
+        updated_at: storyboardGridSafeTimestamp(source.updated_at),
+        download_ready: source.download_ready === true,
+        cells: (Array.isArray(source.cells) ? source.cells : []).map(normalizeStoryboardGridCell).filter(Boolean).slice(0, 48)
+      };
+    }).filter(Boolean).slice(0, OPERATION_HISTORY_LIST_LIMIT);
+  }
+
   function imageOperationItems(context) {
     return (Array.isArray(context.imageOperations) ? context.imageOperations : [])
       .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
@@ -13772,6 +13913,12 @@
       .slice(0, OPERATION_HISTORY_LIST_LIMIT);
   }
 
+  function storyboardGridOperationItems(context) {
+    return normalizeStoryboardGridOperations(context && context.storyboardGridOperations)
+      .filter((item) => item && validImageOperationId(item.id))
+      .slice(0, OPERATION_HISTORY_LIST_LIMIT);
+  }
+
   function imageHistoryOperationItems(context) {
     return (Array.isArray(context.imageHistoryOperations) ? context.imageHistoryOperations : [])
       .filter((item) => item && typeof item === "object" && validImageOperationId(item.id)
@@ -13788,6 +13935,22 @@
     const operationId = String(item && item.id || "").trim();
     return validImageOperationId(operationId) && imageOperationState(item) === "completed" && item && item.download_ready === true
       ? `/api/v1/image-operations/${encodeURIComponent(operationId)}/download`
+      : "";
+  }
+
+  function storyboardGridDownloadPath(item) {
+    const operationId = String(item && item.id || "").trim();
+    return validImageOperationId(operationId) && imageOperationState(item) === "completed" && item && item.download_ready === true
+      ? `/api/v1/storyboard-grid/${encodeURIComponent(operationId)}/download`
+      : "";
+  }
+
+  function storyboardGridCellDownloadPath(operation, cell) {
+    const operationId = String(operation && operation.id || "").trim();
+    const cellId = String(cell && cell.id || "").trim();
+    return validImageOperationId(operationId) && imageOperationState(operation) === "completed"
+      && validStoryboardGridCellId(cellId) && cell && cell.download_ready === true
+      ? `/api/v1/storyboard-grid/${encodeURIComponent(operationId)}/cells/${encodeURIComponent(cellId)}/download`
       : "";
   }
 
@@ -13970,6 +14133,50 @@
     ];
   }
 
+  function storyboardGridFormValues(values) {
+    const current = values && typeof values === "object"
+      ? values
+      : transientFormValues("/image/storyboard-grid");
+    return {
+      episode: "1",
+      rows: "2",
+      cols: "5",
+      start_scene: "1",
+      trim_percent: "0",
+      ...current
+    };
+  }
+
+  function storyboardGridFormFields() {
+    return [
+      {
+        name: "source_asset_id", label: "Ảnh storyboard trong Asset Vault", control: "select", optionsFrom: "imageVaultAssets", referencePicker: "image-operation-image",
+        emptyLabel: "Chọn ảnh private", required: true,
+        help: "Chỉ JPEG, PNG hoặc WebP active thuộc signed Web account hiện tại được chọn. Browser chỉ gửi UUID của asset; file gốc luôn giữ nguyên."
+      },
+      {
+        name: "episode", label: "Tập", type: "number", min: 1, max: 999, step: 1, inputMode: "numeric", required: true,
+        help: "Số tập dùng để đặt ngữ cảnh cảnh, từ 1 đến 999. Không tạo video hoặc Episode job."
+      },
+      {
+        name: "rows", label: "Số hàng", type: "number", min: 1, max: 6, step: 1, inputMode: "numeric", required: true,
+        help: "Lưới có 1–6 hàng. Server chia ảnh bằng quy tắc deterministic; không có kéo cắt hoặc canvas trên browser."
+      },
+      {
+        name: "cols", label: "Số cột", type: "number", min: 1, max: 8, step: 1, inputMode: "numeric", required: true,
+        help: "Lưới có 1–8 cột, tối đa 48 cảnh cho mỗi thao tác."
+      },
+      {
+        name: "start_scene", label: "Cảnh bắt đầu", type: "number", min: 1, max: 999, step: 1, inputMode: "numeric", required: true,
+        help: "Mỗi cell được đánh số theo thứ tự hàng–cột, bắt đầu từ số cảnh này."
+      },
+      {
+        name: "trim_percent", label: "Cắt mép mỗi cell (%)", type: "number", min: 0, max: 18, step: 1, inputMode: "numeric", required: true,
+        help: "0–18%. Server chỉ trim đều theo thông số này sau khi chia lưới; không nhận diện nhân vật, vật thể hay vùng quan trọng."
+      }
+    ];
+  }
+
   function imageEnhanceSettings(item) {
     const raw = item && item.settings && typeof item.settings === "object" ? item.settings : {};
     const values = ["brightness", "contrast", "saturation", "sharpness"].map((key) => {
@@ -14047,6 +14254,47 @@
           ? "Thao tác bị chặn an toàn; Web không phát output thay thế."
           : "Chỉ tải xuống sau khi server xác minh PNG và ownership.";
       return `<article class="portal-card portal-card-pad portal-document-operation-card" data-image-operation="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▣</span><div><h2 class="portal-card-title">${safeText(String(item.original_filename || "PNG private đã gắn thương hiệu"))}</h2><p class="portal-card-subtitle">Brand Overlay Studio · deterministic</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>PNG output</dt><dd>${safeText(targetGeometry)}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>Overlay</dt><dd>${safeText(imageBrandOverlaySettings(item))}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải PNG riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
+    }).join("")}</div>`;
+  }
+
+  function renderStoryboardGridCells(operation) {
+    const cells = Array.isArray(operation && operation.cells) ? operation.cells : [];
+    if (!cells.length) {
+      return `<p class="portal-form-note">Metadata từng cảnh chỉ xuất hiện sau khi server xác minh cell private; Web không tự chia hoặc dựng ảnh thay thế.</p>`;
+    }
+    return `<ul class="portal-project-steps">${cells.map((cell) => {
+      const downloadPath = storyboardGridCellDownloadPath(operation, cell);
+      const filename = String(cell.original_filename || `Cảnh ${cell.scene_no}`);
+      const geometry = `${cell.width} × ${cell.height}`;
+      const placement = `H${cell.row} · C${cell.column}`;
+      const size = cell.byte_size ? ` · ${vaultBytes(cell.byte_size)}` : "";
+      const label = `Cảnh ${cell.scene_no} · ${placement} · ${geometry}${size}`;
+      return `<li><strong>${safeText(label)}</strong><span>${downloadPath ? `<a href="${safeText(downloadPath)}" rel="noreferrer">${safeText(filename)} · tải riêng tư ↓</a>` : "Chưa có file cell đã xác minh để tải."}</span></li>`;
+    }).join("")}</ul>`;
+  }
+
+  function renderStoryboardGridOperationCards(items) {
+    if (!items.length) {
+      return renderEmpty("Chưa có storyboard đã chia", "Các cell chỉ xuất hiện sau khi server hash-copy ảnh nguồn, chia lưới deterministic, kiểm tra từng JPEG và xác minh integrity. Không có preview hoặc output mô phỏng.", "▦");
+    }
+    return `<div class="portal-document-operation-grid">${items.map((item) => {
+      const status = imageOperationState(item);
+      const downloadPath = storyboardGridDownloadPath(item);
+      const sourceGeometry = item.source_width > 0 && item.source_height > 0
+        ? `${item.source_width} × ${item.source_height}`
+        : "Đang kiểm tra";
+      const trimLabel = Number((Number(item.trim_percent || 0) * 100).toFixed(2));
+      const lastScene = Math.max(item.start_scene, item.start_scene + Math.max(0, item.scene_count - 1));
+      const sceneRange = item.scene_count > 0
+        ? (item.start_scene === lastScene ? `Cảnh ${item.start_scene}` : `Cảnh ${item.start_scene}–${lastScene}`)
+        : "Đang xác minh cảnh";
+      const pendingMessage = status === "failed" || status === "unavailable"
+        ? "Không có cell tải xuống; kiểm tra ảnh storyboard private rồi tạo thao tác mới."
+        : status === "guarded"
+          ? "Thao tác bị chặn an toàn; Web không phát cell thay thế."
+          : "Chỉ tải archive/cell sau khi server xác minh ownership và integrity.";
+      const cells = renderStoryboardGridCells(item);
+      return `<article class="portal-card portal-card-pad portal-document-operation-card" data-storyboard-grid="${safeText(String(item.id))}"><div class="portal-card-header"><div class="portal-document-operation-title"><span class="portal-document-operation-icon" aria-hidden="true">▦</span><div><h2 class="portal-card-title">Tập ${safeText(String(item.episode))} · ${safeText(sceneRange)}</h2><p class="portal-card-subtitle">Storyboard Grid Splitter · deterministic</p></div></div>${badge(status)}</div><dl class="portal-document-operation-meta"><div><dt>Nguồn</dt><dd>${safeText(sourceGeometry)}</dd></div><div><dt>Lưới</dt><dd>${safeText(`${item.rows} hàng × ${item.cols} cột · trim ${trimLabel}%`)}</dd></div><div><dt>Cell</dt><dd>${safeText(String(item.scene_count))}${item.byte_size ? ` · ${safeText(vaultBytes(item.byte_size))}` : ""}</dd></div><div><dt>Cập nhật</dt><dd>${safeText(String(item.completed_at || item.updated_at || item.created_at || "—"))}</dd></div></dl><div class="portal-card-subsection"><h3>Cảnh private</h3>${cells}</div><div class="portal-form-footer">${downloadPath ? `<a class="portal-button portal-button--primary" href="${safeText(downloadPath)}" rel="noreferrer">Tải toàn bộ cell riêng tư <span aria-hidden="true">↓</span></a>` : `<span class="portal-form-note">${pendingMessage}</span>`}</div></article>`;
     }).join("")}</div>`;
   }
 
@@ -14450,6 +14698,49 @@
       <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Tạo bản sao thương hiệu</h2><p class="portal-card-subtitle">Chọn ít nhất chữ hoặc logo. Browser chỉ gửi Asset Vault UUID và thông số đã giới hạn; không upload bytes, URL hoặc raw file path.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="image-brand-overlay" data-portal-route="/image/brand-overlay" data-portal-confirm="Tạo PNG private mới với chữ/logo thương hiệu đã chọn? Ảnh nguồn và logo trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(imageBrandOverlayFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo PNG thương hiệu</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới có thể kiểm tra</h2><p class="portal-card-subtitle">Đây là ghép lớp cục bộ deterministic, không phải lời hứa AI design hoặc nhận diện thương hiệu.</p></div></div><ol class="portal-project-steps"><li><strong>1. Asset Vault riêng tư</strong><span>Nguồn và logo đều phải thuộc signed account, active, đúng định dạng và không thể là cùng một asset.</span></li><li><strong>2. Lưới vị trí có giới hạn</strong><span>Chữ và logo chỉ dùng vị trí 3 × 3, cùng ba scale logo và opacity 25–100%; không có drag/drop, canvas hoặc URL tùy ý.</span></li><li><strong>3. Delivery đã xác minh</strong><span>PNG mới được strict-reparse, hash lại và tải qua signed session; không có public URL, preview công khai hay PWA cache.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">PNG đã gắn thương hiệu</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Download bị khóa nếu ownership, state hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="image-brand-overlay-refresh" data-portal-route="/image/brand-overlay"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderImageBrandOverlayOperationCards(operations)}${renderImageBrandOverlayOperationHistoryPagination(context, canView, "/image/brand-overlay")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Brand Overlay Studio không tạo Bot job, không gọi provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook. Nó cũng không xác nhận quyền sở hữu logo, license hoặc quyền thương hiệu thay bạn.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderStoryboardGrid(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["storyboard-grid-view"] === true);
+    const canRunCapability = Boolean(context.capabilities && context.capabilities["storyboard-grid-run"] === true);
+    const canRefresh = Boolean(context.capabilities && context.capabilities["storyboard-grid-refresh"] === true);
+    if (!canView) {
+      return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${safeText(ICONS.image)}</span><div><h2>Storyboard Grid Splitter đang ở chế độ an toàn</h2><p>Tiện ích chỉ mở khi signed Web session, Asset Vault và storage private riêng được server xác nhận. Web không fallback sang browser canvas, Bot job, provider hoặc output giả.</p><div class="portal-state-meta"><span>Signed session</span><span>Owner-scoped</span><span>Không có preview công khai</span></div></div></div></section></article>`;
+    }
+    const assetReadState = String(context.assetVaultReadState || "loading");
+    const operationReadState = String(context.storyboardGridReadState || "loading");
+    const referenceReadState = String(context.imageOperationAssetReferenceReadState || "loading");
+    const privateReadsReady = assetReadState === "ready" && operationReadState === "ready" && referenceReadState === "ready";
+    if (!privateReadsReady) {
+      const loading = assetReadState === "loading" || operationReadState === "loading" || referenceReadState === "loading";
+      const title = loading ? "Đang xác minh dữ liệu private" : "Chưa thể tải trạng thái private";
+      const message = loading
+        ? "Storyboard Grid Splitter đang tải Asset Vault, source reference và lịch sử thuộc signed Web account hiện tại. Form chỉ mở sau khi các phản hồi server-side hoàn tất."
+        : "Asset Vault, source reference hoặc lịch sử Storyboard Grid chưa trả dữ liệu an toàn. Web đã xóa projection cũ, không hiển thị form, cell hoặc dữ liệu thay thế.";
+      const retry = !loading && canRefresh
+        ? `<div class="portal-form-footer"><button class="portal-button portal-button--primary" type="button" data-portal-action="storyboard-grid-refresh" data-portal-route="/image/storyboard-grid">Thử lại dữ liệu private</button></div>`
+        : "";
+      return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="${loading ? "processing" : "guarded"}"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "!"}</span><div><h2>${safeText(title)}</h2><p>${safeText(message)}</p><div class="portal-state-meta"><span>Signed session</span><span>Không cache private</span><span>Không fallback browser</span></div>${retry}</div></div></section></article>`;
+    }
+    const sources = imageVaultItems(context);
+    const operations = storyboardGridOperationItems(context);
+    const canRun = canRunCapability && sources.length > 0;
+    const formValues = storyboardGridFormValues();
+    const runReason = !canRunCapability
+      ? (context.storyboardGridEnabled === true
+        ? "Cần signed session, CSRF và capability Storyboard Grid từ server."
+        : "Storyboard Grid Splitter đang được server giữ guarded cho đến khi WEBAPP_STORYBOARD_GRID_ENABLED được bật có chủ đích.")
+      : sources.length === 0
+        ? "Hãy lưu ảnh storyboard JPEG, PNG hoặc WebP private vào Asset Vault trước khi chia lưới."
+        : "Nguồn → hash-copy cô lập → chia lưới + trim deterministic → từng PNG cell được mở lại và xác minh trước khi tải.";
+    const sourceSummary = sources.length === 1 ? "1 ảnh đang hoạt động" : `${sources.length} ảnh đang hoạt động`;
+    const completedCount = operations.filter((item) => imageOperationState(item) === "completed" && item.download_ready === true).length;
+    return `<article class="portal-page portal-storyboard-grid">${renderHero(page, context)}
+      <section class="portal-document-operation-intro"><div><span class="portal-section-kicker">Web-native Storyboard Utility</span><h2>Chia bảng cảnh private thành JPEG riêng, theo đúng thứ tự tập</h2><p>Chọn một ảnh storyboard trong Asset Vault, đặt lưới, tập, cảnh bắt đầu và mức trim. Server kiểm tra ownership, hash-copy nguồn, giới hạn decoder, chuẩn hóa orientation rồi tạo và xác minh từng cell riêng. Không có browser crop/canvas, preview công khai, AI generation, provider call hay Bot job.</p></div><dl><div><dt>${safeText(sourceSummary)}</dt><dd>Nguồn thuộc account hiện tại</dd></div><div><dt>${safeText(String(completedCount))}</dt><dd>Bộ cell sẵn sàng tải</dd></div></dl></section>
+      <div class="portal-document-operation-layout"><section class="portal-card portal-card-pad portal-document-operation-form"><div class="portal-card-header"><div><h2 class="portal-card-title">Chia ảnh storyboard</h2><p class="portal-card-subtitle">Browser chỉ gửi Asset Vault UUID, bốn số nguyên và một phần trăm đã giới hạn. Phần trăm được đổi thành decimal canonical trong request; không upload bytes, URL, raw file path hoặc giữ kết quả crop private trong browser.</p></div>${badge(canRun ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="storyboard-grid-create" data-portal-route="/image/storyboard-grid" data-portal-confirm="Chia ảnh storyboard private thành các cell JPEG mới theo lưới đã chọn? Ảnh nguồn trong Asset Vault sẽ không bị thay đổi." novalidate>${renderFields(storyboardGridFormFields(), canRun, context, formValues)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(runReason)}</span><button class="portal-button portal-button--primary" type="submit"${canRun ? "" : " disabled"}>Tạo cell storyboard riêng tư</button></div></form></section><aside class="portal-card portal-card-pad portal-document-operation-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới có thể kiểm tra</h2><p class="portal-card-subtitle">Đây là utility chia lưới cục bộ deterministic, không phải tạo storyboard hay dựng video AI.</p></div></div><ol class="portal-project-steps"><li><strong>1. Nguồn Asset Vault riêng tư</strong><span>Ảnh nguồn phải active, thuộc signed account và được server hash-copy trước khi xử lý. File gốc không bị ghi đè.</span></li><li><strong>2. Lưới có trần</strong><span>1–6 hàng × 1–8 cột, trim 0–18% và thứ tự cảnh theo hàng–cột. Không có drag/drop, vùng crop tự do hoặc nhận diện chủ thể.</span></li><li><strong>3. Delivery từng cell</strong><span>Mỗi JPEG được kiểm tra lại trước khi download qua signed session. Không có public URL, preview thumbnail hay PWA cache cho ảnh private.</span></li></ol><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a></div></aside></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Storyboard đã chia</h2><p class="portal-card-subtitle">Chỉ thao tác thuộc signed Web account hiện tại. Archive và từng cell đều bị khóa nếu ownership, state hoặc integrity không còn hợp lệ.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="storyboard-grid-refresh" data-portal-route="/image/storyboard-grid"${canRefresh ? "" : " disabled"}>Làm mới</button></div>${renderStoryboardGridOperationCards(operations)}${renderStoryboardGridHistoryPagination(context, canView, "/image/storyboard-grid")}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Tiện ích Web-native độc lập</strong><p>Storyboard Grid Splitter không tạo Bot job, không gọi Core Bridge/provider, không trừ/cộng Xu, không tạo PayOS order và không dùng webhook. Nó cũng không xác minh quyền sử dụng storyboard, nhân vật hoặc tài sản trí tuệ thay bạn.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -18583,6 +18874,7 @@
       case "image-resize": return renderImageResize(page, context);
       case "image-enhance": return renderImageEnhance(page, context);
       case "image-brand-overlay": return renderImageBrandOverlay(page, context);
+      case "storyboard-grid": return renderStoryboardGrid(page, context);
       case "image-operation-history": return renderImageOperationHistory(page, context);
       case "support-desk": return renderSupportDesk(page, context);
       case "support-cases": return renderSupportCases(page, context);
@@ -18869,6 +19161,11 @@
     if (String(action || "").startsWith("image-brand-overlay-")) {
       Object.assign(fields, {
         __imageBrandOverlayOperationOffset: source.getAttribute("data-image-brand-overlay-offset") || ""
+      });
+    }
+    if (String(action || "").startsWith("storyboard-grid-")) {
+      Object.assign(fields, {
+        __storyboardGridOffset: source.getAttribute("data-storyboard-grid-offset") || ""
       });
     }
     if (String(action || "").startsWith("image-history-operation-")) {
