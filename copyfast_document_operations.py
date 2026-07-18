@@ -1970,8 +1970,8 @@ def _pdf_ocr_remaining_timeout(deadline: float) -> float:
     remaining = deadline - time.monotonic()
     if remaining <= 0:
         raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT")
-    # pytesseract delegates to a subprocess timeout and accepts a fractional
-    # duration. Do not keep the fixed 30-second window once the aggregate
+    # pytesseract supports a fractional per-invocation timeout. Do not keep
+    # the fixed 30-second window once the aggregate
     # budget is nearly exhausted.
     return min(float(PDF_OCR_PAGE_TIMEOUT_SECONDS), max(0.1, remaining))
 

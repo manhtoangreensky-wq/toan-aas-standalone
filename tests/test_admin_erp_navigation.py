@@ -209,8 +209,16 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     groups = {group["id"]: group for group in body["data"]["groups"]}
     # A stale canonical role must not erase local Web-native governance.  It
     # may expose only Web-local, redacted modules and never a Bot authority.
-    assert set(groups) == {"web_private_crm", "web_governance_documents"}
-    assert _module_ids(body) == {"partner_crm_manager", "governance_documents"}
+    assert set(groups) == {
+        "web_private_crm",
+        "web_governance_documents",
+        "web_internal_document_archive",
+    }
+    assert _module_ids(body) == {
+        "partner_crm_manager",
+        "governance_documents",
+        "internal_document_archive",
+    }
     assert all(
         module["authority"] == "web_local_admin"
         for group in groups.values()
@@ -223,3 +231,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     governance = groups["web_governance_documents"]["modules"][0]
     assert governance["authority"] == "web_local_admin"
     assert governance["capability"] == "internal_document_lifecycle_review_version_audit"
+    archive = groups["web_internal_document_archive"]["modules"][0]
+    assert archive["authority"] == "web_local_admin"
+    assert archive["availability"] == "guarded"
+    assert archive["capability"] == "owner_scoped_immutable_private_document_versions"
