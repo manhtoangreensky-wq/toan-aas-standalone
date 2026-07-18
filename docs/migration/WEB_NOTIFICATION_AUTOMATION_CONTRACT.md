@@ -235,6 +235,27 @@ hay Bot, không giữ 'WEB_SESSION_SECRET', DB path, Bot/PayOS/wallet/provider
 credentials. Nó chỉ nhận các 'WEBAPP_NOTIFICATION_TICK_*' cần thiết và
 'WEBAPP_NOTIFICATION_MAX_RUN_SECONDS'.
 
+### Thiết lập Railway theo từng service và tách quyền vận hành
+
+Tạo **một Cron service riêng**, không đổi start command của Web service. Cron
+chạy `python scripts/notifications/run_notification_tick.py` theo lịch tối
+thiểu 5 phút; URL là HTTPS production chính xác của endpoint, origin là origin
+thuần tương ứng. Web service giữ volume, topology/replica attestation, feature
+flag và endpoint verify; Cron service chỉ nhận
+`WEBAPP_NOTIFICATION_TICK_URL`, `WEBAPP_NOTIFICATION_TICK_ORIGIN`,
+`WEBAPP_NOTIFICATION_TICK_SECRET`, `WEBAPP_NOTIFICATION_TICK_KEY_ID` và
+`WEBAPP_NOTIFICATION_MAX_RUN_SECONDS`. Không copy `WEB_SESSION_SECRET`, DB
+path, volume, Bot, PayOS, wallet hay provider credential sang Cron.
+
+Trình tự operator: deploy Web với automation `false` → kiểm tra single-replica
+và persistent volume → cấu hình Cron riêng, secret và lịch → bật flag tại **Web
+service** → xem receipt/log opaque. Rollback: đặt flag Web thành `false` trước,
+sau đó disable Cron schedule; không xóa nonce/run/item/audit rows hoặc đổi
+secret vội trong lúc xử lý sự cố. Người quản lý schedule/log Cron không được
+tự ý đổi Web volume, replica, feature flag hay credential thanh toán/provider;
+nếu Railway role là project-wide thì quy trình review/release phải tạo sự phân
+tách này, không giả định có RBAC theo service.
+
 Railway Cron có đặc tính UTC, tối thiểu 5 phút, không đảm bảo minute-exact và
 skip schedule nếu Cron trước còn chạy; xem
 [Railway Cron Jobs](https://docs.railway.com/cron-jobs). Tạo/enable Cron, thay
