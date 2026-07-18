@@ -12,6 +12,7 @@ already-persisted, Web-owned records below:
 | Job-like Image Operation output | `web_image_operations` |
 | Job-like Subtitle Asset conversion | `web_subtitle_asset_operations` while `WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED=true` |
 | Job-like Video Poster output | `web_video_operations` (`kind=video_poster`) |
+| Job-like Frame Video output | `web_frame_video_operations` (`kind=frame_video`) while `WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED=true` |
 | Asset Vault metadata | `web_asset_files` |
 
 The module does not create schema, start a transaction capable of writing,
@@ -57,6 +58,7 @@ wnj:v1:document-operation:<opaque-token>
 wnj:v1:image-operation:<opaque-token>
 wnj:v1:subtitle-asset-operation:<opaque-token>
 wnj:v1:video-operation:<opaque-token>
+wnj:v1:frame-video-operation:<opaque-token>
 wna:v1:<opaque-token>
 ```
 
@@ -127,6 +129,15 @@ dimensions. Its `output` is eligible only for an exact `video_poster`
 dimensions. The generic projection still does not expose the selected Asset
 Vault source ID, output key/path, process details or an executable URL; the
 owner-scoped delivery handler re-verifies the private JPEG when downloaded.
+
+For a Frame Video item, `summary` is limited to its selected ratio, bounded
+seconds-per-image/effect, source count/aggregate bytes and verified output
+duration/dimensions. Its MP4 output is eligible only for an exact
+`frame_video` completed row with an `outputs/<opaque>.mp4` storage-key shape,
+canonical `video/mp4`, a valid hash, positive byte count, duration and output
+dimensions. Source IDs/order, source hashes, FFmpeg details and storage keys
+remain private; the typed owner-scoped handler re-verifies and seals the MP4
+again before generic or direct delivery.
 
 ## Public asset shape
 

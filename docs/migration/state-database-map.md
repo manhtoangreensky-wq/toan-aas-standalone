@@ -21,3 +21,15 @@ overwrite any Bot table. The Bot remains the canonical writer for its own
 identity, wallet, PayOS, jobs and provider state.
 
 No destructive migration or schema synchronization is authorized by this inventory.
+
+## Additive Web-native Frame Video state
+
+| Table | Owner | Purpose | Explicitly not authoritative for |
+| --- | --- | --- | --- |
+| `web_frame_video_operations` | Signed Web account | One immutable ordered image-sequence MP4 receipt and lifecycle | Bot jobs, provider execution, wallet/Xu, PayOS, Telegram identity or Asset Vault source ownership |
+| `web_frame_video_operation_sources` | Frame Video operation | Ordered source snapshot (Asset Vault ID/digest/size/MIME only) | Source path/URL, generic Asset Vault metadata, Bot upload or provider input |
+| `web_frame_video_operation_attempts` | Web operation | In-request fence evidence; future worker seam only | Durable worker lease, automatic retry, provider job or billing attempt |
+| `web_frame_video_operation_events` | Web operation | Ordered lifecycle evidence | Bot audit log, payment ledger, webhook, notification or delivery receipt |
+
+Frame Video remains additive and Web-local. It never synchronizes, mutates or
+claims authority over any Bot identity/wallet/PayOS/provider/job table.

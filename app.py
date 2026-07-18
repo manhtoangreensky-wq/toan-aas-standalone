@@ -40,6 +40,7 @@ import copyfast_data_controls
 import copyfast_document_operations
 import copyfast_document_workspace
 import copyfast_free_prompt_gallery
+import copyfast_frame_video_operations
 import copyfast_governance
 import copyfast_growth_review
 import copyfast_image_operations
@@ -81,6 +82,7 @@ from copyfast_db import (
     ensure_copyfast_persistence,
     ensure_copyfast_schema,
     ensure_document_operations_persistence,
+    ensure_frame_video_operations_persistence,
     ensure_image_operations_persistence,
     ensure_project_package_persistence,
     ensure_subtitle_asset_operations_persistence,
@@ -101,6 +103,7 @@ STARTUP_RECONCILIATION_STEPS = (
     ("image_operations", copyfast_image_operations.reconcile_image_operation_storage),
     ("subtitle_asset_operations", copyfast_subtitle_asset_operations.reconcile_subtitle_asset_operation_storage),
     ("video_operations", copyfast_video_operations.reconcile_video_operation_storage),
+    ("frame_video_operations", copyfast_frame_video_operations.reconcile_frame_video_operation_storage),
     ("storyboard_grid", copyfast_storyboard_grid.reconcile_storyboard_grid_storage),
 )
 
@@ -141,7 +144,7 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            if name in {"image_operations", "subtitle_asset_operations", "video_operations", "storyboard_grid"} and interrupted_before:
+            if name in {"image_operations", "subtitle_asset_operations", "video_operations", "frame_video_operations", "storyboard_grid"} and interrupted_before:
                 # These local transformations run synchronously in a request
                 # and have no worker to resume them. The deferred scan must
                 # only recover work that predates readiness; otherwise a
@@ -235,10 +238,12 @@ async def lifespan(application: FastAPI):
     ensure_image_operations_persistence()
     ensure_subtitle_asset_operations_persistence()
     ensure_video_operations_persistence()
+    ensure_frame_video_operations_persistence()
     copyfast_document_operations.ensure_document_operations_runtime()
     copyfast_image_operations.ensure_image_operations_runtime()
     copyfast_subtitle_asset_operations.ensure_subtitle_asset_operations_runtime()
     copyfast_video_operations.ensure_video_operations_runtime()
+    copyfast_frame_video_operations.ensure_frame_video_operations_runtime()
     copyfast_storyboard_grid.ensure_storyboard_grid_runtime()
     _start_startup_reconciliation(application)
     try:
@@ -475,6 +480,8 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/document-operations/")
                 or path.startswith("/api/v1/subtitle-asset-operations/")
                 or path.startswith("/api/v1/video-operations/")
+                or path == "/api/v1/frame-video-operations"
+                or path.startswith("/api/v1/frame-video-operations/")
                 or path.startswith("/api/v1/trend-research/")
                 or path.startswith("/api/v1/growth-review/")
                 or path.startswith("/api/v1/media-factory/")
@@ -530,6 +537,8 @@ class PromptLibraryBodyLimitMiddleware:
         if path.startswith("/api/v1/subtitle-asset-operations/"):
             return self.subtitle_asset_operation_max_bytes
         if path.startswith("/api/v1/video-operations/"):
+            return self.video_operation_max_bytes
+        if path == "/api/v1/frame-video-operations" or path.startswith("/api/v1/frame-video-operations/"):
             return self.video_operation_max_bytes
         if path.startswith("/api/v1/trend-research/"):
             return self.trend_research_max_bytes
@@ -594,6 +603,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_document_operation = path.startswith("/api/v1/document-operations/")
         is_subtitle_asset_operation = path.startswith("/api/v1/subtitle-asset-operations/")
         is_video_operation = path.startswith("/api/v1/video-operations/")
+        is_frame_video_operation = path == "/api/v1/frame-video-operations" or path.startswith("/api/v1/frame-video-operations/")
         is_trend_research = path.startswith("/api/v1/trend-research/")
         is_growth_review = path.startswith("/api/v1/growth-review/")
         is_media_factory = path.startswith("/api/v1/media-factory/")
@@ -692,6 +702,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_asset_operation
                     else "Dữ liệu Video Poster vượt giới hạn kích thước an toàn."
                     if is_video_operation
+                    else "Dữ liệu Frame Video vượt giới hạn kích thước an toàn."
+                    if is_frame_video_operation
                     else "Dữ liệu Trend Research vượt giới hạn kích thước an toàn."
                     if is_trend_research
                     else "Dữ liệu Growth Review vượt giới hạn kích thước an toàn."
@@ -755,6 +767,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_subtitle_asset_operation
                     else "WEB_VIDEO_OPERATION_BODY_TOO_LARGE"
                     if is_video_operation
+                    else "WEB_FRAME_VIDEO_OPERATION_BODY_TOO_LARGE"
+                    if is_frame_video_operation
                     else "WEB_TREND_RESEARCH_BODY_TOO_LARGE"
                     if is_trend_research
                     else "WEB_GROWTH_REVIEW_BODY_TOO_LARGE"
@@ -807,7 +821,7 @@ class PromptLibraryBodyLimitMiddleware:
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-        elif is_admin_document_archive_upload or is_video_operation:
+        elif is_admin_document_archive_upload or is_video_operation or is_frame_video_operation:
             # An oversized private archive upload must receive the same
             # cross-origin boundary as a normal archive response. Video Poster
             # requests likewise identify private Asset Vault work, and this
@@ -1102,6 +1116,31 @@ async def security_headers(request: Request, call_next):
         )
         and not video_operation_download
     )
+    # Frame Video is a separate bounded image-sequence MP4 executor. Its
+    # create, estimate, read and sealed download routes receive their own
+    # family buckets before session/CSRF/SQLite/FFmpeg work.
+    frame_video_operation_run = (
+        request.method == "POST"
+        and request.url.path == "/api/v1/frame-video-operations"
+    )
+    frame_video_operation_estimate = (
+        request.method == "POST"
+        and request.url.path == "/api/v1/frame-video-operations/estimate"
+    )
+    frame_video_operation_download = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/frame-video-operations/")
+        and request.url.path.endswith("/download")
+    )
+    frame_video_operation_read = (
+        request.method == "GET"
+        and (
+            request.url.path == "/api/v1/frame-video-operations"
+            or request.url.path == "/api/v1/frame-video-operations/"
+            or request.url.path.startswith("/api/v1/frame-video-operations/")
+        )
+        and not frame_video_operation_download
+    )
     # ``/api/v1/assets/<opaque-native-id>/download`` is the generic
     # owner-scoped delivery adapter for sealed Web-native output.  It can
     # dispatch to Video Poster (and other private output families), so it
@@ -1284,11 +1323,19 @@ async def security_headers(request: Request, call_next):
         # this pre-DB limit blocks repeat browser execution attempts before an
         # operation can be created or an existing idempotency receipt loaded.
         rate_limit = 10
+    if frame_video_operation_run:
+        rate_limit = 6
+    if frame_video_operation_estimate:
+        rate_limit = 20
     if video_operation_download:
+        rate_limit = 20
+    if frame_video_operation_download:
         rate_limit = 20
     if native_asset_download:
         rate_limit = 20
     if video_operation_read:
+        rate_limit = 120
+    if frame_video_operation_read:
         rate_limit = 120
     if memory_write:
         rate_limit = 40
@@ -1439,15 +1486,22 @@ async def security_headers(request: Request, call_next):
             else "inbox-read" if inbox_read
             else "video-operation-run" if video_operation_run
             else "video-operation-download" if video_operation_download
+            else "frame-video-operation-run" if frame_video_operation_run
+            else "frame-video-operation-estimate" if frame_video_operation_estimate
+            else "frame-video-operation-download" if frame_video_operation_download
             else "native-asset-download" if native_asset_download
             else "video-operation-read" if video_operation_read
+            else "frame-video-operation-read" if frame_video_operation_read
             else request.url.path
         )
         rate_key = f"{rate_scope}:{client_ip}"
         window = [value for value in _auth_rate_windows.get(rate_key, []) if now - value < RATE_WINDOW_SECONDS]
         if len(window) >= rate_limit:
             is_document_workspace_request = document_workspace_write or document_workspace_read
-            is_video_operation_request = video_operation_run or video_operation_read or video_operation_download
+            is_video_operation_request = (
+                video_operation_run or video_operation_read or video_operation_download
+                or frame_video_operation_run or frame_video_operation_estimate or frame_video_operation_read or frame_video_operation_download
+            )
             is_trend_research_request = trend_research_write
             is_growth_review_request = growth_review_write
             is_media_factory_request = media_factory_write
@@ -1567,6 +1621,12 @@ async def security_headers(request: Request, call_next):
         or request.url.path.startswith("/api/v1/video-operations/")
     )
     private_video_download = private_video_operation and request.url.path.endswith("/download")
+    private_frame_video_operation = (
+        request.url.path == "/api/v1/frame-video-operations"
+        or request.url.path == "/api/v1/frame-video-operations/"
+        or request.url.path.startswith("/api/v1/frame-video-operations/")
+    )
+    private_frame_video_download = private_frame_video_operation and request.url.path.endswith("/download")
     # Storyboard Grid owns a distinct verified ZIP/cell delivery route rather
     # than reusing Image Operations. Its attachments need the same
     # no-referrer/sandbox/private-cache boundary, including per-cell JPEGs.
@@ -1610,7 +1670,7 @@ async def security_headers(request: Request, call_next):
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
     private_download = (
         private_asset_download or private_native_asset_download or private_package_download or private_document_download
-        or private_image_download or private_subtitle_asset_download or private_video_download or private_storyboard_grid_download
+        or private_image_download or private_subtitle_asset_download or private_video_download or private_frame_video_download or private_storyboard_grid_download
         or private_support_evidence_download or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
     )
@@ -1623,7 +1683,7 @@ async def security_headers(request: Request, call_next):
         if mailbox_confirmation
         else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     )
-    if private_download or private_video_operation or private_governance or private_admin_document_archive or mailbox_confirmation:
+    if private_download or private_video_operation or private_frame_video_operation or private_governance or private_admin_document_archive or mailbox_confirmation:
         # Cover successful attachments and every normal post-route rejection
         # (CSRF, validation, feature flag, owner, revision or size). The
         # early rate-limit branch sets the same header before its return.
@@ -1873,6 +1933,7 @@ app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_subtitle_asset_operations.router)
 app.include_router(copyfast_video_operations.router)
+app.include_router(copyfast_frame_video_operations.router)
 app.include_router(copyfast_storyboard_grid.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)

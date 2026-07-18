@@ -39,6 +39,7 @@ from starlette.concurrency import run_in_threadpool
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_assets import open_verified_private_asset_stream
+from copyfast_media_runtime import media_ffmpeg_capacity
 from copyfast_db import (
     asset_vault_enabled,
     ensure_copyfast_schema,
@@ -79,7 +80,9 @@ MAX_OUTPUT_PIXELS = 2_000_000
 PROBE_TIMEOUT_SECONDS = 6.0
 RENDER_TIMEOUT_SECONDS = 15.0
 ORPHAN_RETENTION_SECONDS = 60 * 60
-_PROCESS_GATE = threading.BoundedSemaphore(value=1)
+# Keep the historic private name for focused Poster tests, but make it the
+# process-wide gate shared with every other bounded local FFmpeg feature.
+_PROCESS_GATE = media_ffmpeg_capacity()
 VIDEO_TOPOLOGY_SQLITE_SINGLE_REPLICA = "sqlite_single_replica"
 REPLICA_COUNT_ENV_NAMES = ("RAILWAY_REPLICA_COUNT", "RAILWAY_REPLICAS", "WEBAPP_REPLICA_COUNT")
 
