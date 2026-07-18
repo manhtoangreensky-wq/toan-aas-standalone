@@ -55,6 +55,7 @@ import copyfast_project_packages
 import copyfast_projects
 import copyfast_reliability
 import copyfast_support
+import copyfast_subtitle_asset_operations
 import copyfast_subtitle_workspace
 import copyfast_trend_research
 import copyfast_video_studio
@@ -77,6 +78,7 @@ from copyfast_db import (
     ensure_document_operations_persistence,
     ensure_image_operations_persistence,
     ensure_project_package_persistence,
+    ensure_subtitle_asset_operations_persistence,
     is_production_like_environment,
     utc_now,
 )
@@ -90,6 +92,7 @@ STARTUP_RECONCILIATION_STEPS = (
     ("project_packages", copyfast_project_packages.reconcile_project_package_storage),
     ("document_operations", copyfast_document_operations.reconcile_document_operation_storage),
     ("image_operations", copyfast_image_operations.reconcile_image_operation_storage),
+    ("subtitle_asset_operations", copyfast_subtitle_asset_operations.reconcile_subtitle_asset_operation_storage),
 )
 
 
@@ -129,12 +132,13 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            if name == "image_operations" and interrupted_before:
-                # Image transforms run synchronously in a request and have no
-                # worker to resume them.  The deferred scan must only recover
-                # work that predates readiness; otherwise a request accepted
-                # while earlier private roots are being scanned can be
-                # mistaken for restart debris and fail mid-render.
+            if name in {"image_operations", "subtitle_asset_operations"} and interrupted_before:
+                # These local transformations run synchronously in a request
+                # and have no worker to resume them. The deferred scan must
+                # only recover work that predates readiness; otherwise a
+                # request accepted while earlier private roots are being
+                # scanned can be mistaken for restart debris and fail
+                # mid-execution.
                 await asyncio.to_thread(reconcile, interrupted_before=interrupted_before)
             else:
                 await asyncio.to_thread(reconcile)
@@ -216,8 +220,10 @@ async def lifespan(application: FastAPI):
     ensure_project_package_persistence()
     ensure_document_operations_persistence()
     ensure_image_operations_persistence()
+    ensure_subtitle_asset_operations_persistence()
     copyfast_document_operations.ensure_document_operations_runtime()
     copyfast_image_operations.ensure_image_operations_runtime()
+    copyfast_subtitle_asset_operations.ensure_subtitle_asset_operations_runtime()
     _start_startup_reconciliation(application)
     try:
         yield
@@ -277,6 +283,10 @@ DOCUMENT_WORKSPACE_BODY_MAX_BYTES = 128 * 1024
 # bounded options.  A separate raw-stream cap protects private OCR/PDF
 # executors before FastAPI parses a malicious chunked body.
 DOCUMENT_OPERATION_BODY_MAX_BYTES = 16 * 1024
+# Subtitle Asset Operations receive only a UUID, an enum and an idempotency
+# receipt.  Enforce a narrow raw-body cap before any private source lookup or
+# SQLite work; the route never accepts subtitle text, uploads, URLs or paths.
+SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES = 16 * 1024
 # Trend Research is a compact, text-only request with a 180-character topic.
 # Retain a small raw-stream cap before Pydantic parses a chunked payload.
 TREND_RESEARCH_BODY_MAX_BYTES = 16 * 1024
@@ -354,6 +364,7 @@ class PromptLibraryBodyLimitMiddleware:
         image_studio_max_bytes: int = IMAGE_STUDIO_BODY_MAX_BYTES,
         document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
         document_operation_max_bytes: int = DOCUMENT_OPERATION_BODY_MAX_BYTES,
+        subtitle_asset_operation_max_bytes: int = SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES,
         trend_research_max_bytes: int = TREND_RESEARCH_BODY_MAX_BYTES,
         media_factory_max_bytes: int = MEDIA_FACTORY_BODY_MAX_BYTES,
         chat_workspace_max_bytes: int = CHAT_WORKSPACE_BODY_MAX_BYTES,
@@ -383,6 +394,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.image_studio_max_bytes = int(image_studio_max_bytes)
         self.document_workspace_max_bytes = int(document_workspace_max_bytes)
         self.document_operation_max_bytes = int(document_operation_max_bytes)
+        self.subtitle_asset_operation_max_bytes = int(subtitle_asset_operation_max_bytes)
         self.trend_research_max_bytes = int(trend_research_max_bytes)
         self.media_factory_max_bytes = int(media_factory_max_bytes)
         self.chat_workspace_max_bytes = int(chat_workspace_max_bytes)
@@ -417,6 +429,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/image-studio/")
                 or path.startswith("/api/v1/document-workspace/")
                 or path.startswith("/api/v1/document-operations/")
+                or path.startswith("/api/v1/subtitle-asset-operations/")
                 or path.startswith("/api/v1/trend-research/")
                 or path.startswith("/api/v1/media-factory/")
                 or path.startswith("/api/v1/chat-workspace/")
@@ -465,6 +478,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.image_studio_max_bytes
         if path.startswith("/api/v1/document-operations/"):
             return self.document_operation_max_bytes
+        if path.startswith("/api/v1/subtitle-asset-operations/"):
+            return self.subtitle_asset_operation_max_bytes
         if path.startswith("/api/v1/trend-research/"):
             return self.trend_research_max_bytes
         if path.startswith("/api/v1/media-factory/"):
@@ -524,6 +539,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_subtitle_studio = path.startswith("/api/v1/subtitle-studio/")
         is_image_studio = path.startswith("/api/v1/image-studio/")
         is_document_operation = path.startswith("/api/v1/document-operations/")
+        is_subtitle_asset_operation = path.startswith("/api/v1/subtitle-asset-operations/")
         is_trend_research = path.startswith("/api/v1/trend-research/")
         is_media_factory = path.startswith("/api/v1/media-factory/")
         is_document_workspace = path.startswith("/api/v1/document-workspace/")
@@ -612,6 +628,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_image_studio
                     else "Dữ liệu Document Operations vượt giới hạn kích thước an toàn."
                     if is_document_operation
+                    else "Dữ liệu Subtitle Asset Operations vượt giới hạn kích thước an toàn."
+                    if is_subtitle_asset_operation
                     else "Dữ liệu Trend Research vượt giới hạn kích thước an toàn."
                     if is_trend_research
                     else "Dữ liệu Media Factory Blueprint vượt giới hạn kích thước an toàn."
@@ -667,6 +685,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_image_studio
                     else "WEB_DOCUMENT_OPERATION_BODY_TOO_LARGE"
                     if is_document_operation
+                    else "WEB_SUBTITLE_ASSET_OPERATION_BODY_TOO_LARGE"
+                    if is_subtitle_asset_operation
                     else "WEB_TREND_RESEARCH_BODY_TOO_LARGE"
                     if is_trend_research
                     else "WEB_MEDIA_FACTORY_BODY_TOO_LARGE"
@@ -798,6 +818,7 @@ app.add_middleware(
     image_studio_max_bytes=IMAGE_STUDIO_BODY_MAX_BYTES,
     document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
     document_operation_max_bytes=DOCUMENT_OPERATION_BODY_MAX_BYTES,
+    subtitle_asset_operation_max_bytes=SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES,
     trend_research_max_bytes=TREND_RESEARCH_BODY_MAX_BYTES,
     media_factory_max_bytes=MEDIA_FACTORY_BODY_MAX_BYTES,
     chat_workspace_max_bytes=CHAT_WORKSPACE_BODY_MAX_BYTES,
@@ -951,6 +972,32 @@ async def security_headers(request: Request, call_next):
             "/api/v1/image-operations/enhance",
         }
     )
+    # Subtitle Asset Operations are a bounded private file executor, distinct
+    # from the authored Subtitle Studio. Keep the run/read/download buckets
+    # fixed before CSRF, owner lookup, parsing or SQLite work.
+    subtitle_asset_operation_write = (
+        request.method == "POST"
+        and request.url.path in {
+            "/api/v1/subtitle-asset-operations/validate",
+            "/api/v1/subtitle-asset-operations/convert",
+        }
+    )
+    subtitle_asset_operation_download = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/subtitle-asset-operations/")
+        and request.url.path.endswith("/download")
+    )
+    subtitle_asset_operation_read = (
+        request.method == "GET"
+        and (
+            request.url.path in {
+                "/api/v1/subtitle-asset-operations",
+                "/api/v1/subtitle-asset-operations/",
+            }
+            or request.url.path.startswith("/api/v1/subtitle-asset-operations/")
+        )
+        and not subtitle_asset_operation_download
+    )
     # Memory writes are tiny text/state mutations, but remain intentionally
     # rate limited before SQLite work.  GET views stay unthrottled here while
     # signed-session/ownership checks remain mandatory in the router.
@@ -1085,6 +1132,12 @@ async def security_headers(request: Request, call_next):
         # source/page/pixel/output limits, while this early gate blocks repeat
         # work before the operation's idempotency record can be observed.
         rate_limit = 10
+    if subtitle_asset_operation_write:
+        rate_limit = 20
+    if subtitle_asset_operation_download:
+        rate_limit = 20
+    if subtitle_asset_operation_read:
+        rate_limit = 120
     if memory_write:
         rate_limit = 40
     if prompt_library_write:
@@ -1176,6 +1229,9 @@ async def security_headers(request: Request, call_next):
         # the gate or allocating one in-memory key per requested path.
         rate_scope = (
             "prompt-library-write" if prompt_library_write
+            else "subtitle-asset-operation-write" if subtitle_asset_operation_write
+            else "subtitle-asset-operation-download" if subtitle_asset_operation_download
+            else "subtitle-asset-operation-read" if subtitle_asset_operation_read
             else "prompt-library-read" if prompt_library_read
             else "media-workspace-write" if media_workspace_write
             else "media-workspace-read" if media_workspace_read
@@ -1273,7 +1329,7 @@ async def security_headers(request: Request, call_next):
                     "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
                 },
             )
-            if analytics_workspace_manual_csv_export or data_controls_export:
+            if analytics_workspace_manual_csv_export or data_controls_export or subtitle_asset_operation_download:
                 # This early return bypasses the normal post-route header
                 # decoration below. Keep a throttled private attachment attempt
                 # inside the same boundary as a successful response.
@@ -1314,6 +1370,7 @@ async def security_headers(request: Request, call_next):
     private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
     private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
+    private_subtitle_asset_download = request.url.path.startswith("/api/v1/subtitle-asset-operations/") and request.url.path.endswith("/download")
     # Support evidence uses the same private attachment boundary as Asset
     # Vault. It has both owner and staff routes under `/api/v1/support/`, so
     # keep the check route-family based rather than trying to infer a case ID
@@ -1343,7 +1400,7 @@ async def security_headers(request: Request, call_next):
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
     private_download = (
         private_asset_download or private_package_download or private_document_download
-        or private_image_download or private_support_evidence_download or private_prompt_export
+        or private_image_download or private_subtitle_asset_download or private_support_evidence_download or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export
     )
     response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"
@@ -1591,6 +1648,7 @@ app.include_router(copyfast_assets.router)
 app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
+app.include_router(copyfast_subtitle_asset_operations.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
 app.include_router(copyfast_prompt_studio.router)

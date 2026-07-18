@@ -10,6 +10,7 @@ already-persisted, Web-owned records below:
 | Job-like Project Package output | `web_project_packages` |
 | Job-like Document Operation output | `web_document_operations` |
 | Job-like Image Operation output | `web_image_operations` |
+| Job-like Subtitle Asset conversion | `web_subtitle_asset_operations` while `WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED=true` |
 | Asset Vault metadata | `web_asset_files` |
 
 The module does not create schema, start a transaction capable of writing,
@@ -53,6 +54,7 @@ before calling the projection.  They use only the current route-safe grammar:
 wnj:v1:project-package:<opaque-token>
 wnj:v1:document-operation:<opaque-token>
 wnj:v1:image-operation:<opaque-token>
+wnj:v1:subtitle-asset-operation:<opaque-token>
 wna:v1:<opaque-token>
 ```
 
@@ -103,6 +105,12 @@ present and valid for that row type:
 This is metadata eligibility only.  It does not claim the blob is physically
 downloadable; the existing owner-scoped download handler still verifies the
 private file when a user requests it.
+
+Subtitle Asset validation is outputless by design. A completed
+`subtitle_validate` projection therefore has `output: null`; only a completed
+`subtitle_convert` with an exact `.srt`/`.vtt` private-output contract may
+project an attachment. When the optional executor is disabled, its table is
+not queried or advertised by this generic read model.
 
 `summary` contains only safe type-specific measurements (for example document
 counts or image dimensions).  It never contains source asset IDs, Project IDs,

@@ -91,6 +91,18 @@ def document_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def subtitle_asset_operations_enabled() -> bool:
+    """Whether private SRT/VTT Asset Vault operations are deliberately enabled.
+
+    This is separate from Subtitle Studio's authored-text workspace. It only
+    permits a bounded, deterministic file conversion after the owner-scoped
+    Asset Vault and isolated output root have been validated; it never enables
+    ASR, translation, dubbing, provider, Bot, wallet/Xu or PayOS work.
+    """
+
+    return os.environ.get("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def image_to_pdf_enabled() -> bool:
     """Whether the Pillow-backed Image-to-PDF decoder is deliberately enabled.
 
@@ -728,6 +740,73 @@ def ensure_image_operations_persistence() -> Path | None:
     if not asset_vault_enabled():
         raise RuntimeError("Image Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
     return image_operations_directory()
+
+
+def subtitle_asset_operations_directory() -> Path:
+    """Resolve an isolated root for verified private subtitle artifacts."""
+
+    if not subtitle_asset_operations_enabled():
+        raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_subtitle_asset_operations"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_subtitle_asset_operations"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT không được nằm trong static")
+
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    if image_operations_enabled():
+        private_roots.append(image_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations và Image Operations"
+            )
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Subtitle Asset Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_subtitle_asset_operations_persistence() -> Path | None:
+    """Validate private SRT/VTT output storage before the feature is served."""
+
+    if not subtitle_asset_operations_enabled():
+        return None
+    if not asset_vault_enabled():
+        raise RuntimeError("Subtitle Asset Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
+    return subtitle_asset_operations_directory()
 
 
 def session_database_path() -> str:
@@ -3370,6 +3449,65 @@ def ensure_copyfast_schema() -> None:
         image_event_columns = {row[1] for row in conn.execute("PRAGMA table_info(web_image_operation_events)").fetchall()}
         if "sequence" not in image_event_columns:
             conn.execute("ALTER TABLE web_image_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+        # Subtitle Asset Operations are deliberately distinct from the
+        # authored Subtitle Studio and from document/image executors. A row
+        # carries only immutable source/output evidence and safe metadata;
+        # it never stores cue text, paths, Bot/provider handles, wallet/Xu or
+        # PayOS data.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_asset_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                project_id TEXT,
+                kind TEXT NOT NULL,
+                target_format TEXT,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_lifecycle_revision INTEGER NOT NULL,
+                source_format TEXT NOT NULL,
+                cue_count INTEGER,
+                timed_duration_ms INTEGER,
+                semantic_sha256 TEXT,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, kind, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_subtitle_asset_operation_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_subtitle_asset_operations(id)
+            )
+            """
+        )
+        subtitle_asset_event_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(web_subtitle_asset_operation_events)").fetchall()
+        }
+        if "sequence" not in subtitle_asset_event_columns:
+            conn.execute("ALTER TABLE web_subtitle_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
         # Workboard is a private, Web-native planning surface.  These tables
         # never store remote URLs, Bot/provider handles, execution output,
         # wallet/payment data or notification-delivery state.  A reference is
@@ -4188,6 +4326,25 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_image_operation_events_operation_sequence ON web_image_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operations_account_updated ON web_subtitle_asset_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operations_source_account ON web_subtitle_asset_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        # Startup reconciliation scans terminal/active operation states, and
+        # per-account conversion quotas read only completed conversion rows.
+        # Keep both reads indexed so growing validation history cannot turn a
+        # restart or a small conversion into an unbounded table scan.
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operations_state_kind_updated ON web_subtitle_asset_operations(state, kind, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operations_account_kind_state ON web_subtitle_asset_operations(account_id, kind, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operation_events_operation_sequence ON web_subtitle_asset_operation_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
