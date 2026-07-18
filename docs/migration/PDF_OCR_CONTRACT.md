@@ -29,8 +29,11 @@ a PDF request or auto-run from a Workspace plan.
   owner-scoped receipt; a completed receipt remains replayable after a source
   is archived and even if the optional OCR runtime later becomes unavailable.
 - States are `queued → processing → completed`, `guarded`, `failed`, and
-  `unavailable`. A completed TXT exists only after every PDF page produced
-  non-empty verified text. No partial/placeholder TXT is delivered.
+  `unavailable`. A completed TXT exists only after at least one PDF page
+  produced verified text. Blank or unreadable pages are omitted rather than
+  filled with placeholder text, so a completed TXT contains only verified
+  recognized page blocks. If no page yields text, the operation fails with
+  `OCR_TEXT_NOT_FOUND`; no TXT is offered.
 
 ## Runtime, bounds and isolation
 
@@ -64,11 +67,16 @@ text is never put in JSON, audit details, browser state, public URLs or PWA
 cache.
 
 The TXT is re-read, strict UTF-8 decoded, byte-counted and SHA-256 verified
-before atomic promotion under the separate Document Operations root. Generic
-owner-scoped Document Operations history/detail/download endpoints enforce
-signed ownership and serve it with `Content-Disposition`, `Cache-Control:
-no-store, private`, `nosniff`, `no-referrer` and CSP sandbox headers. A
-tampered or missing committed file becomes unavailable fail-closed.
+before atomic promotion under the separate Document Operations root. At
+download time, the server pins and hashes the private descriptor, then rehashes
+it into an anonymous temporary stream before delivery; a pathname swap cannot
+change the bytes already authorized for the response. Generic owner-scoped
+Document Operations history/detail/download endpoints enforce signed ownership
+and serve it with `Content-Disposition`, `Cache-Control: no-store, private`,
+`nosniff`, `no-referrer` and CSP sandbox headers. A tampered or missing
+committed file becomes unavailable fail-closed. A temporary local sealing
+failure is retryable and does not change an otherwise verified completed
+receipt to `unavailable`.
 
 ## Configuration and release evidence
 

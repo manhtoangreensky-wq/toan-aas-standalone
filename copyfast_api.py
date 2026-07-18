@@ -475,6 +475,14 @@ def _flags() -> dict[str, bool]:
         # PDF OCR combines bounded PDFium rasterization with the same local
         # Tesseract boundary, so it is a separate opt-in capability.
         "pdf_ocr_enabled": enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False),
+        # Scan PDF → DOCX needs all three local execution boundaries. Expose
+        # only the effective capability so the Portal never promises Word
+        # delivery when its OCR or DOCX prerequisite remains paused.
+        "pdf_ocr_word_enabled": (
+            enabled("WEBAPP_PDF_OCR_WORD_ENABLED", False)
+            and enabled("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", False)
+            and enabled("WEBAPP_PDF_TO_WORD_ENABLED", False)
+        ),
         # PDF text extraction creates a DOCX artifact with a separate writer
         # runtime. Keep it explicitly fail-closed; it is not OCR or a visual
         # PDF layout converter.
@@ -489,6 +497,19 @@ def _flags() -> dict[str, bool]:
         # Local Image Enhance uses the same private output boundary but remains
         # independently guarded; it never implies provider-backed AI editing.
         "image_enhance_enabled": enabled("WEBAPP_IMAGE_ENHANCE_ENABLED", False),
+        "image_brand_overlay_enabled": enabled("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", False),
+        # Video Poster is an isolated, FFmpeg-backed private artifact path.
+        # It does not imply Video Studio rendering, Bot execution, provider
+        # access, wallet/Xu, PayOS or a general media-processing capability.
+        "video_operations_enabled": enabled("WEBAPP_VIDEO_OPERATIONS_ENABLED", False),
+        "video_poster_enabled": (
+            enabled("WEBAPP_VIDEO_OPERATIONS_ENABLED", False)
+            and enabled("WEBAPP_VIDEO_POSTER_ENABLED", False)
+        ),
+        # Storyboard Grid is a dedicated deterministic JPEG/ZIP operation
+        # from a private Asset Vault source. It does not unlock a Bot, bridge,
+        # provider, wallet/Xu, PayOS or generic image execution path.
+        "storyboard_grid_enabled": enabled("WEBAPP_STORYBOARD_GRID_ENABLED", False),
         # Notes, versions and reminders live in the signed Web session
         # database.  This flag is intentionally independent of Bot, wallet,
         # payment, provider and persistent-file capability flags.
@@ -508,6 +529,14 @@ def _flags() -> dict[str, bool]:
         "governance_documents_enabled": (
             enabled("WEBAPP_ADMIN_ERP_ENABLED", True)
             and enabled("WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED", False)
+        ),
+        # Admin Internal Document Archive owns a separate immutable private
+        # blob root and local-admin record tables. It is not the customer Asset
+        # Vault or Governance text review surface, and cannot unlock Bot,
+        # bridge, Telegram, wallet/Xu, PayOS, provider, job or publication.
+        "admin_document_archive_enabled": (
+            enabled("WEBAPP_ADMIN_ERP_ENABLED", True)
+            and enabled("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", False)
         ),
         # Prompt templates and immutable revisions are owned by the signed
         # Web account. This flag has no Bot bridge, wallet, payment, provider
@@ -545,6 +574,12 @@ def _flags() -> dict[str, bool]:
         # This maintenance switch never enables live search, social scraping,
         # Bot/provider work, jobs, wallet/Xu, PayOS, assets or publishing.
         "trend_research_enabled": enabled("WEBAPP_TREND_RESEARCH_ENABLED", True),
+        # Growth Review mirrors only the Bot's deterministic score/recommend
+        # helper over values the signed account enters manually. It does not
+        # enable the Bot's live Growth AI conversation, platform analytics,
+        # canonical revenue, a model/provider, wallet/Xu, PayOS, jobs, assets
+        # or publishing.
+        "growth_review_enabled": enabled("WEBAPP_GROWTH_REVIEW_ENABLED", True),
         # Media Factory Blueprint is the signed, request-only Web conversion
         # of the Bot's static content/video-pack checklist. It does not enable
         # live search, provider/Bot execution, jobs, Xu/PayOS, output or
@@ -1542,6 +1577,10 @@ def _feature_input_contract_error(feature: str, values: dict[str, Any], *, actio
         return "web_native_image_resize_required"
     if feature == "image_edit":
         return "web_native_image_enhance_required"
+    if feature == "image_brand_overlay":
+        return "web_native_image_brand_overlay_required"
+    if feature == "image_storyboard_grid":
+        return "web_native_storyboard_grid_required"
     if feature in {"documents", "documents_pdf"}:
         return "document_operation_invalid"
     if feature in FEATURE_TEXT_REQUIRED and not _has_feature_text(values):
@@ -1595,6 +1634,8 @@ def _feature_input_contract_response(feature: str, reason: str) -> dict:
         "web_native_pdf_ocr_required": "OCR PDF là tiện ích Web-native riêng tư. Chỉ bật khi local PDFium/Tesseract sẵn sàng; không gọi Bot, provider hoặc tạo TXT giả.",
         "web_native_image_resize_required": "Resize & Aspect Studio là tiện ích Web-native riêng tư. Hãy dùng /image/resize để tạo PNG đã được kiểm tra; không gọi Bot, provider hoặc AI upscale.",
         "web_native_image_enhance_required": "Image Enhance Studio là tiện ích Web-native riêng tư. Hãy dùng /image/edit để chỉnh màu/làm nét cơ bản trên Asset Vault; không gọi Bot, provider hoặc AI edit.",
+        "web_native_image_brand_overlay_required": "Brand Overlay Studio là tiện ích Web-native riêng tư. Hãy dùng /image/brand-overlay để tạo PNG đã kiểm tra từ Asset Vault; không gọi Bot, provider hoặc AI edit.",
+        "web_native_storyboard_grid_required": "Storyboard Grid Splitter là tiện ích Web-native riêng tư. Hãy dùng /image/storyboard-grid để tách ảnh Asset Vault thành JPEG scene ZIP/manifest đã kiểm tra; không gọi Bot, provider, Xu hoặc PayOS.",
         "document_operation_invalid": "Công cụ PDF không hợp lệ. Hãy chọn workflow PDF private phù hợp trong Document Studio.",
         "too_many_uploads": f"Mỗi workflow chỉ nhận tối đa {MAX_FEATURE_UPLOADS} tệp đã vào staging canonical.",
         "text_required": "Hãy nhập mô tả chính trước khi tạo draft hoặc estimate canonical.",
@@ -2816,6 +2857,9 @@ async def _native_asset_delivery(asset_id: str, account: dict):
         if source == "subtitle-asset-operation":
             from copyfast_subtitle_asset_operations import download_subtitle_asset_operation
             return await download_subtitle_asset_operation(internal_id, account)
+        if source == "video-operation":
+            from copyfast_video_operations import download_video_operation
+            return await download_video_operation(internal_id, account)
         return envelope(False, "Tài sản Web-native chưa được hỗ trợ.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
 
     native_asset_id = parse_native_asset_id(asset_id)

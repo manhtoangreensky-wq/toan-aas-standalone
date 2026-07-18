@@ -11,6 +11,7 @@ already-persisted, Web-owned records below:
 | Job-like Document Operation output | `web_document_operations` |
 | Job-like Image Operation output | `web_image_operations` |
 | Job-like Subtitle Asset conversion | `web_subtitle_asset_operations` while `WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED=true` |
+| Job-like Video Poster output | `web_video_operations` (`kind=video_poster`) |
 | Asset Vault metadata | `web_asset_files` |
 
 The module does not create schema, start a transaction capable of writing,
@@ -55,6 +56,7 @@ wnj:v1:project-package:<opaque-token>
 wnj:v1:document-operation:<opaque-token>
 wnj:v1:image-operation:<opaque-token>
 wnj:v1:subtitle-asset-operation:<opaque-token>
+wnj:v1:video-operation:<opaque-token>
 wna:v1:<opaque-token>
 ```
 
@@ -116,6 +118,15 @@ not queried or advertised by this generic read model.
 counts or image dimensions).  It never contains source asset IDs, Project IDs,
 request/idempotency metadata, event data, filesystem information or failure
 implementation details.
+
+For a Video Poster item, `summary` is limited to the requested poster position,
+verified source duration/dimensions, selected frame timestamp and verified JPEG
+dimensions. Its `output` is eligible only for an exact `video_poster`
+`completed` row with an `outputs/<opaque>.jpg` storage-key shape, canonical
+`image/jpeg` metadata, a positive byte count, valid hash and positive output
+dimensions. The generic projection still does not expose the selected Asset
+Vault source ID, output key/path, process details or an executable URL; the
+owner-scoped delivery handler re-verifies the private JPEG when downloaded.
 
 ## Public asset shape
 

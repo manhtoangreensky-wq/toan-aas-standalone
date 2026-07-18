@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import asyncio
 from io import BytesIO
 import importlib
 from pathlib import Path
 import sqlite3
 import sys
+import tempfile
+import threading
 from zipfile import ZipFile
 
 from docx import Document
@@ -15,6 +18,7 @@ from fastapi.testclient import TestClient
 from PIL import Image
 from pypdf import PdfReader, PdfWriter
 from pypdf.generic import ArrayObject, DecodedStreamObject, DictionaryObject, NameObject, NumberObject, TextStringObject
+from starlette.requests import ClientDisconnect
 
 
 MODULES = [
@@ -42,6 +46,8 @@ def make_client(
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_ROOT", str(tmp_path / "private-document-outputs"))
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20")
     monkeypatch.setenv("WEBAPP_DOCUMENT_OPERATIONS_QUOTA_MB", "100")
+    monkeypatch.setenv("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false")
+    monkeypatch.setenv("WEBAPP_PDF_OCR_WORD_ENABLED", "false")
     monkeypatch.setenv("WEBAPP_IMAGE_TO_PDF_ENABLED", "true" if image_to_pdf_enabled else "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_IMAGES_ENABLED", "true" if pdf_to_images_enabled else "false")
     monkeypatch.setenv("WEBAPP_PDF_TO_WORD_ENABLED", "true" if pdf_to_word_enabled else "false")
@@ -1437,6 +1443,136 @@ def test_pdf_split_marks_tampered_output_unavailable_and_enforces_private_roots(
         database.ensure_document_operations_persistence()
 
 
+def test_document_operation_download_stream_is_sealed_before_a_source_path_swap(tmp_path, monkeypatch):
+    """A private response must never reopen a verified mutable output pathname."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "document-operation-sealed-download@example.com")
+        source = upload_pdf(client, csrf, key="pdf-sealed-download-source-0001")
+        operation = split(
+            client,
+            csrf,
+            asset_id=source["id"],
+            page_range="1",
+            key="pdf-sealed-download-operation-0001",
+        ).json()["data"]["operation"]
+        with sqlite3.connect(tmp_path / "copyfast-document-operations-test.db") as conn:
+            storage_key, expected_size = conn.execute(
+                "SELECT storage_key, byte_size FROM web_document_operations WHERE id=?",
+                (operation["id"],),
+            ).fetchone()
+        private_file = Path(tmp_path / "private-document-outputs") / storage_key
+        original_bytes = private_file.read_bytes()
+        operations = importlib.import_module("copyfast_document_operations")
+        original_seal = operations._seal_verified_operation_output
+
+        def seal_then_replace_source(stream, *, expected_bytes, expected_digest):
+            sealed = original_seal(stream, expected_bytes=expected_bytes, expected_digest=expected_digest)
+            assert sealed is not None
+            # This is deliberately after descriptor verification and sealing,
+            # but before the route creates a response. Path-based delivery
+            # would serve these replacement bytes instead of the sealed copy.
+            private_file.write_bytes(b"replacement bytes that must never be delivered")
+            return sealed
+
+        monkeypatch.setattr(operations, "_seal_verified_operation_output", seal_then_replace_source)
+        delivered = client.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert delivered.status_code == 200
+        assert delivered.headers["content-length"] == str(expected_size)
+        assert delivered.content == original_bytes
+        assert len(PdfReader(BytesIO(delivered.content), strict=True).pages) == 1
+
+        # The replacement is now visible only to the next request, which must
+        # fail closed rather than deliver a new pathname's bytes.
+        unavailable = client.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert unavailable.json()["error_code"] == "WEB_DOCUMENT_OPERATION_UNAVAILABLE"
+
+
+def test_document_operation_sealed_download_releases_capacity_on_client_disconnect(monkeypatch):
+    """A failed ASGI send must not leak a sealed temp file or its slot."""
+
+    operations = importlib.import_module("copyfast_document_operations")
+    monkeypatch.setattr(operations, "_DOCUMENT_OPERATION_DOWNLOAD_CAPACITY", threading.BoundedSemaphore(value=1))
+    operations._reserve_document_operation_download_capacity()
+    stream = tempfile.TemporaryFile(mode="w+b")
+    stream.write(b"verified private attachment")
+    stream.seek(0)
+    finalizer = operations._sealed_operation_download_finalizer(stream, release_capacity=True)
+    response = operations._operation_attachment_response(
+        stream,
+        byte_size=len(b"verified private attachment"),
+        media_type="text/plain; charset=utf-8",
+        filename="private.txt",
+        on_close=finalizer,
+    )
+    second_slot_reserved = False
+
+    # Starlette 0.27 listens for disconnect in a sibling AnyIO task and keeps
+    # reading until it sees ``http.disconnect``.  Returning ``http.request``
+    # synchronously here creates a tight loop that can starve the streaming
+    # task forever (newer Starlette takes a different ASGI >= 2.4 path).  Keep
+    # the receive side pending until the body send simulates the disconnect,
+    # which is representative of a real ASGI server on both supported
+    # Starlette generations.
+    send_failed = asyncio.Event()
+
+    async def receive():
+        await send_failed.wait()
+        return {"type": "http.disconnect"}
+
+    async def send(message):
+        if message["type"] == "http.response.body" and message.get("body"):
+            send_failed.set()
+            raise OSError("client disconnected")
+
+    try:
+        # Starlette >= 1 maps the failed ASGI send to ClientDisconnect.  The
+        # 0.27 task-group implementation surfaces the same OSError wrapped in
+        # an exception group.  Both prove that delivery was interrupted; do
+        # not hide an unrelated framework or application failure.
+        with pytest.raises((ClientDisconnect, OSError, ExceptionGroup)) as interrupted:
+            asyncio.run(response({"type": "http", "asgi": {"spec_version": "2.4"}}, receive, send))
+        if isinstance(interrupted.value, ExceptionGroup):
+            assert any(isinstance(error, OSError) for error in interrupted.value.exceptions)
+        assert stream.closed is True
+        operations._reserve_document_operation_download_capacity()
+        second_slot_reserved = True
+    finally:
+        if second_slot_reserved:
+            operations._release_document_operation_download_capacity()
+        finalizer()
+
+
+def test_document_operation_temporary_seal_failure_is_retryable_without_demoting_output(tmp_path, monkeypatch):
+    """A local temporary-storage outage is not evidence that output changed."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "document-operation-temp-delivery@example.com")
+        source = upload_pdf(client, csrf, key="pdf-temp-delivery-source-0001")
+        operation = split(
+            client,
+            csrf,
+            asset_id=source["id"],
+            page_range="1",
+            key="pdf-temp-delivery-operation-0001",
+        ).json()["data"]["operation"]
+        operations = importlib.import_module("copyfast_document_operations")
+        original_temporary_file = operations.tempfile.TemporaryFile
+
+        def unavailable_temporary_file(*_args, **_kwargs):
+            raise OSError("temporary storage unavailable")
+
+        monkeypatch.setattr(operations.tempfile, "TemporaryFile", unavailable_temporary_file)
+        unavailable_now = client.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert unavailable_now.status_code == 503
+        assert client.get(f"/api/v1/document-operations/{operation['id']}").json()["data"]["operation"]["state"] == "completed"
+
+        monkeypatch.setattr(operations.tempfile, "TemporaryFile", original_temporary_file)
+        retry = client.get(f"/api/v1/document-operations/{operation['id']}/download")
+        assert retry.status_code == 200
+        assert len(retry.content) == operation["byte_size"]
+
+
 def test_pdf_split_strips_interactive_page_annotations_from_the_generated_attachment(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         csrf = register_and_login(client, "pdf-annotation@example.com")
@@ -1495,6 +1631,9 @@ def test_document_operations_have_no_bot_bridge_public_storage_or_unbounded_pars
     assert "from copyfast_bridge" not in source
     assert "import copyfast_bridge" not in source
     assert "bridge_request(" not in source
+    assert "from fastapi.responses import FileResponse" not in source
+    assert "_open_verified_operation_output" in source
+    assert "_seal_verified_operation_output" in source
     assert "MAX_INPUT_BYTES = 20 * 1024 * 1024" in source
     assert "MAX_PAGES = 30" in source
     assert "PDF_EXCLUDED_PAGE_KEYS" in source

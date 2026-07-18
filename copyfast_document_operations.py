@@ -19,14 +19,18 @@ import math
 import os
 from pathlib import Path
 import re
+import stat
 import threading
+import tempfile
+import time
 import uuid
-from typing import Any
+from typing import Any, BinaryIO, Callable, Iterator
+from urllib.parse import quote
 import warnings
 from zipfile import BadZipFile, ZIP_DEFLATED, ZipFile, ZipInfo
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from fastapi.responses import FileResponse
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, ConfigDict, Field, StrictStr, field_validator
 from starlette.concurrency import run_in_threadpool
 
@@ -38,6 +42,7 @@ from copyfast_db import (
     document_operations_directory,
     document_operations_enabled,
     image_ocr_enabled,
+    pdf_ocr_word_enabled,
     ensure_copyfast_schema,
     image_to_pdf_enabled,
     pdf_ocr_enabled,
@@ -58,6 +63,7 @@ PDF_TO_IMAGES_KIND = "pdf_to_images"
 PDF_TO_WORD_KIND = "pdf_to_word_text"
 IMAGE_OCR_KIND = "image_ocr"
 PDF_OCR_KIND = "pdf_ocr"
+PDF_OCR_WORD_KIND = "pdf_ocr_word"
 SUPPORTED_KINDS = frozenset({
     PDF_SPLIT_KIND,
     PDF_MERGE_KIND,
@@ -67,6 +73,7 @@ SUPPORTED_KINDS = frozenset({
     PDF_TO_WORD_KIND,
     IMAGE_OCR_KIND,
     PDF_OCR_KIND,
+    PDF_OCR_WORD_KIND,
 })
 OPERATION_STATES = frozenset({"queued", "processing", "completed", "failed", "unavailable", "guarded"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
@@ -107,6 +114,13 @@ _PDF_TO_WORD_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_WORD_MAX_CONCURR
 # per Web process and cannot be bypassed by concurrent accounts.
 PDF_TO_IMAGES_MAX_CONCURRENT = 1
 _PDF_TO_IMAGES_CAPACITY = threading.BoundedSemaphore(value=PDF_TO_IMAGES_MAX_CONCURRENT)
+# A completed private artifact is copied into an anonymous temporary stream
+# before delivery.  Bound those streams so slow or disconnected clients cannot
+# consume arbitrary temporary storage even when every requested file is valid.
+DOCUMENT_OPERATION_DOWNLOAD_MAX_CONCURRENT = 2
+_DOCUMENT_OPERATION_DOWNLOAD_CAPACITY = threading.BoundedSemaphore(
+    value=DOCUMENT_OPERATION_DOWNLOAD_MAX_CONCURRENT
+)
 # OCR opens the same bounded image raster as Image → PDF / Image Operations.
 # Reuse the process-wide decoder gate rather than creating a second OCR-only
 # semaphore that could allow two 16 MP inputs to decode at once.
@@ -125,6 +139,10 @@ MAX_PDF_OCR_TOTAL_PIXELS = 20 * 1024 * 1024
 MAX_PDF_OCR_CHARACTERS = 500_000
 MAX_PDF_OCR_OUTPUT_BYTES = 2 * 1024 * 1024
 PDF_OCR_PAGE_TIMEOUT_SECONDS = 15
+# OCR-to-DOCX shares PDF OCR's five-page/20 MP safety envelope.  The total
+# deadline prevents a succession of individually bounded pages from holding
+# the Web worker indefinitely.
+PDF_OCR_TOTAL_TIMEOUT_SECONDS = MAX_PDF_OCR_PAGES * PDF_OCR_PAGE_TIMEOUT_SECONDS
 PDF_OCR_RUNTIME_CODES = frozenset({
     "OCR_RUNTIME_UNAVAILABLE",
     "PDF_RUNTIME_UNAVAILABLE",
@@ -176,6 +194,7 @@ OUTPUT_SPEC_BY_KIND = {
     PDF_TO_WORD_KIND: (".docx", DOCX_MEDIA_TYPE, "toan-aas-pdf-text.docx"),
     IMAGE_OCR_KIND: (".txt", "text/plain; charset=utf-8", "toan-aas-image-ocr.txt"),
     PDF_OCR_KIND: (".txt", "text/plain; charset=utf-8", "toan-aas-pdf-ocr.txt"),
+    PDF_OCR_WORD_KIND: (".docx", DOCX_MEDIA_TYPE, "toan-aas-pdf-ocr.docx"),
 }
 
 OPERATION_SELECT = """id, source_asset_id, project_id, kind, state, requested_page_range,
@@ -192,6 +211,31 @@ class DocumentOperationError(Exception):
         super().__init__(message)
         self.public_message = message
         self.code = code
+
+
+class _SealedOperationDeliveryError(RuntimeError):
+    """A retryable local temporary-stream failure, not output corruption."""
+
+
+class _SealedOperationStreamingResponse(StreamingResponse):
+    """Streaming response that releases a sealed artifact on every exit path.
+
+    Modern Starlette raises ``ClientDisconnect`` when an ASGI ``send`` fails
+    before it runs a response background task. The outer ``finally`` therefore
+    owns the close/release callback; the callback itself is intentionally
+    idempotent because the synchronous body iterator also finalizes on a
+    normal end-of-stream.
+    """
+
+    def __init__(self, content: Iterator[bytes], *, on_close: Callable[[], None], **kwargs: Any) -> None:
+        self._sealed_operation_on_close = on_close
+        super().__init__(content, **kwargs)
+
+    async def __call__(self, scope: Any, receive: Any, send: Any) -> None:
+        try:
+            await super().__call__(scope, receive, send)
+        finally:
+            self._sealed_operation_on_close()
 
 
 class PdfSplitRequest(BaseModel):
@@ -355,6 +399,15 @@ class PdfOcrRequest(ImageOcrRequest):
     """
 
 
+class PdfOcrWordRequest(PdfOcrRequest):
+    """One scan PDF becomes one verified private DOCX after local OCR.
+
+    This intentionally reuses the closed PDF OCR browser schema. The server,
+    not the browser, chooses DOCX construction, idempotency, page/render
+    limits and all local OCR arguments.
+    """
+
+
 def _require_enabled() -> None:
     if not document_operations_enabled() or not asset_vault_enabled():
         raise HTTPException(
@@ -395,6 +448,22 @@ def _require_pdf_ocr_enabled() -> None:
                 "OCR PDF private chưa được bật; cần WEBAPP_DOCUMENT_OCR_PDF_ENABLED "
                 "và local PDFium/Tesseract runtime"
             ),
+        )
+
+
+def _require_pdf_ocr_word_enabled() -> None:
+    """Keep scan OCR-to-DOCX behind all of its explicit runtime boundaries."""
+
+    _require_enabled()
+    if not pdf_ocr_word_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="PDF quét → Word chưa được bật; cần WEBAPP_PDF_OCR_WORD_ENABLED và local runtime riêng",
+        )
+    if not pdf_ocr_enabled() or not pdf_to_word_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="PDF quét → Word cần cả WEBAPP_DOCUMENT_OCR_PDF_ENABLED và WEBAPP_PDF_TO_WORD_ENABLED",
         )
 
 
@@ -470,6 +539,27 @@ def _release_pdf_ocr_capacity() -> None:
     _PDF_TO_IMAGES_CAPACITY.release()
 
 
+def _reserve_document_operation_download_capacity() -> None:
+    """Bound sealed private downloads before an anonymous temp copy is made."""
+
+    if not _DOCUMENT_OPERATION_DOWNLOAD_CAPACITY.acquire(blocking=False):
+        raise HTTPException(
+            status_code=429,
+            detail="Đang có nhiều lượt tải file private; vui lòng thử lại sau ít phút",
+        )
+
+
+def _release_document_operation_download_capacity() -> None:
+    """Release one reserved sealed-download slot without masking a response."""
+
+    try:
+        _DOCUMENT_OPERATION_DOWNLOAD_CAPACITY.release()
+    except ValueError:
+        # A response finalizer is intentionally idempotent; a second close
+        # must never surface as an application error or over-release the gate.
+        pass
+
+
 def _reserve_pdf_to_word_capacity() -> None:
     """Serialize bounded text extraction/DOCX generation per Web process."""
     if not _PDF_TO_WORD_CAPACITY.acquire(blocking=False):
@@ -486,6 +576,22 @@ def _reserve_pdf_to_images_capacity() -> None:
             status_code=429,
             detail="PDF → ảnh đang bận xử lý một tệp khác; vui lòng thử lại sau ít phút",
         )
+
+
+def _reserve_pdf_ocr_word_capacity() -> None:
+    """Reserve OCR raster resources and the shared DOCX writer in one order."""
+
+    _reserve_pdf_ocr_capacity()
+    try:
+        _reserve_pdf_to_word_capacity()
+    except Exception:
+        _release_pdf_ocr_capacity()
+        raise
+
+
+def _release_pdf_ocr_word_capacity() -> None:
+    _PDF_TO_WORD_CAPACITY.release()
+    _release_pdf_ocr_capacity()
 
 
 def ensure_document_operations_runtime() -> None:
@@ -655,6 +761,20 @@ def _pdf_ocr_runtime(language: str) -> tuple[Any, str]:
         ) from exc
 
 
+def _pdf_ocr_word_runtime(language: str) -> tuple[Any, str]:
+    """Preflight every OCR-to-DOCX dependency before a lifecycle row exists."""
+
+    ocr_module, ocr_language = _pdf_ocr_runtime(language)
+    try:
+        _word_classes()
+    except DocumentOperationError as exc:
+        raise DocumentOperationError(
+            "PDF quét → Word chưa có local runtime DOCX sẵn sàng để chạy an toàn.",
+            code="OCR_RUNTIME_UNAVAILABLE",
+        ) from exc
+    return ocr_module, ocr_language
+
+
 def _maximum_output_bytes() -> int:
     raw = os.environ.get("WEBAPP_DOCUMENT_OPERATIONS_MAX_OUTPUT_MB", "20").strip()
     try:
@@ -760,6 +880,274 @@ def _verify_file(path: Path, *, expected_bytes: int, expected_digest: str) -> bo
         return False
 
 
+def _same_operation_file(left: os.stat_result, right: os.stat_result) -> bool:
+    """Compare filesystem identity instead of relying on a mutable pathname."""
+
+    return left.st_dev == right.st_dev and left.st_ino == right.st_ino
+
+
+def _operation_directory_fd_supported() -> bool:
+    """Whether the current runtime can pin `root/outputs` by descriptor."""
+
+    supported = getattr(os, "supports_dir_fd", set())
+    return bool(
+        getattr(os, "O_DIRECTORY", 0)
+        and getattr(os, "O_NOFOLLOW", 0)
+        and os.open in supported
+        and os.stat in supported
+    )
+
+
+def _open_private_operation_outputs_directory(path: Path) -> tuple[int, int] | None:
+    """Pin the operation root and `outputs/` before opening one artifact.
+
+    Railway runs the descriptor-hardened POSIX branch. The lstat fallback is
+    retained only for environments without `dir_fd` support, never as a second
+    attempt after a hardened open fails.
+    """
+
+    if not _operation_directory_fd_supported():
+        return None
+    root_descriptor = -1
+    outputs_descriptor = -1
+    try:
+        directory_flags = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+        root_descriptor = os.open(path.parent.parent, directory_flags)
+        outputs_descriptor = os.open("outputs", directory_flags, dir_fd=root_descriptor)
+        return root_descriptor, outputs_descriptor
+    except OSError:
+        if outputs_descriptor >= 0:
+            os.close(outputs_descriptor)
+        if root_descriptor >= 0:
+            os.close(root_descriptor)
+        return None
+
+
+def _close_private_operation_outputs_directory(descriptors: tuple[int, int] | None) -> None:
+    if descriptors is None:
+        return
+    for descriptor in reversed(descriptors):
+        try:
+            os.close(descriptor)
+        except OSError:
+            pass
+
+
+def _open_verified_operation_output(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Open, hash and pin an artifact without a check/open race.
+
+    A `FileResponse(path=...)` would reopen a verified pathname later. This
+    keeps the opened descriptor as authority, rejects symlink/directory/inode
+    swaps and verifies both size and digest before any attachment can be sent.
+    """
+
+    if expected_bytes <= 0 or expected_bytes > _maximum_output_bytes() or not expected_digest:
+        return None
+    descriptor = -1
+    stream: BinaryIO | None = None
+    try:
+        directories = _open_private_operation_outputs_directory(path) if _operation_directory_fd_supported() else None
+        if _operation_directory_fd_supported() and directories is None:
+            return None
+        if directories is not None:
+            _root_descriptor, outputs_descriptor = directories
+            try:
+                before = os.stat(path.name, dir_fd=outputs_descriptor, follow_symlinks=False)
+                flags = os.O_RDONLY | os.O_NOFOLLOW | getattr(os, "O_BINARY", 0)
+                descriptor = os.open(path.name, flags, dir_fd=outputs_descriptor)
+            finally:
+                _close_private_operation_outputs_directory(directories)
+        else:
+            parent_stat = os.lstat(path.parent)
+            before = os.lstat(path)
+            if (
+                stat.S_ISLNK(parent_stat.st_mode)
+                or not stat.S_ISDIR(parent_stat.st_mode)
+                or stat.S_ISLNK(before.st_mode)
+            ):
+                return None
+            flags = os.O_RDONLY | getattr(os, "O_BINARY", 0) | getattr(os, "O_NOFOLLOW", 0)
+            descriptor = os.open(path, flags)
+        if not stat.S_ISREG(before.st_mode):
+            return None
+        pinned = os.fstat(descriptor)
+        if (
+            not stat.S_ISREG(pinned.st_mode)
+            or pinned.st_size != expected_bytes
+            or not _same_operation_file(before, pinned)
+        ):
+            return None
+        stream = os.fdopen(descriptor, "rb", closefd=True)
+        descriptor = -1
+        digest = hashlib.sha256()
+        read_bytes = 0
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            digest.update(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        stream.seek(0)
+        accepted = stream
+        stream = None
+        return accepted
+    except (OSError, ValueError):
+        return None
+    finally:
+        if stream is not None:
+            try:
+                stream.close()
+            except (OSError, ValueError):
+                pass
+        if descriptor >= 0:
+            try:
+                os.close(descriptor)
+            except OSError:
+                pass
+
+
+def _seal_verified_operation_output(
+    stream: BinaryIO,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Make an anonymous rehashed copy before a private artifact is streamed."""
+
+    sealed: BinaryIO | None = None
+    try:
+        if expected_bytes <= 0 or expected_bytes > _maximum_output_bytes() or not expected_digest:
+            return None
+        sealed = tempfile.TemporaryFile(mode="w+b")
+        digest = hashlib.sha256()
+        read_bytes = 0
+        stream.seek(0)
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            read_bytes += len(chunk)
+            if read_bytes > expected_bytes:
+                return None
+            digest.update(chunk)
+            sealed.write(chunk)
+        if read_bytes != expected_bytes or not hmac.compare_digest(digest.hexdigest(), expected_digest):
+            return None
+        sealed.seek(0)
+        accepted = sealed
+        sealed = None
+        return accepted
+    except (OSError, ValueError) as exc:
+        # The output descriptor was already verified before this separate
+        # anonymous copy began. A temporary filesystem/descriptor failure must
+        # not permanently demote a valid completed artifact to unavailable.
+        raise _SealedOperationDeliveryError("Không thể chuẩn bị luồng tải private") from exc
+    finally:
+        try:
+            stream.close()
+        except (OSError, ValueError):
+            pass
+        if sealed is not None:
+            try:
+                sealed.close()
+            except OSError:
+                pass
+
+
+def _sealed_operation_download_finalizer(stream: BinaryIO, *, release_capacity: bool) -> Callable[[], None]:
+    """Close one sealed stream and release its gate exactly once."""
+
+    lock = threading.Lock()
+    finalized = False
+
+    def finalize() -> None:
+        nonlocal finalized
+        with lock:
+            if finalized:
+                return
+            finalized = True
+        try:
+            stream.close()
+        except (OSError, ValueError):
+            # Cleanup must not hide a client disconnect or delivery error.
+            pass
+        finally:
+            if release_capacity:
+                _release_document_operation_download_capacity()
+
+    return finalize
+
+
+def _operation_output_chunks(stream: BinaryIO, *, finalize: Callable[[], None]) -> Iterator[bytes]:
+    try:
+        while True:
+            chunk = stream.read(CHUNK_BYTES)
+            if not chunk:
+                break
+            yield chunk
+    finally:
+        finalize()
+
+
+def _operation_attachment_response(
+    stream: BinaryIO,
+    *,
+    byte_size: int,
+    media_type: str,
+    filename: str,
+    on_close: Callable[[], None] | None = None,
+) -> StreamingResponse:
+    """Deliver a sealed private Document Operation artifact as an attachment."""
+
+    finalize = on_close or stream.close
+    if byte_size <= 0:
+        finalize()
+        raise ValueError("Kích thước Document Operation output không hợp lệ")
+    safe_name = str(filename or "download").replace("\r", " ").replace("\n", " ").strip() or "download"
+    return _SealedOperationStreamingResponse(
+        _operation_output_chunks(stream, finalize=finalize),
+        on_close=finalize,
+        media_type=media_type,
+        headers={
+            "Content-Length": str(byte_size),
+            "Content-Disposition": f"attachment; filename*=utf-8''{quote(safe_name)}",
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+        },
+    )
+
+
+def _prepare_sealed_operation_output(
+    path: Path,
+    *,
+    expected_bytes: int,
+    expected_digest: str,
+) -> BinaryIO | None:
+    """Pin, verify and seal one output away from the async request loop."""
+
+    pinned_stream = _open_verified_operation_output(
+        path,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+    if pinned_stream is None:
+        return None
+    return _seal_verified_operation_output(
+        pinned_stream,
+        expected_bytes=expected_bytes,
+        expected_digest=expected_digest,
+    )
+
+
 def _copy_verified_source(source: Path, destination: Path, *, expected_bytes: int, expected_digest: str) -> None:
     """Copy a verified Asset Vault blob so parser input cannot race its source."""
     total = 0
@@ -863,7 +1251,7 @@ def _operation_public(row: tuple[Any, ...]) -> dict[str, Any]:
     # metadata. Expose only the allow-listed selector for an OCR history
     # item; never turn a request metadata field into a generic public input.
     ocr_language = None
-    if kind in {IMAGE_OCR_KIND, PDF_OCR_KIND} and requested_page_range.startswith("ocr:"):
+    if kind in {IMAGE_OCR_KIND, PDF_OCR_KIND, PDF_OCR_WORD_KIND} and requested_page_range.startswith("ocr:"):
         candidate = requested_page_range.removeprefix("ocr:")
         if candidate in IMAGE_OCR_LANGUAGES:
             ocr_language = candidate
@@ -1093,6 +1481,32 @@ def _pdf_ocr_request_fingerprint(
     return hashlib.sha256(payload).hexdigest()
 
 
+def _pdf_ocr_word_request_fingerprint(
+    *,
+    source_asset_id: str,
+    source_sha256: str,
+    source_bytes: int,
+    language: str,
+) -> str:
+    """Bind scan-PDF DOCX replay to one source revision and local OCR mode."""
+
+    payload = json.dumps(
+        {
+            "kind": PDF_OCR_WORD_KIND,
+            "source_asset_id": source_asset_id,
+            "source_sha256": source_sha256,
+            "source_bytes": source_bytes,
+            "language": language,
+            "render_scale": PDF_TO_IMAGES_RENDER_SCALE,
+            "engine": "local_tesseract_docx_text_only",
+            "max_pages": MAX_PDF_OCR_PAGES,
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
 def _optimize_request_fingerprint(*, source_asset_id: str, source_sha256: str, source_bytes: int) -> str:
     """Bind one structural optimize intent to its verified source revision."""
     payload = json.dumps(
@@ -1172,6 +1586,7 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
         PDF_TO_WORD_KIND: ("PDF có text → Word", "Đã trích xuất text và xác minh DOCX riêng tư."),
         IMAGE_OCR_KIND: ("OCR ảnh", "Đã trích xuất và xác minh văn bản OCR private."),
         PDF_OCR_KIND: ("OCR PDF", "Đã OCR và xác minh văn bản private từ PDF."),
+        PDF_OCR_WORD_KIND: ("PDF quét → Word", "Đã OCR local và xác minh DOCX riêng tư từ PDF."),
     }.get(kind, ("Document Operation", "Đã xác minh artifact tài liệu riêng tư."))
     if state == "completed":
         return envelope(True, completed_message, data={"operation": public_operation}, status_name="completed")
@@ -1193,7 +1608,7 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
             status_name="guarded",
             error_code="WEB_DOCUMENT_OPERATION_TEXT_NOT_FOUND",
         )
-    if state == "guarded" and kind in {IMAGE_OCR_KIND, PDF_OCR_KIND}:
+    if state == "guarded" and kind in {IMAGE_OCR_KIND, PDF_OCR_KIND, PDF_OCR_WORD_KIND}:
         if failure_code == "OCR_RUNTIME_UNAVAILABLE":
             return envelope(
                 False,
@@ -1212,7 +1627,7 @@ def _operation_response(operation: dict[str, Any]) -> dict[str, Any]:
             )
         return envelope(
             False,
-            "OCR không đọc được văn bản đủ để phát hành. Web không tạo file text giả.",
+            "OCR không đọc được văn bản đủ để phát hành. Web không tạo file giả.",
             data={"operation": public_operation},
             status_name="guarded",
             error_code="WEB_DOCUMENT_OCR_TEXT_NOT_FOUND",
@@ -1597,6 +2012,38 @@ def _normalized_ocr_text(value: Any) -> str:
     return cleaned + "\n"
 
 
+def _normalized_pdf_ocr_fragment(value: Any) -> str:
+    """Normalize one rendered PDF page without inventing a blank-page result.
+
+    A scanned PDF may legitimately contain pages with no readable text.  Those
+    pages are omitted from the private text artifact; only the aggregate needs
+    to contain real OCR text before it may be delivered.  This differs from
+    image OCR's one-input contract, where an empty result is terminal at once.
+    """
+
+    if not isinstance(value, str):
+        raise DocumentOperationError("OCR PDF không trả về văn bản hợp lệ", code="OCR_PARSE_FAILED")
+    cleaned = value.replace("\r\n", "\n").replace("\r", "\n").replace("\x00", "")
+    cleaned = "".join(character for character in cleaned if character in {"\n", "\t"} or ord(character) >= 32)
+    return "\n".join(line.rstrip() for line in cleaned.split("\n")).strip()
+
+
+def _pdf_ocr_remaining_timeout(deadline: float) -> float:
+    """Return the smaller per-page/global OCR budget or fail terminally."""
+
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT")
+    # pytesseract supports a fractional per-invocation timeout. Do not keep
+    # the fixed 30-second window once the aggregate
+    # budget is nearly exhausted.
+    return min(float(PDF_OCR_PAGE_TIMEOUT_SECONDS), max(0.1, remaining))
+
+
+def _is_local_ocr_timeout(exc: Exception) -> bool:
+    """Normalize pytesseract's timeout exception without leaking its detail."""
+
+    return isinstance(exc, TimeoutError) or "timeout" in str(exc).casefold()
 def _build_image_ocr_output(
     root: Path,
     source_copy: Path,
@@ -2582,6 +3029,257 @@ def _build_pdf_to_images_output(root: Path, source_copy: Path) -> tuple[Path, st
             _safe_unlink(page_path)
 
 
+def _build_pdf_ocr_output_for_word(
+    root: Path,
+    source_copy: Path,
+    *,
+    language: str,
+    ocr_module: Any,
+    output_kind: str = "text",
+) -> tuple[Path, str, int, str, int, int, int, int]:
+    """OCR a bounded private PDF and publish one verified server-owned artifact.
+
+    It reuses the main PDF OCR boundary (PDF, five pages, 2× raster and
+    page-marked text) while all Telegram delivery, Xu, provider
+    and job state are intentionally absent.  A blank scanned page is not
+    synthesized into text; either a TXT or DOCX artifact exists only when at
+    least one page has actual recognized characters. `output_kind` is a
+    server-side internal selector, never a browser option.
+    """
+
+    if output_kind not in {"text", "docx"}:
+        raise ValueError("Loại OCR PDF output nội bộ không hợp lệ")
+    temporary_output = _staging_path(root, ".txt" if output_kind == "text" else ".docx")
+    final_path: Path | None = None
+    pdf_document = None
+    deadline = time.monotonic() + PDF_OCR_TOTAL_TIMEOUT_SECONDS
+    try:
+        PdfReader, _ = _pdf_classes()
+        try:
+            with source_copy.open("rb") as source_stream:
+                reader = PdfReader(source_stream, strict=True)
+                if reader.is_encrypted:
+                    raise DocumentOperationError("PDF được mã hóa chưa thể OCR an toàn", code="PDF_ENCRYPTED")
+                source_page_count = len(reader.pages)
+                _pdf_ocr_remaining_timeout(deadline)
+        except DocumentOperationError:
+            raise
+        except Exception as exc:
+            raise DocumentOperationError("PDF không hợp lệ hoặc không thể OCR an toàn", code="PDF_PARSE_FAILED") from exc
+        if source_page_count < 1 or source_page_count > MAX_PDF_OCR_PAGES:
+            raise DocumentOperationError(
+                f"OCR PDF chỉ nhận từ 1 đến {MAX_PDF_OCR_PAGES} trang mỗi lần",
+                code="PDF_OCR_PAGE_LIMIT",
+            )
+
+        pdfium = _pdf_to_images_classes()
+        try:
+            pdf_document = pdfium.PdfDocument(str(source_copy), autoclose=False)
+            _pdf_ocr_remaining_timeout(deadline)
+            if len(pdf_document) != source_page_count:
+                raise DocumentOperationError("Số trang PDF không nhất quán", code="PDF_PARSE_FAILED")
+            geometry: list[tuple[int, int]] = []
+            total_pixels = 0
+            for page_index in range(source_page_count):
+                if time.monotonic() > deadline:
+                    raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT")
+                page = pdf_document[page_index]
+                try:
+                    width, height, pixels = _pdf_ocr_geometry(page)
+                    _pdf_ocr_remaining_timeout(deadline)
+                finally:
+                    try:
+                        page.close()
+                    except Exception:
+                        pass
+                total_pixels += pixels
+                if total_pixels > MAX_PDF_OCR_TOTAL_PIXELS:
+                    raise DocumentOperationError(
+                        "Tổng độ phân giải OCR PDF vượt giới hạn 20 MP mỗi lần",
+                        code="PDF_OCR_TOTAL_PIXEL_LIMIT",
+                    )
+                geometry.append((width, height))
+        except DocumentOperationError:
+            raise
+        except MemoryError as exc:
+            raise DocumentOperationError("PDF vượt giới hạn bộ nhớ render an toàn", code="PDF_RENDER_RESOURCE_LIMIT") from exc
+        except Exception as exc:
+            raise DocumentOperationError("PDF không thể mở bằng renderer an toàn", code="PDF_PARSE_FAILED") from exc
+
+        fragments: list[str] = []
+        recognized_characters = 0
+        recognized_pages = 0
+        for page_index, (expected_width, expected_height) in enumerate(geometry):
+            if time.monotonic() > deadline:
+                raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT")
+            page = None
+            bitmap = None
+            rendered = None
+            raster = None
+            try:
+                page = pdf_document[page_index]
+                actual_width, actual_height, _ = _pdf_ocr_geometry(page)
+                _pdf_ocr_remaining_timeout(deadline)
+                if (actual_width, actual_height) != (expected_width, expected_height):
+                    raise DocumentOperationError("Kích thước trang PDF thay đổi trong khi OCR", code="PDF_OCR_PIXEL_LIMIT")
+                bitmap = page.render(scale=PDF_TO_IMAGES_RENDER_SCALE)
+                _pdf_ocr_remaining_timeout(deadline)
+                rendered = bitmap.to_pil()
+                _pdf_ocr_remaining_timeout(deadline)
+                raster = rendered.convert("RGB")
+                page_timeout = _pdf_ocr_remaining_timeout(deadline)
+                if tuple(raster.size) != (expected_width, expected_height):
+                    raise DocumentOperationError("Render PDF không khớp kích thước trang đã kiểm tra", code="PDF_OCR_OUTPUT_INVALID")
+                try:
+                    raw_text = ocr_module.image_to_string(
+                        raster,
+                        lang=language,
+                        config="--oem 1 --psm 6",
+                        timeout=page_timeout,
+                    )
+                except Exception as exc:
+                    if _is_local_ocr_timeout(exc) or time.monotonic() >= deadline:
+                        raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT") from exc
+                    raise DocumentOperationError(
+                        "Local Tesseract không thể hoàn tất OCR PDF an toàn.",
+                        code="OCR_RUNTIME_UNAVAILABLE",
+                    ) from exc
+                _pdf_ocr_remaining_timeout(deadline)
+                fragment = _normalized_pdf_ocr_fragment(raw_text)
+                if fragment:
+                    block = f"=== Trang {page_index + 1} ===\n{fragment}"
+                    candidate_characters = recognized_characters + len(block)
+                    if candidate_characters > MAX_PDF_OCR_CHARACTERS:
+                        raise DocumentOperationError("Văn bản OCR PDF vượt giới hạn artifact an toàn", code="OCR_OUTPUT_LIMIT")
+                    fragments.append(block)
+                    recognized_characters = candidate_characters
+                    recognized_pages += 1
+            except DocumentOperationError:
+                raise
+            except MemoryError as exc:
+                raise DocumentOperationError("PDF vượt giới hạn bộ nhớ OCR an toàn", code="PDF_OCR_RESOURCE_LIMIT") from exc
+            except Exception as exc:
+                raise DocumentOperationError("Không thể render trang PDF để OCR an toàn", code="PDF_OCR_OUTPUT_INVALID") from exc
+            finally:
+                for resource in (raster, rendered, bitmap, page):
+                    if resource is not None:
+                        try:
+                            resource.close()
+                        except Exception:
+                            pass
+
+        if not fragments:
+            raise DocumentOperationError("OCR không tìm thấy văn bản để phát hành", code="OCR_TEXT_NOT_FOUND")
+        text = "\n\n".join(fragments).strip() + "\n"
+        if output_kind == "text":
+            encoded = text.encode("utf-8")
+            output_limit = min(MAX_PDF_OCR_OUTPUT_BYTES, _maximum_output_bytes())
+            if (
+                len(text.rstrip("\n")) > MAX_PDF_OCR_CHARACTERS
+                or len(encoded) < 1
+                or len(encoded) > output_limit
+            ):
+                raise DocumentOperationError("Văn bản OCR PDF vượt giới hạn artifact an toàn", code="OCR_OUTPUT_LIMIT")
+            with temporary_output.open("xb") as stream:
+                stream.write(encoded)
+            byte_size = temporary_output.stat().st_size
+            if byte_size != len(encoded) or byte_size < 1 or byte_size > output_limit:
+                raise DocumentOperationError("Văn bản OCR PDF vượt giới hạn artifact an toàn", code="OCR_OUTPUT_LIMIT")
+            digest = hashlib.sha256(encoded).hexdigest()
+            # Re-read the exact private bytes before promotion. Text never
+            # enters API envelopes, audit details or browser state.
+            verified_bytes = temporary_output.read_bytes()
+            if verified_bytes != encoded:
+                raise DocumentOperationError("Văn bản OCR PDF đầu ra không vượt qua kiểm tra", code="OCR_OUTPUT_INVALID")
+            try:
+                verified_bytes.decode("utf-8", errors="strict")
+            except UnicodeDecodeError as exc:
+                raise DocumentOperationError("Văn bản OCR PDF đầu ra không hợp lệ", code="OCR_OUTPUT_INVALID") from exc
+            output_suffix = ".txt"
+            output_error_code = "OCR_OUTPUT_INVALID"
+            output_label = "Văn bản OCR PDF"
+        else:
+            if len(text.rstrip("\n")) > MAX_PDF_TO_WORD_CHARACTERS:
+                raise DocumentOperationError("Văn bản OCR PDF vượt giới hạn xuất DOCX an toàn", code="PDF_TO_WORD_OUTPUT_LIMIT")
+            paragraphs = _text_paragraphs(text)
+            if not paragraphs or len(paragraphs) > MAX_PDF_TO_WORD_PARAGRAPHS:
+                raise DocumentOperationError("Văn bản OCR PDF không đủ để xuất DOCX an toàn", code="PDF_TO_WORD_OUTPUT_INVALID")
+            Document = _word_classes()
+            document = Document()
+            document.core_properties.title = "TOAN AAS PDF OCR export"
+            document.core_properties.author = "TOAN AAS Web"
+            document.core_properties.subject = "Local OCR PDF text"
+            for paragraph_text in paragraphs:
+                document.add_paragraph(paragraph_text)
+            document.save(str(temporary_output))
+            byte_size = temporary_output.stat().st_size
+            _verify_docx_output(
+                temporary_output,
+                expected_paragraphs=paragraphs,
+                expected_bytes=byte_size,
+            )
+            digest = hashlib.sha256()
+            with temporary_output.open("rb") as stream:
+                while True:
+                    chunk = stream.read(CHUNK_BYTES)
+                    if not chunk:
+                        break
+                    digest.update(chunk)
+            digest = digest.hexdigest()
+            output_suffix = ".docx"
+            output_error_code = "PDF_TO_WORD_OUTPUT_INVALID"
+            output_label = "DOCX OCR PDF"
+
+        outputs = _private_operation_directory(root, "outputs")
+        storage_key = f"outputs/{uuid.uuid4().hex}{output_suffix}"
+        final_path = _output_path(root, storage_key, expected_suffix=output_suffix)
+        if final_path.parent != outputs:
+            raise RuntimeError("Đường dẫn output OCR PDF không thuộc output storage riêng")
+        os.replace(temporary_output, final_path)
+        if not _verify_file(final_path, expected_bytes=byte_size, expected_digest=digest):
+            raise DocumentOperationError(f"{output_label} đầu ra không vượt qua kiểm tra integrity", code=output_error_code)
+        return (
+            final_path,
+            storage_key,
+            byte_size,
+            digest,
+            source_page_count,
+            total_pixels,
+            recognized_characters,
+            recognized_pages,
+        )
+    except Exception:
+        _safe_unlink(final_path)
+        raise
+    finally:
+        if pdf_document is not None:
+            try:
+                pdf_document.close()
+            except Exception:
+                pass
+        _safe_unlink(temporary_output)
+
+
+def _build_pdf_ocr_word_output(
+    root: Path,
+    source_copy: Path,
+    *,
+    language: str,
+    ocr_module: Any,
+) -> tuple[Path, str, int, str, int, int, int, int]:
+    """Create a DOCX only from real bounded local OCR text.
+
+    This is intentionally a separate route/operation from selectable-text
+    `/pdf-to-word`: it cannot silently change that route into an OCR fallback.
+    """
+
+    return _build_pdf_ocr_output_for_word(
+        root,
+        source_copy,
+        language=language,
+        ocr_module=ocr_module,
+        output_kind="docx",
+    )
 def reconcile_document_operation_storage() -> None:
     """Remove only old unreferenced staging/generated outputs after interruption."""
     if not document_operations_enabled():
@@ -3767,6 +4465,251 @@ async def ocr_pdf(payload: PdfOcrRequest, request: Request, account: dict = Depe
             _release_pdf_ocr_capacity()
 
 
+@router.post("/pdf-ocr-to-word")
+async def pdf_ocr_to_word(payload: PdfOcrWordRequest, request: Request, account: dict = Depends(require_csrf)):
+    """Create a DOCX from bounded local OCR of one owner-scoped scan PDF.
+
+    This is deliberately separate from `/pdf-to-word`, which remains a
+    selectable-text-only exporter. Browser input is restricted to the same
+    private source selector and language choice as PDF OCR; it cannot request
+    a Tesseract option, DOCX setting, path, URL, upload, provider/Bot action,
+    idempotency key, job, wallet or payment behavior.
+    """
+
+    _require_pdf_ocr_word_enabled()
+    try:
+        ocr_module, ocr_language = _pdf_ocr_word_runtime(payload.language)
+    except DocumentOperationError as exc:
+        return _ocr_readiness_guard(exc)
+
+    root = document_operations_directory()
+    account_id = str(account["id"])
+    operation_id = ""
+    source_copy: Path | None = None
+    final_path: Path | None = None
+    source_asset_id = payload.source_asset_id
+    source_storage_key = ""
+    source_bytes = 0
+    source_sha256 = ""
+    capacity_reserved = False
+
+    ensure_copyfast_schema()
+    try:
+        with transaction() as conn:
+            source_row = conn.execute(
+                """SELECT id, project_id, extension, content_type, byte_size, sha256, storage_key, state
+                   FROM web_asset_files WHERE id=? AND account_id=?""",
+                (source_asset_id, account_id),
+            ).fetchone()
+            if not source_row or str(source_row[7]) != "active":
+                return _source_not_found()
+            if str(source_row[2]) != ".pdf" or str(source_row[3]) != "application/pdf":
+                raise HTTPException(status_code=422, detail="PDF quét → Word chỉ nhận PDF private hợp lệ trong Asset Vault")
+            source_bytes = int(source_row[4])
+            if source_bytes < 1 or source_bytes > MAX_INPUT_BYTES:
+                raise HTTPException(status_code=413, detail="PDF nguồn vượt giới hạn 20 MB")
+            source_sha256 = str(source_row[5] or "").lower()
+            source_storage_key = str(source_row[6] or "")
+            if not re.fullmatch(r"[0-9a-f]{64}", source_sha256) or not ASSET_STORAGE_KEY_PATTERN.fullmatch(source_storage_key):
+                raise HTTPException(status_code=422, detail="PDF nguồn không còn sẵn sàng")
+
+            request_fingerprint = _pdf_ocr_word_request_fingerprint(
+                source_asset_id=source_asset_id,
+                source_sha256=source_sha256,
+                source_bytes=source_bytes,
+                language=payload.language,
+            )
+            server_idempotency_key = f"pdf-ocr-word-{request_fingerprint}"
+            existing = conn.execute(
+                f"""SELECT {OPERATION_SELECT}, request_fingerprint FROM web_document_operations
+                    WHERE account_id=? AND kind=? AND idempotency_key=?""",
+                (account_id, PDF_OCR_WORD_KIND, server_idempotency_key),
+            ).fetchone()
+            if existing:
+                if not hmac.compare_digest(str(existing[-1] or ""), request_fingerprint):
+                    raise RuntimeError("Idempotency PDF quét → Word không khớp fingerprint nguồn")
+                existing_operation = _operation_public(tuple(existing[:-1]))
+                if not (
+                    existing_operation.get("state") == "guarded"
+                    and str(existing_operation.get("_failure_code") or "")
+                    in {"OCR_RUNTIME_UNAVAILABLE", "OCR_LANGUAGE_UNAVAILABLE"}
+                ):
+                    return _operation_response(existing_operation)
+                _reserve_pdf_ocr_word_capacity()
+                capacity_reserved = True
+                operation_id = str(existing_operation["id"])
+                now = utc_now()
+                changed = conn.execute(
+                    """UPDATE web_document_operations
+                       SET state='processing', failure_code=NULL, storage_key=NULL, original_filename=NULL,
+                           content_type=NULL, byte_size=NULL, sha256=NULL, source_page_count=NULL,
+                           output_page_count=NULL, completed_at=NULL, started_at=?, updated_at=?
+                       WHERE id=? AND account_id=? AND kind=? AND state='guarded'""",
+                    (now, now, operation_id, account_id, PDF_OCR_WORD_KIND),
+                ).rowcount
+                if changed != 1:
+                    _release_pdf_ocr_word_capacity()
+                    capacity_reserved = False
+                    return _operation_response(existing_operation)
+                _record_event(conn, operation_id=operation_id, state="processing", when=now)
+            else:
+                _reserve_pdf_ocr_word_capacity()
+                capacity_reserved = True
+                operation_id = str(uuid.uuid4())
+                now = utc_now()
+                conn.execute(
+                    """INSERT INTO web_document_operations
+                       (id, account_id, source_asset_id, project_id, kind, state, idempotency_key,
+                        request_fingerprint, source_sha256, source_byte_size, source_count, requested_page_range,
+                        created_at, queued_at, started_at, updated_at)
+                       VALUES (?, ?, ?, ?, ?, 'queued', ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)""",
+                    (
+                        operation_id,
+                        account_id,
+                        source_asset_id,
+                        str(source_row[1]) if source_row[1] else None,
+                        PDF_OCR_WORD_KIND,
+                        server_idempotency_key,
+                        request_fingerprint,
+                        source_sha256,
+                        source_bytes,
+                        f"ocr:{payload.language}",
+                        now,
+                        now,
+                        now,
+                        now,
+                    ),
+                )
+                _record_event(conn, operation_id=operation_id, state="queued", when=now)
+                conn.execute(
+                    "UPDATE web_document_operations SET state='processing', updated_at=? WHERE id=? AND account_id=?",
+                    (now, operation_id, account_id),
+                )
+                _record_event(conn, operation_id=operation_id, state="processing", when=now)
+    except Exception:
+        if capacity_reserved:
+            _release_pdf_ocr_word_capacity()
+        raise
+
+    try:
+        source_path = _asset_path(asset_vault_directory(), source_storage_key)
+        source_copy = _staging_path(root, ".source.pdf")
+        await run_in_threadpool(
+            _copy_verified_source,
+            source_path,
+            source_copy,
+            expected_bytes=source_bytes,
+            expected_digest=source_sha256,
+        )
+        (
+            final_path,
+            output_storage_key,
+            output_bytes,
+            output_digest,
+            source_page_count,
+            total_pixels,
+            recognized_characters,
+            recognized_pages,
+        ) = await run_in_threadpool(
+            _build_pdf_ocr_word_output,
+            root,
+            source_copy,
+            language=ocr_language,
+            ocr_module=ocr_module,
+        )
+        now = utc_now()
+        with transaction() as conn:
+            current = conn.execute(
+                "SELECT state FROM web_document_operations WHERE id=? AND account_id=? AND kind=?",
+                (operation_id, account_id, PDF_OCR_WORD_KIND),
+            ).fetchone()
+            if not current or str(current[0]) != "processing":
+                raise RuntimeError("PDF quét → Word không còn ở trạng thái có thể hoàn tất")
+            if not _quota_available(conn, account_id=account_id, additional_bytes=output_bytes):
+                raise HTTPException(status_code=413, detail="Document Operations đã đạt quota của Web account")
+            conn.execute(
+                """UPDATE web_document_operations
+                   SET state='completed', source_page_count=?, output_page_count=NULL, storage_key=?,
+                       original_filename='toan-aas-pdf-ocr.docx', content_type=?,
+                       byte_size=?, sha256=?, completed_at=?, updated_at=?, failure_code=NULL
+                   WHERE id=? AND account_id=?""",
+                (
+                    source_page_count,
+                    output_storage_key,
+                    DOCX_MEDIA_TYPE,
+                    output_bytes,
+                    output_digest,
+                    now,
+                    now,
+                    operation_id,
+                    account_id,
+                ),
+            )
+            _record_event(conn, operation_id=operation_id, state="completed", when=now)
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.document_operation.pdf_ocr_word",
+                request_id=_request_id(request),
+                target=operation_id,
+                detail=(
+                    f"language={payload.language};source_pages={source_page_count};recognized_pages={recognized_pages};"
+                    f"pixels={total_pixels};characters={recognized_characters};bytes={output_bytes}"
+                ),
+            )
+            completed = conn.execute(
+                f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                (operation_id, account_id),
+            ).fetchone()
+        if not completed:
+            raise RuntimeError("Không thể đọc PDF quét → Word vừa hoàn tất")
+        final_path = None
+        return _operation_response(_operation_public(tuple(completed)))
+    except DocumentOperationError as exc:
+        _safe_unlink(final_path)
+        if exc.code in {"OCR_TEXT_NOT_FOUND", "OCR_RUNTIME_UNAVAILABLE", "OCR_LANGUAGE_UNAVAILABLE"}:
+            _mark_guarded(operation_id, account_id, kind=PDF_OCR_WORD_KIND, request=request, code=exc.code)
+            with transaction() as conn:
+                guarded = conn.execute(
+                    f"SELECT {OPERATION_SELECT} FROM web_document_operations WHERE id=? AND account_id=?",
+                    (operation_id, account_id),
+                ).fetchone()
+            if guarded:
+                return _operation_response(_operation_public(tuple(guarded)))
+        if exc.code == "PDF_SOURCE_UNAVAILABLE":
+            _mark_source_unavailable(source_asset_id, account_id)
+        _mark_failed(operation_id, account_id, kind=PDF_OCR_WORD_KIND, request=request, code=exc.code)
+        status_code = 413 if exc.code in {
+            "PDF_INPUT_TOO_LARGE",
+            "PDF_OCR_PAGE_LIMIT",
+            "PDF_OCR_PIXEL_LIMIT",
+            "PDF_OCR_TOTAL_PIXEL_LIMIT",
+            "PDF_OCR_RESOURCE_LIMIT",
+            "OCR_OUTPUT_LIMIT",
+            "PDF_TO_WORD_OUTPUT_LIMIT",
+        } else 422
+        raise HTTPException(status_code=status_code, detail=exc.public_message) from exc
+    except HTTPException as exc:
+        _safe_unlink(final_path)
+        _mark_failed(
+            operation_id,
+            account_id,
+            kind=PDF_OCR_WORD_KIND,
+            request=request,
+            code="DOCUMENT_QUOTA" if exc.status_code == 413 else "DOCUMENT_OPERATION",
+        )
+        raise
+    except Exception as exc:
+        _safe_unlink(final_path)
+        _mark_failed(operation_id, account_id, kind=PDF_OCR_WORD_KIND, request=request, code="DOCUMENT_OPERATION")
+        raise HTTPException(status_code=500, detail="Không thể OCR PDF sang Word an toàn") from exc
+    finally:
+        _safe_unlink(source_copy)
+        if capacity_reserved:
+            _release_pdf_ocr_word_capacity()
+
+
 @router.post("/pdf-to-images")
 async def pdf_to_images(payload: PdfToImagesRequest, request: Request, account: dict = Depends(require_csrf)):
     """Render a verified private PDF to a checked PNG or deterministic PNG ZIP."""
@@ -4326,21 +5269,46 @@ async def download_document_operation(operation_id: str, account: dict = Depends
     except RuntimeError:
         _mark_output_unavailable(operation_id, account_id)
         return _operation_unavailable()
-    if not _verify_file(private_path, expected_bytes=int(row[12] or 0), expected_digest=str(row[20] or "")):
+    output_bytes = int(row[12] or 0)
+    output_digest = str(row[20] or "")
+    try:
+        # Reserve before the descriptor hash/copy so the same two-slot limit
+        # bounds both temporary storage and expensive private file I/O.
+        _reserve_document_operation_download_capacity()
+    except HTTPException:
+        raise
+    try:
+        sealed_stream = await run_in_threadpool(
+            _prepare_sealed_operation_output,
+            private_path,
+            expected_bytes=output_bytes,
+            expected_digest=output_digest,
+        )
+    except _SealedOperationDeliveryError as exc:
+        _release_document_operation_download_capacity()
+        raise HTTPException(
+            status_code=503,
+            detail="Không thể chuẩn bị file private để tải ngay lúc này; vui lòng thử lại sau",
+        ) from exc
+    except Exception:
+        _release_document_operation_download_capacity()
+        raise
+    if sealed_stream is None:
+        _release_document_operation_download_capacity()
         _mark_output_unavailable(operation_id, account_id)
         return _operation_unavailable()
-    return FileResponse(
-        path=private_path,
-        media_type=media_type,
-        filename=download_filename,
-        content_disposition_type="attachment",
-        headers={
-            "Cache-Control": "no-store, private",
-            "X-Content-Type-Options": "nosniff",
-            "Referrer-Policy": "no-referrer",
-            "Content-Security-Policy": "sandbox",
-        },
-    )
+    finalizer = _sealed_operation_download_finalizer(sealed_stream, release_capacity=True)
+    try:
+        return _operation_attachment_response(
+            sealed_stream,
+            byte_size=output_bytes,
+            media_type=media_type,
+            filename=download_filename,
+            on_close=finalizer,
+        )
+    except Exception:
+        finalizer()
+        raise
 
 
 @router.get("/{operation_id}")

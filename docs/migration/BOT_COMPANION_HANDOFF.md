@@ -13,7 +13,7 @@ their own signed customer routes:
 | `/guides` | `/menu`, `/guide`, `/help` | Bot remains the current command/help authority. |
 | `/account` | `/language`, `/mode`, `/profile`, `/mydata`, `/data_delete` | Web-owned profile metadata stays separate; data-deletion policy and confirmation remain in Bot. |
 | `/support`, `/tickets`, `/admin/support` | Bot reference: `/support`, `/tickets`, `/ticket_status`, `/support_tickets` | Web-owned Support Desk cases, private timeline and staff triage; never reads/writes Bot ticket tables, Telegram attachments or notifications. |
-| `/growth/ai` | `/growth_ai days=<1..90> [platform] [campaign_id] [goal]` | Web allows only a fixed, reviewed filter set; Bot reads performance, checks Xu and returns the canonical analysis. |
+| `/growth/ai` | `/growth_ai` remains a separate Bot conversation | Web now owns a manual, non-persistent Growth Review rule receipt only; it does not send command/data to Telegram. Bot still owns live/canonical analytics, model-based analysis, Xu, charge/refund and Telegram output. |
 | `/campaign/report` | `/campaign_report days=<1..90> [platform] [campaign_id] format=<txt\|csv>` | Bot creates the report/file and remains the only charge/refund authority. |
 | guarded Content routes | `/film` | Zero-argument command opens Bot's content/script usage chooser; the Portal never appends a brief. |
 | guarded Image routes | `/image_tools` | Zero-argument command opens the Bot image menu; it does not send a prompt, image or provider request. |

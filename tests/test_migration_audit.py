@@ -108,7 +108,23 @@ async def dashboard():
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
     assert "Manual top-up stays a Bot handoff" in (docs_dir / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
-    assert "BOT_COMPANION_HANDOFF.md" in (docs_dir / "README.md").read_text(encoding="utf-8")
+    readme = (docs_dir / "README.md").read_text(encoding="utf-8")
+    assert "BOT_COMPANION_HANDOFF.md" in readme
+    # These are deliberate project-wide contracts, not a claim that the tiny
+    # fixture executes any media feature.  The generated migration index must
+    # keep their discoverability on every audit run instead of silently
+    # dropping the guard docs after a source inventory refresh.
+    for marker in (
+        "SUBTITLE_ASSET_OPERATIONS_CONTRACT.md",
+        "VIDEO_POSTER_OPERATION_CONTRACT.md",
+        "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md",
+    ):
+        assert marker in readme
+    assert "Additive Web-native route (not a Telegram command mapping)" in (docs_dir / "route-map.md").read_text(encoding="utf-8")
+    assert "Additive Web-native Video Poster state" in (docs_dir / "state-database-map.md").read_text(encoding="utf-8")
+    assert "Web-native Video Poster environment names" in (docs_dir / "env-provider-map.md").read_text(encoding="utf-8")
+    assert "Additive Web-native guard: Video Poster Lab" in (docs_dir / "known-gaps.md").read_text(encoding="utf-8")
+    assert "Additive Web-native guard: Video Poster Lab" in (docs_dir / "KNOWN_GAPS_AND_GUARDS.md").read_text(encoding="utf-8")
     assert "Bot checkout audited: `unavailable` (`not_a_git_worktree`)" in (docs_dir / "README.md").read_text(encoding="utf-8")
     # The generated compatibility map must preserve the three Web authority
     # domains.  A later static audit must not silently reduce it to a generic

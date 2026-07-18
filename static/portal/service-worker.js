@@ -3,7 +3,8 @@
    Audio Library & Briefing collections/briefs/Asset Vault references, Creative
    Content Studio briefs/content pieces/history, Voice Studio consent metadata/
    scripts/cue sheets/history, uploads,
-   /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations
+   /api/v1/asset-vault, /api/v1/project-packages, /api/v1/document-operations,
+   /api/v1/admin/internal-documents
    (including private Image OCR),
    /api/v1/image-operations, /api/v1/account/data-controls (including export
    attachments and erasure-review receipts), /api/v1/media-workspace (including Music Prompt
@@ -11,11 +12,12 @@
    /api/v1/content-handoffs and /api/v1/partner-crm
    (including the stateless Content Prompt Pack draft endpoint),
     /api/v1/trend-research (manual research receipts only),
+    /api/v1/growth-review (manual, account-private Growth Review input and receipt),
     /api/v1/media-factory (transient Media Factory blueprints only),
    /api/v1/voice-studio, /api/v1/video-studio (including the prompt planner), /api/v1/image-studio, /api/v1/subtitle-studio,
     /api/v1/document-workspace, /api/v1/chat-workspace, /api/v1/analytics-workspace, /api/v1/workboard,
     /api/v1/operations, /internal/v1/operations, /api/v1/inbox, /internal/v1/notifications,
-    private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/music-prompt-composer`, private `/document-workspace/*` routes, private `/documents/ocr` route,
+    private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/music-prompt-composer`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
      private `/chat/*` routes, private `/analytics/*` routes, private `/free-prompt-gallery` and `/api/v1/free-prompt-gallery`, private `/content/channel-strategy`, `/content/prompt-pack`, `/content/publish-review`, `/content/contextual-prompt`, `/trend-research`, `/media-factory`, `/creative-flow`, `/video-studio/workflow`, `/video-studio/story-video-plan` and `/guides/source-rights` routes, private `/workboard/*` routes,
     private `/content/handoffs/*`, private `/crm/*`, private `/operations/*`, private `/admin/operations/*`, private `/admin/reliability/*`, private `/inbox/*` and private `/automation/*` routes and private delivery URLs are
     intentionally never cached. */
@@ -71,6 +73,8 @@ const PUBLIC_NAVIGATION_PATHS = Object.freeze([
 const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/" + "api/v1/document-operations",
   "/documents/ocr",
+  "/documents/pdf-ocr",
+  "/documents/pdf-ocr-to-word",
    "/" + "api/v1/document-workspace",
    "/document-workspace",
   // Data Control Center exposes signed account-private inventory, review
@@ -96,6 +100,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/content/contextual-prompt",
   "/" + "api/v1/trend-research",
   "/trend-research",
+  // Growth Review accepts account-private manual performance input and returns
+  // a transient receipt. Keep both its page and API explicit no-cache paths;
+  // the shell allow-list is intentionally not the security boundary here.
+  "/" + "api/v1/growth-review",
+  "/growth/ai",
   "/" + "api/v1/media-factory",
   "/media-factory",
   "/creative-flow",
@@ -129,6 +138,11 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // accidentally make this family eligible for a shell/offline fallback.
   "/" + "api/v1/admin/governance",
   "/admin/governance",
+  // The binary Admin Internal Document Archive is a private local-admin
+  // surface. Name it independently of the broad /admin guard so page/API
+  // additions cannot ever fall back to an account-agnostic PWA shell.
+  "/" + "api/v1/admin/internal-documents",
+  "/admin/internal-documents",
   "/" + "api/v1/admin",
   "/" + "internal/v1/operations",
   "/operations",

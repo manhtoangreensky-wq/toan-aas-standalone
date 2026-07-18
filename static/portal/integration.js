@@ -8,6 +8,8 @@
 
   const API = "/api/v1";
   const IMAGE_OCR_ROUTE = "/documents/ocr";
+  const PDF_OCR_ROUTE = "/documents/pdf-ocr";
+  const PDF_OCR_WORD_ROUTE = "/documents/pdf-ocr-to-word";
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -51,14 +53,14 @@
     "/notes", "/note", "/memory", "/reminders", "/remind", "/referral", "/ref",
     "/gift", "/promos", "/birthday", "/community", "/official_channels", "/menu", "/guide", "/help",
     "/film", "/image_tools", "/create_media", "/music", "/translate", "/doc_tools",
-    "/growth_ai", "/campaign_report", "/language", "/mode", "/profile", "/mydata",
+    "/campaign_report", "/language", "/mode", "/profile", "/mydata",
     "/tickets", "/ticket_status", "/data_delete"
   ]);
   // Analytics commands accept a deliberately tiny, fixed schema. Unlike the
   // zero-argument Bot companion commands above, this permits the customer to
   // choose a harmless report window/filter without turning the Portal into a
   // generic Telegram command transport or a second analytics/ledger writer.
-  const ANALYTICS_BOT_COMMANDS = new Set(["/growth_ai", "/campaign_report"]);
+  const ANALYTICS_BOT_COMMANDS = new Set(["/campaign_report"]);
   const ANALYTICS_BOT_PLATFORMS = new Set(["", "facebook", "tiktok", "youtube", "instagram", "threads", "website"]);
   const ANALYTICS_BOT_GOALS = new Set([
     "kiếm tiền affiliate", "tăng traffic", "tăng chuyển đổi", "tăng doanh thu", "tăng follow"
@@ -108,6 +110,9 @@
   let documentOperationHistoryHydrationEpoch = 0;
   let imageOperationHistoryHydrationEpoch = 0;
   let imageEnhanceOperationHistoryHydrationEpoch = 0;
+  let imageBrandOverlayOperationHistoryHydrationEpoch = 0;
+  let storyboardGridHydrationEpoch = 0;
+  let imageHistoryOperationHydrationEpoch = 0;
   // Asset Vault is shared by private owner workflows, but it is never a
   // shared browser cache. Session and request fences keep a late vault or
   // picker response from crossing accounts, pages or operation types.
@@ -329,7 +334,7 @@
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
     "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
-    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
+    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/pdf-ocr": "documents_pdf_ocr", "/documents/pdf-ocr-to-word": "documents_pdf_ocr_word", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
     "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
@@ -446,6 +451,8 @@
     // for a different signed account.
     if (window.TOANAASPortal && typeof window.TOANAASPortal.clearTransientFormDraft === "function") {
       window.TOANAASPortal.clearTransientFormDraft(IMAGE_OCR_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_ROUTE);
+      window.TOANAASPortal.clearTransientFormDraft(PDF_OCR_WORD_ROUTE);
     }
   }
 
@@ -1618,9 +1625,9 @@
   const OPERATION_ASSET_REFERENCE_MAX_LIST_OFFSET = 10000;
   const DOCUMENT_ASSET_REFERENCE_ROUTES = new Set([
     "/documents/split", "/documents/merge", "/documents/compress",
-    "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", IMAGE_OCR_ROUTE
+    "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", IMAGE_OCR_ROUTE, PDF_OCR_ROUTE, PDF_OCR_WORD_ROUTE
   ]);
-  const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit"]);
+  const IMAGE_OPERATION_ASSET_REFERENCE_ROUTES = new Set(["/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"]);
   const documentAssetReferenceHydrationEpoch = { pdf: 0, image: 0 };
   let imageOperationAssetReferenceHydrationEpoch = 0;
 
@@ -3931,6 +3938,107 @@
       && trendResearchString(plan.title, 2, 320) && trendResearchString(plan.topic, 2, 180)
       && TREND_RESEARCH_LANGUAGES.has(plan.language) && plan.research_mode === "manual_content_only"
       && plan.freshness === "not_live_not_verified" && validGroups && validTexts && validWorkflows
+    );
+  }
+
+  // Growth Review has a deliberately closed numeric contract. It mirrors the
+  // Bot's small deterministic helper only; it is not a client-side analytics
+  // calculation, a provider/model prompt or a transport for Bot commands.
+  const GROWTH_REVIEW_PLATFORMS = new Set(["facebook", "instagram", "tiktok", "youtube", "threads", "website", "other"]);
+  const GROWTH_REVIEW_RECOMMENDATION_TYPES = new Set(["scale", "fix_cta", "fix_hook", "add_offer", "pause_or_rewrite"]);
+  const GROWTH_REVIEW_BOUNDARY_FALSE_FIELDS = Object.freeze([
+    "input_persisted", "platform_connected", "platform_data_verified", "canonical_revenue_read", "canonical_revenue_written",
+    "ai_model_called", "provider_called", "bot_called", "bridge_called", "job_created", "wallet_mutated", "payment_started",
+    "asset_saved", "publish_action_created", "delivery_created"
+  ]);
+  const GROWTH_REVIEW_INPUT_KEYS = Object.freeze(["views", "likes", "comments", "shares", "clicks", "manual_attributed_value_vnd"]);
+  const GROWTH_REVIEW_WORKFLOW_ROUTES = Object.freeze(["/content/prompt-pack", "/content/publish-review", "/analytics"]);
+
+  function growthReviewInteger(value, label, maximum) {
+    const raw = String(value === undefined || value === null ? "" : value).trim();
+    if (!/^(?:0|[1-9]\d*)$/.test(raw)) throw new Error(`${label} phải là số nguyên không âm.`);
+    const parsed = Number(raw);
+    if (!Number.isSafeInteger(parsed) || parsed < 0 || parsed > maximum) throw new Error(`${label} nằm ngoài giới hạn an toàn.`);
+    return parsed;
+  }
+
+  function growthReviewPayload(fields) {
+    const rawLabel = String(fields.content_label || "");
+    if (/\r|\n/.test(rawLabel)) throw new Error("Nhãn nội dung phải nằm trên một dòng.");
+    const contentLabel = contentStudioLine(rawLabel, "Nhãn nội dung", 2, 160, false);
+    const platform = contentStudioLine(fields.platform || "", "Nền tảng", 2, 24, false).toLowerCase();
+    if (!GROWTH_REVIEW_PLATFORMS.has(platform)) throw new Error("Nền tảng Growth Review không hợp lệ.");
+    return {
+      content_label: contentLabel,
+      platform,
+      views: growthReviewInteger(fields.views, "Lượt xem", 2000000000),
+      likes: growthReviewInteger(fields.likes, "Lượt thích", 2000000000),
+      comments: growthReviewInteger(fields.comments, "Bình luận", 2000000000),
+      shares: growthReviewInteger(fields.shares, "Lượt chia sẻ", 2000000000),
+      clicks: growthReviewInteger(fields.clicks, "Click", 2000000000),
+      manual_attributed_value_vnd: growthReviewInteger(fields.manual_attributed_value_vnd, "Giá trị quy đổi tự nhập", 9000000000000)
+    };
+  }
+
+  function growthReviewBoundaryIsSafe(value) {
+    const data = value && typeof value === "object" ? value : {};
+    return data.execution === "web_native_manual_rule_review_only"
+      && data.manual_metrics_only === true
+      && GROWTH_REVIEW_BOUNDARY_FALSE_FIELDS.every((field) => data[field] === false);
+  }
+
+  function growthReviewSafeText(value, minimum, maximum) {
+    return typeof value === "string" && value.length >= minimum && value.length <= maximum
+      && !TREND_RESEARCH_MARKUP_PATTERN.test(value) && !TREND_RESEARCH_URL_OR_PATH_PATTERN.test(value);
+  }
+
+  function growthReviewMatchesPayload(review, submittedPayload) {
+    const payload = submittedPayload && typeof submittedPayload === "object" ? submittedPayload : {};
+    const inputs = review && review.manual_inputs && typeof review.manual_inputs === "object" && !Array.isArray(review.manual_inputs)
+      ? review.manual_inputs
+      : {};
+    return growthReviewSafeText(payload.content_label, 2, 160)
+      && GROWTH_REVIEW_PLATFORMS.has(payload.platform)
+      && review.content_label === payload.content_label
+      && review.platform === payload.platform
+      && GROWTH_REVIEW_INPUT_KEYS.every((key) => inputs[key] === payload[key])
+      && review.engagement_total === payload.likes + payload.comments + payload.shares;
+  }
+
+  function growthReviewResultIsSafe(value, submittedPayload) {
+    const data = value && typeof value === "object" ? value : {};
+    const review = data.review && typeof data.review === "object" && !Array.isArray(data.review) ? data.review : {};
+    const expectedKeys = ["content_label", "platform", "platform_label", "manual_inputs", "engagement_total", "score", "score_band", "score_breakdown", "recommendation", "rule_version", "provenance", "next_workflows"];
+    const exactKeys = Object.keys(review).sort().join("|") === expectedKeys.sort().join("|");
+    const inputs = review.manual_inputs && typeof review.manual_inputs === "object" && !Array.isArray(review.manual_inputs) ? review.manual_inputs : {};
+    const recommendation = review.recommendation && typeof review.recommendation === "object" && !Array.isArray(review.recommendation) ? review.recommendation : {};
+    const band = review.score_band && typeof review.score_band === "object" && !Array.isArray(review.score_band) ? review.score_band : {};
+    const provenance = review.provenance && typeof review.provenance === "object" && !Array.isArray(review.provenance) ? review.provenance : {};
+    const breakdown = Array.isArray(review.score_breakdown) ? review.score_breakdown : [];
+    const workflows = Array.isArray(review.next_workflows) ? review.next_workflows : [];
+    const validInputs = Object.keys(inputs).sort().join("|") === [...GROWTH_REVIEW_INPUT_KEYS].sort().join("|")
+      && GROWTH_REVIEW_INPUT_KEYS.every((key) => Number.isSafeInteger(inputs[key]) && inputs[key] >= 0 && inputs[key] <= 9000000000000);
+    const validBreakdown = breakdown.length === 4 && breakdown.every((item) => item && typeof item === "object"
+      && growthReviewSafeText(item.key, 2, 64) && growthReviewSafeText(item.label, 2, 120)
+      && Number.isSafeInteger(item.observed) && item.observed >= 0 && Number.isSafeInteger(item.points) && item.points >= 0
+      && Number.isSafeInteger(item.max_points) && item.max_points >= 0 && item.points <= item.max_points);
+    const validWorkflows = workflows.length === 3 && workflows.every((item, index) => item && typeof item === "object"
+      && item.route === GROWTH_REVIEW_WORKFLOW_ROUTES[index] && growthReviewSafeText(item.label, 2, 100)
+      && growthReviewSafeText(item.purpose, 2, 320));
+    return Boolean(
+      exactKeys && growthReviewBoundaryIsSafe(data) && growthReviewMatchesPayload(review, submittedPayload)
+      && growthReviewSafeText(review.content_label, 2, 160)
+      && GROWTH_REVIEW_PLATFORMS.has(review.platform) && growthReviewSafeText(review.platform_label, 2, 64)
+      && validInputs && Number.isSafeInteger(review.engagement_total) && review.engagement_total >= 0
+      && Number.isSafeInteger(review.score) && review.score >= 0 && review.score <= 100
+      && growthReviewSafeText(band.key, 2, 24) && growthReviewSafeText(band.label, 2, 160)
+      && validBreakdown && GROWTH_REVIEW_RECOMMENDATION_TYPES.has(recommendation.type)
+      && growthReviewSafeText(recommendation.title, 2, 180) && growthReviewSafeText(recommendation.reason, 2, 600)
+      && growthReviewSafeText(recommendation.action, 2, 700) && recommendation.score === review.score
+      && review.rule_version === "bot-growth-rules-v1"
+      && provenance.kind === "manual_account_input" && provenance.platform_data_verified === false
+      && provenance.canonical_revenue === false && provenance.input_persisted === false
+      && growthReviewSafeText(provenance.evaluated_at, 20, 40) && validWorkflows
     );
   }
 
@@ -8864,9 +8972,23 @@
     // requested; it never grants browser OCR, a Bot/provider adapter, job,
     // wallet, payment or Telegram capability.
     const imageOcrEnabled = Boolean(status.flags && status.flags.image_ocr_enabled === true);
+    // PDF OCR is an independently guarded local renderer + OCR runtime. A
+    // true flag only allows its server-side private route; it does not grant
+    // browser OCR, Bot/provider execution, jobs, wallet or payment capability.
+    const pdfOcrEnabled = Boolean(status.flags && status.flags.pdf_ocr_enabled === true);
+    // OCR PDF → Word is an isolated local conversion boundary. Its flag only
+    // permits a signed request to the narrow server pipeline; it never grants
+    // browser OCR/DOCX generation, Bot/provider execution, jobs, wallet or
+    // payment capability.
+    const pdfOcrWordEnabled = Boolean(status.flags && status.flags.pdf_ocr_word_enabled === true);
     const imageOperationsEnabled = Boolean(status.flags && status.flags.image_operations_enabled === true);
     const imageResizeEnabled = Boolean(status.flags && status.flags.image_resize_enabled === true);
     const imageEnhanceEnabled = Boolean(status.flags && status.flags.image_enhance_enabled === true);
+    const imageBrandOverlayEnabled = Boolean(status.flags && status.flags.image_brand_overlay_enabled === true);
+    // Storyboard Grid is a Web-native utility that shares the server's
+    // hardened Image Operations runtime. Its flag does not imply Bot/Core
+    // Bridge, provider, jobs, wallet/Xu or payment readiness.
+    const storyboardGridEnabled = Boolean(status.flags && status.flags.storyboard_grid_enabled === true);
     // Memory Center is a signed-account Web-native capability. Its flag does
     // not imply Bot bridge, Telegram, wallet, payment or provider readiness.
     const memoryCenterEnabled = Boolean(status.flags && status.flags.memory_center_enabled === true);
@@ -8922,6 +9044,11 @@
     // Bot's manual command. A true flag does not expose live/social search,
     // scraping, a provider, Bot bridge, job, wallet, payment, asset or media.
     const trendResearchEnabled = Boolean(status.flags && status.flags.trend_research_enabled === true);
+    // Growth Review carries only the Bot's deterministic score/rule helper
+    // into a signed manual Web receipt. It does not unlock Bot Growth AI,
+    // platform analytics, canonical revenue, a provider/model, wallet, PayOS,
+    // job, asset, publishing or delivery authority.
+    const growthReviewEnabled = Boolean(status.flags && status.flags.growth_review_enabled === true);
     // Media Factory is a transient orchestration blueprint derived from Bot
     // text. Its flag must never imply live search, provider/Bot work, media
     // output, job, wallet, PayOS, social connection or publishing authority.
@@ -9050,13 +9177,21 @@
       "/documents/image-to-pdf": account && assetVaultEnabled && documentOperationsEnabled && imageToPdfEnabled ? "ready" : "guarded",
       "/documents/pdf-to-images": account && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled ? "ready" : "guarded",
       "/documents/pdf-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled ? "ready" : "guarded",
-      "/documents/ocr": account && assetVaultEnabled && documentOperationsEnabled && imageOcrEnabled ? "ready" : "guarded"
+      "/documents/ocr": account && assetVaultEnabled && documentOperationsEnabled && imageOcrEnabled ? "ready" : "guarded",
+      "/documents/pdf-ocr": account && assetVaultEnabled && documentOperationsEnabled && pdfOcrEnabled ? "ready" : "guarded",
+      "/documents/pdf-ocr-to-word": account && assetVaultEnabled && documentOperationsEnabled && pdfOcrWordEnabled ? "ready" : "guarded"
     };
     const nativeImagePageStates = {
       // The private source/history reads still need to complete before a
       // server-enabled native page can truthfully show a ready badge.
       "/image/resize": account && assetVaultEnabled && imageOperationsEnabled && imageResizeEnabled ? "processing" : "guarded",
-      "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded"
+      "/image/edit": account && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled ? "processing" : "guarded",
+      "/image/brand-overlay": account && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled ? "processing" : "guarded",
+      "/image/storyboard-grid": account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled ? "processing" : "guarded",
+      // History only reads already verified output. It remains available when a
+      // specific creation flag is paused, but still requires the same private
+      // storage and operation-service gates.
+      "/image/history": account && assetVaultEnabled && imageOperationsEnabled ? "processing" : "guarded"
     };
     const telegramLinked = Boolean(account && account.telegram_linked);
     const bridgeAvailable = Boolean(copyfastEnabled && status.bridge_configured && telegramLinked);
@@ -9190,6 +9325,8 @@
       "document-operation-pdf-to-images": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToImagesEnabled),
       "document-operation-pdf-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfToWordEnabled),
       "document-operation-ocr-image": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && imageOcrEnabled),
+      "document-operation-ocr-pdf": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrEnabled),
+      "document-operation-pdf-ocr-to-word": Boolean(account && me.csrf_token && assetVaultEnabled && documentOperationsEnabled && pdfOcrWordEnabled),
       "document-operation-refresh": Boolean(account && assetVaultEnabled && documentOperationsEnabled),
       // Resize & Aspect Studio is a separate Web-native image contract. It
       // needs no Telegram link/Core Bridge/provider/wallet, but remains
@@ -9199,6 +9336,12 @@
       "image-operation-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
       "image-operation-enhance": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageEnhanceEnabled),
       "image-enhance-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-brand-overlay-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "image-brand-overlay-run": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && imageBrandOverlayEnabled),
+      "image-brand-overlay-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled),
+      "storyboard-grid-view": Boolean(account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled),
+      "storyboard-grid-run": Boolean(account && me.csrf_token && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled),
+      "storyboard-grid-refresh": Boolean(account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled),
       // Notes and reminders are private browser-account data, protected by
       // server-side session/CSRF/ownership/revision checks. They must remain
       // usable without a Telegram link and never announce external delivery.
@@ -9290,6 +9433,7 @@
       "publish-review-pack-compose": Boolean(account && me.csrf_token && publishReviewPackEnabled),
       "contextual-ad-prompt-compose": Boolean(account && me.csrf_token && contextualAdPromptEnabled),
       "trend-research-plan": Boolean(account && me.csrf_token && trendResearchEnabled),
+      "growth-review-evaluate": Boolean(account && me.csrf_token && growthReviewEnabled),
       "media-factory-blueprint": Boolean(account && me.csrf_token && mediaFactoryEnabled),
       "creative-flow-compose": Boolean(account && me.csrf_token && creativeFlowEnabled),
       "story-video-plan": Boolean(account && me.csrf_token && storyVideoPlanEnabled),
@@ -9697,9 +9841,13 @@
       pdfToImagesEnabled,
       pdfToWordEnabled,
       imageOcrEnabled,
+      pdfOcrEnabled,
+      pdfOcrWordEnabled,
       imageOperationsEnabled,
       imageResizeEnabled,
       imageEnhanceEnabled,
+      imageBrandOverlayEnabled,
+      storyboardGridEnabled,
       memoryCenterEnabled,
       promptLibraryEnabled,
       promptStudioEnabled,
@@ -9868,6 +10016,10 @@
       // Trend Research is also a request-only receipt. It is never restored
       // from browser or account storage after an account/session transition.
       trendResearchResult: {},
+      // Growth Review has the same isolated, request-only lifecycle. Never
+      // leave a previous signed account's label or manual metrics in memory
+      // after bootstrap, a logout or a failed session refresh.
+      growthReviewResult: {},
       // Media Factory Blueprint is likewise a request-only receipt. It is
       // cleared on every signed bootstrap and never restored from storage.
       mediaFactoryResult: {},
@@ -10138,9 +10290,13 @@
       documentAssetReferences: emptyDocumentAssetReferences(),
       documentAssetReferenceReadState: account && assetVaultEnabled && documentOperationsEnabled ? "loading" : "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
+      // Storyboard Grid uses the same narrow, hardened image source API as
+      // Image Operations. The server requires that shared runtime too.
       imageOperationAssetReferenceReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       imageEnhanceOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
+      imageBrandOverlayOperationsReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
+      imageHistoryReadState: account && assetVaultEnabled && imageOperationsEnabled ? "loading" : "guarded",
       documentOperations: [],
       documentOperationListing: operationHistoryListingProjection("", 0, {}, 0),
       imageOperations: [],
@@ -10149,6 +10305,13 @@
       // Enhance history is loading. The UI deliberately renders no form or
       // artifact until both private reads settle.
       imageEnhanceOperations: [],
+      imageBrandOverlayOperations: [],
+      imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
+      storyboardGridOperations: [],
+      storyboardGridListing: storyboardGridListingProjection(0, {}, 0),
+      storyboardGridReadState: account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled ? "loading" : "guarded",
+      imageHistoryOperations: [],
+      imageHistoryListing: operationHistoryListingProjection("", 0, {}, 0),
       workspaceDraftFeatures: webWorkspaceDraftFeatures,
       pwaEnabled: Boolean(status.flags && status.flags.pwa_enabled),
       capabilities,
@@ -10183,6 +10346,7 @@
         "/content/publish-review": account && publishReviewPackEnabled ? "ready" : "guarded",
         "/content/contextual-prompt": account && contextualAdPromptEnabled ? "ready" : "guarded",
         "/trend-research": account && trendResearchEnabled ? "ready" : "guarded",
+        "/growth/ai": account && growthReviewEnabled ? "ready" : "guarded",
         "/media-factory": account && mediaFactoryEnabled ? "ready" : "guarded",
         "/creative-flow": account && creativeFlowEnabled ? "ready" : "guarded",
         "/guides/source-rights": account && contentStudioEnabled ? "ready" : "guarded",
@@ -10261,8 +10425,8 @@
       projectPackageListing: projectPackageListingProjection("", 0, {}, 0),
       pageStates: { ...(base().pageStates || {}), "/project-packages": "guarded" }
     });
-    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/image/resize", "/image/edit"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
-    else if (account && ["/asset-vault", "/documents/ocr", "/image/resize", "/image/edit"].includes(currentPath)) merge({
+    if (account && assetVaultEnabled && (["/asset-vault", "/dashboard", "/documents/split", "/documents/merge", "/documents/compress", "/documents/image-to-pdf", "/documents/pdf-to-images", "/documents/pdf-to-word", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath) || isNativeContentHandoffPath(currentPath))) await hydrateAssetVault();
+    else if (account && ["/asset-vault", "/documents/ocr", "/documents/pdf-ocr", "/documents/pdf-ocr-to-word", "/image/resize", "/image/edit", "/image/brand-overlay", "/image/storyboard-grid"].includes(currentPath)) merge({
       vaultItems: [],
       assetVaultListing: assetVaultListingProjection({ q: "", state: "active" }, 0, {}, 0),
       assetVaultReadState: "guarded",
@@ -10295,6 +10459,31 @@
       imageEnhanceOperationsReadState: "guarded",
       imageOperationAssetReferences: emptyImageOperationAssetReferences(),
       imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/brand-overlay") await Promise.all([hydrateImageBrandOverlayOperations(), hydrateImageOperationAssetReferences()]);
+    else if (account && currentPath === "/image/brand-overlay") merge({
+      imageBrandOverlayOperations: [],
+      imageBrandOverlayOperationListing: operationHistoryListingProjection("image_brand_overlay", 0, {}, 0),
+      imageBrandOverlayOperationsReadState: "guarded",
+      imageOperationAssetReferences: emptyImageOperationAssetReferences(),
+      imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && storyboardGridEnabled && currentPath === "/image/storyboard-grid") await Promise.all([hydrateStoryboardGridOperations(), hydrateImageOperationAssetReferences()]);
+    else if (account && currentPath === "/image/storyboard-grid") merge({
+      storyboardGridOperations: [],
+      storyboardGridListing: storyboardGridListingProjection(0, {}, 0),
+      storyboardGridReadState: "guarded",
+      imageOperationAssetReferences: emptyImageOperationAssetReferences(),
+      imageOperationAssetReferenceReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
+    if (account && assetVaultEnabled && imageOperationsEnabled && currentPath === "/image/history") await hydrateImageHistoryOperations();
+    else if (account && currentPath === "/image/history") merge({
+      imageHistoryOperations: [],
+      imageHistoryListing: operationHistoryListingProjection("", 0, {}, 0),
+      imageHistoryReadState: "guarded",
       pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
     });
     if (account && memoryCenterEnabled && ["/notes", "/reminders"].includes(currentPath)) await hydrateMemoryCenter();
@@ -14178,6 +14367,20 @@
     return "guarded";
   }
 
+  function imageBrandOverlayPrivateReadPageState(assetState, operationState) {
+    if (base().imageBrandOverlayEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading") return "processing";
+    return "guarded";
+  }
+
+  function storyboardGridPrivateReadPageState(assetState, operationState, referenceState) {
+    if (base().storyboardGridEnabled !== true || base().imageOperationsEnabled !== true) return "guarded";
+    if (assetState === "ready" && operationState === "ready" && referenceState === "ready") return "ready";
+    if (assetState === "loading" || operationState === "loading" || referenceState === "loading") return "processing";
+    return "guarded";
+  }
+
   async function hydrateAssetVault(filterValue, offsetValue) {
     const requestEpoch = ++assetVaultListHydrationEpoch;
     const sessionEpoch = assetVaultSessionEpoch;
@@ -14208,7 +14411,9 @@
           ...(base().pageStates || {}),
           "/asset-vault": "ready",
           "/image/resize": imageResizePrivateReadPageState("ready", String(base().imageOperationsReadState || "loading")),
-          "/image/edit": imageEnhancePrivateReadPageState("ready", String(base().imageEnhanceOperationsReadState || "loading"))
+          "/image/edit": imageEnhancePrivateReadPageState("ready", String(base().imageEnhanceOperationsReadState || "loading")),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("ready", String(base().imageBrandOverlayOperationsReadState || "loading")),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState("ready", String(base().storyboardGridReadState || "loading"), String(base().imageOperationAssetReferenceReadState || "loading"))
         }
       });
       return items;
@@ -14224,7 +14429,9 @@
           ...(base().pageStates || {}),
           "/asset-vault": "guarded",
           "/image/resize": imageResizePrivateReadPageState("failed", String(base().imageOperationsReadState || "loading")),
-          "/image/edit": imageEnhancePrivateReadPageState("failed", String(base().imageEnhanceOperationsReadState || "loading"))
+          "/image/edit": imageEnhancePrivateReadPageState("failed", String(base().imageEnhanceOperationsReadState || "loading")),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState("failed", String(base().imageBrandOverlayOperationsReadState || "loading")),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState("failed", String(base().storyboardGridReadState || "loading"), String(base().imageOperationAssetReferenceReadState || "loading"))
         }
       });
       return [];
@@ -14309,12 +14516,38 @@
       if (!imageOperationAssetReferenceRequestIsCurrent(epoch, sessionEpoch, expectedPath)) return null;
       const references = operationAssetReferenceStateWithPage(existing, "image_operation", "image", filter, offset, data, selections);
       if (!imageOperationAssetReferenceRequestIsCurrent(epoch, sessionEpoch, expectedPath)) return null;
-      merge({ imageOperationAssetReferences: references, imageOperationAssetReferenceReadState: "ready" });
+      merge({
+        imageOperationAssetReferences: references,
+        imageOperationAssetReferenceReadState: "ready",
+        pageStates: expectedPath === "/image/storyboard-grid"
+          ? {
+            ...(base().pageStates || {}),
+            "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+              String(base().assetVaultReadState || "loading"),
+              String(base().storyboardGridReadState || "loading"),
+              "ready"
+            )
+          }
+          : (base().pageStates || {})
+      });
       return references;
     } catch (_) {
       if (!imageOperationAssetReferenceRequestIsCurrent(epoch, sessionEpoch, expectedPath)) return null;
       const references = operationAssetReferenceStateWithPage(existing, "image_operation", "image", filter, offset, {}, selections);
-      merge({ imageOperationAssetReferences: references, imageOperationAssetReferenceReadState: "failed" });
+      merge({
+        imageOperationAssetReferences: references,
+        imageOperationAssetReferenceReadState: "failed",
+        pageStates: expectedPath === "/image/storyboard-grid"
+          ? {
+            ...(base().pageStates || {}),
+            "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+              String(base().assetVaultReadState || "loading"),
+              String(base().storyboardGridReadState || "loading"),
+              "failed"
+            )
+          }
+          : (base().pageStates || {})
+      });
       return null;
     }
   }
@@ -14330,9 +14563,9 @@
   const OPERATION_HISTORY_LIST_LIMIT = 50;
   const OPERATION_HISTORY_MAX_LIST_OFFSET = 10000;
   const DOCUMENT_OPERATION_HISTORY_KINDS = new Set([
-    "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr"
+    "pdf_split", "pdf_merge", "pdf_optimize", "image_to_pdf", "pdf_to_images", "pdf_to_word_text", "image_ocr", "pdf_ocr", "pdf_ocr_word"
   ]);
-  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance"]);
+  const IMAGE_OPERATION_HISTORY_KINDS = new Set(["image_resize", "image_enhance", "image_brand_overlay"]);
 
   function operationHistoryListOffset(value) {
     const offset = Number(value);
@@ -14382,12 +14615,56 @@
 
   function imageOperationHistoryPath(kind, offset) {
     const normalizedKind = String(kind || "").trim().toLowerCase();
-    if (!IMAGE_OPERATION_HISTORY_KINDS.has(normalizedKind)) throw new Error("Loại Image Operation không hợp lệ.");
-    return "/image-operations?" + new URLSearchParams({
-      kind: normalizedKind,
+    if (normalizedKind && !IMAGE_OPERATION_HISTORY_KINDS.has(normalizedKind)) throw new Error("Loại Image Operation không hợp lệ.");
+    const query = new URLSearchParams({
       limit: String(OPERATION_HISTORY_LIST_LIMIT),
       offset: String(operationHistoryListOffset(offset))
-    }).toString();
+    });
+    if (normalizedKind) query.set("kind", normalizedKind);
+    return "/image-operations?" + query.toString();
+  }
+
+  function storyboardGridListingProjection(offset, source, returned) {
+    const data = source && typeof source === "object" ? source : {};
+    const pagination = data.pagination && typeof data.pagination === "object" ? data.pagination : data;
+    const currentOffset = operationHistoryListOffset(offset);
+    const rawNextOffset = Number(pagination.next_offset);
+    const nextOffset = pagination.has_more === true && Number.isInteger(rawNextOffset)
+      && rawNextOffset > currentOffset && rawNextOffset <= OPERATION_HISTORY_MAX_LIST_OFFSET
+      ? rawNextOffset
+      : null;
+    return {
+      filters: { kind: "storyboard_grid" },
+      pagination: {
+        limit: OPERATION_HISTORY_LIST_LIMIT,
+        offset: currentOffset,
+        returned: Math.max(0, Math.min(OPERATION_HISTORY_LIST_LIMIT, Number.isInteger(Number(returned)) ? Number(returned) : 0)),
+        has_more: nextOffset !== null,
+        next_offset: nextOffset,
+        previous_offset: currentOffset >= OPERATION_HISTORY_LIST_LIMIT ? currentOffset - OPERATION_HISTORY_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function storyboardGridListOffset(listingValue, offsetValue) {
+    const listing = listingValue && typeof listingValue === "object" ? listingValue : {};
+    const pagination = listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    return operationHistoryListOffset(offsetValue === undefined ? pagination.offset : offsetValue);
+  }
+
+  function storyboardGridListPath(offset) {
+    const query = new URLSearchParams({
+      limit: String(OPERATION_HISTORY_LIST_LIMIT),
+      offset: String(operationHistoryListOffset(offset))
+    });
+    return "/storyboard-grid?" + query.toString();
+  }
+
+  function storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === storyboardGridHydrationEpoch
+      && sessionEpoch === operationHistorySessionEpoch
+      && currentPortalPath() === expectedPath
+      && expectedPath === "/image/storyboard-grid";
   }
 
   function operationHistoryRequestIsCurrent(requestEpoch, currentEpoch, sessionEpoch) {
@@ -14404,6 +14681,8 @@
     if (currentPath === "/documents/pdf-to-images") return "pdf_to_images";
     if (currentPath === "/documents/pdf-to-word") return "pdf_to_word_text";
     if (currentPath === IMAGE_OCR_ROUTE) return "image_ocr";
+    if (currentPath === PDF_OCR_ROUTE) return "pdf_ocr";
+    if (currentPath === PDF_OCR_WORD_ROUTE) return "pdf_ocr_word";
     return "";
   }
 
@@ -14432,7 +14711,9 @@
           "/documents/image-to-pdf": base().imageToPdfEnabled === true ? "ready" : "guarded",
           "/documents/pdf-to-images": base().pdfToImagesEnabled === true ? "ready" : "guarded",
           "/documents/pdf-to-word": base().pdfToWordEnabled === true ? "ready" : "guarded",
-          "/documents/ocr": base().imageOcrEnabled === true ? "ready" : "guarded"
+          "/documents/ocr": base().imageOcrEnabled === true ? "ready" : "guarded",
+          "/documents/pdf-ocr": base().pdfOcrEnabled === true ? "ready" : "guarded",
+          "/documents/pdf-ocr-to-word": base().pdfOcrWordEnabled === true ? "ready" : "guarded"
         }
       });
       return items;
@@ -14452,7 +14733,9 @@
           "/documents/image-to-pdf": "guarded",
           "/documents/pdf-to-images": "guarded",
           "/documents/pdf-to-word": "guarded",
-          "/documents/ocr": "guarded"
+          "/documents/ocr": "guarded",
+          "/documents/pdf-ocr": "guarded",
+          "/documents/pdf-ocr-to-word": "guarded"
         }
       });
       return [];
@@ -14531,6 +14814,137 @@
         pageStates: {
           ...(base().pageStates || {}),
           "/image/edit": imageEnhancePrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageBrandOverlayOperations(offsetValue) {
+    const kind = "image_brand_overlay";
+    const offset = operationHistoryOffsetForKind(base().imageBrandOverlayOperationListing, kind, offsetValue);
+    const requestEpoch = ++imageBrandOverlayOperationHistoryHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    try {
+      const result = await api(imageOperationHistoryPath(kind, offset));
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageBrandOverlayOperationHistoryHydrationEpoch, sessionEpoch)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => item && validImageOperationId(item.id) && String(item.kind || "") === kind).slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      merge({
+        imageBrandOverlayOperations: items,
+        imageBrandOverlayOperationListing: operationHistoryListingProjection(kind, offset, data, items.length),
+        imageBrandOverlayOperationsReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState(String(base().assetVaultReadState || "loading"), "ready")
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageBrandOverlayOperationHistoryHydrationEpoch, sessionEpoch)) return null;
+      // Owner-scoped Brand Overlay history never falls back to a generic
+      // image list, Bot artifact, provider result or browser composition.
+      merge({
+        imageBrandOverlayOperations: [],
+        imageBrandOverlayOperationListing: operationHistoryListingProjection(kind, offset, {}, 0),
+        imageBrandOverlayOperationsReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/brand-overlay": imageBrandOverlayPrivateReadPageState(String(base().assetVaultReadState || "loading"), "failed")
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateStoryboardGridOperations(offsetValue) {
+    const expectedPath = "/image/storyboard-grid";
+    const offset = storyboardGridListOffset(base().storyboardGridListing, offsetValue);
+    const requestEpoch = ++storyboardGridHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    try {
+      const result = await api(storyboardGridListPath(offset));
+      if (!storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items.filter((item) => item && validImageOperationId(item.id)).slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      if (!storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        storyboardGridOperations: items,
+        storyboardGridListing: storyboardGridListingProjection(offset, data, items.length),
+        storyboardGridReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+            String(base().assetVaultReadState || "loading"),
+            "ready",
+            String(base().imageOperationAssetReferenceReadState || "loading")
+          )
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!storyboardGridRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      // The dedicated list must never fall back to Image Operations, a Bot
+      // artifact or browser-made cells after a private read fails.
+      merge({
+        storyboardGridOperations: [],
+        storyboardGridListing: storyboardGridListingProjection(offset, {}, 0),
+        storyboardGridReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/storyboard-grid": storyboardGridPrivateReadPageState(
+            String(base().assetVaultReadState || "loading"),
+            "failed",
+            String(base().imageOperationAssetReferenceReadState || "loading")
+          )
+        }
+      });
+      return [];
+    }
+  }
+
+  async function hydrateImageHistoryOperations(offsetValue) {
+    // An empty kind is intentional: the server returns only the bounded set
+    // of Web-native image operation kinds, already owner-scoped. Do not merge
+    // a Bot asset list or a route-local Resize/Enhance cache into this view.
+    const kind = "";
+    const offset = operationHistoryOffsetForKind(base().imageHistoryListing, kind, offsetValue);
+    const requestEpoch = ++imageHistoryOperationHydrationEpoch;
+    const sessionEpoch = operationHistorySessionEpoch;
+    try {
+      const result = await api(imageOperationHistoryPath(kind, offset));
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageHistoryOperationHydrationEpoch, sessionEpoch)) return null;
+      const data = result.data && typeof result.data === "object" ? result.data : {};
+      const items = Array.isArray(data.items)
+        ? data.items
+          .filter((item) => item && validImageOperationId(item.id) && IMAGE_OPERATION_HISTORY_KINDS.has(String(item.kind || "")))
+          .slice(0, OPERATION_HISTORY_LIST_LIMIT)
+        : [];
+      merge({
+        imageHistoryOperations: items,
+        imageHistoryListing: operationHistoryListingProjection(kind, offset, data, items.length),
+        imageHistoryReadState: "ready",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/history": "ready"
+        }
+      });
+      return items;
+    } catch (_) {
+      if (!operationHistoryRequestIsCurrent(requestEpoch, imageHistoryOperationHydrationEpoch, sessionEpoch)) return null;
+      // Failed owner-scoped reads clear the entire combined projection. Never
+      // substitute stale rows, canonical Bot assets or browser-created data.
+      merge({
+        imageHistoryOperations: [],
+        imageHistoryListing: operationHistoryListingProjection(kind, offset, {}, 0),
+        imageHistoryReadState: "failed",
+        pageStates: {
+          ...(base().pageStates || {}),
+          "/image/history": "guarded"
         }
       });
       return [];
@@ -15905,7 +16319,7 @@
           readiness: readiness.data || {},
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures) }
         });
-      } else if (path === "/assets" || ["/image/history", "/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/assets" || ["/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         if (!isCurrent()) return null;
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
@@ -15915,7 +16329,7 @@
         const items = jobs.data && jobs.data.items ? jobs.data.items : [];
         merge({ jobs: items, pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
         scheduleJobPolling(path, items);
-      } else if (path === "/image/resize" || path === "/image/edit") {
+      } else if (path === "/image/resize" || path === "/image/edit" || path === "/image/history") {
         // Native image operations hydrate separately from Asset Vault. Do not
         // request pricing/readiness from the bridge or overwrite the strict
         // server-side guarded/ready state with a generic image feature badge.
@@ -17559,6 +17973,51 @@
             pageStates: { ...(base().pageStates || {}), "/trend-research": "guarded" }
           });
           toast(guarded.message || "Chủ đề cần được điều chỉnh trước khi lập checklist research.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "growth-review-evaluate") {
+        // A prior receipt belongs to a prior request. Clear it before even
+        // validating the new form so stale manual metrics cannot remain on
+        // screen after a client validation, CSRF, rate-limit or server error.
+        merge({ growthReviewResult: {} });
+        const payload = growthReviewPayload(fields);
+        // A manual Growth Review creates neither a durable record nor an
+        // external action. Keep it outside generic feature dispatch and
+        // idempotency storage; the server returns a bounded rule receipt only.
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/growth-review/evaluate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status !== "draft" || !growthReviewResultIsSafe(data, payload)) {
+            throw new Error("Máy chủ chưa trả Growth Review Web-native an toàn.");
+          }
+          merge({
+            growthReviewResult: data,
+            pageStates: { ...(base().pageStates || {}), "/growth/ai": "ready" }
+          });
+          toast(result.message || "Đã tạo Growth Review từ số liệu tự nhập.");
+        } catch (error) {
+          // Fail closed for a manual, request-only receipt.  Never leave a
+          // previous account/request's observations visible after an error or
+          // a response that does not match the submitted payload exactly.
+          const disabledBoundary = error && error.status === 503 && error.payload
+            && error.payload.data && growthReviewBoundaryIsSafe(error.payload.data);
+          const current = base();
+          merge({
+            growthReviewResult: {},
+            capabilities: disabledBoundary
+              ? { ...(current.capabilities || {}), "growth-review-evaluate": false }
+              : current.capabilities,
+            pageStates: { ...(current.pageStates || {}), "/growth/ai": disabledBoundary ? "guarded" : "ready" }
+          });
+          throw error;
         } finally {
           setActionBusy(action, route, false);
         }
@@ -21695,7 +22154,11 @@
         return;
       }
       if (["image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page"].includes(action)) {
-        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) throw new Error("Cần signed Web session để chọn ảnh riêng tư.");
+        const canUseImageReference = Boolean(base().capabilities && (
+          base().capabilities["image-operation-view"] === true
+          || (route === "/image/storyboard-grid" && base().capabilities["storyboard-grid-view"] === true)
+        ));
+        if (!canUseImageReference) throw new Error("Cần signed Web session để chọn ảnh riêng tư.");
         if (!IMAGE_OPERATION_ASSET_REFERENCE_ROUTES.has(route)) throw new Error("Trang Image Operations không hỗ trợ reference này.");
         const selections = operationAssetReferenceSelectedIds(fields.__imageOperationAssetReferenceSelections);
         const clear = action === "image-operation-asset-reference-filter-clear";
@@ -21911,6 +22374,94 @@
         }
         return;
       }
+      if (action === "document-operation-ocr-pdf") {
+        // The request is intentionally only this owner-scoped PDF asset ID
+        // plus the small language allow-list. No upload, URL, path, raw
+        // bytes, provider options, job/payment/wallet fields or browser OCR
+        // result can cross this boundary.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const language = String(fields.language || "").trim().toLowerCase();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF private hợp lệ từ Asset Vault.");
+        if (!IMAGE_OCR_LANGUAGES.has(language)) throw new Error("Ngôn ngữ OCR chỉ có thể là auto, vi hoặc en.");
+        const scope = `document-operation:pdf-ocr:${sourceAssetId}:${language}`;
+        const submission = acquireSubmission(scope, `${sourceAssetId}:${language}`);
+        if (!submission) {
+          toast("OCR PDF đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/ocr-pdf", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_id: sourceAssetId, language })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_ocr") {
+            throw new Error("Máy chủ chưa trả metadata OCR PDF hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã đọc và xác minh TXT OCR PDF riêng tư.");
+        } catch (error) {
+          // A normal guarded envelope may have no operation while local
+          // renderer/runtime/language readiness is unavailable. Re-read only
+          // owner-scoped records; never fabricate a TXT or browser preview.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "document-operation-pdf-ocr-to-word") {
+        // Keep the browser contract deliberately small: the private PDF asset
+        // ID and an allow-listed OCR language only. OCR text, DOCX bytes,
+        // paths, URLs, provider options, job/payment/wallet fields and a
+        // client idempotency key must never cross this boundary.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const language = String(fields.language || "").trim().toLowerCase();
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn một PDF scan private hợp lệ từ Asset Vault.");
+        if (!IMAGE_OCR_LANGUAGES.has(language)) throw new Error("Ngôn ngữ OCR chỉ có thể là auto, vi hoặc en.");
+        const scope = `document-operation:pdf-ocr-to-word:${sourceAssetId}:${language}`;
+        const submission = acquireSubmission(scope, `${sourceAssetId}:${language}`);
+        if (!submission) {
+          toast("OCR PDF → Word đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/document-operations/pdf-ocr-to-word", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ source_asset_id: sourceAssetId, language })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validDocumentOperationId(operation.id) || String(operation.kind || "") !== "pdf_ocr_word") {
+            throw new Error("Máy chủ chưa trả metadata OCR PDF → Word hợp lệ.");
+          }
+          await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã đọc và xác minh DOCX OCR PDF riêng tư.");
+        } catch (error) {
+          // A guarded runtime or no-text response may intentionally have no
+          // operation. Re-read only the signed owner projection; never derive
+          // text, build a DOCX or substitute a browser/provider result.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
       if (action === "document-operation-ocr-image") {
         // The request is intentionally only this owner-scoped asset ID plus
         // the small language allow-list. No upload, URL, path, raw bytes,
@@ -21992,6 +22543,151 @@
           // only the server-recorded state; never manufacture a client PDF.
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           if (acknowledged) await Promise.all([hydrateDocumentOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "image-brand-overlay") {
+        // This browser contract contains only owner-scoped Asset Vault IDs
+        // and bounded presentation choices. It never sends a logo/source URL,
+        // raw image bytes, path, font, canvas result or a provider option.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const logoAssetId = String(fields.logo_asset_id || "").trim();
+        const overlayText = String(fields.overlay_text || "").replace(/\s+/g, " ").trim();
+        const textPosition = String(fields.text_position || "bottom_center").trim().toLowerCase();
+        const logoPosition = String(fields.logo_position || "bottom_right").trim().toLowerCase();
+        const scaleText = String(fields.logo_scale_percent || "18").trim();
+        const opacityText = String(fields.logo_opacity_percent || "78").trim();
+        const positions = new Set([
+          "top_left", "top_center", "top_right", "center_left", "center", "center_right",
+          "bottom_left", "bottom_center", "bottom_right"
+        ]);
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn ảnh nguồn private hợp lệ từ Asset Vault.");
+        if (logoAssetId && !validVaultAssetId(logoAssetId)) throw new Error("Logo phải là ảnh private hợp lệ từ Asset Vault.");
+        if (logoAssetId && logoAssetId === sourceAssetId) throw new Error("Logo phải khác ảnh nguồn.");
+        if (!overlayText && !logoAssetId) throw new Error("Hãy nhập chữ thương hiệu hoặc chọn logo private.");
+        if (overlayText.length > 260) throw new Error("Chữ thương hiệu tối đa 260 ký tự.");
+        if (!positions.has(textPosition) || !positions.has(logoPosition)) throw new Error("Vị trí chữ hoặc logo chưa hợp lệ.");
+        if (!/^(?:12|18|22)$/.test(scaleText)) throw new Error("Kích thước logo chỉ có thể là 12%, 18% hoặc 22%.");
+        if (!/^\d{2,3}$/.test(opacityText)) throw new Error("Độ mờ logo phải là số nguyên từ 25 đến 100.");
+        const logoScalePercent = Number(scaleText);
+        const logoOpacityPercent = Number(opacityText);
+        if (!Number.isInteger(logoOpacityPercent) || logoOpacityPercent < 25 || logoOpacityPercent > 100) {
+          throw new Error("Độ mờ logo phải là số nguyên từ 25 đến 100.");
+        }
+        // Keep raw overlay text out of the in-memory idempotency map.  The
+        // text itself is sent only in the signed request body; this compact
+        // transient fingerprint merely distinguishes a changed form while a
+        // request is awaiting a server acknowledgement.
+        let textFingerprint = 2166136261;
+        for (let index = 0; index < overlayText.length; index += 1) {
+          textFingerprint = Math.imul(textFingerprint ^ overlayText.charCodeAt(index), 16777619) >>> 0;
+        }
+        const scope = `image-operation:brand-overlay:${sourceAssetId}:${logoAssetId}`;
+        const requestFingerprint = `${textFingerprint.toString(36)}:${overlayText.length}:${textPosition}:${logoPosition}:${logoScalePercent}:${logoOpacityPercent}`;
+        const submission = acquireSubmission(scope, requestFingerprint);
+        if (!submission) {
+          toast("Brand Overlay Studio đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/image-operations/brand-overlay", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              logo_asset_id: logoAssetId || null,
+              overlay_text: overlayText || null,
+              text_position: textPosition,
+              logo_position: logoPosition,
+              logo_scale_percent: logoScalePercent,
+              logo_opacity_percent: logoOpacityPercent,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const operation = result.data && result.data.operation && typeof result.data.operation === "object" ? result.data.operation : null;
+          if (!operation || !validImageOperationId(operation.id) || String(operation.kind || "") !== "image_brand_overlay") {
+            throw new Error("Máy chủ chưa trả metadata Brand Overlay Studio hợp lệ.");
+          }
+          await Promise.all([hydrateImageBrandOverlayOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã ghép và xác minh PNG thương hiệu private.");
+        } catch (error) {
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateImageBrandOverlayOperations(), hydrateAssetVault()]);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "storyboard-grid-create") {
+        // This request contains only one owner-scoped Asset Vault UUID and
+        // bounded integer settings.  The browser never crop-renders cells,
+        // sends file bytes/URLs/paths or selects a Bot/provider execution.
+        const sourceAssetId = String(fields.source_asset_id || "").trim();
+        const parseInteger = (value, label, minimum, maximum) => {
+          const text = String(value || "").trim();
+          if (!/^\d{1,3}$/.test(text)) throw new Error(`${label} phải là số nguyên từ ${minimum} đến ${maximum}.`);
+          const parsed = Number(text);
+          if (!Number.isInteger(parsed) || parsed < minimum || parsed > maximum) {
+            throw new Error(`${label} phải là số nguyên từ ${minimum} đến ${maximum}.`);
+          }
+          return parsed;
+        };
+        if (!validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn ảnh storyboard private hợp lệ từ Asset Vault.");
+        const episode = parseInteger(fields.episode, "Tập", 1, 999);
+        const rows = parseInteger(fields.rows, "Số hàng", 1, 6);
+        const cols = parseInteger(fields.cols, "Số cột", 1, 8);
+        const startScene = parseInteger(fields.start_scene, "Cảnh bắt đầu", 1, 999);
+        const trimPercent = parseInteger(fields.trim_percent, "Cắt mép", 0, 18);
+        // The UI is expressed in familiar whole percentages (0–18), while
+        // the server contract intentionally stores a canonical decimal
+        // fraction (0.00–0.18) to keep grid maths deterministic.
+        const trimFraction = Number((trimPercent / 100).toFixed(2));
+        const scope = `storyboard-grid:${sourceAssetId}:${episode}:${rows}:${cols}:${startScene}:${trimPercent}`;
+        const submission = acquireSubmission(scope, scope);
+        if (!submission) {
+          toast("Storyboard Grid Splitter đang được máy chủ xử lý. Vui lòng chờ phản hồi.", "error");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/storyboard-grid", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              source_asset_id: sourceAssetId,
+              episode,
+              rows,
+              cols,
+              start_scene: startScene,
+              trim_percent: trimFraction,
+              idempotency_key: submission.key
+            })
+          });
+          acknowledged = true;
+          const payload = result.data && typeof result.data === "object" ? result.data : {};
+          const operation = payload.operation && typeof payload.operation === "object" ? payload.operation : payload;
+          if (!operation || !validImageOperationId(operation.id)) {
+            throw new Error("Máy chủ chưa trả metadata Storyboard Grid hợp lệ.");
+          }
+          await Promise.all([hydrateStoryboardGridOperations(), hydrateAssetVault()]);
+          toast(result.message || "Đã chia và xác minh các cell storyboard private.");
+        } catch (error) {
+          // A rejected or malformed source stays a server-recorded outcome.
+          // No browser canvas or fake cell can replace it after a request.
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (acknowledged) await Promise.all([hydrateStoryboardGridOperations(), hydrateAssetVault()]);
           throw error;
         } finally {
           releaseSubmission(submission);
@@ -22158,6 +22854,59 @@
         }
         const refreshed = await hydrateImageEnhanceOperations(operationHistoryListOffset(fields.__imageEnhanceOperationOffset));
         if (!refreshed) throw new Error("Không thể tải trang lịch sử Image Enhance Studio.");
+        return;
+      }
+      if (action === "image-brand-overlay-refresh") {
+        await Promise.all([hydrateImageBrandOverlayOperations(), hydrateAssetVault()]);
+        toast("Đã làm mới Brand Overlay Studio.");
+        return;
+      }
+      if (action === "image-brand-overlay-page") {
+        if (!(base().capabilities && base().capabilities["image-brand-overlay-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử Brand Overlay Studio.");
+        }
+        const refreshed = await hydrateImageBrandOverlayOperations(operationHistoryListOffset(fields.__imageBrandOverlayOperationOffset));
+        if (!refreshed) throw new Error("Không thể tải trang lịch sử Brand Overlay Studio.");
+        return;
+      }
+      if (action === "storyboard-grid-refresh") {
+        if (!(base().capabilities && base().capabilities["storyboard-grid-refresh"] === true)) {
+          throw new Error("Bạn không có quyền làm mới Storyboard Grid Splitter.");
+        }
+        await Promise.all([hydrateStoryboardGridOperations(), hydrateAssetVault(), hydrateImageOperationAssetReferences()]);
+        if (String(base().storyboardGridReadState || "guarded") !== "ready") {
+          throw new Error("Không thể làm mới Storyboard Grid Splitter.");
+        }
+        toast("Đã làm mới Storyboard Grid Splitter.");
+        return;
+      }
+      if (action === "storyboard-grid-page") {
+        if (!(base().capabilities && base().capabilities["storyboard-grid-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử Storyboard Grid Splitter.");
+        }
+        const refreshed = await hydrateStoryboardGridOperations(operationHistoryListOffset(fields.__storyboardGridOffset));
+        if (!refreshed) throw new Error("Không thể tải trang lịch sử Storyboard Grid Splitter.");
+        return;
+      }
+      if (action === "image-history-refresh") {
+        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử ảnh Web.");
+        }
+        await hydrateImageHistoryOperations();
+        if (String(base().imageHistoryReadState || "guarded") !== "ready") {
+          throw new Error("Không thể làm mới lịch sử ảnh Web.");
+        }
+        toast("Đã làm mới lịch sử ảnh Web.");
+        return;
+      }
+      if (action === "image-history-operation-page") {
+        if (!(base().capabilities && base().capabilities["image-operation-view"] === true)) {
+          throw new Error("Bạn không có quyền xem lịch sử ảnh Web.");
+        }
+        await hydrateImageHistoryOperations(operationHistoryListOffset(fields.__imageHistoryOperationOffset));
+        if (String(base().imageHistoryReadState || "guarded") !== "ready") {
+          throw new Error("Không thể tải trang lịch sử ảnh Web.");
+        }
         return;
       }
       if (action === "document-operation-refresh") {

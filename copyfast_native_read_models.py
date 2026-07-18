@@ -23,7 +23,15 @@ MAX_PUBLIC_ID_LENGTH = 160
 
 _JOB_PREFIX = "wnj:v1"
 _ASSET_PREFIX = "wna:v1"
-_JOB_SOURCES = frozenset({"project-package", "document-operation", "image-operation", "subtitle-asset-operation"})
+_JOB_SOURCES = frozenset(
+    {
+        "project-package",
+        "document-operation",
+        "image-operation",
+        "subtitle-asset-operation",
+        "video-operation",
+    }
+)
 _PUBLIC_ROUTE_ID_PATTERN = re.compile(rf"^[A-Za-z0-9._:-]{{1,{MAX_PUBLIC_ID_LENGTH}}}$")
 # The longest public job prefix is ``wnj:v1:document-operation:`` (26
 # characters).  One hundred ASCII identifier bytes encode to 134 unpadded
@@ -35,6 +43,7 @@ _PACKAGE_STORAGE_KEY_PATTERN = re.compile(r"^packages/[0-9a-f]{32}\.zip$")
 _DOCUMENT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:pdf|docx|png|txt|zip)$")
 _IMAGE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.png$")
 _SUBTITLE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:srt|vtt)$")
+_VIDEO_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.jpg$")
 
 # These are exact copies of the direct document-handler output contracts.  Do
 # not normalize a MIME parameter here: ``text/plain`` is *not* the same sealed
@@ -63,6 +72,7 @@ _SUBTITLE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     "srt": (".srt", "application/x-subrip", "toan-aas-subtitle.srt"),
     "vtt": (".vtt", "text/vtt", "toan-aas-subtitle.vtt"),
 }
+_VIDEO_POSTER_OUTPUT_SPEC = (".jpg", "image/jpeg", "toan-aas-video-poster.jpg")
 
 
 def _account_id(value: Any) -> str:
@@ -510,6 +520,76 @@ def _project_subtitle_asset_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     }
 
 
+def _project_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Project one verified Video Poster record without source identifiers."""
+
+    (
+        record_id,
+        operation_kind,
+        state,
+        poster_position,
+        source_duration_ms,
+        source_width,
+        source_height,
+        frame_timestamp_ms,
+        output_width,
+        output_height,
+        storage_key,
+        _filename,
+        content_type,
+        byte_size,
+        sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    kind = str(operation_kind or "")
+    output_spec = _VIDEO_POSTER_OUTPUT_SPEC if kind == "video_poster" else None
+    return {
+        "id": encode_native_job_id("video-operation", record_id),
+        "kind": "video-operation",
+        "operation_kind": kind,
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        # Do not project Asset Vault source identifiers, hashes, storage keys,
+        # idempotency keys or failure details. Generic Jobs/Assets receives
+        # only an opaque local job plus non-sensitive operation dimensions.
+        "summary": {
+            "poster_position": _safe_filename(poster_position),
+            "source_duration_ms": _non_negative_int(source_duration_ms),
+            "source_width": _positive_int(source_width),
+            "source_height": _positive_int(source_height),
+            "frame_timestamp_ms": _non_negative_int(frame_timestamp_ms),
+            "output_width": _positive_int(output_width),
+            "output_height": _positive_int(output_height),
+        },
+        "output": (
+            _sealed_output(
+                state=state,
+                storage_key=storage_key,
+                storage_pattern=_VIDEO_STORAGE_KEY_PATTERN,
+                content_type=content_type,
+                byte_size=byte_size,
+                sha256=sha256,
+                expected_suffix=output_spec[0],
+                expected_content_type=output_spec[1],
+                filename=output_spec[2],
+                required_positive_values=(output_width, output_height),
+            )
+            if output_spec is not None
+            else None
+        ),
+    }
+
+
 def _project_asset(row: tuple[Any, ...]) -> dict[str, Any]:
     (
         record_id,
@@ -585,6 +665,18 @@ _SUBTITLE_ASSET_OPERATION_QUERY = """
      LIMIT ?
 """
 
+_VIDEO_QUERY = """
+    SELECT id, kind, state, poster_position, source_duration_ms,
+           source_width, source_height, frame_timestamp_ms, output_width,
+           output_height, storage_key, original_filename, content_type,
+           byte_size, sha256, created_at, queued_at, started_at, completed_at,
+           updated_at
+      FROM web_video_operations
+     WHERE account_id=? AND kind='video_poster'
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
 _ASSET_QUERY = """
     SELECT id, display_name, original_filename, extension, content_type,
            byte_size, state, created_at, updated_at, archived_at
@@ -599,6 +691,10 @@ _DOCUMENT_COMPLETED_QUERY = _DOCUMENT_QUERY.replace("WHERE account_id=?", "WHERE
 _IMAGE_COMPLETED_QUERY = _IMAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
 _SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY = _SUBTITLE_ASSET_OPERATION_QUERY.replace(
     "WHERE account_id=?", "WHERE account_id=? AND state='completed'"
+)
+_VIDEO_COMPLETED_QUERY = _VIDEO_QUERY.replace(
+    "WHERE account_id=? AND kind='video_poster'",
+    "WHERE account_id=? AND kind='video_poster' AND state='completed'",
 )
 
 
@@ -627,6 +723,11 @@ def _projected_jobs_for_account(
             "image-operation",
             _IMAGE_COMPLETED_QUERY if completed_outputs_only else _IMAGE_QUERY,
             _project_image_operation,
+        ),
+        (
+            "video-operation",
+            _VIDEO_COMPLETED_QUERY if completed_outputs_only else _VIDEO_QUERY,
+            _project_video_operation,
         ),
     ]
     # The read model never creates schema. When this optional executor is
@@ -716,6 +817,7 @@ def resolve_native_job(conn: Any, account_id: str, public_id: str) -> dict[str, 
         "document-operation": (_DOCUMENT_QUERY, _project_document_operation),
         "image-operation": (_IMAGE_QUERY, _project_image_operation),
         "subtitle-asset-operation": (_SUBTITLE_ASSET_OPERATION_QUERY, _project_subtitle_asset_operation),
+        "video-operation": (_VIDEO_QUERY, _project_video_operation),
     }
     query_and_projector = queries.get(source)
     if query_and_projector is None:

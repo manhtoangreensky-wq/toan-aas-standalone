@@ -78,6 +78,12 @@ Production Web App for `app.toanaas.vn`.
   opt-in: `WEBAPP_DOCUMENT_OCR_PDF_ENABLED=true` requires pypdf, PDFium,
   Pillow and Tesseract and produces a verified private TXT only when every
   bounded PDF page has real text; it does not use a browser, Bot or provider
+  selectable text, not OCR or visual layout. Scanned PDF → Word is a
+  separate operation requiring all of
+  `WEBAPP_PDF_OCR_WORD_ENABLED=true`,
+  `WEBAPP_DOCUMENT_OCR_PDF_ENABLED=true` and
+  `WEBAPP_PDF_TO_WORD_ENABLED=true`; it creates a fresh verified DOCX only
+  from real local OCR text, never changes text-only PDF → Word into an OCR
   fallback. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
@@ -85,7 +91,8 @@ Production Web App for `app.toanaas.vn`.
   [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
   [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md), and
   [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md), and
-  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md).
+  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md) and
+  [`PDF_OCR_WORD_CONTRACT.md`](docs/migration/PDF_OCR_WORD_CONTRACT.md).
 - `WEBAPP_IMAGE_OPERATIONS_ENABLED` defaults to `false`. Resize & Aspect
   Studio additionally needs `WEBAPP_IMAGE_RESIZE_ENABLED=true`, Asset Vault,
   Pillow and its own separate persistent
@@ -102,6 +109,20 @@ Production Web App for `app.toanaas.vn`.
   local colour/detail adjustments (and optional deterministic basic upscale),
   never AI edit/upscale, a Bot job, provider request or payment path. See
   [`IMAGE_ENHANCE_CONTRACT.md`](docs/migration/IMAGE_ENHANCE_CONTRACT.md).
+- `WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED` defaults to `false`. Brand Overlay
+  Studio creates a new verified private PNG from an Asset Vault source plus
+  optional owner-scoped logo and/or bounded text; it does not enable browser
+  canvas, Bot jobs, provider calls, Xu or payment logic. It shares the
+  isolated Image Operations root and may use
+  `WEBAPP_IMAGE_BRAND_OVERLAY_FONT_PATH` to pin a server Unicode font for
+  text. See
+  [`IMAGE_BRAND_OVERLAY_CONTRACT.md`](docs/migration/IMAGE_BRAND_OVERLAY_CONTRACT.md).
+- `WEBAPP_STORYBOARD_GRID_ENABLED` defaults to `false`. Storyboard Grid
+  Splitter accepts one verified private Asset Vault image and deterministically
+  writes a verified JPEG-scene ZIP plus manifest using the isolated Image
+  Operations storage boundary. It does not enable AI, Bot jobs, provider
+  calls, Xu, PayOS or browser rendering. See
+  [`STORYBOARD_GRID_SPLITTER_CONTRACT.md`](docs/migration/STORYBOARD_GRID_SPLITTER_CONTRACT.md).
 - `WEBAPP_MEMORY_CENTER_ENABLED` defaults to `true`. `/notes` and
   `/reminders` are a signed-account, Web-owned workspace for private notes,
   version history and view-only reminders. It does not read or mutate Bot
@@ -131,6 +152,13 @@ Production Web App for `app.toanaas.vn`.
   Bot `/campaign/report`, platform report, stored asset, job or delivery
   artifact. See
   [`ANALYTICS_WORKSPACE_CONTRACT.md`](docs/migration/ANALYTICS_WORKSPACE_CONTRACT.md).
+- `WEBAPP_GROWTH_REVIEW_ENABLED` defaults to `true`. `/growth/ai` is a signed,
+  request-only **Growth Review** that mirrors the Bot's deterministic score
+  and recommendation thresholds over six values the account manually enters.
+  It is not Growth AI: it never connects to a platform, reads canonical
+  revenue, calls Bot/provider/model, changes Xu/PayOS, creates a job or saves
+  the input/result. See
+  [`GROWTH_REVIEW_CONTRACT.md`](docs/migration/GROWTH_REVIEW_CONTRACT.md).
 - `WEBAPP_WORKBOARD_ENABLED` defaults to `true`. `/workboard` is a
   signed-account Kanban and self-review queue for metadata the same Web
   account owns. It can reference verified Web Project, Campaign, Analytics,
@@ -252,8 +280,9 @@ private Bot bridge.
   blobs, change Xu, invoke PayOS or call a provider. See
   [`PROJECT_PACKAGE_CONTRACT.md`](docs/migration/PROJECT_PACKAGE_CONTRACT.md).
 - `/documents/split`, `/documents/merge`, `/documents/compress`,
-  `/documents/image-to-pdf`, `/documents/pdf-to-images` and
-  `/documents/pdf-to-word` are distinct
+  `/documents/image-to-pdf`, `/documents/pdf-to-images`,
+  `/documents/pdf-to-word`, `/documents/pdf-ocr` and
+  `/documents/pdf-ocr-to-word` are distinct
   Web-native document operations:
   the PDF tools accept only verified private Asset Vault PDFs, while Image to
   PDF accepts ordered, verified private JPEG/PNG/WebP assets. Each writes a
@@ -262,13 +291,18 @@ private Bot bridge.
   final artifact is meaningfully smaller; PDF → images delivers a verified
   PNG or deterministic PNG ZIP; PDF text → Word delivers only when
   the private source contains real extractable text and its fresh DOCX passes
-  verification. See
+  verification; PDF OCR delivers only non-empty local OCR text after its 2×
+  raster, timeout and artifact checks; scanned PDF → Word emits a fresh,
+  verified DOCX only from that same bounded local OCR path and never exposes
+  raw OCR text to the browser. See
   [`PDF_SPLIT_CONTRACT.md`](docs/migration/PDF_SPLIT_CONTRACT.md),
   [`PDF_MERGE_CONTRACT.md`](docs/migration/PDF_MERGE_CONTRACT.md) and
   [`PDF_OPTIMIZE_CONTRACT.md`](docs/migration/PDF_OPTIMIZE_CONTRACT.md),
   [`IMAGE_TO_PDF_CONTRACT.md`](docs/migration/IMAGE_TO_PDF_CONTRACT.md),
-  [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md), and
-  [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md).
+  [`PDF_TO_IMAGES_CONTRACT.md`](docs/migration/PDF_TO_IMAGES_CONTRACT.md),
+  [`PDF_TO_WORD_CONTRACT.md`](docs/migration/PDF_TO_WORD_CONTRACT.md), and
+  [`PDF_OCR_CONTRACT.md`](docs/migration/PDF_OCR_CONTRACT.md) and
+  [`PDF_OCR_WORD_CONTRACT.md`](docs/migration/PDF_OCR_WORD_CONTRACT.md).
 
 See [the current migration contracts](docs/migration/README.md), especially
 `PAYOS_WALLET_JOB_MAP.md`, `FEATURE_CONFIRM_CONTRACT.md`, and

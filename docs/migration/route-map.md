@@ -2,6 +2,12 @@
 
 This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes.
 
+## Additive Web-native route (not a Telegram command mapping)
+
+| Web route/action | Authority | Status |
+| --- | --- | --- |
+| `/api/v1/video-operations/*` (not yet a public catalogue route) | Signed Web account + private Asset Vault source | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded JPEG poster utility; no Bot/provider/PayOS/wallet delegation and no claim that existing `/video/*` Bot companion routes render media. It stays outside the public registry until the dedicated signed workbench is implemented in the broader video navigation/UI phase. |
+
 | Telegram command | Web route/action | Status |
 | --- | --- | --- |
 | /add | /admin/add | COPIED_GUARDED |

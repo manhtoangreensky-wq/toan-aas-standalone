@@ -12,6 +12,11 @@ or the delivery authority.
   database ID, storage key, checksum, provider handle or download URL from a
   Workboard reference or Handoff lineage response.
 
+`wnj:v1:video-operation:*` can identify only a sealed `video_poster` JPEG
+output. It is not an alias for the selected Asset Vault source and cannot be
+used to create another poster, open a source video, invoke FFmpeg, change a
+poster position or reveal runtime/attempt details.
+
 Workboard accepts `native_job` for owner-scoped coordination in any existing
 state, and `native_asset` only while the owner-scoped Asset Vault record is
 active.  A Workboard card is metadata only: it cannot start a job, claim an
@@ -48,3 +53,9 @@ external delivery claim.
 The module never imports the Telegram Bot, calls Core Bridge or a provider,
 starts jobs, mutates wallet/payment state, sends notifications, creates a
 social publish action or validates an external delivery.
+
+Video Poster lineage remains subject to its own disabled-by-default runtime,
+owner checks and private output verification. A Workboard or Handoff reference
+does not bypass those gates and cannot turn the bounded request-time operation
+into a durable worker. See
+[`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).

@@ -137,6 +137,18 @@ def pdf_ocr_enabled() -> bool:
     return os.environ.get("WEBAPP_DOCUMENT_OCR_PDF_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def pdf_ocr_word_enabled() -> bool:
+    """Whether scanned-PDF OCR-to-DOCX is deliberately enabled.
+
+    This combines an untrusted PDF rasterizer, local Tesseract and DOCX
+    writing.  Keep it independent from both TXT OCR and selectable-text PDF
+    export so an operator must explicitly opt in to the larger execution
+    surface and no existing route gains an unstated OCR fallback.
+    """
+
+    return os.environ.get("WEBAPP_PDF_OCR_WORD_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def pdf_to_word_enabled() -> bool:
     """Whether the private PDF-text-to-DOCX exporter is deliberately enabled.
 
@@ -168,6 +180,27 @@ def image_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_IMAGE_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def video_operations_enabled() -> bool:
+    """Whether bounded, Web-native private video operations are enabled.
+
+    This is a distinct execution and storage boundary from Video Studio.  It
+    never enables Bot video jobs, provider generation, wallet/Xu, PayOS,
+    social publishing or browser-supplied FFmpeg arguments.
+    """
+
+    return os.environ.get("WEBAPP_VIDEO_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def video_poster_enabled() -> bool:
+    """Whether the private, FFmpeg-backed Video Poster operation is enabled.
+
+    A separate false-by-default switch means an operator can prepare the
+    Web-owned storage boundary without accidentally executing a media binary.
+    """
+
+    return os.environ.get("WEBAPP_VIDEO_POSTER_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def image_resize_enabled() -> bool:
     """Whether the Pillow-backed Resize & Aspect Studio executor is enabled.
 
@@ -187,6 +220,29 @@ def image_enhance_enabled() -> bool:
     payment action.
     """
     return os.environ.get("WEBAPP_IMAGE_ENHANCE_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def image_brand_overlay_enabled() -> bool:
+    """Whether the private Image Brand Overlay Studio executor is enabled.
+
+    The switch is deliberately narrower than Image Operations itself.  It
+    unlocks only a bounded server-side Pillow composition from owner-scoped
+    Asset Vault images; it never grants browser canvas rendering, a Bot job,
+    provider access, wallet mutation or payment action.
+    """
+    return os.environ.get("WEBAPP_IMAGE_BRAND_OVERLAY_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def storyboard_grid_enabled() -> bool:
+    """Whether private Web-native storyboard-grid splitting is enabled.
+
+    This is intentionally narrower than the shared Image Operations boundary.
+    It permits only a deterministic, owner-scoped Asset Vault image to be
+    split into verified JPEG scene files and a private ZIP/manifest.  It never
+    enables a Bot job, provider request, wallet/Xu mutation, PayOS action or
+    browser-side rendering fallback.
+    """
+    return os.environ.get("WEBAPP_STORYBOARD_GRID_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def memory_center_enabled() -> bool:
@@ -227,6 +283,23 @@ def governance_documents_enabled() -> bool:
     enabled_values = {"1", "true", "yes", "on"}
     umbrella = os.environ.get("WEBAPP_ADMIN_ERP_ENABLED", "true").strip().lower() in enabled_values
     dedicated = os.environ.get("WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED", "false").strip().lower() in enabled_values
+    return umbrella and dedicated
+
+
+def admin_document_archive_enabled() -> bool:
+    """Whether the Web-owned Admin Internal Document Archive is enabled.
+
+    This is deliberately separate from text-only Governance Documents and from
+    customer Asset Vaults: it accepts immutable private admin-record blobs.
+    Both the Admin ERP umbrella and this false-by-default gate must be enabled
+    before the archive can touch its own tables or storage root.  It never
+    grants Bot, bridge, Telegram, wallet/Xu, PayOS, provider, job, customer or
+    finance authority.
+    """
+
+    enabled_values = {"1", "true", "yes", "on"}
+    umbrella = os.environ.get("WEBAPP_ADMIN_ERP_ENABLED", "true").strip().lower() in enabled_values
+    dedicated = os.environ.get("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", "false").strip().lower() in enabled_values
     return umbrella and dedicated
 
 
@@ -309,6 +382,18 @@ def trend_research_enabled() -> bool:
     PayOS, job, asset, media output, publishing or delivery capability.
     """
     return os.environ.get("WEBAPP_TREND_RESEARCH_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def growth_review_enabled() -> bool:
+    """Whether the manual, rule-based Growth Review is available.
+
+    The switch permits only deterministic arithmetic over metric values the
+    signed browser explicitly submits.  It never enables a social/platform
+    connection, Bot/Core Bridge, AI/provider call, canonical revenue, wallet,
+    PayOS, job, asset, publish or delivery capability.
+    """
+
+    return os.environ.get("WEBAPP_GROWTH_REVIEW_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
 def media_factory_enabled() -> bool:
@@ -759,7 +844,6 @@ def subtitle_asset_operations_directory() -> Path:
 
     if not subtitle_asset_operations_enabled():
         raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED chưa được bật")
-
     configured = os.environ.get("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT", "").strip()
     if configured:
         candidate = Path(configured).expanduser()
@@ -767,17 +851,15 @@ def subtitle_asset_operations_directory() -> Path:
             raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
     else:
         persistent_directory = _persistent_session_directory()
-        if persistent_directory is not None:
-            candidate = persistent_directory / "toanaas_webapp_subtitle_asset_operations"
-        else:
-            database_parent = Path(session_database_path()).expanduser().resolve().parent
-            candidate = database_parent / "toanaas_webapp_subtitle_asset_operations"
-
+        candidate = (
+            persistent_directory / "toanaas_webapp_subtitle_asset_operations"
+            if persistent_directory is not None
+            else Path(session_database_path()).expanduser().resolve().parent / "toanaas_webapp_subtitle_asset_operations"
+        )
     candidate = candidate.resolve()
     static_directory = (Path(__file__).resolve().parent / "static").resolve()
     if _is_within(candidate, static_directory):
         raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT không được nằm trong static")
-
     private_roots: list[Path] = []
     if asset_vault_enabled():
         private_roots.append(asset_vault_directory().resolve())
@@ -792,19 +874,13 @@ def subtitle_asset_operations_directory() -> Path:
             raise RuntimeError(
                 "WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations và Image Operations"
             )
-
     if _is_production():
         persistent_directory = _persistent_session_directory()
         if persistent_directory is None:
-            raise RuntimeError(
-                "Subtitle Asset Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
-            )
+            raise RuntimeError("Subtitle Asset Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data")
         persistent_directory = persistent_directory.resolve()
         if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
-            raise RuntimeError(
-                "WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production"
-            )
-
+            raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production")
     candidate.mkdir(parents=True, exist_ok=True)
     if not candidate.is_dir():
         raise RuntimeError("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ROOT không phải thư mục hợp lệ")
@@ -819,6 +895,137 @@ def ensure_subtitle_asset_operations_persistence() -> Path | None:
     if not asset_vault_enabled():
         raise RuntimeError("Subtitle Asset Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
     return subtitle_asset_operations_directory()
+
+
+def video_operations_directory() -> Path:
+    """Resolve the isolated private output root for Web-native video work.
+
+    Video poster extraction consumes an immutable Asset Vault source and
+    produces a new JPEG.  It may never share the input vault, package,
+    document or image-operation roots, because an output must remain plainly
+    distinguishable from a customer source or a Bot-owned delivery.
+    """
+
+    if not video_operations_enabled():
+        raise RuntimeError("WEBAPP_VIDEO_OPERATIONS_ENABLED chưa được bật")
+
+    configured = os.environ.get("WEBAPP_VIDEO_OPERATIONS_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_VIDEO_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is not None:
+            candidate = persistent_directory / "toanaas_webapp_video_operations"
+        else:
+            database_parent = Path(session_database_path()).expanduser().resolve().parent
+            candidate = database_parent / "toanaas_webapp_video_operations"
+
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_VIDEO_OPERATIONS_ROOT không được nằm trong static")
+
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    if image_operations_enabled():
+        private_roots.append(image_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_VIDEO_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations và Image Operations"
+            )
+
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError(
+                "Video Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data"
+            )
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError(
+                "WEBAPP_VIDEO_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production"
+            )
+
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_VIDEO_OPERATIONS_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_video_operations_persistence() -> Path | None:
+    """Validate the isolated output boundary before video execution is served."""
+
+    if not video_operations_enabled():
+        return None
+    if not asset_vault_enabled():
+        raise RuntimeError("Video Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
+    return video_operations_directory()
+
+
+def admin_document_archive_directory() -> Path:
+    """Resolve the isolated private blob root for Admin Internal Documents."""
+
+    if not admin_document_archive_enabled():
+        raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED chưa được bật")
+    configured = os.environ.get("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        candidate = (
+            persistent_directory / "toanaas_webapp_admin_document_archive"
+            if persistent_directory is not None
+            else Path(session_database_path()).expanduser().resolve().parent / "toanaas_webapp_admin_document_archive"
+        )
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT không được nằm trong static")
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    if image_operations_enabled():
+        private_roots.append(image_operations_directory().resolve())
+    if subtitle_asset_operations_enabled():
+        private_roots.append(subtitle_asset_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations và Subtitle Asset Operations"
+            )
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError("Admin Document Archive production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data")
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT phải là thư mục con của persistent volume khi production")
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir():
+        raise RuntimeError("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_admin_document_archive_persistence() -> Path | None:
+    """Validate the dedicated immutable admin-record storage when enabled."""
+
+    if not admin_document_archive_enabled():
+        return None
+    return admin_document_archive_directory()
 
 
 def session_database_path() -> str:
@@ -3520,6 +3727,159 @@ def ensure_copyfast_schema() -> None:
         }
         if "sequence" not in subtitle_asset_event_columns:
             conn.execute("ALTER TABLE web_subtitle_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+
+        # Storyboard Grid keeps its bounded scene cuts in a purpose-specific
+        # table instead of overloading Web image transforms.  A completed
+        # operation delivers one verified private JPEG-scene ZIP/manifest;
+        # its per-cell evidence remains append-only and never becomes a Bot
+        # job, provider artifact, Asset Vault source, wallet/Xu or PayOS row.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_storyboard_grid_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                project_id TEXT,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_width INTEGER NOT NULL,
+                source_height INTEGER NOT NULL,
+                rows INTEGER NOT NULL,
+                cols INTEGER NOT NULL,
+                episode INTEGER NOT NULL,
+                start_scene INTEGER NOT NULL,
+                trim_percent REAL NOT NULL,
+                scene_count INTEGER NOT NULL,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_storyboard_grid_cells (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                scene_no INTEGER NOT NULL,
+                row_index INTEGER NOT NULL,
+                column_index INTEGER NOT NULL,
+                crop_x INTEGER NOT NULL,
+                crop_y INTEGER NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                original_filename TEXT NOT NULL,
+                byte_size INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                UNIQUE(operation_id, scene_no),
+                UNIQUE(operation_id, row_index, column_index),
+                FOREIGN KEY(operation_id) REFERENCES web_storyboard_grid_operations(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_storyboard_grid_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_storyboard_grid_operations(id)
+            )
+            """
+        )
+        # Video Operations is the first bounded Web-native media execution
+        # boundary.  It is deliberately separate from Video Studio plans,
+        # Bot jobs and Asset Vault sources: one immutable owner-scoped source
+        # can produce only a verified private artifact after local runtime
+        # validation.  Attempt rows make an interrupted in-request executor
+        # auditable and leave a durable seam for a future worker lease.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                kind TEXT NOT NULL,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_extension TEXT NOT NULL,
+                source_content_type TEXT NOT NULL,
+                poster_position TEXT NOT NULL,
+                source_duration_ms INTEGER,
+                source_width INTEGER,
+                source_height INTEGER,
+                frame_timestamp_ms INTEGER,
+                output_width INTEGER,
+                output_height INTEGER,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                revision INTEGER NOT NULL DEFAULT 1,
+                UNIQUE(account_id, kind, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_operation_attempts (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                attempt_no INTEGER NOT NULL,
+                state TEXT NOT NULL,
+                fence_token TEXT NOT NULL,
+                started_at TEXT NOT NULL,
+                completed_at TEXT,
+                failure_code TEXT,
+                UNIQUE(operation_id, attempt_no),
+                UNIQUE(operation_id, fence_token),
+                FOREIGN KEY(operation_id) REFERENCES web_video_operations(id),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_video_operation_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_video_operations(id)
+            )
+            """
+        )
         # Workboard is a private, Web-native planning surface.  These tables
         # never store remote URLs, Bot/provider handles, execution output,
         # wallet/payment data or notification-delivery state.  A reference is
@@ -4270,6 +4630,77 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # Admin Internal Document Archive owns immutable private file versions
+        # in a separate root.  It intentionally does not mirror the Bot's
+        # ``internal_documents`` table, Telegram file references, customer
+        # Asset Vault, finance/customer/provider fields or bridge authority.
+        # No FK uses CASCADE: archive history must remain auditable rather than
+        # disappearing after an unrelated account or lifecycle operation.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_admin_archive_documents (
+                id TEXT PRIMARY KEY,
+                owner_account_id TEXT NOT NULL,
+                department TEXT NOT NULL,
+                document_type TEXT NOT NULL,
+                title TEXT NOT NULL,
+                tags_json TEXT NOT NULL DEFAULT '[]',
+                description TEXT NOT NULL DEFAULT '',
+                retention_label TEXT NOT NULL DEFAULT 'manual_review'
+                    CHECK(retention_label IN ('manual_review', '3_years', '5_years', '10_years', 'permanent')),
+                confidentiality_level TEXT NOT NULL DEFAULT 'internal'
+                    CHECK(confidentiality_level IN ('internal', 'confidential', 'restricted')),
+                state TEXT NOT NULL DEFAULT 'active'
+                    CHECK(state IN ('active', 'archived', 'unavailable')),
+                current_version_id TEXT,
+                lifecycle_revision INTEGER NOT NULL DEFAULT 1 CHECK(lifecycle_revision >= 1),
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                archived_at TEXT,
+                FOREIGN KEY(owner_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_admin_archive_versions (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                version_number INTEGER NOT NULL CHECK(version_number >= 1),
+                uploader_account_id TEXT NOT NULL,
+                original_filename TEXT NOT NULL,
+                display_name TEXT NOT NULL,
+                extension TEXT NOT NULL,
+                content_type TEXT NOT NULL,
+                byte_size INTEGER NOT NULL CHECK(byte_size >= 1),
+                sha256 TEXT NOT NULL,
+                storage_key TEXT NOT NULL UNIQUE,
+                availability TEXT NOT NULL DEFAULT 'available'
+                    CHECK(availability IN ('available', 'unavailable')),
+                created_at TEXT NOT NULL,
+                UNIQUE(document_id, version_number),
+                FOREIGN KEY(document_id) REFERENCES web_admin_archive_documents(id),
+                FOREIGN KEY(uploader_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_admin_archive_events (
+                id TEXT PRIMARY KEY,
+                document_id TEXT NOT NULL,
+                actor_account_id TEXT NOT NULL,
+                action TEXT NOT NULL CHECK(action IN ('created', 'version_added', 'metadata_updated', 'archived', 'restored', 'unavailable')),
+                from_state TEXT,
+                to_state TEXT NOT NULL CHECK(to_state IN ('active', 'archived', 'unavailable')),
+                lifecycle_revision INTEGER NOT NULL CHECK(lifecycle_revision >= 1),
+                version_number INTEGER,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(document_id) REFERENCES web_admin_archive_documents(id),
+                FOREIGN KEY(actor_account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_sessions_account ON web_sessions(account_id)"
         )
@@ -4357,6 +4788,33 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operation_events_operation_sequence ON web_subtitle_asset_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_operations_account_updated ON web_video_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_operations_source_account ON web_video_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_operation_attempts_operation_attempt ON web_video_operation_attempts(operation_id, attempt_no DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_video_operation_events_operation_sequence ON web_video_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_operations_account_updated ON web_storyboard_grid_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_operations_source_account ON web_storyboard_grid_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_cells_operation_scene ON web_storyboard_grid_cells(operation_id, scene_no ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_cells_operation_grid ON web_storyboard_grid_cells(operation_id, row_index ASC, column_index ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_storyboard_grid_events_operation_sequence ON web_storyboard_grid_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_bridge_callback_nonce_expiry ON web_bridge_callback_nonces(expires_at)"
@@ -4569,6 +5027,21 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_governance_events_document_created ON web_governance_document_events(document_id, created_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_documents_owner_state_updated ON web_admin_archive_documents(owner_account_id, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_documents_department_state_updated ON web_admin_archive_documents(department, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_documents_type_updated ON web_admin_archive_documents(document_type, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_versions_document_version ON web_admin_archive_versions(document_id, version_number DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_admin_archive_events_document_created ON web_admin_archive_events(document_id, created_at DESC, id DESC)"
         )
 
 
