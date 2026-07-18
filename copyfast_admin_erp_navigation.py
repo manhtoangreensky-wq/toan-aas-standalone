@@ -11,9 +11,10 @@ There are three authority domains:
   confirms a live admin role; and
 * Support Desk, Operations and Reliability are Web-native staff surfaces
   whose role is checked from the server-side signed Web account store.
-* The redacted Partner CRM manager directory and the Governance Documents
-  Center are Web-native surfaces for a locally provisioned Web admin. They are
-  deliberately not presented as canonical Bot Admin capabilities.
+* The redacted Partner CRM manager directory, Governance Documents Center and
+  Internal Document Archive are Web-native surfaces for a locally provisioned
+  Web admin. They are deliberately not presented as canonical Bot Admin
+  capabilities.
 
 Keeping those domains separate prevents a browser role, an email allow-list,
 or a stale cached Admin role from turning into permission to navigate the
@@ -71,6 +72,7 @@ _MODULE_DESCRIPTIONS = {
     "content_handoffs": "Hàng review bàn giao nội bộ Web-native; không có publish, delivery, provider, Xu hay PayOS.",
     "partner_crm_manager": "Directory CRM Web-native đã redaction, chỉ đọc; không có cross-account write hay dữ liệu liên hệ.",
     "governance_documents": "Kho tài liệu vận hành nội bộ Web-native có review/version/audit; không đọc tài liệu, file hay authority Telegram Bot.",
+    "internal_document_archive": "Kho hồ sơ Web-native local-admin có blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents.",
 }
 
 _GROUP_DESCRIPTIONS = {
@@ -82,6 +84,7 @@ _GROUP_DESCRIPTIONS = {
     "support_operations": "Web-native CSKH và Operations metadata, không có financial/provider executor.",
     "web_private_crm": "Giám sát CRM Web-native đã redaction; tách biệt với canonical Bot Admin và financial authority.",
     "web_governance_documents": "Kho tài liệu Governance Web-native, có lifecycle nội bộ nhưng không phải tư vấn pháp lý, file export hay Bot authority.",
+    "web_internal_document_archive": "Kho hồ sơ nội bộ Web-native local-admin có file private và version bất biến; không phải Bot archive, Asset Vault khách hàng, ledger, PayOS hay provider action.",
 }
 
 
@@ -354,10 +357,11 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
     """Return standalone Web admin surfaces that are not Bot-canonical.
 
     ``/admin/crm/leads`` independently uses ``require_admin`` and returns
-    only redacted cross-account pipeline metadata. ``/admin/governance`` is a
-    separately flagged Web-owned internal-document lifecycle. Keeping both in
-    distinct authority groups prevents a signed Web administrator from being
-    visually or semantically promoted into a Bot/canonical administrator.
+    only redacted cross-account pipeline metadata. ``/admin/governance`` and
+    ``/admin/internal-documents`` are separately flagged Web-owned internal
+    document surfaces. Keeping all three in distinct authority groups prevents
+    a signed Web administrator from being visually or semantically promoted
+    into a Bot/canonical administrator.
     """
 
     crm_state = "web_native" if _enabled("WEBAPP_PARTNER_CRM_ENABLED", default=True) else "guarded"
@@ -365,6 +369,12 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
         "web_native"
         if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True)
         and _enabled("WEBAPP_GOVERNANCE_DOCUMENTS_ENABLED", default=False)
+        else "guarded"
+    )
+    archive_state = (
+        "web_native"
+        if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True)
+        and _enabled("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", default=False)
         else "guarded"
     )
     return [
@@ -397,6 +407,22 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
                     source="web_native",
                     availability=governance_state,
                     capability="internal_document_lifecycle_review_version_audit",
+                ),
+            ],
+        ),
+        _group(
+            "web_internal_document_archive",
+            "Internal Document Archive",
+            authority="web_local_admin",
+            modules=[
+                _module(
+                    "internal_document_archive",
+                    "Kho hồ sơ nội bộ",
+                    "/admin/internal-documents",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=archive_state,
+                    capability="owner_scoped_immutable_private_document_versions",
                 ),
             ],
         ),
