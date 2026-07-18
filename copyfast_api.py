@@ -510,6 +510,10 @@ def _flags() -> dict[str, bool]:
         # It never unlocks Video Studio, Bot/bridge jobs, a remote provider,
         # wallet/Xu, PayOS, publishing or arbitrary media execution.
         "frame_video_operations_enabled": enabled("WEBAPP_FRAME_VIDEO_OPERATIONS_ENABLED", False),
+        # Video Finishing is an isolated owner-scoped transform boundary. It
+        # does not enable Video Studio, Bot/bridge jobs, a provider, wallet/Xu,
+        # PayOS, arbitrary FFmpeg input or social publishing.
+        "video_transform_operations_enabled": enabled("WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ENABLED", False),
         # Storyboard Grid is a dedicated deterministic JPEG/ZIP operation
         # from a private Asset Vault source. It does not unlock a Bot, bridge,
         # provider, wallet/Xu, PayOS or generic image execution path.
@@ -2867,6 +2871,9 @@ async def _native_asset_delivery(asset_id: str, account: dict):
         if source == "frame-video-operation":
             from copyfast_frame_video_operations import download_frame_video
             return await download_frame_video(internal_id, account)
+        if source == "video-transform-operation":
+            from copyfast_video_transform_operations import download_video_transform_operation
+            return await download_video_transform_operation(internal_id, account)
         return envelope(False, "Tài sản Web-native chưa được hỗ trợ.", status_name="guarded", error_code="WEB_NATIVE_ASSET_UNAVAILABLE")
 
     native_asset_id = parse_native_asset_id(asset_id)

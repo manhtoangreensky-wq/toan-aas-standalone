@@ -42,3 +42,15 @@ enabled. It shares the local FFmpeg gate with Video Poster but has no durable
 queue, retry worker, cross-replica lease, audio/mux pipeline, provider adapter
 or payment behaviour. See
 [`FRAME_VIDEO_LAB_CONTRACT.md`](FRAME_VIDEO_LAB_CONTRACT.md).
+
+## Additive Web-native guard: Video Finishing Lab
+
+Video Finishing is a Web-local bounded reframe/preset utility derived from the
+safe local-video-editor concept, not a migration of Bot workers, Video Studio
+generation, provider execution or multi-scene/series rendering. It remains
+guarded until Asset Vault, `WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ENABLED`, an
+isolated root, trusted FFmpeg/ffprobe and explicit one-replica topology are
+enabled. It shares the single local FFmpeg gate with Video Poster and Frame
+Video, has no durable queue, cross-replica lease, text/watermark renderer,
+music/voice mux, provider adapter, wallet/Xu or payment behavior. See
+[`VIDEO_FINISHING_LAB_CONTRACT.md`](VIDEO_FINISHING_LAB_CONTRACT.md).

@@ -30,3 +30,18 @@ provider/Bot fallback. On a missing runtime or interrupted attempt it must
 fail closed instead of claiming an output. It does not change Bot authority
 for Telegram identity, Bot jobs, provider state, Xu/wallet or PayOS. See
 [`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md).
+
+## Additive Web-native guard: Video Finishing Lab
+
+Video Finishing is a separate owner-scoped, local MP4 reframe/preset utility.
+It is not Video Studio, Bot/local-worker execution, provider media generation,
+wallet/Xu, PayOS, publishing, custom FFmpeg or text/watermark rendering. Its
+route, schema and generic read-model integration remain disabled until Asset
+Vault, its own private root, trusted FFmpeg/ffprobe and an explicitly attested
+single-replica topology are available together.
+
+The request-time executor shares one bounded FFmpeg gate with Video Poster and
+Frame Video. It has no durable queue, retry daemon, cross-replica coordination,
+audio/music replacement or provider/Bot fallback. A missing runtime,
+interrupted attempt or invalid/tampered output must fail closed. See
+[`VIDEO_FINISHING_LAB_CONTRACT.md`](VIDEO_FINISHING_LAB_CONTRACT.md).

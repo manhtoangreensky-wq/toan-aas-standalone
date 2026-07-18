@@ -424,3 +424,20 @@ They do not contain an API key and must not be used as a provider, Bot,
 PayOS, wallet, webhook or production-deployment toggle. Enabling the feature
 also requires the existing private Asset Vault gate and a separately supplied
 FFmpeg/ffprobe runtime.
+
+## Web-native Video Finishing Lab environment names
+
+Video Finishing is an independent disabled-by-default local MP4 transform. It
+does not call a Bot, provider, wallet/Xu, PayOS or webhook.
+
+- `WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ENABLED` (default `false`)
+- `WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ROOT`
+- `WEBAPP_VIDEO_TRANSFORM_MAX_OUTPUT_MB` (default `25`, capped `100`)
+- `WEBAPP_VIDEO_TRANSFORM_QUOTA_MB` (default `250`, capped `5000`)
+- `WEBAPP_VIDEO_TRANSFORM_OPERATIONS_TOPOLOGY` (must be `sqlite_single_replica`; the existing video topology setting is only an explicit fallback)
+- `WEBAPP_VIDEO_TRANSFORM_FFMPEG_BIN` and `WEBAPP_VIDEO_TRANSFORM_FFPROBE_BIN` (absolute trusted binaries; existing video binary settings are fallback only)
+- one explicit replica-count attestation: `RAILWAY_REPLICA_COUNT`, `RAILWAY_REPLICAS` or `WEBAPP_REPLICA_COUNT`, equal to `1`
+
+These names configure only the bounded private executor. They are not provider
+credentials and enabling them does not enable Video Studio, Bot jobs, billing,
+webhooks, media publishing or arbitrary FFmpeg execution.
