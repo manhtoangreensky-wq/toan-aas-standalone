@@ -1507,16 +1507,33 @@ def test_document_operation_sealed_download_releases_capacity_on_client_disconne
     )
     second_slot_reserved = False
 
+    # Starlette 0.27 listens for disconnect in a sibling AnyIO task and keeps
+    # reading until it sees ``http.disconnect``.  Returning ``http.request``
+    # synchronously here creates a tight loop that can starve the streaming
+    # task forever (newer Starlette takes a different ASGI >= 2.4 path).  Keep
+    # the receive side pending until the body send simulates the disconnect,
+    # which is representative of a real ASGI server on both supported
+    # Starlette generations.
+    send_failed = asyncio.Event()
+
     async def receive():
-        return {"type": "http.request"}
+        await send_failed.wait()
+        return {"type": "http.disconnect"}
 
     async def send(message):
         if message["type"] == "http.response.body" and message.get("body"):
+            send_failed.set()
             raise OSError("client disconnected")
 
     try:
-        with pytest.raises(ClientDisconnect):
+        # Starlette >= 1 maps the failed ASGI send to ClientDisconnect.  The
+        # 0.27 task-group implementation surfaces the same OSError wrapped in
+        # an exception group.  Both prove that delivery was interrupted; do
+        # not hide an unrelated framework or application failure.
+        with pytest.raises((ClientDisconnect, OSError, ExceptionGroup)) as interrupted:
             asyncio.run(response({"type": "http", "asgi": {"spec_version": "2.4"}}, receive, send))
+        if isinstance(interrupted.value, ExceptionGroup):
+            assert any(isinstance(error, OSError) for error in interrupted.value.exceptions)
         assert stream.closed is True
         operations._reserve_document_operation_download_capacity()
         second_slot_reserved = True
