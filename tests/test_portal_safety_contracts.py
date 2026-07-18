@@ -290,7 +290,10 @@ def test_mobile_workspace_dock_is_signed_session_only_and_navigation_only() -> N
     assert "function isMobileNavCurrent(key, page)" in PORTAL
     assert "function renderMobileNav(page)" in PORTAL
     dock = PORTAL[PORTAL.index("function renderMobileNav(page)"):PORTAL.index("function renderSidebar(page, context)")]
-    for label in ("Tổng quan", "AI Studio", "Jobs", "Tài sản", "Tài khoản"):
+    # The first item represents the authenticated workspace family, not only
+    # the dashboard.  This keeps the active-state label truthful on planning
+    # and authoring pages while preserving the same navigation-only contract.
+    for label in ("Workspace", "AI Studio", "Jobs", "Tài sản", "Tài khoản"):
         assert label in dock
     assert "fetch(" not in dock
     assert "dispatchAction(" not in dock
