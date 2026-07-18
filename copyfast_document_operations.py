@@ -1688,6 +1688,38 @@ def _normalized_ocr_text(value: Any) -> str:
     return cleaned + "\n"
 
 
+def _normalized_pdf_ocr_fragment(value: Any) -> str:
+    """Normalize one rendered PDF page without inventing a blank-page result.
+
+    A scanned PDF may legitimately contain pages with no readable text.  Those
+    pages are omitted from the private text artifact; only the aggregate needs
+    to contain real OCR text before it may be delivered.  This differs from
+    image OCR's one-input contract, where an empty result is terminal at once.
+    """
+
+    if not isinstance(value, str):
+        raise DocumentOperationError("OCR PDF không trả về văn bản hợp lệ", code="OCR_PARSE_FAILED")
+    cleaned = value.replace("\r\n", "\n").replace("\r", "\n").replace("\x00", "")
+    cleaned = "".join(character for character in cleaned if character in {"\n", "\t"} or ord(character) >= 32)
+    return "\n".join(line.rstrip() for line in cleaned.split("\n")).strip()
+
+
+def _pdf_ocr_remaining_timeout(deadline: float) -> float:
+    """Return the smaller per-page/global OCR budget or fail terminally."""
+
+    remaining = deadline - time.monotonic()
+    if remaining <= 0:
+        raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT")
+    # pytesseract supports a fractional per-invocation timeout. Do not keep
+    # the fixed 30-second window once the aggregate
+    # budget is nearly exhausted.
+    return min(float(PDF_OCR_PAGE_TIMEOUT_SECONDS), max(0.1, remaining))
+
+
+def _is_local_ocr_timeout(exc: Exception) -> bool:
+    """Normalize pytesseract's timeout exception without leaking its detail."""
+
+    return isinstance(exc, TimeoutError) or "timeout" in str(exc).casefold()
 def _build_image_ocr_output(
     root: Path,
     source_copy: Path,
@@ -2671,25 +2703,6 @@ def _build_pdf_to_images_output(root: Path, source_copy: Path) -> tuple[Path, st
         _safe_unlink(temporary_zip)
         for page_path in page_paths:
             _safe_unlink(page_path)
-
-
-def _pdf_ocr_remaining_timeout(deadline: float) -> float:
-    """Return a bounded per-page timeout or fail before extending work."""
-
-    remaining = deadline - time.monotonic()
-    if remaining <= 0:
-        raise DocumentOperationError("OCR PDF vượt quá thời gian xử lý an toàn", code="OCR_TIMEOUT")
-    return min(float(PDF_OCR_PAGE_TIMEOUT_SECONDS), max(0.1, remaining))
-
-
-def _is_local_ocr_timeout(exc: Exception) -> bool:
-    return isinstance(exc, TimeoutError) or "timeout" in str(exc).casefold()
-
-
-def _normalized_pdf_ocr_fragment(value: Any) -> str:
-    """Use the same strict non-empty page contract as bounded PDF OCR."""
-
-    return _normalized_ocr_text(value).rstrip()
 
 
 def _build_pdf_ocr_output_for_word(

@@ -12887,8 +12887,10 @@
       : "";
     const activity = `<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Job gần đây</h2><p class="portal-card-subtitle">Core Bridge kiểm tra ownership trước khi trả dữ liệu.</p></div><a class="portal-button portal-button--quiet" href="/jobs">Mở Job Center →</a></div>${renderRowsTable(["Job", "Tính năng", "Trạng thái", "Output engine"], jobs, (item) => `<td><a href="/jobs/${encodeURIComponent(item.id || "")}">${safeText(item.id || "—")}</a></td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${reportedOutput(item)}</td>`, "Chưa có hoạt động được xác minh", "Khi bạn có job hợp lệ, Core Bridge sẽ trả metadata canonical tại đây.")}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tài sản gần đây</h2><p class="portal-card-subtitle">Chỉ metadata riêng tư; output hợp lệ vẫn phải chờ delivery URL ký.</p></div><a class="portal-button portal-button--quiet" href="/assets">Mở tài sản →</a></div>${renderRowsTable(["Tài sản", "Tính năng", "Trạng thái", "Delivery"], assets, (item) => `<td>${assetJobLink(item)}</td><td>${safeText(item.feature || "—")}</td><td>${badge(jobStatus(item))}</td><td>${assetDeliveryState(item, "asset")}</td>`, "Chưa có asset metadata", "Không dùng placeholder để thay thế một output đã được xác minh.")}</section></div>`;
-    const assurance = `<details class="portal-dashboard-assurance"><summary><span>Trạng thái tích hợp và bảo mật</span><small>Chỉ đọc · không gọi provider hoặc payment từ browser</small></summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
-    return `<article class="portal-page portal-dashboard-app">${renderDashboardWorkspaceSummary(context)}${renderWorkspaceActionCenter(context)}${renderDashboardStartGuide(context)}${quickMetrics}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div>${renderStudioLaunchpad(context)}${assurance}${activity}</article>`;
+    // New accounts should see the next steps before the signed integration
+    // projection.  The cards remain read-only: they render only server-scoped
+    // status and never make provider, wallet, payment or job calls here.
+    return `<article class="portal-page portal-dashboard-app">${renderDashboardWorkspaceSummary(context)}${renderWorkspaceActionCenter(context)}${renderDashboardStartGuide(context)}<div class="portal-status-grid" aria-label="Trạng thái tích hợp và bảo mật">${renderStatusCard(page, context)}${renderSummary(page, context)}</div>${quickMetrics}<div class="portal-dashboard-library-grid">${renderDashboardRecentProjects(context)}${renderDashboardRecentDrafts(context)}</div>${renderStudioLaunchpad(context)}${activity}</article>`;
   }
 
   function renderWorkspaceActionCenter(context) {
@@ -19387,7 +19389,8 @@
     // Neither may remain in the generic tab-memory draft map while a server
     // receipt is pending or after it returns.  Their signed endpoints are
     // the only source of visible result state.
-    if (form && ["chat-run-submit", "image-brand-overlay"].includes(action)) clearTransientFormDraft(route);
+    if (form && action === "chat-run-submit") clearTransientFormDraft(route);
+    if (form && action === "image-brand-overlay") clearTransientFormDraft(route);
     const fields = collectFormFields(form);
     // The picker never stores selection outside the tab.  Pass its current
     // Asset Vault UUID choices only to the hydration action so selected rows
