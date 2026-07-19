@@ -110,6 +110,7 @@ async def dashboard():
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
+        "STORAGE_ADDON_CALLBACK_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -1381,6 +1382,111 @@ async def page(page_path):
     assert "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED" in contract
     assert "VIDEO_JOB_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Bot video-job stats can only open" in (
+        tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md"
+    ).read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_storage_addon_callbacks_in_the_bot_payment_boundary(tmp_path: Path) -> None:
+    """Storage quota purchase must never inherit the Xu top-up route."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    expected_callbacks = {
+        "storage|menu": (
+            "CANONICAL_BOT_STORAGE_ADDON_CATALOG",
+            "TELEGRAM_PAYMENT_CONTEXT",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "storage|custom": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_PENDING_STORAGE_INPUT",
+            "NO_RUNTIME_CLAIM",
+        ),
+    }
+    for callback, dispositions in expected_callbacks.items():
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "reviewed_storage_addon_telegram_only"
+        assert mapped["source_dispositions"] == list(dispositions)
+        assert "/wallet/topup" not in mapped["source_evidence"]
+
+    confirm = audit._map_callback_template("storage|confirm|{*}", evidence, routes)
+    assert confirm is not None
+    assert confirm["classification"] == "customer"
+    assert confirm["target"] == "TELEGRAM_ONLY"
+    assert confirm["status"] == "TELEGRAM_ONLY"
+    assert confirm["resolution"] == "bot_canonical_storage_addon_checkout"
+    assert confirm["source_dispositions"] == (
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_STORAGE_ORDER_REQUIRED",
+        "CANONICAL_BOT_PAYOS_CHECKOUT",
+        "CANONICAL_STORAGE_ENTITLEMENT_SETTLEMENT",
+        "NO_RUNTIME_CLAIM",
+    )
+    assert "canonical storage order and PayOS checkout" in confirm["source_evidence"]
+
+    unknown = audit._map_callback("storage|future|example", "callback_data", evidence, routes)
+    audit._annotate_feature_disposition(unknown)
+    assert unknown["target"] == "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unknown["fallback_family"] == "storage"
+    assert "CANONICAL_BOT_STORAGE_ADDON_SOURCE_REVIEW" in unknown["source_dispositions"]
+
+    unknown_template = audit._map_callback_template("storage|select|{*}", evidence, routes)
+    assert unknown_template is not None
+    assert unknown_template["target"] == "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED"
+    assert unknown_template["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+InlineKeyboardButton("Storage menu", callback_data="storage|menu")
+InlineKeyboardButton("Custom", callback_data="storage|custom")
+code = "100mb"
+InlineKeyboardButton("Confirm", callback_data=f"storage|confirm|{code}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/{page_path:path}")
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    report_callbacks = {
+        item["source"]: item for item in result["parity_gap"]["callback_mappings"]
+    }
+    assert all(
+        report_callbacks[callback]["target"] == "TELEGRAM_ONLY"
+        and report_callbacks[callback]["status"] == "TELEGRAM_ONLY"
+        for callback in expected_callbacks
+    )
+    report_templates = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_template_mappings"]
+    }
+    assert report_templates["storage|confirm|{*}"]["target"] == "TELEGRAM_ONLY"
+    assert "storage" not in {
+        item["family"] for item in result["parity_gap"]["feature_disposition_backlog"]
+    }
+    contract = (tmp_path / "docs" / "STORAGE_ADDON_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "storage\\|custom" in contract
+    assert "storage\\|confirm\\|{*}" in contract
+    assert "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED" in contract
+    assert "STORAGE_ADDON_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Storage quota add-on purchase is distinct from Xu top-up" in (
         tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md"
     ).read_text(encoding="utf-8")
 
