@@ -260,6 +260,11 @@
   // must never cross a logout, account switch, route change or refresh.
   let accountSecuritySessionEpoch = 0;
   let accountSecurityHydrationEpoch = 0;
+  // Workspace Setup is a signed-account preference profile. Keep its own
+  // session/request fence so a delayed response cannot cross a logout,
+  // account switch, dashboard navigation or a newer setup refresh.
+  let workspaceSetupSessionEpoch = 0;
+  let workspaceSetupHydrationEpoch = 0;
   // Data Control Center reads authoring inventory and erasure-review metadata
   // owned by the signed Web account. Keep it isolated from the Bot privacy
   // flow and fence it against logout, account switches, route changes and a
@@ -804,6 +809,94 @@
 
   function featureFingerprint(value) {
     return JSON.stringify(stableValue(value && typeof value === "object" ? value : {}));
+  }
+
+  // Mirror the server's closed vocabulary before a response can reach the
+  // page state. This is defense in depth for a small Web-owned preference
+  // profile; it does not cache, infer or import any Bot/canonical identity.
+  const WORKSPACE_SETUP_STATES = new Set(["not_started", "completed", "skipped"]);
+  const WORKSPACE_SETUP_ROLES = new Set(["solo_creator", "team_lead", "operator", "learner"]);
+  const WORKSPACE_SETUP_GOALS = new Set(["organize_work", "create_content", "build_brand", "run_operations", "learn_workflows"]);
+  const WORKSPACE_SETUP_EXPERIENCE = new Set(["new", "growing", "advanced"]);
+  const WORKSPACE_SETUP_FOCUS = new Set(["projects", "content", "image", "voice", "music", "subtitle", "documents", "automation"]);
+  const WORKSPACE_SETUP_BOUNDARY_FALSE_FIELDS = [
+    "bot_called", "bridge_called", "provider_called", "job_created", "wallet_mutated",
+    "payment_started", "publish_action_created", "notification_sent"
+  ];
+
+  function workspaceSetupEmptyProfile() {
+    return { setup_state: "not_started", role: "", goal: "", experience: "", focus_areas: [], revision: 0, completed_at: "", updated_at: "" };
+  }
+
+  function workspaceSetupTimestamp(value) {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text && text.length <= 64 && !/[\u0000-\u001f\u007f]/.test(text) && Number.isFinite(Date.parse(text)) ? text : "";
+  }
+
+  function workspaceSetupProfileProjection(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const focusSeen = new Set();
+    const focusAreas = Array.isArray(source.focus_areas)
+      ? source.focus_areas.map((item) => String(item || "").trim().toLowerCase())
+        .filter((item) => WORKSPACE_SETUP_FOCUS.has(item) && !focusSeen.has(item) && focusSeen.add(item)).slice(0, 3)
+      : [];
+    const revision = Number.isSafeInteger(source.revision) && source.revision >= 0 && source.revision <= 2147483647
+      ? source.revision
+      : 0;
+    return {
+      setup_state: WORKSPACE_SETUP_STATES.has(String(source.setup_state || "")) ? String(source.setup_state) : "not_started",
+      role: WORKSPACE_SETUP_ROLES.has(String(source.role || "")) ? String(source.role) : "",
+      goal: WORKSPACE_SETUP_GOALS.has(String(source.goal || "")) ? String(source.goal) : "",
+      experience: WORKSPACE_SETUP_EXPERIENCE.has(String(source.experience || "")) ? String(source.experience) : "",
+      focus_areas: focusAreas,
+      revision,
+      completed_at: workspaceSetupTimestamp(source.completed_at),
+      updated_at: workspaceSetupTimestamp(source.updated_at)
+    };
+  }
+
+  function workspaceSetupProfileIsConsistent(profile) {
+    const source = profile && typeof profile === "object" && !Array.isArray(profile) ? profile : workspaceSetupEmptyProfile();
+    const noChoices = !source.role && !source.goal && !source.experience && Array.isArray(source.focus_areas) && source.focus_areas.length === 0;
+    if (source.setup_state === "not_started") return noChoices && source.revision === 0 && !source.completed_at;
+    if (source.setup_state === "skipped") return noChoices && source.revision >= 1 && !source.completed_at && Boolean(source.updated_at);
+    return source.setup_state === "completed"
+      && WORKSPACE_SETUP_ROLES.has(source.role)
+      && WORKSPACE_SETUP_GOALS.has(source.goal)
+      && WORKSPACE_SETUP_EXPERIENCE.has(source.experience)
+      && Array.isArray(source.focus_areas) && source.focus_areas.length >= 1 && source.focus_areas.length <= 3
+      && Boolean(source.completed_at) && Boolean(source.updated_at);
+  }
+
+  function workspaceSetupBoundaryIsSafe(raw, profile) {
+    const boundary = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const persisted = Boolean(profile && profile.setup_state && profile.setup_state !== "not_started");
+    return boundary.execution === "web_native_workspace_setup_profile"
+      && boundary.profile_persisted === persisted
+      && WORKSPACE_SETUP_BOUNDARY_FALSE_FIELDS.every((field) => boundary[field] === false);
+  }
+
+  function workspaceSetupProjection(raw, readState) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const profile = workspaceSetupProfileProjection(source.profile);
+    // A malformed or out-of-scope response must not quietly become a usable
+    // browser preference profile. Keep the page guarded until the signed
+    // source can be read again with the explicit Web-native boundary.
+    if (readState === "read_only" && (!workspaceSetupProfileIsConsistent(profile) || !workspaceSetupBoundaryIsSafe(source.boundary, profile))) {
+      return workspaceSetupProjection({}, "guarded");
+    }
+    const locale = String(source.preferences && source.preferences.locale || "vi").trim().toLowerCase();
+    const timezone = String(source.preferences && source.preferences.timezone || "Asia/Ho_Chi_Minh").trim();
+    return {
+      profile,
+      preferences: {
+        locale: ["vi", "en"].includes(locale) ? locale : "vi",
+        timezone: /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+)$/.test(timezone) && timezone.length <= 64
+          ? timezone
+          : "Asia/Ho_Chi_Minh"
+      },
+      readState: ["loading", "read_only", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded"
+    };
   }
 
   function priorFeatureFlow(route) {
@@ -8899,6 +8992,7 @@
     ++notificationSessionEpoch;
     ++accountActivitySessionEpoch;
     ++accountSecuritySessionEpoch;
+    ++workspaceSetupSessionEpoch;
     ++dataControlsSessionEpoch;
     ++governanceDocumentsSessionEpoch;
     ++governanceDocumentsHydrationEpoch;
@@ -9235,6 +9329,11 @@
       "account-security-revoke-others": Boolean(account && me.csrf_token),
       "account-security-password-change": Boolean(account && me.csrf_token),
       "account-security-oauth-unlink": Boolean(account && me.csrf_token),
+      // Workspace Setup is independently Web-native and only controls its
+      // own preference profile. The server repeats signed-session, CSRF,
+      // account ownership, revision and idempotency checks on every write.
+      "workspace-setup-view": Boolean(account),
+      "workspace-setup-save": Boolean(account && me.csrf_token),
       // SMTP availability is projected separately by the signed server. This
       // only enables the explicit consent control; it never claims delivery.
       "account-security-email-verification": Boolean(account && me.csrf_token),
@@ -9800,6 +9899,11 @@
       // never a bridge fallback. Clear both before their signed reads start.
       accountActivity: [],
       accountSecurity: { sessions: [], loginMethods: {}, mfa: accountSecurityMfaProjection({}), readState: account ? "loading" : "guarded" },
+      // Clear the first-run preference projection on every signed bootstrap.
+      // A failed read must never leave another account's chosen studios or
+      // revision on screen, and no browser-derived default is treated as a
+      // saved profile.
+      workspaceSetup: workspaceSetupProjection({}, account ? "loading" : "guarded"),
       // Data Controls gets a blank, narrow projection on every bootstrap. A
       // failed/new session must never retain another account's inventory or
       // erasure-review receipt, and nothing falls back to the Bot flow.
@@ -10846,6 +10950,7 @@
     // Dashboard is a real signed workspace now, so it may show the same
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
     // the Bot bridge and cannot create a job, quote, payment or provider task.
+    if (account && ["/workspace/setup", "/dashboard"].includes(currentPath)) await hydrateWorkspaceSetup();
     if (account && ["/workspace", "/dashboard"].includes(currentPath)) await hydrateWorkspaceDrafts();
     if (account && linkChallengeRoute()) {
       const linkStatus = await hydrateLinkStatus();
@@ -15332,6 +15437,123 @@
     }
   }
 
+  function workspaceSetupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === workspaceSetupHydrationEpoch
+      && sessionEpoch === workspaceSetupSessionEpoch
+      && currentPortalPath() === expectedPath
+      && ["/workspace/setup", "/dashboard"].includes(expectedPath)
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateWorkspaceSetup() {
+    const requestEpoch = ++workspaceSetupHydrationEpoch;
+    const sessionEpoch = workspaceSetupSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!["/workspace/setup", "/dashboard"].includes(expectedPath)) return null;
+    try {
+      const result = await api("/workspace/setup");
+      if (!workspaceSetupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const setup = workspaceSetupProjection(result.data, "read_only");
+      if (!workspaceSetupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        workspaceSetup: setup,
+        pageStates: expectedPath === "/workspace/setup"
+          ? { ...(base().pageStates || {}), [expectedPath]: "read_only" }
+          : base().pageStates
+      });
+      return setup;
+    } catch (_) {
+      // Do not retain preferences from a prior account or manufacture a
+      // browser-only first-run profile when the server-owned read fails.
+      if (!workspaceSetupRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        workspaceSetup: workspaceSetupProjection({}, "guarded"),
+        pageStates: expectedPath === "/workspace/setup"
+          ? { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+          : base().pageStates
+      });
+      return null;
+    }
+  }
+
+  function workspaceSetupCurrentRevision() {
+    const profile = base().workspaceSetup && base().workspaceSetup.profile && typeof base().workspaceSetup.profile === "object"
+      ? base().workspaceSetup.profile
+      : {};
+    const revision = profile.revision;
+    return Number.isSafeInteger(revision) && revision >= 0 && revision <= 2147483647 ? revision : null;
+  }
+
+  function workspaceSetupPayload(fields, intent) {
+    const normalizedIntent = intent === "skip" ? "skip" : "complete";
+    const expectedRevision = workspaceSetupCurrentRevision();
+    if (expectedRevision === null) throw new Error("Phiên bản thiết lập Workspace không còn hợp lệ. Hãy tải lại trang.");
+    if (normalizedIntent === "skip") {
+      return { intent: "skip", role: "", goal: "", experience: "", focus_areas: [], expected_revision: expectedRevision };
+    }
+    const role = String(fields.role || "").trim();
+    const goal = String(fields.goal || "").trim();
+    const experience = String(fields.experience || "").trim();
+    const focusAreas = [...WORKSPACE_SETUP_FOCUS].filter((key) => fields[`focus_${key}`] === true);
+    if (!WORKSPACE_SETUP_ROLES.has(role) || !WORKSPACE_SETUP_GOALS.has(goal) || !WORKSPACE_SETUP_EXPERIENCE.has(experience)) {
+      throw new Error("Hãy chọn vai trò, mục tiêu và mức trải nghiệm hợp lệ.");
+    }
+    if (!focusAreas.length || focusAreas.length > 3) {
+      throw new Error("Hãy chọn từ một đến ba nhóm studio ưu tiên.");
+    }
+    return { intent: "complete", role, goal, experience, focus_areas: focusAreas, expected_revision: expectedRevision };
+  }
+
+  async function saveWorkspaceSetup({ action, route, fields, intent }) {
+    if (route !== "/workspace/setup" || currentPortalPath() !== "/workspace/setup") {
+      throw new Error("Thiết lập chỉ được lưu từ trang Workspace Setup hiện tại.");
+    }
+    if (!(base().capabilities && base().capabilities["workspace-setup-save"] === true)) {
+      throw new Error("Cần signed Web session và CSRF hợp lệ để lưu thiết lập Workspace.");
+    }
+    const payload = workspaceSetupPayload(fields, intent);
+    const scope = `workspace-setup:${payload.expected_revision}:${payload.intent}`;
+    const submission = acquireSubmission(scope, featureFingerprint(payload));
+    if (!submission) {
+      toast("Thiết lập Workspace đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      return;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api("/workspace/setup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      if (workspaceSetupProjection(result.data, "read_only").readState !== "read_only") {
+        throw new Error("Máy chủ trả thiết lập Workspace không đúng phạm vi an toàn. Hãy tải lại trước khi tiếp tục.");
+      }
+      const setup = await hydrateWorkspaceSetup();
+      // A delayed save must not pull someone back from another Studio after
+      // they intentionally navigated away. The server receipt remains safe
+      // and idempotent, but this tab should not decide their next route.
+      if (currentPortalPath() !== "/workspace/setup") return;
+      if (!setup && currentPortalPath() === "/workspace/setup") {
+        throw new Error("Máy chủ đã nhận yêu cầu nhưng Portal chưa tải lại được thiết lập an toàn. Hãy tải lại trước khi tiếp tục.");
+      }
+      toast(result.message || "Đã lưu thiết lập Workspace.");
+      window.location.assign("/dashboard");
+    } catch (error) {
+      acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      // A received HTTP response may have committed the write even when the
+      // client rejects its schema or refresh fails. Re-read the signed source;
+      // a network ambiguity intentionally keeps the same idempotency key.
+      if (acknowledged && currentPortalPath() === "/workspace/setup") await hydrateWorkspaceSetup();
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
   function workspaceDraftRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
     return requestEpoch === workspaceDraftHydrationEpoch
       && sessionEpoch === workspaceDraftSessionEpoch
@@ -17030,6 +17252,31 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "workspace-setup-refresh") {
+        if (route !== "/workspace/setup" || currentPortalPath() !== "/workspace/setup") {
+          throw new Error("Chỉ có thể tải lại thiết lập từ trang Workspace Setup hiện tại.");
+        }
+        if (!(base().capabilities && base().capabilities["workspace-setup-view"] === true)) {
+          throw new Error("Cần signed Web session để xem thiết lập Workspace.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const setup = await hydrateWorkspaceSetup();
+          if (!setup) throw new Error("Không thể tải thiết lập Workspace owner-scoped. Hãy thử lại.");
+          toast("Đã tải lại thiết lập Workspace từ server.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "workspace-setup-save") {
+        await saveWorkspaceSetup({ action, route, fields, intent: "complete" });
+        return;
+      }
+      if (action === "workspace-setup-skip") {
+        await saveWorkspaceSetup({ action, route, fields: {}, intent: "skip" });
+        return;
+      }
       if (["campaign-calendar-filter", "campaign-calendar-month", "campaign-calendar-refresh"].includes(action)) {
         if (route !== "/calendar" || currentPortalPath() !== "/calendar") {
           throw new Error("Calendar chỉ nhận thao tác từ trang Calendar của signed Web session.");

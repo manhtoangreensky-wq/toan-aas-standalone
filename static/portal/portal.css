@@ -3538,6 +3538,48 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-onboarding-assurance { display: block; }
 .portal-onboarding-assurance > .portal-status-grid, .portal-onboarding-assurance > .portal-panel-list { margin: 0 14px 14px; }
 
+/* First-run preferences belong inside the signed application shell. Keep the
+   same dense dark-slate/teal system as the Workspace; this is not a landing
+   hero or an authority-grant flow. */
+.portal-workspace-setup { max-width: 1040px; }
+.portal-workspace-setup > .portal-hero { margin-bottom: 2px; }
+.portal-workspace-setup-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.portal-workspace-setup-steps li { display: flex; gap: 12px; align-items: flex-start; min-height: 92px; padding: 15px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius); background: var(--portal-surface); transition: border-color .18s ease, background .18s ease; }
+.portal-workspace-setup-steps li > span { display: grid; width: 30px; height: 30px; flex: 0 0 30px; place-items: center; border: 1px solid var(--portal-border); border-radius: 50%; color: var(--portal-muted); font-size: 12px; font-weight: 850; }
+.portal-workspace-setup-steps li div { display: grid; gap: 4px; min-width: 0; }
+.portal-workspace-setup-steps strong { color: var(--portal-text); font-size: 13px; line-height: 1.35; }
+.portal-workspace-setup-steps small { color: var(--portal-muted); font-size: 12px; line-height: 1.5; }
+.portal-workspace-setup-steps li[data-state="done"] { border-color: var(--portal-border-strong); background: rgba(81, 213, 188, .07); }
+.portal-workspace-setup-steps li[data-state="done"] > span { border-color: var(--portal-accent); color: var(--portal-accent); }
+.portal-workspace-setup-steps li[data-state="done"] .portal-icon { width: 15px; height: 15px; }
+.portal-workspace-setup-context { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; align-items: start; padding: 20px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-lg); background: var(--portal-surface-strong); }
+.portal-workspace-setup-context h2 { margin: 5px 0 6px; color: var(--portal-text); font-size: clamp(21px, 2.7vw, 29px); letter-spacing: -.035em; }
+.portal-workspace-setup-context p { max-width: 680px; margin: 0; color: var(--portal-muted-strong); }
+.portal-workspace-setup-context-meta { display: flex; grid-column: 1 / -1; flex-wrap: wrap; gap: 8px; }
+.portal-workspace-setup-context-meta span { display: inline-flex; gap: 7px; align-items: center; min-height: 32px; padding: 6px 10px; border: 1px solid var(--portal-border); border-radius: 999px; color: var(--portal-muted-strong); font-size: 12px; font-weight: 750; }
+.portal-workspace-setup-context-meta .portal-icon { width: 15px; height: 15px; color: var(--portal-accent); }
+.portal-workspace-setup-form { display: grid; gap: 18px; padding: 22px; border: 1px solid var(--portal-border); border-radius: var(--portal-radius-lg); background: var(--portal-surface); }
+.portal-workspace-setup-form .portal-select, .portal-workspace-setup-form .portal-button { min-height: 44px; }
+.portal-workspace-setup-form-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; }
+.portal-workspace-setup-focus { min-width: 0; margin: 0; padding: 0; border: 0; }
+.portal-workspace-setup-focus > legend { padding: 0; color: var(--portal-text); font-size: 15px; font-weight: 800; }
+.portal-workspace-setup-focus > p { margin: 6px 0 12px; color: var(--portal-muted); font-size: 13px; line-height: 1.55; }
+.portal-workspace-setup-focus > .portal-workspace-setup-focus-status { min-height: 20px; margin: -4px 0 12px; color: var(--portal-accent); font-size: 12px; font-weight: 750; }
+.portal-workspace-setup-focus-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.portal-workspace-setup-focus-card { display: grid; grid-template-columns: 20px 36px minmax(0, 1fr); gap: 10px; align-items: center; min-height: 78px; padding: 12px; border: 1px solid var(--portal-border); border-radius: 12px; background: rgba(7, 14, 22, .22); color: var(--portal-text); cursor: pointer; transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.portal-workspace-setup-focus-card:hover { border-color: rgba(81, 213, 188, .44); background: rgba(81, 213, 188, .06); transform: translateY(-1px); }
+.portal-workspace-setup-focus-card:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px rgba(81, 213, 188, .16); outline: 0; }
+.portal-workspace-setup-focus-card:has(input:checked) { border-color: var(--portal-border-strong); background: rgba(81, 213, 188, .09); }
+.portal-workspace-setup-focus-card input { width: 20px; height: 20px; margin: 0; accent-color: var(--portal-accent); }
+.portal-workspace-setup-focus-card input:disabled { cursor: not-allowed; }
+.portal-workspace-setup-focus-card:has(input:disabled) { cursor: not-allowed; opacity: .62; }
+.portal-workspace-setup-focus-icon { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--portal-border); border-radius: 10px; color: var(--portal-accent); background: rgba(81, 213, 188, .08); }
+.portal-workspace-setup-focus-icon .portal-icon { width: 18px; height: 18px; }
+.portal-workspace-setup-focus-card > span:last-child { display: grid; gap: 3px; min-width: 0; }
+.portal-workspace-setup-focus-card strong { color: var(--portal-text); font-size: 13px; line-height: 1.35; }
+.portal-workspace-setup-focus-card small { color: var(--portal-muted); font-size: 12px; line-height: 1.4; }
+.portal-workspace-setup-secondary { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+
 @media (max-width: 980px) {
   .portal-auth-page { grid-template-columns: 1fr; width: min(680px, 100%); gap: 20px; padding-top: 72px; }
   .portal-auth-intro { max-width: none; padding: 0; }
@@ -3560,6 +3602,14 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-onboarding-steps li { min-height: 0; }
   .portal-onboarding-choice { grid-template-columns: 36px minmax(0, 1fr); align-items: start; }
   .portal-onboarding-choice .portal-button { grid-column: 2; justify-self: start; }
+  .portal-workspace-setup-steps { grid-template-columns: 1fr; }
+  .portal-workspace-setup-steps li { min-height: 0; }
+  .portal-workspace-setup-context { grid-template-columns: 1fr; padding: 18px; }
+  .portal-workspace-setup-context > .portal-status-badge { justify-self: start; }
+  .portal-workspace-setup-form { padding: 18px; }
+  .portal-workspace-setup-form-grid, .portal-workspace-setup-focus-grid { grid-template-columns: 1fr; }
+  .portal-workspace-setup-focus-card { min-height: 76px; }
+  .portal-workspace-setup-secondary .portal-button { min-height: 44px; flex: 1 1 180px; justify-content: center; }
 }
 
 .portal-settings-nav {

@@ -56,6 +56,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`FRAME_VIDEO_LAB_CONTRACT.md`](FRAME_VIDEO_LAB_CONTRACT.md) — disabled-by-default, bounded private image-sequence H.264 MP4 output from Asset Vault images.
 - [`VIDEO_FINISHING_LAB_CONTRACT.md`](VIDEO_FINISHING_LAB_CONTRACT.md) — disabled-by-default, bounded private MP4 reframe/preset/sharpen transform from one owned Asset Vault MP4; not Video Studio, a Bot job, provider, wallet/Xu or PayOS flow.
 - [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.
+- [`WORKSPACE_SETUP_PROFILE_CONTRACT.md`](WORKSPACE_SETUP_PROFILE_CONTRACT.md) — signed Web-native first-run preferences with revision, CSRF, bounded receipts and no Bot/provider/payment behavior.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.
