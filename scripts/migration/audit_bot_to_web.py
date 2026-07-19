@@ -561,9 +561,11 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "docflow": {
         "priority": "P1",
-        "candidate_boundary": "/documents",
-        "authority": "Web-native private document operations",
-        "next_contract": "Map document selection/confirmation only to validated Asset Vault-backed operations; preserve output validation and private delivery constraints.",
+        "candidate_boundary": "/document-workspace + independent /documents/* tools",
+        "authority": "Bot pending state remains Bot-owned; Web tools are independently Web-native",
+        "next_contract": "Keep every docflow callback as a source disposition until a finite, owner-scoped Web handoff is proven. A document plan may link to a fresh Asset Vault-backed tool, but must not transfer Telegram pending files, page choices, compression profile, confirmation, execution, charge or delivery state.",
+        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot `handle_doc_tool_callback` reads and mutates USER_PENDING document files/options, can request page ranges, select Bot compression labels, and runs local execution/delivery after the Bot confirmation path. A Web navigation link is not a replay of that state machine.",
     },
     "archive": {
         "priority": "P1",
@@ -681,6 +683,98 @@ DEFAULT_FALLBACK_FEATURE_DISPOSITION: dict[str, Any] = {
     "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
     "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
     "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+}
+
+# ``docflow`` is a single Telegram dispatcher family, but its finite values
+# do not have one browser meaning.  Keep the detail here rather than allowing
+# the generic keyword router to label a profile/confirmation as a Web feature.
+# All of these records intentionally remain NEEDS_FEATURE_DISPOSITION: the
+# metadata clarifies a source boundary; it does not increase Web coverage.
+DOCFLOW_CALLBACK_DISPOSITIONS: dict[str, dict[str, Any]] = {
+    "docflow|send_more": {
+        "target": "/document-workspace",
+        "resolution": "docflow_pending_file_collection_not_web_handoff",
+        "source_dispositions": ("TELEGRAM_PENDING_FILE_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot asks for another Telegram attachment and retains it in USER_PENDING. Web Document Workspace never accepts or transfers that file slot.",
+    },
+    "docflow|reset_files": {
+        "target": "/document-workspace",
+        "resolution": "docflow_pending_file_reset_not_web_handoff",
+        "source_dispositions": ("TELEGRAM_PENDING_FILE_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot clears pending Telegram files/options before collecting a new source. Web navigation must not mutate Bot state or inherit its files.",
+    },
+    "docflow|pop": {
+        "target": "/document-workspace",
+        "resolution": "docflow_pending_file_pop_not_web_handoff",
+        "source_dispositions": ("TELEGRAM_PENDING_FILE_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot removes the latest pending Telegram file. Web has no access to the Bot file list and uses independent Asset Vault selection.",
+    },
+    "docflow|clear": {
+        "target": "/document-workspace",
+        "resolution": "docflow_pending_file_clear_not_web_handoff",
+        "source_dispositions": ("TELEGRAM_PENDING_FILE_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot clears its pending document list/options. This is not a browser document operation or asset mutation.",
+    },
+    "docflow|ask_pages": {
+        "target": "/documents/split",
+        "resolution": "docflow_page_prompt_requires_fresh_web_input",
+        "source_dispositions": ("TELEGRAM_PENDING_PAGE_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot enters a page-range prompt against its pending Telegram PDF. The Web split tool requires a fresh owner-scoped source and independently entered page range.",
+    },
+    "docflow|back": {
+        "target": "/document-workspace",
+        "resolution": "docflow_bot_navigation_not_web_state_transfer",
+        "source_dispositions": ("TELEGRAM_MESSAGE_NAVIGATION", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
+    },
+    "docflow|back_received": {
+        "target": "/document-workspace",
+        "resolution": "docflow_bot_navigation_not_web_state_transfer",
+        "source_dispositions": ("TELEGRAM_MESSAGE_NAVIGATION", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot redraws the pending-file summary. Web does not receive or render that Telegram file state.",
+    },
+    "docflow|main": {
+        "target": "/document-workspace",
+        "resolution": "docflow_bot_navigation_not_web_state_transfer",
+        "source_dispositions": ("TELEGRAM_MESSAGE_NAVIGATION", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot clears its document flow and returns to the Telegram main menu. The Web route starts a separate signed session surface.",
+    },
+    "docflow|compress|light": {
+        "target": "/documents/compress",
+        "resolution": "docflow_compression_profile_semantics_mismatch",
+        "source_dispositions": ("PROFILE_SEMANTICS_MISMATCH", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot records the label Nén nhẹ on a pending Telegram PDF. Web PDF Optimize has one verified structural profile and must not claim to reproduce Bot light/medium/strong choices.",
+    },
+    "docflow|compress|medium": {
+        "target": "/documents/compress",
+        "resolution": "docflow_compression_profile_semantics_mismatch",
+        "source_dispositions": ("PROFILE_SEMANTICS_MISMATCH", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot records the label Nén vừa on a pending Telegram PDF. Web PDF Optimize has one verified structural profile and must not claim to reproduce Bot light/medium/strong choices.",
+    },
+    "docflow|compress|strong": {
+        "target": "/documents/compress",
+        "resolution": "docflow_compression_profile_semantics_mismatch",
+        "source_dispositions": ("PROFILE_SEMANTICS_MISMATCH", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot records the label Nén mạnh on a pending Telegram PDF. Web PDF Optimize has one verified structural profile and must not claim to reproduce Bot light/medium/strong choices.",
+    },
+    "docflow|confirm": {
+        "target": "BOT_PENDING_CONFIRMATION_REQUIRED",
+        "resolution": "docflow_confirmation_not_web_execution",
+        "source_dispositions": ("TELEGRAM_PENDING_CONFIRMATION", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot validates pending files/options and builds a Telegram confirmation. It is not an owner-scoped Web execution, payment or delivery confirmation.",
+    },
+    "docflow|run": {
+        "target": "BOT_PENDING_EXECUTION_REQUIRED",
+        "resolution": "docflow_execution_delivery_not_web_runtime",
+        "source_dispositions": ("BOT_EXECUTION_DELIVERY_BOUNDARY", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot runs its pending document flow, performs delivery checks and may charge only under Bot rules. Web must not replay this action from a plan or callback.",
+    },
+}
+DOCFLOW_DEFAULT_DISPOSITION: dict[str, Any] = {
+    "target": "SOURCE_STATE_MACHINE_REQUIRED",
+    "resolution": "unreviewed_docflow_source_state_machine",
+    "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+    "source_evidence": "A docflow callback needs handler-level state review before any Web navigation or execution claim.",
 }
 
 # These public Bot commands can contain words such as ``factory`` or mention
@@ -2258,6 +2352,29 @@ def _map_unreferenced_static_record(record: dict[str, Any], source_kind: str) ->
     }
 
 
+def _map_docflow_callback(identifier: str, source_kind: str, evidence: dict[str, Any]) -> dict[str, Any]:
+    """Record a finite Bot document-flow state without inventing Web parity.
+
+    The target is a review boundary or a clean Web starting point, never a
+    callback payload, pending Telegram file, browser execution endpoint or
+    claim that the corresponding Document Operation has run.
+    """
+
+    token = str(identifier or "").casefold()
+    policy = DOCFLOW_CALLBACK_DISPOSITIONS.get(token, DOCFLOW_DEFAULT_DISPOSITION)
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": str(policy["target"]),
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": str(policy["resolution"]),
+        "source_dispositions": [str(value) for value in policy["source_dispositions"]],
+        "source_evidence": str(policy["source_evidence"]),
+        "evidence": evidence,
+    }
+
+
 def _partition_unreferenced_module_records(
     records: Iterable[dict[str, Any]],
     unreferenced_files: set[str],
@@ -2276,6 +2393,8 @@ def _partition_unreferenced_module_records(
 
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
+    if token.startswith("docflow|"):
+        return _map_docflow_callback(identifier, source_kind, evidence)
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
     dashboard_fallback = False
@@ -2947,9 +3066,13 @@ def _annotate_feature_disposition(item: dict[str, Any]) -> dict[str, Any]:
     item["fallback_family"] = family
     source_dispositions = [str(value) for value in policy.get("source_dispositions", ())]
     source_evidence = str(policy.get("source_evidence") or "")
-    if source_dispositions:
+    # A finite source family such as docflow can carry stricter per-token
+    # evidence than its backlog-level default.  Preserve that detail so a
+    # generic family policy cannot erase a semantic mismatch or Bot-state
+    # boundary during report generation.
+    if source_dispositions and not item.get("source_dispositions"):
         item["source_dispositions"] = source_dispositions
-    if source_evidence:
+    if source_evidence and not item.get("source_evidence"):
         item["source_evidence"] = source_evidence
     return item
 
@@ -3328,6 +3451,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`CALLBACK_HANDLER_DISPATCH_MAP.md`](CALLBACK_HANDLER_DISPATCH_MAP.md) — Bot callback dispatcher registrations, their source provenance and why they are not browser actions.\n"
         + "- [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.\n"
         + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
+        + "- [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"

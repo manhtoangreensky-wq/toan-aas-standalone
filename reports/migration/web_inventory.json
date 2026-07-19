@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 1645,
+      "line": 1739,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -2045,7 +2045,7 @@
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 892,
+      "line": 997,
       "operation": "INSERT INTO",
       "table": "web_document_plan_versions"
     },
@@ -2057,37 +2057,37 @@
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 860,
+      "line": 965,
       "operation": "INSERT INTO",
       "table": "web_document_plans"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 887,
+      "line": 992,
       "operation": "UPDATE",
       "table": "web_document_plans"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 920,
+      "line": 1025,
       "operation": "UPDATE",
       "table": "web_document_plans"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 925,
+      "line": 1030,
       "operation": "UPDATE",
       "table": "web_document_plans"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 1728,
+      "line": 1833,
       "operation": "UPDATE",
       "table": "web_document_plans"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 1735,
+      "line": 1840,
       "operation": "UPDATE",
       "table": "web_document_plans"
     },
@@ -2099,7 +2099,7 @@
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 941,
+      "line": 1046,
       "operation": "INSERT INTO",
       "table": "web_document_workspace_events"
     },
@@ -2111,7 +2111,7 @@
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 850,
+      "line": 955,
       "operation": "INSERT INTO",
       "table": "web_document_workspace_versions"
     },
@@ -2123,13 +2123,13 @@
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 817,
+      "line": 922,
       "operation": "INSERT INTO",
       "table": "web_document_workspaces"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 834,
+      "line": 939,
       "operation": "UPDATE",
       "table": "web_document_workspaces"
     },
@@ -2597,13 +2597,13 @@
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 440,
+      "line": 524,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_document_workspace.py",
-      "line": 468,
+      "line": 552,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -6642,7 +6642,7 @@
         "docs/migration/ADMIN_DOMAIN_CENTERS_CONTRACT.md",
         "docs/migration/ADMIN_ERP_MAP.md"
       ],
-      "occurrences": 677,
+      "occurrences": 678,
       "provider": "PayOS"
     },
     {
@@ -6869,7 +6869,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1396,
+      "occurrences": 1425,
       "provider": "Telegram"
     }
   ],
@@ -8605,7 +8605,7 @@
     {
       "endpoint": "document_workspace_events",
       "file": "copyfast_document_workspace.py",
-      "line": 1794,
+      "line": 1899,
       "methods": [
         "GET"
       ],
@@ -8839,7 +8839,7 @@
     {
       "endpoint": "document_workspace_history",
       "file": "copyfast_document_workspace.py",
-      "line": 1806,
+      "line": 1911,
       "methods": [
         "GET"
       ],
@@ -9748,7 +9748,7 @@
     {
       "endpoint": "document_workspace_policy",
       "file": "copyfast_document_workspace.py",
-      "line": 511,
+      "line": 615,
       "methods": [
         "GET"
       ],
@@ -10324,7 +10324,7 @@
     {
       "endpoint": "document_workspace_references",
       "file": "copyfast_document_workspace.py",
-      "line": 1115,
+      "line": 1220,
       "methods": [
         "GET"
       ],
@@ -10891,7 +10891,7 @@
     {
       "endpoint": "document_workspace_summary",
       "file": "copyfast_document_workspace.py",
-      "line": 502,
+      "line": 606,
       "methods": [
         "GET"
       ],
@@ -11944,7 +11944,7 @@
     {
       "endpoint": "document_workspaces",
       "file": "copyfast_document_workspace.py",
-      "line": 1124,
+      "line": 1229,
       "methods": [
         "GET"
       ],
@@ -11953,7 +11953,7 @@
     {
       "endpoint": "document_workspace_create",
       "file": "copyfast_document_workspace.py",
-      "line": 1197,
+      "line": 1302,
       "methods": [
         "POST"
       ],
@@ -11962,7 +11962,7 @@
     {
       "endpoint": "document_workspace_detail",
       "file": "copyfast_document_workspace.py",
-      "line": 1185,
+      "line": 1290,
       "methods": [
         "GET"
       ],
@@ -11971,7 +11971,7 @@
     {
       "endpoint": "document_workspace_update",
       "file": "copyfast_document_workspace.py",
-      "line": 1233,
+      "line": 1338,
       "methods": [
         "PATCH"
       ],
@@ -11980,7 +11980,7 @@
     {
       "endpoint": "document_workspace_estimate",
       "file": "copyfast_document_workspace.py",
-      "line": 1760,
+      "line": 1865,
       "methods": [
         "GET"
       ],
@@ -11989,7 +11989,7 @@
     {
       "endpoint": "document_workspace_lifecycle",
       "file": "copyfast_document_workspace.py",
-      "line": 1277,
+      "line": 1382,
       "methods": [
         "POST"
       ],
@@ -11998,7 +11998,7 @@
     {
       "endpoint": "document_plan_create",
       "file": "copyfast_document_workspace.py",
-      "line": 1399,
+      "line": 1504,
       "methods": [
         "POST"
       ],
@@ -12007,7 +12007,7 @@
     {
       "endpoint": "document_plans_reorder",
       "file": "copyfast_document_workspace.py",
-      "line": 1691,
+      "line": 1796,
       "methods": [
         "POST"
       ],
@@ -12016,7 +12016,7 @@
     {
       "endpoint": "document_plan_update",
       "file": "copyfast_document_workspace.py",
-      "line": 1459,
+      "line": 1564,
       "methods": [
         "PATCH"
       ],
@@ -12025,7 +12025,7 @@
     {
       "endpoint": "document_plan_archive",
       "file": "copyfast_document_workspace.py",
-      "line": 1597,
+      "line": 1702,
       "methods": [
         "POST"
       ],
@@ -12034,7 +12034,7 @@
     {
       "endpoint": "document_plan_restore",
       "file": "copyfast_document_workspace.py",
-      "line": 1605,
+      "line": 1710,
       "methods": [
         "POST"
       ],
@@ -12043,7 +12043,7 @@
     {
       "endpoint": "document_plan_restore_version",
       "file": "copyfast_document_workspace.py",
-      "line": 1613,
+      "line": 1718,
       "methods": [
         "POST"
       ],
@@ -12052,7 +12052,7 @@
     {
       "endpoint": "document_workspace_restore_version",
       "file": "copyfast_document_workspace.py",
-      "line": 1333,
+      "line": 1438,
       "methods": [
         "POST"
       ],
@@ -12465,10 +12465,10 @@
     }
   ],
   "schema_version": "1.4",
-  "source_files_discovered": 257,
-  "source_files_scanned": 257,
-  "source_fingerprint_sha256": "9c5cc77c46e49c54d2f84e4d7c5f9229016d6aa42ff20c8c02505d3d84f62e1e",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast50-handler-disposition",
+  "source_files_discovered": 258,
+  "source_files_scanned": 258,
+  "source_fingerprint_sha256": "b8557cbbcc0229ffcb9bd030ae01f4f268edfa99135a9d791f4d712586e68fce",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast51-docflow-handoff",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

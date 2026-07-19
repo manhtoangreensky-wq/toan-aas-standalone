@@ -1655,6 +1655,13 @@ a { color: inherit; text-decoration: none; }
 .portal-document-plan-card.is-archived { border-color: rgba(154, 173, 190, .19); background: linear-gradient(145deg, rgba(25, 33, 46, .92), rgba(7, 17, 31, .99)); }
 .portal-document-plan-card .portal-card-subtitle { display: -webkit-box; min-height: 42px; overflow: hidden; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
 .portal-document-plan-meta span { max-width: min(100%, 360px); }
+.portal-document-plan-handoff { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 14px; align-items: start; padding: 13px; border: 1px solid rgba(126, 223, 209, .18); border-radius: 14px; background: linear-gradient(135deg, rgba(16, 68, 72, .54), rgba(8, 26, 39, .62)); }
+.portal-document-plan-handoff.is-guarded, .portal-document-plan-handoff.is-guidance { border-color: rgba(174, 186, 205, .18); background: linear-gradient(135deg, rgba(31, 43, 57, .56), rgba(9, 21, 34, .68)); }
+.portal-document-plan-handoff h4 { margin: 4px 0 5px; color: #e9fffb; font-size: 12px; letter-spacing: -.012em; }
+.portal-document-plan-handoff p { margin: 0; color: #a8c8c6; font-size: 10px; line-height: 1.55; }
+.portal-document-plan-handoff small { display: block; max-width: 670px; margin-top: 8px; color: #87aaa7; font-size: 9px; line-height: 1.48; }
+.portal-document-plan-handoff-action { display: grid; gap: 8px; justify-items: end; min-width: 146px; }
+.portal-document-plan-handoff-action .portal-button { white-space: nowrap; }
 .portal-document-plan-form { padding-top: 13px; border-top: 1px solid rgba(140, 229, 215, .14); }
 .portal-document-plan-form .portal-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .portal-document-plan-form .portal-field--wide { grid-column: 1 / -1; }
@@ -2239,6 +2246,8 @@ a { color: inherit; text-decoration: none; }
   .portal-chat-turn, .portal-chat-version-list > article, .portal-chat-run-card { grid-template-columns: 1fr; }
   .portal-document-plan-form .portal-fields { grid-template-columns: 1fr; }
   .portal-document-plan-form .portal-field--wide { grid-column: auto; }
+  .portal-document-plan-handoff { grid-template-columns: 1fr; }
+  .portal-document-plan-handoff-action { justify-items: start; min-width: 0; }
   .portal-document-plan-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-document-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-format-lab-intro { padding: 20px; border-radius: 18px; }

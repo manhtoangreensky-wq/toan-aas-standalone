@@ -7418,6 +7418,18 @@
     "organize", "split", "merge", "optimize", "image_to_pdf", "pdf_to_images",
     "pdf_to_word", "ocr", "translate", "convert", "other"
   ]);
+  // This browser allow-list mirrors the server's content-free handoff policy.
+  // A plan is never allowed to supply, extend or decorate one of these paths:
+  // each destination starts a fresh signed Document Operations form.
+  const DOCUMENT_WORKSPACE_HANDOFF_ROUTES = Object.freeze({
+    split: "/documents/split",
+    merge: "/documents/merge",
+    optimize: "/documents/compress",
+    image_to_pdf: "/documents/image-to-pdf",
+    pdf_to_images: "/documents/pdf-to-images",
+    pdf_to_word: "/documents/pdf-to-word"
+  });
+  const DOCUMENT_WORKSPACE_HANDOFF_AVAILABILITY = new Set(["available", "guarded", "guidance"]);
   const DOCUMENT_WORKSPACE_STATES = new Set(["draft", "review", "approved", "archived"]);
   const DOCUMENT_WORKSPACE_FILTER_STATES = new Set(["active", "draft", "review", "approved", "archived"]);
   const DOCUMENT_WORKSPACE_LIST_LIMIT = 50;
@@ -7517,6 +7529,39 @@
       && boundary.preview_available === false
       && boundary.output_delivery === "guarded"
     );
+  }
+  function documentWorkspaceHandoffText(value, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+  function documentWorkspaceHandoffCatalog(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const raw = Array.isArray(source.handoff_catalog) ? source.handoff_catalog : [];
+    const seen = new Set();
+    const catalog = raw.map((item) => {
+      const candidate = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const operation = String(candidate.operation || "").trim().toLowerCase();
+      const availability = String(candidate.availability || "").trim().toLowerCase();
+      const route = candidate.route === null || candidate.route === undefined ? "" : String(candidate.route || "").trim();
+      const expectedRoute = DOCUMENT_WORKSPACE_HANDOFF_ROUTES[operation] || "";
+      const title = documentWorkspaceHandoffText(candidate.title, 120);
+      const summary = documentWorkspaceHandoffText(candidate.summary, 320);
+      const boundaryIsSafe = candidate.requires_new_tool_input === true
+        && candidate.workspace_data_transferred === false
+        && candidate.auto_execute === false
+        && candidate.workspace_output_shared === false;
+      if (!DOCUMENT_WORKSPACE_OPERATIONS.has(operation) || seen.has(operation) || !DOCUMENT_WORKSPACE_HANDOFF_AVAILABILITY.has(availability)
+        || !title || !summary || !boundaryIsSafe) return null;
+      if (availability === "available" ? route !== expectedRoute : Boolean(route)) return null;
+      seen.add(operation);
+      return { operation, availability, route: route || null, title, summary };
+    }).filter(Boolean);
+    return catalog.length === DOCUMENT_WORKSPACE_OPERATIONS.size && seen.size === DOCUMENT_WORKSPACE_OPERATIONS.size ? catalog : [];
+  }
+  function documentWorkspacePolicyProjection(value) {
+    if (!documentWorkspaceBoundaryIsSafe(value)) return null;
+    const catalog = documentWorkspaceHandoffCatalog(value);
+    return catalog.length ? { handoff_catalog: catalog } : null;
   }
 
   // Workboard is a signed Web-native task board. It manages only item
@@ -13740,8 +13785,9 @@
       const summary = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
       const workspaceData = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
       const references = results[3].data && typeof results[3].data === "object" ? results[3].data : {};
-      const policy = results[4].data && typeof results[4].data === "object" ? results[4].data : {};
-      if (![summary, workspaceData, references, policy].every(documentWorkspaceBoundaryIsSafe)) {
+      const rawPolicy = results[4].data && typeof results[4].data === "object" ? results[4].data : {};
+      const policy = documentWorkspacePolicyProjection(rawPolicy);
+      if (![summary, workspaceData, references].every(documentWorkspaceBoundaryIsSafe) || !policy) {
         throw new Error("Boundary Document & PDF Workspace chưa được máy chủ xác nhận.");
       }
       const workspaces = Array.isArray(workspaceData.items)
@@ -13783,9 +13829,10 @@
       ]);
       const data = results[0].data && typeof results[0].data === "object" ? results[0].data : {};
       const references = results[1].data && typeof results[1].data === "object" ? results[1].data : {};
-      const policy = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const rawPolicy = results[2].data && typeof results[2].data === "object" ? results[2].data : {};
+      const policy = documentWorkspacePolicyProjection(rawPolicy);
       const workspace = data.workspace && typeof data.workspace === "object" ? data.workspace : null;
-      if (!documentWorkspaceBoundaryIsSafe(data) || !documentWorkspaceBoundaryIsSafe(references) || !documentWorkspaceBoundaryIsSafe(policy) || !workspace || !validDocumentWorkspaceId(workspace.id) || String(workspace.id) !== String(workspaceId) || !validDocumentWorkspaceRevision(workspace.revision)) {
+      if (!documentWorkspaceBoundaryIsSafe(data) || !documentWorkspaceBoundaryIsSafe(references) || !policy || !workspace || !validDocumentWorkspaceId(workspace.id) || String(workspace.id) !== String(workspaceId) || !validDocumentWorkspaceRevision(workspace.revision)) {
         throw new Error("Document workspace không còn khả dụng cho Web account hiện tại.");
       }
       if (!documentWorkspaceDetailRequestIsCurrent(requestEpoch, sessionEpoch, route)) return null;

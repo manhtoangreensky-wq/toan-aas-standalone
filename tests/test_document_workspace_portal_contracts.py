@@ -141,6 +141,59 @@ def test_document_workspace_links_to_but_never_runs_existing_deterministic_tools
     assert 'prefix="/api/v1/document-operations"' not in WORKSPACE
 
 
+def test_document_plan_handoff_uses_only_closed_navigation_without_state_transfer() -> None:
+    surface = _document_surface()
+    helpers = _document_integration_helpers()
+    for marker in (
+        "DOCUMENT_WORKSPACE_HANDOFF_ROUTES",
+        "function documentWorkspaceHandoffCatalog(context)",
+        "function documentWorkspaceHandoffForPlan(context, operation)",
+        "function renderDocumentPlanHandoff(plan, context)",
+        "Independent tool handoff",
+        "Không chuyển brief, plan, Asset Vault ID, file, khoảng trang, profile, token hoặc output",
+    ):
+        assert marker in surface
+    for route in (
+        'split: "/documents/split"',
+        'merge: "/documents/merge"',
+        'optimize: "/documents/compress"',
+        'image_to_pdf: "/documents/image-to-pdf"',
+        'pdf_to_images: "/documents/pdf-to-images"',
+        'pdf_to_word: "/documents/pdf-to-word"',
+    ):
+        assert route in surface
+
+    handoff = surface[
+        surface.index("function renderDocumentPlanHandoff(plan, context)"):
+        surface.index("function documentWorkspaceFields(context)")
+    ]
+    for forbidden in (
+        "data-portal-action",
+        "fetch(",
+        "api(",
+        "window.location",
+        "?source_asset_id=",
+        "idempotency_key",
+        "document-workspace-execute",
+        "document-plan-execute",
+    ):
+        assert forbidden not in handoff
+
+    for marker in (
+        "function documentWorkspaceHandoffCatalog(value)",
+        "function documentWorkspacePolicyProjection(value)",
+        "workspace_data_transferred === false",
+        "auto_execute === false",
+        "workspace_output_shared === false",
+        "route !== expectedRoute",
+    ):
+        assert marker in helpers
+    assert "documentWorkspacePolicyProjection(rawPolicy)" in INTEGRATION
+    assert "bridge_request" not in helpers
+    assert "CORE_BRIDGE" not in helpers
+    assert "document-operation-pdf-split" not in helpers
+
+
 def test_document_workspace_private_routes_are_explicitly_outside_pwa_cache() -> None:
     shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
     assert "/api/v1/document-workspace" in SERVICE_WORKER
@@ -161,6 +214,7 @@ def test_document_workspace_private_routes_are_explicitly_outside_pwa_cache() ->
         ".portal-document-workspace-intro",
         ".portal-document-workspace-grid",
         ".portal-document-plan-card",
+        ".portal-document-plan-handoff",
         ".portal-document-workspace-estimate-grid",
         ".portal-document-workspace-guard-list",
         ".portal-document-workspace-intro, .portal-document-workspace-detail-summary, .portal-document-workspace-layout, .portal-document-workspace-detail-grid, .portal-document-workspace-history-grid { grid-template-columns: 1fr; }",
