@@ -37562,16 +37562,22 @@
       "target": "/video-studio"
     },
     {
-      "classification": "unknown",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 46596
       },
-      "resolution": "unresolved_dynamic_template",
+      "resolution": "reviewed_freehub_library_category_navigation",
       "source": "freehub|lib_{*}",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_PENDING_STATE_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot uses a finite category value only to choose global prompt-library suggestions before storing temporary Telegram pending state. The Web opens its own signed Free Prompt Gallery and never accepts that value as a Bot state, prompt ID, query parameter, or browser identifier.",
       "source_kind": "callback_template",
-      "status": "NEEDS_WEB_IMPLEMENTATION",
-      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+      "status": "NAVIGATION_ONLY",
+      "target": "/free-prompt-gallery"
     },
     {
       "classification": "customer",
@@ -52018,14 +52024,15 @@
   "coverage_comparability": {
     "feature_progress_claim": false,
     "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
-    "reason": "Schema 1.6 keeps the 1.5 inventory corrections and adds typed dispositions for dynamic Bot media-preview callbacks whose cache indexes, Telegram delivery/guidance, and selected-media state are not Web media contracts.",
+    "reason": "Schema 1.7 retains the 1.6 inventory corrections and records the finite Free Hub prompt-library category template as fresh signed Gallery navigation only; its Bot suggestion and pending state are not Web contracts.",
     "scope_changes": [
       "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
       "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
       "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
       "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
       "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
-      "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions."
+      "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
+      "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser."
     ],
     "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES"
   },
@@ -52503,7 +52510,7 @@
   "gaps": [
     {
       "area": "customer_and_admin_routes",
-      "count": 1,
+      "count": 0,
       "detail": "Bot source mappings that do not have an observed Web App route or guarded compatibility surface.",
       "severity": "high"
     },
@@ -52647,7 +52654,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 47,
+      "count": 46,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -52791,14 +52798,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.89,
+  "mapping_coverage_percent": 80.91,
   "mapping_status_counts": {
     "COPIED_GUARDED": 2407,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 455,
+    "NAVIGATION_ONLY": 456,
     "NEEDS_FEATURE_DISPOSITION": 728,
-    "NEEDS_WEB_IMPLEMENTATION": 1,
     "TELEGRAM_ONLY": 220
   },
   "metric_scope": {
@@ -52812,7 +52818,7 @@
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
     "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
     "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-    "Schema 1.6 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates and corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks; a percentage delta is not feature progress.",
+    "Schema 1.7 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
     "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
     "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
     "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -52820,8 +52826,8 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.89,
-  "schema_version": "1.6",
+  "safe_disposition_coverage_percent": 80.91,
+  "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
     "callback_handler_dispatchers": 54,
@@ -52830,13 +52836,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3085,
+    "resolved_static_source_count": 3086,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 47,
-    "unresolved_source_count": 729
+    "unresolved_callback_templates": 46,
+    "unresolved_source_count": 728
   },
   "static_web_surface_coverage_percent": 63.14,
   "telegram_link_callback_contract": {

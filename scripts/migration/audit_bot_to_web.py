@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.6"
+SCHEMA_VERSION = "1.7"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -346,6 +346,13 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("archive|", "/admin", "admin"),
     ("opmenu|", "/admin", "admin"),
 )
+
+# The Bot emits only this reviewed Free Hub library category template.  Its
+# formatted suffix chooses a Bot-side suggestion set and short-lived Telegram
+# pending state; it is not a safe Web query parameter, prompt identifier or
+# browser action.  The standalone Web can only open its own fresh signed
+# Gallery surface without carrying that value forward.
+FREE_HUB_LIBRARY_CATEGORY_CALLBACK_TEMPLATE = "freehub|lib_{*}"
 
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
@@ -3248,6 +3255,38 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     media_preview_mapping = _map_media_preview_callback_template(template, evidence)
     if media_preview_mapping is not None:
         return media_preview_mapping
+    if token == FREE_HUB_LIBRARY_CATEGORY_CALLBACK_TEMPLATE:
+        # The finite Bot suffix selects one global prompt-library suggestion
+        # set and then writes a short-lived Telegram pending selection.  The
+        # Web opens an independent, signed, read-only Gallery from its own
+        # static snapshot.  It never receives the raw suffix, resolves Bot
+        # suggestions, or recreates the Telegram pending/result state.
+        target = "/free-prompt-gallery"
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(
+                target,
+                existing_routes,
+                telegram_only=False,
+                navigation_only=True,
+            ),
+            "resolution": "reviewed_freehub_library_category_navigation",
+            "source_dispositions": [
+                "FRESH_SIGNED_WEB_NAVIGATION",
+                "BOT_PENDING_STATE_NOT_REPLAYED",
+                "NO_RUNTIME_CLAIM",
+            ],
+            "source_evidence": (
+                "The Bot uses a finite category value only to choose global prompt-library "
+                "suggestions before storing temporary Telegram pending state. The Web opens "
+                "its own signed Free Prompt Gallery and never accepts that value as a Bot "
+                "state, prompt ID, query parameter, or browser identifier."
+            ),
+            "evidence": evidence,
+        }
     if token.startswith("menu|"):
         # Dynamic menu templates can encode a Bot-only back route, translation
         # session, locale/product context or other pending state.  A finite
@@ -3714,7 +3753,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "coverage_comparability": {
                 "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
                 "feature_progress_claim": False,
-                "reason": "Schema 1.6 keeps the 1.5 inventory corrections and adds typed dispositions for dynamic Bot media-preview callbacks whose cache indexes, Telegram delivery/guidance, and selected-media state are not Web media contracts.",
+                "reason": "Schema 1.7 retains the 1.6 inventory corrections and records the finite Free Hub prompt-library category template as fresh signed Gallery navigation only; its Bot suggestion and pending state are not Web contracts.",
                 "scope_changes": [
                     "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
                     "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -3722,6 +3761,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                     "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
                     "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
                     "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
+                    "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
                 ],
                 "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
             },
@@ -3747,7 +3787,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
                 "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
                 "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-                "Schema 1.6 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates and corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks; a percentage delta is not feature progress.",
+                "Schema 1.7 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates, corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks, and records the finite Free Hub category template only as fresh Gallery navigation; a percentage delta is not feature progress.",
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -3864,6 +3904,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.\n"
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
         + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
+        + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
