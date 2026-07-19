@@ -520,6 +520,47 @@ def test_catalog_declares_exact_web_workspace_draft_support(tmp_path, monkeypatc
         assert support["workspace_drafts"] is False
 
 
+def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path, monkeypatch):
+    """Menu metadata may navigate, but it must never replay Bot callbacks."""
+    with make_client(tmp_path, monkeypatch) as client:
+        response = client.get("/api/v1/catalog")
+        assert response.status_code == 200
+        menu = response.json()["data"]["menu_capabilities"]
+
+    by_key = {item["key"]: item for item in menu}
+    assert {
+        "workspace_home", "account", "wallet_topup", "documents", "image_studio",
+        "video_studio", "media_workspace", "guides", "support", "media_factory",
+        "video_factory_workflow",
+    } == set(by_key)
+    assert by_key["account"] == {
+        "key": "account",
+        "feature_key": "account",
+        "title": "Tài khoản",
+        "group": "account",
+        "route": "/account",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+        "availability": "NAVIGATION_ONLY",
+        "execution": "NO_EXECUTION_CLAIM",
+        "description": "Hồ sơ và bảo mật Web theo signed session, tách khỏi callback Bot.",
+    }
+    assert by_key["wallet_topup"]["route"] == "/wallet/topup"
+    assert by_key["wallet_topup"]["authority"] == "CORE_CANONICAL_PAYMENT"
+    assert by_key["wallet_topup"]["launch_mode"] == "BRIDGE_GUARDED_PROXY"
+    assert by_key["wallet_topup"]["availability"] == "GUARDED"
+    assert all(item["execution"] == "NO_EXECUTION_CLAIM" for item in menu)
+    allowed_fields = {
+        "key", "feature_key", "title", "group", "route", "authority",
+        "launch_mode", "availability", "execution", "description",
+    }
+    assert all(set(item) == allowed_fields for item in menu)
+    serialized = json.dumps(menu, ensure_ascii=False)
+    forbidden_fields = {"callback_data", "bot_action", "telegram_action", "raw_callback"}
+    assert all(not (forbidden_fields & set(item)) for item in menu)
+    assert "|" not in serialized
+
+
 def test_login_runs_password_verification_for_missing_and_existing_accounts(tmp_path, monkeypatch):
     """Avoid an account-enumeration timing oracle on the login endpoint."""
     with make_client(tmp_path, monkeypatch) as client:

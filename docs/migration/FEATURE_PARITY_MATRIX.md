@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Static Web-surface coverage: **62.68%**. Typed source-disposition coverage: **68.35%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). This is an actionable migration baseline, not a LIVE or engine-success claim.
+Static Web-surface coverage: **62.68%**. Typed source-disposition coverage: **80.08%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -205,4 +205,4 @@ Static Web-surface coverage: **62.68%**. Typed source-disposition coverage: **68
 | command | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | command | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
 
-Audit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.
+Audit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.

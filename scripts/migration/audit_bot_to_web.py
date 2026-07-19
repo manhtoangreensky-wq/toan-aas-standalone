@@ -342,10 +342,143 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("pkgbuy|", "/wallet/topup", "customer"),
     ("storage|", "/wallet/topup", "customer"),
     ("job|", "/jobs", "customer"),
-    ("menu|", "/dashboard", "customer"),
     ("archive|", "/admin", "admin"),
     ("opmenu|", "/admin", "admin"),
 )
+
+# Exact, source-reviewed menu entries that can safely become a fresh signed Web
+# navigation.  The keys stay in this *static auditor* only: raw Telegram
+# callback tokens must never be sent to the browser.  The product-facing
+# catalog in ``copyfast_registry.py`` exposes equivalent Web capability keys
+# and routes without these Bot identifiers.
+#
+# This is intentionally a small finite allow-list.  A menu button often clears
+# or creates Bot pending state, changes product context, mutates a canonical
+# payment/storage/referral record, or opens an admin/provider control.  Those
+# actions remain visible as guarded, Telegram-only, bridge-required, or
+# unresolved until a dedicated Web contract exists; they must not inherit a
+# route from a label or namespace prefix.
+MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
+    "menu|main": {
+        "capability_key": "workspace_home",
+        "target": "/dashboard",
+        "feature_key": "dashboard",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "NAVIGATION_SHELL",
+    },
+    "menu|back": {
+        "capability_key": "workspace_home",
+        "target": "/dashboard",
+        "feature_key": "dashboard",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "NAVIGATION_SHELL",
+    },
+    "freehub|main": {
+        "capability_key": "workspace_home",
+        "target": "/dashboard",
+        "feature_key": "dashboard",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "NAVIGATION_SHELL",
+    },
+    "menu|main_profile": {
+        "capability_key": "account",
+        "target": "/account",
+        "feature_key": "account",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_topup": {
+        "capability_key": "wallet_topup",
+        "target": "/wallet/topup",
+        "feature_key": "wallet_topup",
+        "authority": "CORE_CANONICAL_PAYMENT",
+        "launch_mode": "BRIDGE_GUARDED_PROXY",
+    },
+    "menu|main_docs": {
+        "capability_key": "documents",
+        "target": "/documents",
+        "feature_key": "documents",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|doc_tools": {
+        "capability_key": "documents",
+        "target": "/documents",
+        "feature_key": "documents",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_image": {
+        "capability_key": "image_studio",
+        "target": "/image-studio",
+        "feature_key": "image_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_video": {
+        "capability_key": "video_studio",
+        "target": "/video-studio",
+        "feature_key": "video_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_music": {
+        "capability_key": "media_workspace",
+        "target": "/media-workspace",
+        "feature_key": "media_workspace",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_audio": {
+        "capability_key": "media_workspace",
+        "target": "/media-workspace",
+        "feature_key": "media_workspace",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_guide": {
+        "capability_key": "guides",
+        "target": "/guides",
+        "feature_key": "guides",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|guide": {
+        "capability_key": "guides",
+        "target": "/guides",
+        "feature_key": "guides",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|support": {
+        "capability_key": "support",
+        "target": "/support",
+        "feature_key": "support",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|create_media": {
+        "capability_key": "media_factory",
+        "target": "/media-factory",
+        "feature_key": "media_factory",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|video_workflow": {
+        "capability_key": "video_factory_workflow",
+        "target": "/video-studio/workflow",
+        "feature_key": "video_factory_workflow",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|video_factory_flow": {
+        "capability_key": "video_factory_workflow",
+        "target": "/video-studio/workflow",
+        "feature_key": "video_factory_workflow",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+}
 
 # A dashboard is an intentional signed entry point for a person starting the
 # Web App. It is not evidence that an arbitrary Bot callback has an equivalent
@@ -1803,6 +1936,7 @@ def _mapping_status(
     *,
     dashboard_fallback: bool = False,
     navigation_entrypoint: bool = False,
+    navigation_only: bool = False,
 ) -> str:
     if telegram_only:
         return "TELEGRAM_ONLY"
@@ -1812,6 +1946,13 @@ def _mapping_status(
         _route_exists(target, existing_routes) or _compatibility_surface_exists(target, existing_routes)
     ):
         return "NAVIGATION_ENTRYPOINT"
+    if navigation_only and (
+        _route_exists(target, existing_routes) or _compatibility_surface_exists(target, existing_routes)
+    ):
+        # An exact Bot menu item may open a fresh signed Web workspace, but
+        # that is not evidence that the Bot callback's pending state, engine,
+        # wallet, job, provider or delivery side effect was reproduced.
+        return "NAVIGATION_ONLY"
     if _route_exists(target, existing_routes):
         return "MAPPED_TO_EXISTING_ROUTE"
     if _compatibility_surface_exists(target, existing_routes):
@@ -1862,6 +2003,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
     dashboard_fallback = False
+    menu_entry = MENU_ACTION_REGISTRY.get(token)
+    navigation_only = menu_entry is not None
     if token == "payosalert|remind_later":
         # This is not a customer reminder.  The Bot emits it only in its
         # owner/admin PayOS-expiry alert keyboard and
@@ -1871,6 +2014,11 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         admin = True
         telegram_only = True
         target = "TELEGRAM_ONLY"
+    elif menu_entry is not None:
+        # Only this finite catalog may become a fresh signed Web navigation.
+        # It cannot carry hidden Bot state, a message id, a file id or a
+        # canonical action into the browser.
+        target = menu_entry["target"]
     elif admin and not telegram_only:
         target = "/admin/callbacks"
     elif token.startswith(DASHBOARD_NAVIGATION_TEMPLATE_PREFIXES):
@@ -2242,9 +2390,12 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         existing_routes,
         telegram_only,
         dashboard_fallback=dashboard_fallback,
+        navigation_only=navigation_only,
     )
     if telegram_only:
         resolution = "telegram_only"
+    elif navigation_only:
+        resolution = "reviewed_exact_menu_navigation"
     elif dashboard_fallback:
         resolution = (
             "menu_callback_requires_explicit_feature_disposition"
@@ -2253,7 +2404,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         )
     else:
         resolution = "explicit_static_route_mapping"
-    return {
+    result = {
         "source_kind": source_kind,
         "source": identifier,
         "target": target if not telegram_only else "TELEGRAM_ONLY",
@@ -2262,6 +2413,14 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         "resolution": resolution,
         "evidence": evidence,
     }
+    if menu_entry is not None:
+        # These are audit-only descriptors.  The public API returns the
+        # matching Web capability catalog without raw Bot action identifiers.
+        result["menu_capability_key"] = menu_entry["capability_key"]
+        result["menu_feature_key"] = menu_entry["feature_key"]
+        result["menu_authority"] = menu_entry["authority"]
+        result["menu_launch_mode"] = menu_entry["launch_mode"]
+    return result
 
 
 def _map_reviewed_guided_video_helper_template(
@@ -2327,6 +2486,21 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     token = str(template or "").casefold()
     if "{*}" not in token:
         return _map_callback(token, "callback_template", evidence, existing_routes)
+    if token.startswith("menu|"):
+        # Dynamic menu templates can encode a Bot-only back route, translation
+        # session, locale/product context or other pending state.  A finite
+        # exact action catalog is required before any one value can be treated
+        # as navigation; never route this namespace through a dashboard
+        # fallback or expose the formatted value to the browser.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "UNRESOLVED_DYNAMIC_MENU_ACTION",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "dynamic_menu_action_requires_finite_catalog",
+            "evidence": evidence,
+        }
     if token == "longvideo|structure|{*}":
         # The only dynamic value is a bounded position (1–3) emitted by the
         # reviewed long-video structure keyboard.  Web's Long-form Roadmap
@@ -2662,7 +2836,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
-                "NAVIGATION_ENTRYPOINT is an intentional dashboard launch route, not feature parity. NEEDS_FEATURE_DISPOSITION records were previously absorbed by a dashboard fallback and now remain actionable.",
+                "NAVIGATION_ENTRYPOINT and NAVIGATION_ONLY are reviewed launch/navigation records, not feature parity. NEEDS_FEATURE_DISPOSITION records were previously absorbed by a dashboard fallback and now remain actionable.",
                 "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
                 "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision.",
             ],
@@ -2864,7 +3038,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         f"Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). "
         "All source items are represented in the JSON matrix; this page shows the first 200 records.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows or [["None discovered", "", "", ""]])
-        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` is only a reviewed dashboard launch. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`.\n",
+        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`.\n",
     )
     fallback_rows = [
         [
@@ -3035,7 +3209,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "# Feature parity matrix\n\n"
         f"Static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%**. Typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**. Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). This is an actionable migration baseline, not a LIVE or engine-success claim.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows)
-        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.\n",
+        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.\n",
     )
     write(
         "TELEGRAM_TO_WEB_ROUTE_MAP.md",

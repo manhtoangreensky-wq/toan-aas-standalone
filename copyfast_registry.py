@@ -25,6 +25,25 @@ class WebFeature:
     input_hint: str = ""
 
 
+@dataclass(frozen=True)
+class MenuCapability:
+    """One reviewed Web navigation destination for the product capability menu.
+
+    This is intentionally keyed by a Web product concept, never a raw
+    Telegram callback.  The browser may use it to render a stable navigation
+    choice, while the static migration audit retains the private evidence that
+    a finite Bot menu action can lead to that choice.  A navigation destination
+    does not grant an engine, provider, payment, job or Bot-state action.
+    """
+
+    key: str
+    feature_key: str
+    authority: str
+    launch_mode: str
+    availability: str
+    description: str
+
+
 CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("dashboard", "Tổng quan", "account", "/dashboard", description="Tài khoản, Xu, job và trạng thái gần đây."),
     WebFeature("feature_catalog", "Tất cả công cụ", "content", "/features", description="Khám phá workflow Web, phần authoring độc lập và trạng thái Engine/Bot companion tách biệt."),
@@ -196,9 +215,136 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
 ALL_FEATURES: tuple[WebFeature, ...] = CUSTOMER_FEATURES + ADMIN_FEATURES
 FEATURE_BY_KEY = {item.key: item for item in ALL_FEATURES}
 
+# A small, reviewed subset of the Web catalog that can be used as a genuine
+# application navigation menu.  It deliberately excludes raw Telegram button
+# labels, pending-state transitions, provider controls, canonical wallet
+# writes and administrative actions.  ``availability`` describes the Web
+# navigation boundary only; it never indicates execution readiness.
+MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
+    MenuCapability(
+        "workspace_home",
+        "dashboard",
+        "SIGNED_CUSTOMER",
+        "NAVIGATION_SHELL",
+        "NAVIGATION_ONLY",
+        "Mở workspace chính đã xác thực; không khôi phục menu hoặc state Telegram.",
+    ),
+    MenuCapability(
+        "account",
+        "account",
+        "SIGNED_CUSTOMER",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Hồ sơ và bảo mật Web theo signed session, tách khỏi callback Bot.",
+    ),
+    MenuCapability(
+        "wallet_topup",
+        "wallet_topup",
+        "CORE_CANONICAL_PAYMENT",
+        "BRIDGE_GUARDED_PROXY",
+        "GUARDED",
+        "Mở bề mặt nạp Xu canonical có guard; request đi qua core bridge, còn Web không tự định giá, cộng Xu hoặc xử lý webhook PayOS.",
+    ),
+    MenuCapability(
+        "documents",
+        "documents",
+        "SIGNED_CUSTOMER",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Document & PDF Workspace; từng thao tác file vẫn tự kiểm tra quyền và capability riêng.",
+    ),
+    MenuCapability(
+        "image_studio",
+        "image_studio",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Image Creative Studio Web-native, không tạo ảnh hay gọi provider chỉ bằng điều hướng.",
+    ),
+    MenuCapability(
+        "video_studio",
+        "video_studio",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Video Production Studio để lập kế hoạch; không nhập state Telegram hoặc khởi tạo render.",
+    ),
+    MenuCapability(
+        "media_workspace",
+        "media_workspace",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Audio Library & Briefing Web-native; không dùng product context hoặc thư viện Bot.",
+    ),
+    MenuCapability(
+        "guides",
+        "guides",
+        "SIGNED_CUSTOMER",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở guide Web; nội dung không cấp quyền chạy workflow Bot.",
+    ),
+    MenuCapability(
+        "support",
+        "support",
+        "SIGNED_CUSTOMER",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Support Desk owner-scoped, không chuyển ticket hoặc callback Telegram.",
+    ),
+    MenuCapability(
+        "media_factory",
+        "media_factory",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Media Factory Blueprint; không tạo media, job, provider call hoặc publish.",
+    ),
+    MenuCapability(
+        "video_factory_workflow",
+        "video_factory_workflow",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở bản đồ Video Factory Web-native; đây là điều hướng/read-only, không phải execution flow.",
+    ),
+)
+MENU_CAPABILITY_BY_KEY = {item.key: item for item in MENU_CAPABILITIES}
+
 
 def catalog() -> list[dict[str, str]]:
     return [asdict(item) for item in ALL_FEATURES]
+
+
+def menu_capability_catalog() -> list[dict[str, str]]:
+    """Return browser-safe menu destinations without Bot callback metadata.
+
+    The registry itself is a closed local allow-list.  Constructing each item
+    from ``FEATURE_BY_KEY`` prevents a stale menu entry from emitting a route
+    that is not an actual Web feature.  The returned values are static product
+    metadata; callers must still enforce their own signed-session, CSRF, role,
+    ownership and runtime checks.
+    """
+
+    entries: list[dict[str, str]] = []
+    for item in MENU_CAPABILITIES:
+        feature = FEATURE_BY_KEY[item.feature_key]
+        entries.append(
+            {
+                "key": item.key,
+                "feature_key": feature.key,
+                "title": feature.title,
+                "group": feature.group,
+                "route": feature.route,
+                "authority": item.authority,
+                "launch_mode": item.launch_mode,
+                "availability": item.availability,
+                "execution": "NO_EXECUTION_CLAIM",
+                "description": item.description,
+            }
+        )
+    return entries
 
 
 def allowed_paths() -> set[str]:

@@ -53,7 +53,7 @@ from copyfast_native_read_models import (
     parse_native_asset_id,
     parse_native_job_id,
 )
-from copyfast_registry import FEATURE_BY_KEY, catalog
+from copyfast_registry import FEATURE_BY_KEY, catalog, menu_capability_catalog
 from copyfast_web_engine import engine_descriptor
 
 
@@ -2960,6 +2960,12 @@ async def feature_catalog():
         "Danh mục tính năng Web App",
         data={
             "features": features,
+            # This closed, browser-safe navigation catalog contains only
+            # product-facing Web destinations.  It never exposes raw Bot
+            # callbacks or makes a route appear to be an engine/payment/job
+            # action; every destination remains subject to its own server-side
+            # authorization and capability checks.
+            "menu_capabilities": menu_capability_catalog(),
             "flags": flags,
             "bridge_configured": bridge_configured(),
             "capability_hub": capability_hub(),
