@@ -1034,7 +1034,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         "videoaddon|export|{*}": "/video/add-ons",
         "manual|history|{*}": "/wallet/topup",
         "shopai|confirm|{*}": "/wallet/topup",
-        "license_music|{*}": "/media-workspace",
         "job|cancel|{*}": "/jobs",
         "archive|dept|{*}": "/admin",
     }
@@ -1321,13 +1320,14 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
     assert gap["coverage_comparability"] == {
         "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
         "feature_progress_claim": False,
-        "reason": "Schema 1.5 keeps the 1.4 inventory corrections, retains embedded formatted callback values as opaque templates, and removes false Web coverage claims for tvflow callbacks whose Bot handler requires pending state, canonical billing/package decisions, provider/job guards, or Telegram-only guidance.",
+        "reason": "Schema 1.6 keeps the 1.5 inventory corrections and adds typed dispositions for dynamic Bot media-preview callbacks whose cache indexes, Telegram delivery/guidance, and selected-media state are not Web media contracts.",
         "scope_changes": [
             "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
             "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
             "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
             "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
             "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
+            "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
         ],
         "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
     }
@@ -1553,6 +1553,103 @@ async def video():
     }.intersection({"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED", "NAVIGATION_ONLY"})
     assert report_mappings["tvflow|admin_video_image_{*}_{*}"]["status"] == "TELEGRAM_ONLY"
     assert (tmp_path / "docs" / "TVFLOW_CALLBACK_CONTRACT.md").is_file()
+
+
+def test_static_audit_dispositions_dynamic_media_preview_templates_without_web_claim(tmp_path: Path) -> None:
+    """Bot preview cache indexes cannot become browser media actions."""
+
+    audit = _load_audit_module()
+    routes = {"/media-workspace", "/{page_path:path}"}
+    expectations = {
+        "play_{*}|{*}": (
+            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
+            "media_preview_play_requires_bot_cache_and_telegram_delivery",
+            "TELEGRAM_CHAT_DELIVERY",
+        ),
+        "select_{*}|{*}": (
+            "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
+            "media_preview_select_requires_bot_cache_and_selection_state",
+            "BOT_MEDIA_SELECTION_STATE",
+        ),
+        "license_{*}|1": (
+            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
+            "media_preview_license_requires_bot_cache_and_telegram_guidance",
+            "TELEGRAM_CHAT_GUIDANCE",
+        ),
+        "license_music|{*}": (
+            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
+            "media_preview_license_requires_bot_cache_and_telegram_guidance",
+            "TELEGRAM_CHAT_GUIDANCE",
+        ),
+        "play_media|{*}": (
+            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
+            "media_preview_play_requires_bot_cache_and_telegram_delivery",
+            "TELEGRAM_CHAT_DELIVERY",
+        ),
+        "select_media|{*}": (
+            "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
+            "media_preview_select_requires_bot_cache_and_selection_state",
+            "BOT_MEDIA_SELECTION_STATE",
+        ),
+    }
+
+    for template, (target, resolution, specific_disposition) in expectations.items():
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        audit._annotate_feature_disposition(mapped)
+        assert mapped["target"] == target
+        assert mapped["resolution"] == resolution
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["fallback_family"] == "media_preview"
+        assert specific_disposition in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+        assert mapped["target"].startswith("BOT_")
+        assert mapped["status"] not in {"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED", "NAVIGATION_ONLY", "TELEGRAM_ONLY"}
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+kind = "ignored"
+index = "ignored"
+InlineKeyboardButton("Play", callback_data=f"play_{kind}|{index}")
+InlineKeyboardButton("Select", callback_data=f"select_{kind}|{index}")
+InlineKeyboardButton("License", callback_data=f"license_{kind}|1")
+InlineKeyboardButton("Music license", callback_data=f"license_music|{index}")
+InlineKeyboardButton("Media play", callback_data=f"play_media|{index}")
+InlineKeyboardButton("Media select", callback_data=f"select_media|{index}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/media-workspace")
+async def media_workspace():
+    return {}
+@app.get("/{page_path:path}")
+async def portal(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    mappings = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_template_mappings"]
+    }
+    assert set(mappings) == set(expectations)
+    assert {item["status"] for item in mappings.values()} == {"NEEDS_FEATURE_DISPOSITION"}
+    assert all(str(item["target"]).startswith("BOT_") for item in mappings.values())
+    backlog = {item["family"]: item for item in result["parity_gap"]["feature_disposition_backlog"]}
+    assert backlog["media_preview"]["count"] == 6
+    contract = tmp_path / "docs" / "MEDIA_PREVIEW_CALLBACK_CONTRACT.md"
+    assert contract.is_file()
+    assert "Bot cache index" in contract.read_text(encoding="utf-8")
 
 
 def test_static_audit_does_not_mistake_aspect_ratio_tuples_for_callbacks(tmp_path: Path) -> None:

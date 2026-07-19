@@ -30022,7 +30022,7 @@
       "path": "/webhook/payos"
     }
   ],
-  "schema_version": "1.5",
+  "schema_version": "1.6",
   "source_files_discovered": 176,
   "source_files_scanned": 172,
   "source_fingerprint_sha256": "3390924d75276b84156b46e0d074ef1cf9c807df2fbb307809a08d5c567d7208",
