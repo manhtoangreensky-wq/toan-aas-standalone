@@ -126,6 +126,21 @@
     copy: "portal-copy", refresh: "portal-refresh", shield: "portal-shield"
   });
 
+  // Starter Kits are a closed, reviewed local catalog.  Keep this allow-list
+  // in the browser as well as the server so a route or API response cannot
+  // turn into an arbitrary Project seed, icon payload or action surface.
+  const STARTER_KIT_PORTAL_META = Object.freeze({
+    "project-foundation": Object.freeze({ icon: ICONS.dashboard }),
+    "content-foundation": Object.freeze({ icon: ICONS.prompt }),
+    "image-direction": Object.freeze({ icon: ICONS.image }),
+    "voice-script": Object.freeze({ icon: ICONS.voice }),
+    "audio-brief": Object.freeze({ icon: ICONS.music }),
+    "subtitle-plan": Object.freeze({ icon: ICONS.subtitle }),
+    "document-qa": Object.freeze({ icon: ICONS.document }),
+    "operations-board": Object.freeze({ icon: ICONS.workboard })
+  });
+  const STARTER_KIT_PORTAL_KEYS = Object.freeze(Object.keys(STARTER_KIT_PORTAL_META));
+
   // The legacy registry uses compact glyph tokens.  The presentation layer
   // maps only that closed, local token set to SVG; it never renders icon HTML
   // supplied by a server response, route, account, provider or form field.
@@ -677,6 +692,10 @@
   customerPage("/workspace/setup", "Thiết lập Workspace", "Chọn cách làm việc và nhóm studio ưu tiên để Web App sắp xếp điểm bắt đầu phù hợp với bạn.", ICONS.dashboard, {
     layout: "workspace-setup", fields: [], action: "none", status: "ready",
     notes: ["Thiết lập này chỉ cá nhân hóa điều hướng Web; không kích hoạt Bot, bridge, provider, job, ví Xu, PayOS hay xuất bản.", "Lựa chọn được lưu theo signed Web account, có CSRF, revision và audit; không nhận Telegram ID từ browser."]
+  });
+  customerPage("/starter-kits", "Starter Kits", "Tạo một Project Web-native có brief, Studio Documents và Workboard checklist từ một bộ khởi đầu đã được review.", ICONS.package, {
+    type: "starter-kits", layout: "starter-kits", fields: [], action: "none", status: "ready",
+    notes: ["Mỗi Starter Kit chỉ tạo record planning thuộc signed Web account sau xác nhận rõ ràng.", "Starter Kits không gọi Bot/Core Bridge, provider, job, ví Xu, PayOS, xuất bản, thông báo hay tạo media output."]
   });
   customerPage("/account", "Tài khoản & bảo mật", "Quản lý thông tin hồ sơ và trạng thái liên kết theo dữ liệu server-side.", ICONS.account, {
     layout: "account", fields: [], action: "none", status: "ready",
@@ -5452,6 +5471,82 @@
     };
   }
 
+  const STARTER_KITS_BOOTSTRAP_READ_STATES = new Set(["loading", "read_only", "guarded"]);
+  const STARTER_KITS_BOOTSTRAP_STATES = new Set(["available", "installed", "setup_required", "maintenance"]);
+
+  function starterKitsSafeText(value, maximum) {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function starterKitsSafeCount(value, maximum) {
+    const number = Number(value);
+    return Number.isSafeInteger(number) && number >= 0 && number <= maximum ? number : null;
+  }
+
+  function starterKitsEmptyBootstrap(readState) {
+    return {
+      readState: STARTER_KITS_BOOTSTRAP_READ_STATES.has(String(readState || "")) ? String(readState) : "guarded",
+      profile: workspaceSetupEmptyProfile(),
+      kits: [],
+      recommendedKeys: [],
+      workboardReady: false
+    };
+  }
+
+  function normalizeStarterKitInstallation(raw, key) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const id = String(source.id || "").trim();
+    const projectId = String(source.project_id || "").trim();
+    const kitKey = String(source.kit_key || "").trim();
+    const kitVersion = starterKitsSafeCount(source.kit_version, 1000000);
+    const documentCount = starterKitsSafeCount(source.document_count, 6);
+    const workItemCount = starterKitsSafeCount(source.work_item_count, 1);
+    const setupRevision = starterKitsSafeCount(source.setup_profile_revision, 2147483647);
+    const createdAt = bootstrapSafeTimestamp(source.created_at);
+    if (!validProjectId(id) || !validProjectId(projectId) || kitKey !== key || !kitVersion || documentCount === null || workItemCount !== 1 || setupRevision === null || !createdAt) return null;
+    return { id, kit_key: kitKey, kit_version: kitVersion, project_id: projectId, document_count: documentCount, work_item_count: workItemCount, setup_profile_revision: setupRevision, created_at: createdAt };
+  }
+
+  function normalizeStarterKitsBootstrap(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const requestedReadState = String(source.readState || "").trim().toLowerCase();
+    const readState = STARTER_KITS_BOOTSTRAP_READ_STATES.has(requestedReadState) ? requestedReadState : "guarded";
+    const profile = normalizeWorkspaceSetupBootstrap({ profile: source.profile }).profile;
+    if (readState === "loading") return { ...starterKitsEmptyBootstrap("loading"), profile };
+    const seen = new Set();
+    const kits = (Array.isArray(source.kits) ? source.kits : []).map((rawKit) => {
+      const item = rawKit && typeof rawKit === "object" ? rawKit : {};
+      const key = String(item.key || "").trim();
+      const meta = STARTER_KIT_PORTAL_META[key];
+      const version = starterKitsSafeCount(item.version, 1000000);
+      const title = starterKitsSafeText(item.title, 120);
+      const summary = starterKitsSafeText(item.summary, 300);
+      const outcome = starterKitsSafeText(item.outcome, 300);
+      const state = String(item.state || "").trim();
+      const counts = item.record_counts && typeof item.record_counts === "object" ? item.record_counts : {};
+      const projectCount = starterKitsSafeCount(counts.projects, 1);
+      const documentCount = starterKitsSafeCount(counts.documents, 6);
+      const workItemCount = starterKitsSafeCount(counts.work_items, 1);
+      const checklistCount = starterKitsSafeCount(counts.checklist_items, 32);
+      const focusSeen = new Set();
+      const focusAreas = Array.isArray(item.focus_areas) ? item.focus_areas.map((value) => String(value || "").trim().toLowerCase())
+        .filter((value) => WORKSPACE_SETUP_BOOTSTRAP_FOCUS.has(value) && !focusSeen.has(value) && focusSeen.add(value)).slice(0, 2) : [];
+      const installation = normalizeStarterKitInstallation(item.installation, key);
+      if (!meta || seen.has(key) || !version || !title || !summary || !outcome || !STARTER_KITS_BOOTSTRAP_STATES.has(state)
+        || projectCount !== 1 || documentCount === null || documentCount < 2 || workItemCount !== 1 || checklistCount === null || checklistCount < 1 || !focusAreas.length
+        || (state === "installed" && !installation) || (state !== "installed" && installation)) return null;
+      seen.add(key);
+      return { key, version, title, summary, outcome, icon: meta.icon, focus_areas: focusAreas, record_counts: { projects: projectCount, documents: documentCount, work_items: workItemCount, checklist_items: checklistCount }, state, installation };
+    }).filter(Boolean);
+    if (readState !== "read_only" || kits.length !== STARTER_KIT_PORTAL_KEYS.length || seen.size !== STARTER_KIT_PORTAL_KEYS.length) return { ...starterKitsEmptyBootstrap("guarded"), profile };
+    const known = new Set(kits.map((kit) => kit.key));
+    const recommendedSeen = new Set();
+    const recommendedKeys = (Array.isArray(source.recommendedKeys) ? source.recommendedKeys : []).map((key) => String(key || "").trim())
+      .filter((key) => known.has(key) && !recommendedSeen.has(key) && recommendedSeen.add(key)).slice(0, 3);
+    return { readState, profile, kits, recommendedKeys, workboardReady: source.workboardReady === true };
+  }
+
   function normalizeAccountSecurityBootstrap(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const readState = ACCOUNT_SECURITY_BOOTSTRAP_READ_STATES.has(String(source.readState || "").trim().toLowerCase())
@@ -6369,6 +6464,11 @@
       // display locale/timezone; it cannot inherit bridge, Bot, job, wallet,
       // payment, provider or arbitrary profile data through a render cycle.
       workspaceSetup: normalizeWorkspaceSetupBootstrap(source.workspaceSetup),
+      // Starter Kits retain only a closed local catalog, bounded counts and
+      // owner-scoped receipt IDs. They cannot inherit Bot, bridge, provider,
+      // job, wallet, payment, publication or notification state through a
+      // render cycle.
+      starterKits: normalizeStarterKitsBootstrap(source.starterKits),
       // MFA has a deliberately separate, tightly validated projection. The
       // transient setup/challenge handles are accepted only from live
       // in-memory Portal state and are never read from browser storage.
@@ -6451,6 +6551,19 @@
   function resolvePage(path) {
     const normalized = normalizePath(path);
     if (manifest[normalized]) return manifest[normalized];
+    if (normalized.startsWith("/starter-kits/")) {
+      const kitKey = normalized.slice("/starter-kits/".length);
+      const meta = STARTER_KIT_PORTAL_META[kitKey];
+      if (meta && normalized === `/starter-kits/${kitKey}`) {
+        return Object.freeze({
+          path: "/starter-kits/:key", routePath: normalized, starterKitKey: kitKey,
+          title: "Starter Kit", icon: meta.icon, section: "Workspace",
+          description: "Xem rõ record sẽ được tạo trước khi xác nhận một bộ khởi đầu Project Web-native.",
+          status: "ready", access: "member", type: "starter-kits", layout: "starter-kits", action: "none", actionLabel: "", fields: [],
+          notes: ["Server chỉ nhận key và version thuộc catalog đóng; browser không gửi nội dung Project, tài liệu, checklist hay reference.", "Khi xác nhận, transaction chỉ tạo Project, Studio Documents và Workboard checklist Web-owned; không có Bot, provider, job, Xu, PayOS hoặc output."]
+        });
+      }
+    }
     if (/^\/admin\/governance\/documents\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
       const documentId = normalized.split("/").pop();
       return Object.freeze({
@@ -6855,7 +6968,7 @@
       {
         label: "Workspace", defaultOpen: true,
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/starter-kits", "Starter Kits", ICONS.package], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets]
         ]
       },
       {
@@ -7045,7 +7158,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/projects", "/workboard", "/project-packages", "/workspace", "/prompt-library", "/free-prompt-gallery", "/content-studio", "/content/channel-strategy", "/content/handoffs", "/crm/leads", "/content/prompt-pack", "/content/contextual-prompt", "/trend-research", "/image/prompt-composer", "/image-studio", "/document-workspace", "/media-factory", "/creative-flow", "/guides/source-rights", "/subtitle-studio", "/subtitle/formats", "/voice-studio", "/media-workspace", "/analytics", "/notes", "/reminders", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/projects/") || path.startsWith("/workboard/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/content/channel-strategy/") || path.startsWith("/content/handoffs/") || path.startsWith("/crm/leads/") || path.startsWith("/document-workspace/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/");
+      return ["/dashboard", "/starter-kits", "/projects", "/workboard", "/project-packages", "/workspace", "/prompt-library", "/free-prompt-gallery", "/content-studio", "/content/channel-strategy", "/content/handoffs", "/crm/leads", "/content/prompt-pack", "/content/contextual-prompt", "/trend-research", "/image/prompt-composer", "/image-studio", "/document-workspace", "/media-factory", "/creative-flow", "/guides/source-rights", "/subtitle-studio", "/subtitle/formats", "/voice-studio", "/media-workspace", "/analytics", "/notes", "/reminders", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/starter-kits/") || path.startsWith("/projects/") || path.startsWith("/workboard/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/content/channel-strategy/") || path.startsWith("/content/handoffs/") || path.startsWith("/crm/leads/") || path.startsWith("/document-workspace/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -7324,6 +7437,9 @@
     const webSupportDesk = ["support-desk", "support-cases", "support-case-detail", "support-admin", "support-admin-case-detail"].includes(page.layout);
     if (webSupportDesk && status !== "guarded" && status !== "error" && status !== "failed") {
       return { icon: "✓", title: "Web Support Desk độc lập", text: "Case, timeline và quyền truy cập do Web App kiểm tra; không tạo ticket Bot, delivery Telegram/email, payment hoặc provider call." };
+    }
+    if (page.layout === "starter-kits") {
+      return { icon: "✓", title: "Starter Kits là planning Web-native", text: "Chỉ Project, Studio Documents và Workboard checklist được tạo sau xác nhận; không có integration, xử lý hay thanh toán ở luồng này." };
     }
     if (status === "ready") return { icon: "✓", title: "Giao diện đã sẵn sàng", text: "Chỉ các khả năng đã được máy chủ ký và cấp cho phiên mới được bật." };
     if (status === "empty") return { icon: "○", title: "Chưa có dữ liệu để hiển thị", text: "Portal không tự tạo job, số dư, file hay output. Dữ liệu chỉ xuất hiện sau phản hồi từ Engine Web hoặc integration đã được cấp quyền." };
@@ -17203,6 +17319,69 @@
     return `<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Liên kết Telegram đang tạm dừng</h2><p class="portal-card-subtitle">Cầu nối xác minh đang không sẵn sàng. Portal đã ẩn mã, deep link và lệnh Bot để không hướng bạn vào một luồng không thể hoàn tất.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Bạn vẫn có thể dùng Workspace Web độc lập. Khi máy chủ xác nhận lại cầu nối, hãy tạo mã mới; mã cũ không được dùng lại.</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding">Kiểm tra trạng thái</button></div></section>`;
   }
 
+  function starterKitCatalogItem(context, key) {
+    const catalog = context.starterKits && typeof context.starterKits === "object" ? context.starterKits : starterKitsEmptyBootstrap();
+    return (Array.isArray(catalog.kits) ? catalog.kits : []).find((item) => item && item.key === key) || null;
+  }
+
+  function starterKitStateBadge(state) {
+    return state === "installed" || state === "available" ? "ready" : "guarded";
+  }
+
+  function starterKitRecordCounts(kit) {
+    const counts = kit && kit.record_counts && typeof kit.record_counts === "object" ? kit.record_counts : {};
+    return `<dl class="portal-starter-kit-counts"><div><dt>Project</dt><dd>${safeText(String(counts.projects || 0))}</dd></div><div><dt>Studio Documents</dt><dd>${safeText(String(counts.documents || 0))}</dd></div><div><dt>Workboard card</dt><dd>${safeText(String(counts.work_items || 0))}</dd></div><div><dt>Checklist</dt><dd>${safeText(String(counts.checklist_items || 0))}</dd></div></dl>`;
+  }
+
+  function starterKitScopeRail() {
+    return `<aside class="portal-card portal-card-pad portal-starter-kit-scope"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Bạn luôn biết điều gì được tạo</h2></div>${badge("read_only")}</div><div class="portal-starter-kit-scope-section"><h3>Starter Kit sẽ tạo</h3><ul><li>Một Project Web-owned</li><li>Các Studio Documents bản nháp</li><li>Một Workboard card và checklist</li></ul></div><div class="portal-starter-kit-scope-section"><h3>Starter Kit không tạo</h3><ul><li>Không chạy công cụ hay sinh output</li><li>Không thay đổi số dư hoặc giao dịch</li><li>Không gửi thông báo hay phát hành nội dung</li></ul></div><p class="portal-form-note">Bạn có thể review, chỉnh sửa hoặc xóa các record Web này sau khi tạo.</p></aside>`;
+  }
+
+  function renderStarterKitCatalog(page, context, catalog) {
+    const recommended = new Set(Array.isArray(catalog.recommendedKeys) ? catalog.recommendedKeys : []);
+    const cards = catalog.kits.map((kit) => {
+      const installed = kit.state === "installed" && kit.installation && validProjectId(kit.installation.project_id);
+      const primary = installed
+        ? `<a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(kit.installation.project_id))}">Mở Project <span aria-hidden="true">→</span></a>`
+        : `<a class="portal-button portal-button--primary" href="/starter-kits/${encodeURIComponent(kit.key)}">${kit.state === "available" ? "Xem & tạo Project" : "Xem điều kiện"} <span aria-hidden="true">→</span></a>`;
+      const recommendation = recommended.has(kit.key) && !installed ? '<span class="portal-starter-kit-recommended">Phù hợp với Workspace Setup của bạn</span>' : "";
+      const installedNote = installed ? `<p class="portal-starter-kit-installed">Đã tạo ${safeText(String(kit.installation.document_count))} tài liệu và Workboard checklist vào ${safeText(String(kit.installation.created_at || "Project hiện tại"))}.</p>` : "";
+      return `<article class="portal-card portal-card-pad portal-starter-kit-card" data-state="${safeText(kit.state)}"><div class="portal-card-header"><div class="portal-starter-kit-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(kit.icon)}</span><div><span class="portal-section-kicker">${recommendation || "Starter Kit"}</span><h2 class="portal-card-title">${safeText(kit.title)}</h2><p class="portal-card-subtitle">${safeText(kit.summary)}</p></div></div>${badge(starterKitStateBadge(kit.state))}</div><p class="portal-starter-kit-outcome">${safeText(kit.outcome)}</p>${starterKitRecordCounts(kit)}${installedNote}<div class="portal-starter-kit-actions">${primary}</div></article>`;
+    }).join("");
+    return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<div class="portal-starter-kits-layout"><section class="portal-starter-kit-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Project launchpad</span><h2>Chọn cách khởi động Project</h2><p>Mỗi lựa chọn chỉ tạo cấu trúc planning rõ ràng để bạn tiếp tục review và biên tập trong Web App.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="/starter-kits">Làm mới</button></div><div class="portal-starter-kit-grid">${cards}</div></section>${starterKitScopeRail()}</div></article>`;
+  }
+
+  function renderStarterKitDetail(page, context, catalog, kit) {
+    const route = String(page.routePath || page.path || "/starter-kits");
+    const profile = catalog.profile && typeof catalog.profile === "object" ? catalog.profile : workspaceSetupEmptyProfile();
+    const installed = kit.state === "installed" && kit.installation && validProjectId(kit.installation.project_id);
+    const setupReady = profile.setup_state === "completed";
+    const applyReady = Boolean(context.capabilities && context.capabilities["starter-kit-apply"] === true && setupReady && catalog.workboardReady === true && kit.state === "available");
+    const content = installed
+      ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Đã tạo</span><h2 class="portal-card-title">Starter Kit này đã có trong Workspace</h2><p class="portal-card-subtitle">Không tạo lại record trùng. Hãy tiếp tục từ Project Web hiện có.</p></div>${badge("ready")}</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(kit.installation.project_id))}">Mở Project <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/starter-kits">Xem Starter Kits khác</a></div></section>`
+      : (!setupReady
+        ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước cần trước</span><h2 class="portal-card-title">Hoàn tất Workspace Setup trước</h2><p class="portal-card-subtitle">Starter Kit dùng revision của thiết lập hiện tại để tạo một Project phù hợp với cách bạn làm việc.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workspace/setup">Mở Workspace Setup <span aria-hidden="true">→</span></a></div></section>`
+        : (!catalog.workboardReady || kit.state === "maintenance"
+          ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Bảo trì</span><h2 class="portal-card-title">Workboard chưa sẵn sàng</h2><p class="portal-card-subtitle">Để tránh tạo một Project thiếu checklist, Starter Kit đang tạm dừng đến khi Workboard hoạt động trở lại.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="${safeText(route)}">Kiểm tra lại</button></div></section>`
+          : `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Xác nhận tạo Project</span><h2 class="portal-card-title">Tạo cấu trúc planning này?</h2><p class="portal-card-subtitle">Server sẽ kiểm tra signed session, CSRF, Workspace Setup revision, idempotency và giới hạn Workboard trước khi tạo record.</p></div>${badge(applyReady ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="starter-kit-apply" data-portal-route="${safeText(route)}" data-portal-confirm="Tạo Project, Studio Documents và Workboard checklist từ Starter Kit này? Bạn có thể chỉnh sửa các record Web sau đó." novalidate><input type="hidden" name="kit_key" value="${safeText(kit.key)}"><input type="hidden" name="kit_version" value="${safeText(String(kit.version))}"><input type="hidden" name="expected_setup_revision" value="${safeText(String(profile.revision || 0))}"><label class="portal-checkbox portal-starter-kit-confirm-check"><input type="checkbox" name="starter_kit_confirm" value="true" required${applyReady ? "" : " disabled"}><span>Tôi hiểu kit này chỉ tạo các record planning ở trên; không tạo kết quả hoàn tất hay chạy tác vụ bên ngoài.</span></label><div class="portal-form-footer"><span class="portal-form-note">Tạo một lần theo từng Starter Kit. Nhấn lại cùng yêu cầu sẽ nhận lại receipt an toàn, không nhân đôi record.</span><button class="portal-button portal-button--primary" type="submit"${applyReady ? "" : " disabled"}>Tạo Project từ kit <span aria-hidden="true">→</span></button></div></form></section>`));
+    return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<div class="portal-starter-kits-layout"><section class="portal-starter-kit-detail"><a class="portal-back-link" href="/starter-kits">${portalIcon(ICONS.arrowRight)} <span>Tất cả Starter Kits</span></a><section class="portal-card portal-card-pad portal-starter-kit-detail-card"><div class="portal-card-header"><div class="portal-starter-kit-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(kit.icon)}</span><div><span class="portal-section-kicker">Starter Kit</span><h2 class="portal-card-title">${safeText(kit.title)}</h2><p class="portal-card-subtitle">${safeText(kit.summary)}</p></div></div>${badge(starterKitStateBadge(kit.state))}</div><p class="portal-starter-kit-outcome">${safeText(kit.outcome)}</p><section class="portal-starter-kit-creates"><h3>Kit này sẽ tạo</h3>${starterKitRecordCounts(kit)}</section></section>${content}</section>${starterKitScopeRail()}</div></article>`;
+  }
+
+  function renderStarterKits(page, context) {
+    const catalog = context.starterKits && typeof context.starterKits === "object" ? context.starterKits : starterKitsEmptyBootstrap();
+    const canView = Boolean(context.capabilities && context.capabilities["starter-kits-view"] === true);
+    if (!canView) return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Starter Kits đang được bảo vệ", "Đăng nhập bằng signed session để xem catalog Project Web-native của tài khoản hiện tại.", ICONS.package)}</section></article>`;
+    if (catalog.readState === "loading") return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Đang tải Starter Kits", "Portal đang đọc catalog và receipt owner-scoped từ server. Không dùng cache cũ hoặc dữ liệu trình duyệt thay thế.", ICONS.package)}</section></article>`;
+    if (catalog.readState !== "read_only") return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Starter Kits chưa thể xác minh", "Catalog đang được bảo vệ hoặc phản hồi không đúng contract. Hãy tải lại khi signed session còn hoạt động.", ICONS.security)}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="${safeText(String(page.routePath || page.path || "/starter-kits"))}">Tải lại</button></div></section></article>`;
+    const key = typeof page.starterKitKey === "string" ? page.starterKitKey : "";
+    if (key) {
+      const kit = starterKitCatalogItem(context, key);
+      if (!kit) return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Starter Kit không còn trong catalog", "Hãy quay về catalog để chọn một bộ khởi đầu đang được server công bố.", ICONS.package)}<a class="portal-button portal-button--primary" href="/starter-kits">Về Starter Kits</a></section></article>`;
+      return renderStarterKitDetail(page, context, catalog, kit);
+    }
+    return renderStarterKitCatalog(page, context, catalog);
+  }
+
   function renderWorkspaceSetup(page, context) {
     const setup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
     const profile = setup.profile && typeof setup.profile === "object" ? setup.profile : workspaceSetupEmptyProfile();
@@ -17253,10 +17432,11 @@
       : "";
     const completionState = profile.setup_state === "completed" ? ' data-state="done"' : "";
     const completionMarker = profile.setup_state === "completed" ? portalIcon(ICONS.check) : "1";
+    const starterKitLink = profile.setup_state === "completed" ? `<a class="portal-button portal-button--quiet" href="/starter-kits">Mở Starter Kits</a>` : "";
     return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}
       <ol class="portal-workspace-setup-steps" aria-label="Ba phần trong biểu mẫu Workspace"><li${completionState}><span aria-hidden="true">${completionMarker}</span><div><strong>Cách làm việc</strong><small>Vai trò, mục tiêu và mức trải nghiệm.</small></div></li><li${completionState}><span aria-hidden="true">${profile.setup_state === "completed" ? portalIcon(ICONS.check) : "2"}</span><div><strong>Chọn studio</strong><small>Tối đa ba nhóm ưu tiên.</small></div></li><li${completionState}><span aria-hidden="true">${profile.setup_state === "completed" ? portalIcon(ICONS.check) : "3"}</span><div><strong>Lưu và điều chỉnh sau</strong><small>Một biểu mẫu, không có bước ẩn.</small></div></li></ol>
       <section class="portal-workspace-setup-context" aria-label="Ngữ cảnh tài khoản Web"><div><span class="portal-section-kicker">Web-native preference</span><h2>Thiết lập theo cách bạn làm việc</h2><p>${safeText(stateCopy)}</p></div>${badge(profileState)}<div class="portal-workspace-setup-context-meta"><span>${portalIcon(ICONS.account)} ${safeText(String(preferences.locale || "vi").toUpperCase())}</span><span>${portalIcon(ICONS.system)} ${safeText(String(preferences.timezone || "Asia/Ho_Chi_Minh"))}</span></div></section>
-      <form class="portal-form portal-workspace-setup-form" data-portal-form data-portal-no-transient data-workspace-setup-form data-workspace-setup-writable="${canSave ? "true" : "false"}" data-portal-action="workspace-setup-save" data-portal-route="${route}" novalidate><div class="portal-fields portal-workspace-setup-form-grid"><label class="portal-field"><span>Vai trò của bạn</span><select class="portal-select" name="role" required${disabled}>${options(roleOptions, profile.role, "Chọn vai trò")}</select><small class="portal-field-help">Dùng để sắp xếp điểm bắt đầu trong Web App.</small></label><label class="portal-field"><span>Mục tiêu chính</span><select class="portal-select" name="goal" required${disabled}>${options(goalOptions, profile.goal, "Chọn mục tiêu")}</select><small class="portal-field-help">Không mở thêm quyền hoặc engine.</small></label><label class="portal-field"><span>Mức trải nghiệm</span><select class="portal-select" name="experience" required${disabled}>${options(experienceOptions, profile.experience, "Chọn mức trải nghiệm")}</select><small class="portal-field-help">Bạn có thể thay đổi sau.</small></label></div><fieldset class="portal-workspace-setup-focus" aria-describedby="workspace-setup-focus-help workspace-setup-focus-status"><legend>Chọn tối đa 3 nhóm studio ưu tiên</legend><p id="workspace-setup-focus-help">Chỉ chọn những không gian bạn muốn thấy trước. Đây không phải lệnh chạy hoặc tạo output.</p><p class="portal-workspace-setup-focus-status" id="workspace-setup-focus-status" data-workspace-setup-focus-status role="status" aria-live="polite">${focusStatus}</p><div class="portal-workspace-setup-focus-grid">${focusCards}</div></fieldset><div class="portal-form-footer" data-workspace-setup-status aria-live="polite"><span class="portal-form-note">Lưu theo signed Web account · revision ${safeText(String(profile.revision || 0))} · không có Bot, provider, job, ví hay thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Lưu và vào Workspace</button></div></form><div class="portal-workspace-setup-secondary">${skip}<a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard</a></div></article>`;
+      <form class="portal-form portal-workspace-setup-form" data-portal-form data-portal-no-transient data-workspace-setup-form data-workspace-setup-writable="${canSave ? "true" : "false"}" data-portal-action="workspace-setup-save" data-portal-route="${route}" novalidate><div class="portal-fields portal-workspace-setup-form-grid"><label class="portal-field"><span>Vai trò của bạn</span><select class="portal-select" name="role" required${disabled}>${options(roleOptions, profile.role, "Chọn vai trò")}</select><small class="portal-field-help">Dùng để sắp xếp điểm bắt đầu trong Web App.</small></label><label class="portal-field"><span>Mục tiêu chính</span><select class="portal-select" name="goal" required${disabled}>${options(goalOptions, profile.goal, "Chọn mục tiêu")}</select><small class="portal-field-help">Không mở thêm quyền hoặc engine.</small></label><label class="portal-field"><span>Mức trải nghiệm</span><select class="portal-select" name="experience" required${disabled}>${options(experienceOptions, profile.experience, "Chọn mức trải nghiệm")}</select><small class="portal-field-help">Bạn có thể thay đổi sau.</small></label></div><fieldset class="portal-workspace-setup-focus" aria-describedby="workspace-setup-focus-help workspace-setup-focus-status"><legend>Chọn tối đa 3 nhóm studio ưu tiên</legend><p id="workspace-setup-focus-help">Chỉ chọn những không gian bạn muốn thấy trước. Đây không phải lệnh chạy hoặc tạo output.</p><p class="portal-workspace-setup-focus-status" id="workspace-setup-focus-status" data-workspace-setup-focus-status role="status" aria-live="polite">${focusStatus}</p><div class="portal-workspace-setup-focus-grid">${focusCards}</div></fieldset><div class="portal-form-footer" data-workspace-setup-status aria-live="polite"><span class="portal-form-note">Lưu theo signed Web account · revision ${safeText(String(profile.revision || 0))} · không có Bot, provider, job, ví hay thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Lưu và vào Workspace</button></div></form><div class="portal-workspace-setup-secondary">${skip}${starterKitLink}<a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard</a></div></article>`;
   }
 
   function renderOnboarding(page, context) {
@@ -19381,6 +19561,7 @@
       case "membership": return renderMembership(page, context);
       case "service-status": return renderServiceStatus(page, context);
       case "media-studio": return renderMediaStudio(page, context);
+      case "starter-kits": return renderStarterKits(page, context);
       case "workspace-setup": return renderWorkspaceSetup(page, context);
       case "read-only": return renderReadOnly(page, context);
       case "onboarding": return renderOnboarding(page, context);

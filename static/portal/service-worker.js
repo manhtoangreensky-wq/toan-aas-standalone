@@ -16,12 +16,13 @@
     /api/v1/media-factory (transient Media Factory blueprints only),
    /api/v1/voice-studio, /api/v1/video-studio (including the prompt planner), /api/v1/image-studio, /api/v1/subtitle-studio,
    /api/v1/document-workspace, /api/v1/chat-workspace, /api/v1/analytics-workspace, /api/v1/workboard,
-    /api/v1/workspace/setup,
+    /api/v1/workspace/setup, /api/v1/workspace/starter-kits,
     /api/v1/operations, /internal/v1/operations, /api/v1/inbox, /internal/v1/notifications,
     private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/music-prompt-composer`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
      private `/chat/*` routes, private `/analytics/*` routes, private `/free-prompt-gallery` and `/api/v1/free-prompt-gallery`, private `/content/channel-strategy`, `/content/prompt-pack`, `/content/publish-review`, `/content/contextual-prompt`, `/trend-research`, `/media-factory`, `/creative-flow`, `/video-studio/workflow`, `/video-studio/story-video-plan` and `/guides/source-rights` routes, private `/workboard/*` routes,
     private `/content/handoffs/*`, private `/crm/*`, private `/operations/*`, private `/admin/operations/*`, private `/admin/reliability/*`, private `/inbox/*` and private `/automation/*` routes and private delivery URLs are
-    intentionally never cached. */
+    private `/starter-kits/*` routes and private delivery URLs are intentionally
+    never cached. */
 // Cache Storage is origin-wide.  Only remove obsolete generations created by
 // this worker; other applications sharing the origin may own their own caches.
 const CACHE_PREFIX = "toan-aas-portal-shell-";
@@ -130,6 +131,10 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   // shell allow-list evolves in a future release.
   "/" + "api/v1/workspace/setup",
   "/workspace/setup",
+  // Starter Kits expose owner-scoped setup revisions and install receipts.
+  // Keep the catalog/API and every fixed detail page out of Cache Storage.
+  "/" + "api/v1/workspace/starter-kits",
+  "/starter-kits",
   // Campaign Planner, its Calendar and self-review views are signed
   // account-owned planning surfaces. Campaign schedule intents are private
   // Inbox metadata, never a public PWA cache entry or offline fallback.

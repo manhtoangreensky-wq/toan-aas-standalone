@@ -265,6 +265,11 @@
   // account switch, dashboard navigation or a newer setup refresh.
   let workspaceSetupSessionEpoch = 0;
   let workspaceSetupHydrationEpoch = 0;
+  // Starter Kits have an independent owner-scoped catalog and install ledger.
+  // Fence them separately so a delayed catalog/receipt can never cross a
+  // logout, account switch, route transition or newer refresh.
+  let starterKitsSessionEpoch = 0;
+  let starterKitsHydrationEpoch = 0;
   // Data Control Center reads authoring inventory and erasure-review metadata
   // owned by the signed Web account. Keep it isolated from the Bot privacy
   // flow and fence it against logout, account switches, route changes and a
@@ -897,6 +902,113 @@
       },
       readState: ["loading", "read_only", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded"
     };
+  }
+
+  // Keep the browser catalog closed even when a deployment has stale assets.
+  // The API still owns all actual record content; this projection preserves
+  // only safe display metadata and receipt IDs for the signed account.
+  const STARTER_KIT_KEYS = new Set([
+    "project-foundation", "content-foundation", "image-direction", "voice-script",
+    "audio-brief", "subtitle-plan", "document-qa", "operations-board"
+  ]);
+  const STARTER_KIT_STATES = new Set(["available", "installed", "setup_required", "maintenance"]);
+  const STARTER_KIT_BOUNDARY_FALSE_FIELDS = [
+    "installation_created", "project_created", "studio_documents_created", "workboard_items_created",
+    "bot_called", "bridge_called", "provider_called", "job_created", "wallet_mutated", "payment_started",
+    "publish_action_created", "notification_sent", "asset_created", "delivery_created"
+  ];
+
+  function starterKitsSafeText(value, maximum) {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function starterKitsSafeCount(value, maximum) {
+    const number = Number(value);
+    return Number.isSafeInteger(number) && number >= 0 && number <= maximum ? number : null;
+  }
+
+  function emptyStarterKitsProjection(readState) {
+    return {
+      readState: ["loading", "read_only", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded",
+      profile: workspaceSetupEmptyProfile(),
+      kits: [],
+      recommendedKeys: [],
+      workboardReady: false
+    };
+  }
+
+  function starterKitsBoundaryIsSafe(raw) {
+    const boundary = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    return boundary.execution === "web_native_starter_kit_install"
+      && boundary.catalog_loaded === true
+      && STARTER_KIT_BOUNDARY_FALSE_FIELDS.every((field) => boundary[field] === false);
+  }
+
+  function starterKitInstallationProjection(raw, key) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const id = String(source.id || "").trim();
+    const projectId = String(source.project_id || "").trim();
+    const kitKey = String(source.kit_key || "").trim();
+    const kitVersion = starterKitsSafeCount(source.kit_version, 1000000);
+    const documentCount = starterKitsSafeCount(source.document_count, 6);
+    const workItemCount = starterKitsSafeCount(source.work_item_count, 1);
+    const setupRevision = starterKitsSafeCount(source.setup_profile_revision, 2147483647);
+    const createdAt = workspaceSetupTimestamp(source.created_at);
+    if (!validProjectId(id) || !validProjectId(projectId) || kitKey !== key || !kitVersion || documentCount === null || documentCount < 2 || workItemCount !== 1 || setupRevision === null || !createdAt) return null;
+    return { id, kit_key: kitKey, kit_version: kitVersion, project_id: projectId, document_count: documentCount, work_item_count: workItemCount, setup_profile_revision: setupRevision, created_at: createdAt };
+  }
+
+  function starterKitProjection(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const key = String(source.key || "").trim();
+    const version = starterKitsSafeCount(source.version, 1000000);
+    const title = starterKitsSafeText(source.title, 120);
+    const summary = starterKitsSafeText(source.summary, 300);
+    const outcome = starterKitsSafeText(source.outcome, 300);
+    const state = String(source.state || "").trim();
+    const counts = source.record_counts && typeof source.record_counts === "object" ? source.record_counts : {};
+    const projects = starterKitsSafeCount(counts.projects, 1);
+    const documents = starterKitsSafeCount(counts.documents, 6);
+    const workItems = starterKitsSafeCount(counts.work_items, 1);
+    const checklistItems = starterKitsSafeCount(counts.checklist_items, 32);
+    const focusSeen = new Set();
+    const focusAreas = Array.isArray(source.focus_areas) ? source.focus_areas.map((value) => String(value || "").trim().toLowerCase())
+      .filter((value) => WORKSPACE_SETUP_FOCUS.has(value) && !focusSeen.has(value) && focusSeen.add(value)).slice(0, 2) : [];
+    const installation = starterKitInstallationProjection(source.installation, key);
+    if (!STARTER_KIT_KEYS.has(key) || !version || !title || !summary || !outcome || !STARTER_KIT_STATES.has(state)
+      || projects !== 1 || documents === null || documents < 2 || workItems !== 1 || checklistItems === null || checklistItems < 1 || !focusAreas.length
+      || (state === "installed" && !installation) || (state !== "installed" && installation)) return null;
+    return { key, version, title, summary, outcome, focus_areas: focusAreas, record_counts: { projects, documents, work_items: workItems, checklist_items: checklistItems }, state, installation };
+  }
+
+  function starterKitsProjection(raw, readState) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    if (readState !== "read_only") return emptyStarterKitsProjection(readState);
+    const profile = workspaceSetupProfileProjection(source.profile);
+    if (!workspaceSetupProfileIsConsistent(profile) || !starterKitsBoundaryIsSafe(source.boundary)) return emptyStarterKitsProjection("guarded");
+    const seen = new Set();
+    const kits = (Array.isArray(source.kits) ? source.kits : []).map(starterKitProjection)
+      .filter((item) => item && !seen.has(item.key) && seen.add(item.key));
+    if (kits.length !== STARTER_KIT_KEYS.size || seen.size !== STARTER_KIT_KEYS.size) return emptyStarterKitsProjection("guarded");
+    const recommendationSeen = new Set();
+    const recommendedKeys = (Array.isArray(source.recommended_keys) ? source.recommended_keys : []).map((key) => String(key || "").trim())
+      .filter((key) => seen.has(key) && !recommendationSeen.has(key) && recommendationSeen.add(key)).slice(0, 3);
+    return { readState: "read_only", profile, kits, recommendedKeys, workboardReady: source.workboard_ready === true };
+  }
+
+  function starterKitApplyReceipt(raw, expectedKey) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const boundary = source.boundary && typeof source.boundary === "object" ? source.boundary : {};
+    const installation = starterKitInstallationProjection(source.installation, expectedKey);
+    const executionComplete = boundary.execution === "web_native_starter_kit_install"
+      && boundary.catalog_loaded === true
+      && boundary.installation_created === true
+      && boundary.project_created === true
+      && boundary.studio_documents_created === true
+      && boundary.workboard_items_created === true
+      && ["bot_called", "bridge_called", "provider_called", "job_created", "wallet_mutated", "payment_started", "publish_action_created", "notification_sent", "asset_created", "delivery_created"].every((field) => boundary[field] === false);
+    return installation && executionComplete ? installation : null;
   }
 
   function priorFeatureFlow(route) {
@@ -8993,6 +9105,7 @@
     ++accountActivitySessionEpoch;
     ++accountSecuritySessionEpoch;
     ++workspaceSetupSessionEpoch;
+    ++starterKitsSessionEpoch;
     ++dataControlsSessionEpoch;
     ++governanceDocumentsSessionEpoch;
     ++governanceDocumentsHydrationEpoch;
@@ -9039,6 +9152,10 @@
       ? (account.display_name || account.email || (account.account_type === "telegram" ? "Người dùng Telegram" : "Khách"))
       : "";
     const copyfastEnabled = Boolean(status.flags && status.flags.copyfast_enabled);
+    // Starter Kits are a separate Web-native planning capability.  This flag
+    // does not grant any external execution; the server still checks setup,
+    // owner scope, Workboard readiness, CSRF and idempotency on every apply.
+    const starterKitsEnabled = Boolean(status.flags && status.flags.starter_kits_enabled === true);
     // TOTP is a Web-only second factor. A true client flag merely permits
     // the Portal to request the narrow signed MFA routes; it never enables
     // Bot identity, Core Bridge, wallet, payment, provider or job behavior.
@@ -9334,6 +9451,8 @@
       // account ownership, revision and idempotency checks on every write.
       "workspace-setup-view": Boolean(account),
       "workspace-setup-save": Boolean(account && me.csrf_token),
+      "starter-kits-view": Boolean(account && starterKitsEnabled),
+      "starter-kit-apply": Boolean(account && me.csrf_token && starterKitsEnabled),
       // SMTP availability is projected separately by the signed server. This
       // only enables the explicit consent control; it never claims delivery.
       "account-security-email-verification": Boolean(account && me.csrf_token),
@@ -9904,6 +10023,11 @@
       // revision on screen, and no browser-derived default is treated as a
       // saved profile.
       workspaceSetup: workspaceSetupProjection({}, account ? "loading" : "guarded"),
+      // Starter Kit catalog/install receipts are independent private records.
+      // Clear them before every account bootstrap so a prior user's catalog or
+      // Project receipt can never survive a failed signed read.
+      starterKitsEnabled,
+      starterKits: emptyStarterKitsProjection(account && starterKitsEnabled ? "loading" : "guarded"),
       // Data Controls gets a blank, narrow projection on every bootstrap. A
       // failed/new session must never retain another account's inventory or
       // erasure-review receipt, and nothing falls back to the Bot flow.
@@ -10951,6 +11075,11 @@
     // owner-scoped, Web-only draft library as `/workspace`. This never calls
     // the Bot bridge and cannot create a job, quote, payment or provider task.
     if (account && ["/workspace/setup", "/dashboard"].includes(currentPath)) await hydrateWorkspaceSetup();
+    if (account && starterKitsEnabled && isNativeStarterKitsPath(currentPath)) await hydrateStarterKits();
+    else if (isNativeStarterKitsPath(currentPath)) merge({
+      starterKits: emptyStarterKitsProjection("guarded"),
+      pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+    });
     if (account && ["/workspace", "/dashboard"].includes(currentPath)) await hydrateWorkspaceDrafts();
     if (account && linkChallengeRoute()) {
       const linkStatus = await hydrateLinkStatus();
@@ -10970,7 +11099,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -15445,6 +15574,107 @@
       && Boolean(base().session && base().session.authenticated === true);
   }
 
+  function isNativeStarterKitsPath(path) {
+    const normalized = String(path || "").split("?")[0].replace(/\/$/, "") || "/";
+    if (normalized === "/starter-kits") return true;
+    if (!normalized.startsWith("/starter-kits/")) return false;
+    const key = normalized.slice("/starter-kits/".length);
+    return STARTER_KIT_KEYS.has(key) && normalized === `/starter-kits/${key}`;
+  }
+
+  function starterKitsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === starterKitsHydrationEpoch
+      && sessionEpoch === starterKitsSessionEpoch
+      && currentPortalPath() === expectedPath
+      && isNativeStarterKitsPath(expectedPath)
+      && base().starterKitsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateStarterKits() {
+    const requestEpoch = ++starterKitsHydrationEpoch;
+    const sessionEpoch = starterKitsSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!isNativeStarterKitsPath(expectedPath) || base().starterKitsEnabled !== true) return null;
+    try {
+      const result = await api("/workspace/starter-kits");
+      if (!starterKitsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const catalog = starterKitsProjection(result.data, "read_only");
+      if (!starterKitsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      if (catalog.readState !== "read_only") {
+        merge({ starterKits: emptyStarterKitsProjection("guarded"), pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" } });
+        return null;
+      }
+      merge({ starterKits: catalog, pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" } });
+      return catalog;
+    } catch (_) {
+      // A current failure clears the private catalog rather than leaving a
+      // previous account's install receipt on screen.
+      if (!starterKitsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({ starterKits: emptyStarterKitsProjection("guarded"), pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" } });
+      return null;
+    }
+  }
+
+  function starterKitApplyPayload(route, fields) {
+    if (!isNativeStarterKitsPath(route) || route === "/starter-kits") throw new Error("Chọn một Starter Kit hợp lệ trước khi tạo Project.");
+    const key = route.slice("/starter-kits/".length);
+    const kitVersion = starterKitsSafeCount(fields.kit_version, 1000000);
+    const expectedSetupRevision = starterKitsSafeCount(fields.expected_setup_revision, 2147483647);
+    const catalog = base().starterKits && typeof base().starterKits === "object" ? base().starterKits : emptyStarterKitsProjection("guarded");
+    const profile = catalog.profile && typeof catalog.profile === "object" ? catalog.profile : workspaceSetupEmptyProfile();
+    const kit = Array.isArray(catalog.kits) ? catalog.kits.find((item) => item && item.key === key) : null;
+    if (fields.starter_kit_confirm !== true) throw new Error("Hãy xác nhận phạm vi Starter Kit trước khi tạo Project.");
+    if (String(fields.kit_key || "").trim() !== key || !kitVersion || expectedSetupRevision === null) throw new Error("Thông tin xác nhận Starter Kit không hợp lệ. Hãy tải lại trang.");
+    if (catalog.readState !== "read_only" || !kit || kit.version !== kitVersion || kit.state !== "available") throw new Error("Starter Kit đã thay đổi hoặc chưa sẵn sàng. Hãy tải lại catalog.");
+    if (profile.setup_state !== "completed" || profile.revision !== expectedSetupRevision || catalog.workboardReady !== true) throw new Error("Workspace Setup hoặc Workboard đã thay đổi. Hãy tải lại trước khi tiếp tục.");
+    return { key, kit_version: kitVersion, expected_setup_revision: expectedSetupRevision, confirmed: true };
+  }
+
+  async function applyStarterKit({ action, route, fields }) {
+    if (currentPortalPath() !== route) throw new Error("Starter Kit chỉ được tạo từ trang đang mở.");
+    if (!(base().capabilities && base().capabilities["starter-kit-apply"] === true)) throw new Error("Cần signed Web session và CSRF hợp lệ để tạo Starter Kit.");
+    const payload = starterKitApplyPayload(route, fields);
+    const scope = `starter-kit:${payload.key}:${payload.kit_version}:${payload.expected_setup_revision}`;
+    const submission = acquireSubmission(scope, featureFingerprint(payload));
+    if (!submission) {
+      toast("Starter Kit đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      return;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(`/workspace/starter-kits/${encodeURIComponent(payload.key)}/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      const receipt = result.status === "draft" ? starterKitApplyReceipt(result.data, payload.key) : null;
+      if (!receipt) throw new Error("Máy chủ trả receipt Starter Kit không đúng phạm vi an toàn. Hãy tải lại trước khi tiếp tục.");
+      // A late response must never change another screen. The signed refresh
+      // and Project redirect occur only while this exact route still owns the
+      // interaction.
+      if (currentPortalPath() !== route) return;
+      const catalog = await hydrateStarterKits();
+      if (currentPortalPath() !== route) return;
+      if (!catalog) throw new Error("Project đã được tạo nhưng Portal chưa tải lại catalog an toàn. Hãy mở Starter Kits lại.");
+      toast(result.message || "Đã tạo Project từ Starter Kit.");
+      window.location.assign(`/projects/${encodeURIComponent(receipt.project_id)}`);
+    } catch (error) {
+      acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      // Once a response reached the server, refresh only the current signed
+      // Starter route. This keeps duplicate receipts/guarded outcomes truthful
+      // without dragging a user back from a later navigation.
+      if (acknowledged && currentPortalPath() === route) await hydrateStarterKits();
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
   async function hydrateWorkspaceSetup() {
     const requestEpoch = ++workspaceSetupHydrationEpoch;
     const sessionEpoch = workspaceSetupSessionEpoch;
@@ -16461,7 +16691,7 @@
     // Native authoring workspaces have no generic feature/bridge projection.
     // Return before any canonical endpoint can overwrite their owner-scoped
     // state, including the similarly-prefixed `/voice-studio` route.
-    if (isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path)) return;
+    if (isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
@@ -17252,6 +17482,27 @@
     let featurePhase = "";
     let featureSubmission = null;
     try {
+      if (action === "starter-kits-refresh") {
+        if (!isNativeStarterKitsPath(route) || currentPortalPath() !== route) {
+          throw new Error("Chỉ có thể tải lại Starter Kits từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["starter-kits-view"] === true)) {
+          throw new Error("Cần signed Web session để xem Starter Kits.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const catalog = await hydrateStarterKits();
+          if (!catalog) throw new Error("Không thể tải Starter Kits owner-scoped an toàn. Hãy thử lại.");
+          toast("Đã tải lại Starter Kits từ server.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "starter-kit-apply") {
+        await applyStarterKit({ action, route, fields });
+        return;
+      }
       if (action === "workspace-setup-refresh") {
         if (route !== "/workspace/setup" || currentPortalPath() !== "/workspace/setup") {
           throw new Error("Chỉ có thể tải lại thiết lập từ trang Workspace Setup hiện tại.");

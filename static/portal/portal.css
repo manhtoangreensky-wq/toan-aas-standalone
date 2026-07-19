@@ -3580,11 +3580,53 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-workspace-setup-focus-card small { color: var(--portal-muted); font-size: 12px; line-height: 1.4; }
 .portal-workspace-setup-secondary { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 
+/* Starter Kits stay inside the app shell: a compact Project launchpad, not a
+   marketing hero. The right rail makes the write boundary visible before the
+   user ever reaches the confirmation control. */
+.portal-starter-kits { max-width: 1220px; }
+.portal-starter-kits > .portal-hero { margin-bottom: 2px; }
+.portal-starter-kits-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(250px, 318px); gap: 18px; align-items: start; }
+.portal-starter-kit-catalog, .portal-starter-kit-detail { display: grid; gap: 16px; min-width: 0; }
+.portal-starter-kit-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+.portal-starter-kit-card { display: flex; min-height: 100%; flex-direction: column; gap: 14px; border-color: var(--portal-border); transition: border-color .18s ease, background .18s ease, transform .18s ease; }
+.portal-starter-kit-card:hover { border-color: rgba(81, 213, 188, .48); background: var(--portal-surface-strong); transform: translateY(-1px); }
+.portal-starter-kit-card:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px rgba(81, 213, 188, .16); }
+.portal-starter-kit-heading { display: flex; min-width: 0; gap: 12px; align-items: flex-start; }
+.portal-starter-kit-heading > div { min-width: 0; }
+.portal-starter-kit-heading .portal-module-icon { width: 42px; height: 42px; flex: 0 0 42px; border: 1px solid var(--portal-border); border-radius: 12px; background: rgba(81, 213, 188, .08); color: var(--portal-accent); }
+.portal-starter-kit-heading .portal-module-icon .portal-icon { width: 20px; height: 20px; }
+.portal-starter-kit-recommended { display: block; margin-bottom: 4px; color: var(--portal-accent); font-size: 11px; font-weight: 800; line-height: 1.35; letter-spacing: .06em; text-transform: uppercase; }
+.portal-starter-kit-outcome { min-height: 42px; margin: 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.58; }
+.portal-starter-kit-counts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin: 0; }
+.portal-starter-kit-counts > div { min-width: 0; padding: 9px; border: 1px solid var(--portal-border); border-radius: 10px; background: rgba(7, 14, 22, .22); }
+.portal-starter-kit-counts dt { overflow: hidden; color: var(--portal-muted); font-size: 10px; font-weight: 750; line-height: 1.3; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
+.portal-starter-kit-counts dd { margin: 4px 0 0; color: var(--portal-text); font-size: 16px; font-weight: 850; }
+.portal-starter-kit-actions { display: flex; margin-top: auto; padding-top: 2px; }
+.portal-starter-kit-actions .portal-button, .portal-starter-kit-confirmation .portal-button { min-height: 44px; }
+.portal-starter-kit-actions .portal-button { width: 100%; justify-content: center; }
+.portal-starter-kit-installed { margin: 0; color: var(--portal-accent); font-size: 12px; line-height: 1.5; }
+.portal-starter-kit-scope { position: sticky; top: 88px; display: grid; gap: 15px; }
+.portal-starter-kit-scope-section { display: grid; gap: 8px; padding-top: 14px; border-top: 1px solid var(--portal-border); }
+.portal-starter-kit-scope-section h3, .portal-starter-kit-creates h3 { margin: 0; color: var(--portal-text); font-size: 13px; }
+.portal-starter-kit-scope-section ul { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.portal-starter-kit-scope-section li { position: relative; padding-left: 18px; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.5; }
+.portal-starter-kit-scope-section li::before { position: absolute; left: 0; color: var(--portal-accent); content: "•"; }
+.portal-starter-kit-detail-card, .portal-starter-kit-confirmation { display: grid; gap: 16px; }
+.portal-starter-kit-creates { display: grid; gap: 10px; padding-top: 16px; border-top: 1px solid var(--portal-border); }
+.portal-starter-kit-confirm-check { align-items: flex-start; padding: 13px; border: 1px solid var(--portal-border); border-radius: 12px; background: rgba(7, 14, 22, .22); }
+.portal-starter-kit-confirm-check input { width: 20px; height: 20px; flex: 0 0 20px; margin-top: 1px; accent-color: var(--portal-accent); }
+.portal-starter-kit-confirm-check:focus-within { border-color: var(--portal-accent); box-shadow: 0 0 0 3px rgba(81, 213, 188, .16); }
+.portal-back-link { display: inline-flex; width: fit-content; min-height: 44px; gap: 8px; align-items: center; color: var(--portal-muted-strong); font-size: 13px; font-weight: 750; text-decoration: none; }
+.portal-back-link:hover { color: var(--portal-text); }
+.portal-back-link .portal-icon { width: 16px; height: 16px; transform: rotate(180deg); }
+
 @media (max-width: 980px) {
   .portal-auth-page { grid-template-columns: 1fr; width: min(680px, 100%); gap: 20px; padding-top: 72px; }
   .portal-auth-intro { max-width: none; padding: 0; }
   .portal-auth-intro .portal-description { max-width: 620px; }
   .portal-auth-card { justify-self: stretch; max-width: none; }
+  .portal-starter-kits-layout { grid-template-columns: 1fr; }
+  .portal-starter-kit-scope { position: static; }
 }
 
 @media (max-width: 700px) {
@@ -3610,6 +3652,10 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-workspace-setup-form-grid, .portal-workspace-setup-focus-grid { grid-template-columns: 1fr; }
   .portal-workspace-setup-focus-card { min-height: 76px; }
   .portal-workspace-setup-secondary .portal-button { min-height: 44px; flex: 1 1 180px; justify-content: center; }
+  .portal-starter-kit-grid { grid-template-columns: 1fr; }
+  .portal-starter-kit-counts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .portal-starter-kit-scope, .portal-starter-kit-card, .portal-starter-kit-detail-card, .portal-starter-kit-confirmation { border-radius: 16px; }
+  .portal-starter-kit-scope { padding: 18px; }
 }
 
 .portal-settings-nav {

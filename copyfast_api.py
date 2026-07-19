@@ -633,6 +633,11 @@ def _flags() -> dict[str, bool]:
         # without enabling Bot work, providers, wallet/Xu, PayOS, jobs,
         # publishing, notifications or any external automation.
         "workboard_enabled": enabled("WEBAPP_WORKBOARD_ENABLED", True),
+        # Starter Kits are a narrow, local Project launch action.  They create
+        # only reviewed Project/Studio Document/Workboard records; this flag
+        # never enables a Bot bridge, provider, job, asset, wallet/Xu, PayOS,
+        # publication or notification side effect.
+        "starter_kits_enabled": enabled("WEBAPP_STARTER_KITS_ENABLED", True),
         # Support cases/messages are owned by signed Web accounts.  The flag
         # is independent from the Bot ticket bridge and makes a deliberate
         # maintenance posture observable to the Portal without hiding the
