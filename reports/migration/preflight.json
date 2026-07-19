@@ -16,15 +16,15 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-07-19T14:39:32+00:00",
+  "generated_at_utc": "2026-07-19T15:51:41+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
     "Report/document text is sanitized for secret-shaped literals."
   ],
-  "schema_version": "1.5",
+  "schema_version": "1.6",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast52-handler-disposition"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast53-dispatch-audit"
   }
 }

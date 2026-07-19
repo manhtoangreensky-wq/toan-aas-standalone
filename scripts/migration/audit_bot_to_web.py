@@ -30,7 +30,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.5"
+SCHEMA_VERSION = "1.6"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -506,6 +506,14 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "authority": "Web-native private finishing or canonical Bot job bridge",
         "next_contract": "Split safe editing choices from render/export/payment actions; require a verified source, idempotency, validated output and owner-scoped delivery before any runtime action.",
     },
+    "media_preview": {
+        "priority": "P0",
+        "candidate_boundary": "separate Web media-catalog and owner-scoped selection contract",
+        "authority": "Canonical Bot media-preview cache, Telegram delivery and selected-media state",
+        "next_contract": "Create a Web-owned catalog/preview/selection contract with verified media rights, owner-scoped references and explicit downstream handoff; do not accept Bot cache indexes or replay Telegram preview callbacks.",
+        "source_dispositions": ("BOT_MEDIA_PREVIEW_CACHE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot preview buttons resolve a short-lived per-user cache, deliver media or guidance through Telegram, and can mutate Bot selected-media state for later Bot-only workflows.",
+    },
     "pkgbuy": {
         "priority": "P0",
         "candidate_boundary": "/wallet/topup",
@@ -975,6 +983,81 @@ TVFLOW_DEFAULT_DISPOSITION: dict[str, Any] = {
     "resolution": "unreviewed_tvflow_source_state_machine",
     "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
     "source_evidence": "A tvflow callback needs finite handler/state review before any Web navigation, bridge, provider, billing, job, asset, or execution claim.",
+}
+
+# These dynamic preview callbacks are emitted only by the Bot media-preview
+# keyboard. Their formatted values are either a media kind/index pair or an
+# index into a short-lived per-Telegram-user cache; they are not owner-scoped
+# Web asset or media identifiers. Keep future Web work visible as a typed
+# disposition, but never turn this template into a Web route or browser
+# action.
+MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
+    "play_{*}|{*}": {
+        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
+        "resolution": "media_preview_play_requires_bot_cache_and_telegram_delivery",
+        "source_dispositions": (
+            "BOT_MEDIA_PREVIEW_CACHE",
+            "TELEGRAM_CHAT_DELIVERY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot resolves a music/SFX index from its short-lived per-Telegram-user preview cache and sends the audio preview into Telegram chat. The formatted values are not Web asset IDs or a browser playback contract.",
+    },
+    "select_{*}|{*}": {
+        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
+        "resolution": "media_preview_select_requires_bot_cache_and_selection_state",
+        "source_dispositions": (
+            "BOT_MEDIA_PREVIEW_CACHE",
+            "BOT_MEDIA_SELECTION_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot resolves a cached music/SFX result then writes selected-media state for later Bot video/image/trend/cinematic flows. The formatted values are not a Web-owned media selection or asset reference.",
+    },
+    "license_{*}|1": {
+        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
+        "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
+        "source_dispositions": (
+            "BOT_MEDIA_PREVIEW_CACHE",
+            "TELEGRAM_CHAT_GUIDANCE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot reads the first current music/SFX preview result from its per-user cache and sends a Telegram license notice. The callback does not establish Web catalog ownership, license verification, or a browser media contract.",
+    },
+    "license_music|{*}": {
+        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
+        "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
+        "source_dispositions": (
+            "BOT_MEDIA_PREVIEW_CACHE",
+            "TELEGRAM_CHAT_GUIDANCE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot resolves the formatted music index from its short-lived per-user preview cache and sends a Telegram license notice. The value is not a Web media ID, catalog authority, license verification, or browser media contract.",
+    },
+    "play_media|{*}": {
+        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
+        "resolution": "media_preview_play_requires_bot_cache_and_telegram_delivery",
+        "source_dispositions": (
+            "BOT_MEDIA_PREVIEW_CACHE",
+            "TELEGRAM_CHAT_DELIVERY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot resolves the formatted media index from its short-lived per-user media-preview cache and sends the preview or source into Telegram chat. The value is not a Web asset ID or browser playback contract.",
+    },
+    "select_media|{*}": {
+        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
+        "resolution": "media_preview_select_requires_bot_cache_and_selection_state",
+        "source_dispositions": (
+            "BOT_MEDIA_PREVIEW_CACHE",
+            "BOT_MEDIA_SELECTION_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot resolves a cached media result then writes its selected-media state for later Bot flows. The formatted value is not a Web-owned media selection or asset reference.",
+    },
 }
 
 # These public Bot commands can contain words such as ``factory`` or mention
@@ -2622,6 +2705,33 @@ def _map_tvflow_callback(identifier: str, source_kind: str, evidence: dict[str, 
     }
 
 
+def _map_media_preview_callback_template(template: str, evidence: dict[str, Any]) -> dict[str, Any] | None:
+    """Record Bot-only preview cache actions without inventing a Web player.
+
+    The template values are not stable resources. The Bot uses them as a
+    kind/index lookup into a short-lived Telegram-user cache, then either
+    delivers chat media/guidance or mutates Bot selected-media state. A future
+    Web catalog may solve the product need independently, but cannot replay
+    this callback or use its opaque values as Web identifiers.
+    """
+
+    token = str(template or "").casefold()
+    policy = MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS.get(token)
+    if policy is None:
+        return None
+    return {
+        "source_kind": "callback_template",
+        "source": template,
+        "target": str(policy["target"]),
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": str(policy["resolution"]),
+        "source_dispositions": [str(value) for value in policy["source_dispositions"]],
+        "source_evidence": str(policy["source_evidence"]),
+        "evidence": evidence,
+    }
+
+
 def _partition_unreferenced_module_records(
     records: Iterable[dict[str, Any]],
     unreferenced_files: set[str],
@@ -3135,6 +3245,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # Preserve the family-specific source boundary rather than allowing a
         # generic dynamic namespace route to imply Web ownership of that state.
         return _map_tvflow_callback(template, "callback_template", evidence)
+    media_preview_mapping = _map_media_preview_callback_template(template, evidence)
+    if media_preview_mapping is not None:
+        return media_preview_mapping
     if token.startswith("menu|"):
         # Dynamic menu templates can encode a Bot-only back route, translation
         # session, locale/product context or other pending state.  A finite
@@ -3282,6 +3395,8 @@ def _fallback_feature_family(item: dict[str, Any]) -> str:
     if not source or source.startswith("<"):
         return "unstructured"
     lowered = source.casefold()
+    if lowered in MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS:
+        return "media_preview"
     if lowered == "menu_affiliate" or lowered.startswith("affiliate_"):
         return "affiliate"
     if lowered == "menu_freelance" or lowered.startswith("freelance_"):
@@ -3599,13 +3714,14 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "coverage_comparability": {
                 "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
                 "feature_progress_claim": False,
-                "reason": "Schema 1.5 keeps the 1.4 inventory corrections, retains embedded formatted callback values as opaque templates, and removes false Web coverage claims for tvflow callbacks whose Bot handler requires pending state, canonical billing/package decisions, provider/job guards, or Telegram-only guidance.",
+                "reason": "Schema 1.6 keeps the 1.5 inventory corrections and adds typed dispositions for dynamic Bot media-preview callbacks whose cache indexes, Telegram delivery/guidance, and selected-media state are not Web media contracts.",
                 "scope_changes": [
                     "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
                     "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
                     "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
                     "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
                     "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
+                    "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
                 ],
                 "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
             },
@@ -3631,7 +3747,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
                 "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
                 "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-                "Schema 1.5 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit now retains embedded callback templates and corrects false tvflow Web-surface classifications; a percentage delta is not feature progress.",
+                "Schema 1.6 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates and corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks; a percentage delta is not feature progress.",
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -3715,6 +3831,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ", ".join(str(value) for value in TVFLOW_DEFAULT_DISPOSITION["source_dispositions"]),
         ]
     ]
+    media_preview_contract_rows = [
+        [
+            source,
+            str(policy["target"]),
+            str(policy["resolution"]),
+            "NEEDS_FEATURE_DISPOSITION",
+            ", ".join(str(value) for value in policy["source_dispositions"]),
+        ]
+        for source, policy in MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS.items()
+    ]
 
     write(
         "README.md",
@@ -3737,6 +3863,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
         + "- [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.\n"
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
+        + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -3788,6 +3915,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             tvflow_contract_rows,
         )
         + "\n\nA future Web flow must start from Web-owned, owner-scoped input or a separately reviewed private bridge contract. It must never accept/replay Bot scene/job IDs, mutate Bot pending state, credit/debit Xu, finalize PayOS, invoke a provider from the browser, or claim a file/output exists merely because a Telegram callback was observed.\n",
+    )
+    write(
+        "MEDIA_PREVIEW_CALLBACK_CONTRACT.md",
+        "# Dynamic media-preview callback disposition contract\n\n"
+        "The Bot emits these dynamic music/SFX and media-library preview callbacks only from its Telegram media-preview keyboards. Their formatted values are a media kind/index pair or short-lived cache index, not an owner-scoped Web asset, catalog record, playback authorization, media license verification, or downstream Web media-selection contract. Every entry remains `NEEDS_FEATURE_DISPOSITION`; its target is a symbolic Bot authority boundary, **not** a Web route, browser callback, bridge implementation, provider action, wallet/payment action, job action, asset claim, or output-delivery claim.\n\n"
+        + _markdown_table(
+            ["Bot callback template", "Required authority boundary", "Audit resolution", "Status", "Source dispositions"],
+            media_preview_contract_rows,
+        )
+        + "\n\nA future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference. It must not accept a Bot cache index, replay the Telegram callback, read Bot selected-media state, claim license clearance, or trigger a Bot/video/provider action.\n",
     )
     write(
         "inventory.md",

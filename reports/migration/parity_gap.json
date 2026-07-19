@@ -37711,35 +37711,59 @@
         "file": "bot.py",
         "line": 77146
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
       "source": "license_music|{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "TELEGRAM_CHAT_GUIDANCE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot resolves the formatted music index from its short-lived per-user preview cache and sends a Telegram license notice. The value is not a Web media ID, catalog authority, license verification, or browser media contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-workspace"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED"
     },
     {
-      "classification": "unknown",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 76823
       },
-      "resolution": "unresolved_dynamic_template",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
       "source": "license_{*}|1",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "TELEGRAM_CHAT_GUIDANCE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot reads the first current music/SFX preview result from its per-user cache and sends a Telegram license notice. The callback does not establish Web catalog ownership, license verification, or a browser media contract.",
       "source_kind": "callback_template",
-      "status": "NEEDS_WEB_IMPLEMENTATION",
-      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED"
     },
     {
-      "classification": "unknown",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 76828
       },
-      "resolution": "unresolved_dynamic_template",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
       "source": "license_{*}|1",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "TELEGRAM_CHAT_GUIDANCE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot reads the first current music/SFX preview result from its per-user cache and sends a Telegram license notice. The callback does not establish Web catalog ownership, license verification, or a browser media contract.",
       "source_kind": "callback_template",
-      "status": "NEEDS_WEB_IMPLEMENTATION",
-      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED"
     },
     {
       "classification": "customer",
@@ -38775,23 +38799,39 @@
         "file": "bot.py",
         "line": 77785
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_play_requires_bot_cache_and_telegram_delivery",
       "source": "play_media|{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "TELEGRAM_CHAT_DELIVERY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot resolves the formatted media index from its short-lived per-user media-preview cache and sends the preview or source into Telegram chat. The value is not a Web asset ID or browser playback contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-workspace"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED"
     },
     {
-      "classification": "unknown",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 76817
       },
-      "resolution": "unresolved_dynamic_template",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_play_requires_bot_cache_and_telegram_delivery",
       "source": "play_{*}|{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "TELEGRAM_CHAT_DELIVERY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot resolves a music/SFX index from its short-lived per-Telegram-user preview cache and sends the audio preview into Telegram chat. The formatted values are not Web asset IDs or a browser playback contract.",
       "source_kind": "callback_template",
-      "status": "NEEDS_WEB_IMPLEMENTATION",
-      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED"
     },
     {
       "classification": "customer",
@@ -38859,23 +38899,39 @@
         "file": "bot.py",
         "line": 77786
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_select_requires_bot_cache_and_selection_state",
       "source": "select_media|{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "BOT_MEDIA_SELECTION_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot resolves a cached media result then writes its selected-media state for later Bot flows. The formatted value is not a Web-owned media selection or asset reference.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/media-workspace"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED"
     },
     {
-      "classification": "unknown",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 76818
       },
-      "resolution": "unresolved_dynamic_template",
+      "fallback_family": "media_preview",
+      "resolution": "media_preview_select_requires_bot_cache_and_selection_state",
       "source": "select_{*}|{*}",
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "BOT_MEDIA_SELECTION_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot resolves a cached music/SFX result then writes selected-media state for later Bot video/image/trend/cinematic flows. The formatted values are not a Web-owned media selection or asset reference.",
       "source_kind": "callback_template",
-      "status": "NEEDS_WEB_IMPLEMENTATION",
-      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED"
     },
     {
       "classification": "customer",
@@ -51962,13 +52018,14 @@
   "coverage_comparability": {
     "feature_progress_claim": false,
     "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
-    "reason": "Schema 1.5 keeps the 1.4 inventory corrections, retains embedded formatted callback values as opaque templates, and removes false Web coverage claims for tvflow callbacks whose Bot handler requires pending state, canonical billing/package decisions, provider/job guards, or Telegram-only guidance.",
+    "reason": "Schema 1.6 keeps the 1.5 inventory corrections and adds typed dispositions for dynamic Bot media-preview callbacks whose cache indexes, Telegram delivery/guidance, and selected-media state are not Web media contracts.",
     "scope_changes": [
       "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
       "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
       "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
       "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
-      "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches."
+      "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
+      "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions."
     ],
     "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES"
   },
@@ -52044,6 +52101,31 @@
       ],
       "source_kinds": [
         "callback_data"
+      ]
+    },
+    {
+      "authority": "Canonical Bot media-preview cache, Telegram delivery and selected-media state",
+      "candidate_boundary": "separate Web media-catalog and owner-scoped selection contract",
+      "count": 7,
+      "family": "media_preview",
+      "next_contract": "Create a Web-owned catalog/preview/selection contract with verified media rights, owner-scoped references and explicit downstream handoff; do not accept Bot cache indexes or replay Telegram preview callbacks.",
+      "priority": "P0",
+      "sample_sources": [
+        "license_music|{*}",
+        "license_{*}|1",
+        "play_media|{*}",
+        "play_{*}|{*}",
+        "select_media|{*}",
+        "select_{*}|{*}"
+      ],
+      "source_dispositions": [
+        "BOT_MEDIA_PREVIEW_CACHE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot preview buttons resolve a short-lived per-user cache, deliver media or guidance through Telegram, and can mutate Bot selected-media state for later Bot-only workflows.",
+      "source_kinds": [
+        "callback_template"
       ]
     },
     {
@@ -52421,13 +52503,13 @@
   "gaps": [
     {
       "area": "customer_and_admin_routes",
-      "count": 5,
+      "count": 1,
       "detail": "Bot source mappings that do not have an observed Web App route or guarded compatibility surface.",
       "severity": "high"
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 721,
+      "count": 728,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -52443,6 +52525,11 @@
         {
           "count": 9,
           "family": "pkgbuy",
+          "priority": "P0"
+        },
+        {
+          "count": 7,
+          "family": "media_preview",
           "priority": "P0"
         },
         {
@@ -52560,7 +52647,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 44,
+      "count": 47,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -52704,14 +52791,14 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.96,
+  "mapping_coverage_percent": 80.89,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2410,
+    "COPIED_GUARDED": 2407,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 455,
-    "NEEDS_FEATURE_DISPOSITION": 721,
-    "NEEDS_WEB_IMPLEMENTATION": 5,
+    "NEEDS_FEATURE_DISPOSITION": 728,
+    "NEEDS_WEB_IMPLEMENTATION": 1,
     "TELEGRAM_ONLY": 220
   },
   "metric_scope": {
@@ -52725,7 +52812,7 @@
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
     "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
     "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-    "Schema 1.5 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit now retains embedded callback templates and corrects false tvflow Web-surface classifications; a percentage delta is not feature progress.",
+    "Schema 1.6 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit retains opaque callback templates and corrects false Web implications for Bot-only media-preview cache/delivery/selection callbacks; a percentage delta is not feature progress.",
     "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
     "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
     "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -52733,8 +52820,8 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.96,
-  "schema_version": "1.5",
+  "safe_disposition_coverage_percent": 80.89,
+  "schema_version": "1.6",
   "source_counts": {
     "callback_data": 2815,
     "callback_handler_dispatchers": 54,
@@ -52743,15 +52830,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3088,
+    "resolved_static_source_count": 3085,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 44,
-    "unresolved_source_count": 726
+    "unresolved_callback_templates": 47,
+    "unresolved_source_count": 729
   },
-  "static_web_surface_coverage_percent": 63.21,
+  "static_web_surface_coverage_percent": 63.14,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
