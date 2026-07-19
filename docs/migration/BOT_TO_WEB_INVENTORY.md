@@ -7,6 +7,6 @@
 | Concrete callback values | 2815 | Mapped, guarded, actionable backlog or TELEGRAM_ONLY |
 | Conversations | 0 | Draft/estimate/confirm contract |
 | FastAPI routes | 139 | 621 |
-| DB tables | 97 | 202 |
+| DB tables | 97 | 203 |
 
 Canonical business state remains in the bot; this inventory never imports runtime code.

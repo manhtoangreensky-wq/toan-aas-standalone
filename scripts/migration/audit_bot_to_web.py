@@ -328,7 +328,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("videoaddon|", "/video/add-ons", "customer"),
     ("framevideo|", "/video-studio", "customer"),
     ("videoedit|", "/video-studio", "customer"),
-    ("vfinal|", "/video/export", "customer"),
     ("license_music|", "/media-workspace", "customer"),
     ("select_media|", "/media-workspace", "customer"),
     ("play_media|", "/media-workspace", "customer"),
@@ -435,6 +434,39 @@ STORAGE_ADDON_TELEGRAM_ONLY_CALLBACKS: dict[str, dict[str, Any]] = {
     },
 }
 STORAGE_ADDON_CONFIRM_CALLBACK_TEMPLATE = "storage|confirm|{*}"
+
+# The frozen Bot's vfinal namespace is a Telegram-only state machine.  Every
+# reviewed literal below reads or writes its per-Telegram-user finalization
+# session and several branches can hand off to selected media, TTS/ASR,
+# rendering, package selection, wallet and delivery guards.  The standalone
+# Web owns a separate signed Video Finishing workflow; a raw Bot callback can
+# never become a browser command, source asset, quote, export, or payment.
+VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACKS = frozenset({
+    "vfinal|addon", "vfinal|addon_none", "vfinal|ai_guard", "vfinal|aspect|16x9",
+    "vfinal|aspect|1x1", "vfinal|aspect|4x5", "vfinal|aspect|9x16", "vfinal|back",
+    "vfinal|combo", "vfinal|combo_asr", "vfinal|combo_input", "vfinal|combo_lang_custom",
+    "vfinal|combo_lang|en", "vfinal|combo_lang|vi", "vfinal|combo_lang|zh", "vfinal|combo_script",
+    "vfinal|copy_prompt", "vfinal|export_ai", "vfinal|export_local", "vfinal|logo",
+    "vfinal|logo_confirm", "vfinal|logo_pos|bottom_center", "vfinal|logo_pos|bottom_left",
+    "vfinal|logo_pos|bottom_right", "vfinal|logo_pos|center", "vfinal|logo_pos|center_left",
+    "vfinal|logo_pos|center_right", "vfinal|logo_pos|top_center", "vfinal|logo_pos|top_left",
+    "vfinal|logo_pos|top_right", "vfinal|main", "vfinal|menu", "vfinal|music",
+    "vfinal|music_ai", "vfinal|music_library", "vfinal|music_none", "vfinal|music_sfx",
+    "vfinal|music_upload", "vfinal|music_use", "vfinal|my_media", "vfinal|review",
+    "vfinal|save", "vfinal|scene_count_screen", "vfinal|scene_count|1", "vfinal|scene_count|10",
+    "vfinal|scene_count|20", "vfinal|scene_count|3", "vfinal|scene_count|5", "vfinal|scene_custom",
+    "vfinal|skip", "vfinal|strip_addons", "vfinal|subtitle_asr", "vfinal|subtitle_manual",
+    "vfinal|subtitle_none", "vfinal|subtitle_script", "vfinal|tier", "vfinal|tier|basic",
+    "vfinal|tier|common", "vfinal|translate_lang_custom", "vfinal|translate_lang|en",
+    "vfinal|translate_lang|vi", "vfinal|translate_lang|zh", "vfinal|translate_sub",
+    "vfinal|upgrade_300", "vfinal|voice", "vfinal|voice_create", "vfinal|voice_default|female",
+    "vfinal|voice_default|male", "vfinal|voice_default|neutral", "vfinal|voice_lang|auto",
+    "vfinal|voice_lang|en", "vfinal|voice_lang|vi", "vfinal|voice_lang|zh", "vfinal|voice_none",
+    "vfinal|voice_preview", "vfinal|voice_vault",
+})
+VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "vfinal|tier|{*}",
+})
 
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
@@ -591,9 +623,11 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "vfinal": {
         "priority": "P0",
-        "candidate_boundary": "/video/finishing",
-        "authority": "Web-native private finishing or canonical Bot job bridge",
-        "next_contract": "Split safe editing choices from render/export/payment actions; require a verified source, idempotency, validated output and owner-scoped delivery before any runtime action.",
+        "candidate_boundary": "separate signed Web Video Finishing state and owner-scoped Asset Vault input",
+        "authority": "Canonical Bot Telegram finalization session; separate Web-native finishing workflow",
+        "next_contract": "Bot vfinal callbacks remain Telegram-only because they mutate or consume Bot finalization/media/input/export state. Web finishing must begin from its own signed draft and verified owner asset, then separately guard render/export/payment/delivery; never replay a Bot callback or state value.",
+        "source_dispositions": ("BOT_VIDEO_FINALIZATION_SESSION_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot vfinal handler reads and writes per-Telegram-user finalization state and can route to pending input, selected media, provider readiness, quote/package and export guards.",
     },
     "media_preview": {
         "priority": "P0",
@@ -3055,6 +3089,53 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             ),
             "evidence": evidence,
         }
+    if token in VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACKS:
+        # These values only make sense inside the Bot finalization session.
+        # In particular, a choice such as tier, aspect, music or export is not
+        # safe to detach from its Telegram identity, pending media/text, quote
+        # and canonical execution guards.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "reviewed_video_finalization_telegram_only",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_VIDEO_FINALIZATION_SESSION_STATE",
+                "BOT_PENDING_MEDIA_OR_TEXT_STATE",
+                "CANONICAL_VIDEO_EXPORT_AND_PAYMENT_GUARDS",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot vfinal handler resolves this callback against a per-Telegram-user finalization "
+                "session and can update choices, selected media/input, quote/package state or guarded export "
+                "paths. The separately authenticated Web Video Finishing workflow cannot replay the callback "
+                "or accept its Bot state as a browser action."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("vfinal|"):
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "VIDEO_FINALIZATION_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "video_finalization_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_VIDEO_FINALIZATION_SESSION_STATE",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot vfinal namespace mixes draft choices with pending Telegram media/text, selected-media "
+                "state, provider/readiness checks, quote/package rules and guarded exports. An unreviewed value "
+                "cannot become a Web route, asset reference, render/export, provider, wallet or payment action."
+            ),
+            "evidence": evidence,
+        }
     if menu_entry is not None:
         # Only this finite catalog may become a fresh signed Web navigation.
         # It cannot carry hidden Bot state, a message id, a file id or a
@@ -3532,6 +3613,48 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # Preserve the family-specific source boundary rather than allowing a
         # generic dynamic namespace route to imply Web ownership of that state.
         return _map_tvflow_callback(template, "callback_template", evidence)
+    if token in VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "reviewed_video_finalization_telegram_only",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_VIDEO_FINALIZATION_SESSION_STATE",
+                "BOT_PENDING_MEDIA_OR_TEXT_STATE",
+                "CANONICAL_VIDEO_EXPORT_AND_PAYMENT_GUARDS",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot vfinal tier value is applied only inside a per-Telegram-user finalization session, "
+                "then proceeds through package, readiness and guarded export paths. The Web cannot accept the "
+                "Bot tier value, quote, pending state or next action."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("vfinal|"):
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "VIDEO_FINALIZATION_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "video_finalization_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_VIDEO_FINALIZATION_SESSION_STATE",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot vfinal namespace contains per-Telegram-user finalization state and guarded render/export "
+                "transitions. An unreviewed dynamic value cannot become a Web draft, asset, quote, render/export, "
+                "provider, wallet or payment action."
+            ),
+            "evidence": evidence,
+        }
     media_preview_mapping = _map_media_preview_callback_template(template, evidence)
     if media_preview_mapping is not None:
         return media_preview_mapping
@@ -4375,6 +4498,33 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_ADMIN_ONLY, CANONICAL_BOT_VIDEO_JOB_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    video_finalization_contract_rows = [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "reviewed_video_finalization_telegram_only",
+            "TELEGRAM_ONLY",
+            "TELEGRAM_IDENTITY_CONTEXT, BOT_VIDEO_FINALIZATION_SESSION_STATE, BOT_PENDING_MEDIA_OR_TEXT_STATE, CANONICAL_VIDEO_EXPORT_AND_PAYMENT_GUARDS, NO_RUNTIME_CLAIM",
+        ]
+        for source in sorted(VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACKS)
+    ] + [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "reviewed_video_finalization_telegram_only",
+            "TELEGRAM_ONLY",
+            "TELEGRAM_IDENTITY_CONTEXT, BOT_VIDEO_FINALIZATION_SESSION_STATE, BOT_PENDING_MEDIA_OR_TEXT_STATE, CANONICAL_VIDEO_EXPORT_AND_PAYMENT_GUARDS, NO_RUNTIME_CLAIM",
+        ]
+        for source in sorted(VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACK_TEMPLATES)
+    ] + [
+        [
+            "other vfinal|*",
+            "VIDEO_FINALIZATION_SOURCE_REVIEW_REQUIRED",
+            "video_finalization_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_VIDEO_FINALIZATION_SESSION_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ],
+    ]
     storage_addon_contract_rows = [
         [
             source,
@@ -4427,6 +4577,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
+        + "- [`VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`](VIDEO_FINALIZATION_CALLBACK_CONTRACT.md) — exact Bot Video Finishing session boundaries; the separate signed Web workflow never replays Telegram draft, quote, export or payment callbacks.\n"
         + "- [`STORAGE_ADDON_CALLBACK_CONTRACT.md`](STORAGE_ADDON_CALLBACK_CONTRACT.md) — exact Bot storage add-on boundaries; storage quota purchase never becomes a Xu top-up or a second Web payment ledger.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
@@ -4524,6 +4675,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\n`job|stats|0` is the sole navigation-only exception: it may open a fresh signed, role-checked `/admin/jobs` surface. It transfers no Telegram identity, Bot job ID, campaign/video-job row, cached result, provider state, output/delivery claim, or mutation into the browser. `/admin/jobs` must use its own canonical admin authorization and remain guarded if its bridge projection is unavailable.\n\n"
         "`job|approve|{*}` and `job|cancel|{*}` stay Telegram-only. The Web must not accept a Bot job ID, approve/cancel a canonical job, infer runtime completion, call a provider, debit/credit Xu, finalize PayOS, or create a second job state machine. Any unlisted `job|*` value is source-review-required.\n",
+    )
+    write(
+        "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
+        "# Video Finishing callback disposition contract\n\n"
+        "The frozen Bot `vfinal` dispatcher is a per-Telegram-user finalization state machine. Its callbacks can change a Bot draft, consume pending text/media or selected media, select a tier/scene/aspect, route toward TTS/ASR/provider readiness, or reach guarded package/export paths. A Bot callback is therefore not a Web form value, asset identifier, quote, render request, payment request, or delivery signal.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            video_finalization_contract_rows,
+        )
+        + "\n\nThe standalone Web has a separately authenticated Video Finishing workflow with owner-scoped assets and its own validation/idempotency/output guards. It must begin from a fresh signed Web draft; it must never replay a Bot `vfinal` callback, read/write Bot pending state, accept a Bot cache/file ID or quote, call a provider from the browser, charge Xu, finalize PayOS, or claim render/export success without a verified owner-scoped output. Any unlisted `vfinal|*` value remains source-review-required.\n",
     )
     write(
         "STORAGE_ADDON_CALLBACK_CONTRACT.md",
@@ -4887,6 +5048,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- Bot video-job stats can only open a fresh signed `/admin/jobs` view for one reviewed admin callback. Canonical approve/cancel actions stay Telegram-only until a dedicated owner-scoped admin bridge exists; the Web never accepts a Bot job ID. See `VIDEO_JOB_CALLBACK_CONTRACT.md`.\n"
+        "- Bot Video Finishing callbacks remain Telegram-only because they consume or mutate the Telegram finalization session. The separately signed Web workflow starts from its own owner-scoped draft and never accepts Bot media, quote, export or payment state. See `VIDEO_FINALIZATION_CALLBACK_CONTRACT.md`.\n"
         "- Storage quota add-on purchase is distinct from Xu top-up. Bot menu/custom/confirm callbacks remain Telegram-only until an owner-scoped storage bridge exists; the Web must not create a storage order, checkout, quota entitlement, or second webhook/ledger. See `STORAGE_ADDON_CALLBACK_CONTRACT.md`.\n"
         "- Job completion means validated output bytes or a canonical queued task with a polling route; HTTP success alone is insufficient.\n"
         "- Retry/refund/freeze remain guarded until their existing canonical bot action has a tested adapter.\n",
