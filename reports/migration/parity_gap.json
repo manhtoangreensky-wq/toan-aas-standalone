@@ -10496,17 +10496,23 @@
       "target": "/tools"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 111012
       },
-      "fallback_family": "job",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_video_job_stats_admin_navigation",
       "source": "job|stats|0",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_VIDEO_JOB_STATS_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot video-job handler first enforces is_admin_user. Its stats branch reads canonical campaign/video_job counts for the Telegram admin and redraws the Telegram message; the Web opens a fresh role-checked admin view without receiving Bot rows or callback context.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/jobs"
     },
     {
       "classification": "customer",
@@ -37773,28 +37779,42 @@
       "target": "/image"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 111009
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_canonical_video_job_mutation",
       "source": "job|approve|{*}",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_MUTATION",
+        "OWNER_SCOPED_BOT_JOB_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot video-job handler rejects non-admin callers, resolves the job by canonical ID and Telegram owner, then updates approved/cancelled status in the Bot database. No Web mutation bridge has been reviewed for this workflow.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/jobs"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 111010
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_canonical_video_job_mutation",
       "source": "job|cancel|{*}",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_MUTATION",
+        "OWNER_SCOPED_BOT_JOB_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot video-job handler rejects non-admin callers, resolves the job by canonical ID and Telegram owner, then updates approved/cancelled status in the Bot database. No Web mutation bridge has been reviewed for this workflow.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/jobs"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -52222,20 +52242,6 @@
       ]
     },
     {
-      "authority": "Canonical Bot job bridge",
-      "candidate_boundary": "/jobs",
-      "count": 1,
-      "family": "job",
-      "next_contract": "Add only owner-scoped read/status projections first; retry/refund/charge/delivery require separate canonical action contracts.",
-      "priority": "P0",
-      "sample_sources": [
-        "job|stats|0"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Web-native planning; runtime separately guarded",
       "candidate_boundary": "/video-studio/cinematic-concept",
       "count": 107,
@@ -52571,7 +52577,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 715,
+      "count": 714,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -52592,11 +52598,6 @@
         {
           "count": 4,
           "family": "storage",
-          "priority": "P0"
-        },
-        {
-          "count": 1,
-          "family": "job",
           "priority": "P0"
         },
         {
@@ -52843,14 +52844,14 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 81.25,
+  "mapping_coverage_percent": 81.28,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2404,
+    "COPIED_GUARDED": 2402,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 467,
-    "NEEDS_FEATURE_DISPOSITION": 715,
-    "TELEGRAM_ONLY": 225
+    "NAVIGATION_ONLY": 468,
+    "NEEDS_FEATURE_DISPOSITION": 714,
+    "TELEGRAM_ONLY": 227
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -52871,7 +52872,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 81.25,
+  "safe_disposition_coverage_percent": 81.28,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -52881,15 +52882,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3099,
+    "resolved_static_source_count": 3100,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 46,
-    "unresolved_source_count": 715
+    "unresolved_source_count": 714
   },
-  "static_web_surface_coverage_percent": 63.06,
+  "static_web_surface_coverage_percent": 63.0,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

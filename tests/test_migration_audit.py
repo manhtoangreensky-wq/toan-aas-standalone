@@ -109,6 +109,7 @@ async def dashboard():
         "UNREFERENCED_STATIC_MODULES.md",
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
+        "VIDEO_JOB_CALLBACK_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -1283,6 +1284,107 @@ async def page(page_path):
     ).read_text(encoding="utf-8")
 
 
+def test_static_audit_keeps_video_job_callbacks_in_admin_or_bot_mutation_boundary(tmp_path: Path) -> None:
+    """Canonical Bot job IDs must never become customer or browser mutations."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    stats = audit._map_callback("job|stats|0", "callback_data", evidence, routes)
+    assert stats["classification"] == "admin"
+    assert stats["target"] == "/admin/jobs"
+    assert stats["status"] == "NAVIGATION_ONLY"
+    assert stats["resolution"] == "reviewed_video_job_stats_admin_navigation"
+    assert stats["source_dispositions"] == (
+        "BOT_ADMIN_ONLY",
+        "BOT_VIDEO_JOB_STATS_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM",
+    )
+    assert "fresh role-checked admin view" in stats["source_evidence"]
+
+    for template in ("job|approve|{*}", "job|cancel|{*}"):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_canonical_video_job_mutation"
+        assert mapped["source_dispositions"] == (
+            "BOT_ADMIN_ONLY",
+            "CANONICAL_BOT_JOB_MUTATION",
+            "OWNER_SCOPED_BOT_JOB_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        )
+        assert "canonical ID and Telegram owner" in mapped["source_evidence"]
+
+    unknown = audit._map_callback("job|future|example", "callback_data", evidence, routes)
+    audit._annotate_feature_disposition(unknown)
+    assert unknown["classification"] == "admin"
+    assert unknown["target"] == "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unknown["fallback_family"] == "job"
+    assert "CANONICAL_BOT_VIDEO_JOB_STATE" in unknown["source_dispositions"]
+
+    unknown_template = audit._map_callback_template("job|future|{*}", evidence, routes)
+    assert unknown_template is not None
+    assert unknown_template["classification"] == "admin"
+    assert unknown_template["target"] == "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED"
+    assert unknown_template["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+job_id = 7
+InlineKeyboardButton("Stats", callback_data="job|stats|0")
+InlineKeyboardButton("Approve", callback_data=f"job|approve|{job_id}")
+InlineKeyboardButton("Cancel", callback_data=f"job|cancel|{job_id}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/{page_path:path}")
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    report_callbacks = {
+        item["source"]: item for item in result["parity_gap"]["callback_mappings"]
+    }
+    assert report_callbacks["job|stats|0"]["classification"] == "admin"
+    assert report_callbacks["job|stats|0"]["target"] == "/admin/jobs"
+    assert report_callbacks["job|stats|0"]["status"] == "NAVIGATION_ONLY"
+    report_templates = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_template_mappings"]
+    }
+    assert all(
+        report_templates[template]["target"] == "TELEGRAM_ONLY"
+        and report_templates[template]["status"] == "TELEGRAM_ONLY"
+        for template in ("job|approve|{*}", "job|cancel|{*}")
+    )
+    assert "job" not in {
+        item["family"] for item in result["parity_gap"]["feature_disposition_backlog"]
+    }
+    contract = (tmp_path / "docs" / "VIDEO_JOB_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "job|stats|0" in contract
+    assert "job|approve|{*}" in contract
+    assert "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED" in contract
+    assert "VIDEO_JOB_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot video-job stats can only open" in (
+        tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md"
+    ).read_text(encoding="utf-8")
+
+
 def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolving_ids() -> None:
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
@@ -1296,7 +1398,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         "videoaddon|export|{*}": "/video/add-ons",
         "manual|history|{*}": "/wallet/topup",
         "shopai|confirm|{*}": "/wallet/topup",
-        "job|cancel|{*}": "/jobs",
         "archive|dept|{*}": "/admin",
     }
     for template, target in expected.items():
