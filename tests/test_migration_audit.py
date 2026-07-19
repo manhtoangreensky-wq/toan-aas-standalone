@@ -108,6 +108,7 @@ async def dashboard():
         "CALLBACK_HANDLER_DISPATCH_MAP.md",
         "UNREFERENCED_STATIC_MODULES.md",
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
+        "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -1166,6 +1167,120 @@ async def page(page_path):
     assert "payosalert|manual" in contract
     assert "PAYOS_ALERT_SOURCE_REVIEW_REQUIRED" in contract
     assert "PAYOS_ALERT_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_package_purchase_callbacks_in_catalog_or_bot_payment_boundary(tmp_path: Path) -> None:
+    """A service package selection is not a Xu top-up or browser checkout."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    expected_selectors = {
+        "pkgbuy|combo|basic_199k",
+        "pkgbuy|combo|posting_499k",
+        "pkgbuy|combo|product_ads_699k",
+        "pkgbuy|combo|standard_299k",
+        "pkgbuy|combo|tiktok_99k",
+        "pkgbuy|monthly|creator_monthly",
+        "pkgbuy|monthly|pro_monthly",
+        "pkgbuy|monthly|shop_monthly",
+        "pkgbuy|monthly|starter_monthly",
+    }
+    assert set(audit.PACKAGE_PURCHASE_SELECTOR_CALLBACKS) == expected_selectors
+
+    for callback in expected_selectors:
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/packages"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_package_catalog_selector_navigation"
+        assert mapped["source_dispositions"] == (
+            "FRESH_SIGNED_WEB_NAVIGATION",
+            "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        )
+        assert "never receives the Bot package type/code" in mapped["source_evidence"]
+
+    confirm = audit._map_callback_template(
+        "pkgbuy|confirm|{*}|{*}", evidence, routes
+    )
+    assert confirm is not None
+    assert confirm["classification"] == "customer"
+    assert confirm["target"] == "TELEGRAM_ONLY"
+    assert confirm["status"] == "TELEGRAM_ONLY"
+    assert confirm["resolution"] == "bot_canonical_package_checkout"
+    assert confirm["source_dispositions"] == (
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_ORDER_REQUIRED",
+        "CANONICAL_BOT_PAYOS_CHECKOUT",
+        "CANONICAL_PACKAGE_ENTITLEMENT_SETTLEMENT",
+        "NO_RUNTIME_CLAIM",
+    )
+    assert "start_package_purchase" in confirm["source_evidence"]
+
+    unknown = audit._map_callback("pkgbuy|future|example", "callback_data", evidence, routes)
+    audit._annotate_feature_disposition(unknown)
+    assert unknown["target"] == "PACKAGE_PURCHASE_SOURCE_REVIEW_REQUIRED"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unknown["fallback_family"] == "pkgbuy"
+    assert "CANONICAL_PACKAGE_PURCHASE_SOURCE_REVIEW" in unknown["source_dispositions"]
+
+    unknown_template = audit._map_callback_template("pkgbuy|future|{*}", evidence, routes)
+    assert unknown_template is not None
+    assert unknown_template["target"] == "PACKAGE_PURCHASE_SOURCE_REVIEW_REQUIRED"
+    assert unknown_template["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    selector_buttons = "\n".join(
+        f'InlineKeyboardButton("Package", callback_data="{callback}")'
+        for callback in sorted(expected_selectors)
+    )
+    (bot_root / "bot.py").write_text(
+        selector_buttons
+        + '''
+package_type = "monthly"
+package_code = "starter_monthly"
+InlineKeyboardButton("Confirm", callback_data=f"pkgbuy|confirm|{package_type}|{package_code}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/{page_path:path}")
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    report_callbacks = {
+        item["source"]: item for item in result["parity_gap"]["callback_mappings"]
+    }
+    assert all(
+        report_callbacks[callback]["target"] == "/packages"
+        and report_callbacks[callback]["status"] == "NAVIGATION_ONLY"
+        for callback in expected_selectors
+    )
+    report_templates = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_template_mappings"]
+    }
+    assert report_templates["pkgbuy|confirm|{*}|{*}"]["target"] == "TELEGRAM_ONLY"
+    assert "pkgbuy" not in {
+        item["family"] for item in result["parity_gap"]["feature_disposition_backlog"]
+    }
+    contract = (tmp_path / "docs" / "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "pkgbuy|monthly|starter_monthly" in contract
+    assert "pkgbuy|confirm|{*}|{*}" in contract
+    assert "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Service package/combo checkout is distinct from Xu top-up" in (
+        tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md"
+    ).read_text(encoding="utf-8")
 
 
 def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolving_ids() -> None:
