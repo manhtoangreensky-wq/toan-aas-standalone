@@ -2119,40 +2119,40 @@ async def video():
     assert (tmp_path / "docs" / "TVFLOW_CALLBACK_CONTRACT.md").is_file()
 
 
-def test_static_audit_dispositions_dynamic_media_preview_templates_without_web_claim(tmp_path: Path) -> None:
+def test_static_audit_keeps_dynamic_media_preview_callbacks_telegram_only(tmp_path: Path) -> None:
     """Bot preview cache indexes cannot become browser media actions."""
 
     audit = _load_audit_module()
     routes = {"/media-workspace", "/{page_path:path}"}
     expectations = {
         "play_{*}|{*}": (
-            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
-            "media_preview_play_requires_bot_cache_and_telegram_delivery",
+            "TELEGRAM_ONLY",
+            "reviewed_bot_preview_play_telegram_only_web_owned_preview_separate",
             "TELEGRAM_CHAT_DELIVERY",
         ),
         "select_{*}|{*}": (
-            "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
-            "media_preview_select_requires_bot_cache_and_selection_state",
+            "TELEGRAM_ONLY",
+            "reviewed_bot_media_select_telegram_only_web_owned_reference_separate",
             "BOT_MEDIA_SELECTION_STATE",
         ),
         "license_{*}|1": (
-            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
-            "media_preview_license_requires_bot_cache_and_telegram_guidance",
+            "TELEGRAM_ONLY",
+            "reviewed_bot_media_license_telegram_only_web_rights_note_separate",
             "TELEGRAM_CHAT_GUIDANCE",
         ),
         "license_music|{*}": (
-            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
-            "media_preview_license_requires_bot_cache_and_telegram_guidance",
+            "TELEGRAM_ONLY",
+            "reviewed_bot_media_license_telegram_only_web_rights_note_separate",
             "TELEGRAM_CHAT_GUIDANCE",
         ),
         "play_media|{*}": (
-            "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
-            "media_preview_play_requires_bot_cache_and_telegram_delivery",
+            "TELEGRAM_ONLY",
+            "reviewed_bot_preview_play_telegram_only_web_owned_preview_separate",
             "TELEGRAM_CHAT_DELIVERY",
         ),
         "select_media|{*}": (
-            "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
-            "media_preview_select_requires_bot_cache_and_selection_state",
+            "TELEGRAM_ONLY",
+            "reviewed_bot_media_select_telegram_only_web_owned_reference_separate",
             "BOT_MEDIA_SELECTION_STATE",
         ),
     }
@@ -2164,12 +2164,11 @@ def test_static_audit_dispositions_dynamic_media_preview_templates_without_web_c
         assert mapped["target"] == target
         assert mapped["resolution"] == resolution
         assert mapped["classification"] == "customer"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["fallback_family"] == "media_preview"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert "fallback_family" not in mapped
         assert specific_disposition in mapped["source_dispositions"]
         assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
-        assert mapped["target"].startswith("BOT_")
-        assert mapped["status"] not in {"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED", "NAVIGATION_ONLY", "TELEGRAM_ONLY"}
+        assert mapped["target"] == "TELEGRAM_ONLY"
 
     bot_root = tmp_path / "bot"
     web_root = tmp_path / "web"
@@ -2207,13 +2206,16 @@ async def portal(page_path):
         for item in result["parity_gap"]["callback_template_mappings"]
     }
     assert set(mappings) == set(expectations)
-    assert {item["status"] for item in mappings.values()} == {"NEEDS_FEATURE_DISPOSITION"}
-    assert all(str(item["target"]).startswith("BOT_") for item in mappings.values())
+    assert {item["status"] for item in mappings.values()} == {"TELEGRAM_ONLY"}
+    assert all(str(item["target"]) == "TELEGRAM_ONLY" for item in mappings.values())
     backlog = {item["family"]: item for item in result["parity_gap"]["feature_disposition_backlog"]}
-    assert backlog["media_preview"]["count"] == 6
+    assert "media_preview" not in backlog
     contract = tmp_path / "docs" / "MEDIA_PREVIEW_CALLBACK_CONTRACT.md"
     assert contract.is_file()
     assert "Bot cache index" in contract.read_text(encoding="utf-8")
+    environment_contract = tmp_path / "docs" / "ENV_AND_PROVIDER_MAP.md"
+    assert environment_contract.is_file()
+    assert "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED" in environment_contract.read_text(encoding="utf-8")
 
 
 def test_static_audit_does_not_mistake_aspect_ratio_tuples_for_callbacks(tmp_path: Path) -> None:

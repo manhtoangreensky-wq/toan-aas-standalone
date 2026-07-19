@@ -263,6 +263,100 @@ def test_media_workspace_accepts_only_owned_active_audio_and_keeps_delivery_priv
             assert cross_owner.json()["error_code"] == "WEB_MEDIA_AUDIO_ASSET_NOT_FOUND"
 
 
+def test_media_workspace_preview_is_flagged_owner_scoped_verified_and_never_public(tmp_path, monkeypatch):
+    """An inline preview is an opt-in read of one attached owner audio file."""
+    db_path = tmp_path / "copyfast-media-workspace-test.db"
+    with make_client(tmp_path, monkeypatch) as owner:
+        csrf = register_and_login(owner, "media-preview-owner@example.com")
+        collection = create_collection(owner, csrf, "media-preview-collection-create-0001")
+        audio = upload_asset(
+            owner,
+            csrf,
+            key="media-preview-audio-upload-0001",
+            name="private-intro.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        attached = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(audio["id"], 1, "media-preview-attach-0001"),
+        )
+        assert attached.status_code == 200
+        item_id = attached.json()["data"]["item_id"]
+        endpoint = f"/api/v1/media-workspace/collections/{collection['id']}/items/{item_id}/preview"
+
+        # The feature is intentionally unavailable until an operator elects
+        # to expose same-origin previews.  It has no provider/Bot fallback.
+        disabled = owner.get(endpoint)
+        assert disabled.status_code == 503
+        assert "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED" in disabled.text
+
+        monkeypatch.setenv("WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED", "true")
+        preview = owner.get(endpoint)
+        assert preview.status_code == 200
+        assert preview.content == wav_bytes()
+        assert preview.headers["content-type"].startswith("audio/wav")
+        assert preview.headers["content-disposition"].startswith("inline;")
+        assert preview.headers["cache-control"] == "no-store, private"
+        assert preview.headers["cross-origin-resource-policy"] == "same-origin"
+        assert preview.headers["referrer-policy"] == "no-referrer"
+        assert "accept-ranges" not in preview.headers
+        assert "private-web-assets" not in preview.text
+        with sqlite3.connect(db_path) as conn:
+            audit = conn.execute(
+                "SELECT target, detail FROM web_audit_events WHERE action='web.media.item.preview'"
+            ).fetchone()
+        assert audit is not None
+        assert audit[0] == item_id
+        assert "owner_scoped_verified" in audit[1]
+        assert audio["id"] not in audit[1]
+
+        # A different signed account sees the same non-enumerating 404 and
+        # never receives another account's bytes or a public URL.
+        with make_client(tmp_path, monkeypatch) as other:
+            register_and_login(other, "media-preview-other@example.com")
+            foreign = other.get(endpoint)
+            assert foreign.status_code == 404
+            assert wav_bytes() not in foreign.content
+
+        archived = owner.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/archive",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": 2, "idempotency_key": "media-preview-archive-0001"},
+        )
+        assert archived.status_code == 200
+        assert owner.get(endpoint).status_code == 404
+
+
+def test_media_workspace_preview_fails_closed_when_the_private_blob_changes(tmp_path, monkeypatch):
+    """Preview must not stream a swapped/tampered Asset Vault object."""
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "media-preview-integrity@example.com")
+        collection = create_collection(client, csrf, "media-preview-integrity-collection-0001")
+        audio = upload_asset(
+            client,
+            csrf,
+            key="media-preview-integrity-upload-0001",
+            name="integrity.wav",
+            content=wav_bytes(),
+            content_type="audio/wav",
+        )
+        attached = client.post(
+            f"/api/v1/media-workspace/collections/{collection['id']}/items",
+            headers={"X-CSRF-Token": csrf},
+            json=attach_payload(audio["id"], 1, "media-preview-integrity-attach-0001"),
+        )
+        item_id = attached.json()["data"]["item_id"]
+        blob = next((tmp_path / "private-web-assets" / "objects").glob("*.blob"))
+        blob.write_bytes(b"not-the-verified-audio")
+        monkeypatch.setenv("WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED", "true")
+        endpoint = f"/api/v1/media-workspace/collections/{collection['id']}/items/{item_id}/preview"
+        failed = client.get(endpoint)
+        assert failed.status_code == 404
+        assert b"not-the-verified-audio" not in failed.content
+
+
 def test_media_audio_listing_filters_before_pagination_and_is_owner_scoped(tmp_path, monkeypatch):
     """Older Vault audio stays searchable even after hundreds of non-audio files."""
     db_path = tmp_path / "copyfast-media-workspace-test.db"

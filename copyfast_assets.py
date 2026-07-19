@@ -1017,6 +1017,41 @@ def private_asset_attachment_response(
     )
 
 
+def private_asset_inline_response(
+    stream: BinaryIO,
+    *,
+    byte_size: int,
+    media_type: str,
+    filename: str,
+) -> StreamingResponse:
+    """Serve an already-pinned private audio reference for same-origin preview.
+
+    Callers must have already performed account ownership, object reference,
+    media-type and integrity checks.  The response intentionally has no
+    public URL, cache permission or byte-range contract; a future seek/range
+    implementation requires its own storage and media-security review.
+    """
+
+    if byte_size <= 0:
+        stream.close()
+        raise ValueError("Kích thước private Asset Vault không hợp lệ")
+    safe_name = str(filename or "preview").replace("\r", " ").replace("\n", " ").strip() or "preview"
+    return StreamingResponse(
+        _pinned_private_file_chunks(stream),
+        media_type=media_type,
+        background=BackgroundTask(stream.close),
+        headers={
+            "Content-Length": str(byte_size),
+            "Content-Disposition": f"inline; filename*=utf-8''{quote(safe_name)}",
+            "Cache-Control": "no-store, private",
+            "X-Content-Type-Options": "nosniff",
+            "Referrer-Policy": "no-referrer",
+            "Content-Security-Policy": "sandbox",
+            "Cross-Origin-Resource-Policy": "same-origin",
+        },
+    )
+
+
 def read_verified_private_asset_bytes(
     *,
     storage_key: str,

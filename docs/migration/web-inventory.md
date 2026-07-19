@@ -143,6 +143,7 @@
 | /collections/{collection_id}/items | POST | attach_media_item |
 | /collections/{collection_id}/items/{item_id} | PATCH | update_media_item |
 | /collections/{collection_id}/items/{item_id}/detach | POST | detach_media_item |
+| /collections/{collection_id}/items/{item_id}/preview | GET | preview_media_item |
 | /collections/{collection_id}/restore | POST | restore_collection |
 | /collections/{collection_id}/restore-version | POST | restore_collection_version |
 | /compose | POST | compose_prompt_blueprint |
@@ -161,6 +162,5 @@
 | /documents | GET | list_documents |
 | /documents | GET | list_documents |
 | /documents | POST | create_document |
-| /documents/upload | POST | upload_document |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.
