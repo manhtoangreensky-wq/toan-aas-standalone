@@ -417,7 +417,9 @@ def test_resolved_portal_page_title_beats_the_generic_server_placeholder_for_ali
     assert "function displayPageTitle(page, context)" in PORTAL
     assert 'serverTitle !== "TOAN AAS"' in PORTAL
     assert "displayPageTitle(page, context)" in PORTAL
-    assert "document.title = `${displayPageTitle(page, context)} · TOAN AAS`;" in PORTAL
+    assert "function localizedPageTitle(page, context)" in PORTAL
+    assert "const fallback = displayPageTitle(page, context);" in PORTAL
+    assert "document.title = `${localizedPageTitle(page, context)} · TOAN AAS`;" in PORTAL
 
 
 def test_hero_never_submits_an_empty_duplicate_feature_form_action() -> None:

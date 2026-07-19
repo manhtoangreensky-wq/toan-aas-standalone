@@ -45,6 +45,7 @@ const OFFLINE_FALLBACK = "/static/portal/offline.html";
 // only public, account-free shell files plus a generic offline notice.
 const SHELL = Object.freeze([
   "/static/portal/portal.css",
+  "/static/portal/portal-i18n.js",
   "/static/portal/portal.js",
   "/static/portal/integration.js",
   "/static/portal/manifest.webmanifest",

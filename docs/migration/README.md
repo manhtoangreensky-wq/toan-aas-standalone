@@ -58,6 +58,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.
 - [`WORKSPACE_SETUP_PROFILE_CONTRACT.md`](WORKSPACE_SETUP_PROFILE_CONTRACT.md) — signed Web-native first-run preferences with revision, CSRF, bounded receipts and no Bot/provider/payment behavior.
 - [`WORKSPACE_STARTER_KITS_CONTRACT.md`](WORKSPACE_STARTER_KITS_CONTRACT.md) — closed, signed Web-native Project starter bundles with atomic Project/Document/Workboard records; no Bot, provider, job, wallet, PayOS, output or delivery behavior.
+- [`WEB_INTERFACE_LOCALE_CONTRACT.md`](WEB_INTERFACE_LOCALE_CONTRACT.md) — reviewed `vi`/`en`/`zh` Portal UI preference, strict signed-profile boundary and no workflow-language/Browser-storage side effect.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.
 - [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.
 - [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.

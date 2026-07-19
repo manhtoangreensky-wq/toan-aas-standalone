@@ -49,6 +49,43 @@
   window.__TOAN_AAS_PORTAL_BUILD_ID__ = publicBuildId(
     window.__TOAN_AAS_PORTAL__ && window.__TOAN_AAS_PORTAL__.buildId
   );
+
+  // The public i18n bundle is loaded before this presentation shell.  Keep
+  // every call defensive so a partial/static development checkout still
+  // renders Vietnamese rather than blocking authentication or navigation.
+  // Locale is a signed Web-profile preference only; it never changes the
+  // language of customer content, a Bot command, provider input or workflow
+  // contract.
+  function portalI18n() {
+    const candidate = window.TOANAASI18n;
+    return candidate && typeof candidate === "object" && typeof candidate.t === "function"
+      ? candidate
+      : null;
+  }
+
+  function uiText(key, fallback, params) {
+    const i18n = portalI18n();
+    if (!i18n || typeof key !== "string" || !key) return fallback;
+    const translated = i18n.t(key, params);
+    return typeof translated === "string" && translated ? translated : fallback;
+  }
+
+  function interfaceLocaleFor(context) {
+    const candidate = context && context.profile && typeof context.profile.locale === "string"
+      ? context.profile.locale
+      : "vi";
+    const i18n = portalI18n();
+    return i18n && typeof i18n.normalizeLocale === "function"
+      ? i18n.normalizeLocale(candidate, "vi")
+      : (["vi", "en", "zh"].includes(candidate) ? candidate : "vi");
+  }
+
+  function applyInterfaceLocale(context) {
+    const i18n = portalI18n();
+    const locale = interfaceLocaleFor(context);
+    if (i18n && typeof i18n.setLocale === "function") i18n.setLocale(locale, { emit: false });
+    return locale;
+  }
   const ALLOWED_STATES = new Set([
     "ready", "draft", "awaiting_confirm", "queued", "processing",
     "completed", "failed", "failed_no_charge", "cancelled", "refunded", "review", "in_review", "approved", "scheduled", "archived", "unavailable", "guarded", "disabled", "read_only", "error", "empty",
@@ -100,6 +137,21 @@
     error: "Lỗi kết nối",
     empty: "Chưa có dữ liệu"
   });
+
+  const STATE_I18N_KEYS = Object.freeze({
+    ready: "states.ready", draft: "states.draft", awaiting_confirm: "states.awaitingConfirm",
+    queued: "states.queued", processing: "states.processing", completed: "states.completed",
+    failed: "states.failed", guarded: "states.guarded", disabled: "states.disabled",
+    read_only: "states.readOnly", empty: "states.empty", backlog: "states.backlog",
+    planned: "states.planned", in_progress: "states.inProgress", done: "states.done",
+    review: "states.review", reviewing: "states.reviewing", scheduled: "states.scheduled",
+    archived: "states.archived"
+  });
+
+  function stateLabel(status) {
+    const normalized = ALLOWED_STATES.has(status) ? status : "guarded";
+    return uiText(STATE_I18N_KEYS[normalized] || "", STATE_LABELS[normalized] || normalized);
+  }
 
   const PAYMENT_STATUS_LABELS = Object.freeze({
     draft: "Khởi tạo",
@@ -236,6 +288,14 @@
     { value: "ru", label: "Русский" }, { value: "ar", label: "العربية" }, { value: "hi", label: "हिन्दी" },
     { value: "lo", label: "ລາວ" }, { value: "km", label: "ខ្មែរ" }, { value: "my", label: "Burmese" },
     { value: "fil", label: "Filipino" }, { value: "auto", label: "Tự nhận diện" }
+  ]);
+
+  // Interface locale intentionally remains separate from the canonical
+  // workflow target-language list above. It changes Portal presentation only.
+  const INTERFACE_LOCALE_OPTIONS = Object.freeze([
+    { value: "vi", label: "Tiếng Việt" },
+    { value: "en", label: "English" },
+    { value: "zh", label: "中文" }
   ]);
 
   const FIELD_SETS = Object.freeze({
@@ -406,9 +466,9 @@
       { name: "detail", label: "Nội dung", control: "textarea", placeholder: "Không nhập khoá API, token hoặc dữ liệu thanh toán nhạy cảm.", help: "Web server sẽ chặn secret, OTP/CVV và số thẻ trước khi ticket được gửi. Tệp đính kèm chỉ xuất hiện khi adapter canonical hỗ trợ reference upload; form hiện tại không nhận hoặc bỏ qua file.", required: true, minLength: 3, maxLength: 4000 }
     ],
     profile: [
-      { name: "display_name", label: "Tên hiển thị", placeholder: "Tên bạn muốn hiển thị", maxLength: 120, help: "Đây là metadata Web; Telegram identity, role và Xu không thể sửa ở form này." },
-      { name: "locale", label: "Ngôn ngữ hồ sơ", control: "select", options: [{ value: "vi", label: "Tiếng Việt" }, { value: "en", label: "English" }], help: "Lưu preference hồ sơ; nội dung workflow vẫn theo contract canonical." },
-      { name: "timezone", label: "Múi giờ", control: "select", options: ["Asia/Ho_Chi_Minh", "UTC"], help: "Dùng cho preference hiển thị Web, không thay đổi timezone runtime Bot." }
+      { name: "display_name", label: "Tên hiển thị", labelKey: "account.display_name", placeholder: "Tên bạn muốn hiển thị", maxLength: 120, help: "Đây là metadata Web; Telegram identity, role và Xu không thể sửa ở form này." },
+      { name: "locale", label: "Ngôn ngữ giao diện", labelKey: "account.interfaceLocale", control: "select", options: INTERFACE_LOCALE_OPTIONS, help: "Lưu preference hồ sơ; nội dung workflow vẫn theo contract canonical.", helpKey: "account.locale_help" },
+      { name: "timezone", label: "Múi giờ", labelKey: "account.timezone", control: "select", options: ["Asia/Ho_Chi_Minh", "UTC"], help: "Dùng cho preference hiển thị Web, không thay đổi timezone runtime Bot." }
     ],
     adminFilter: [
       { name: "query", label: "Tìm kiếm", placeholder: "ID, email hoặc mã job…" },
@@ -6861,7 +6921,7 @@
 
   function badge(status) {
     const normalized = ALLOWED_STATES.has(status) ? status : "guarded";
-    return `<span class="portal-badge" data-status="${normalized}">${safeText(STATE_LABELS[normalized] || normalized)}</span>`;
+    return `<span class="portal-badge" data-status="${normalized}">${safeText(stateLabel(normalized))}</span>`;
   }
 
   function icon(name) { return safeText(ICONS[name] || name || ICONS.default); }
@@ -6877,6 +6937,52 @@
     // compatibility paths. A resolved portal page has richer metadata, so do
     // not let that generic placeholder erase its title in the UI/tab.
     return serverTitle && serverTitle !== "TOAN AAS" ? serverTitle : (page.title || "TOAN AAS");
+  }
+
+  const NAVIGATION_I18N_KEYS = Object.freeze({
+    "Workspace": "nav.workspace",
+    "Tổng quan": "nav.dashboard",
+    "Starter Kits": "nav.starterKits",
+    "Project Center": "nav.projects",
+    "Workboard": "nav.workboard",
+    "Asset Vault": "nav.assets",
+    "Nội dung & kế hoạch": "nav.contentPlanning",
+    "AI Labs & Media": "nav.aiLabs",
+    "Tạo mới": "nav.create",
+    "Công việc": "nav.work",
+    "Job Center": "nav.jobs",
+    "Tài sản Bot": "nav.assets",
+    "Ví & gói": "nav.wallet",
+    "Tài khoản & hỗ trợ": "nav.accountSupport",
+    "Tài khoản": "nav.account",
+    "Hỗ trợ": "nav.support",
+    "Bảng giá": "nav.pricing",
+    "Quản trị": "nav.admin"
+  });
+
+  function localizedNavigationLabel(label) {
+    const source = String(label || "");
+    return uiText(NAVIGATION_I18N_KEYS[source] || "", source);
+  }
+
+  function localizedPageTitle(page, context) {
+    const fallback = displayPageTitle(page, context);
+    const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/dashboard") return uiText("nav.dashboard", fallback);
+    if (path === "/account") return uiText("account.title", fallback);
+    if (path === "/workspace/setup") return uiText("setup.title", fallback);
+    if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("starter.title", fallback);
+    return localizedNavigationLabel(fallback);
+  }
+
+  function localizedPageDescription(page) {
+    const fallback = typeof page.description === "string" ? page.description : "";
+    const path = normalizePath(page && (page.routePath || page.path));
+    if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
+    if (path === "/account") return uiText("page.account.description", fallback);
+    if (path === "/workspace/setup") return uiText("page.workspaceSetup.description", fallback);
+    if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("page.starterKits.description", fallback);
+    return fallback;
   }
 
   function initials(name) {
@@ -7176,11 +7282,11 @@
 
   function renderMobileNav(page) {
     const items = [
-      ["dashboard", "/dashboard", "Workspace", ICONS.dashboard],
-      ["studio", "/features", "AI Studio", ICONS.prompt],
-      ["jobs", "/jobs", "Jobs", ICONS.jobs],
-      ["assets", "/assets", "Tài sản", ICONS.assets],
-      ["account", "/account", "Tài khoản", ICONS.account]
+      ["dashboard", "/dashboard", uiText("mobile.workspace", "Workspace"), ICONS.dashboard],
+      ["studio", "/features", uiText("mobile.studio", "AI Studio"), ICONS.prompt],
+      ["jobs", "/jobs", uiText("mobile.jobs", "Jobs"), ICONS.jobs],
+      ["assets", "/assets", uiText("mobile.assets", "Tài sản"), ICONS.assets],
+      ["account", "/account", uiText("mobile.account", "Tài khoản"), ICONS.account]
     ];
     return items.map(([key, href, label, icon]) => {
       const current = isMobileNavCurrent(key, page);
@@ -7251,7 +7357,7 @@
     const groups = navGroups(context, page).map((group) => {
       const preparedLinks = group.links.map(([path, label, linkIcon]) => {
         const current = isNavCurrent(path, page);
-        return { path, label, linkIcon, current };
+        return { path, label: localizedNavigationLabel(label), linkIcon, current };
       });
       const links = preparedLinks.map(({ path, label, linkIcon, current }) => {
         return `<a class="portal-nav-link" href="${path}"${current ? ' aria-current="page"' : ""}>
@@ -7265,41 +7371,41 @@
       // the five core Workspace destinations remain open for new customers.
       const open = group.defaultOpen === true || preparedLinks.some((link) => link.current);
       return `<details class="portal-nav-group"${open ? " open" : ""}>
-        <summary class="portal-nav-summary"><span class="portal-nav-label">${safeText(group.label)}</span><span class="portal-nav-group-count" aria-hidden="true">${safeText(String(preparedLinks.length))}</span></summary>
+        <summary class="portal-nav-summary"><span class="portal-nav-label">${safeText(localizedNavigationLabel(group.label))}</span><span class="portal-nav-group-count" aria-hidden="true">${safeText(String(preparedLinks.length))}</span></summary>
         <div class="portal-nav-links">${links}</div>
       </details>`;
     }).join("");
     return `<div class="portal-brand">
       <span class="portal-brand-mark" aria-hidden="true">TA</span>
       <span class="portal-brand-copy"><span class="portal-brand-name">TOAN AAS</span><span class="portal-brand-caption">AI Workspace</span></span>
-      <button class="portal-sidebar-close" type="button" aria-label="Đóng điều hướng" data-portal-close-menu>${portalIcon(ICONS.close)}</button>
+      <button class="portal-sidebar-close" type="button" aria-label="${safeText(uiText("chrome.closeNavigation", "Đóng điều hướng"))}" data-portal-close-menu>${portalIcon(ICONS.close)}</button>
     </div>
     <div class="portal-sidebar-action-row">
-      <a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>Tạo workflow mới</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>
-      <button class="portal-sidebar-focus-toggle" type="button" aria-label="Bật chế độ tập trung nội dung" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>${portalIcon(ICONS.collapse)}</span><span class="portal-sr-only" data-portal-focus-navigation-label>Thu gọn điều hướng</span></button>
+      <a class="portal-sidebar-create" href="/features"><span class="portal-sidebar-create-icon" aria-hidden="true">${portalIcon(ICONS.plus)}</span><span>${safeText(uiText("chrome.newWorkflow", "Tạo workflow mới"))}</span><b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></a>
+      <button class="portal-sidebar-focus-toggle" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Bật chế độ tập trung nội dung"))}" aria-pressed="false" data-portal-focus-navigation><span aria-hidden="true" data-portal-focus-navigation-icon>${portalIcon(ICONS.collapse)}</span><span class="portal-sr-only" data-portal-focus-navigation-label>${safeText(uiText("chrome.closeNavigation", "Thu gọn điều hướng"))}</span></button>
     </div>
-    <button class="portal-sidebar-search" type="button" aria-label="Tìm mọi workspace" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>Tìm mọi workspace</span><kbd aria-hidden="true">Ctrl K</kbd></button>
+    <button class="portal-sidebar-search" type="button" aria-label="${safeText(uiText("chrome.searchWorkspace", "Tìm mọi workspace"))}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span>${safeText(uiText("chrome.searchWorkspace", "Tìm mọi workspace"))}</span><kbd aria-hidden="true">Ctrl K</kbd></button>
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
-        <span><strong>${bridgeReady ? "Kết nối workspace sẵn sàng" : "Workspace đang ở chế độ an toàn"}</strong><span>${bridgeReady ? "Tính năng được cấp theo phiên hiện tại" : "Không gọi provider, Xu hoặc payment từ browser"}</span></span>
+        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Kết nối workspace sẵn sàng") : uiText("chrome.safeMode", "Workspace đang ở chế độ an toàn"))}</strong><span>${bridgeReady ? "Tính năng được cấp theo phiên hiện tại" : "Không gọi provider, Xu hoặc payment từ browser"}</span></span>
       </div>
-      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>Pháp lý & riêng tư</span></a>
+      <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & riêng tư"))}</span></a>
     </div>`;
   }
 
   function renderHeader(page, context) {
     const name = displayName(context);
-    const crumbs = ["TOAN AAS", page.section, page.title].filter(Boolean).map((piece) => `<span>${safeText(piece)}</span>`).join("");
+    const crumbs = ["TOAN AAS", page.section, localizedPageTitle(page, context)].filter(Boolean).map((piece) => `<span>${safeText(localizedNavigationLabel(piece))}</span>`).join("");
     const accountHref = context.session.authenticated === true ? "/account" : "/login";
     const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;
-    return `<button class="portal-menu-button" type="button" aria-label="Mở điều hướng" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
-      <div class="portal-crumbs" aria-label="Vị trí hiện tại">${crumbs}</div>
+    return `<button class="portal-menu-button" type="button" aria-label="${safeText(uiText("chrome.openNavigation", "Mở điều hướng"))}" aria-controls="portal-sidebar" aria-expanded="false" data-portal-menu><span class="portal-control-icon" aria-hidden="true">${portalIcon(ICONS.menu)}</span></button>
+      <div class="portal-crumbs" aria-label="${safeText(uiText("chrome.main_navigation", "Vị trí hiện tại"))}">${crumbs}</div>
       <div class="portal-header-actions">
-        ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="Cài TOAN AAS trên thiết bị" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">Cài app</span></button>` : ""}
-        <button class="portal-command-trigger" type="button" aria-label="Mở chuyển nhanh" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">Tìm hoặc chuyển workspace</span><kbd>Ctrl K</kbd></button>
+        ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
+        <button class="portal-command-trigger" type="button" aria-label="${safeText(uiText("chrome.quickSwitch", "Mở chuyển nhanh"))}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace"))}</span><kbd>Ctrl K</kbd></button>
         ${badge(stateFor(page, context))}
-        <a class="portal-session-chip" href="${accountHref}" aria-label="Mở tài khoản">
+        <a class="portal-session-chip" href="${accountHref}" aria-label="${safeText(uiText("chrome.openAccount", "Mở tài khoản"))}">
           <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>
         </a>
       </div>`;
@@ -7316,8 +7422,10 @@
       const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
       const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
       const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
+      const fieldLabel = field.labelKey ? uiText(field.labelKey, field.label) : field.label;
+      const fieldHelp = field.helpKey ? uiText(field.helpKey, field.help) : field.help;
       const descriptionIds = [];
-      const help = field.help ? (descriptionIds.push(`${id}-help`), `<span id="${id}-help" class="portal-field-help">${safeText(field.help)}</span>`) : "";
+      const help = fieldHelp ? (descriptionIds.push(`${id}-help`), `<span id="${id}-help" class="portal-field-help">${safeText(fieldHelp)}</span>`) : "";
       const staged = stagedUploadCount ? (descriptionIds.push(`${id}-staged`), `<span id="${id}-staged" class="portal-field-staged">${safeText(String(stagedUploadCount))} tệp đã vào staging canonical; không cần chọn lại để estimate/confirm.</span>`) : "";
       const describedBy = descriptionIds.length ? ` aria-describedby="${descriptionIds.join(" ")}"` : "";
       const required = field.required === true && field.type !== "file" ? " required" : "";
@@ -7429,7 +7537,7 @@
         ? `<span class="portal-required-mark" data-portal-required-mark aria-hidden="true"${field.required === true || field.requiredUpload === true ? "" : " hidden"}>*</span><span class="portal-sr-only" data-portal-required-message${field.required === true || field.requiredUpload === true ? "" : " hidden"}> bắt buộc</span>`
         : "";
       const referencePicker = field.referencePicker ? renderOperationAssetReferencePicker(context, field.referencePicker) : "";
-      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(field.label)}${requiredMark}</label>${control}${help}${staged}${referencePicker}</div>`;
+      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(fieldLabel)}${requiredMark}</label>${control}${help}${staged}${referencePicker}</div>`;
     }).join("")}</div>`;
   }
 
@@ -7631,8 +7739,8 @@
     const showHeroAction = hasAction && !hasFields;
     const enabled = hasAction && canAct(page, context);
     const reason = actionBlockReason(page, context);
-    return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(page.section || "TOAN AAS")}</div>
-      <h1 class="portal-title">${safeText(displayPageTitle(page, context))}</h1><p class="portal-description">${safeText(page.description)}</p></div>
+    return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(localizedNavigationLabel(page.section || "TOAN AAS"))}</div>
+      <h1 class="portal-title">${safeText(localizedPageTitle(page, context))}</h1><p class="portal-description">${safeText(localizedPageDescription(page))}</p></div>
       <div class="portal-hero-actions">${badge(state)}${showHeroAction ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button>` : ""}</div>
     </section>`;
   }
@@ -16587,7 +16695,7 @@
       loginMethods.github === true ? "GitHub OAuth" : (oauthProviders.github && oauthProviders.github.enabled === true ? "GitHub OAuth sẵn sàng liên kết" : "GitHub OAuth chờ cấu hình server"),
       loginMethods.apple === true ? "Sign in with Apple" : (oauthProviders.apple && oauthProviders.apple.enabled === true ? "Apple OAuth sẵn sàng liên kết" : "Apple OAuth chờ cấu hình server")
     ].filter(Boolean).join(" · ");
-    const accountRows = `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tên hiển thị</span><span class="portal-summary-value">${safeText(profile.displayName || profile.name || session.displayName || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Email</span><span class="portal-summary-value">${safeText(profile.email || session.email || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Mặc định hồ sơ</span><span class="portal-summary-value">${safeText(profile.locale || "vi")} · ${safeText(profile.timezone || "Asia/Ho_Chi_Minh")} · ${safeText(profile.avatarStyle || "gradient")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Đăng nhập</span><span class="portal-summary-value">${safeText(methodSummary || "Email + mật khẩu (có thể dùng Gmail)")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Telegram</span><span class="portal-summary-value">${linked ? "Đã liên kết canonical" : "Chưa liên kết"}</span></div><div class="portal-summary-item"><span class="portal-summary-key">Phiên</span><span class="portal-summary-value">${session.authenticated ? "Signed session hợp lệ" : "Đang chờ xác minh"}</span></div></div>`;
+    const accountRows = `<div class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("account.display_name", "Tên hiển thị"))}</span><span class="portal-summary-value">${safeText(profile.displayName || profile.name || session.displayName || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("account.email", "Email"))}</span><span class="portal-summary-value">${safeText(profile.email || session.email || "—")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("account.language_preference", "Mặc định hồ sơ"))}</span><span class="portal-summary-value">${safeText(profile.locale || "vi")} · ${safeText(profile.timezone || "Asia/Ho_Chi_Minh")} · ${safeText(profile.avatarStyle || "gradient")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("account.oauth", "Đăng nhập"))}</span><span class="portal-summary-value">${safeText(methodSummary || "Email + mật khẩu (có thể dùng Gmail)")}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("account.telegram", "Telegram"))}</span><span class="portal-summary-value">${safeText(linked ? uiText("account.connected", "Đã liên kết canonical") : uiText("account.not_connected", "Chưa liên kết"))}</span></div><div class="portal-summary-item"><span class="portal-summary-key">${safeText(uiText("account.sessions", "Phiên"))}</span><span class="portal-summary-value">${safeText(session.authenticated ? uiText("account.sessionValid", "Signed session hợp lệ") : uiText("account.sessionPending", "Đang chờ xác minh"))}</span></div></div>`;
     const profileEnabled = context.capabilities && context.capabilities["update-profile"] === true;
     const profileValues = {
       display_name: profile.displayName || profile.name || session.displayName || "",
@@ -16612,7 +16720,7 @@
         ? `<div class="portal-notice"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>OAuth chưa hoàn tất</strong><p>Không thể hoàn tất liên kết. Hãy bắt đầu lại từ nút liên kết bên dưới; không chia sẻ mã hoặc token OAuth với bất kỳ ai.</p></div></div>`
         : "";
     const oauthMethods = `${oauthNotice}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Phương thức đăng nhập</h2><p class="portal-card-subtitle">Liên kết OAuth luôn cần signed session, CSRF và xác minh trực tiếp tại provider. Telegram Login và Bot link phải khớp cùng Telegram identity; Web không tự ghép account chỉ vì trùng email.</p></div>${badge((oauthProviders.telegram && oauthProviders.telegram.enabled) || (oauthProviders.google && oauthProviders.google.enabled) || (oauthProviders.github && oauthProviders.github.enabled) || (oauthProviders.apple && oauthProviders.apple.enabled) ? "ready" : "guarded")}</div><div class="portal-summary-list">${oauthMethodCard("telegram", "Telegram Login")}${oauthMethodCard("google", "Google (OAuth)")}${oauthMethodCard("github", "GitHub")}${oauthMethodCard("apple", "Sign in with Apple")}</div></section>`;
-    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tuỳ chỉnh hồ sơ Web</h2><p class="portal-card-subtitle">Chỉ cập nhật metadata Web thuộc signed session này. Telegram identity, role, Xu, PayOS và provider luôn do canonical Bot kiểm soát.</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">Các thay đổi được audit và yêu cầu CSRF hợp lệ.</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : " disabled title=\"Cần signed session và CSRF hợp lệ.\""}>Lưu hồ sơ</button></div></form></section>`;
+    const profileEditor = `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(uiText("account.profile", "Tuỳ chỉnh hồ sơ Web"))}</h2><p class="portal-card-subtitle">${safeText(uiText("account.profile_description", "Chỉ cập nhật metadata Web thuộc signed session này. Telegram identity, role, Xu, PayOS và provider luôn do canonical Bot kiểm soát."))}</p></div>${badge(profileEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.profile, profileEnabled, context, profileValues)}<div class="portal-form-footer"><span class="portal-form-note">Các thay đổi được audit và yêu cầu CSRF hợp lệ.</span><button class="portal-button portal-button--primary" type="submit"${profileEnabled ? "" : " disabled title=\"Cần signed session và CSRF hợp lệ.\""}>${safeText(uiText("account.save", "Lưu hồ sơ"))}</button></div></form></section>`;
     const connection = context.telegramConnection && typeof context.telegramConnection === "object" ? context.telegramConnection : {};
     const botUrl = safeTelegramLink(connection.bot_chat_url || "");
     const botPreferences = [
@@ -17330,11 +17438,11 @@
 
   function starterKitRecordCounts(kit) {
     const counts = kit && kit.record_counts && typeof kit.record_counts === "object" ? kit.record_counts : {};
-    return `<dl class="portal-starter-kit-counts"><div><dt>Project</dt><dd>${safeText(String(counts.projects || 0))}</dd></div><div><dt>Studio Documents</dt><dd>${safeText(String(counts.documents || 0))}</dd></div><div><dt>Workboard card</dt><dd>${safeText(String(counts.work_items || 0))}</dd></div><div><dt>Checklist</dt><dd>${safeText(String(counts.checklist_items || 0))}</dd></div></dl>`;
+    return `<dl class="portal-starter-kit-counts"><div><dt>${safeText(uiText("starter.project", "Project"))}</dt><dd>${safeText(String(counts.projects || 0))}</dd></div><div><dt>${safeText(uiText("starter.recordDocuments", "Studio Documents"))}</dt><dd>${safeText(String(counts.documents || 0))}</dd></div><div><dt>${safeText(uiText("starter.recordWorkboard", "Workboard card"))}</dt><dd>${safeText(String(counts.work_items || 0))}</dd></div><div><dt>${safeText(uiText("starter.recordChecklist", "Checklist"))}</dt><dd>${safeText(String(counts.checklist_items || 0))}</dd></div></dl>`;
   }
 
   function starterKitScopeRail() {
-    return `<aside class="portal-card portal-card-pad portal-starter-kit-scope"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Bạn luôn biết điều gì được tạo</h2></div>${badge("read_only")}</div><div class="portal-starter-kit-scope-section"><h3>Starter Kit sẽ tạo</h3><ul><li>Một Project Web-owned</li><li>Các Studio Documents bản nháp</li><li>Một Workboard card và checklist</li></ul></div><div class="portal-starter-kit-scope-section"><h3>Starter Kit không tạo</h3><ul><li>Không chạy công cụ hay sinh output</li><li>Không thay đổi số dư hoặc giao dịch</li><li>Không gửi thông báo hay phát hành nội dung</li></ul></div><p class="portal-form-note">Bạn có thể review, chỉnh sửa hoặc xóa các record Web này sau khi tạo.</p></aside>`;
+    return `<aside class="portal-card portal-card-pad portal-starter-kit-scope"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("starter.scopeKicker", "Scope rõ ràng"))}</span><h2 class="portal-card-title">${safeText(uiText("starter.scopeTitle", "Bạn luôn biết điều gì được tạo"))}</h2></div>${badge("read_only")}</div><div class="portal-starter-kit-scope-section"><h3>${safeText(uiText("starter.scopeCreatesTitle", "Starter Kit sẽ tạo"))}</h3><ul><li>${safeText(uiText("starter.scopeCreatesProject", "Một Project Web-owned"))}</li><li>${safeText(uiText("starter.scopeCreatesDocuments", "Các Studio Documents bản nháp"))}</li><li>${safeText(uiText("starter.scopeCreatesWorkboard", "Một Workboard card và checklist"))}</li></ul></div><div class="portal-starter-kit-scope-section"><h3>${safeText(uiText("starter.scopeExcludesTitle", "Starter Kit không tạo"))}</h3><ul><li>${safeText(uiText("starter.scopeExcludesOutput", "Không chạy công cụ hay sinh output"))}</li><li>${safeText(uiText("starter.scopeExcludesBalance", "Không thay đổi số dư hoặc giao dịch"))}</li><li>${safeText(uiText("starter.scopeExcludesPublish", "Không gửi thông báo hay phát hành nội dung"))}</li></ul></div><p class="portal-form-note">${safeText(uiText("starter.scopeNote", "Bạn có thể review, chỉnh sửa hoặc xóa các record Web này sau khi tạo."))}</p></aside>`;
   }
 
   function renderStarterKitCatalog(page, context, catalog) {
@@ -17342,13 +17450,13 @@
     const cards = catalog.kits.map((kit) => {
       const installed = kit.state === "installed" && kit.installation && validProjectId(kit.installation.project_id);
       const primary = installed
-        ? `<a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(kit.installation.project_id))}">Mở Project <span aria-hidden="true">→</span></a>`
-        : `<a class="portal-button portal-button--primary" href="/starter-kits/${encodeURIComponent(kit.key)}">${kit.state === "available" ? "Xem & tạo Project" : "Xem điều kiện"} <span aria-hidden="true">→</span></a>`;
-      const recommendation = recommended.has(kit.key) && !installed ? '<span class="portal-starter-kit-recommended">Phù hợp với Workspace Setup của bạn</span>' : "";
-      const installedNote = installed ? `<p class="portal-starter-kit-installed">Đã tạo ${safeText(String(kit.installation.document_count))} tài liệu và Workboard checklist vào ${safeText(String(kit.installation.created_at || "Project hiện tại"))}.</p>` : "";
-      return `<article class="portal-card portal-card-pad portal-starter-kit-card" data-state="${safeText(kit.state)}"><div class="portal-card-header"><div class="portal-starter-kit-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(kit.icon)}</span><div><span class="portal-section-kicker">${recommendation || "Starter Kit"}</span><h2 class="portal-card-title">${safeText(kit.title)}</h2><p class="portal-card-subtitle">${safeText(kit.summary)}</p></div></div>${badge(starterKitStateBadge(kit.state))}</div><p class="portal-starter-kit-outcome">${safeText(kit.outcome)}</p>${starterKitRecordCounts(kit)}${installedNote}<div class="portal-starter-kit-actions">${primary}</div></article>`;
+        ? `<a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(kit.installation.project_id))}">${safeText(uiText("starter.openProject", "Mở Project"))} <span aria-hidden="true">→</span></a>`
+        : `<a class="portal-button portal-button--primary" href="/starter-kits/${encodeURIComponent(kit.key)}">${safeText(uiText(kit.state === "available" ? "starter.viewAndCreate" : "starter.viewRequirements", kit.state === "available" ? "Xem & tạo Project" : "Xem điều kiện"))} <span aria-hidden="true">→</span></a>`;
+      const recommendation = recommended.has(kit.key) && !installed ? `<span class="portal-starter-kit-recommended">${safeText(uiText("starter.recommendation", "Phù hợp với Workspace Setup của bạn"))}</span>` : "";
+      const installedNote = installed ? `<p class="portal-starter-kit-installed">${safeText(uiText("starter.installedNote", "Đã tạo {count} tài liệu và Workboard checklist vào {date}.", { count: String(kit.installation.document_count), date: String(kit.installation.created_at || "Project hiện tại") }))}</p>` : "";
+      return `<article class="portal-card portal-card-pad portal-starter-kit-card" data-state="${safeText(kit.state)}"><div class="portal-card-header"><div class="portal-starter-kit-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(kit.icon)}</span><div><span class="portal-section-kicker">${recommendation || safeText(uiText("starter.title", "Starter Kit"))}</span><h2 class="portal-card-title">${safeText(kit.title)}</h2><p class="portal-card-subtitle">${safeText(kit.summary)}</p></div></div>${badge(starterKitStateBadge(kit.state))}</div><p class="portal-starter-kit-outcome">${safeText(kit.outcome)}</p>${starterKitRecordCounts(kit)}${installedNote}<div class="portal-starter-kit-actions">${primary}</div></article>`;
     }).join("");
-    return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<div class="portal-starter-kits-layout"><section class="portal-starter-kit-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Project launchpad</span><h2>Chọn cách khởi động Project</h2><p>Mỗi lựa chọn chỉ tạo cấu trúc planning rõ ràng để bạn tiếp tục review và biên tập trong Web App.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="/starter-kits">Làm mới</button></div><div class="portal-starter-kit-grid">${cards}</div></section>${starterKitScopeRail()}</div></article>`;
+    return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<div class="portal-starter-kits-layout"><section class="portal-starter-kit-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">${safeText(uiText("starter.catalogKicker", "Project launchpad"))}</span><h2>${safeText(uiText("starter.catalogTitle", "Chọn cách khởi động Project"))}</h2><p>${safeText(uiText("starter.catalogBody", "Mỗi lựa chọn chỉ tạo cấu trúc planning rõ ràng để bạn tiếp tục review và biên tập trong Web App."))}</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="/starter-kits">${safeText(uiText("chrome.refresh", "Làm mới"))}</button></div><div class="portal-starter-kit-grid">${cards}</div></section>${starterKitScopeRail()}</div></article>`;
   }
 
   function renderStarterKitDetail(page, context, catalog, kit) {
@@ -17358,25 +17466,25 @@
     const setupReady = profile.setup_state === "completed";
     const applyReady = Boolean(context.capabilities && context.capabilities["starter-kit-apply"] === true && setupReady && catalog.workboardReady === true && kit.state === "available");
     const content = installed
-      ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Đã tạo</span><h2 class="portal-card-title">Starter Kit này đã có trong Workspace</h2><p class="portal-card-subtitle">Không tạo lại record trùng. Hãy tiếp tục từ Project Web hiện có.</p></div>${badge("ready")}</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(kit.installation.project_id))}">Mở Project <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/starter-kits">Xem Starter Kits khác</a></div></section>`
+      ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("starter.createdKicker", "Đã tạo"))}</span><h2 class="portal-card-title">${safeText(uiText("starter.createdTitle", "Starter Kit này đã có trong Workspace"))}</h2><p class="portal-card-subtitle">${safeText(uiText("starter.createdBody", "Không tạo lại record trùng. Hãy tiếp tục từ Project Web hiện có."))}</p></div>${badge("ready")}</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/projects/${encodeURIComponent(String(kit.installation.project_id))}">${safeText(uiText("starter.openProject", "Mở Project"))} <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/starter-kits">${safeText(uiText("starter.browseMore", "Xem Starter Kits khác"))}</a></div></section>`
       : (!setupReady
-        ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Bước cần trước</span><h2 class="portal-card-title">Hoàn tất Workspace Setup trước</h2><p class="portal-card-subtitle">Starter Kit dùng revision của thiết lập hiện tại để tạo một Project phù hợp với cách bạn làm việc.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workspace/setup">Mở Workspace Setup <span aria-hidden="true">→</span></a></div></section>`
+        ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("starter.prerequisiteKicker", "Bước cần trước"))}</span><h2 class="portal-card-title">${safeText(uiText("starter.prerequisiteTitle", "Hoàn tất Workspace Setup trước"))}</h2><p class="portal-card-subtitle">${safeText(uiText("starter.prerequisiteBody", "Starter Kit dùng revision của thiết lập hiện tại để tạo một Project phù hợp với cách bạn làm việc."))}</p></div>${badge("guarded")}</div><div class="portal-form-footer"><a class="portal-button portal-button--primary" href="/workspace/setup">${safeText(uiText("starter.openSetup", "Mở Workspace Setup"))} <span aria-hidden="true">→</span></a></div></section>`
         : (!catalog.workboardReady || kit.state === "maintenance"
-          ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Bảo trì</span><h2 class="portal-card-title">Workboard chưa sẵn sàng</h2><p class="portal-card-subtitle">Để tránh tạo một Project thiếu checklist, Starter Kit đang tạm dừng đến khi Workboard hoạt động trở lại.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="${safeText(route)}">Kiểm tra lại</button></div></section>`
-          : `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">Xác nhận tạo Project</span><h2 class="portal-card-title">Tạo cấu trúc planning này?</h2><p class="portal-card-subtitle">Server sẽ kiểm tra signed session, CSRF, Workspace Setup revision, idempotency và giới hạn Workboard trước khi tạo record.</p></div>${badge(applyReady ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="starter-kit-apply" data-portal-route="${safeText(route)}" data-portal-confirm="Tạo Project, Studio Documents và Workboard checklist từ Starter Kit này? Bạn có thể chỉnh sửa các record Web sau đó." novalidate><input type="hidden" name="kit_key" value="${safeText(kit.key)}"><input type="hidden" name="kit_version" value="${safeText(String(kit.version))}"><input type="hidden" name="expected_setup_revision" value="${safeText(String(profile.revision || 0))}"><label class="portal-checkbox portal-starter-kit-confirm-check"><input type="checkbox" name="starter_kit_confirm" value="true" required${applyReady ? "" : " disabled"}><span>Tôi hiểu kit này chỉ tạo các record planning ở trên; không tạo kết quả hoàn tất hay chạy tác vụ bên ngoài.</span></label><div class="portal-form-footer"><span class="portal-form-note">Tạo một lần theo từng Starter Kit. Nhấn lại cùng yêu cầu sẽ nhận lại receipt an toàn, không nhân đôi record.</span><button class="portal-button portal-button--primary" type="submit"${applyReady ? "" : " disabled"}>Tạo Project từ kit <span aria-hidden="true">→</span></button></div></form></section>`));
-    return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<div class="portal-starter-kits-layout"><section class="portal-starter-kit-detail"><a class="portal-back-link" href="/starter-kits">${portalIcon(ICONS.arrowRight)} <span>Tất cả Starter Kits</span></a><section class="portal-card portal-card-pad portal-starter-kit-detail-card"><div class="portal-card-header"><div class="portal-starter-kit-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(kit.icon)}</span><div><span class="portal-section-kicker">Starter Kit</span><h2 class="portal-card-title">${safeText(kit.title)}</h2><p class="portal-card-subtitle">${safeText(kit.summary)}</p></div></div>${badge(starterKitStateBadge(kit.state))}</div><p class="portal-starter-kit-outcome">${safeText(kit.outcome)}</p><section class="portal-starter-kit-creates"><h3>Kit này sẽ tạo</h3>${starterKitRecordCounts(kit)}</section></section>${content}</section>${starterKitScopeRail()}</div></article>`;
+          ? `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("starter.maintenanceKicker", "Bảo trì"))}</span><h2 class="portal-card-title">${safeText(uiText("starter.maintenanceTitle", "Workboard chưa sẵn sàng"))}</h2><p class="portal-card-subtitle">${safeText(uiText("starter.maintenanceBody", "Để tránh tạo một Project thiếu checklist, Starter Kit đang tạm dừng đến khi Workboard hoạt động trở lại."))}</p></div>${badge("guarded")}</div><div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="${safeText(route)}">${safeText(uiText("starter.checkAgain", "Kiểm tra lại"))}</button></div></section>`
+          : `<section class="portal-card portal-card-pad portal-starter-kit-confirmation"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("starter.confirmationKicker", "Xác nhận tạo Project"))}</span><h2 class="portal-card-title">${safeText(uiText("starter.confirmationTitle", "Tạo cấu trúc planning này?"))}</h2><p class="portal-card-subtitle">${safeText(uiText("starter.confirmationBody", "Server sẽ kiểm tra signed session, CSRF, Workspace Setup revision, idempotency và giới hạn Workboard trước khi tạo record."))}</p></div>${badge(applyReady ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="starter-kit-apply" data-portal-route="${safeText(route)}" data-portal-confirm="${safeText(uiText("starter.confirmation", "Thao tác này sẽ tạo một dự án, tài liệu cấu trúc và checklist bản nháp trong workspace của bạn."))}" novalidate><input type="hidden" name="kit_key" value="${safeText(kit.key)}"><input type="hidden" name="kit_version" value="${safeText(String(kit.version))}"><input type="hidden" name="expected_setup_revision" value="${safeText(String(profile.revision || 0))}"><label class="portal-checkbox portal-starter-kit-confirm-check"><input type="checkbox" name="starter_kit_confirm" value="true" required${applyReady ? "" : " disabled"}><span>${safeText(uiText("starter.confirmCheckbox", "Tôi hiểu kit này chỉ tạo các record planning ở trên; không tạo kết quả hoàn tất hay chạy tác vụ bên ngoài."))}</span></label><div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("starter.idempotencyNote", "Tạo một lần theo từng Starter Kit. Nhấn lại cùng yêu cầu sẽ nhận lại receipt an toàn, không nhân đôi record."))}</span><button class="portal-button portal-button--primary" type="submit"${applyReady ? "" : " disabled"}>${safeText(uiText("starter.createProject", "Tạo Project từ kit"))} <span aria-hidden="true">→</span></button></div></form></section>`));
+    return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<div class="portal-starter-kits-layout"><section class="portal-starter-kit-detail"><a class="portal-back-link" href="/starter-kits">${portalIcon(ICONS.arrowRight)} <span>${safeText(uiText("starter.returnCatalog", "Tất cả Starter Kits"))}</span></a><section class="portal-card portal-card-pad portal-starter-kit-detail-card"><div class="portal-card-header"><div class="portal-starter-kit-heading"><span class="portal-module-icon" aria-hidden="true">${portalIcon(kit.icon)}</span><div><span class="portal-section-kicker">${safeText(uiText("starter.title", "Starter Kit"))}</span><h2 class="portal-card-title">${safeText(kit.title)}</h2><p class="portal-card-subtitle">${safeText(kit.summary)}</p></div></div>${badge(starterKitStateBadge(kit.state))}</div><p class="portal-starter-kit-outcome">${safeText(kit.outcome)}</p><section class="portal-starter-kit-creates"><h3>${safeText(uiText("starter.createsTitle", "Kit này sẽ tạo"))}</h3>${starterKitRecordCounts(kit)}</section></section>${content}</section>${starterKitScopeRail()}</div></article>`;
   }
 
   function renderStarterKits(page, context) {
     const catalog = context.starterKits && typeof context.starterKits === "object" ? context.starterKits : starterKitsEmptyBootstrap();
     const canView = Boolean(context.capabilities && context.capabilities["starter-kits-view"] === true);
-    if (!canView) return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Starter Kits đang được bảo vệ", "Đăng nhập bằng signed session để xem catalog Project Web-native của tài khoản hiện tại.", ICONS.package)}</section></article>`;
-    if (catalog.readState === "loading") return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Đang tải Starter Kits", "Portal đang đọc catalog và receipt owner-scoped từ server. Không dùng cache cũ hoặc dữ liệu trình duyệt thay thế.", ICONS.package)}</section></article>`;
-    if (catalog.readState !== "read_only") return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Starter Kits chưa thể xác minh", "Catalog đang được bảo vệ hoặc phản hồi không đúng contract. Hãy tải lại khi signed session còn hoạt động.", ICONS.security)}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="${safeText(String(page.routePath || page.path || "/starter-kits"))}">Tải lại</button></div></section></article>`;
+    if (!canView) return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(uiText("starter.protectedTitle", "Starter Kits đang được bảo vệ"), uiText("starter.protectedBody", "Đăng nhập bằng signed session để xem catalog Project Web-native của tài khoản hiện tại."), ICONS.package)}</section></article>`;
+    if (catalog.readState === "loading") return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(uiText("starter.loadingTitle", "Đang tải Starter Kits"), uiText("starter.loadingBody", "Portal đang đọc catalog và receipt owner-scoped từ server. Không dùng cache cũ hoặc dữ liệu trình duyệt thay thế."), ICONS.package)}</section></article>`;
+    if (catalog.readState !== "read_only") return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(uiText("starter.guardedTitle", "Starter Kits chưa thể xác minh"), uiText("starter.guardedBody", "Catalog đang được bảo vệ hoặc phản hồi không đúng contract. Hãy tải lại khi signed session còn hoạt động."), ICONS.security)}<div class="portal-form-footer"><button class="portal-button portal-button--quiet" type="button" data-portal-action="starter-kits-refresh" data-portal-route="${safeText(String(page.routePath || page.path || "/starter-kits"))}">${safeText(uiText("starter.reload", "Tải lại"))}</button></div></section></article>`;
     const key = typeof page.starterKitKey === "string" ? page.starterKitKey : "";
     if (key) {
       const kit = starterKitCatalogItem(context, key);
-      if (!kit) return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Starter Kit không còn trong catalog", "Hãy quay về catalog để chọn một bộ khởi đầu đang được server công bố.", ICONS.package)}<a class="portal-button portal-button--primary" href="/starter-kits">Về Starter Kits</a></section></article>`;
+      if (!kit) return `<article class="portal-page portal-starter-kits">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(uiText("starter.missingTitle", "Starter Kit không còn trong catalog"), uiText("starter.missingBody", "Hãy quay về catalog để chọn một bộ khởi đầu đang được server công bố."), ICONS.package)}<a class="portal-button portal-button--primary" href="/starter-kits">${safeText(uiText("starter.returnCatalog", "Về Starter Kits"))}</a></section></article>`;
       return renderStarterKitDetail(page, context, catalog, kit);
     }
     return renderStarterKitCatalog(page, context, catalog);
@@ -17390,53 +17498,58 @@
     const canSave = Boolean(context.capabilities && context.capabilities["workspace-setup-save"] === true && readState === "read_only");
     const route = "/workspace/setup";
     if (readState === "loading") {
-      return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite">${renderEmpty("Đang tải thiết lập Workspace", "Portal đang đọc hồ sơ riêng của signed Web account. Không dùng dữ liệu Bot, browser storage hay profile của phiên trước để thay thế.", ICONS.dashboard)}</section></article>`;
+      return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite">${renderEmpty(uiText("setup.loadingTitle", "Đang tải thiết lập Workspace"), uiText("setup.loadingBody", "Portal đang đọc hồ sơ riêng của signed Web account. Không dùng dữ liệu Bot, browser storage hay profile của phiên trước để thay thế."), ICONS.dashboard)}</section></article>`;
     }
     if (readState !== "read_only") {
-      return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}<section class="portal-card portal-card-pad" data-workspace-setup-status aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Signed account required</span><h2 class="portal-card-title">Thiết lập Workspace đang được bảo vệ</h2><p class="portal-card-subtitle">Máy chủ chưa trả hồ sơ thiết lập hợp lệ. Portal không hiển thị lựa chọn cũ hoặc tự tạo profile trong trình duyệt.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Hãy làm mới khi signed session còn hoạt động.</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-setup-refresh" data-portal-route="${route}">Tải lại thiết lập</button></div></section></article>`;
+      return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}<section class="portal-card portal-card-pad" data-workspace-setup-status aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("setup.guardedKicker", "Signed account required"))}</span><h2 class="portal-card-title">${safeText(uiText("setup.guardedTitle", "Thiết lập Workspace đang được bảo vệ"))}</h2><p class="portal-card-subtitle">${safeText(uiText("setup.guardedBody", "Máy chủ chưa trả hồ sơ thiết lập hợp lệ. Portal không hiển thị lựa chọn cũ hoặc tự tạo profile trong trình duyệt."))}</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("chrome.retry", "Hãy làm mới khi signed session còn hoạt động."))}</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-setup-refresh" data-portal-route="${route}">${safeText(uiText("setup.refresh", "Tải lại thiết lập"))}</button></div></section></article>`;
     }
     const roleOptions = [
-      ["solo_creator", "Sáng tạo cá nhân"], ["team_lead", "Dẫn dắt nhóm"], ["operator", "Vận hành & điều phối"], ["learner", "Học và thử quy trình"]
+      ["solo_creator", uiText("setup.roleSoloCreator", "Sáng tạo cá nhân")], ["team_lead", uiText("setup.roleTeamLead", "Dẫn dắt nhóm")], ["operator", uiText("setup.roleOperator", "Vận hành & điều phối")], ["learner", uiText("setup.roleLearner", "Học và thử quy trình")]
     ];
     const goalOptions = [
-      ["organize_work", "Tổ chức công việc"], ["create_content", "Xây nội dung"], ["build_brand", "Phát triển thương hiệu"], ["run_operations", "Vận hành có kiểm soát"], ["learn_workflows", "Học workflow"]
+      ["organize_work", uiText("setup.goalOrganizeWork", "Tổ chức công việc")], ["create_content", uiText("setup.goalCreateContent", "Xây nội dung")], ["build_brand", uiText("setup.goalBuildBrand", "Phát triển thương hiệu")], ["run_operations", uiText("setup.goalRunOperations", "Vận hành có kiểm soát")], ["learn_workflows", uiText("setup.goalLearnWorkflows", "Học workflow")]
     ];
-    const experienceOptions = [["new", "Mới bắt đầu"], ["growing", "Đang phát triển"], ["advanced", "Đã quen workflow"]];
+    const experienceOptions = [["new", uiText("setup.experienceNew", "Mới bắt đầu")], ["growing", uiText("setup.experienceGrowing", "Đang phát triển")], ["advanced", uiText("setup.experienceAdvanced", "Đã quen workflow")]];
     const focusOptions = [
-      ["projects", "Project Center", "Gom brief, tài liệu và phiên bản.", ICONS.dashboard],
-      ["content", "Content Studio", "Brief, caption, hook và script.", ICONS.prompt],
-      ["image", "Image Studio", "Ý tưởng và artboard hình ảnh.", ICONS.image],
-      ["voice", "Voice Studio", "Kịch bản và direction giọng nói.", ICONS.voice],
-      ["music", "Music Workspace", "Brief âm thanh và collection riêng tư.", ICONS.music],
-      ["subtitle", "Subtitle Studio", "Caption authored và định dạng phụ đề.", ICONS.subtitle],
-      ["documents", "Document Workspace", "Tài liệu, PDF brief và quy trình.", ICONS.document],
-      ["automation", "Workboard", "Theo dõi công việc và review rõ ràng.", ICONS.workboard]
+      ["projects", uiText("setup.focusProjectsTitle", "Project Center"), uiText("setup.focusProjectsBody", "Gom brief, tài liệu và phiên bản."), ICONS.dashboard],
+      ["content", uiText("setup.focusContentTitle", "Content Studio"), uiText("setup.focusContentBody", "Brief, caption, hook và script."), ICONS.prompt],
+      ["image", uiText("setup.focusImageTitle", "Image Studio"), uiText("setup.focusImageBody", "Ý tưởng và artboard hình ảnh."), ICONS.image],
+      ["voice", uiText("setup.focusVoiceTitle", "Voice Studio"), uiText("setup.focusVoiceBody", "Kịch bản và direction giọng nói."), ICONS.voice],
+      ["music", uiText("setup.focusMusicTitle", "Music Workspace"), uiText("setup.focusMusicBody", "Brief âm thanh và collection riêng tư."), ICONS.music],
+      ["subtitle", uiText("setup.focusSubtitleTitle", "Subtitle Studio"), uiText("setup.focusSubtitleBody", "Caption authored và định dạng phụ đề."), ICONS.subtitle],
+      ["documents", uiText("setup.focusDocumentsTitle", "Document Workspace"), uiText("setup.focusDocumentsBody", "Tài liệu, PDF brief và quy trình."), ICONS.document],
+      ["automation", uiText("setup.focusAutomationTitle", "Workboard"), uiText("setup.focusAutomationBody", "Theo dõi công việc và review rõ ràng."), ICONS.workboard]
     ];
     const selected = (actual, value) => actual === value ? " selected" : "";
     const disabled = canSave ? "" : " disabled";
     const selectedFocus = new Set(Array.isArray(profile.focus_areas) ? profile.focus_areas : []);
     const profileState = profile.setup_state === "completed" ? "completed" : profile.setup_state === "skipped" ? "ready" : "awaiting_confirm";
     const stateCopy = profile.setup_state === "completed"
-      ? "Thiết lập đã lưu. Bạn có thể cập nhật khi cách làm việc thay đổi."
+      ? uiText("setup.savedState", "Thiết lập đã lưu. Bạn có thể cập nhật khi cách làm việc thay đổi.")
       : profile.setup_state === "skipped"
-        ? "Bạn đã bỏ qua trước đó; có thể chọn lại bất cứ lúc nào."
-        : "Chọn một lần để Workspace đề xuất điểm bắt đầu phù hợp; bạn luôn có thể sửa sau.";
+        ? uiText("setup.skippedState", "Bạn đã bỏ qua trước đó; có thể chọn lại bất cứ lúc nào.")
+        : uiText("setup.defaultState", "Chọn một lần để Workspace đề xuất điểm bắt đầu phù hợp; bạn luôn có thể sửa sau.");
     const options = (items, current, placeholder) => `<option value="">${safeText(placeholder)}</option>${items.map(([value, label]) => `<option value="${safeText(value)}"${selected(current, value)}>${safeText(label)}</option>`).join("")}`;
     const selectedFocusCount = [...selectedFocus].filter((key) => focusOptions.some(([option]) => option === key)).length;
     const focusStatus = selectedFocusCount >= 3
-      ? "Đã chọn 3/3 nhóm studio ưu tiên. Bỏ chọn một nhóm để đổi."
-      : `Đã chọn ${safeText(String(selectedFocusCount))}/3 nhóm studio ưu tiên.`;
+      ? uiText("setup.maxFocus", "Đã chọn 3/3 nhóm studio ưu tiên. Bỏ chọn một nhóm để đổi.")
+      : uiText("setup.selectedFocus", "Đã chọn {count}/3 nhóm studio ưu tiên.", { count: String(selectedFocusCount) });
     const focusCards = focusOptions.map(([key, title, description, icon]) => `<label class="portal-workspace-setup-focus-card"><input type="checkbox" name="focus_${safeText(key)}" aria-describedby="workspace-setup-focus-status"${selectedFocus.has(key) ? " checked" : ""}${disabled}><span class="portal-workspace-setup-focus-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(description)}</small></span></label>`).join("");
     const skip = profile.setup_state === "not_started"
-      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-setup-skip" data-portal-route="${route}"${disabled}>Bỏ qua lúc này</button>`
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-setup-skip" data-portal-route="${route}"${disabled}>${safeText(uiText("setup.skip", "Bỏ qua lúc này"))}</button>`
       : "";
     const completionState = profile.setup_state === "completed" ? ' data-state="done"' : "";
     const completionMarker = profile.setup_state === "completed" ? portalIcon(ICONS.check) : "1";
-    const starterKitLink = profile.setup_state === "completed" ? `<a class="portal-button portal-button--quiet" href="/starter-kits">Mở Starter Kits</a>` : "";
+    const starterKitLink = profile.setup_state === "completed" ? `<a class="portal-button portal-button--quiet" href="/starter-kits">${safeText(uiText("setup.openStarters", "Mở Starter Kits"))}</a>` : "";
+    const setupSteps = [
+      [completionMarker, "setup.stepWork", "Cách làm việc", "setup.stepWorkDetail", "Vai trò, mục tiêu và mức trải nghiệm."],
+      [profile.setup_state === "completed" ? portalIcon(ICONS.check) : "2", "setup.stepStudios", "Chọn studio", "setup.stepStudiosDetail", "Tối đa ba nhóm ưu tiên."],
+      [profile.setup_state === "completed" ? portalIcon(ICONS.check) : "3", "setup.stepSave", "Lưu và điều chỉnh sau", "setup.stepSaveDetail", "Một biểu mẫu, không có bước ẩn."]
+    ].map(([marker, titleKey, titleFallback, detailKey, detailFallback]) => `<li${completionState}><span aria-hidden="true">${marker}</span><div><strong>${safeText(uiText(titleKey, titleFallback))}</strong><small>${safeText(uiText(detailKey, detailFallback))}</small></div></li>`).join("");
     return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}
-      <ol class="portal-workspace-setup-steps" aria-label="Ba phần trong biểu mẫu Workspace"><li${completionState}><span aria-hidden="true">${completionMarker}</span><div><strong>Cách làm việc</strong><small>Vai trò, mục tiêu và mức trải nghiệm.</small></div></li><li${completionState}><span aria-hidden="true">${profile.setup_state === "completed" ? portalIcon(ICONS.check) : "2"}</span><div><strong>Chọn studio</strong><small>Tối đa ba nhóm ưu tiên.</small></div></li><li${completionState}><span aria-hidden="true">${profile.setup_state === "completed" ? portalIcon(ICONS.check) : "3"}</span><div><strong>Lưu và điều chỉnh sau</strong><small>Một biểu mẫu, không có bước ẩn.</small></div></li></ol>
-      <section class="portal-workspace-setup-context" aria-label="Ngữ cảnh tài khoản Web"><div><span class="portal-section-kicker">Web-native preference</span><h2>Thiết lập theo cách bạn làm việc</h2><p>${safeText(stateCopy)}</p></div>${badge(profileState)}<div class="portal-workspace-setup-context-meta"><span>${portalIcon(ICONS.account)} ${safeText(String(preferences.locale || "vi").toUpperCase())}</span><span>${portalIcon(ICONS.system)} ${safeText(String(preferences.timezone || "Asia/Ho_Chi_Minh"))}</span></div></section>
-      <form class="portal-form portal-workspace-setup-form" data-portal-form data-portal-no-transient data-workspace-setup-form data-workspace-setup-writable="${canSave ? "true" : "false"}" data-portal-action="workspace-setup-save" data-portal-route="${route}" novalidate><div class="portal-fields portal-workspace-setup-form-grid"><label class="portal-field"><span>Vai trò của bạn</span><select class="portal-select" name="role" required${disabled}>${options(roleOptions, profile.role, "Chọn vai trò")}</select><small class="portal-field-help">Dùng để sắp xếp điểm bắt đầu trong Web App.</small></label><label class="portal-field"><span>Mục tiêu chính</span><select class="portal-select" name="goal" required${disabled}>${options(goalOptions, profile.goal, "Chọn mục tiêu")}</select><small class="portal-field-help">Không mở thêm quyền hoặc engine.</small></label><label class="portal-field"><span>Mức trải nghiệm</span><select class="portal-select" name="experience" required${disabled}>${options(experienceOptions, profile.experience, "Chọn mức trải nghiệm")}</select><small class="portal-field-help">Bạn có thể thay đổi sau.</small></label></div><fieldset class="portal-workspace-setup-focus" aria-describedby="workspace-setup-focus-help workspace-setup-focus-status"><legend>Chọn tối đa 3 nhóm studio ưu tiên</legend><p id="workspace-setup-focus-help">Chỉ chọn những không gian bạn muốn thấy trước. Đây không phải lệnh chạy hoặc tạo output.</p><p class="portal-workspace-setup-focus-status" id="workspace-setup-focus-status" data-workspace-setup-focus-status role="status" aria-live="polite">${focusStatus}</p><div class="portal-workspace-setup-focus-grid">${focusCards}</div></fieldset><div class="portal-form-footer" data-workspace-setup-status aria-live="polite"><span class="portal-form-note">Lưu theo signed Web account · revision ${safeText(String(profile.revision || 0))} · không có Bot, provider, job, ví hay thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Lưu và vào Workspace</button></div></form><div class="portal-workspace-setup-secondary">${skip}${starterKitLink}<a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard</a></div></article>`;
+      <ol class="portal-workspace-setup-steps" aria-label="${safeText(uiText("setup.title", "Ba phần trong biểu mẫu Workspace"))}">${setupSteps}</ol>
+      <section class="portal-workspace-setup-context" aria-label="${safeText(uiText("setup.accountContext", "Ngữ cảnh tài khoản Web"))}"><div><span class="portal-section-kicker">${safeText(uiText("setup.webNative", "Web-native preference"))}</span><h2>${safeText(uiText("setup.contextTitle", "Thiết lập theo cách bạn làm việc"))}</h2><p>${safeText(stateCopy)}</p></div>${badge(profileState)}<div class="portal-workspace-setup-context-meta"><span>${portalIcon(ICONS.account)} ${safeText(String(preferences.locale || "vi").toUpperCase())}</span><span>${portalIcon(ICONS.system)} ${safeText(String(preferences.timezone || "Asia/Ho_Chi_Minh"))}</span></div></section>
+      <form class="portal-form portal-workspace-setup-form" data-portal-form data-portal-no-transient data-workspace-setup-form data-workspace-setup-writable="${canSave ? "true" : "false"}" data-portal-action="workspace-setup-save" data-portal-route="${route}" novalidate><div class="portal-fields portal-workspace-setup-form-grid"><label class="portal-field"><span>${safeText(uiText("setup.role", "Vai trò của bạn"))}</span><select class="portal-select" name="role" required${disabled}>${options(roleOptions, profile.role, uiText("setup.chooseRole", "Chọn vai trò"))}</select><small class="portal-field-help">${safeText(uiText("setup.roleHelp", "Dùng để sắp xếp điểm bắt đầu trong Web App."))}</small></label><label class="portal-field"><span>${safeText(uiText("setup.goal", "Mục tiêu chính"))}</span><select class="portal-select" name="goal" required${disabled}>${options(goalOptions, profile.goal, uiText("setup.chooseGoal", "Chọn mục tiêu"))}</select><small class="portal-field-help">${safeText(uiText("setup.goalHelp", "Không mở thêm quyền hoặc engine."))}</small></label><label class="portal-field"><span>${safeText(uiText("setup.experience", "Mức trải nghiệm"))}</span><select class="portal-select" name="experience" required${disabled}>${options(experienceOptions, profile.experience, uiText("setup.chooseExperience", "Chọn mức trải nghiệm"))}</select><small class="portal-field-help">${safeText(uiText("setup.experienceHelp", "Bạn có thể thay đổi sau."))}</small></label></div><fieldset class="portal-workspace-setup-focus" aria-describedby="workspace-setup-focus-help workspace-setup-focus-status"><legend>${safeText(uiText("setup.focusTitle", "Chọn tối đa 3 nhóm studio ưu tiên"))}</legend><p id="workspace-setup-focus-help">${safeText(uiText("setup.focusHelp", "Chỉ chọn những không gian bạn muốn thấy trước. Đây không phải lệnh chạy hoặc tạo output."))}</p><p class="portal-workspace-setup-focus-status" id="workspace-setup-focus-status" data-workspace-setup-focus-status role="status" aria-live="polite">${safeText(focusStatus)}</p><div class="portal-workspace-setup-focus-grid">${focusCards}</div></fieldset><div class="portal-form-footer" data-workspace-setup-status aria-live="polite"><span class="portal-form-note">${safeText(uiText("setup.saveNote", "Lưu theo signed Web account · revision {revision} · không có Bot, provider, job, ví hay thanh toán.", { revision: String(profile.revision || 0) }))}</span><button class="portal-button portal-button--primary" type="submit"${disabled}>${safeText(uiText("setup.saveAndEnter", "Lưu và vào Workspace"))}</button></div></form><div class="portal-workspace-setup-secondary">${skip}${starterKitLink}<a class="portal-button portal-button--quiet" href="/dashboard">${safeText(uiText("setup.goDashboard", "Về Dashboard"))}</a></div></article>`;
   }
 
   function renderOnboarding(page, context) {
@@ -20512,6 +20625,7 @@
     const focus = focusSnapshot();
     const context = getBootstrap();
     const page = resolvePage(context.path);
+    applyInterfaceLocale(context);
     const sidebar = document.querySelector("[data-portal-sidebar]");
     const header = document.querySelector("[data-portal-header]");
     const main = document.querySelector("[data-portal-main]");
@@ -20538,7 +20652,10 @@
     document.body.classList.toggle("portal-body--auth", isAuth);
     sidebar.hidden = minimalShell;
     header.hidden = minimalShell;
+    const skipLink = document.querySelector(".skip-link");
+    if (skipLink) skipLink.textContent = uiText("chrome.skip_navigation", "Bỏ qua điều hướng");
     if (mobileNav) {
+      mobileNav.setAttribute("aria-label", uiText("chrome.quick_navigation", "Điều hướng nhanh"));
       mobileNav.hidden = !showMobileNav;
       mobileNav.innerHTML = showMobileNav ? renderMobileNav(page) : "";
     }
@@ -20546,7 +20663,7 @@
       commandPalette.hidden = true;
       commandPalette.innerHTML = "";
     }
-    document.title = `${displayPageTitle(page, context)} · TOAN AAS`;
+    document.title = `${localizedPageTitle(page, context)} · TOAN AAS`;
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
