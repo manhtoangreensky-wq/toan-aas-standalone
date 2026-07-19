@@ -1321,14 +1321,238 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
     assert gap["coverage_comparability"] == {
         "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
         "feature_progress_claim": False,
-        "reason": "Schema 1.4 corrects raw-string callback-handler extraction, keeps the handlers/ package outside the observed bot.py runtime denominator when no static import path exists, and rejects only bare numeric aspect-ratio tuples from the keyboard callback heuristic.",
+        "reason": "Schema 1.5 keeps the 1.4 inventory corrections, retains embedded formatted callback values as opaque templates, and removes false Web coverage claims for tvflow callbacks whose Bot handler requires pending state, canonical billing/package decisions, provider/job guards, or Telegram-only guidance.",
         "scope_changes": [
             "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
             "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
             "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
+            "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
+            "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
         ],
         "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
     }
+
+
+def test_static_audit_large_parser_preserves_source_lines_without_rescanning(tmp_path: Path) -> None:
+    """The optimized large-file location index keeps 1-based audit evidence."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    bot_source = bot_root / "bot.py"
+    bot_source.write_text(
+        'header = True\n'
+        'button = InlineKeyboardButton("Trend", callback_data="tvflow|confirm_content")\n'
+        '\n'
+        'app.add_handler(CallbackQueryHandler(handle_trend_video_flow_callback, pattern=r"^tvflow\\\\|"))\n',
+        encoding="utf-8",
+    )
+
+    original_max_ast_parse_bytes = audit.MAX_AST_PARSE_BYTES
+    try:
+        audit.MAX_AST_PARSE_BYTES = 1
+        inventory = audit._extract_python_inventory(bot_root, [bot_source])
+    finally:
+        audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes
+
+    assert {record["token"]: record["line"] for record in inventory["callback_data"]} == {
+        "tvflow|confirm_content": 2,
+    }
+    assert inventory["callback_handlers"] == [
+        {
+            "handler": "handle_trend_video_flow_callback",
+            "pattern": r"^tvflow\\|",
+            "file": "bot.py",
+            "line": 4,
+        }
+    ]
+
+
+def test_static_audit_keeps_tvflow_callbacks_at_bot_authority_boundaries(tmp_path: Path) -> None:
+    """Trend-video names must not inherit convenient-looking Web route claims."""
+
+    audit = _load_audit_module()
+    # These are exactly the generic keyword targets that used to upgrade
+    # tvflow records to COPIED_GUARDED.  A finite Bot-state disposition must
+    # win even when each matching-looking Web surface exists.
+    routes = {"/membership", "/features/content", "/features/image", "/features/video"}
+    expected = {
+        "tvflow|cancel_content": (
+            "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED",
+            "tvflow_cancel_content_requires_bot_pending_state",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|confirm_content": (
+            "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED",
+            "tvflow_confirm_content_requires_bot_billing_execution",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|confirm_content_package": (
+            "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED",
+            "tvflow_confirm_content_requires_bot_billing_execution",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|cancel": (
+            "BOT_TREND_PENDING_STATE_REQUIRED",
+            "tvflow_cancel_requires_bot_pending_state",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|image_scene_1": (
+            "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+            "tvflow_image_scene_requires_bot_output_credit_confirmation",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|image_scene_2": (
+            "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+            "tvflow_image_scene_requires_bot_output_credit_confirmation",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|image_scene_3": (
+            "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+            "tvflow_image_scene_requires_bot_output_credit_confirmation",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|save_image": (
+            "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+            "tvflow_save_image_is_not_a_web_asset",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|edit_prompt": (
+            "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+            "tvflow_prompt_guidance_is_not_web_state_transfer",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|rewrite": (
+            "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+            "tvflow_prompt_guidance_is_not_web_state_transfer",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|video_prompt": (
+            "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+            "tvflow_prompt_guidance_is_not_web_state_transfer",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+        "tvflow|admin_video_image_7_1": (
+            "BOT_ADMIN_SMOKE_REQUIRED",
+            "tvflow_admin_smoke_requires_bot_authority",
+            "admin",
+            "TELEGRAM_ONLY",
+        ),
+        "tvflow|image_warranty_retry_7": (
+            "BOT_IMAGE_JOB_WARRANTY_REQUIRED",
+            "tvflow_warranty_retry_requires_bot_job_state",
+            "customer",
+            "NEEDS_FEATURE_DISPOSITION",
+        ),
+    }
+
+    for callback, (target, resolution, classification, status) in expected.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        audit._annotate_feature_disposition(mapped)
+        assert mapped["target"] == target
+        assert mapped["resolution"] == resolution
+        assert mapped["classification"] == classification
+        assert mapped["status"] == status
+        assert mapped["status"] not in {"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED", "NAVIGATION_ONLY"}
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+        if status == "NEEDS_FEATURE_DISPOSITION":
+            assert mapped["fallback_family"] == "tvflow"
+        else:
+            assert "fallback_family" not in mapped
+
+    template_expectations = {
+        "tvflow|regen_scene_{*}": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+        "tvflow|image_video_real_{*}_{*}": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+        "tvflow|image_video_prompt_select_{*}_{*}": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+        "tvflow|image_video_prompts_{*}": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+        "tvflow|music_image_{*}": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+        "tvflow|image_back_{*}": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+    }
+    for template, target in template_expectations.items():
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        audit._annotate_feature_disposition(mapped)
+        assert mapped["target"] == target
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["status"] not in {"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED"}
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    admin_template = audit._map_callback_template(
+        "tvflow|admin_video_image_{*}_{*}",
+        {"file": "bot.py", "line": 1},
+        routes,
+    )
+    assert admin_template is not None
+    assert admin_template["target"] == "BOT_ADMIN_SMOKE_REQUIRED"
+    assert admin_template["classification"] == "admin"
+    assert admin_template["status"] == "TELEGRAM_ONLY"
+
+    unknown = audit._map_callback("tvflow|future_action", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["target"] == "BOT_TRENDFLOW_SOURCE_REVIEW_REQUIRED"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert "NO_RUNTIME_CLAIM" in unknown["source_dispositions"]
+
+    # Exercise the real static inventory path, including f-string templates,
+    # so an implementation cannot accidentally bypass the tvflow interceptor.
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+InlineKeyboardButton("Confirm", callback_data="tvflow|confirm_content_package")
+InlineKeyboardButton("Image", callback_data="tvflow|image_scene_1")
+job_id = "ignored"
+choice = "ignored"
+InlineKeyboardButton("Video", callback_data=f"tvflow|image_video_real_{job_id}_{choice}")
+InlineKeyboardButton("Admin", callback_data=f"tvflow|admin_video_image_{job_id}_{choice}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/membership")
+async def membership():
+    return {}
+@app.get("/features/image")
+async def image():
+    return {}
+@app.get("/features/video")
+async def video():
+    return {}
+''',
+        encoding="utf-8",
+    )
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    report_mappings = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_mappings"] + result["parity_gap"]["callback_template_mappings"]
+        if str(item.get("source") or "").startswith("tvflow|")
+    }
+    assert set(report_mappings) == {
+        "tvflow|confirm_content_package",
+        "tvflow|image_scene_1",
+        "tvflow|image_video_real_{*}_{*}",
+        "tvflow|admin_video_image_{*}_{*}",
+    }
+    assert not {
+        item["status"]
+        for item in report_mappings.values()
+    }.intersection({"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED", "NAVIGATION_ONLY"})
+    assert report_mappings["tvflow|admin_video_image_{*}_{*}"]["status"] == "TELEGRAM_ONLY"
+    assert (tmp_path / "docs" / "TVFLOW_CALLBACK_CONTRACT.md").is_file()
 
 
 def test_static_audit_does_not_mistake_aspect_ratio_tuples_for_callbacks(tmp_path: Path) -> None:

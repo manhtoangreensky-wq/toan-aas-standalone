@@ -16294,6 +16294,72 @@
     },
     {
       "file": "bot.py",
+      "line": 92153,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|image_tier_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92174,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|image_tier_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91456,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|qi_ratio_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91494,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|qi_tier_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 96933,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|video_tier_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91653,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}_add"
+    },
+    {
+      "file": "bot.py",
+      "line": 91831,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}_add"
+    },
+    {
+      "file": "bot.py",
+      "line": 91858,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}_aspect_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 91747,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}_choice"
+    },
+    {
+      "file": "bot.py",
+      "line": 91830,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}_confirm"
+    },
+    {
+      "file": "bot.py",
+      "line": 91654,
+      "resolution": "unresolved_dynamic_template",
+      "template": "create_media|{*}_skip"
+    },
+    {
+      "file": "bot.py",
       "line": 91791,
       "resolution": "unresolved_dynamic_template",
       "template": "create_media|{*}|bottom_center"
@@ -16366,6 +16432,12 @@
     },
     {
       "file": "bot.py",
+      "line": 46596,
+      "resolution": "unresolved_dynamic_template",
+      "template": "freehub|lib_{*}"
+    },
+    {
+      "file": "bot.py",
       "line": 40531,
       "resolution": "unresolved_dynamic_template",
       "template": "imgtool|{*}|bottom_center"
@@ -16435,6 +16507,18 @@
       "line": 77146,
       "resolution": "unresolved_dynamic_template",
       "template": "license_music|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 76823,
+      "resolution": "unresolved_dynamic_template",
+      "template": "license_{*}|1"
+    },
+    {
+      "file": "bot.py",
+      "line": 76828,
+      "resolution": "unresolved_dynamic_template",
+      "template": "license_{*}|1"
     },
     {
       "file": "bot.py",
@@ -16666,6 +16750,30 @@
     },
     {
       "file": "bot.py",
+      "line": 122173,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|admin_confirm_ack_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30472,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|translation_pair_back_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30439,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|translation_pair_start_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30438,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|translation_pair_swap_{*}"
+    },
+    {
+      "file": "bot.py",
       "line": 30399,
       "resolution": "unresolved_dynamic_template",
       "template": "menu|{*}"
@@ -16705,6 +16813,60 @@
       "line": 122431,
       "resolution": "unresolved_dynamic_template",
       "template": "menu|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 30459,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_auto"
+    },
+    {
+      "file": "bot.py",
+      "line": 30468,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_de"
+    },
+    {
+      "file": "bot.py",
+      "line": 30462,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_en"
+    },
+    {
+      "file": "bot.py",
+      "line": 30467,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_fr"
+    },
+    {
+      "file": "bot.py",
+      "line": 30464,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_ja"
+    },
+    {
+      "file": "bot.py",
+      "line": 30465,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_ko"
+    },
+    {
+      "file": "bot.py",
+      "line": 30466,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_th"
+    },
+    {
+      "file": "bot.py",
+      "line": 30461,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_vi"
+    },
+    {
+      "file": "bot.py",
+      "line": 30463,
+      "resolution": "unresolved_dynamic_template",
+      "template": "menu|{*}_zh"
     },
     {
       "file": "bot.py",
@@ -16870,6 +17032,12 @@
     },
     {
       "file": "bot.py",
+      "line": 76817,
+      "resolution": "unresolved_dynamic_template",
+      "template": "play_{*}|{*}"
+    },
+    {
+      "file": "bot.py",
       "line": 30795,
       "resolution": "unresolved_dynamic_template",
       "template": "prov|cancel|cancel|{*}"
@@ -16903,6 +17071,12 @@
       "line": 77786,
       "resolution": "unresolved_dynamic_template",
       "template": "select_media|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 76818,
+      "resolution": "unresolved_dynamic_template",
+      "template": "select_{*}|{*}"
     },
     {
       "file": "bot.py",
@@ -17320,6 +17494,132 @@
     },
     {
       "file": "bot.py",
+      "line": 92053,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|admin_video_image_{*}_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92089,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|admin_video_image_{*}_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92030,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_back_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92050,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_back_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92086,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_back_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92049,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompt_edit_{*}_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92046,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompt_save_{*}_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92084,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompt_save_{*}_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92026,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompt_select_{*}_1"
+    },
+    {
+      "file": "bot.py",
+      "line": 92027,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompt_select_{*}_2"
+    },
+    {
+      "file": "bot.py",
+      "line": 92028,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompt_select_{*}_3"
+    },
+    {
+      "file": "bot.py",
+      "line": 92029,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompts_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92170,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompts_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 100007,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompts_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 101152,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_prompts_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92047,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_video_real_{*}_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92158,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_warranty_retry_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 100010,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|image_warranty_retry_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92048,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|music_image_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 92085,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|music_image_{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 100012,
+      "resolution": "unresolved_dynamic_template",
+      "template": "tvflow|regen_scene_{*}"
+    },
+    {
+      "file": "bot.py",
       "line": 94035,
       "resolution": "unresolved_dynamic_template",
       "template": "vfinal|tier|{*}"
@@ -17479,6 +17779,12 @@
       "line": 47923,
       "resolution": "unresolved_dynamic_template",
       "template": "vproduct|pace|{*}"
+    },
+    {
+      "file": "bot.py",
+      "line": 48613,
+      "resolution": "unresolved_dynamic_template",
+      "template": "vproduct|prompt_video_select|batch_{*}"
     },
     {
       "file": "bot.py",
@@ -23895,7 +24201,7 @@
     "background_jobs": 194,
     "callback_data": 2815,
     "callback_handlers": 54,
-    "callback_templates": 232,
+    "callback_templates": 283,
     "commands": 773,
     "conversations": 0,
     "database_tables": 97,
@@ -29716,7 +30022,7 @@
       "path": "/webhook/payos"
     }
   ],
-  "schema_version": "1.4",
+  "schema_version": "1.5",
   "source_files_discovered": 176,
   "source_files_scanned": 172,
   "source_fingerprint_sha256": "3390924d75276b84156b46e0d074ef1cf9c807df2fbb307809a08d5c567d7208",
