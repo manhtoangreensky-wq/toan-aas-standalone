@@ -340,7 +340,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("manual|", "/wallet/topup", "customer"),
     ("shopai|", "/wallet/topup", "customer"),
     ("shopai_video_job|", "/wallet/topup", "customer"),
-    ("storage|", "/wallet/topup", "customer"),
     ("archive|", "/admin", "admin"),
     ("opmenu|", "/admin", "admin"),
 )
@@ -405,6 +404,37 @@ VIDEO_JOB_MUTATION_CALLBACK_TEMPLATES = frozenset({
     "job|approve|{*}",
     "job|cancel|{*}",
 })
+
+# Storage add-ons are distinct from Xu top-ups.  The frozen Bot renders the
+# catalog and custom-input prompt in Telegram, then its confirm branch creates
+# a canonical storage order/PayOS checkout and grants quota only after the
+# canonical settlement path.  A callback can never become a browser amount,
+# a wallet top-up, or a second storage ledger.
+STORAGE_ADDON_TELEGRAM_ONLY_CALLBACKS: dict[str, dict[str, Any]] = {
+    "storage|menu": {
+        "source_dispositions": (
+            "CANONICAL_BOT_STORAGE_ADDON_CATALOG",
+            "TELEGRAM_PAYMENT_CONTEXT",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot storage menu redraws its Telegram storage-add-on catalog. It is the entry to a "
+            "canonical Bot purchase flow, not a Web storage catalog, Xu top-up, or browser checkout."
+        ),
+    },
+    "storage|custom": {
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_PENDING_STORAGE_INPUT",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot custom-storage branch writes a short-lived pending action for the Telegram user and "
+            "expects the next Telegram text message. It does not transfer an amount or storage request to Web."
+        ),
+    },
+}
+STORAGE_ADDON_CONFIRM_CALLBACK_TEMPLATE = "storage|confirm|{*}"
 
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
@@ -583,9 +613,11 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "storage": {
         "priority": "P0",
-        "candidate_boundary": "/wallet/topup",
-        "authority": "Canonical Bot wallet/PayOS bridge",
-        "next_contract": "Keep storage purchase/credit changes canonical to the Bot until an owner-scoped bridge contract exists.",
+        "candidate_boundary": "canonical Bot storage add-on order, PayOS checkout and entitlement settlement",
+        "authority": "Canonical Bot storage quota/PayOS state machine",
+        "next_contract": "Storage add-on menu, custom input and confirmation remain Bot-canonical until a dedicated owner-scoped storage bridge exists. Web must not turn the flow into Xu top-up, accept a Bot amount/code, create an order, finalize PayOS, grant quota or create a second webhook/ledger.",
+        "source_dispositions": ("CANONICAL_BOT_STORAGE_ADDON_SOURCE_REVIEW", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot storage callback flow uses Telegram pending input, canonical orders/PayOS checkout and canonical quota entitlement settlement; it is not a Xu top-up flow.",
     },
     "payosalert": {
         "priority": "P0",
@@ -2987,6 +3019,42 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             ),
             "evidence": evidence,
         }
+    if token in STORAGE_ADDON_TELEGRAM_ONLY_CALLBACKS:
+        # These finite customer callbacks belong to a Telegram-only storage
+        # purchase conversation. They must not inherit /wallet/topup or a
+        # browser storage catalog because neither carries the Bot state safely.
+        contract = STORAGE_ADDON_TELEGRAM_ONLY_CALLBACKS[token]
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "reviewed_storage_addon_telegram_only",
+            "source_dispositions": list(contract["source_dispositions"]),
+            "source_evidence": str(contract["source_evidence"]),
+            "evidence": evidence,
+        }
+    if token.startswith("storage|"):
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "storage_addon_callback_requires_source_review",
+            "source_dispositions": (
+                "CANONICAL_BOT_STORAGE_ADDON_SOURCE_REVIEW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot storage namespace contains Telegram pending input and canonical payment/quota state. "
+                "An unreviewed value cannot become a Web storage request, wallet top-up, order, checkout, "
+                "quota entitlement, provider action, or output claim."
+            ),
+            "evidence": evidence,
+        }
     if menu_entry is not None:
         # Only this finite catalog may become a fresh signed Web navigation.
         # It cannot carry hidden Bot state, a message id, a file id or a
@@ -3558,6 +3626,48 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
             "source_evidence": (
                 "The Bot job namespace contains canonical video-job state. An unreviewed dynamic value cannot "
                 "become a browser job lookup, admin mutation, customer route, or runtime-success claim."
+            ),
+            "evidence": evidence,
+        }
+    if token == STORAGE_ADDON_CONFIRM_CALLBACK_TEMPLATE:
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_canonical_storage_addon_checkout",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "CANONICAL_BOT_STORAGE_ORDER_REQUIRED",
+                "CANONICAL_BOT_PAYOS_CHECKOUT",
+                "CANONICAL_STORAGE_ENTITLEMENT_SETTLEMENT",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot storage confirm branch validates a Bot catalog spec, can create a pending canonical "
+                "storage order and PayOS checkout, and grants storage quota only after canonical settlement. "
+                "The Web has no approved owner-scoped storage-purchase bridge contract."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("storage|"):
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "storage_addon_callback_requires_source_review",
+            "source_dispositions": (
+                "CANONICAL_BOT_STORAGE_ADDON_SOURCE_REVIEW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot storage namespace combines Telegram pending input with canonical PayOS/quota state. "
+                "An unreviewed dynamic value cannot become a Web catalog, top-up, order, checkout, quota, "
+                "or provider action."
             ),
             "evidence": evidence,
         }
@@ -4265,6 +4375,31 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_ADMIN_ONLY, CANONICAL_BOT_VIDEO_JOB_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    storage_addon_contract_rows = [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "reviewed_storage_addon_telegram_only",
+            "TELEGRAM_ONLY",
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in STORAGE_ADDON_TELEGRAM_ONLY_CALLBACKS.items()
+    ] + [
+        [
+            STORAGE_ADDON_CONFIRM_CALLBACK_TEMPLATE,
+            "TELEGRAM_ONLY",
+            "bot_canonical_storage_addon_checkout",
+            "TELEGRAM_ONLY",
+            "TELEGRAM_IDENTITY_CONTEXT, CANONICAL_BOT_STORAGE_ORDER_REQUIRED, CANONICAL_BOT_PAYOS_CHECKOUT, CANONICAL_STORAGE_ENTITLEMENT_SETTLEMENT, NO_RUNTIME_CLAIM",
+        ],
+        [
+            "other storage|*",
+            "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED",
+            "storage_addon_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "CANONICAL_BOT_STORAGE_ADDON_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ],
+    ]
 
     write(
         "README.md",
@@ -4292,6 +4427,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
+        + "- [`STORAGE_ADDON_CALLBACK_CONTRACT.md`](STORAGE_ADDON_CALLBACK_CONTRACT.md) — exact Bot storage add-on boundaries; storage quota purchase never becomes a Xu top-up or a second Web payment ledger.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -4388,6 +4524,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\n`job|stats|0` is the sole navigation-only exception: it may open a fresh signed, role-checked `/admin/jobs` surface. It transfers no Telegram identity, Bot job ID, campaign/video-job row, cached result, provider state, output/delivery claim, or mutation into the browser. `/admin/jobs` must use its own canonical admin authorization and remain guarded if its bridge projection is unavailable.\n\n"
         "`job|approve|{*}` and `job|cancel|{*}` stay Telegram-only. The Web must not accept a Bot job ID, approve/cancel a canonical job, infer runtime completion, call a provider, debit/credit Xu, finalize PayOS, or create a second job state machine. Any unlisted `job|*` value is source-review-required.\n",
+    )
+    write(
+        "STORAGE_ADDON_CALLBACK_CONTRACT.md",
+        "# Storage add-on callback disposition contract\n\n"
+        "The frozen Bot storage add-on flow is a Telegram conversation, not a Xu top-up. Its menu draws a Bot-owned storage catalog; its custom branch stores a short-lived pending action for the Telegram user and expects a following Telegram message; and its confirmation branch validates a Bot catalog spec, can create a canonical storage order and PayOS checkout, then grants quota only after canonical settlement.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            storage_addon_contract_rows,
+        )
+        + "\n\nNo value above becomes `/wallet/topup`, a Web amount/code, a browser checkout, a Web storage ledger, a second PayOS webhook, or a quota grant. The Web may later add a separately reviewed owner-scoped Storage Center and bridge contract, but it must start from canonical current state rather than replay a Bot callback or Telegram pending value.\n\n"
+        "Any unlisted `storage|*` value remains source-review-required. It must not create an order, call PayOS, grant quota, write storage usage, call a provider, or claim that a storage purchase succeeded.\n",
     )
     write(
         "inventory.md",
@@ -4740,6 +4887,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- Bot video-job stats can only open a fresh signed `/admin/jobs` view for one reviewed admin callback. Canonical approve/cancel actions stay Telegram-only until a dedicated owner-scoped admin bridge exists; the Web never accepts a Bot job ID. See `VIDEO_JOB_CALLBACK_CONTRACT.md`.\n"
+        "- Storage quota add-on purchase is distinct from Xu top-up. Bot menu/custom/confirm callbacks remain Telegram-only until an owner-scoped storage bridge exists; the Web must not create a storage order, checkout, quota entitlement, or second webhook/ledger. See `STORAGE_ADDON_CALLBACK_CONTRACT.md`.\n"
         "- Job completion means validated output bytes or a canonical queued task with a polling route; HTTP success alone is insufficient.\n"
         "- Retry/refund/freeze remain guarded until their existing canonical bot action has a tested adapter.\n",
     )

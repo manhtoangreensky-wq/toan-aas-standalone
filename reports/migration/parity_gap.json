@@ -25935,12 +25935,17 @@
         "file": "bot.py",
         "line": 86577
       },
-      "fallback_family": "storage",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storage_addon_telegram_only",
       "source": "storage|custom",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_PENDING_STORAGE_INPUT",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot custom-storage branch writes a short-lived pending action for the Telegram user and expects the next Telegram text message. It does not transfer an amount or storage request to Web.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -25948,12 +25953,17 @@
         "file": "bot.py",
         "line": 86598
       },
-      "fallback_family": "storage",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storage_addon_telegram_only",
       "source": "storage|menu",
+      "source_dispositions": [
+        "CANONICAL_BOT_STORAGE_ADDON_CATALOG",
+        "TELEGRAM_PAYMENT_CONTEXT",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot storage menu redraws its Telegram storage-add-on catalog. It is the entry to a canonical Bot purchase flow, not a Web storage catalog, Xu top-up, or browser checkout.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -25961,12 +25971,17 @@
         "file": "bot.py",
         "line": 86606
       },
-      "fallback_family": "storage",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storage_addon_telegram_only",
       "source": "storage|menu",
+      "source_dispositions": [
+        "CANONICAL_BOT_STORAGE_ADDON_CATALOG",
+        "TELEGRAM_PAYMENT_CONTEXT",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot storage menu redraws its Telegram storage-add-on catalog. It is the entry to a canonical Bot purchase flow, not a Web storage catalog, Xu top-up, or browser checkout.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -25974,12 +25989,17 @@
         "file": "bot.py",
         "line": 86804
       },
-      "fallback_family": "storage",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storage_addon_telegram_only",
       "source": "storage|menu",
+      "source_dispositions": [
+        "CANONICAL_BOT_STORAGE_ADDON_CATALOG",
+        "TELEGRAM_PAYMENT_CONTEXT",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot storage menu redraws its Telegram storage-add-on catalog. It is the entry to a canonical Bot purchase flow, not a Web storage catalog, Xu top-up, or browser checkout.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -39238,11 +39258,19 @@
         "file": "bot.py",
         "line": 86597
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_canonical_storage_addon_checkout",
       "source": "storage|confirm|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_STORAGE_ORDER_REQUIRED",
+        "CANONICAL_BOT_PAYOS_CHECKOUT",
+        "CANONICAL_STORAGE_ENTITLEMENT_SETTLEMENT",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot storage confirm branch validates a Bot catalog spec, can create a pending canonical storage order and PayOS checkout, and grants storage quota only after canonical settlement. The Web has no approved owner-scoped storage-purchase bridge contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -52227,21 +52255,6 @@
       ]
     },
     {
-      "authority": "Canonical Bot wallet/PayOS bridge",
-      "candidate_boundary": "/wallet/topup",
-      "count": 4,
-      "family": "storage",
-      "next_contract": "Keep storage purchase/credit changes canonical to the Bot until an owner-scoped bridge contract exists.",
-      "priority": "P0",
-      "sample_sources": [
-        "storage|custom",
-        "storage|menu"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Web-native planning; runtime separately guarded",
       "candidate_boundary": "/video-studio/cinematic-concept",
       "count": 107,
@@ -52577,7 +52590,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 714,
+      "count": 710,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -52593,11 +52606,6 @@
         {
           "count": 7,
           "family": "media_preview",
-          "priority": "P0"
-        },
-        {
-          "count": 4,
-          "family": "storage",
           "priority": "P0"
         },
         {
@@ -52844,14 +52852,14 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 81.28,
+  "mapping_coverage_percent": 81.38,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2402,
+    "COPIED_GUARDED": 2401,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 468,
-    "NEEDS_FEATURE_DISPOSITION": 714,
-    "TELEGRAM_ONLY": 227
+    "NEEDS_FEATURE_DISPOSITION": 710,
+    "TELEGRAM_ONLY": 232
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -52872,7 +52880,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 81.28,
+  "safe_disposition_coverage_percent": 81.38,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -52882,15 +52890,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3100,
+    "resolved_static_source_count": 3104,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 46,
-    "unresolved_source_count": 714
+    "unresolved_source_count": 710
   },
-  "static_web_surface_coverage_percent": 63.0,
+  "static_web_surface_coverage_percent": 62.98,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
