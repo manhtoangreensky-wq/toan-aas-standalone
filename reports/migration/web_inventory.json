@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 2091,
+      "line": 2102,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -6869,7 +6869,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1522,
+      "occurrences": 1551,
       "provider": "Telegram"
     }
   ],
@@ -12465,10 +12465,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 261,
-  "source_files_scanned": 261,
-  "source_fingerprint_sha256": "3cd5ccdb75edb70ceda625a101924a926014b69eab386d8a12a25250269f23b6",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast57-package-purchase-disposition",
+  "source_files_discovered": 262,
+  "source_files_scanned": 262,
+  "source_fingerprint_sha256": "805bfa5133d0b9d67a4b782544049faef6451d796cbad8d065cf860475ddae8f",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast58-video-job-disposition",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

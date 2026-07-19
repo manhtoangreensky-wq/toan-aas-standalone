@@ -16,7 +16,7 @@
     },
     "root": "D:\\TOANAAS\\bot telegram"
   },
-  "generated_at_utc": "2026-07-19T19:15:46+00:00",
+  "generated_at_utc": "2026-07-19T20:02:13+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
@@ -25,6 +25,6 @@
   "schema_version": "1.7",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast57-package-purchase-disposition"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast58-video-job-disposition"
   }
 }

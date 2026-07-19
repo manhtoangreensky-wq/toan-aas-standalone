@@ -341,7 +341,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("shopai|", "/wallet/topup", "customer"),
     ("shopai_video_job|", "/wallet/topup", "customer"),
     ("storage|", "/wallet/topup", "customer"),
-    ("job|", "/jobs", "customer"),
     ("archive|", "/admin", "admin"),
     ("opmenu|", "/admin", "admin"),
 )
@@ -396,6 +395,16 @@ PACKAGE_PURCHASE_SELECTOR_CALLBACKS = frozenset({
     "pkgbuy|monthly|pro_monthly",
 })
 PACKAGE_PURCHASE_CONFIRM_CALLBACK_TEMPLATE = "pkgbuy|confirm|{*}|{*}"
+
+# The observed Bot `job|*` namespace belongs to the admin-only video-job
+# workflow.  Stats only reads Bot-owned campaign/video-job rows, while approve
+# and cancel write the canonical Bot state machine.  None of these values are
+# customer `/jobs` shortcuts or browser mutation inputs.
+VIDEO_JOB_STATS_CALLBACK = "job|stats|0"
+VIDEO_JOB_MUTATION_CALLBACK_TEMPLATES = frozenset({
+    "job|approve|{*}",
+    "job|cancel|{*}",
+})
 
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
@@ -588,9 +597,11 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "job": {
         "priority": "P0",
-        "candidate_boundary": "/jobs",
-        "authority": "Canonical Bot job bridge",
-        "next_contract": "Add only owner-scoped read/status projections first; retry/refund/charge/delivery require separate canonical action contracts.",
+        "candidate_boundary": "fresh /admin/jobs navigation or canonical Bot video-job state",
+        "authority": "Canonical Bot admin video-job state machine",
+        "next_contract": "Only the exact read-only Bot stats callback may open a fresh signed admin jobs view. Approve/cancel and every unreviewed job callback stay Bot-canonical until a dedicated owner-scoped admin bridge action exists; Web must not accept a Bot job ID or mutate canonical job state.",
+        "source_dispositions": ("BOT_ADMIN_ONLY", "CANONICAL_BOT_VIDEO_JOB_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot video-job callback handler rejects non-admin callers. Its stats branch reads canonical campaign/video_job rows, while approve/cancel resolve the Bot owner and update the canonical job status.",
     },
     "vproduct": {
         "priority": "P1",
@@ -2928,6 +2939,54 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             ),
             "evidence": evidence,
         }
+    if token == VIDEO_JOB_STATS_CALLBACK:
+        # This one callback is emitted by the admin-only video-job keyboard
+        # and only redraws canonical Bot stats. A fresh signed admin surface
+        # may expose its independently authorized bridge projection, but it
+        # never receives the Bot Telegram owner, job rows or callback state.
+        target = "/admin/jobs"
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "admin",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_video_job_stats_admin_navigation",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "BOT_VIDEO_JOB_STATS_NOT_REPLAYED",
+                "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot video-job handler first enforces is_admin_user. Its stats branch reads canonical "
+                "campaign/video_job counts for the Telegram admin and redraws the Telegram message; the Web "
+                "opens a fresh role-checked admin view without receiving Bot rows or callback context."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("job|"):
+        # This namespace includes canonical status mutations. A future static
+        # value cannot inherit either the customer jobs screen or admin stats.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "video_job_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "CANONICAL_BOT_VIDEO_JOB_STATE",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot job namespace belongs to the admin-only video-job state machine. An unreviewed value "
+                "must not become a customer route, browser job ID, canonical read, or job mutation."
+            ),
+            "evidence": evidence,
+        }
     if menu_entry is not None:
         # Only this finite catalog may become a fresh signed Web navigation.
         # It cannot carry hidden Bot state, a message id, a file id or a
@@ -3454,6 +3513,51 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
             "source_evidence": (
                 "The Bot package namespace combines catalog selection and canonical checkout/entitlement "
                 "state. An unreviewed dynamic suffix cannot become a Web catalog, wallet or payment action."
+            ),
+            "evidence": evidence,
+        }
+    if token in VIDEO_JOB_MUTATION_CALLBACK_TEMPLATES:
+        # These dynamic callbacks carry a canonical Bot video-job identifier.
+        # The Bot first checks admin authority, then resolves the job against
+        # its Bot owner before changing the canonical status. The Web must not
+        # accept that identifier or synthesize an approve/cancel operation.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "admin",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_canonical_video_job_mutation",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "CANONICAL_BOT_JOB_MUTATION",
+                "OWNER_SCOPED_BOT_JOB_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot video-job handler rejects non-admin callers, resolves the job by canonical ID and "
+                "Telegram owner, then updates approved/cancelled status in the Bot database. No Web mutation "
+                "bridge has been reviewed for this workflow."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("job|"):
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "video_job_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "CANONICAL_BOT_VIDEO_JOB_STATE",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot job namespace contains canonical video-job state. An unreviewed dynamic value cannot "
+                "become a browser job lookup, admin mutation, customer route, or runtime-success claim."
             ),
             "evidence": evidence,
         }
@@ -4135,6 +4239,32 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "CANONICAL_PACKAGE_PURCHASE_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    video_job_contract_rows = [
+        [
+            VIDEO_JOB_STATS_CALLBACK,
+            "/admin/jobs",
+            "reviewed_video_job_stats_admin_navigation",
+            "NAVIGATION_ONLY",
+            "BOT_ADMIN_ONLY, BOT_VIDEO_JOB_STATS_NOT_REPLAYED, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, NO_RUNTIME_CLAIM",
+        ],
+    ] + [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "bot_canonical_video_job_mutation",
+            "TELEGRAM_ONLY",
+            "BOT_ADMIN_ONLY, CANONICAL_BOT_JOB_MUTATION, OWNER_SCOPED_BOT_JOB_REQUIRED, NO_RUNTIME_CLAIM",
+        ]
+        for source in sorted(VIDEO_JOB_MUTATION_CALLBACK_TEMPLATES)
+    ] + [
+        [
+            "other job|*",
+            "BOT_VIDEO_JOB_SOURCE_REVIEW_REQUIRED",
+            "video_job_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_ADMIN_ONLY, CANONICAL_BOT_VIDEO_JOB_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ],
+    ]
 
     write(
         "README.md",
@@ -4161,6 +4291,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
+        + "- [`VIDEO_JOB_CALLBACK_CONTRACT.md`](VIDEO_JOB_CALLBACK_CONTRACT.md) — exact admin video-job stats navigation and canonical Bot mutation boundaries; raw Bot job IDs never become browser actions.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -4246,6 +4377,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + package_purchase_selector_sources
         + ". They may open only a fresh signed `/packages` catalog. The Web receives no Bot package type/code, Telegram identity or pending state, price, entitlement, checkout URL, order ID, PayOS state, or confirmation action. `/packages` is not a browser checkout.\n\n"
         "`pkgbuy|confirm|{*}|{*}` stays Telegram-only until a separately reviewed owner-scoped package-purchase bridge exists. The Web must not price a service package, create a canonical order, issue or finalize PayOS, credit Xu, grant package entitlement, create a second webhook/ledger, or infer success from a callback. Any unlisted `pkgbuy|*` value remains source-review-required.\n",
+    )
+    write(
+        "VIDEO_JOB_CALLBACK_CONTRACT.md",
+        "# Video-job callback disposition contract\n\n"
+        "The frozen Bot emits these `job` callbacks only from its admin-only video-job keyboard. Its callback handler rejects a non-admin caller before it reads the action. The `stats` branch only reads canonical Bot campaign/video-job rows and redraws a Telegram message. The `approve` and `cancel` branches resolve a canonical job ID against the Bot owner before updating the canonical job status.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            video_job_contract_rows,
+        )
+        + "\n\n`job|stats|0` is the sole navigation-only exception: it may open a fresh signed, role-checked `/admin/jobs` surface. It transfers no Telegram identity, Bot job ID, campaign/video-job row, cached result, provider state, output/delivery claim, or mutation into the browser. `/admin/jobs` must use its own canonical admin authorization and remain guarded if its bridge projection is unavailable.\n\n"
+        "`job|approve|{*}` and `job|cancel|{*}` stay Telegram-only. The Web must not accept a Bot job ID, approve/cancel a canonical job, infer runtime completion, call a provider, debit/credit Xu, finalize PayOS, or create a second job state machine. Any unlisted `job|*` value is source-review-required.\n",
     )
     write(
         "inventory.md",
@@ -4597,6 +4739,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
+        "- Bot video-job stats can only open a fresh signed `/admin/jobs` view for one reviewed admin callback. Canonical approve/cancel actions stay Telegram-only until a dedicated owner-scoped admin bridge exists; the Web never accepts a Bot job ID. See `VIDEO_JOB_CALLBACK_CONTRACT.md`.\n"
         "- Job completion means validated output bytes or a canonical queued task with a polling route; HTTP success alone is insufficient.\n"
         "- Retry/refund/freeze remain guarded until their existing canonical bot action has a tested adapter.\n",
     )
