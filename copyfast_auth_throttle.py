@@ -53,7 +53,11 @@ _MIN_ATTEMPTS = 1
 _MAX_ATTEMPTS = 100
 _MIN_GLOBAL_ATTEMPTS = 2
 _MAX_GLOBAL_ATTEMPTS = 200
-_DEFAULT_DB_TIMEOUT_SECONDS = 0.20
+# App startup deliberately reconciles Web-owned private storage in background
+# threads.  Those short SQLite write transactions can overlap the first
+# password request on a fresh deployment, so the default waits through normal
+# startup contention while retaining the existing half-second fail-closed cap.
+_DEFAULT_DB_TIMEOUT_SECONDS = 0.50
 _MAX_DB_TIMEOUT_SECONDS = 0.50
 
 

@@ -14,7 +14,7 @@ from PIL import Image
 
 
 MODULES = [
-    "app", "copyfast_db", "copyfast_auth", "copyfast_bridge", "copyfast_registry",
+    "app", "copyfast_db", "copyfast_auth", "copyfast_auth_throttle", "copyfast_bridge", "copyfast_registry",
     "copyfast_api", "copyfast_projects", "copyfast_assets", "copyfast_project_packages",
     "copyfast_document_operations", "copyfast_image_runtime", "copyfast_image_operations", "copyfast_pages",
 ]

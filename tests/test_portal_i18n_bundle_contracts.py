@@ -88,7 +88,7 @@ for (const locale of expected) {
   if (JSON.stringify(keys) !== JSON.stringify(referenceKeys)) {
     throw new Error(`Locale keyset diverged for ${locale}`);
   }
-  for (const key of ["chrome.newWorkflow", "account.interfaceLocale", "setup.title", "starter.install"]) {
+  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "account.interfaceLocale", "setup.title", "starter.install"]) {
     if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
   }
 }
