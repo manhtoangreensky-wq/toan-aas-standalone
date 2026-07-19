@@ -29292,16 +29292,17 @@
         "line": 100000
       },
       "fallback_family": "tvflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "tvflow_cancel_requires_bot_pending_state",
       "source": "tvflow|cancel",
       "source_dispositions": [
+        "TELEGRAM_PENDING_WORKFLOW_STATE",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+      "source_evidence": "Bot clears trend workflow, confirmation, and warranty-retry pending state. A Web dashboard cancellation must not mutate or inherit those Bot slots.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_TREND_PENDING_STATE_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29310,16 +29311,18 @@
         "line": 98630
       },
       "fallback_family": "tvflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "tvflow_cancel_content_requires_bot_pending_state",
       "source": "tvflow|cancel_content",
       "source_dispositions": [
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "BOT_BILLING_AUDIT_BOUNDARY",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+      "source_evidence": "Bot reads and clears a pending trend-content confirmation, then records a Bot billing event. A browser cannot cancel or reconstruct that pending state.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29328,16 +29331,19 @@
         "line": 98629
       },
       "fallback_family": "tvflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "tvflow_confirm_content_requires_bot_billing_execution",
       "source": "tvflow|confirm_content",
       "source_dispositions": [
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "BOT_WALLET_OR_PACKAGE_BOUNDARY",
+        "BOT_EXECUTION_DELIVERY_BOUNDARY",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+      "source_evidence": "Bot consumes pending trend-content confirmation, applies canonical Xu/package rules, records billing evidence, and enters its execution/delivery path. No Web execution is proven.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29345,11 +29351,20 @@
         "file": "bot.py",
         "line": 98628
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_confirm_content_requires_bot_billing_execution",
       "source": "tvflow|confirm_content_package",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "BOT_WALLET_OR_PACKAGE_BOUNDARY",
+        "BOT_EXECUTION_DELIVERY_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot consumes pending trend-content confirmation, applies canonical Xu/package rules, records billing evidence, and enters its execution/delivery path. No Web execution is proven.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/membership"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29357,11 +29372,18 @@
         "file": "bot.py",
         "line": 100015
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
       "source": "tvflow|edit_prompt",
+      "source_dispositions": [
+        "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot returns chat guidance for editing a trend prompt. It does not transfer a pending prompt, output, or job into a Web draft.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/content"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -29369,11 +29391,20 @@
         "file": "bot.py",
         "line": 99990
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_scene_requires_bot_output_credit_confirmation",
       "source": "tvflow|image_scene_1",
+      "source_dispositions": [
+        "BOT_TREND_OUTPUT_STATE",
+        "PROVIDER_AND_CREDIT_GUARD",
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot reads cached trend output, checks public image/provider and credit guards, then creates a separate Bot confirmation. A Web Image Studio route does not own that output or confirmation.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29381,11 +29412,20 @@
         "file": "bot.py",
         "line": 99991
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_scene_requires_bot_output_credit_confirmation",
       "source": "tvflow|image_scene_2",
+      "source_dispositions": [
+        "BOT_TREND_OUTPUT_STATE",
+        "PROVIDER_AND_CREDIT_GUARD",
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot reads cached trend output, checks public image/provider and credit guards, then creates a separate Bot confirmation. A Web Image Studio route does not own that output or confirmation.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29393,11 +29433,20 @@
         "file": "bot.py",
         "line": 99992
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_scene_requires_bot_output_credit_confirmation",
       "source": "tvflow|image_scene_3",
+      "source_dispositions": [
+        "BOT_TREND_OUTPUT_STATE",
+        "PROVIDER_AND_CREDIT_GUARD",
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot reads cached trend output, checks public image/provider and credit guards, then creates a separate Bot confirmation. A Web Image Studio route does not own that output or confirmation.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -29406,16 +29455,17 @@
         "line": 99995
       },
       "fallback_family": "tvflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
       "source": "tvflow|rewrite",
       "source_dispositions": [
+        "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+      "source_evidence": "Bot returns chat guidance for rewriting a trend prompt. It does not transfer a pending prompt, output, or job into a Web draft.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -29424,16 +29474,17 @@
         "line": 99996
       },
       "fallback_family": "tvflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
       "source": "tvflow|rewrite",
       "source_dispositions": [
+        "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
         "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+      "source_evidence": "Bot returns chat guidance for rewriting a trend prompt. It does not transfer a pending prompt, output, or job into a Web draft.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -29441,11 +29492,18 @@
         "file": "bot.py",
         "line": 92166
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_save_image_is_not_a_web_asset",
       "source": "tvflow|save_image",
+      "source_dispositions": [
+        "TELEGRAM_CHAT_OUTPUT_ONLY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot guidance says the image remains in Telegram chat and automatic project saving is not present. Web must not imply that an Asset Vault record exists.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -29453,11 +29511,18 @@
         "file": "bot.py",
         "line": 100006
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_save_image_is_not_a_web_asset",
       "source": "tvflow|save_image",
+      "source_dispositions": [
+        "TELEGRAM_CHAT_OUTPUT_ONLY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot guidance says the image remains in Telegram chat and automatic project saving is not present. Web must not imply that an Asset Vault record exists.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -29465,11 +29530,18 @@
         "file": "bot.py",
         "line": 100016
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_save_image_is_not_a_web_asset",
       "source": "tvflow|save_image",
+      "source_dispositions": [
+        "TELEGRAM_CHAT_OUTPUT_ONLY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot guidance says the image remains in Telegram chat and automatic project saving is not present. Web must not imply that an Asset Vault record exists.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -29477,11 +29549,18 @@
         "file": "bot.py",
         "line": 99993
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
       "source": "tvflow|video_prompt",
+      "source_dispositions": [
+        "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot returns chat guidance for a video prompt and may direct the user to another Bot flow. It is not a Web video plan, provider call, or job output.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE"
     },
     {
       "classification": "customer",
@@ -37210,6 +37289,138 @@
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
+        "line": 92153
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|image_tier_{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92174
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|image_tier_{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91456
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|qi_ratio_{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91494
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|qi_tier_{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 96933
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|video_tier_{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91653
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|{*}_add",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91831
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|{*}_add",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91858
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|{*}_aspect_{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91747
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|{*}_choice",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91830
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|{*}_confirm",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 91654
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "create_media|{*}_skip",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/media-factory"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
         "line": 91791
       },
       "resolution": "reviewed_namespace_compatibility_route",
@@ -37349,6 +37560,18 @@
       "source_kind": "callback_template",
       "status": "COPIED_GUARDED",
       "target": "/video-studio"
+    },
+    {
+      "classification": "unknown",
+      "evidence": {
+        "file": "bot.py",
+        "line": 46596
+      },
+      "resolution": "unresolved_dynamic_template",
+      "source": "freehub|lib_{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_WEB_IMPLEMENTATION",
+      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
     },
     {
       "classification": "customer",
@@ -37493,6 +37716,30 @@
       "source_kind": "callback_template",
       "status": "COPIED_GUARDED",
       "target": "/media-workspace"
+    },
+    {
+      "classification": "unknown",
+      "evidence": {
+        "file": "bot.py",
+        "line": 76823
+      },
+      "resolution": "unresolved_dynamic_template",
+      "source": "license_{*}|1",
+      "source_kind": "callback_template",
+      "status": "NEEDS_WEB_IMPLEMENTATION",
+      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+    },
+    {
+      "classification": "unknown",
+      "evidence": {
+        "file": "bot.py",
+        "line": 76828
+      },
+      "resolution": "unresolved_dynamic_template",
+      "source": "license_{*}|1",
+      "source_kind": "callback_template",
+      "status": "NEEDS_WEB_IMPLEMENTATION",
+      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
     },
     {
       "classification": "customer",
@@ -37954,6 +38201,58 @@
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
+        "line": 122173
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|admin_confirm_ack_{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30472
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|translation_pair_back_{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30439
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|translation_pair_start_{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30438
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|translation_pair_swap_{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
         "line": 30399
       },
       "fallback_family": "menu",
@@ -38037,6 +38336,123 @@
       "fallback_family": "menu",
       "resolution": "dynamic_menu_action_requires_finite_catalog",
       "source": "menu|{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30459
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_auto",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30468
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_de",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30462
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_en",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30467
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_fr",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30464
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_ja",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30465
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_ko",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30466
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_th",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30461
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_vi",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 30463
+      },
+      "fallback_family": "menu",
+      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "source": "menu|{*}_zh",
       "source_kind": "callback_template",
       "status": "NEEDS_FEATURE_DISPOSITION",
       "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
@@ -38366,6 +38782,18 @@
       "target": "/media-workspace"
     },
     {
+      "classification": "unknown",
+      "evidence": {
+        "file": "bot.py",
+        "line": 76817
+      },
+      "resolution": "unresolved_dynamic_template",
+      "source": "play_{*}|{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_WEB_IMPLEMENTATION",
+      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
+    },
+    {
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
@@ -38436,6 +38864,18 @@
       "source_kind": "callback_template",
       "status": "COPIED_GUARDED",
       "target": "/media-workspace"
+    },
+    {
+      "classification": "unknown",
+      "evidence": {
+        "file": "bot.py",
+        "line": 76818
+      },
+      "resolution": "unresolved_dynamic_template",
+      "source": "select_{*}|{*}",
+      "source_kind": "callback_template",
+      "status": "NEEDS_WEB_IMPLEMENTATION",
+      "target": "UNRESOLVED_DYNAMIC_CALLBACK_TEMPLATE"
     },
     {
       "classification": "customer",
@@ -39266,6 +39706,406 @@
       "target": "TELEGRAM_ONLY"
     },
     {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92053
+      },
+      "resolution": "tvflow_admin_smoke_requires_bot_authority",
+      "source": "tvflow|admin_video_image_{*}_{*}",
+      "source_dispositions": [
+        "BOT_ADMIN_SMOKE_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot dispatches an admin image-video smoke action using Bot job context. It is not a browser-admin action or a provider readiness claim.",
+      "source_kind": "callback_template",
+      "status": "TELEGRAM_ONLY",
+      "target": "BOT_ADMIN_SMOKE_REQUIRED"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92089
+      },
+      "resolution": "tvflow_admin_smoke_requires_bot_authority",
+      "source": "tvflow|admin_video_image_{*}_{*}",
+      "source_dispositions": [
+        "BOT_ADMIN_SMOKE_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot dispatches an admin image-video smoke action using Bot job context. It is not a browser-admin action or a provider readiness claim.",
+      "source_kind": "callback_template",
+      "status": "TELEGRAM_ONLY",
+      "target": "BOT_ADMIN_SMOKE_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92030
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_requires_bot_context",
+      "source": "tvflow|image_back_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot returns within an image-video flow backed by Bot job state. Browser navigation must not recreate the Bot back-stack or hidden identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92050
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_requires_bot_context",
+      "source": "tvflow|image_back_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot returns within an image-video flow backed by Bot job state. Browser navigation must not recreate the Bot back-stack or hidden identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92086
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_requires_bot_context",
+      "source": "tvflow|image_back_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot returns within an image-video flow backed by Bot job state. Browser navigation must not recreate the Bot back-stack or hidden identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92049
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompt_edit_{*}_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92046
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompt_save_{*}_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92084
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompt_save_{*}_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92026
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompt_select_{*}_1",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92027
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompt_select_{*}_2",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92028
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompt_select_{*}_3",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92029
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompts_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92170
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompts_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 100007
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompts_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 101152
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_prompt_requires_bot_context",
+      "source": "tvflow|image_video_prompts_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92047
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_requires_bot_package_context",
+      "source": "tvflow|image_video_real_{*}_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "BOT_WALLET_OR_PACKAGE_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot sets public video package context from a Bot job and selected image. A Web route cannot receive that job identifier or package context.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92158
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_warranty_retry_requires_bot_job_state",
+      "source": "tvflow|image_warranty_retry_{*}",
+      "source_dispositions": [
+        "BOT_JOB_WARRANTY_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot retries a trend-image warranty path against a Bot job identifier and canonical job state. Web must not accept or replay that identifier.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_JOB_WARRANTY_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 100010
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_warranty_retry_requires_bot_job_state",
+      "source": "tvflow|image_warranty_retry_{*}",
+      "source_dispositions": [
+        "BOT_JOB_WARRANTY_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot retries a trend-image warranty path against a Bot job identifier and canonical job state. Web must not accept or replay that identifier.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_JOB_WARRANTY_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92048
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_requires_bot_context",
+      "source": "tvflow|music_image_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot opens music choices for an image-video job held in Bot state. It does not prove a Web-owned media draft or music execution contract.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 92085
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_image_video_requires_bot_context",
+      "source": "tvflow|music_image_{*}",
+      "source_dispositions": [
+        "BOT_IMAGE_VIDEO_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot opens music choices for an image-video job held in Bot state. It does not prove a Web-owned media draft or music execution contract.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 100012
+      },
+      "fallback_family": "tvflow",
+      "resolution": "tvflow_regen_scene_requires_bot_output_confirmation",
+      "source": "tvflow|regen_scene_{*}",
+      "source_dispositions": [
+        "BOT_TREND_OUTPUT_STATE",
+        "PROVIDER_AND_CREDIT_GUARD",
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot regenerates an indexed trend scene from its pending/output state and can enter image confirmation. The formatted scene index is not a Web asset selector.",
+      "source_kind": "callback_template",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED"
+    },
+    {
       "classification": "customer",
       "evidence": {
         "file": "bot.py",
@@ -39585,6 +40425,18 @@
       },
       "resolution": "reviewed_namespace_compatibility_route",
       "source": "vproduct|pace|{*}",
+      "source_kind": "callback_template",
+      "status": "COPIED_GUARDED",
+      "target": "/video/product"
+    },
+    {
+      "classification": "customer",
+      "evidence": {
+        "file": "bot.py",
+        "line": 48613
+      },
+      "resolution": "reviewed_namespace_compatibility_route",
+      "source": "vproduct|prompt_video_select|batch_{*}",
       "source_kind": "callback_template",
       "status": "COPIED_GUARDED",
       "target": "/video/product"
@@ -51110,11 +51962,13 @@
   "coverage_comparability": {
     "feature_progress_claim": false,
     "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
-    "reason": "Schema 1.4 corrects raw-string callback-handler extraction, keeps the handlers/ package outside the observed bot.py runtime denominator when no static import path exists, and rejects only bare numeric aspect-ratio tuples from the keyboard callback heuristic.",
+    "reason": "Schema 1.5 keeps the 1.4 inventory corrections, retains embedded formatted callback values as opaque templates, and removes false Web coverage claims for tvflow callbacks whose Bot handler requires pending state, canonical billing/package decisions, provider/job guards, or Telegram-only guidance.",
     "scope_changes": [
       "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
       "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
-      "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported."
+      "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
+      "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
+      "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches."
     ],
     "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES"
   },
@@ -51122,11 +51976,12 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 184,
+      "count": 197,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
       "sample_sources": [
+        "menu|admin_confirm_ack_{*}",
         "menu|billing",
         "menu|clear_stale_jobs_help",
         "menu|guide_credits",
@@ -51137,8 +51992,7 @@
         "menu|guide_quick_start",
         "menu|guide_video_ai",
         "menu|hint_ai_prompt",
-        "menu|hint_campaign_preset",
-        "menu|hint_doc_compress_pdf"
+        "menu|hint_campaign_preset"
       ],
       "source_kinds": [
         "callback_data",
@@ -51313,6 +52167,37 @@
       ]
     },
     {
+      "authority": "Canonical Bot pending, wallet/package, provider/job and Telegram-chat state",
+      "candidate_boundary": "finite Bot-state dispositions; separate Web-native or private-bridge design required",
+      "count": 33,
+      "family": "tvflow",
+      "next_contract": "Use TVFLOW_CALLBACK_CONTRACT.md for each finite callback. Only a separately reviewed owner-scoped Web-native workflow or private bridge contract may replace a symbolic Bot-state boundary; do not infer rendering, content mutation, asset ownership or execution from a callback label.",
+      "priority": "P1",
+      "sample_sources": [
+        "tvflow|cancel",
+        "tvflow|cancel_content",
+        "tvflow|confirm_content",
+        "tvflow|confirm_content_package",
+        "tvflow|edit_prompt",
+        "tvflow|image_back_{*}",
+        "tvflow|image_scene_1",
+        "tvflow|image_scene_2",
+        "tvflow|image_scene_3",
+        "tvflow|image_video_prompt_edit_{*}_{*}",
+        "tvflow|image_video_prompt_save_{*}_{*}",
+        "tvflow|image_video_prompt_select_{*}_1"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads/clears pending workflow and confirmation state, can inspect canonical package/Xu state, record billing events, enter provider/job guards, use Bot job IDs, or return Telegram-only guidance.",
+      "source_kinds": [
+        "callback_data",
+        "callback_template"
+      ]
+    },
+    {
       "authority": "Canonical Bot admin or separate Web admin archive",
       "candidate_boundary": "/admin",
       "count": 30,
@@ -51460,28 +52345,6 @@
       ]
     },
     {
-      "authority": "Source review required",
-      "candidate_boundary": "/video-studio",
-      "count": 5,
-      "family": "tvflow",
-      "next_contract": "Recover the exact Bot handler state machine before mapping cancel/rewrite/confirm actions; do not infer a render or content mutation contract.",
-      "priority": "P1",
-      "sample_sources": [
-        "tvflow|cancel",
-        "tvflow|cancel_content",
-        "tvflow|confirm_content",
-        "tvflow|rewrite"
-      ],
-      "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Web-native subtitle/dubbing boundary",
       "candidate_boundary": "/dubbing",
       "count": 1,
@@ -51558,17 +52421,17 @@
   "gaps": [
     {
       "area": "customer_and_admin_routes",
-      "count": 0,
+      "count": 5,
       "detail": "Bot source mappings that do not have an observed Web App route or guarded compatibility surface.",
       "severity": "high"
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 680,
+      "count": 721,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 184,
+          "count": 197,
           "family": "menu",
           "priority": "P0"
         },
@@ -51613,6 +52476,11 @@
           "priority": "P1"
         },
         {
+          "count": 33,
+          "family": "tvflow",
+          "priority": "P1"
+        },
+        {
           "count": 30,
           "family": "archive",
           "priority": "P1"
@@ -51640,11 +52508,6 @@
         {
           "count": 8,
           "family": "motion",
-          "priority": "P1"
-        },
-        {
-          "count": 5,
-          "family": "tvflow",
           "priority": "P1"
         },
         {
@@ -51697,7 +52560,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 7,
+      "count": 44,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -51841,27 +52704,28 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 81.93,
+  "mapping_coverage_percent": 80.96,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2407,
+    "COPIED_GUARDED": 2410,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 455,
-    "NEEDS_FEATURE_DISPOSITION": 680,
-    "TELEGRAM_ONLY": 218
+    "NEEDS_FEATURE_DISPOSITION": 721,
+    "NEEDS_WEB_IMPLEMENTATION": 5,
+    "TELEGRAM_ONLY": 220
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
     "excluded_unreferenced_handler_package_records": 57,
     "note": "Coverage is calculated only from concrete source actions reachable from the observed bot.py entrypoint. CallbackQueryHandler registrations are transport metadata, and unreferenced handlers-package records remain evidence only. This changes the denominator; it does not add a Web feature or runtime-parity claim.",
     "numeric_tuple_non_action_rule": "Bare N:N aspect-ratio tuple values are configuration data, not callback actions; numeric-leading structured callbacks remain inventoried.",
-    "product_action_denominator": 3763
+    "product_action_denominator": 3814
   },
   "notes": [
     "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
     "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
     "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-    "Schema 1.4 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because audit source scope was corrected; a percentage delta is not feature progress.",
+    "Schema 1.5 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit now retains embedded callback templates and corrects false tvflow Web-surface classifications; a percentage delta is not feature progress.",
     "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
     "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
     "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -51869,25 +52733,25 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 81.93,
-  "schema_version": "1.4",
+  "safe_disposition_coverage_percent": 80.96,
+  "schema_version": "1.5",
   "source_counts": {
     "callback_data": 2815,
     "callback_handler_dispatchers": 54,
     "callback_handlers": 54,
-    "callback_templates": 232,
+    "callback_templates": 283,
     "commands": 773,
     "conversations": 0,
-    "observed_runtime_product_action_mappings": 3763,
-    "resolved_static_source_count": 3083,
+    "observed_runtime_product_action_mappings": 3814,
+    "resolved_static_source_count": 3088,
     "telegram_transport_handler_records": 54,
-    "total_audited_source_records": 3874,
-    "total_mappings": 3763,
+    "total_audited_source_records": 3925,
+    "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 7,
-    "unresolved_source_count": 680
+    "unresolved_callback_templates": 44,
+    "unresolved_source_count": 726
   },
-  "static_web_surface_coverage_percent": 63.99,
+  "static_web_surface_coverage_percent": 63.21,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

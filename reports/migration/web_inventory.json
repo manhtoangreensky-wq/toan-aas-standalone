@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 1739,
+      "line": 1954,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -6642,7 +6642,7 @@
         "docs/migration/ADMIN_DOMAIN_CENTERS_CONTRACT.md",
         "docs/migration/ADMIN_ERP_MAP.md"
       ],
-      "occurrences": 678,
+      "occurrences": 680,
       "provider": "PayOS"
     },
     {
@@ -6869,7 +6869,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1425,
+      "occurrences": 1473,
       "provider": "Telegram"
     }
   ],
@@ -12464,11 +12464,11 @@
       "path": "<dynamic-route>"
     }
   ],
-  "schema_version": "1.4",
-  "source_files_discovered": 258,
-  "source_files_scanned": 258,
-  "source_fingerprint_sha256": "b8557cbbcc0229ffcb9bd030ae01f4f268edfa99135a9d791f4d712586e68fce",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast51-docflow-handoff",
+  "schema_version": "1.5",
+  "source_files_discovered": 259,
+  "source_files_scanned": 259,
+  "source_fingerprint_sha256": "ccbde30be41fe812756179b81caec62d66afcbb8368db615763b25da14015afd",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast52-handler-disposition",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

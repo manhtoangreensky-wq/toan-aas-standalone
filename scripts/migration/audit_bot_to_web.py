@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+from bisect import bisect_right
 import hashlib
 import json
 import os
@@ -29,7 +30,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.4"
+SCHEMA_VERSION = "1.5"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -587,10 +588,10 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "tvflow": {
         "priority": "P1",
-        "candidate_boundary": "/video-studio",
-        "authority": "Source review required",
-        "next_contract": "Recover the exact Bot handler state machine before mapping cancel/rewrite/confirm actions; do not infer a render or content mutation contract.",
-        "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+        "candidate_boundary": "finite Bot-state dispositions; separate Web-native or private-bridge design required",
+        "authority": "Canonical Bot pending, wallet/package, provider/job and Telegram-chat state",
+        "next_contract": "Use TVFLOW_CALLBACK_CONTRACT.md for each finite callback. Only a separately reviewed owner-scoped Web-native workflow or private bridge contract may replace a symbolic Bot-state boundary; do not infer rendering, content mutation, asset ownership or execution from a callback label.",
+        "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads/clears pending workflow and confirmation state, can inspect canonical package/Xu state, record billing events, enter provider/job guards, use Bot job IDs, or return Telegram-only guidance.",
         "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
     },
     "tr_pick": {
@@ -777,6 +778,205 @@ DOCFLOW_DEFAULT_DISPOSITION: dict[str, Any] = {
     "source_evidence": "A docflow callback needs handler-level state review before any Web navigation or execution claim.",
 }
 
+# ``tvflow`` is the Bot's trend-video dispatcher.  Several values happen to
+# contain words such as ``image``, ``video``, ``content`` or ``package``, but
+# the handler reads pending Bot state, may touch the canonical Xu/package
+# boundary, and can enter provider/job guards.  Never let the generic keyword
+# router turn those words into an existing Web feature claim.
+#
+# Each disposition remains NEEDS_FEATURE_DISPOSITION.  A symbolic target is a
+# review/authority boundary, not a browser route, bridge implementation, or
+# authorization to replay a Telegram callback from the Web App.
+TVFLOW_CALLBACK_DISPOSITIONS: dict[str, dict[str, Any]] = {
+    "tvflow|cancel_content": {
+        "target": "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED",
+        "resolution": "tvflow_cancel_content_requires_bot_pending_state",
+        "source_dispositions": (
+            "TELEGRAM_PENDING_CONFIRMATION",
+            "BOT_BILLING_AUDIT_BOUNDARY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot reads and clears a pending trend-content confirmation, then records a Bot billing event. A browser cannot cancel or reconstruct that pending state.",
+    },
+    "tvflow|confirm_content": {
+        "target": "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED",
+        "resolution": "tvflow_confirm_content_requires_bot_billing_execution",
+        "source_dispositions": (
+            "TELEGRAM_PENDING_CONFIRMATION",
+            "BOT_WALLET_OR_PACKAGE_BOUNDARY",
+            "BOT_EXECUTION_DELIVERY_BOUNDARY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot consumes pending trend-content confirmation, applies canonical Xu/package rules, records billing evidence, and enters its execution/delivery path. No Web execution is proven.",
+    },
+    "tvflow|confirm_content_package": {
+        "target": "BOT_TREND_CONFIRMATION_AND_BILLING_REQUIRED",
+        "resolution": "tvflow_confirm_content_requires_bot_billing_execution",
+        "source_dispositions": (
+            "TELEGRAM_PENDING_CONFIRMATION",
+            "BOT_WALLET_OR_PACKAGE_BOUNDARY",
+            "BOT_EXECUTION_DELIVERY_BOUNDARY",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot consumes pending trend-content confirmation, applies canonical Xu/package rules, records billing evidence, and enters its execution/delivery path. No Web execution is proven.",
+    },
+    "tvflow|cancel": {
+        "target": "BOT_TREND_PENDING_STATE_REQUIRED",
+        "resolution": "tvflow_cancel_requires_bot_pending_state",
+        "source_dispositions": (
+            "TELEGRAM_PENDING_WORKFLOW_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot clears trend workflow, confirmation, and warranty-retry pending state. A Web dashboard cancellation must not mutate or inherit those Bot slots.",
+    },
+    "tvflow|image_scene_1": {
+        "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+        "resolution": "tvflow_image_scene_requires_bot_output_credit_confirmation",
+        "source_dispositions": (
+            "BOT_TREND_OUTPUT_STATE",
+            "PROVIDER_AND_CREDIT_GUARD",
+            "TELEGRAM_PENDING_CONFIRMATION",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot reads cached trend output, checks public image/provider and credit guards, then creates a separate Bot confirmation. A Web Image Studio route does not own that output or confirmation.",
+    },
+    "tvflow|image_scene_2": {
+        "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+        "resolution": "tvflow_image_scene_requires_bot_output_credit_confirmation",
+        "source_dispositions": (
+            "BOT_TREND_OUTPUT_STATE",
+            "PROVIDER_AND_CREDIT_GUARD",
+            "TELEGRAM_PENDING_CONFIRMATION",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot reads cached trend output, checks public image/provider and credit guards, then creates a separate Bot confirmation. A Web Image Studio route does not own that output or confirmation.",
+    },
+    "tvflow|image_scene_3": {
+        "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+        "resolution": "tvflow_image_scene_requires_bot_output_credit_confirmation",
+        "source_dispositions": (
+            "BOT_TREND_OUTPUT_STATE",
+            "PROVIDER_AND_CREDIT_GUARD",
+            "TELEGRAM_PENDING_CONFIRMATION",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "Bot reads cached trend output, checks public image/provider and credit guards, then creates a separate Bot confirmation. A Web Image Studio route does not own that output or confirmation.",
+    },
+    "tvflow|save_image": {
+        "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+        "resolution": "tvflow_save_image_is_not_a_web_asset",
+        "source_dispositions": ("TELEGRAM_CHAT_OUTPUT_ONLY", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot guidance says the image remains in Telegram chat and automatic project saving is not present. Web must not imply that an Asset Vault record exists.",
+    },
+    "tvflow|edit_prompt": {
+        "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+        "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
+        "source_dispositions": ("TELEGRAM_GUIDANCE_OR_CHAT_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot returns chat guidance for editing a trend prompt. It does not transfer a pending prompt, output, or job into a Web draft.",
+    },
+    "tvflow|rewrite": {
+        "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+        "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
+        "source_dispositions": ("TELEGRAM_GUIDANCE_OR_CHAT_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot returns chat guidance for rewriting a trend prompt. It does not transfer a pending prompt, output, or job into a Web draft.",
+    },
+    "tvflow|video_prompt": {
+        "target": "TELEGRAM_GUIDANCE_OR_CHAT_STATE",
+        "resolution": "tvflow_prompt_guidance_is_not_web_state_transfer",
+        "source_dispositions": ("TELEGRAM_GUIDANCE_OR_CHAT_STATE", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot returns chat guidance for a video prompt and may direct the user to another Bot flow. It is not a Web video plan, provider call, or job output.",
+    },
+}
+TVFLOW_CALLBACK_PREFIX_DISPOSITIONS: tuple[tuple[str, dict[str, Any]], ...] = (
+    (
+        "tvflow|admin_video_image_",
+        {
+            "target": "BOT_ADMIN_SMOKE_REQUIRED",
+            "classification": "admin",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "tvflow_admin_smoke_requires_bot_authority",
+            "source_dispositions": ("BOT_ADMIN_SMOKE_BOUNDARY", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot dispatches an admin image-video smoke action using Bot job context. It is not a browser-admin action or a provider readiness claim.",
+        },
+    ),
+    (
+        "tvflow|image_warranty_retry_",
+        {
+            "target": "BOT_IMAGE_JOB_WARRANTY_REQUIRED",
+            "resolution": "tvflow_warranty_retry_requires_bot_job_state",
+            "source_dispositions": ("BOT_JOB_WARRANTY_BOUNDARY", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot retries a trend-image warranty path against a Bot job identifier and canonical job state. Web must not accept or replay that identifier.",
+        },
+    ),
+    (
+        "tvflow|regen_scene_",
+        {
+            "target": "BOT_TREND_OUTPUT_AND_IMAGE_CONFIRMATION_REQUIRED",
+            "resolution": "tvflow_regen_scene_requires_bot_output_confirmation",
+            "source_dispositions": ("BOT_TREND_OUTPUT_STATE", "PROVIDER_AND_CREDIT_GUARD", "TELEGRAM_PENDING_CONFIRMATION", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot regenerates an indexed trend scene from its pending/output state and can enter image confirmation. The formatted scene index is not a Web asset selector.",
+        },
+    ),
+    (
+        "tvflow|image_video_real_",
+        {
+            "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+            "resolution": "tvflow_image_video_requires_bot_package_context",
+            "source_dispositions": ("BOT_IMAGE_VIDEO_CONTEXT", "BOT_WALLET_OR_PACKAGE_BOUNDARY", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot sets public video package context from a Bot job and selected image. A Web route cannot receive that job identifier or package context.",
+        },
+    ),
+    (
+        "tvflow|image_video_prompt_",
+        {
+            "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+            "resolution": "tvflow_image_video_prompt_requires_bot_context",
+            "source_dispositions": ("BOT_IMAGE_VIDEO_CONTEXT", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+        },
+    ),
+    (
+        "tvflow|image_video_prompts_",
+        {
+            "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+            "resolution": "tvflow_image_video_prompt_requires_bot_context",
+            "source_dispositions": ("BOT_IMAGE_VIDEO_CONTEXT", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot image-to-video prompt actions use a Bot job/output context. The formatted values are not owner-scoped Web asset or draft identifiers.",
+        },
+    ),
+    (
+        "tvflow|music_image_",
+        {
+            "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+            "resolution": "tvflow_image_video_requires_bot_context",
+            "source_dispositions": ("BOT_IMAGE_VIDEO_CONTEXT", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot opens music choices for an image-video job held in Bot state. It does not prove a Web-owned media draft or music execution contract.",
+        },
+    ),
+    (
+        "tvflow|image_back_",
+        {
+            "target": "BOT_IMAGE_TO_VIDEO_CONTEXT_REQUIRED",
+            "resolution": "tvflow_image_video_requires_bot_context",
+            "source_dispositions": ("BOT_IMAGE_VIDEO_CONTEXT", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+            "source_evidence": "Bot returns within an image-video flow backed by Bot job state. Browser navigation must not recreate the Bot back-stack or hidden identifiers.",
+        },
+    ),
+)
+TVFLOW_DEFAULT_DISPOSITION: dict[str, Any] = {
+    "target": "BOT_TRENDFLOW_SOURCE_REVIEW_REQUIRED",
+    "resolution": "unreviewed_tvflow_source_state_machine",
+    "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+    "source_evidence": "A tvflow callback needs finite handler/state review before any Web navigation, bridge, provider, billing, job, asset, or execution claim.",
+}
+
 # These public Bot commands can contain words such as ``factory`` or mention
 # an admin review in their handler, which the generic static heuristic sees as
 # an admin signal.  Their command registrations and customer-facing handlers
@@ -848,7 +1048,13 @@ BARE_NUMERIC_ASPECT_RATIO_RE = re.compile(r"^\d{1,3}:\d{1,3}$")
 CALLBACK_DYNAMIC_TUPLE_RE = re.compile(
     r"(?<![A-Za-z0-9_])\((?:[^()\r\n]|\\.)*?,\s*f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)\s*\)"
 )
-CALLBACK_TEMPLATE_SEGMENT_RE = r"(?:[A-Za-z0-9][A-Za-z0-9_.-]*|\{\*\})"
+# A dynamic callback can embed a formatted value inside a fixed segment, for
+# example ``tvflow|image_video_real_{job_id}_{choice}``.  Treat that as an
+# opaque template rather than dropping it from the inventory.  The grammar is
+# deliberately narrow: only a segment beginning with an alphanumeric literal
+# or one ``{*}`` marker may contain letters, digits, ``._-`` and further whole
+# ``{*}`` markers; it never evaluates an f-string or exposes its values.
+CALLBACK_TEMPLATE_SEGMENT_RE = r"(?=[A-Za-z0-9{])(?:[A-Za-z0-9_.-]|\{\*\})+"
 CALLBACK_TEMPLATE_TOKEN_RE = re.compile(
     rf"^{CALLBACK_TEMPLATE_SEGMENT_RE}(?:[|:]{CALLBACK_TEMPLATE_SEGMENT_RE})+$"
 )
@@ -1425,8 +1631,17 @@ def _extract_large_python_file(
     patterns and retain source locations without executing the file.
     """
 
+    # The canonical Bot source is multi-megabyte and produces thousands of
+    # static records.  Counting newlines from character zero for every match
+    # makes location collection quadratic in source size.  Build the immutable
+    # line-start index once; `bisect_right` keeps exactly the same 1-based line
+    # semantics without evaluating/importing the source or dropping records.
+    line_starts = [0]
+    line_starts.extend(match.end() for match in re.finditer(r"\n", text))
+    relative_path = _relative(path, root)
+
     def location(match: re.Match[str]) -> dict[str, Any]:
-        return {"file": _relative(path, root), "line": _line_for_offset(text, match.start())}
+        return {"file": relative_path, "line": bisect_right(line_starts, match.start())}
 
     admin_guarded_handlers = _static_admin_guarded_handlers(text)
     for match in COMMAND_HANDLER_RE.finditer(text):
@@ -2375,6 +2590,38 @@ def _map_docflow_callback(identifier: str, source_kind: str, evidence: dict[str,
     }
 
 
+def _map_tvflow_callback(identifier: str, source_kind: str, evidence: dict[str, Any]) -> dict[str, Any]:
+    """Record a finite Bot trend-video flow without inventing Web parity.
+
+    ``tvflow`` callbacks can look like ordinary content/image/video actions
+    while the Bot handler actually relies on private pending workflow/output
+    state, canonical package/Xu decisions, provider guards, job state or an
+    admin-only smoke path.  Return a symbolic authority boundary so the audit
+    cannot upgrade an existing Web route into a false guarded implementation.
+    """
+
+    token = str(identifier or "").casefold()
+    policy = TVFLOW_CALLBACK_DISPOSITIONS.get(token)
+    if policy is None:
+        for prefix, prefix_policy in TVFLOW_CALLBACK_PREFIX_DISPOSITIONS:
+            if token.startswith(prefix):
+                policy = prefix_policy
+                break
+    if policy is None:
+        policy = TVFLOW_DEFAULT_DISPOSITION
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": str(policy["target"]),
+        "classification": str(policy.get("classification") or "customer"),
+        "status": str(policy.get("status") or "NEEDS_FEATURE_DISPOSITION"),
+        "resolution": str(policy["resolution"]),
+        "source_dispositions": [str(value) for value in policy["source_dispositions"]],
+        "source_evidence": str(policy["source_evidence"]),
+        "evidence": evidence,
+    }
+
+
 def _partition_unreferenced_module_records(
     records: Iterable[dict[str, Any]],
     unreferenced_files: set[str],
@@ -2395,6 +2642,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     token = identifier.casefold()
     if token.startswith("docflow|"):
         return _map_docflow_callback(identifier, source_kind, evidence)
+    if token.startswith("tvflow|"):
+        return _map_tvflow_callback(identifier, source_kind, evidence)
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
     dashboard_fallback = False
@@ -2881,6 +3130,11 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     token = str(template or "").casefold()
     if "{*}" not in token:
         return _map_callback(token, "callback_template", evidence, existing_routes)
+    if token.startswith("tvflow|"):
+        # Dynamic trend-video values include Bot job, scene and choice context.
+        # Preserve the family-specific source boundary rather than allowing a
+        # generic dynamic namespace route to imply Web ownership of that state.
+        return _map_tvflow_callback(template, "callback_template", evidence)
     if token.startswith("menu|"):
         # Dynamic menu templates can encode a Bot-only back route, translation
         # session, locale/product context or other pending state.  A finite
@@ -3345,11 +3599,13 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "coverage_comparability": {
                 "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
                 "feature_progress_claim": False,
-                "reason": "Schema 1.4 corrects raw-string callback-handler extraction, keeps the handlers/ package outside the observed bot.py runtime denominator when no static import path exists, and rejects only bare numeric aspect-ratio tuples from the keyboard callback heuristic.",
+                "reason": "Schema 1.5 keeps the 1.4 inventory corrections, retains embedded formatted callback values as opaque templates, and removes false Web coverage claims for tvflow callbacks whose Bot handler requires pending state, canonical billing/package decisions, provider/job guards, or Telegram-only guidance.",
                 "scope_changes": [
                     "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
                     "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
                     "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
+                    "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
+                    "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
                 ],
                 "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
             },
@@ -3375,7 +3631,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
                 "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
                 "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
-                "Schema 1.4 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because audit source scope was corrected; a percentage delta is not feature progress.",
+                "Schema 1.5 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because the audit now retains embedded callback templates and corrects false tvflow Web-surface classifications; a percentage delta is not feature progress.",
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -3432,6 +3688,34 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         _write_text(path, _sanitize(content))
         generated.append(path)
 
+    tvflow_contract_rows = [
+        [
+            source,
+            str(policy["target"]),
+            str(policy["resolution"]),
+            str(policy.get("status") or "NEEDS_FEATURE_DISPOSITION"),
+            ", ".join(str(value) for value in policy["source_dispositions"]),
+        ]
+        for source, policy in TVFLOW_CALLBACK_DISPOSITIONS.items()
+    ] + [
+        [
+            f"{prefix}*",
+            str(policy["target"]),
+            str(policy["resolution"]),
+            str(policy.get("status") or "NEEDS_FEATURE_DISPOSITION"),
+            ", ".join(str(value) for value in policy["source_dispositions"]),
+        ]
+        for prefix, policy in TVFLOW_CALLBACK_PREFIX_DISPOSITIONS
+    ] + [
+        [
+            "other tvflow|*",
+            str(TVFLOW_DEFAULT_DISPOSITION["target"]),
+            str(TVFLOW_DEFAULT_DISPOSITION["resolution"]),
+            "NEEDS_FEATURE_DISPOSITION",
+            ", ".join(str(value) for value in TVFLOW_DEFAULT_DISPOSITION["source_dispositions"]),
+        ]
+    ]
+
     write(
         "README.md",
         "# P0 WebApp CopyFast1 migration inventory\n\n"
@@ -3452,6 +3736,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.\n"
         + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
         + "- [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.\n"
+        + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -3493,6 +3778,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`ENGINE_DELIVERY_ADAPTER_BACKLOG.md`](ENGINE_DELIVERY_ADAPTER_BACKLOG.md) — canonical job/output/delivery prerequisites.\n"
         + "- [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.\n"
         + "- [`ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md`](ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md) — opt-in local-admin private document archive with isolated immutable versions; it does not migrate or call Bot internal-document state.\n",
+    )
+    write(
+        "TVFLOW_CALLBACK_CONTRACT.md",
+        "# Trend-video callback disposition contract\n\n"
+        "The Bot `tvflow` dispatcher has finite source branches, but they depend on Telegram pending state, cached Bot output, canonical Xu/package/billing decisions, provider/job guards, Bot job identifiers, or Telegram chat guidance. Every entry below that is not explicitly `TELEGRAM_ONLY` remains `NEEDS_FEATURE_DISPOSITION`; its target is a symbolic authority boundary, **not** a Web route, bridge implementation, browser callback, provider action, payment action, job action, asset claim, or output-delivery claim.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Required authority boundary", "Audit resolution", "Status", "Source dispositions"],
+            tvflow_contract_rows,
+        )
+        + "\n\nA future Web flow must start from Web-owned, owner-scoped input or a separately reviewed private bridge contract. It must never accept/replay Bot scene/job IDs, mutate Bot pending state, credit/debit Xu, finalize PayOS, invoke a provider from the browser, or claim a file/output exists merely because a Telegram callback was observed.\n",
     )
     write(
         "inventory.md",
