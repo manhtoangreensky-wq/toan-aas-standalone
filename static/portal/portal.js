@@ -12363,6 +12363,18 @@
     ["ocr", "OCR intent · guarded"], ["translate", "Dịch intent · guarded"],
     ["convert", "Convert intent · guarded"], ["other", "Khác"]
   ]);
+  // The policy server and integration both validate this same closed map.
+  // Rendering validates it again so a plan can never turn an arbitrary
+  // operation, URL, Asset Vault ID or Bot callback into a handoff link.
+  const DOCUMENT_WORKSPACE_HANDOFF_ROUTES = Object.freeze({
+    split: "/documents/split",
+    merge: "/documents/merge",
+    optimize: "/documents/compress",
+    image_to_pdf: "/documents/image-to-pdf",
+    pdf_to_images: "/documents/pdf-to-images",
+    pdf_to_word: "/documents/pdf-to-word"
+  });
+  const DOCUMENT_WORKSPACE_HANDOFF_AVAILABILITY = new Set(["available", "guarded", "guidance"]);
   const DOCUMENT_WORKSPACE_STATES = Object.freeze({
     draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
   });
@@ -12416,6 +12428,45 @@
     const assets = documentWorkspaceAssetOptions(context);
     const asset = assets.find((item) => item.value === id);
     return asset ? asset.label : (id ? "Asset Vault reference đã chọn" : "Không gắn asset");
+  }
+  function documentWorkspaceHandoffText(value, maximum) {
+    const text = String(value || "").replace(/\s+/g, " ").trim();
+    return text && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+  function documentWorkspaceHandoffCatalog(context) {
+    const policy = context && context.documentWorkspacePolicy && typeof context.documentWorkspacePolicy === "object" ? context.documentWorkspacePolicy : {};
+    const items = Array.isArray(policy.handoff_catalog) ? policy.handoff_catalog : [];
+    const validOperations = new Set(DOCUMENT_WORKSPACE_OPERATIONS.map((item) => item[0]));
+    const seen = new Set();
+    const catalog = items.map((item) => {
+      const source = item && typeof item === "object" ? item : {};
+      const operation = String(source.operation || "").trim().toLowerCase();
+      const availability = String(source.availability || "").trim().toLowerCase();
+      const route = source.route === null || source.route === undefined ? "" : String(source.route || "").trim();
+      const expectedRoute = DOCUMENT_WORKSPACE_HANDOFF_ROUTES[operation] || "";
+      const title = documentWorkspaceHandoffText(source.title, 120);
+      const summary = documentWorkspaceHandoffText(source.summary, 320);
+      if (!validOperations.has(operation) || seen.has(operation) || !DOCUMENT_WORKSPACE_HANDOFF_AVAILABILITY.has(availability) || !title || !summary) return null;
+      if (availability === "available" ? route !== expectedRoute : Boolean(route)) return null;
+      seen.add(operation);
+      return { operation, availability, route: route || null, title, summary };
+    }).filter(Boolean);
+    return catalog.length === validOperations.size && seen.size === validOperations.size ? catalog : [];
+  }
+  function documentWorkspaceHandoffForPlan(context, operation) {
+    const normalized = String(operation || "").trim().toLowerCase();
+    return documentWorkspaceHandoffCatalog(context).find((item) => item.operation === normalized) || null;
+  }
+  function renderDocumentPlanHandoff(plan, context) {
+    const handoff = documentWorkspaceHandoffForPlan(context, plan && plan.operation);
+    if (!handoff) {
+      return '<aside class="portal-document-plan-handoff is-guarded"><div><span class="portal-section-kicker">Independent tool handoff</span><h4>Chưa có handoff đã được xác minh</h4><p>Workspace giữ plan này ở chế độ review; không tạo link, request, output hoặc trạng thái thành công thay cho một tool độc lập.</p></div>' + badge("guarded") + "</aside>";
+    }
+    const status = handoff.availability === "available" ? "ready" : "guarded";
+    const action = handoff.availability === "available" && handoff.route
+      ? '<a class="portal-button portal-button--quiet" href="' + safeText(handoff.route) + '">Mở công cụ riêng <span aria-hidden="true">→</span></a>'
+      : '<span class="portal-form-note">Chưa có tool độc lập an toàn để mở.</span>';
+    return '<aside class="portal-document-plan-handoff is-' + safeText(handoff.availability) + '"><div><span class="portal-section-kicker">Independent tool handoff</span><h4>' + safeText(handoff.title) + '</h4><p>' + safeText(handoff.summary) + '</p><small>Không chuyển brief, plan, Asset Vault ID, file, khoảng trang, profile, token hoặc output. Công cụ đích sẽ yêu cầu chọn lại input và kiểm tra quyền riêng.</small></div><div class="portal-document-plan-handoff-action">' + badge(status) + action + "</div></aside>";
   }
   function documentWorkspaceFields(context) {
     return [
@@ -12574,7 +12625,7 @@
       return '<article><span><strong>v' + safeText(String(version.revision)) + '</strong><small>' + safeText(String(version.instructions_excerpt || "")) + '</small></span>' + restore + '</article>';
     }).join("") + '</div>' : "";
     const form = '<form class="portal-form portal-document-plan-form" data-portal-form data-portal-action="document-plan-update"' + routeAttr + attrs + " novalidate>" + renderFields(documentPlanFields(context), canUpdate, context, documentPlanValues(plan)) + '<div class="portal-form-footer"><span class="portal-form-note">Lưu plan không đọc Asset Vault blob, không chạy utility/OCR/dịch và không tạo output.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? "" : " disabled") + ">Lưu revision plan</button></div></form>";
-    return '<article class="portal-document-plan-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceOperationLabel(plan.operation)) + "</span><h3 class=\"portal-card-title\">" + safeText(String(plan.title || "Processing plan")) + "</h3><p class=\"portal-card-subtitle\">" + safeText(String(plan.instructions_excerpt || plan.instructions || "Chưa có scope plan hiển thị.")) + "</p></div>" + badge(active ? "ready" : "archived") + "</div>" + sources + renderDocumentWorkspaceTags(plan.tags) + '<div class="portal-inline-actions">' + archiveButton + moves + "</div>" + history + form + "</article>";
+    return '<article class="portal-document-plan-card' + (active ? "" : " is-archived") + '"><div class="portal-card-header"><div><span class="portal-section-kicker">' + safeText(documentWorkspaceOperationLabel(plan.operation)) + "</span><h3 class=\"portal-card-title\">" + safeText(String(plan.title || "Processing plan")) + "</h3><p class=\"portal-card-subtitle\">" + safeText(String(plan.instructions_excerpt || plan.instructions || "Chưa có scope plan hiển thị.")) + "</p></div>" + badge(active ? "ready" : "archived") + "</div>" + sources + renderDocumentWorkspaceTags(plan.tags) + renderDocumentPlanHandoff(plan, context) + '<div class="portal-inline-actions">' + archiveButton + moves + "</div>" + history + form + "</article>";
   }
 
   function documentWorkspaceStateActions(workspace, state, context, route) {

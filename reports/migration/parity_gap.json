@@ -4524,11 +4524,17 @@
         "line": 84692
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_page_prompt_requires_fresh_web_input",
       "source": "docflow|ask_pages",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_PAGE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot enters a page-range prompt against its pending Telegram PDF. The Web split tool requires a fresh owner-scoped source and independently entered page range.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/documents/split"
     },
     {
       "classification": "customer",
@@ -4537,11 +4543,17 @@
         "line": 84609
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_bot_navigation_not_web_state_transfer",
       "source": "docflow|back",
+      "source_dispositions": [
+        "TELEGRAM_MESSAGE_NAVIGATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4550,11 +4562,17 @@
         "line": 84617
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_bot_navigation_not_web_state_transfer",
       "source": "docflow|back",
+      "source_dispositions": [
+        "TELEGRAM_MESSAGE_NAVIGATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4563,11 +4581,17 @@
         "line": 84703
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_bot_navigation_not_web_state_transfer",
       "source": "docflow|back",
+      "source_dispositions": [
+        "TELEGRAM_MESSAGE_NAVIGATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4576,11 +4600,17 @@
         "line": 84714
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_bot_navigation_not_web_state_transfer",
       "source": "docflow|back",
+      "source_dispositions": [
+        "TELEGRAM_MESSAGE_NAVIGATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4589,11 +4619,17 @@
         "line": 84729
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_bot_navigation_not_web_state_transfer",
       "source": "docflow|back",
+      "source_dispositions": [
+        "TELEGRAM_MESSAGE_NAVIGATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4602,11 +4638,17 @@
         "line": 84767
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_bot_navigation_not_web_state_transfer",
       "source": "docflow|back",
+      "source_dispositions": [
+        "TELEGRAM_MESSAGE_NAVIGATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending state and redraws its parent Telegram menu. Opening a fresh Web workspace does not restore a previous Telegram screen.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4615,11 +4657,17 @@
         "line": 84723
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_clear_not_web_handoff",
       "source": "docflow|clear",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears its pending document list/options. This is not a browser document operation or asset mutation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4627,11 +4675,18 @@
         "file": "bot.py",
         "line": 84685
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "docflow",
+      "resolution": "docflow_compression_profile_semantics_mismatch",
       "source": "docflow|compress|light",
+      "source_dispositions": [
+        "PROFILE_SEMANTICS_MISMATCH",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot records the label Nén nhẹ on a pending Telegram PDF. Web PDF Optimize has one verified structural profile and must not claim to reproduce Bot light/medium/strong choices.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/documents"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "/documents/compress"
     },
     {
       "classification": "customer",
@@ -4639,11 +4694,18 @@
         "file": "bot.py",
         "line": 84686
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "docflow",
+      "resolution": "docflow_compression_profile_semantics_mismatch",
       "source": "docflow|compress|medium",
+      "source_dispositions": [
+        "PROFILE_SEMANTICS_MISMATCH",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot records the label Nén vừa on a pending Telegram PDF. Web PDF Optimize has one verified structural profile and must not claim to reproduce Bot light/medium/strong choices.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/documents"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "/documents/compress"
     },
     {
       "classification": "customer",
@@ -4651,11 +4713,18 @@
         "file": "bot.py",
         "line": 84687
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "docflow",
+      "resolution": "docflow_compression_profile_semantics_mismatch",
       "source": "docflow|compress|strong",
+      "source_dispositions": [
+        "PROFILE_SEMANTICS_MISMATCH",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot records the label Nén mạnh on a pending Telegram PDF. Web PDF Optimize has one verified structural profile and must not claim to reproduce Bot light/medium/strong choices.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/documents"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "/documents/compress"
     },
     {
       "classification": "customer",
@@ -4664,11 +4733,17 @@
         "line": 84698
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_confirmation_not_web_execution",
       "source": "docflow|confirm",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot validates pending files/options and builds a Telegram confirmation. It is not an owner-scoped Web execution, payment or delivery confirmation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_PENDING_CONFIRMATION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -4677,11 +4752,17 @@
         "line": 84710
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_confirmation_not_web_execution",
       "source": "docflow|confirm",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot validates pending files/options and builds a Telegram confirmation. It is not an owner-scoped Web execution, payment or delivery confirmation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_PENDING_CONFIRMATION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -4690,11 +4771,17 @@
         "line": 84720
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_confirmation_not_web_execution",
       "source": "docflow|confirm",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot validates pending files/options and builds a Telegram confirmation. It is not an owner-scoped Web execution, payment or delivery confirmation.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_PENDING_CONFIRMATION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -4703,11 +4790,17 @@
         "line": 84688
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_reset_not_web_handoff",
       "source": "docflow|reset_files",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending Telegram files/options before collecting a new source. Web navigation must not mutate Bot state or inherit its files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4716,11 +4809,17 @@
         "line": 84693
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_reset_not_web_handoff",
       "source": "docflow|reset_files",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending Telegram files/options before collecting a new source. Web navigation must not mutate Bot state or inherit its files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4729,11 +4828,17 @@
         "line": 84699
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_reset_not_web_handoff",
       "source": "docflow|reset_files",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending Telegram files/options before collecting a new source. Web navigation must not mutate Bot state or inherit its files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4742,11 +4847,17 @@
         "line": 84711
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_reset_not_web_handoff",
       "source": "docflow|reset_files",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending Telegram files/options before collecting a new source. Web navigation must not mutate Bot state or inherit its files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4755,11 +4866,17 @@
         "line": 84764
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_reset_not_web_handoff",
       "source": "docflow|reset_files",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot clears pending Telegram files/options before collecting a new source. Web navigation must not mutate Bot state or inherit its files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4768,11 +4885,17 @@
         "line": 84763
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_execution_delivery_not_web_runtime",
       "source": "docflow|run",
+      "source_dispositions": [
+        "BOT_EXECUTION_DELIVERY_BOUNDARY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot runs its pending document flow, performs delivery checks and may charge only under Bot rules. Web must not replay this action from a plan or callback.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_PENDING_EXECUTION_REQUIRED"
     },
     {
       "classification": "customer",
@@ -4781,11 +4904,17 @@
         "line": 84605
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_collection_not_web_handoff",
       "source": "docflow|send_more",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot asks for another Telegram attachment and retains it in USER_PENDING. Web Document Workspace never accepts or transfers that file slot.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -4794,11 +4923,17 @@
         "line": 84616
       },
       "fallback_family": "docflow",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "docflow_pending_file_collection_not_web_handoff",
       "source": "docflow|send_more",
+      "source_dispositions": [
+        "TELEGRAM_PENDING_FILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot asks for another Telegram attachment and retains it in USER_PENDING. Web Document Workspace never accepts or transfers that file slot.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "/document-workspace"
     },
     {
       "classification": "customer",
@@ -51228,6 +51363,34 @@
       ]
     },
     {
+      "authority": "Bot pending state remains Bot-owned; Web tools are independently Web-native",
+      "candidate_boundary": "/document-workspace + independent /documents/* tools",
+      "count": 22,
+      "family": "docflow",
+      "next_contract": "Keep every docflow callback as a source disposition until a finite, owner-scoped Web handoff is proven. A document plan may link to a fresh Asset Vault-backed tool, but must not transfer Telegram pending files, page choices, compression profile, confirmation, execution, charge or delivery state.",
+      "priority": "P1",
+      "sample_sources": [
+        "docflow|ask_pages",
+        "docflow|back",
+        "docflow|clear",
+        "docflow|compress|light",
+        "docflow|compress|medium",
+        "docflow|compress|strong",
+        "docflow|confirm",
+        "docflow|reset_files",
+        "docflow|run",
+        "docflow|send_more"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Bot `handle_doc_tool_callback` reads and mutates USER_PENDING document files/options, can request page ranges, select Bot compression labels, and runs local execution/delivery after the Bot confirmation path. A Web navigation link is not a replay of that state machine.",
+      "source_kinds": [
+        "callback_data"
+      ]
+    },
+    {
       "authority": "Web campaign planning and controlled operations",
       "candidate_boundary": "/campaign-app",
       "count": 20,
@@ -51247,26 +51410,6 @@
         "marketing|kind|physical",
         "marketing|kind|realestate",
         "marketing|kind|service"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
-      "authority": "Web-native private document operations",
-      "candidate_boundary": "/documents",
-      "count": 19,
-      "family": "docflow",
-      "next_contract": "Map document selection/confirmation only to validated Asset Vault-backed operations; preserve output validation and private delivery constraints.",
-      "priority": "P1",
-      "sample_sources": [
-        "docflow|ask_pages",
-        "docflow|back",
-        "docflow|clear",
-        "docflow|confirm",
-        "docflow|reset_files",
-        "docflow|run",
-        "docflow|send_more"
       ],
       "source_kinds": [
         "callback_data"
@@ -51421,7 +51564,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 677,
+      "count": 680,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -51480,13 +51623,13 @@
           "priority": "P1"
         },
         {
-          "count": 20,
-          "family": "marketing",
+          "count": 22,
+          "family": "docflow",
           "priority": "P1"
         },
         {
-          "count": 19,
-          "family": "docflow",
+          "count": 20,
+          "family": "marketing",
           "priority": "P1"
         },
         {
@@ -51698,13 +51841,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 82.01,
+  "mapping_coverage_percent": 81.93,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2410,
+    "COPIED_GUARDED": 2407,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
     "NAVIGATION_ONLY": 455,
-    "NEEDS_FEATURE_DISPOSITION": 677,
+    "NEEDS_FEATURE_DISPOSITION": 680,
     "TELEGRAM_ONLY": 218
   },
   "metric_scope": {
@@ -51726,7 +51869,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 82.01,
+  "safe_disposition_coverage_percent": 81.93,
   "schema_version": "1.4",
   "source_counts": {
     "callback_data": 2815,
@@ -51736,15 +51879,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3763,
-    "resolved_static_source_count": 3086,
+    "resolved_static_source_count": 3083,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3874,
     "total_mappings": 3763,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 7,
-    "unresolved_source_count": 677
+    "unresolved_source_count": 680
   },
-  "static_web_surface_coverage_percent": 64.07,
+  "static_web_surface_coverage_percent": 63.99,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

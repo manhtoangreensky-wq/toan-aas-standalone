@@ -36,6 +36,90 @@ PLAN_OPERATIONS = frozenset({
     "organize", "split", "merge", "optimize", "image_to_pdf", "pdf_to_images",
     "pdf_to_word", "ocr", "translate", "convert", "other",
 })
+# A document plan is deliberately not an executable request.  This closed
+# catalogue only tells the signed UI which *independent* Web-native tool may
+# be opened next for a compatible planning intent.  It contains no workspace
+# or Asset Vault identifier, no prefilled page/profile choice and no execution
+# token, so following a link can never replay a Bot `docflow` state machine.
+DOCUMENT_HANDOFF_CATALOG = (
+    {
+        "operation": "split",
+        "availability": "available",
+        "route": "/documents/split",
+        "title": "Tách PDF riêng tư",
+        "summary": "Mở biểu mẫu tách PDF riêng; chọn lại PDF Asset Vault và khoảng trang trong công cụ đó.",
+    },
+    {
+        "operation": "merge",
+        "availability": "available",
+        "route": "/documents/merge",
+        "title": "Gộp PDF riêng tư",
+        "summary": "Mở biểu mẫu gộp PDF riêng; chọn lại từng PDF Asset Vault theo thứ tự trong công cụ đó.",
+    },
+    {
+        "operation": "optimize",
+        "availability": "available",
+        "route": "/documents/compress",
+        "title": "Tối ưu PDF có kiểm chứng",
+        "summary": "Mở PDF Optimize riêng. Web chỉ dùng một profile structural đã kiểm chứng, không nhận mức nén Bot light/medium/strong.",
+    },
+    {
+        "operation": "image_to_pdf",
+        "availability": "available",
+        "route": "/documents/image-to-pdf",
+        "title": "Ảnh sang PDF riêng tư",
+        "summary": "Mở biểu mẫu ảnh sang PDF riêng; chọn lại ảnh Asset Vault trong công cụ đó.",
+    },
+    {
+        "operation": "pdf_to_images",
+        "availability": "available",
+        "route": "/documents/pdf-to-images",
+        "title": "PDF sang ảnh riêng tư",
+        "summary": "Mở biểu mẫu PDF sang ảnh riêng; chọn lại PDF Asset Vault trong công cụ đó.",
+    },
+    {
+        "operation": "pdf_to_word",
+        "availability": "available",
+        "route": "/documents/pdf-to-word",
+        "title": "PDF text sang Word riêng tư",
+        "summary": "Mở biểu mẫu PDF text sang Word riêng; chọn lại PDF Asset Vault trong công cụ đó.",
+    },
+    {
+        "operation": "ocr",
+        "availability": "guarded",
+        "route": None,
+        "title": "OCR cần công cụ nguồn phù hợp",
+        "summary": "Intent OCR chưa xác định loại nguồn hoặc runtime; Workspace không chuyển file hay tự chọn OCR thay bạn.",
+    },
+    {
+        "operation": "translate",
+        "availability": "guarded",
+        "route": None,
+        "title": "Dịch tài liệu đang được bảo vệ",
+        "summary": "Không có handoff dịch tài liệu từ plan này; Web không gửi document đến provider hoặc Bot.",
+    },
+    {
+        "operation": "convert",
+        "availability": "guarded",
+        "route": None,
+        "title": "Convert cần contract riêng",
+        "summary": "Chọn định dạng và nguồn trong một tool có contract riêng; plan này không tạo request convert.",
+    },
+    {
+        "operation": "organize",
+        "availability": "guidance",
+        "route": None,
+        "title": "Tiếp tục self-review",
+        "summary": "Đây là intent tổ chức/QA. Tiếp tục cập nhật checklist và chọn một utility độc lập khi scope đã rõ.",
+    },
+    {
+        "operation": "other",
+        "availability": "guidance",
+        "route": None,
+        "title": "Cần xác định công cụ phù hợp",
+        "summary": "Intent này không có route mặc định; không chuyển state, file hoặc yêu cầu thực thi sang browser.",
+    },
+)
 ASSET_EXTENSIONS = frozenset({"pdf", "docx", "txt", "jpg", "jpeg", "png", "webp"})
 ASSET_CONTENT_TYPES = frozenset({
     "application/pdf",
@@ -498,6 +582,26 @@ def _summary_data(conn: Any, *, account_id: str) -> dict[str, Any]:
     }
 
 
+def _document_handoff_catalog() -> list[dict[str, Any]]:
+    """Return a content-free route catalogue for navigation-only handoffs.
+
+    Every item is constant, closed and independent of a workspace/plan row.
+    The receiving `/documents/*` tool has to repeat its signed account, Asset
+    Vault ownership, feature flag, CSRF and idempotency checks itself.
+    """
+
+    return [
+        {
+            **item,
+            "requires_new_tool_input": True,
+            "workspace_data_transferred": False,
+            "auto_execute": False,
+            "workspace_output_shared": False,
+        }
+        for item in DOCUMENT_HANDOFF_CATALOG
+    ]
+
+
 @router.get("/summary")
 async def document_workspace_summary(account: dict = Depends(require_account)):
     _require_enabled()
@@ -524,7 +628,8 @@ async def document_workspace_policy(account: dict = Depends(require_account)):
                 "pdf_to_images": "/documents/pdf-to-images",
                 "pdf_to_word": "/documents/pdf-to-word",
             },
-            "notice": "Các route deterministic là capability riêng, không được gọi, chia sẻ lifecycle hoặc nhận output từ workspace này.",
+            "handoff_catalog": _document_handoff_catalog(),
+            "notice": "Các route deterministic là capability riêng, không được gọi, chia sẻ lifecycle hoặc nhận output từ workspace này. Handoff chỉ điều hướng sang tool mới; không chuyển brief, plan, Asset Vault ID, file, page range, profile hay token.",
             **_boundary(),
         },
         status_name="read_only",

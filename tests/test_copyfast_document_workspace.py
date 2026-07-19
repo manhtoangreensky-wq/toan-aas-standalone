@@ -180,6 +180,75 @@ def test_document_workspace_signed_session_csrf_body_cap_and_receipt_redaction(t
         assert raw["objective"] not in text
 
 
+def test_document_workspace_policy_has_only_closed_navigation_handoffs(tmp_path, monkeypatch):
+    """A plan may open a new tool, but it cannot carry Bot/Web state into it."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        assert client.get("/api/v1/document-workspace/policy").status_code == 401
+        login(client, "document-handoff-policy@example.com")
+        response = client.get("/api/v1/document-workspace/policy")
+        assert response.status_code == 200 and response.json()["ok"] is True
+        data = response.json()["data"]
+        assert_authoring_only(data)
+        catalog = data["handoff_catalog"]
+        assert len(catalog) == 11
+        by_operation = {item["operation"]: item for item in catalog}
+        assert set(by_operation) == {
+            "organize", "split", "merge", "optimize", "image_to_pdf", "pdf_to_images",
+            "pdf_to_word", "ocr", "translate", "convert", "other",
+        }
+        assert {
+            operation: item["route"]
+            for operation, item in by_operation.items()
+            if item["availability"] == "available"
+        } == {
+            "split": "/documents/split",
+            "merge": "/documents/merge",
+            "optimize": "/documents/compress",
+            "image_to_pdf": "/documents/image-to-pdf",
+            "pdf_to_images": "/documents/pdf-to-images",
+            "pdf_to_word": "/documents/pdf-to-word",
+        }
+        assert {operation for operation, item in by_operation.items() if item["availability"] == "guarded"} == {
+            "ocr", "translate", "convert",
+        }
+        assert {operation for operation, item in by_operation.items() if item["availability"] == "guidance"} == {
+            "organize", "other",
+        }
+        for item in catalog:
+            assert item["requires_new_tool_input"] is True
+            assert item["workspace_data_transferred"] is False
+            assert item["auto_execute"] is False
+            assert item["workspace_output_shared"] is False
+            assert set(item).isdisjoint({
+                "workspace_id", "plan_id", "asset_id", "source_asset_id", "file", "path", "url",
+                "token", "receipt", "job", "provider", "wallet", "payment", "payos",
+            })
+            if item["availability"] != "available":
+                assert item["route"] is None
+        assert "light/medium/strong" in by_operation["optimize"]["summary"]
+
+
+def test_document_workspace_summary_remains_account_scoped_with_handoff_catalog(tmp_path, monkeypatch):
+    """Policy metadata must not change the independent summary read model."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        login(client, "document-summary-handoff@example.com")
+        response = client.get("/api/v1/document-workspace/summary")
+        assert response.status_code == 200 and response.json()["ok"] is True
+        data = response.json()["data"]
+        assert_authoring_only(data)
+        assert data["workspaces"] == {
+            "draft": 0,
+            "review": 0,
+            "approved": 0,
+            "archived": 0,
+            "total": 0,
+            "limit_per_account": 300,
+        }
+        assert data["plans"] == {"active": 0, "limit_per_workspace": 120}
+
+
 def test_document_workspace_owner_assets_markup_and_dotted_extensions(tmp_path, monkeypatch):
     db_path = tmp_path / "document-workspace-test.db"
     with make_client(tmp_path, monkeypatch) as client:
