@@ -142,7 +142,7 @@
     {
       "file": "app.py",
       "kind": "function",
-      "line": 1972,
+      "line": 1984,
       "target": "root_service_worker"
     },
     {
@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 2044,
+      "line": 2071,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -509,7 +509,7 @@
     },
     {
       "file": "app.py",
-      "line": 1359,
+      "line": 1368,
       "operation": "UPDATE",
       "table": "family"
     },
@@ -6642,7 +6642,7 @@
         "docs/migration/ADMIN_DOMAIN_CENTERS_CONTRACT.md",
         "docs/migration/ADMIN_ERP_MAP.md"
       ],
-      "occurrences": 681,
+      "occurrences": 702,
       "provider": "PayOS"
     },
     {
@@ -6869,7 +6869,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1506,
+      "occurrences": 1514,
       "provider": "Telegram"
     }
   ],
@@ -6904,7 +6904,7 @@
     {
       "endpoint": "legacy_admin_redirect",
       "file": "app.py",
-      "line": 2128,
+      "line": 2140,
       "methods": [
         "GET"
       ],
@@ -7129,7 +7129,7 @@
     {
       "endpoint": "legacy_affiliate_redirect",
       "file": "app.py",
-      "line": 2148,
+      "line": 2160,
       "methods": [
         "GET"
       ],
@@ -7165,7 +7165,7 @@
     {
       "endpoint": "durable_login",
       "file": "app.py",
-      "line": 2039,
+      "line": 2051,
       "methods": [
         "POST"
       ],
@@ -7174,7 +7174,7 @@
     {
       "endpoint": "durable_register",
       "file": "app.py",
-      "line": 2025,
+      "line": 2037,
       "methods": [
         "POST"
       ],
@@ -7183,7 +7183,7 @@
     {
       "endpoint": "durable_password_change",
       "file": "app.py",
-      "line": 2053,
+      "line": 2065,
       "methods": [
         "POST"
       ],
@@ -7192,7 +7192,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2123,
+      "line": 2135,
       "methods": [
         "GET"
       ],
@@ -7588,7 +7588,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2159,
+      "line": 2171,
       "methods": [
         "GET"
       ],
@@ -7633,7 +7633,7 @@
     {
       "endpoint": "legacy_b2b_redirect",
       "file": "app.py",
-      "line": 2164,
+      "line": 2176,
       "methods": [
         "GET"
       ],
@@ -7831,7 +7831,7 @@
     {
       "endpoint": "legacy_campaign_redirect",
       "file": "app.py",
-      "line": 2143,
+      "line": 2155,
       "methods": [
         "GET"
       ],
@@ -8047,7 +8047,7 @@
     {
       "endpoint": "legacy_assistant_redirect",
       "file": "app.py",
-      "line": 2159,
+      "line": 2171,
       "methods": [
         "GET"
       ],
@@ -8641,7 +8641,7 @@
     {
       "endpoint": "prompt_library_events",
       "file": "copyfast_prompt_library.py",
-      "line": 1637,
+      "line": 1651,
       "methods": [
         "GET"
       ],
@@ -8830,7 +8830,7 @@
     {
       "endpoint": "health",
       "file": "app.py",
-      "line": 2123,
+      "line": 2135,
       "methods": [
         "GET"
       ],
@@ -9262,7 +9262,7 @@
     {
       "endpoint": "legacy_media_redirect",
       "file": "app.py",
-      "line": 2153,
+      "line": 2165,
       "methods": [
         "GET"
       ],
@@ -10738,7 +10738,7 @@
     {
       "endpoint": "root_service_worker",
       "file": "app.py",
-      "line": 1972,
+      "line": 1984,
       "methods": [
         "GET"
       ],
@@ -11818,7 +11818,7 @@
     {
       "endpoint": "legacy_video_redirect",
       "file": "app.py",
-      "line": 2138,
+      "line": 2150,
       "methods": [
         "GET"
       ],
@@ -11845,7 +11845,7 @@
     {
       "endpoint": "legacy_wallet_redirect",
       "file": "app.py",
-      "line": 2133,
+      "line": 2145,
       "methods": [
         "GET"
       ],
@@ -12250,7 +12250,7 @@
     {
       "endpoint": "page",
       "file": "app.py",
-      "line": 2169,
+      "line": 2181,
       "methods": [
         "GET"
       ],
@@ -12465,10 +12465,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 260,
-  "source_files_scanned": 260,
-  "source_fingerprint_sha256": "3988751ab4562528fda2c078039d2873c93616c922e764e43514c392fb7364ac",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast54-prompt-library",
+  "source_files_discovered": 261,
+  "source_files_scanned": 261,
+  "source_fingerprint_sha256": "aeae48bea58f1bb57c38678f3cf2ac22720d40870c8fff72fd50e436768052b2",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast56-payos-alert-disposition",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

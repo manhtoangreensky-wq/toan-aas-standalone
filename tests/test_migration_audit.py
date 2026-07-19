@@ -107,6 +107,7 @@ async def dashboard():
         "FALLBACK_FEATURE_DISPOSITION.md",
         "CALLBACK_HANDLER_DISPATCH_MAP.md",
         "UNREFERENCED_STATIC_MODULES.md",
+        "PAYOS_ALERT_CALLBACK_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -1077,6 +1078,94 @@ async def page(page_path):
     assert result["parity_gap"]["static_web_surface_coverage_percent"] == 0.0
     assert result["parity_gap"]["mapping_coverage_percent"] == 100.0
     assert "FREE_PROMPT_GALLERY_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_payos_alert_callbacks_in_their_admin_authority_boundary(tmp_path: Path) -> None:
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    manual = audit._map_callback("payosalert|manual", "callback_data", evidence, routes)
+    assert manual["classification"] == "admin"
+    assert manual["target"] == "/admin/payments"
+    assert manual["status"] == "NAVIGATION_ONLY"
+    assert manual["resolution"] == "reviewed_payos_alert_admin_navigation"
+    assert manual["source_dispositions"] == (
+        "BOT_ADMIN_ONLY",
+        "BOT_EPHEMERAL_BILL_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM",
+    )
+    assert "no Bot state" in manual["source_evidence"]
+
+    expected_dispositions = {
+        "payosalert|test": "TELEGRAM_COMMAND_GUIDANCE",
+        "payosalert|mute": "BOT_PROCESS_LOCAL_ALERT_STATE",
+        "payosalert|renewed": "DEPLOYMENT_ENV_GUIDANCE",
+        "payosalert|remind_later": "TELEGRAM_MESSAGE_DISMISSAL",
+    }
+    for callback, disposition in expected_dispositions.items():
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "reviewed_payos_alert_telegram_admin_only"
+        assert disposition in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    # The Bot dispatcher accepts a namespace pattern, but unreviewed future
+    # values must never be silently classified as dashboard or payment UI.
+    unknown = audit._map_callback("payosalert|future_action", "callback_data", evidence, routes)
+    audit._annotate_feature_disposition(unknown)
+    assert unknown["classification"] == "admin"
+    assert unknown["target"] == "PAYOS_ALERT_SOURCE_REVIEW_REQUIRED"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unknown["fallback_family"] == "payosalert"
+    assert "CANONICAL_BOT_PAYOS_ALERT_FLOW" in unknown["source_dispositions"]
+    assert "NO_RUNTIME_CLAIM" in unknown["source_dispositions"]
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+InlineKeyboardButton("Manual", callback_data="payosalert|manual")
+InlineKeyboardButton("Test", callback_data="payosalert|test")
+InlineKeyboardButton("Mute", callback_data="payosalert|mute")
+InlineKeyboardButton("Renewed", callback_data="payosalert|renewed")
+InlineKeyboardButton("Later", callback_data="payosalert|remind_later")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/{page_path:path}")
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    report_mappings = {
+        item["source"]: item
+        for item in result["parity_gap"]["callback_mappings"]
+    }
+    assert report_mappings["payosalert|manual"]["status"] == "NAVIGATION_ONLY"
+    assert report_mappings["payosalert|manual"]["target"] == "/admin/payments"
+    assert all(
+        report_mappings[callback]["status"] == "TELEGRAM_ONLY"
+        for callback in expected_dispositions
+    )
+    assert "payosalert" not in {
+        item["family"] for item in result["parity_gap"]["feature_disposition_backlog"]
+    }
+    contract = (tmp_path / "docs" / "PAYOS_ALERT_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "payosalert|manual" in contract
+    assert "PAYOS_ALERT_SOURCE_REVIEW_REQUIRED" in contract
+    assert "PAYOS_ALERT_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
 
 
 def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolving_ids() -> None:

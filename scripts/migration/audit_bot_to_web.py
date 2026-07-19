@@ -354,6 +354,31 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
 # Gallery surface without carrying that value forward.
 FREE_HUB_LIBRARY_CATEGORY_CALLBACK_TEMPLATE = "freehub|lib_{*}"
 
+# These are the only literal values emitted by the Bot's internal PayOS alert
+# keyboards at the frozen baseline. They are intentionally not a namespace
+# route override: the Bot handler is admin-gated and a future value might
+# mutate canonical payment, alert, or deployment state. Every value below was
+# reviewed against ``handle_payos_alert_callback``; unknown values remain
+# unresolved instead of inheriting a convenient-looking Web route.
+PAYOS_ALERT_TELEGRAM_ONLY_CALLBACKS: dict[str, dict[str, Any]] = {
+    "payosalert|test": {
+        "source_dispositions": ("BOT_ADMIN_ONLY", "TELEGRAM_COMMAND_GUIDANCE", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "After the Bot's admin guard, this callback only displays masked Bot-command guidance for PayOS diagnostics; it does not perform a provider or payment test.",
+    },
+    "payosalert|mute": {
+        "source_dispositions": ("BOT_ADMIN_ONLY", "BOT_PROCESS_LOCAL_ALERT_STATE", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "After the Bot's admin guard, this callback changes only the Bot process-local one-hour PayOS alert mute window. It is not persistent Web notification state.",
+    },
+    "payosalert|renewed": {
+        "source_dispositions": ("BOT_ADMIN_ONLY", "DEPLOYMENT_ENV_GUIDANCE", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "After the Bot's admin guard, this callback only tells an operator that the PayOS registration-expiry deployment setting must be changed and redeployed; it does not change an environment value or PayOS state.",
+    },
+    "payosalert|remind_later": {
+        "source_dispositions": ("BOT_ADMIN_ONLY", "TELEGRAM_MESSAGE_DISMISSAL", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "After the Bot's admin guard, this callback only replaces the current Telegram expiry-reminder message. It does not persist a customer or Web reminder state.",
+    },
+}
+
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
 # callback tokens must never be sent to the browser.  The product-facing
@@ -538,6 +563,8 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "candidate_boundary": "TELEGRAM_ONLY",
         "authority": "Canonical Bot PayOS/admin alert flow",
         "next_contract": "Classify each alert action by source evidence; do not convert Telegram dismissal, test or renewal buttons into Web payment actions.",
+        "source_dispositions": ("BOT_ADMIN_ONLY", "TELEGRAM_ALERT_CONTEXT", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The observed Bot alert keyboard is sent only to owner/admin IDs and its handler rejects non-admin callers before any action. Its controls are Telegram alert/message guidance or Bot-local state, not a customer payment contract.",
     },
     "job": {
         "priority": "P0",
@@ -2766,16 +2793,74 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     dashboard_fallback = False
     menu_entry = MENU_ACTION_REGISTRY.get(token)
     navigation_only = menu_entry is not None
-    if token == "payosalert|remind_later":
-        # This is not a customer reminder.  The Bot emits it only in its
-        # owner/admin PayOS-expiry alert keyboard and
-        # ``handle_payos_alert_callback`` first enforces ``is_admin_user``.
-        # Its only effect is dismissing that Telegram message; there is no
-        # account reminder or Web-owned payment state to recreate.
-        admin = True
-        telegram_only = True
-        target = "TELEGRAM_ONLY"
-    elif menu_entry is not None:
+    if token == "payosalert|manual":
+        # The Bot emits this only in its owner/admin PayOS-alert keyboards.
+        # It creates a short-lived Bot-local manual-bill menu state for that
+        # Telegram admin; it does not create an order, write the Xu ledger,
+        # call PayOS, or expose a customer top-up action. The Web may only
+        # open its independently authenticated admin-payment read surface.
+        target = "/admin/payments"
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "admin",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_payos_alert_admin_navigation",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "BOT_EPHEMERAL_BILL_STATE_NOT_REPLAYED",
+                "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot handler first enforces is_admin_user, then stores only a ten-minute "
+                "per-admin USER_BILL_STATE and redraws the Telegram manual-payment menu. "
+                "The Web opens a fresh role-checked admin view and receives no Bot state."
+            ),
+            "evidence": evidence,
+        }
+    if token in PAYOS_ALERT_TELEGRAM_ONLY_CALLBACKS:
+        # These exact values are Bot-admin alert controls rather than
+        # customer payment actions. Keep each source effect explicit; no
+        # prefix wildcard may convert a later Bot alert into a Web control.
+        contract = PAYOS_ALERT_TELEGRAM_ONLY_CALLBACKS[token]
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "admin",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "reviewed_payos_alert_telegram_admin_only",
+            "source_dispositions": list(contract["source_dispositions"]),
+            "source_evidence": str(contract["source_evidence"]),
+            "evidence": evidence,
+        }
+    if token.startswith("payosalert|"):
+        # The registered Bot handler accepts the namespace broadly, but only
+        # the finite literals above are source-reviewed. A future callback
+        # could mutate canonical alert/payment/deployment state, so it cannot
+        # inherit the customer dashboard or the admin payment route.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "PAYOS_ALERT_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "payos_alert_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "CANONICAL_BOT_PAYOS_ALERT_FLOW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot registers a broad payosalert dispatcher, but a new action has no reviewed "
+                "source branch. It must not become a Web payment, provider, environment, or alert action."
+            ),
+            "evidence": evidence,
+        }
+    if menu_entry is not None:
         # Only this finite catalog may become a fresh signed Web navigation.
         # It cannot carry hidden Bot state, a message id, a file id or a
         # canonical action into the browser.
@@ -3881,6 +3966,32 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, policy in MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS.items()
     ]
+    payos_alert_contract_rows = [
+        [
+            "payosalert|manual",
+            "/admin/payments",
+            "reviewed_payos_alert_admin_navigation",
+            "NAVIGATION_ONLY",
+            "BOT_ADMIN_ONLY, BOT_EPHEMERAL_BILL_STATE_NOT_REPLAYED, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, NO_RUNTIME_CLAIM",
+        ],
+    ] + [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "reviewed_payos_alert_telegram_admin_only",
+            "TELEGRAM_ONLY",
+            ", ".join(str(value) for value in policy["source_dispositions"]),
+        ]
+        for source, policy in PAYOS_ALERT_TELEGRAM_ONLY_CALLBACKS.items()
+    ] + [
+        [
+            "other payosalert|*",
+            "PAYOS_ALERT_SOURCE_REVIEW_REQUIRED",
+            "payos_alert_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_ADMIN_ONLY, CANONICAL_BOT_PAYOS_ALERT_FLOW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ],
+    ]
 
     write(
         "README.md",
@@ -3905,6 +4016,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
         + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
+        + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -3966,6 +4078,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             media_preview_contract_rows,
         )
         + "\n\nA future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference. It must not accept a Bot cache index, replay the Telegram callback, read Bot selected-media state, claim license clearance, or trigger a Bot/video/provider action.\n",
+    )
+    write(
+        "PAYOS_ALERT_CALLBACK_CONTRACT.md",
+        "# PayOS alert callback disposition contract\n\n"
+        "The frozen Bot emits the finite `payosalert` callbacks only from owner/admin PayOS alert keyboards, and `handle_payos_alert_callback` rejects a non-admin caller before it reads the action. These are not customer wallet/top-up controls and no value below transfers a Telegram message ID, a Bot-local mute window, a manual-bill state, a provider diagnostic, a PayOS registration state, or an environment value into the Web App.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            payos_alert_contract_rows,
+        )
+        + "\n\n`payosalert|manual` is the sole navigation-only exception: it opens a fresh signed, role-checked `/admin/payments` view. It does not create a payment, request a manual top-up, expose a customer route, carry Bot `USER_BILL_STATE`, add Xu, finalize PayOS, call a provider, change an environment variable, or create a webhook/ledger. `test`, `mute`, `renewed`, and `remind_later` stay Telegram-only until a separately reviewed, canonical admin contract exists.\n\n"
+        "An unlisted `payosalert|*` value is deliberately unresolved. It must be source-reviewed before it can become a Web route, bridge method, payment action, diagnostics control, alert preference, or deployment setting.\n",
     )
     write(
         "inventory.md",
@@ -4315,6 +4438,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- One canonical PayOS webhook and wallet writer: Telegram bot.\n"
         "- Web never calculates credit, finalizes redirect, stores a second order ledger, or exposes payment secrets.\n"
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction.\n"
+        "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
         "- Job completion means validated output bytes or a canonical queued task with a polling route; HTTP success alone is insufficient.\n"
         "- Retry/refund/freeze remain guarded until their existing canonical bot action has a tested adapter.\n",
     )
