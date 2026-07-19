@@ -550,6 +550,17 @@ def workboard_enabled() -> bool:
     return os.environ.get("WEBAPP_WORKBOARD_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def starter_kits_enabled() -> bool:
+    """Whether signed users can install reviewed Web-native Starter Kits.
+
+    A Starter Kit creates only owner-scoped Project, Studio Document and
+    Workboard planning records in one local database transaction.  This flag
+    cannot enable a Bot/Core Bridge, provider, job, media output, wallet/Xu,
+    PayOS, publishing or notification action.
+    """
+    return os.environ.get("WEBAPP_STARTER_KITS_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def autopilot_enabled() -> bool:
     """Whether the controlled Operations Autopilot surface is enabled.
 
@@ -3667,6 +3678,30 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # A Starter Kit is an explicit, one-time Web-owned launch receipt.
+        # It deliberately records only the reviewed kit digest and the local
+        # Project/Document/Workboard counts.  It must never become a shadow
+        # Bot job, provider operation, wallet ledger, payment record or media
+        # delivery table.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workspace_starter_kit_installs (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                kit_key TEXT NOT NULL,
+                kit_version INTEGER NOT NULL CHECK(kit_version > 0),
+                kit_digest TEXT NOT NULL CHECK(length(kit_digest) = 64),
+                setup_profile_revision INTEGER NOT NULL CHECK(setup_profile_revision >= 0),
+                project_id TEXT NOT NULL UNIQUE,
+                document_count INTEGER NOT NULL CHECK(document_count >= 0),
+                work_item_count INTEGER NOT NULL CHECK(work_item_count >= 0),
+                created_at TEXT NOT NULL,
+                UNIQUE(account_id, kit_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
         # Asset Vault stores metadata for private, Web-owned blobs. The
         # browser never receives ``storage_key`` or a filesystem path, and the
         # table deliberately has no Bot job, provider, payment or Xu columns.
@@ -5123,6 +5158,9 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_studio_document_versions_document_revision ON web_studio_document_versions(document_id, revision DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_workspace_starter_kit_installs_account_created ON web_workspace_starter_kit_installs(account_id, created_at DESC, id DESC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_asset_files_account_state_updated ON web_asset_files(account_id, state, updated_at DESC, id DESC)"
