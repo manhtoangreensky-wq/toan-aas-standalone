@@ -1,6 +1,6 @@
 # Parity matrix
 
-Safe Web surface coverage: **94.38%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Static mapping coverage: **100.0%**; unresolved callback templates lower this value until they have a typed disposition. All source items are represented in the JSON matrix; this page shows the first 200 records.
+Static Web-surface coverage: **62.68%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Typed source-disposition coverage: **68.35%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). All source items are represented in the JSON matrix; this page shows the first 200 records.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -205,4 +205,4 @@ Safe Web surface coverage: **94.38%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUAR
 | command | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | command | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
 
-`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NEEDS_WEB_IMPLEMENTATION` remains actionable.
+`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` is only a reviewed dashboard launch. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`.

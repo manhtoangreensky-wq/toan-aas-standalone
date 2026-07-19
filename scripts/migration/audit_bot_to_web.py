@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.2"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -346,6 +346,153 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("archive|", "/admin", "admin"),
     ("opmenu|", "/admin", "admin"),
 )
+
+# A dashboard is an intentional signed entry point for a person starting the
+# Web App. It is not evidence that an arbitrary Bot callback has an equivalent
+# Web workflow. Keep this distinction in the static report so a catch-all
+# route cannot silently turn unreviewed callbacks into a parity claim.
+DASHBOARD_ENTRYPOINT_COMMANDS = frozenset({"start", "menu"})
+DASHBOARD_NAVIGATION_TEMPLATE_PREFIXES = ("menu|",)
+
+# These are backlog dispositions, not route mappings.  They keep every
+# dashboard fallback visible with an authority boundary and a concrete next
+# contract, without pretending that a candidate route implements the Bot
+# action.  A family moves out of this list only after its finite Bot actions
+# have a reviewed Web-native or canonical-bridge contract and focused tests.
+FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, str]] = {
+    "menu": {
+        "priority": "P0",
+        "candidate_boundary": "/features",
+        "authority": "Web capability catalog",
+        "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
+    },
+    "vfinal": {
+        "priority": "P0",
+        "candidate_boundary": "/video/finishing",
+        "authority": "Web-native private finishing or canonical Bot job bridge",
+        "next_contract": "Split safe editing choices from render/export/payment actions; require a verified source, idempotency, validated output and owner-scoped delivery before any runtime action.",
+    },
+    "pkgbuy": {
+        "priority": "P0",
+        "candidate_boundary": "/wallet/topup",
+        "authority": "Canonical Bot wallet/PayOS bridge",
+        "next_contract": "Expose only verified package/read/confirm contracts. The Web must not price, credit Xu, finalize PayOS or create a second webhook.",
+    },
+    "storage": {
+        "priority": "P0",
+        "candidate_boundary": "/wallet/topup",
+        "authority": "Canonical Bot wallet/PayOS bridge",
+        "next_contract": "Keep storage purchase/credit changes canonical to the Bot until an owner-scoped bridge contract exists.",
+    },
+    "payosalert": {
+        "priority": "P0",
+        "candidate_boundary": "TELEGRAM_ONLY",
+        "authority": "Canonical Bot PayOS/admin alert flow",
+        "next_contract": "Classify each alert action by source evidence; do not convert Telegram dismissal, test or renewal buttons into Web payment actions.",
+    },
+    "job": {
+        "priority": "P0",
+        "candidate_boundary": "/jobs",
+        "authority": "Canonical Bot job bridge",
+        "next_contract": "Add only owner-scoped read/status projections first; retry/refund/charge/delivery require separate canonical action contracts.",
+    },
+    "vproduct": {
+        "priority": "P1",
+        "candidate_boundary": "/video-studio/script-to-screen-planner",
+        "authority": "Web-native planning; runtime separately guarded",
+        "next_contract": "Map finite Script-to-Screen planning choices to a recomputed Web Video Plan; render/export stays a distinct runtime boundary.",
+    },
+    "adconcept": {
+        "priority": "P1",
+        "candidate_boundary": "/video-studio/cinematic-concept",
+        "authority": "Web-native planning; runtime separately guarded",
+        "next_contract": "Map text concept choices to the cinematic planner; finalization/lock/runtime actions require an explicit capability contract.",
+    },
+    "storypack": {
+        "priority": "P1",
+        "candidate_boundary": "/video-studio/storyboard-composer",
+        "authority": "Web-native planning",
+        "next_contract": "Map finite brief/concept/template choices to the signed storyboard composer and keep copy/export effects locally reviewable.",
+    },
+    "create_media": {
+        "priority": "P1",
+        "candidate_boundary": "/media-factory",
+        "authority": "Web-native planning",
+        "next_contract": "Map Quick Idea choices to an explicit Media Factory blueprint; media generation and provider calls remain unavailable until a separate runtime exists.",
+    },
+    "marketing": {
+        "priority": "P1",
+        "candidate_boundary": "/campaign-app",
+        "authority": "Web campaign planning and controlled operations",
+        "next_contract": "Map brief/KPI/schedule choices to account-owned campaign plans; publishing and canonical analytics remain separately authorized.",
+    },
+    "docflow": {
+        "priority": "P1",
+        "candidate_boundary": "/documents",
+        "authority": "Web-native private document operations",
+        "next_contract": "Map document selection/confirmation only to validated Asset Vault-backed operations; preserve output validation and private delivery constraints.",
+    },
+    "archive": {
+        "priority": "P1",
+        "candidate_boundary": "/admin",
+        "authority": "Canonical Bot admin or separate Web admin archive",
+        "next_contract": "Separate Bot archive state from the isolated Web admin document archive; every write needs canonical role, CSRF, confirmation and audit evidence.",
+    },
+    "opmenu": {
+        "priority": "P1",
+        "candidate_boundary": "/admin",
+        "authority": "Server-authorized Admin ERP",
+        "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
+    },
+    "motion": {
+        "priority": "P1",
+        "candidate_boundary": "/video-studio/image-motion-planner",
+        "authority": "Web-native planning",
+        "next_contract": "Map finite motion suggestions to the owner-scoped Image Motion planner; source inspection/rendering remains a separate capability.",
+    },
+    "tvflow": {
+        "priority": "P1",
+        "candidate_boundary": "/video-studio",
+        "authority": "Source review required",
+        "next_contract": "Recover the exact Bot handler state machine before mapping cancel/rewrite/confirm actions; do not infer a render or content mutation contract.",
+    },
+    "tr_pick": {
+        "priority": "P1",
+        "candidate_boundary": "/dubbing",
+        "authority": "Web-native subtitle/dubbing boundary",
+        "next_contract": "Require an explicit owner-scoped source selection contract before mapping Telegram file-pick actions.",
+    },
+    "freehub": {
+        "priority": "P2",
+        "candidate_boundary": "/features",
+        "authority": "Web capability catalog",
+        "next_contract": "Map remaining hub/root navigation to a named Web catalog entry; do not import Bot pending text or hidden Telegram state.",
+    },
+    "lang": {
+        "priority": "P2",
+        "candidate_boundary": "/account",
+        "authority": "Signed Web profile locale",
+        "next_contract": "Map supported UI locales through the signed account preference. Bot-only languages need a reviewed locale bundle before being advertised.",
+    },
+    "aspect_ratio_orphan": {
+        "priority": "P2",
+        "candidate_boundary": "parent_workflow_required",
+        "authority": "Parent Web workflow",
+        "next_contract": "Resolve orphan ratio tokens from their source keyboard/handler before mapping; a ratio alone must not become a global browser action.",
+    },
+    "unstructured": {
+        "priority": "P0",
+        "candidate_boundary": "source_review_required",
+        "authority": "Source review required",
+        "next_contract": "Classify catch-all handlers and unstructured patterns with handler-level evidence before assigning any Web route or authority.",
+    },
+}
+DEFAULT_FALLBACK_FEATURE_DISPOSITION = {
+    "priority": "P1",
+    "candidate_boundary": "source_review_required",
+    "authority": "Source review required",
+    "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+}
 
 # These public Bot commands can contain words such as ``factory`` or mention
 # an admin review in their handler, which the generic static heuristic sees as
@@ -1649,9 +1796,22 @@ def _compatibility_surface_exists(candidate: str, routes: set[str]) -> bool:
     return normalized == "/" or normalized.startswith(prefixes)
 
 
-def _mapping_status(target: str, existing_routes: set[str], telegram_only: bool) -> str:
+def _mapping_status(
+    target: str,
+    existing_routes: set[str],
+    telegram_only: bool,
+    *,
+    dashboard_fallback: bool = False,
+    navigation_entrypoint: bool = False,
+) -> str:
     if telegram_only:
         return "TELEGRAM_ONLY"
+    if dashboard_fallback:
+        return "NEEDS_FEATURE_DISPOSITION"
+    if navigation_entrypoint and (
+        _route_exists(target, existing_routes) or _compatibility_surface_exists(target, existing_routes)
+    ):
+        return "NAVIGATION_ENTRYPOINT"
     if _route_exists(target, existing_routes):
         return "MAPPED_TO_EXISTING_ROUTE"
     if _compatibility_surface_exists(target, existing_routes):
@@ -1663,11 +1823,28 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
     name = command["command"].casefold()
     admin = _is_admin_command(name, command["handler"], admin_guarded=bool(command.get("admin_guarded")))
     telegram_only = _is_telegram_only(name)
+    route_override = COMMAND_ROUTE_OVERRIDES.get(name)
     if admin and not telegram_only:
         target = f"/admin/{name}"
     else:
-        target = COMMAND_ROUTE_OVERRIDES.get(name, _feature_route(name))
-    status = _mapping_status(target, existing_routes, telegram_only)
+        target = route_override or _feature_route(name)
+    navigation_entrypoint = not telegram_only and not admin and name in DASHBOARD_ENTRYPOINT_COMMANDS and target == "/dashboard"
+    dashboard_fallback = not telegram_only and not navigation_entrypoint and route_override is None and target == "/dashboard"
+    status = _mapping_status(
+        target,
+        existing_routes,
+        telegram_only,
+        dashboard_fallback=dashboard_fallback,
+        navigation_entrypoint=navigation_entrypoint,
+    )
+    if telegram_only:
+        resolution = "telegram_only"
+    elif navigation_entrypoint:
+        resolution = "reviewed_dashboard_navigation_entrypoint"
+    elif dashboard_fallback:
+        resolution = "unreviewed_dashboard_fallback_requires_feature_disposition"
+    else:
+        resolution = "explicit_static_route_mapping"
     return {
         "source_kind": "command",
         "source": f"/{command['command']}",
@@ -1675,6 +1852,7 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         "target": target if not telegram_only else "TELEGRAM_ONLY",
         "classification": "admin" if admin else "customer",
         "status": status,
+        "resolution": resolution,
         "evidence": {"file": command["file"], "line": command["line"]},
     }
 
@@ -1683,6 +1861,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     token = identifier.casefold()
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
+    dashboard_fallback = False
     if token == "payosalert|remind_later":
         # This is not a customer reminder.  The Bot emits it only in its
         # owner/admin PayOS-expiry alert keyboard and
@@ -1694,6 +1873,13 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         target = "TELEGRAM_ONLY"
     elif admin and not telegram_only:
         target = "/admin/callbacks"
+    elif token.startswith(DASHBOARD_NAVIGATION_TEMPLATE_PREFIXES):
+        # A Bot menu namespace often embeds a label such as ``video`` or
+        # ``assets``.  That label alone is not a reviewed Web workflow and
+        # must not be promoted to feature parity by the generic keyword
+        # router below. Keep the safe dashboard target visible but actionable.
+        target = "/dashboard"
+        dashboard_fallback = True
     elif token == "adconcept|message|memory":
         # ``memory`` is one selectable *creative message theme* in the Bot's
         # cinematic-ad wizard (alongside success, confidence and luxury), not
@@ -2050,13 +2236,30 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         target = "/content/contextual-prompt"
     else:
         target = _feature_route(token)
-    status = _mapping_status(target, existing_routes, telegram_only)
+        dashboard_fallback = target == "/dashboard"
+    status = _mapping_status(
+        target,
+        existing_routes,
+        telegram_only,
+        dashboard_fallback=dashboard_fallback,
+    )
+    if telegram_only:
+        resolution = "telegram_only"
+    elif dashboard_fallback:
+        resolution = (
+            "menu_callback_requires_explicit_feature_disposition"
+            if token.startswith(DASHBOARD_NAVIGATION_TEMPLATE_PREFIXES)
+            else "unreviewed_dashboard_fallback_requires_feature_disposition"
+        )
+    else:
+        resolution = "explicit_static_route_mapping"
     return {
         "source_kind": source_kind,
         "source": identifier,
         "target": target if not telegram_only else "TELEGRAM_ONLY",
         "classification": "admin" if admin else "customer",
         "status": status,
+        "resolution": resolution,
         "evidence": evidence,
     }
 
@@ -2169,13 +2372,23 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     for prefix, target, classification in DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES:
         if not token.startswith(prefix):
             continue
+        dashboard_fallback = target == "/dashboard" and prefix in DASHBOARD_NAVIGATION_TEMPLATE_PREFIXES
         return {
             "source_kind": "callback_template",
             "source": template,
             "target": target,
             "classification": classification,
-            "status": _mapping_status(target, existing_routes, telegram_only=False),
-            "resolution": "reviewed_namespace_compatibility_route",
+            "status": _mapping_status(
+                target,
+                existing_routes,
+                telegram_only=False,
+                dashboard_fallback=dashboard_fallback,
+            ),
+            "resolution": (
+                "menu_namespace_requires_explicit_feature_disposition"
+                if dashboard_fallback
+                else "reviewed_namespace_compatibility_route"
+            ),
             "evidence": evidence,
         }
     return None
@@ -2239,6 +2452,62 @@ def _runtime_web_route_paths(web: dict[str, Any], web_root: Path) -> set[str]:
     return reachable
 
 
+def _fallback_feature_family(item: dict[str, Any]) -> str:
+    """Return a stable non-executing family key for a dashboard fallback."""
+
+    source = str(item.get("source") or "").strip()
+    if not source or source.startswith("<"):
+        return "unstructured"
+    if re.fullmatch(r"\d{1,3}:\d{1,3}", source):
+        return "aspect_ratio_orphan"
+    if source.startswith("/"):
+        return f"command:{source[1:].casefold() or 'unknown'}"
+    match = re.match(r"(?P<family>[A-Za-z0-9_.-]+)[|:]", source)
+    if match is None:
+        return "unstructured"
+    return str(match.group("family") or "unstructured").casefold()
+
+
+def _feature_disposition_backlog(mappings: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Group unresolved dashboard fallbacks into a reviewable contract backlog.
+
+    This does not resolve or reroute a callback. It keeps the migration plan
+    finite and auditable while preserving the source evidence that still needs
+    a product/security decision.
+    """
+
+    grouped: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for item in mappings:
+        if item.get("status") != "NEEDS_FEATURE_DISPOSITION":
+            continue
+        grouped[_fallback_feature_family(item)].append(item)
+
+    priority_rank = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
+    backlog: list[dict[str, Any]] = []
+    for family, items in grouped.items():
+        policy = FALLBACK_FEATURE_DISPOSITIONS.get(family, DEFAULT_FALLBACK_FEATURE_DISPOSITION)
+        backlog.append(
+            {
+                "family": family,
+                "priority": str(policy["priority"]),
+                "candidate_boundary": str(policy["candidate_boundary"]),
+                "authority": str(policy["authority"]),
+                "next_contract": str(policy["next_contract"]),
+                "count": len(items),
+                "source_kinds": sorted({str(item.get("source_kind") or "unknown") for item in items}),
+                "sample_sources": sorted({str(item.get("source") or "") for item in items})[:12],
+            }
+        )
+    return sorted(
+        backlog,
+        key=lambda item: (
+            priority_rank.get(str(item["priority"]), 99),
+            -int(item["count"]),
+            str(item["family"]),
+        ),
+    )
+
+
 def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, web_root: Path) -> dict[str, Any]:
     existing_routes = _runtime_web_route_paths(web, web_root)
     bridge_contract = _bridge_contract_inventory(bot_root, web_root)
@@ -2284,12 +2553,17 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
     ]
     mappings = command_mappings + callback_mappings + callback_template_mappings + conversation_mappings
     status_counts = Counter(item["status"] for item in mappings)
-    mapped = status_counts["MAPPED_TO_EXISTING_ROUTE"] + status_counts["COPIED_GUARDED"]
+    feature_disposition_backlog = _feature_disposition_backlog(mappings)
+    static_web_surfaces = status_counts["MAPPED_TO_EXISTING_ROUTE"] + status_counts["COPIED_GUARDED"]
     source_total = len(mappings)
     unresolved_callback_templates = sum(
-        1 for item in callback_template_mappings if item["status"] == "NEEDS_WEB_IMPLEMENTATION"
+        1
+        for item in callback_template_mappings
+        if item["status"] in {"NEEDS_WEB_IMPLEMENTATION", "NEEDS_FEATURE_DISPOSITION"}
     )
-    resolved_static_source_count = source_total - unresolved_callback_templates
+    unresolved_feature_dispositions = status_counts["NEEDS_FEATURE_DISPOSITION"]
+    unresolved_source_count = status_counts["NEEDS_WEB_IMPLEMENTATION"] + unresolved_feature_dispositions
+    resolved_static_source_count = source_total - unresolved_source_count
     bot_tables = set(bot["database_tables"])
     web_tables = set(web["database_tables"])
     observed_private_route = bool(bot.get("private_core_bridge_present")) or any(
@@ -2307,6 +2581,16 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "severity": "high",
             "detail": "Bot source mappings that do not have an observed Web App route or guarded compatibility surface.",
             "count": status_counts["NEEDS_WEB_IMPLEMENTATION"],
+        },
+        {
+            "area": "dashboard_navigation_fallbacks",
+            "severity": "high",
+            "detail": "A signed dashboard route exists, but these Bot entries have no reviewed feature-family disposition. They are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY.",
+            "count": unresolved_feature_dispositions,
+            "families": [
+                {"family": item["family"], "priority": item["priority"], "count": item["count"]}
+                for item in feature_disposition_backlog
+            ],
         },
         {
             "area": "dynamic_callback_templates",
@@ -2348,15 +2632,24 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "commands": len(command_mappings),
                 "callback_handlers": len(bot["callback_handlers"]),
                 "callback_data": len(bot["callback_data"]),
-                "callback_templates": unresolved_callback_templates,
+                "callback_templates": len(callback_template_mappings),
+                "unresolved_callback_templates": unresolved_callback_templates,
                 "conversations": len(conversation_mappings),
                 "total_mappings": source_total,
                 "resolved_static_source_count": resolved_static_source_count,
+                "unresolved_source_count": unresolved_source_count,
             },
             "mapping_status_counts": dict(sorted(status_counts.items())),
-            "implemented_coverage_percent": round((mapped / source_total * 100), 2) if source_total else 0.0,
-            "guarded_surface_coverage_percent": round(((mapped + status_counts["TELEGRAM_ONLY"]) / source_total * 100), 2) if source_total else 100.0,
+            "static_web_surface_coverage_percent": round((static_web_surfaces / source_total * 100), 2) if source_total else 0.0,
+            "safe_disposition_coverage_percent": round((resolved_static_source_count / source_total * 100), 2) if source_total else 100.0,
             "mapping_coverage_percent": round((resolved_static_source_count / source_total * 100), 2) if source_total else 100.0,
+            "workflow_equivalence": {
+                "status": "NOT_STATICALLY_VERIFIABLE",
+                "verified_mapping_count": 0,
+                "coverage_percent": 0.0,
+                "note": "This source-only audit can verify route and disposition evidence, not signed runtime behavior, provider execution, billing, job delivery, or owner-scoped output access.",
+            },
+            "feature_disposition_backlog": feature_disposition_backlog,
             "bridge_contract": bridge_contract,
             "telegram_link_callback_contract": telegram_link_contract,
             "command_mappings": command_mappings,
@@ -2366,9 +2659,11 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "gaps": gaps,
             "notes": [
                 "Every statically discovered command/callback/conversation/template is represented in this matrix.",
-                "Unresolved callback templates are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
+                "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
+                "NAVIGATION_ENTRYPOINT is an intentional dashboard launch route, not feature parity. NEEDS_FEATURE_DISPOSITION records were previously absorbed by a dashboard fallback and now remain actionable.",
+                "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
                 "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision.",
             ],
         }
@@ -2400,6 +2695,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     baseline_bridge_present = baseline_bridge.get("present")
     bridge_contract = gap.get("bridge_contract") if isinstance(gap.get("bridge_contract"), dict) else {}
     telegram_callback_contract = gap.get("telegram_link_callback_contract") if isinstance(gap.get("telegram_link_callback_contract"), dict) else {}
+    feature_disposition_backlog = gap.get("feature_disposition_backlog") if isinstance(gap.get("feature_disposition_backlog"), list) else []
     telegram_callback_status = str(telegram_callback_contract.get("status") or "NOT_AUDITED")
     bridge_status = str(bridge_contract.get("status") or "NOT_AUDITED")
     bridge_matched = int(bridge_contract.get("matched_request_count") or 0)
@@ -2429,6 +2725,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "The generated parity matrix is an implementation backlog, not a claim that surfaces are live or safe to enable.\n\n"
         + "## Web implementation contracts\n\n"
         + "- [`FEATURE_FAMILY_NAVIGATION.md`](FEATURE_FAMILY_NAVIGATION.md) — navigation-only feature families.\n"
+        + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -2562,17 +2859,39 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "parity-matrix.md",
         "# Parity matrix\n\n"
-        f"Safe Web surface coverage: **{gap['implemented_coverage_percent']}%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). "
-        f"Static mapping coverage: **{gap['mapping_coverage_percent']}%**; unresolved callback templates lower this value until they have a typed disposition. "
+        f"Static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). "
+        f"Typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. "
+        f"Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). "
         "All source items are represented in the JSON matrix; this page shows the first 200 records.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows or [["None discovered", "", "", ""]])
-        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NEEDS_WEB_IMPLEMENTATION` remains actionable.\n",
+        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` is only a reviewed dashboard launch. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`.\n",
+    )
+    fallback_rows = [
+        [
+            str(item.get("priority") or ""),
+            str(item.get("family") or ""),
+            str(item.get("count") or 0),
+            str(item.get("candidate_boundary") or ""),
+            str(item.get("authority") or ""),
+            str(item.get("next_contract") or ""),
+        ]
+        for item in feature_disposition_backlog
+    ]
+    write(
+        "FALLBACK_FEATURE_DISPOSITION.md",
+        "# Dashboard fallback feature-disposition backlog\n\n"
+        "Every row below was previously able to fall through to dashboard/catch-all navigation. It is now a required migration decision. `Candidate boundary` names the first contract to design; it does **not** claim that the route, runtime, provider, payment, job or output is already implemented.\n\n"
+        + _markdown_table(
+            ["Priority", "Bot family", "Entries", "Candidate boundary", "Authority", "Required next contract"],
+            fallback_rows or [["None", "", "0", "", "", ""]],
+        )
+        + "\n\nBefore a row leaves this backlog, preserve the source evidence and add focused tests for signed authorization, CSRF where a Web write exists, canonical ownership, idempotency where relevant, safe guarded state, and validated private delivery for any output.\n",
     )
     route_rows = [[item["source"], item["target"], item["status"]] for item in gap["command_mappings"][:200]]
     write(
         "route-map.md",
         "# Route and action map\n\n"
-        "This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes.\n\n"
+        "This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes. A dashboard navigation fallback is never counted as feature parity and remains `NEEDS_FEATURE_DISPOSITION`.\n\n"
         "## Additive Web-native route (not a Telegram command mapping)\n\n"
         "| Web route/action | Authority | Status |\n"
         "| --- | --- | --- |\n"
@@ -2714,9 +3033,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "FEATURE_PARITY_MATRIX.md",
         "# Feature parity matrix\n\n"
-        f"Safe Web surface coverage: **{gap['implemented_coverage_percent']}%**. This is an actionable migration baseline, not a LIVE or engine-success claim.\n\n"
+        f"Static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%**. Typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**. Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). This is an actionable migration baseline, not a LIVE or engine-success claim.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows)
-        + "\n\nAllowed implementation statuses: `COPIED_WORKING`, `COPIED_GUARDED`, `ADMIN_ONLY`, `READ_ONLY`, `NEEDS_CORE_BRIDGE`, `BOT_NOT_WORKING`, `NOT_FOUND`.\n",
+        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.\n",
     )
     write(
         "TELEGRAM_TO_WEB_ROUTE_MAP.md",

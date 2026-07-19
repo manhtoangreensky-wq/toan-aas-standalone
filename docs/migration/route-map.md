@@ -1,14 +1,12 @@
 # Route and action map
 
-This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes.
+This maps Telegram entry points to the intended Web route family. Existing-route status uses the signed `app.py` entrypoint plus its directly included routers; unmounted legacy decorators are not treated as production routes. A dashboard navigation fallback is never counted as feature parity and remains `NEEDS_FEATURE_DISPOSITION`.
 
 ## Additive Web-native route (not a Telegram command mapping)
 
 | Web route/action | Authority | Status |
 | --- | --- | --- |
 | `/api/v1/video-operations/*` (not yet a public catalogue route) | Signed Web account + private Asset Vault source | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded JPEG poster utility; no Bot/provider/PayOS/wallet delegation and no claim that existing `/video/*` Bot companion routes render media. It stays outside the public registry until the dedicated signed workbench is implemented in the broader video navigation/UI phase. |
-| `/api/v1/frame-video-operations/*` (not yet a public catalogue route) | Signed Web account + 2–8 private Asset Vault images | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded image-sequence H.264 MP4 utility with a sealed private output; no Bot/provider/PayOS/wallet delegation, no Telegram worker state and no claim that the existing `/video/*` companion routes render media. |
-| `/api/v1/video-transform-operations/*` (not yet a public catalogue route) | Signed Web account + one private Asset Vault MP4 | `WEB_NATIVE_DISABLED_BY_DEFAULT` — bounded reframe/preset/sharpen utility with an optional source-audio AAC track and sealed private MP4; no Bot/provider/PayOS/wallet delegation, custom FFmpeg input, text/watermark, worker state or claim that existing `/video/*` companion routes render media. |
 
 | Telegram command | Web route/action | Status |
 | --- | --- | --- |
