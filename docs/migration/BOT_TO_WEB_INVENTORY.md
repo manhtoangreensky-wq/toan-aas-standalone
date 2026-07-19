@@ -3,7 +3,8 @@
 | Area | Bot | Web App |
 | --- | --- | --- |
 | Commands | 773 | Mapped through feature/route registry |
-| Callbacks | 54 | Mapped or explicitly TELEGRAM_ONLY |
+| Callback dispatcher registrations | 54 | Source provenance only; not a feature/action mapping |
+| Concrete callback values | 2815 | Mapped, guarded, actionable backlog or TELEGRAM_ONLY |
 | Conversations | 0 | Draft/estimate/confirm contract |
 | FastAPI routes | 139 | 621 |
 | DB tables | 97 | 202 |

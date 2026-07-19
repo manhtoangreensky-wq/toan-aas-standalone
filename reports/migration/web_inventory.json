@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 1443,
+      "line": 1645,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -6869,7 +6869,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1309,
+      "occurrences": 1396,
       "provider": "Telegram"
     }
   ],
@@ -12464,11 +12464,11 @@
       "path": "<dynamic-route>"
     }
   ],
-  "schema_version": "1.2",
-  "source_files_discovered": 255,
-  "source_files_scanned": 255,
-  "source_fingerprint_sha256": "21d6bdfb3a11711b7dffd862148e724a137349de992ba4e54e7b1a3eb35920b3",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast32-ci-signal",
+  "schema_version": "1.4",
+  "source_files_discovered": 257,
+  "source_files_scanned": 257,
+  "source_fingerprint_sha256": "9c5cc77c46e49c54d2f84e4d7c5f9229016d6aa42ff20c8c02505d3d84f62e1e",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast50-handler-disposition",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

@@ -1,6 +1,6 @@
 # Parity matrix
 
-Static Web-surface coverage: **62.68%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Typed source-disposition coverage: **80.08%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). All source items are represented in the JSON matrix; this page shows the first 200 records.
+Observed-runtime static Web-surface coverage: **64.07%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Observed-runtime typed source-disposition coverage: **82.01%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3763`; excluded Telegram transport registrations: `54`; excluded unreferenced `handlers/` package records: `57`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -205,4 +205,4 @@ Static Web-surface coverage: **62.68%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GU
 | command | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | command | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
 
-`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`.
+`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`. `TELEGRAM_TRANSPORT_HANDLER` and `UNREFERENCED_BY_OBSERVED_ENTRYPOINT` are evidence-only statuses outside the product-action denominator.

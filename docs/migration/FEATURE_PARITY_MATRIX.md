@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Static Web-surface coverage: **62.68%**. Typed source-disposition coverage: **80.08%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). This is an actionable migration baseline, not a LIVE or engine-success claim.
+Observed-runtime static Web-surface coverage: **64.07%**. Observed-runtime typed source-disposition coverage: **82.01%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3763`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -205,4 +205,4 @@ Static Web-surface coverage: **62.68%**. Typed source-disposition coverage: **80
 | command | /image_edit_public_close | /admin/image_edit_public_close | COPIED_GUARDED |
 | command | /image_edit_public_open | /admin/image_edit_public_open | COPIED_GUARDED |
 
-Audit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.
+Audit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`, `TELEGRAM_TRANSPORT_HANDLER`, `UNREFERENCED_BY_OBSERVED_ENTRYPOINT`. Handler registrations are documented in `CALLBACK_HANDLER_DISPATCH_MAP.md`, and legacy unreferenced-module evidence in `UNREFERENCED_STATIC_MODULES.md`; neither is a browser action. A static route is not a runtime workflow-equivalence claim.

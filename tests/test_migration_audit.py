@@ -105,12 +105,15 @@ async def dashboard():
         "key4u-map.md",
         "known-gaps.md",
         "FALLBACK_FEATURE_DISPOSITION.md",
+        "CALLBACK_HANDLER_DISPATCH_MAP.md",
+        "UNREFERENCED_STATIC_MODULES.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
     assert "Manual top-up stays a Bot handoff" in (docs_dir / "PAYOS_WALLET_JOB_MAP.md").read_text(encoding="utf-8")
     readme = (docs_dir / "README.md").read_text(encoding="utf-8")
     assert "BOT_COMPANION_HANDOFF.md" in readme
+    assert "UNREFERENCED_STATIC_MODULES.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
     # keep their discoverability on every audit run instead of silently
@@ -1262,3 +1265,182 @@ not_a_keyboard_callback = ("Display only", "ordinary text")
             assert all(record["line"] > 0 for record in records)
     finally:
         audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes
+
+
+def test_static_audit_keeps_raw_patterned_handlers_as_transport_evidence(tmp_path: Path) -> None:
+    """Raw-regex handler registrations must not collapse into fake catch-alls."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    bot_source = bot_root / "bot.py"
+    bot_source.write_text(
+        r'''
+app.add_handler(CallbackQueryHandler(safe_mode_callback_guard))
+app.add_handler(CallbackQueryHandler(handle_trend_video_flow_callback, pattern=r"^tvflow\|"))
+app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affiliate_"))
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text("app = FastAPI()", encoding="utf-8")
+
+    expected = {
+        ("safe_mode_callback_guard", "<catch-all>"),
+        ("handle_trend_video_flow_callback", r"^tvflow\|"),
+        ("handle_affiliate_callback", r"^affiliate_"),
+    }
+    original_max_ast_parse_bytes = audit.MAX_AST_PARSE_BYTES
+    try:
+        for max_ast_parse_bytes in (original_max_ast_parse_bytes, 1):
+            audit.MAX_AST_PARSE_BYTES = max_ast_parse_bytes
+            inventory = audit._extract_python_inventory(bot_root, [bot_source])
+            actual = {(item["handler"], item["pattern"]) for item in inventory["callback_handlers"]}
+            assert actual == expected
+        audit.MAX_AST_PARSE_BYTES = 1
+        result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    finally:
+        audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes
+
+    gap = result["parity_gap"]
+    assert gap["callback_handler_summary"] == {
+        "total": 3,
+        "observed_runtime_registrations": 3,
+        "unreferenced_static_module_registrations": 0,
+        "catch_all": 1,
+        "patterned": 2,
+        "product_action_claims": 0,
+        "note": "CallbackQueryHandler registrations are Telegram transport evidence only. They are excluded from product-action coverage and never prove a browser route or Web runtime parity.",
+    }
+    assert {item["status"] for item in gap["callback_handler_mappings"]} == {"TELEGRAM_TRANSPORT_HANDLER"}
+    assert not gap["callback_mappings"]
+    assert gap["mapping_status_counts"].get("TELEGRAM_TRANSPORT_HANDLER", 0) == 0
+    assert gap["source_counts"]["telegram_transport_handler_records"] == 3
+    assert gap["metric_scope"]["excluded_telegram_transport_handlers"] == 3
+    assert gap["coverage_comparability"] == {
+        "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
+        "feature_progress_claim": False,
+        "reason": "Schema 1.4 corrects raw-string callback-handler extraction, keeps the handlers/ package outside the observed bot.py runtime denominator when no static import path exists, and rejects only bare numeric aspect-ratio tuples from the keyboard callback heuristic.",
+        "scope_changes": [
+            "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
+            "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
+            "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
+        ],
+        "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
+    }
+
+
+def test_static_audit_does_not_mistake_aspect_ratio_tuples_for_callbacks(tmp_path: Path) -> None:
+    """A bare numeric ratio needs a parent workflow, not a callback record."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    bot_source = bot_root / "bot.py"
+    bot_source.write_text(
+        '''
+keyboard_rows = [
+    ("Square", "1:1"),
+    ("Wide", "21:9"),
+    ("Portrait", "3:4"),
+    ("Classic", "4:3"),
+    ("Tall", "4:5"),
+    ("Two-factor", "2fa|enable"),
+    ("Valid callback", "freehub|meta"),
+]
+''',
+        encoding="utf-8",
+    )
+
+    original_max_ast_parse_bytes = audit.MAX_AST_PARSE_BYTES
+    try:
+        for max_ast_parse_bytes in (original_max_ast_parse_bytes, 1):
+            audit.MAX_AST_PARSE_BYTES = max_ast_parse_bytes
+            inventory = audit._extract_python_inventory(bot_root, [bot_source])
+            assert {record["token"] for record in inventory["callback_data"]} == {"2fa|enable", "freehub|meta"}
+    finally:
+        audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes
+
+
+def test_static_audit_keeps_unreferenced_handler_modules_out_of_runtime_parity(tmp_path: Path) -> None:
+    """Legacy handlers must remain evidence, not guarded/mapped Web parity."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    handlers_root = bot_root / "handlers"
+    handlers_root.mkdir(parents=True)
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+button_a = InlineKeyboardButton("Trend", callback_data="tvflow|confirm_content")
+button_b = InlineKeyboardButton("Transcribe", callback_data="tr_transcribe")
+''',
+        encoding="utf-8",
+    )
+    (handlers_root / "affiliate_handler.py").write_text(
+        'button = InlineKeyboardButton("Affiliate", callback_data="affiliate_join")',
+        encoding="utf-8",
+    )
+    (handlers_root / "freelance_handler.py").write_text(
+        'button = InlineKeyboardButton("Freelance", callback_data="freelance_post")',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+@app.get('/{page_path:path}')
+async def page(page_path):
+    return {}
+""",
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    gap = result["parity_gap"]
+    observation = gap["handler_module_observation"]
+    active = {item["source"]: item for item in gap["callback_mappings"]}
+    unreferenced = {item["source"]: item for item in gap["unreferenced_static_module_mappings"]}
+
+    assert observation["status"] == "HANDLERS_UNREFERENCED_BY_OBSERVED_ENTRYPOINT"
+    assert observation["unreferenced_module_files"] == [
+        "handlers/affiliate_handler.py",
+        "handlers/freelance_handler.py",
+    ]
+    assert set(active) == {"tvflow|confirm_content", "tr_transcribe"}
+    assert set(unreferenced) == {"affiliate_join", "freelance_post"}
+    assert {item["status"] for item in unreferenced.values()} == {"UNREFERENCED_BY_OBSERVED_ENTRYPOINT"}
+    assert gap["source_counts"]["observed_runtime_product_action_mappings"] == 2
+    assert gap["source_counts"]["unreferenced_static_module_records"] == 2
+    assert gap["metric_scope"]["excluded_unreferenced_handler_package_records"] == 2
+    assert "affiliate_join" not in active
+    assert "freelance_post" not in active
+
+    for callback in ("tvflow|confirm_content", "tr_transcribe", "affiliate_join", "freelance_post"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, {"/{page_path:path}"})
+        audit._annotate_feature_disposition(mapped)
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["status"] not in {"MAPPED_TO_EXISTING_ROUTE", "COPIED_GUARDED"}
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    assert active["tvflow|confirm_content"]["fallback_family"] == "tvflow"
+    assert active["tr_transcribe"]["fallback_family"] == "tr_transcribe"
+    assert (tmp_path / "docs" / "UNREFERENCED_STATIC_MODULES.md").is_file()
+
+
+def test_static_audit_keeps_handler_modules_in_scope_when_entrypoint_imports_them(tmp_path: Path) -> None:
+    """The observed import closure must be conservative, never prune a live package."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    handlers_root = bot_root / "handlers"
+    handlers_root.mkdir(parents=True)
+    (bot_root / "bot.py").write_text("import handlers\n", encoding="utf-8")
+    (handlers_root / "__init__.py").write_text("", encoding="utf-8")
+    (handlers_root / "affiliate_handler.py").write_text("pass\n", encoding="utf-8")
+
+    observation = audit._unreferenced_handler_module_observation(bot_root)
+
+    assert observation["status"] == "HANDLERS_REACHABLE_FROM_OBSERVED_ENTRYPOINT"
+    assert observation["unreferenced_module_files"] == []
