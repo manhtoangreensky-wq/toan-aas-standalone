@@ -101,7 +101,9 @@ def test_install_offer_uses_only_an_explicit_browser_prompt_for_a_signed_pwa_ses
     assert "let pwaInstallPrompt = null;" in PORTAL
     assert 'const canOfferPwaInstall = context.pwaEnabled === true && context.session.authenticated === true;' in PORTAL
     assert 'data-portal-install-app' in PORTAL
-    assert 'type="button" aria-label="Cài TOAN AAS trên thiết bị" hidden data-portal-install-app' in PORTAL
+    # The install control keeps a real accessible name, while its reviewed
+    # label follows the interface locale rather than being fixed to Vietnamese.
+    assert 'type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app' in PORTAL
     assert "function requestPwaInstall()" in PORTAL
     assert "await prompt.prompt();" in PORTAL
     assert "pwaInstallPrompt = null;" in PORTAL
