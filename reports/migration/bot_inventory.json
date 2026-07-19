@@ -1169,36 +1169,6 @@
   "callback_data": [
     {
       "file": "bot.py",
-      "line": 40205,
-      "token": "1:1"
-    },
-    {
-      "file": "bot.py",
-      "line": 39046,
-      "token": "21:9"
-    },
-    {
-      "file": "bot.py",
-      "line": 33807,
-      "token": "3:4"
-    },
-    {
-      "file": "bot.py",
-      "line": 33808,
-      "token": "4:3"
-    },
-    {
-      "file": "bot.py",
-      "line": 40205,
-      "token": "4:3"
-    },
-    {
-      "file": "bot.py",
-      "line": 93518,
-      "token": "4:5"
-    },
-    {
-      "file": "bot.py",
       "line": 89311,
       "token": "adconcept|admin_video_smoke"
     },
@@ -15962,321 +15932,321 @@
     },
     {
       "file": "bot.py",
-      "handler": "handle_music_quick_callback",
-      "line": 129130,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_media_preview_callback",
-      "line": 129131,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_pixabay_media_callback",
-      "line": 129132,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
       "handler": "handle_image_story_callback",
       "line": 129133,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_product_callback",
-      "line": 129134,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_trend_guided_callback",
-      "line": 129135,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_trend_video_flow_callback",
-      "line": 129136,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_creative_motion_callback",
-      "line": 129137,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_cinematic_ad_callback",
-      "line": 129138,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_prompt_video_callback",
-      "line": 129139,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_image_video_callback",
-      "line": 129140,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_reference_callback",
-      "line": 129141,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_dubbing_callback",
-      "line": 129142,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_marketing_callback",
-      "line": 129143,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_self_scene_ai_callback",
-      "line": 129144,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_long_video_callback",
-      "line": 129145,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_storyboard_pack_callback",
-      "line": 129146,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_idea_callback",
-      "line": 129147,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_upload_callback",
-      "line": 129148,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_editor_callback",
-      "line": 129149,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_storyboard_callback",
-      "line": 129150,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_finalization_callback",
-      "line": 129151,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_video_addon_callback",
-      "line": 129152,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_create_media_callback",
-      "line": 129153,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_frame_video_callback",
-      "line": 129154,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_suggest_music_callback",
-      "line": 129155,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_shopaikey_public_callback",
-      "line": 129156,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_shopaikey_video_job_callback",
-      "line": 129157,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_human_support_callback",
-      "line": 129158,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_ticket_callback",
-      "line": 129159,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_feedback_callback",
-      "line": 129160,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_image_tools_callback",
-      "line": 129161,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_storage_addon_callback",
-      "line": 129162,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_memory_callback",
-      "line": 129163,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_translation_callback",
-      "line": 129164,
-      "pattern": "<catch-all>"
+      "pattern": "^(image_story_aspect\\|.+|image_story_render_hint)$"
     },
     {
       "file": "bot.py",
       "handler": "handle_language_callback",
       "line": 129165,
-      "pattern": "<catch-all>"
+      "pattern": "^(lang\\|[a-z]{2}|lang_more|back_lang)$"
     },
     {
       "file": "bot.py",
-      "handler": "handle_package_purchase_callback",
-      "line": 129166,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_pricing_callback",
-      "line": 129167,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_buy_plan_callback",
-      "line": 129168,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_doc_tool_callback",
-      "line": 129169,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_internal_archive_callback",
-      "line": 129170,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_free_hub_callback",
-      "line": 129171,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_menu_callback",
-      "line": 129172,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_provider_choice",
-      "line": 129173,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_payos_alert_callback",
-      "line": 129174,
-      "pattern": "<catch-all>"
-    },
-    {
-      "file": "bot.py",
-      "handler": "handle_manual_package_choice",
-      "line": 129175,
-      "pattern": "<catch-all>"
+      "handler": "handle_music_quick_callback",
+      "line": 129130,
+      "pattern": "^(music_quick|sfx_quick|media_quick)\\|"
     },
     {
       "file": "bot.py",
       "handler": "handle_package_choice",
       "line": 129176,
-      "pattern": "<catch-all>"
+      "pattern": "^(payos_pkg|pkg)\\|"
     },
     {
       "file": "bot.py",
-      "handler": "handle_video_job_callback",
-      "line": 129177,
-      "pattern": "<catch-all>"
+      "handler": "handle_pixabay_media_callback",
+      "line": 129132,
+      "pattern": "^(play_media|select_media)\\|\\d+$"
     },
     {
       "file": "bot.py",
-      "handler": "handle_pipeline_callback",
-      "line": 129178,
-      "pattern": "<catch-all>"
+      "handler": "handle_media_preview_callback",
+      "line": 129131,
+      "pattern": "^(play_sfx|play_music|select_sfx|select_music|open_sfx_source|open_music_source|license_sfx|license_music)\\|\\d+$"
     },
     {
       "file": "bot.py",
-      "handler": "handle_trend_callback",
-      "line": 129179,
-      "pattern": "<catch-all>"
+      "handler": "handle_cinematic_ad_callback",
+      "line": 129138,
+      "pattern": "^adconcept\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_internal_archive_callback",
+      "line": 129170,
+      "pattern": "^archive\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_buy_plan_callback",
+      "line": 129168,
+      "pattern": "^buy_plan\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_create_media_callback",
+      "line": 129153,
+      "pattern": "^create_media\\|"
     },
     {
       "file": "bot.py",
       "handler": "handle_creative_callback",
       "line": 129180,
-      "pattern": "<catch-all>"
+      "pattern": "^creative\\|"
     },
     {
       "file": "bot.py",
-      "handler": "handle_task_callback",
-      "line": 129181,
-      "pattern": "<catch-all>"
+      "handler": "handle_doc_tool_callback",
+      "line": 129169,
+      "pattern": "^docflow\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_feedback_callback",
+      "line": 129160,
+      "pattern": "^feedback\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_frame_video_callback",
+      "line": 129154,
+      "pattern": "^framevideo\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_free_hub_callback",
+      "line": 129171,
+      "pattern": "^freehub\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_image_video_callback",
+      "line": 129140,
+      "pattern": "^imagevideo\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_image_tools_callback",
+      "line": 129161,
+      "pattern": "^imgtool\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_job_callback",
+      "line": 129177,
+      "pattern": "^job\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_long_video_callback",
+      "line": 129145,
+      "pattern": "^longvideo\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_manual_package_choice",
+      "line": 129175,
+      "pattern": "^manual\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_marketing_callback",
+      "line": 129143,
+      "pattern": "^marketing\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_memory_callback",
+      "line": 129163,
+      "pattern": "^memory\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_menu_callback",
+      "line": 129172,
+      "pattern": "^menu\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_creative_motion_callback",
+      "line": 129137,
+      "pattern": "^motion\\|"
     },
     {
       "file": "bot.py",
       "handler": "handle_operator_menu_callback",
       "line": 129182,
-      "pattern": "<catch-all>"
+      "pattern": "^opmenu\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_payos_alert_callback",
+      "line": 129174,
+      "pattern": "^payosalert\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_pipeline_callback",
+      "line": 129178,
+      "pattern": "^pipe\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_package_purchase_callback",
+      "line": 129166,
+      "pattern": "^pkgbuy\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_pricing_callback",
+      "line": 129167,
+      "pattern": "^pricing\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_prompt_video_callback",
+      "line": 129139,
+      "pattern": "^promptvideo\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_provider_choice",
+      "line": 129173,
+      "pattern": "^prov\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_self_scene_ai_callback",
+      "line": 129144,
+      "pattern": "^selfscene\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_shopaikey_public_callback",
+      "line": 129156,
+      "pattern": "^shopai\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_shopaikey_video_job_callback",
+      "line": 129157,
+      "pattern": "^shopai_video_job\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_storage_addon_callback",
+      "line": 129162,
+      "pattern": "^storage\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_storyboard_callback",
+      "line": 129150,
+      "pattern": "^storyboard\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_storyboard_pack_callback",
+      "line": 129146,
+      "pattern": "^storypack\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_suggest_music_callback",
+      "line": 129155,
+      "pattern": "^suggest_music\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_human_support_callback",
+      "line": 129158,
+      "pattern": "^support\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_task_callback",
+      "line": 129181,
+      "pattern": "^task\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_ticket_callback",
+      "line": 129159,
+      "pattern": "^ticket\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_translation_callback",
+      "line": 129164,
+      "pattern": "^tr_(target|more|pick|transcribe)(\\||$)"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_trend_callback",
+      "line": 129179,
+      "pattern": "^trend\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_trend_guided_callback",
+      "line": 129135,
+      "pattern": "^trendg\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_trend_video_flow_callback",
+      "line": 129136,
+      "pattern": "^tvflow\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_finalization_callback",
+      "line": 129151,
+      "pattern": "^vfinal\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_upload_callback",
+      "line": 129148,
+      "pattern": "^video_upload\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_addon_callback",
+      "line": 129152,
+      "pattern": "^videoaddon\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_dubbing_callback",
+      "line": 129142,
+      "pattern": "^videodub\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_editor_callback",
+      "line": 129149,
+      "pattern": "^videoedit\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_idea_callback",
+      "line": 129147,
+      "pattern": "^videoidea\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_reference_callback",
+      "line": 129141,
+      "pattern": "^videoref\\|"
+    },
+    {
+      "file": "bot.py",
+      "handler": "handle_video_product_callback",
+      "line": 129134,
+      "pattern": "^vproduct\\|"
     }
   ],
   "callback_templates": [
@@ -23923,7 +23893,7 @@
   "conversations": [],
   "counts": {
     "background_jobs": 194,
-    "callback_data": 2821,
+    "callback_data": 2815,
     "callback_handlers": 54,
     "callback_templates": 232,
     "commands": 773,
@@ -28056,6 +28026,33 @@
       "topup"
     ]
   },
+  "handler_module_observation": {
+    "note": "No static handlers import is reachable from bot.py. These files remain static source evidence but do not prove active Bot runtime behavior.",
+    "observed_entrypoint": "bot.py",
+    "reachable_local_modules": [
+      "bot.py",
+      "creative_suggestions.py",
+      "free_tools_hub.py",
+      "image_prompt_quality.py",
+      "operations_v1a.py",
+      "provider_router.py",
+      "providers/key4u_provider.py",
+      "support_v1b.py",
+      "video_multiscene_engine.py",
+      "video_product_system.py",
+      "video_prompt_quality.py"
+    ],
+    "status": "HANDLERS_UNREFERENCED_BY_OBSERVED_ENTRYPOINT",
+    "unreferenced_module_files": [
+      "handlers/__init__.py",
+      "handlers/admin_handler.py",
+      "handlers/affiliate_handler.py",
+      "handlers/freelance_handler.py",
+      "handlers/mxh_handler.py",
+      "handlers/tools_handler.py",
+      "handlers/video_handler.py"
+    ]
+  },
   "parse_errors": [],
   "private_core_bridge_present": false,
   "project_kind": "telegram_bot",
@@ -29719,7 +29716,7 @@
       "path": "/webhook/payos"
     }
   ],
-  "schema_version": "1.2",
+  "schema_version": "1.4",
   "source_files_discovered": 176,
   "source_files_scanned": 172,
   "source_fingerprint_sha256": "3390924d75276b84156b46e0d074ef1cf9c807df2fbb307809a08d5c567d7208",

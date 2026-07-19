@@ -29,7 +29,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 
-SCHEMA_VERSION = "1.2"
+SCHEMA_VERSION = "1.4"
 SOURCE_SUFFIXES = {".py", ".js", ".html", ".htm", ".json", ".sql", ".md"}
 EXCLUDED_DIRS = {
     ".git",
@@ -492,7 +492,7 @@ DASHBOARD_NAVIGATION_TEMPLATE_PREFIXES = ("menu|",)
 # contract, without pretending that a candidate route implements the Bot
 # action.  A family moves out of this list only after its finite Bot actions
 # have a reviewed Web-native or canonical-bridge contract and focused tests.
-FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, str]] = {
+FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     "menu": {
         "priority": "P0",
         "candidate_boundary": "/features",
@@ -588,6 +588,8 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, str]] = {
         "candidate_boundary": "/video-studio",
         "authority": "Source review required",
         "next_contract": "Recover the exact Bot handler state machine before mapping cancel/rewrite/confirm actions; do not infer a render or content mutation contract.",
+        "source_evidence": "Bot handler `handle_trend_video_flow_callback` reads and clears pending workflow/confirmation state; confirmation can inspect package/Xu state, record billing events, and enter provider/job guards.",
+        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
     },
     "tr_pick": {
         "priority": "P1",
@@ -612,19 +614,73 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, str]] = {
         "candidate_boundary": "parent_workflow_required",
         "authority": "Parent Web workflow",
         "next_contract": "Resolve orphan ratio tokens from their source keyboard/handler before mapping; a ratio alone must not become a global browser action.",
+        "source_evidence": "Bare ratio tokens are reused by image/video selection keyboards and can feed provider/package flows; static source does not prove a single safe parent workflow.",
+        "source_dispositions": ("PARENT_WORKFLOW_REQUIRED", "NO_RUNTIME_CLAIM"),
+    },
+    "affiliate": {
+        "priority": "P1",
+        "candidate_boundary": "separate_affiliate_domain_required",
+        "authority": "Separate affiliate/referral business domain",
+        "next_contract": "Do not map Bot affiliate navigation into Partner CRM. Define attribution, commission, payout, promotion and membership authority before exposing a Web affiliate action.",
+        "source_dispositions": ("SEPARATE_BUSINESS_DOMAIN_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot affiliate menu/actions are not evidence that the Web Partner CRM owns referral attribution, commission, payout, promotion or membership behavior.",
+    },
+    "freelance": {
+        "priority": "P1",
+        "candidate_boundary": "separate_freelance_domain_required",
+        "authority": "Separate marketplace/freelance business domain",
+        "next_contract": "Define an account-owned freelance workflow and moderation/data policy before exposing a Web action; do not repurpose Support or CRM navigation as parity.",
+        "source_dispositions": ("SEPARATE_BUSINESS_DOMAIN_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot's freelance choices are informational/navigation state and have no reviewed Web marketplace, lead-routing or service-delivery contract.",
+    },
+    "social_navigation": {
+        "priority": "P2",
+        "candidate_boundary": "separate_social_domain_required",
+        "authority": "Separate social publishing/integration domain",
+        "next_contract": "Do not turn a Bot social shortcut into a publish/account integration. Define linked-account ownership, permissions and publish controls first.",
+        "source_dispositions": ("SEPARATE_BUSINESS_DOMAIN_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Social shortcut callbacks do not contain a signed Web social account, publishing permission or provider contract.",
+    },
+    "locale_navigation": {
+        "priority": "P2",
+        "candidate_boundary": "/account",
+        "authority": "Signed Web profile locale",
+        "next_contract": "Map a locale action only after the signed Web account preference, supported bundle and fallback behavior are explicitly reviewed; do not replay Bot language/menu state.",
+        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot language callbacks write Bot user preference and redraw a localized Telegram menu. They are not a browser locale mutation contract.",
+    },
+    "root_navigation": {
+        "priority": "P2",
+        "candidate_boundary": "/features",
+        "authority": "Web capability catalog",
+        "next_contract": "Review the exact Bot screen/state before adding a named Web catalog entry; a legacy back button must not reset or import Telegram state.",
+        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "A Bot back/root callback can depend on the previous Telegram screen and pending state, which the Web catalog intentionally does not receive.",
+    },
+    "tr_transcribe": {
+        "priority": "P1",
+        "candidate_boundary": "/asr",
+        "authority": "Owner-scoped Web ASR runtime boundary",
+        "next_contract": "Require a verified owner-scoped source asset plus a dedicated ASR execution/delivery contract; do not infer it from the Bot's recent-audio Telegram slot.",
+        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "Bot `tr_transcribe` requires recent Telegram audio/video input and delegates to Bot transcription logic; it is not an existing Web ASR execution claim.",
     },
     "unstructured": {
         "priority": "P0",
         "candidate_boundary": "source_review_required",
         "authority": "Source review required",
-        "next_contract": "Classify catch-all handlers and unstructured patterns with handler-level evidence before assigning any Web route or authority.",
+        "next_contract": "Classify delimiter-free concrete callbacks with handler-level evidence before assigning any Web route or authority; dispatcher registrations are tracked separately and do not become product actions.",
+        "source_evidence": "The backlog contains concrete callback values only. Broad `CallbackQueryHandler` registrations are dispatch evidence, not end-user callback actions or Web parity claims.",
+        "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
     },
 }
-DEFAULT_FALLBACK_FEATURE_DISPOSITION = {
+DEFAULT_FALLBACK_FEATURE_DISPOSITION: dict[str, Any] = {
     "priority": "P1",
     "candidate_boundary": "source_review_required",
     "authority": "Source review required",
     "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+    "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+    "source_dispositions": ("SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
 }
 
 # These public Bot commands can contain words such as ``factory`` or mention
@@ -668,7 +724,11 @@ COMMAND_HANDLER_RE = re.compile(
 )
 CALLBACK_HANDLER_RE = re.compile(r"\bCallbackQueryHandler\s*\(\s*(?P<handler>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)")
 CALLBACK_PATTERN_RE = re.compile(
-    r"\bCallbackQueryHandler\s*\(\s*(?P<handler>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)[\s\S]{0,360}?\bpattern\s*=\s*(['\"])(?P<pattern>[^'\"\r\n]+)\2"
+    # The canonical Bot keeps this multi-megabyte registration block in raw
+    # strings (``pattern=r\"^flow\\|\"``).  The AST path already handles raw
+    # strings, but its bounded large-file parser must preserve the same
+    # handler/pattern evidence instead of incorrectly calling them catch-all.
+    r"\bCallbackQueryHandler\s*\(\s*(?P<handler>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)?)(?:(?!\bCallbackQueryHandler\s*\()[\s\S]){0,360}?\bpattern\s*=\s*(?:[rR])?(?P<quote>['\"])(?P<pattern>[^'\"\r\n]+)(?P=quote)"
 )
 CALLBACK_DATA_RE = re.compile(r"\bcallback_data\s*=\s*(['\"])(?P<token>[^'\"\r\n]+)\1")
 # Keep f-string callbacks separate from literal callback data.  A template such
@@ -690,6 +750,7 @@ CALLBACK_TUPLE_TOKEN_RE = re.compile(
 CALLBACK_LITERAL_TOKEN_RE = re.compile(
     r"^[A-Za-z0-9][A-Za-z0-9_.-]*(?:[|:][A-Za-z0-9_.:-]+)+$"
 )
+BARE_NUMERIC_ASPECT_RATIO_RE = re.compile(r"^\d{1,3}:\d{1,3}$")
 CALLBACK_DYNAMIC_TUPLE_RE = re.compile(
     r"(?<![A-Za-z0-9_])\((?:[^()\r\n]|\\.)*?,\s*f(?P<quote>['\"])(?P<body>[^'\"\r\n]+)(?P=quote)\s*\)"
 )
@@ -919,6 +980,128 @@ def _active_inventory_files(project_kind: str, root: Path, files: list[Path]) ->
     return active, excluded
 
 
+STATIC_FROM_IMPORT_RE = re.compile(
+    r"(?m)^\s*from\s+(?P<module>\.*[A-Za-z_][A-Za-z0-9_.]*)\s+import\b"
+)
+STATIC_IMPORT_RE = re.compile(
+    r"(?m)^\s*import\s+(?P<modules>[A-Za-z_][A-Za-z0-9_.]*(?:\s+as\s+[A-Za-z_]\w*)?(?:\s*,\s*[A-Za-z_][A-Za-z0-9_.]*(?:\s+as\s+[A-Za-z_]\w*)?)*)"
+)
+DYNAMIC_HANDLER_IMPORT_RE = re.compile(
+    r"\b(?:importlib\.)?import_module\s*\(\s*['\"]handlers(?:[.'\"]|$)|\b__import__\s*\(\s*['\"]handlers(?:[.'\"]|$)"
+)
+
+
+def _local_python_module_index(root: Path) -> dict[str, Path]:
+    """Return local module names without importing or executing any source."""
+
+    modules: dict[str, Path] = {}
+    for path in _source_files(root):
+        if path.suffix.lower() != ".py":
+            continue
+        relative_parts = list(path.relative_to(root).with_suffix("").parts)
+        if not relative_parts:
+            continue
+        if relative_parts[-1] == "__init__":
+            relative_parts.pop()
+        if relative_parts:
+            modules[".".join(relative_parts)] = path
+    return modules
+
+
+def _static_import_modules(text: str) -> set[str]:
+    """Collect literal import roots from source text without resolving code."""
+
+    modules = {match.group("module").lstrip(".") for match in STATIC_FROM_IMPORT_RE.finditer(text)}
+    for match in STATIC_IMPORT_RE.finditer(text):
+        for value in str(match.group("modules") or "").split(","):
+            module = value.strip().split(" as ", 1)[0].strip()
+            if module:
+                modules.add(module)
+    return {module for module in modules if module}
+
+
+def _unreferenced_handler_module_observation(root: Path) -> dict[str, Any]:
+    """Keep legacy ``handlers/`` source visible without claiming Bot runtime.
+
+    The observed Bot entrypoint is the local ``bot.py`` module.  Its static
+    import closure is enough to answer one narrow audit question: does the
+    entrypoint reference the legacy ``handlers`` package at all?  If it does
+    not, records in that directory remain source evidence but are excluded
+    from the *observed runtime* parity denominator.  A dynamic literal import
+    is treated conservatively as reachable rather than being silently pruned.
+    """
+
+    module_index = _local_python_module_index(root)
+    handler_files = sorted(
+        relative
+        for module, path in module_index.items()
+        if module == "handlers" or module.startswith("handlers.")
+        for relative in [_relative(path, root)]
+    )
+    entrypoint = root / "bot.py"
+    if not handler_files:
+        return {
+            "status": "NO_HANDLER_MODULES_DISCOVERED",
+            "observed_entrypoint": "bot.py",
+            "unreferenced_module_files": [],
+            "reachable_local_modules": [],
+            "note": "No local handlers package was discovered in the static source tree.",
+        }
+    if not entrypoint.is_file():
+        return {
+            "status": "ENTRYPOINT_NOT_OBSERVED",
+            "observed_entrypoint": "bot.py",
+            "unreferenced_module_files": [],
+            "reachable_local_modules": [],
+            "note": "No bot.py entrypoint was available, so handler-module runtime reachability was not inferred.",
+        }
+
+    reachable_paths: set[Path] = set()
+    pending = [entrypoint]
+    dynamic_handler_import_seen = False
+    while pending:
+        path = pending.pop()
+        if path in reachable_paths:
+            continue
+        reachable_paths.add(path)
+        try:
+            text = _read_source(path)
+        except OSError:
+            continue
+        if DYNAMIC_HANDLER_IMPORT_RE.search(text):
+            dynamic_handler_import_seen = True
+            break
+        for module in _static_import_modules(text):
+            if module == "handlers" or module.startswith("handlers."):
+                return {
+                    "status": "HANDLERS_REACHABLE_FROM_OBSERVED_ENTRYPOINT",
+                    "observed_entrypoint": "bot.py",
+                    "unreferenced_module_files": [],
+                    "reachable_local_modules": sorted(_relative(item, root) for item in reachable_paths),
+                    "note": "A literal handlers import is reachable from bot.py, so no handler source is excluded from the observed runtime denominator.",
+                }
+            candidate = module_index.get(module)
+            if candidate is not None and candidate not in reachable_paths:
+                pending.append(candidate)
+
+    reachable = sorted(_relative(item, root) for item in reachable_paths)
+    if dynamic_handler_import_seen:
+        return {
+            "status": "DYNAMIC_HANDLER_IMPORT_POSSIBLE",
+            "observed_entrypoint": "bot.py",
+            "unreferenced_module_files": [],
+            "reachable_local_modules": reachable,
+            "note": "A literal dynamic handlers import is reachable from bot.py, so the audit keeps all handler sources in the observed runtime denominator.",
+        }
+    return {
+        "status": "HANDLERS_UNREFERENCED_BY_OBSERVED_ENTRYPOINT",
+        "observed_entrypoint": "bot.py",
+        "unreferenced_module_files": handler_files,
+        "reachable_local_modules": reachable,
+        "note": "No static handlers import is reachable from bot.py. These files remain static source evidence but do not prove active Bot runtime behavior.",
+    }
+
+
 def _read_source(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="replace")
 
@@ -981,6 +1164,19 @@ def _callback_template_from_ast(node: ast.AST | None) -> str | None:
     return _callback_template_from_text("".join(values))
 
 
+def _is_bare_numeric_aspect_ratio(value: str) -> bool:
+    """Return whether a tuple literal is data such as ``16:9``, not an action.
+
+    A numeric-leading namespace can be a valid callback (for example
+    ``2fa|enable``), so this is intentionally narrower than a first-character
+    grammar change.  Only a standalone numeric ratio is excluded from the
+    keyboard-row callback heuristic; direct ``callback_data=...`` literals
+    continue to be inventoried as source evidence.
+    """
+
+    return bool(BARE_NUMERIC_ASPECT_RATIO_RE.fullmatch(str(value or "")))
+
+
 def _tuple_callback_token(node: ast.AST) -> str | None:
     """Return a static keyboard-row callback token without evaluating source.
 
@@ -995,7 +1191,7 @@ def _tuple_callback_token(node: ast.AST) -> str | None:
     if not isinstance(node, ast.Tuple) or len(node.elts) != 2:
         return None
     token = _literal_string(node.elts[1])
-    if token and CALLBACK_LITERAL_TOKEN_RE.fullmatch(token):
+    if token and CALLBACK_LITERAL_TOKEN_RE.fullmatch(token) and not _is_bare_numeric_aspect_ratio(token):
         return token
     return None
 
@@ -1161,7 +1357,13 @@ def _extract_large_python_file(
         record = {"token": _redact_text(match.group("token")), **location(match)}
         _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
     for match in CALLBACK_TUPLE_TOKEN_RE.finditer(text):
-        record = {"token": _redact_text(match.group("token")), **location(match)}
+        token = _redact_text(match.group("token"))
+        if _is_bare_numeric_aspect_ratio(token):
+            # A tuple such as ("9:16", "16:9") is configuration data, not
+            # a callback. Keep direct callback_data literals untouched; this
+            # narrow rule only protects the broad keyboard-row heuristic.
+            continue
+        record = {"token": token, **location(match)}
         _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
     for expression in (CALLBACK_DYNAMIC_DATA_RE, CALLBACK_DYNAMIC_TUPLE_RE):
         for match in expression.finditer(text):
@@ -1575,6 +1777,8 @@ def _summarize_inventory(project_kind: str, root: Path) -> dict[str, Any]:
             "providers": len(providers),
         },
     }
+    if project_kind == "telegram_bot":
+        inventory["handler_module_observation"] = _unreferenced_handler_module_observation(root)
     if project_kind == "webapp":
         inventory["ui_path_references"] = _extract_web_ui_paths(root, files)
         inventory["counts"]["ui_path_references"] = len(inventory["ui_path_references"])
@@ -1996,6 +2200,78 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         "resolution": resolution,
         "evidence": {"file": command["file"], "line": command["line"]},
     }
+
+
+def _map_callback_handler_registration(record: dict[str, Any]) -> dict[str, Any]:
+    """Keep a Bot callback dispatcher visible without pretending it is an action.
+
+    ``CallbackQueryHandler`` registrations are routing mechanics.  A broad
+    handler can receive many unrelated Telegram buttons and can also contain
+    state, wallet, provider, admin or delivery branches.  Treating its
+    ``<catch-all>`` pattern as a customer callback used to collapse dozens of
+    independent dispatchers into one fake dashboard fallback.  The audit now
+    preserves the actual handler identity and line while deliberately making
+    no Web route or runtime claim.  This is transport metadata, not a
+    ``NEEDS_FEATURE_DISPOSITION`` product action.
+    """
+
+    handler = str(record.get("handler") or "<unknown-handler>")
+    pattern = str(record.get("pattern") or "<catch-all>")
+    return {
+        "source_kind": "callback_handler_registration",
+        "source": f"CallbackQueryHandler:{handler}",
+        "handler": handler,
+        "pattern": pattern,
+        "target": "NOT_BROWSER_ACTION",
+        "classification": "telegram_transport",
+        "status": "TELEGRAM_TRANSPORT_HANDLER",
+        "resolution": "registered_telegram_dispatch_not_browser_action",
+        "source_dispositions": ["NOT_BROWSER_ACTION", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"],
+        "source_evidence": "Registration metadata routes Telegram callback traffic to a Bot handler. It does not identify a finite browser action or prove a Web runtime contract.",
+        "evidence": {"file": record["file"], "line": record["line"]},
+    }
+
+
+def _map_unreferenced_static_record(record: dict[str, Any], source_kind: str) -> dict[str, Any]:
+    """Preserve a legacy static record without treating it as live Bot parity."""
+
+    field_by_kind = {
+        "command": "command",
+        "callback_data": "token",
+        "callback_template": "template",
+        "conversation": "handler",
+        "callback_handler_registration": "handler",
+    }
+    source = str(record.get(field_by_kind.get(source_kind, "token")) or "<unknown-source>")
+    if source_kind == "command" and not source.startswith("/"):
+        source = f"/{source}"
+    return {
+        "source_kind": source_kind,
+        "source": source,
+        "target": "UNREFERENCED_BY_OBSERVED_ENTRYPOINT",
+        "classification": "static_module_evidence",
+        "status": "UNREFERENCED_BY_OBSERVED_ENTRYPOINT",
+        "resolution": "not_imported_by_observed_bot_entrypoint",
+        "source_dispositions": ["UNREFERENCED_BY_OBSERVED_ENTRYPOINT", "NO_RUNTIME_CLAIM"],
+        "source_evidence": "The source file is not statically reachable from the observed bot.py entrypoint. Retained for migration evidence, excluded from runtime parity metrics.",
+        "evidence": {"file": str(record.get("file") or ""), "line": int(record.get("line") or 0)},
+    }
+
+
+def _partition_unreferenced_module_records(
+    records: Iterable[dict[str, Any]],
+    unreferenced_files: set[str],
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Separate observed-runtime source from static legacy-module evidence."""
+
+    active: list[dict[str, Any]] = []
+    unreferenced: list[dict[str, Any]] = []
+    for record in records:
+        if str(record.get("file") or "") in unreferenced_files:
+            unreferenced.append(record)
+        else:
+            active.append(record)
+    return active, unreferenced
 
 
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
@@ -2632,6 +2908,19 @@ def _fallback_feature_family(item: dict[str, Any]) -> str:
     source = str(item.get("source") or "").strip()
     if not source or source.startswith("<"):
         return "unstructured"
+    lowered = source.casefold()
+    if lowered == "menu_affiliate" or lowered.startswith("affiliate_"):
+        return "affiliate"
+    if lowered == "menu_freelance" or lowered.startswith("freelance_"):
+        return "freelance"
+    if lowered == "menu_mxh" or lowered.startswith("mxh_"):
+        return "social_navigation"
+    if lowered in {"back_lang", "lang_more"}:
+        return "locale_navigation"
+    if lowered == "back_main":
+        return "root_navigation"
+    if lowered == "tr_transcribe":
+        return "tr_transcribe"
     if re.fullmatch(r"\d{1,3}:\d{1,3}", source):
         return "aspect_ratio_orphan"
     if source.startswith("/"):
@@ -2640,6 +2929,29 @@ def _fallback_feature_family(item: dict[str, Any]) -> str:
     if match is None:
         return "unstructured"
     return str(match.group("family") or "unstructured").casefold()
+
+
+def _annotate_feature_disposition(item: dict[str, Any]) -> dict[str, Any]:
+    """Attach source-state evidence without changing a route/parity result.
+
+    The metadata makes unresolved records reviewable by product/security
+    boundary while retaining their existing ``NEEDS_FEATURE_DISPOSITION``
+    status.  In particular, it must never turn a dispatcher, Bot pending
+    state, provider action or canonical payment action into a browser route.
+    """
+
+    if item.get("status") != "NEEDS_FEATURE_DISPOSITION":
+        return item
+    family = _fallback_feature_family(item)
+    policy = FALLBACK_FEATURE_DISPOSITIONS.get(family, DEFAULT_FALLBACK_FEATURE_DISPOSITION)
+    item["fallback_family"] = family
+    source_dispositions = [str(value) for value in policy.get("source_dispositions", ())]
+    source_evidence = str(policy.get("source_evidence") or "")
+    if source_dispositions:
+        item["source_dispositions"] = source_dispositions
+    if source_evidence:
+        item["source_evidence"] = source_evidence
+    return item
 
 
 def _feature_disposition_backlog(mappings: Iterable[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -2654,24 +2966,30 @@ def _feature_disposition_backlog(mappings: Iterable[dict[str, Any]]) -> list[dic
     for item in mappings:
         if item.get("status") != "NEEDS_FEATURE_DISPOSITION":
             continue
-        grouped[_fallback_feature_family(item)].append(item)
+        family = str(item.get("fallback_family") or _fallback_feature_family(item))
+        grouped[family].append(item)
 
     priority_rank = {"P0": 0, "P1": 1, "P2": 2, "P3": 3}
     backlog: list[dict[str, Any]] = []
     for family, items in grouped.items():
         policy = FALLBACK_FEATURE_DISPOSITIONS.get(family, DEFAULT_FALLBACK_FEATURE_DISPOSITION)
-        backlog.append(
-            {
-                "family": family,
-                "priority": str(policy["priority"]),
-                "candidate_boundary": str(policy["candidate_boundary"]),
-                "authority": str(policy["authority"]),
-                "next_contract": str(policy["next_contract"]),
-                "count": len(items),
-                "source_kinds": sorted({str(item.get("source_kind") or "unknown") for item in items}),
-                "sample_sources": sorted({str(item.get("source") or "") for item in items})[:12],
-            }
-        )
+        entry = {
+            "family": family,
+            "priority": str(policy["priority"]),
+            "candidate_boundary": str(policy["candidate_boundary"]),
+            "authority": str(policy["authority"]),
+            "next_contract": str(policy["next_contract"]),
+            "count": len(items),
+            "source_kinds": sorted({str(item.get("source_kind") or "unknown") for item in items}),
+            "sample_sources": sorted({str(item.get("source") or "") for item in items})[:12],
+        }
+        source_dispositions = [str(value) for value in policy.get("source_dispositions", ())]
+        source_evidence = str(policy.get("source_evidence") or "")
+        if source_dispositions:
+            entry["source_dispositions"] = source_dispositions
+        if source_evidence:
+            entry["source_evidence"] = source_evidence
+        backlog.append(entry)
     return sorted(
         backlog,
         key=lambda item: (
@@ -2686,17 +3004,48 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
     existing_routes = _runtime_web_route_paths(web, web_root)
     bridge_contract = _bridge_contract_inventory(bot_root, web_root)
     telegram_link_contract = _telegram_link_callback_contract(bot_root, web_root)
-    command_mappings = [_map_command(command, existing_routes) for command in bot["commands"]]
-    callback_mappings = [
-        _map_callback(record["pattern"], "callback_handler", {"file": record["file"], "line": record["line"]}, existing_routes)
-        for record in bot["callback_handlers"]
-    ]
-    callback_mappings.extend(
-        _map_callback(record["token"], "callback_data", {"file": record["file"], "line": record["line"]}, existing_routes)
-        for record in bot["callback_data"]
+    handler_module_observation = (
+        bot.get("handler_module_observation")
+        if isinstance(bot.get("handler_module_observation"), dict)
+        else {}
     )
+    unreferenced_module_files = {
+        str(path)
+        for path in handler_module_observation.get("unreferenced_module_files", [])
+        if isinstance(path, str)
+    }
+    active_commands, unreferenced_commands = _partition_unreferenced_module_records(
+        bot["commands"], unreferenced_module_files
+    )
+    active_callback_handlers, unreferenced_callback_handlers = _partition_unreferenced_module_records(
+        bot["callback_handlers"], unreferenced_module_files
+    )
+    active_callback_data, unreferenced_callback_data = _partition_unreferenced_module_records(
+        bot["callback_data"], unreferenced_module_files
+    )
+    active_callback_templates, unreferenced_callback_templates = _partition_unreferenced_module_records(
+        bot.get("callback_templates", []), unreferenced_module_files
+    )
+    active_conversations, unreferenced_conversations = _partition_unreferenced_module_records(
+        bot["conversations"], unreferenced_module_files
+    )
+
+    # The runtime-parity denominator contains only concrete source actions
+    # statically reachable from the observed entrypoint. Dispatcher
+    # registrations and unreferenced handler-package modules stay in separate
+    # evidence collections. This corrects the audit scope, but changes the
+    # denominator and must never be described as feature-progress coverage.
+    command_mappings = [_map_command(command, existing_routes) for command in active_commands]
+    callback_handler_mappings = [
+        _map_callback_handler_registration(record)
+        for record in active_callback_handlers
+    ]
+    callback_mappings = [
+        _map_callback(record["token"], "callback_data", {"file": record["file"], "line": record["line"]}, existing_routes)
+        for record in active_callback_data
+    ]
     callback_template_mappings = []
-    for record in bot.get("callback_templates", []):
+    for record in active_callback_templates:
         evidence = {"file": record["file"], "line": record["line"]}
         mapped = _map_reviewed_guided_video_helper_template(record, existing_routes)
         if mapped is None:
@@ -2723,11 +3072,34 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "status": "NEEDS_WEB_IMPLEMENTATION",
             "evidence": {"file": record["file"], "line": record["line"]},
         }
-        for record in bot["conversations"]
+        for record in active_conversations
     ]
     mappings = command_mappings + callback_mappings + callback_template_mappings + conversation_mappings
+    for item in mappings:
+        _annotate_feature_disposition(item)
+
+    unreferenced_static_module_mappings = [
+        _map_unreferenced_static_record(record, source_kind)
+        for source_kind, records in (
+            ("command", unreferenced_commands),
+            ("callback_handler_registration", unreferenced_callback_handlers),
+            ("callback_data", unreferenced_callback_data),
+            ("callback_template", unreferenced_callback_templates),
+            ("conversation", unreferenced_conversations),
+        )
+        for record in records
+    ]
     status_counts = Counter(item["status"] for item in mappings)
     feature_disposition_backlog = _feature_disposition_backlog(mappings)
+    callback_handler_summary = {
+        "total": len(bot["callback_handlers"]),
+        "observed_runtime_registrations": len(callback_handler_mappings),
+        "unreferenced_static_module_registrations": len(unreferenced_callback_handlers),
+        "catch_all": sum(1 for item in bot["callback_handlers"] if item.get("pattern") == "<catch-all>"),
+        "patterned": sum(1 for item in bot["callback_handlers"] if item.get("pattern") != "<catch-all>"),
+        "product_action_claims": 0,
+        "note": "CallbackQueryHandler registrations are Telegram transport evidence only. They are excluded from product-action coverage and never prove a browser route or Web runtime parity.",
+    }
     static_web_surfaces = status_counts["MAPPED_TO_EXISTING_ROUTE"] + status_counts["COPIED_GUARDED"]
     source_total = len(mappings)
     unresolved_callback_templates = sum(
@@ -2736,6 +3108,7 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
         if item["status"] in {"NEEDS_WEB_IMPLEMENTATION", "NEEDS_FEATURE_DISPOSITION"}
     )
     unresolved_feature_dispositions = status_counts["NEEDS_FEATURE_DISPOSITION"]
+    dashboard_fallback_count = sum(1 for item in mappings if item.get("status") == "NEEDS_FEATURE_DISPOSITION")
     unresolved_source_count = status_counts["NEEDS_WEB_IMPLEMENTATION"] + unresolved_feature_dispositions
     resolved_static_source_count = source_total - unresolved_source_count
     bot_tables = set(bot["database_tables"])
@@ -2759,12 +3132,29 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
         {
             "area": "dashboard_navigation_fallbacks",
             "severity": "high",
-            "detail": "A signed dashboard route exists, but these Bot entries have no reviewed feature-family disposition. They are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY.",
-            "count": unresolved_feature_dispositions,
+            "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
+            "count": dashboard_fallback_count,
             "families": [
                 {"family": item["family"], "priority": item["priority"], "count": item["count"]}
                 for item in feature_disposition_backlog
             ],
+        },
+        {
+            "area": "callback_handler_dispatchers",
+            "severity": "high",
+            "detail": "CallbackQueryHandler registrations are recorded with their real handler identity and source line. They are Telegram transport evidence, not end-user browser actions, and are excluded from product-action coverage.",
+            "count": callback_handler_summary["observed_runtime_registrations"],
+            "static_inventory_count": callback_handler_summary["total"],
+            "catch_all": callback_handler_summary["catch_all"],
+            "patterned": callback_handler_summary["patterned"],
+        },
+        {
+            "area": "unreferenced_static_modules",
+            "severity": "high",
+            "detail": "Legacy handler-module records are retained as source evidence but excluded from the observed bot.py runtime parity denominator when the static import closure does not reach their module files.",
+            "count": len(unreferenced_static_module_mappings),
+            "module_files": sorted(unreferenced_module_files),
+            "observation_status": str(handler_module_observation.get("status") or "NOT_AUDITED"),
         },
         {
             "area": "dynamic_callback_templates",
@@ -2803,12 +3193,17 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "schema_version": SCHEMA_VERSION,
             "audit_mode": "static-only",
             "source_counts": {
-                "commands": len(command_mappings),
+                "commands": len(bot["commands"]),
                 "callback_handlers": len(bot["callback_handlers"]),
+                "callback_handler_dispatchers": len(callback_handler_mappings),
                 "callback_data": len(bot["callback_data"]),
-                "callback_templates": len(callback_template_mappings),
+                "callback_templates": len(bot.get("callback_templates", [])),
                 "unresolved_callback_templates": unresolved_callback_templates,
-                "conversations": len(conversation_mappings),
+                "conversations": len(bot["conversations"]),
+                "observed_runtime_product_action_mappings": source_total,
+                "unreferenced_static_module_records": len(unreferenced_static_module_mappings),
+                "telegram_transport_handler_records": len(callback_handler_mappings),
+                "total_audited_source_records": source_total + len(callback_handler_mappings) + len(unreferenced_static_module_mappings),
                 "total_mappings": source_total,
                 "resolved_static_source_count": resolved_static_source_count,
                 "unresolved_source_count": unresolved_source_count,
@@ -2817,6 +3212,24 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
             "static_web_surface_coverage_percent": round((static_web_surfaces / source_total * 100), 2) if source_total else 0.0,
             "safe_disposition_coverage_percent": round((resolved_static_source_count / source_total * 100), 2) if source_total else 100.0,
             "mapping_coverage_percent": round((resolved_static_source_count / source_total * 100), 2) if source_total else 100.0,
+            "metric_scope": {
+                "product_action_denominator": source_total,
+                "excluded_telegram_transport_handlers": len(callback_handler_mappings),
+                "excluded_unreferenced_handler_package_records": len(unreferenced_static_module_mappings),
+                "numeric_tuple_non_action_rule": "Bare N:N aspect-ratio tuple values are configuration data, not callback actions; numeric-leading structured callbacks remain inventoried.",
+                "note": "Coverage is calculated only from concrete source actions reachable from the observed bot.py entrypoint. CallbackQueryHandler registrations are transport metadata, and unreferenced handlers-package records remain evidence only. This changes the denominator; it does not add a Web feature or runtime-parity claim.",
+            },
+            "coverage_comparability": {
+                "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
+                "feature_progress_claim": False,
+                "reason": "Schema 1.4 corrects raw-string callback-handler extraction, keeps the handlers/ package outside the observed bot.py runtime denominator when no static import path exists, and rejects only bare numeric aspect-ratio tuples from the keyboard callback heuristic.",
+                "scope_changes": [
+                    "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
+                    "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
+                    "Bare N:N tuple values are treated as aspect-ratio configuration, while numeric-leading structured callbacks remain supported.",
+                ],
+                "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
+            },
             "workflow_equivalence": {
                 "status": "NOT_STATICALLY_VERIFIABLE",
                 "verified_mapping_count": 0,
@@ -2824,15 +3237,22 @@ def _build_parity_gap(bot: dict[str, Any], web: dict[str, Any], bot_root: Path, 
                 "note": "This source-only audit can verify route and disposition evidence, not signed runtime behavior, provider execution, billing, job delivery, or owner-scoped output access.",
             },
             "feature_disposition_backlog": feature_disposition_backlog,
+            "callback_handler_summary": callback_handler_summary,
             "bridge_contract": bridge_contract,
             "telegram_link_callback_contract": telegram_link_contract,
             "command_mappings": command_mappings,
             "callback_mappings": callback_mappings,
+            "callback_handler_mappings": callback_handler_mappings,
             "callback_template_mappings": callback_template_mappings,
             "conversation_mappings": conversation_mappings,
+            "handler_module_observation": handler_module_observation,
+            "unreferenced_static_module_mappings": unreferenced_static_module_mappings,
             "gaps": gaps,
             "notes": [
-                "Every statically discovered command/callback/conversation/template is represented in this matrix.",
+                "Every statically discovered source record remains represented: reachable concrete product actions in the parity denominator, Telegram handler registrations in transport evidence, and unreferenced legacy-module records in a separate evidence collection.",
+                "CallbackQueryHandler registrations are Telegram transport evidence, not browser actions. They have status TELEGRAM_TRANSPORT_HANDLER and do not contribute a route, runtime, payment, provider, job or delivery claim.",
+                "A handlers/ package source file not statically reachable from the observed bot.py entrypoint is retained as UNREFERENCED_BY_OBSERVED_ENTRYPOINT evidence and excluded from runtime parity metrics. This is not a deletion, a general module-closure audit, or a claim that the file can never be loaded by an unobserved deployment path.",
+                "Schema 1.4 coverage percentages are NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES because audit source scope was corrected; a percentage delta is not feature progress.",
                 "Unresolved callback templates and dashboard fallbacks are source markers only. They are not browser actions and lower mapping coverage until a typed disposition exists.",
                 "COPIED_GUARDED is a real signed/guarded Web compatibility surface, not a provider, wallet, job, or output success claim.",
                 "MAPPED_TO_EXISTING_ROUTE only confirms a static Web route was found; it does not prove auth, wallet, provider, job, or output parity.",
@@ -2870,6 +3290,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     bridge_contract = gap.get("bridge_contract") if isinstance(gap.get("bridge_contract"), dict) else {}
     telegram_callback_contract = gap.get("telegram_link_callback_contract") if isinstance(gap.get("telegram_link_callback_contract"), dict) else {}
     feature_disposition_backlog = gap.get("feature_disposition_backlog") if isinstance(gap.get("feature_disposition_backlog"), list) else []
+    callback_handler_mappings = gap.get("callback_handler_mappings") if isinstance(gap.get("callback_handler_mappings"), list) else []
+    callback_handler_summary = gap.get("callback_handler_summary") if isinstance(gap.get("callback_handler_summary"), dict) else {}
+    handler_module_observation = gap.get("handler_module_observation") if isinstance(gap.get("handler_module_observation"), dict) else {}
+    unreferenced_static_module_mappings = gap.get("unreferenced_static_module_mappings") if isinstance(gap.get("unreferenced_static_module_mappings"), list) else []
+    metric_scope = gap.get("metric_scope") if isinstance(gap.get("metric_scope"), dict) else {}
+    coverage_comparability = gap.get("coverage_comparability") if isinstance(gap.get("coverage_comparability"), dict) else {}
     telegram_callback_status = str(telegram_callback_contract.get("status") or "NOT_AUDITED")
     bridge_status = str(bridge_contract.get("status") or "NOT_AUDITED")
     bridge_matched = int(bridge_contract.get("matched_request_count") or 0)
@@ -2899,6 +3325,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "The generated parity matrix is an implementation backlog, not a claim that surfaces are live or safe to enable.\n\n"
         + "## Web implementation contracts\n\n"
         + "- [`FEATURE_FAMILY_NAVIGATION.md`](FEATURE_FAMILY_NAVIGATION.md) — navigation-only feature families.\n"
+        + "- [`CALLBACK_HANDLER_DISPATCH_MAP.md`](CALLBACK_HANDLER_DISPATCH_MAP.md) — Bot callback dispatcher registrations, their source provenance and why they are not browser actions.\n"
+        + "- [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.\n"
         + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
@@ -2951,8 +3379,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
                 ["Source files scanned", str(bot["source_files_scanned"]), str(web["source_files_scanned"])],
                 ["Noncanonical Bot drafts excluded", str(len(bot.get("excluded_noncanonical_source_files", []))), "n/a"],
                 ["Commands", str(bot["counts"]["commands"]), "n/a"],
-                ["Callback handlers", str(bot["counts"]["callback_handlers"]), "n/a"],
+                ["Callback handler registrations", str(bot["counts"]["callback_handlers"]), "Dispatcher evidence only; not a user-action parity claim"],
                 ["Callback-data values", str(bot["counts"]["callback_data"]), "n/a"],
+                ["Legacy handlers/ package records outside observed runtime", str(len(unreferenced_static_module_mappings)), "Evidence only; excluded from product-action coverage"],
                 ["Unresolved callback templates", str(bot["counts"].get("callback_templates", 0)), "n/a"],
                 ["Conversation handlers", str(bot["counts"]["conversations"]), "n/a"],
                 ["FastAPI routes", str(bot["counts"]["routes"]), str(web["counts"]["routes"])],
@@ -2968,10 +3397,61 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "bot-inventory.md",
         "# Telegram bot inventory\n\n"
-        f"Discovered `{bot['counts']['commands']}` registered commands, `{bot['counts']['callback_handlers']}` callback handlers, `{bot['counts']['callback_data']}` concrete callback-data values, and `{bot['counts'].get('callback_templates', 0)}` unresolved callback templates from static source.\n\n"
+        f"Discovered `{bot['counts']['commands']}` registered commands, `{bot['counts']['callback_handlers']}` callback-handler registrations, `{bot['counts']['callback_data']}` concrete callback-data values, and `{bot['counts'].get('callback_templates', 0)}` unresolved callback templates from static source. A handler registration is dispatcher evidence, not one customer action. `{len(unreferenced_static_module_mappings)}` records belong to the legacy `handlers/` package outside the observed `bot.py` import closure and stay evidence-only.\n\n"
         + ("Excluded clearly named Bot drafts: `" + "`, `".join(bot.get("excluded_noncanonical_source_files", [])) + "`.\n\n" if bot.get("excluded_noncanonical_source_files") else "")
         + _markdown_table(["Command", "Handler", "Source"], sampled_commands or [["None discovered", "", ""]])
         + "\n\nThe full command/callback inventory is in `reports/migration/bot_inventory.json`.\n",
+    )
+    callback_handler_rows = [
+        [
+            str(item.get("handler") or ""),
+            str(item.get("pattern") or ""),
+            str(item.get("classification") or ""),
+            str(item.get("target") or ""),
+            ", ".join(str(value) for value in item.get("source_dispositions", [])),
+            str(item.get("resolution") or ""),
+            str(item.get("evidence", {}).get("file") or ""),
+            str(item.get("evidence", {}).get("line") or ""),
+        ]
+        for item in callback_handler_mappings[:200]
+        if isinstance(item, dict)
+    ]
+    write(
+        "CALLBACK_HANDLER_DISPATCH_MAP.md",
+        "# Callback handler dispatch map\n\n"
+        + f"Static registrations: `{int(callback_handler_summary.get('total') or 0)}`; observed-runtime registrations: `{int(callback_handler_summary.get('observed_runtime_registrations') or 0)}`; unreferenced-module registrations: `{int(callback_handler_summary.get('unreferenced_static_module_registrations') or 0)}`; catch-all: `{int(callback_handler_summary.get('catch_all') or 0)}`; patterned: `{int(callback_handler_summary.get('patterned') or 0)}`. "
+        + "A `CallbackQueryHandler` registration routes Telegram traffic to Bot code. It is **not** a browser action, Web route, provider call, payment action, job claim or output-delivery claim, and it is excluded from product-action coverage.\n\n"
+        + _markdown_table(
+            ["Bot handler", "Pattern", "Classification", "Web target", "Source disposition", "Resolution", "File", "Line"],
+            callback_handler_rows or [["None discovered", "", "", "", "", "", "", ""]],
+        )
+        + "\n\nBefore any callback family is marked as Web parity, recover the finite handler branch and separately prove signed authorization, CSRF for writes, canonical ownership, provider/job/payment boundaries and private output delivery.\n",
+    )
+    unreferenced_static_rows = [
+        [
+            str(item.get("source_kind") or ""),
+            str(item.get("source") or ""),
+            str(item.get("status") or ""),
+            str(item.get("evidence", {}).get("file") or ""),
+            str(item.get("evidence", {}).get("line") or ""),
+        ]
+        for item in unreferenced_static_module_mappings[:200]
+        if isinstance(item, dict)
+    ]
+    write(
+        "UNREFERENCED_STATIC_MODULES.md",
+        "# Unreferenced static Bot handler-package modules\n\n"
+        + f"Observation status: `{handler_module_observation.get('status') or 'NOT_AUDITED'}`. Observed entrypoint: `{handler_module_observation.get('observed_entrypoint') or 'unavailable'}`. "
+        + f"Records preserved outside the observed-runtime denominator: `{len(unreferenced_static_module_mappings)}`. "
+        + "This scoped source-only observation evaluates the local `handlers/` package, not every Python module in the repository. It does not delete a file or prove that an arbitrary deployment can never load it. It only prevents a handler-package module with no static path from the observed entrypoint from becoming a false Web parity claim.\n\n"
+        + "## Handler-package files outside the observed import closure\n\n"
+        + ("\n".join(f"- `{path}`" for path in handler_module_observation.get("unreferenced_module_files", [])) or "- None")
+        + "\n\n## Preserved source evidence\n\n"
+        + _markdown_table(
+            ["Source type", "Bot entry", "Disposition", "File", "Line"],
+            unreferenced_static_rows or [["None", "", "", "", ""]],
+        )
+        + "\n\nA module moves back into the runtime parity denominator only after a static import path from the observed entrypoint is present and its finite behavior is reviewed.\n",
     )
     write(
         "web-inventory.md",
@@ -3033,12 +3513,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "parity-matrix.md",
         "# Parity matrix\n\n"
-        f"Static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). "
-        f"Typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. "
+        f"Observed-runtime static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). "
+        f"Observed-runtime typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. "
         f"Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). "
-        "All source items are represented in the JSON matrix; this page shows the first 200 records.\n\n"
+        f"Product-action denominator: `{int(metric_scope.get('product_action_denominator') or 0)}`; excluded Telegram transport registrations: `{int(metric_scope.get('excluded_telegram_transport_handlers') or 0)}`; excluded unreferenced `handlers/` package records: `{int(metric_scope.get('excluded_unreferenced_handler_package_records') or 0)}`. **Comparability: `{coverage_comparability.get('status') or 'NOT_AUDITED'}` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows or [["None discovered", "", "", ""]])
-        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`.\n",
+        + "\n\n`COPIED_GUARDED` means a signed/guarded compatibility page exists; it never claims an engine, payment, or output completed. `NAVIGATION_ENTRYPOINT` and `NAVIGATION_ONLY` are reviewed launches only. `NEEDS_FEATURE_DISPOSITION` remains actionable until it is mapped to a real Web workflow, a guarded runtime boundary, admin-only, or `TELEGRAM_ONLY`. `TELEGRAM_TRANSPORT_HANDLER` and `UNREFERENCED_BY_OBSERVED_ENTRYPOINT` are evidence-only statuses outside the product-action denominator.\n",
     )
     fallback_rows = [
         [
@@ -3047,6 +3527,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             str(item.get("count") or 0),
             str(item.get("candidate_boundary") or ""),
             str(item.get("authority") or ""),
+            ", ".join(str(value) for value in item.get("source_dispositions", [])),
+            str(item.get("source_evidence") or ""),
             str(item.get("next_contract") or ""),
         ]
         for item in feature_disposition_backlog
@@ -3054,10 +3536,10 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "FALLBACK_FEATURE_DISPOSITION.md",
         "# Dashboard fallback feature-disposition backlog\n\n"
-        "Every row below was previously able to fall through to dashboard/catch-all navigation. It is now a required migration decision. `Candidate boundary` names the first contract to design; it does **not** claim that the route, runtime, provider, payment, job or output is already implemented.\n\n"
+        "Concrete callbacks below were previously able to fall through to dashboard/catch-all navigation. Callback-handler registrations and unreferenced `handlers/` package records are retained in separate evidence documents, never browser actions. Every row is a required migration decision. `Candidate boundary` names the first contract to design; it does **not** claim that the route, runtime, provider, payment, job or output is already implemented.\n\n"
         + _markdown_table(
-            ["Priority", "Bot family", "Entries", "Candidate boundary", "Authority", "Required next contract"],
-            fallback_rows or [["None", "", "0", "", "", ""]],
+            ["Priority", "Bot family", "Entries", "Candidate boundary", "Authority", "Source disposition", "Source evidence", "Required next contract"],
+            fallback_rows or [["None", "", "0", "", "", "", "", ""]],
         )
         + "\n\nBefore a row leaves this backlog, preserve the source evidence and add focused tests for signed authorization, CSRF where a Web write exists, canonical ownership, idempotency where relevant, safe guarded state, and validated private delivery for any output.\n",
     )
@@ -3196,7 +3678,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Area", "Bot", "Web App"],
             [
                 ["Commands", str(bot["counts"]["commands"]), "Mapped through feature/route registry"],
-                ["Callbacks", str(bot["counts"]["callback_handlers"]), "Mapped or explicitly TELEGRAM_ONLY"],
+                ["Callback dispatcher registrations", str(bot["counts"]["callback_handlers"]), "Source provenance only; not a feature/action mapping"],
+                ["Concrete callback values", str(bot["counts"]["callback_data"]), "Mapped, guarded, actionable backlog or TELEGRAM_ONLY"],
                 ["Conversations", str(bot["counts"]["conversations"]), "Draft/estimate/confirm contract"],
                 ["FastAPI routes", str(bot["counts"]["routes"]), str(web["counts"]["routes"])],
                 ["DB tables", str(bot["counts"]["database_tables"]), str(web["counts"]["database_tables"])],
@@ -3207,9 +3690,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "FEATURE_PARITY_MATRIX.md",
         "# Feature parity matrix\n\n"
-        f"Static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%**. Typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**. Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). This is an actionable migration baseline, not a LIVE or engine-success claim.\n\n"
+        f"Observed-runtime static Web-surface coverage: **{gap['static_web_surface_coverage_percent']}%**. Observed-runtime typed source-disposition coverage: **{gap['mapping_coverage_percent']}%**. Runtime workflow-equivalence verification: **{gap['workflow_equivalence']['coverage_percent']}%** (`{gap['workflow_equivalence']['status']}`). Product-action denominator: `{int(metric_scope.get('product_action_denominator') or 0)}`. **Comparability: `{coverage_comparability.get('status') or 'NOT_AUDITED'}` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.\n\n"
         + _markdown_table(["Source type", "Bot entry", "Web target", "Status"], parity_rows)
-        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`. A static route is not a runtime workflow-equivalence claim.\n",
+        + "\n\nAudit statuses: `MAPPED_TO_EXISTING_ROUTE`, `COPIED_GUARDED`, `NAVIGATION_ENTRYPOINT`, `NAVIGATION_ONLY`, `NEEDS_FEATURE_DISPOSITION`, `NEEDS_WEB_IMPLEMENTATION`, `TELEGRAM_ONLY`, `TELEGRAM_TRANSPORT_HANDLER`, `UNREFERENCED_BY_OBSERVED_ENTRYPOINT`. Handler registrations are documented in `CALLBACK_HANDLER_DISPATCH_MAP.md`, and legacy unreferenced-module evidence in `UNREFERENCED_STATIC_MODULES.md`; neither is a browser action. A static route is not a runtime workflow-equivalence claim.\n",
     )
     write(
         "TELEGRAM_TO_WEB_ROUTE_MAP.md",
