@@ -1555,8 +1555,8 @@ async def import_templates(payload: ImportRequest, request: Request, account: di
 
 
 @router.post("/export")
-async def export_templates(account: dict = Depends(require_csrf)):
-    """Return a CSRF-protected private JSON attachment without a storage artifact."""
+async def export_templates(request: Request, account: dict = Depends(require_csrf)):
+    """Return an audited, CSRF-protected private JSON attachment without storage."""
     _require_prompt_library_enabled()
     account_id = str(account["id"])
     with read_transaction() as conn:
@@ -1620,6 +1620,20 @@ async def export_templates(account: dict = Depends(require_csrf)):
             projected_bytes += len(separator) + len(encoded)
             wrote_item = True
     content = b"".join((*parts, suffix))
+    # An export contains the complete private template corpus.  Commit a
+    # minimal success audit before returning the attachment, but never include
+    # prompt text, metadata, identifiers, email, source or license content in
+    # the audit detail.  If the durable audit write cannot complete, fail
+    # closed rather than releasing an unaccounted-for private export.
+    with transaction() as conn:
+        _record_template_audit(
+            conn,
+            request=request,
+            account=account,
+            action="web.prompt_library.export",
+            target="private_export",
+            detail=f"web-owned prompt templates exported:{int(count[0] or 0)} bytes:{len(content)}",
+        )
     return Response(
         content=content,
         media_type="application/json",

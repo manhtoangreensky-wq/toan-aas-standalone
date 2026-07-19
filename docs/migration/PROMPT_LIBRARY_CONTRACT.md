@@ -36,7 +36,7 @@ The source reference is static-only, frozen at
 | `prompt_vault_refresh` | Portal refresh plus owner-scoped `GET /templates` | Implemented; refresh only reads Web-owned SQLite data. |
 | `prompt_vault_search` | Owner-scoped metadata/content search/filter | Implemented for title, prompt, negative prompt, category, context, platform, style, language and tags. |
 | `prompt_vault_add` / import alias | Create form and bounded JSON import | Implemented with schema, DLP, CSRF, idempotency, quotas and audit. |
-| `prompt_vault_export` | CSRF-protected `POST /export` browser Blob download | Implemented with an importable reduced schema; no storage object, URL fetch or shared link is created. |
+| `prompt_vault_export` | CSRF-protected `POST /export` browser Blob download | Implemented with an importable reduced schema, a durable redacted success audit and a tighter export-specific rate gate; no storage object, URL fetch or shared link is created. |
 | Bot `prompt_id` | Fresh opaque Web UUID | Intentionally not migrated; import never accepts a source ID. |
 | `category`, `product_id`, `platform`, `style`, `language` | `category`, `product_context`, `platform`, `style`, `language` | Implemented as account-owned metadata. |
 | `prompt_text`, `negative_prompt`, `variables` | Same semantic fields | Implemented as private text; declared variables power preview only. |
@@ -158,7 +158,14 @@ scraper input, global Bot seed or authority field.
   It is a no-store attachment with `nosniff`, `no-referrer` and `sandbox`
   headers. The Portal uses an in-memory Blob URL then revokes it; no export is
   written to server storage. It serializes rows incrementally and stops with a
-  guarded JSON 413 response before an encoded export exceeds 24 MiB.
+  guarded JSON 413 response before an encoded export exceeds 24 MiB. A
+  successful attachment is released only after a durable
+  `web.prompt_library.export` audit event commits. Its redacted **detail** has
+  the count and encoded byte size only—never prompt text, title, source,
+  license, email or template ID. The protected standard audit columns retain
+  the signed account/request linkage needed for accountability, but no export
+  payload data. Export has its own fixed pre-DB rate bucket of 10 requests per
+  IP per minute, rather than sharing the normal template-write bucket.
 - All normal Prompt Library writes are capped at 512 KiB raw body size; import
   has the separately documented 6 MiB cap. The ASGI boundary checks both
   declared `Content-Length` and each chunk of a streamed body before
