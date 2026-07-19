@@ -6,6 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 import importlib
 import sqlite3
 import sys
+import time
+from threading import Event, Thread, current_thread
 
 from fastapi.testclient import TestClient
 from starlette.requests import Request
@@ -107,6 +109,74 @@ def test_throttle_is_atomic_and_survives_module_restart(tmp_path, monkeypatch):
     )
     assert after_restart.allowed is False
     assert after_restart.reason == "limited"
+
+
+def test_throttle_waits_through_a_short_startup_writer_lock_by_default(tmp_path, monkeypatch):
+    """A normal startup reconciler lock must not become a spurious 503."""
+
+    monkeypatch.delenv("WEBAPP_AUTH_THROTTLE_DB_TIMEOUT_SECONDS", raising=False)
+    throttle, database = _prepare(tmp_path, monkeypatch)
+    email_hmac = throttle.email_fingerprint("startup-lock@example.com")
+    scope_hmac = throttle.client_scope_fingerprint(_request())
+    assert email_hmac and scope_hmac
+
+    writer_locked = Event()
+    consumer_connected = Event()
+    release_writer = Event()
+    decision_holder = []
+    errors = []
+    original_connect = throttle.sqlite3.connect
+
+    def observed_connect(*args, **kwargs):
+        if current_thread().name == "auth-throttle-consumer":
+            consumer_connected.set()
+        return original_connect(*args, **kwargs)
+
+    monkeypatch.setattr(throttle.sqlite3, "connect", observed_connect)
+
+    def hold_short_writer_lock():
+        connection = sqlite3.connect(database.session_database_path(), timeout=1)
+        try:
+            connection.execute("BEGIN IMMEDIATE")
+            writer_locked.set()
+            assert release_writer.wait(timeout=2)
+            connection.commit()
+        except BaseException as exc:  # pragma: no cover - asserted by the parent thread
+            errors.append(exc)
+        finally:
+            connection.close()
+
+    def consume_after_startup_lock():
+        try:
+            decision_holder.append(
+                throttle.consume_fingerprints(
+                    action="login", email_hmac=email_hmac, client_scope_hmac=scope_hmac, now_epoch=4_000,
+                )
+            )
+        except BaseException as exc:  # pragma: no cover - asserted by the parent thread
+            errors.append(exc)
+
+    writer = Thread(target=hold_short_writer_lock, name="startup-reconciler-writer")
+    consumer = Thread(target=consume_after_startup_lock, name="auth-throttle-consumer")
+    writer.start()
+    assert writer_locked.wait(timeout=1)
+    consumer.start()
+    assert consumer_connected.wait(timeout=1)
+    try:
+        # The old 0.20s default failed here. This remains below the bounded
+        # 0.50s limit, matching ordinary startup reconciliation contention.
+        time.sleep(0.35)
+    finally:
+        release_writer.set()
+    writer.join(timeout=2)
+    consumer.join(timeout=2)
+
+    assert not writer.is_alive()
+    assert not consumer.is_alive()
+    assert not errors
+    assert len(decision_holder) == 1
+    assert decision_holder[0].allowed is True
+    assert decision_holder[0].reason == "allowed"
 
 
 def test_email_global_bucket_resists_rotating_client_fingerprints(tmp_path, monkeypatch):

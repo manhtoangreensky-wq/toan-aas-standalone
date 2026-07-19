@@ -40,7 +40,10 @@ def test_app_shell_keeps_touch_focus_motion_and_local_svg_contracts() -> None:
 
     # The mobile dock is an app navigation surface, not a generic marketing
     # homepage, and its decorative glyphs are rendered from a closed SVG map.
-    assert '["dashboard", "/dashboard", "Workspace", ICONS.dashboard]' in PORTAL
+    # Labels are presentation-only and must follow the signed account's
+    # reviewed interface locale.  The route and closed SVG icon remain fixed
+    # so localization cannot change navigation authority or icon rendering.
+    assert '["dashboard", "/dashboard", uiText("mobile.workspace", "Workspace"), ICONS.dashboard]' in PORTAL
     assert "const PORTAL_ICON_PATHS = Object.freeze({" in PORTAL
     icon_helper = _section(PORTAL, "function portalIcon(icon)", "const WEB_LOCAL_ACTIONS")
     assert "PORTAL_ICON_PATHS[key] || PORTAL_ICON_PATHS[ICONS.default]" in icon_helper
