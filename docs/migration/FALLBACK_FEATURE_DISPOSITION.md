@@ -4,7 +4,7 @@ Every row below was previously able to fall through to dashboard/catch-all navig
 
 | Priority | Bot family | Entries | Candidate boundary | Authority | Required next contract |
 | --- | --- | --- | --- | --- | --- |
-| P0 | menu | 626 | /features | Web capability catalog | Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword. |
+| P0 | menu | 184 | /features | Web capability catalog | Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword. |
 | P0 | vfinal | 130 | /video/finishing | Web-native private finishing or canonical Bot job bridge | Split safe editing choices from render/export/payment actions; require a verified source, idempotency, validated output and owner-scoped delivery before any runtime action. |
 | P0 | unstructured | 95 | source_review_required | Source review required | Classify catch-all handlers and unstructured patterns with handler-level evidence before assigning any Web route or authority. |
 | P0 | pkgbuy | 9 | /wallet/topup | Canonical Bot wallet/PayOS bridge | Expose only verified package/read/confirm contracts. The Web must not price, credit Xu, finalize PayOS or create a second webhook. |
@@ -22,7 +22,6 @@ Every row below was previously able to fall through to dashboard/catch-all navig
 | P1 | motion | 8 | /video-studio/image-motion-planner | Web-native planning | Map finite motion suggestions to the owner-scoped Image Motion planner; source inspection/rendering remains a separate capability. |
 | P1 | tvflow | 5 | /video-studio | Source review required | Recover the exact Bot handler state machine before mapping cancel/rewrite/confirm actions; do not infer a render or content mutation contract. |
 | P1 | tr_pick | 1 | /dubbing | Web-native subtitle/dubbing boundary | Require an explicit owner-scoped source selection contract before mapping Telegram file-pick actions. |
-| P2 | freehub | 13 | /features | Web capability catalog | Map remaining hub/root navigation to a named Web catalog entry; do not import Bot pending text or hidden Telegram state. |
 | P2 | lang | 7 | /account | Signed Web profile locale | Map supported UI locales through the signed account preference. Bot-only languages need a reviewed locale bundle before being advertised. |
 | P2 | aspect_ratio_orphan | 6 | parent_workflow_required | Parent Web workflow | Resolve orphan ratio tokens from their source keyboard/handler before mapping; a ratio alone must not become a global browser action. |
 

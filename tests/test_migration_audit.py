@@ -1130,7 +1130,103 @@ async def page(page_path):
     template = audit._map_callback_template("menu|video|{*}", {"file": "bot.py", "line": 1}, {"/{page_path:path}"})
     assert template is not None
     assert template["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert template["resolution"] == "menu_namespace_requires_explicit_feature_disposition"
+    assert template["target"] == "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    assert template["resolution"] == "dynamic_menu_action_requires_finite_catalog"
+
+
+def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() -> None:
+    """Menu labels/state must never inherit a Web route through a wildcard."""
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {
+        "menu|main": ("/dashboard", "workspace_home", "dashboard", "SIGNED_CUSTOMER", "NAVIGATION_SHELL"),
+        "menu|back": ("/dashboard", "workspace_home", "dashboard", "SIGNED_CUSTOMER", "NAVIGATION_SHELL"),
+        "freehub|main": ("/dashboard", "workspace_home", "dashboard", "SIGNED_CUSTOMER", "NAVIGATION_SHELL"),
+        "menu|main_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|main_topup": ("/wallet/topup", "wallet_topup", "wallet_topup", "CORE_CANONICAL_PAYMENT", "BRIDGE_GUARDED_PROXY"),
+        "menu|main_docs": ("/documents", "documents", "documents", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|doc_tools": ("/documents", "documents", "documents", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|main_image": ("/image-studio", "image_studio", "image_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|main_video": ("/video-studio", "video_studio", "video_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|main_music": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|main_audio": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|main_guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|support": ("/support", "support", "support", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|create_media": ("/media-factory", "media_factory", "media_factory", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|video_workflow": ("/video-studio/workflow", "video_factory_workflow", "video_factory_workflow", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|video_factory_flow": ("/video-studio/workflow", "video_factory_workflow", "video_factory_workflow", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+    }
+    assert set(audit.MENU_ACTION_REGISTRY) == set(expected)
+
+    for callback, (target, capability, feature, authority, launch_mode) in expected.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == target
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_exact_menu_navigation"
+        assert mapped["menu_capability_key"] == capability
+        assert mapped["menu_feature_key"] == feature
+        assert mapped["menu_authority"] == authority
+        assert mapped["menu_launch_mode"] == launch_mode
+
+    # The static audit's private Bot token registry and the browser-safe public
+    # catalog must stay in lockstep.  This prevents an audit mapping from
+    # claiming a different route, authority or launch semantics than the
+    # Web product can actually render.
+    from copyfast_registry import menu_capability_catalog
+
+    public_catalog = {item["key"]: item for item in menu_capability_catalog()}
+    for descriptor in audit.MENU_ACTION_REGISTRY.values():
+        public_entry = public_catalog[descriptor["capability_key"]]
+        assert public_entry["feature_key"] == descriptor["feature_key"]
+        assert public_entry["route"] == descriptor["target"]
+        assert public_entry["authority"] == descriptor["authority"]
+        assert public_entry["launch_mode"] == descriptor["launch_mode"]
+
+    # This family combines Bot storage, notes and temporary context.  It is
+    # deliberately not promoted to a convenient-looking Notes route.
+    unresolved = audit._map_callback("menu|main_memory", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unresolved["target"] == "/dashboard"
+    assert unresolved["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unresolved["resolution"] == "menu_callback_requires_explicit_feature_disposition"
+
+    dynamic = audit._map_callback_template("menu|translation_pair_{*}", {"file": "bot.py", "line": 1}, routes)
+    assert dynamic is not None
+    assert dynamic["target"] == "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    assert dynamic["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert dynamic["resolution"] == "dynamic_menu_action_requires_finite_catalog"
+
+
+def test_reviewed_menu_navigation_does_not_inflate_static_feature_parity(tmp_path: Path) -> None:
+    """Opening a fresh Web workspace is not proof of Bot workflow parity."""
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        'button = InlineKeyboardButton("Main", callback_data="menu|main")',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+@app.get('/dashboard')
+async def dashboard():
+    return {}
+@app.get('/{page_path:path}')
+async def page(page_path):
+    return {}
+""",
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    gap = result["parity_gap"]
+    assert gap["callback_mappings"][0]["status"] == "NAVIGATION_ONLY"
+    assert gap["static_web_surface_coverage_percent"] == 0.0
+    assert gap["mapping_coverage_percent"] == 100.0
 
 
 def test_static_audit_inventories_literal_tuple_keyboard_callbacks_in_small_and_monolithic_sources(tmp_path: Path) -> None:
