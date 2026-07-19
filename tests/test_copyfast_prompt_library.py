@@ -641,6 +641,17 @@ def test_prompt_library_import_export_is_bounded_private_round_trippable_and_has
         assert "revision" not in body["templates"][0]
         assert body["templates"][0]["state"] == "archived"
 
+        db_path = tmp_path / "copyfast-prompt-library-test.db"
+        with sqlite3.connect(db_path) as conn:
+            export_audit = conn.execute(
+                "SELECT target, detail FROM web_audit_events WHERE action='web.prompt_library.export'"
+            ).fetchone()
+        assert export_audit is not None
+        assert export_audit[0] == "private_export"
+        assert export_audit[1] == f"web-owned prompt templates exported:1 bytes:{len(exported.content)}"
+        assert import_payload["prompt_text"] not in export_audit[1]
+        assert import_payload["title"] not in export_audit[1]
+
         with make_client(tmp_path, monkeypatch) as other:
             csrf_other = register_and_login(other, "prompt-export-other@example.com")
             round_trip = other.post(
@@ -654,7 +665,6 @@ def test_prompt_library_import_export_is_bounded_private_round_trippable_and_has
             assert other_export["templates"][0]["title"] == import_payload["title"]
             assert other_export["templates"][0]["state"] == "archived"
 
-        db_path = tmp_path / "copyfast-prompt-library-test.db"
         with sqlite3.connect(db_path) as conn:
             idempotency_rows = conn.execute("SELECT response_json FROM web_idempotency").fetchall()
         assert idempotency_rows
@@ -858,6 +868,23 @@ def test_prompt_library_write_rate_limit_uses_one_fixed_family_bucket(tmp_path, 
         keys = [key for key in app_module._auth_rate_windows if key.startswith("prompt-library-write:")]
         assert len(keys) == 1
         assert len(app_module._auth_rate_windows[keys[0]]) == 2
+
+
+def test_prompt_library_export_uses_a_tighter_isolated_rate_bucket(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "prompt-export-rate@example.com")
+        app_module = sys.modules["app"]
+        app_module._auth_rate_windows.clear()
+
+        for _ in range(10):
+            assert client.post("/api/v1/prompt-library/export", headers={"X-CSRF-Token": csrf}).status_code == 200
+        blocked = client.post("/api/v1/prompt-library/export", headers={"X-CSRF-Token": csrf})
+        assert blocked.status_code == 429
+
+        keys = [key for key in app_module._auth_rate_windows if key.startswith("prompt-library-export:")]
+        assert len(keys) == 1
+        assert len(app_module._auth_rate_windows[keys[0]]) == 10
+        assert not [key for key in app_module._auth_rate_windows if key.startswith("prompt-library-write:")]
 
 
 def test_prompt_library_read_rate_limit_uses_one_fixed_family_bucket(tmp_path, monkeypatch):

@@ -1234,10 +1234,19 @@ async def security_headers(request: Request, call_next):
     # rate limited before SQLite work.  GET views stay unthrottled here while
     # signed-session/ownership checks remain mandatory in the router.
     memory_write = request.method == "POST" and request.url.path.startswith("/api/v1/memory/")
+    # Private exports return a customer's complete prompt corpus.  Keep them
+    # in a stricter fixed bucket than normal template mutations, before any
+    # signed-session/CSRF/SQLite work.  This does not grant a storage link,
+    # provider, Bot, wallet, PayOS, job or delivery capability.
+    prompt_library_export = request.method == "POST" and request.url.path == "/api/v1/prompt-library/export"
     # Prompt Library writes are owner-scoped text/template mutations.  Keep an
     # early independent limit before SQLite work; this does not replace the
     # router's signed session, CSRF, revision, idempotency or ownership checks.
-    prompt_library_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/prompt-library/")
+    prompt_library_write = (
+        request.method in {"POST", "PATCH"}
+        and request.url.path.startswith("/api/v1/prompt-library/")
+        and not prompt_library_export
+    )
     # Prompt Library reads include text search over a private SQLite vault.
     # Bound them by a fixed route family too, so arbitrary template UUIDs or
     # query strings cannot bypass the pre-DB gate or grow its in-memory map.
@@ -1442,6 +1451,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if prompt_library_write:
         rate_limit = 40
+    if prompt_library_export:
+        rate_limit = 10
     if prompt_library_read:
         rate_limit = 120
     if media_workspace_write:
@@ -1546,7 +1557,8 @@ async def security_headers(request: Request, call_next):
         # family bucket prevents arbitrary 404/405 suffixes from bypassing
         # the gate or allocating one in-memory key per requested path.
         rate_scope = (
-            "prompt-library-write" if prompt_library_write
+            "prompt-library-export" if prompt_library_export
+            else "prompt-library-write" if prompt_library_write
             else "subtitle-asset-operation-write" if subtitle_asset_operation_write
             else "subtitle-asset-operation-download" if subtitle_asset_operation_download
             else "subtitle-asset-operation-read" if subtitle_asset_operation_read
