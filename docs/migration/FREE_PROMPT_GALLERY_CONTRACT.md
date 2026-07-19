@@ -15,6 +15,22 @@ The production `app.py` mounts the router at `/api/v1/free-prompt-gallery` and t
 
 Every endpoint requires the existing signed Web session (`require_account`).  They are read-only `GET` endpoints and therefore do not require CSRF; responses set `Cache-Control: private, no-store`, `Pragma: no-cache` and `Vary: Cookie`.
 
+## Reviewed Free Hub library navigation boundary
+
+The literal Bot callback `freehub|library` opens the same signed Gallery
+surface. The only reviewed dynamic family is `freehub|lib_{*}`: the Bot uses
+its finite suffixes (`video`, `image`, `meta`, `caption`, `shop`, `beauty`,
+`random`) to choose a global prompt-library suggestion set and then stores a
+short-lived Telegram pending selection.
+
+The migration audit records `freehub|lib_{*}` as `NAVIGATION_ONLY` to
+`/free-prompt-gallery`. It intentionally opens a fresh Gallery rather than
+passing a suffix, suggestion list, ordinal, Bot prompt ID, Telegram user ID or
+pending state into the browser. The Gallery can use only its own validated
+catalog filters and stable Web item IDs. This is not a claim that Bot
+suggestions, `lib_more`, `lib_back`, `lib_pick1..3`, a provider, job, wallet,
+PayOS action or media output has been replayed on the Web.
+
 ## Explicit save into the private Prompt Library
 
 The Gallery router itself remains read-only. A signed user can explicitly

@@ -1021,6 +1021,64 @@ def test_static_audit_maps_free_hub_gallery_upload_docs_and_server_recomputed_sa
     assert save["status"] == "COPIED_GUARDED"
 
 
+def test_static_audit_maps_only_reviewed_free_hub_library_categories_to_fresh_gallery_navigation(tmp_path: Path) -> None:
+    """The Bot library category state must not become a browser identifier."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    mapped = audit._map_callback_template("freehub|lib_{*}", evidence, routes)
+    assert mapped is not None
+    assert mapped["classification"] == "customer"
+    assert mapped["target"] == "/free-prompt-gallery"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_freehub_library_category_navigation"
+    assert mapped["source_dispositions"] == [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_PENDING_STATE_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM",
+    ]
+    assert "never accepts that value" in mapped["source_evidence"]
+
+    # This is intentionally an exact source-reviewed template, not a broad
+    # freehub prefix that could turn a future Bot stateful callback green.
+    assert audit._map_callback_template("freehub|lib_future_{*}", evidence, routes) is None
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+category = "video"
+InlineKeyboardButton("Prompt library", callback_data=f"freehub|lib_{category}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/{page_path:path}")
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    report_mapping = {
+        item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]
+    }["freehub|lib_{*}"]
+    assert report_mapping["status"] == "NAVIGATION_ONLY"
+    assert report_mapping["target"] == "/free-prompt-gallery"
+    assert report_mapping["resolution"] == "reviewed_freehub_library_category_navigation"
+    assert result["parity_gap"]["source_counts"]["unresolved_callback_templates"] == 0
+    assert result["parity_gap"]["static_web_surface_coverage_percent"] == 0.0
+    assert result["parity_gap"]["mapping_coverage_percent"] == 100.0
+    assert "FREE_PROMPT_GALLERY_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+
+
 def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolving_ids() -> None:
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
@@ -1320,7 +1378,7 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
     assert gap["coverage_comparability"] == {
         "status": "NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES",
         "feature_progress_claim": False,
-        "reason": "Schema 1.6 keeps the 1.5 inventory corrections and adds typed dispositions for dynamic Bot media-preview callbacks whose cache indexes, Telegram delivery/guidance, and selected-media state are not Web media contracts.",
+        "reason": "Schema 1.7 retains the 1.6 inventory corrections and records the finite Free Hub prompt-library category template as fresh signed Gallery navigation only; its Bot suggestion and pending state are not Web contracts.",
         "scope_changes": [
             "CallbackQueryHandler registrations are Telegram transport evidence, not product actions.",
             "Records from unreferenced handlers/ package files remain evidence-only instead of mapped/guarded runtime parity.",
@@ -1328,6 +1386,7 @@ app.add_handler(CallbackQueryHandler(handle_affiliate_callback, pattern=r"^affil
             "Embedded formatted callback values such as family_action_{*}_{*} are retained as opaque templates instead of being dropped from the static inventory.",
             "tvflow callbacks are finite Bot-state dispositions instead of generic image/video/content/package route matches.",
             "Dynamic media-preview callback templates are typed Bot-state dispositions instead of unresolved Web media actions.",
+            "The finite Free Hub prompt-library category template opens a fresh signed Web Gallery as navigation-only; it does not carry a Bot category token, suggestion set, or pending state into the browser.",
         ],
         "note": "Any percentage delta caused by these inventory corrections is not feature progress. Compare absolute routes/contracts and separately verified runtime evidence instead.",
     }

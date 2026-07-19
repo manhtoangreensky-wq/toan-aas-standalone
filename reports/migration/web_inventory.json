@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 2037,
+      "line": 2044,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -6642,7 +6642,7 @@
         "docs/migration/ADMIN_DOMAIN_CENTERS_CONTRACT.md",
         "docs/migration/ADMIN_ERP_MAP.md"
       ],
-      "occurrences": 680,
+      "occurrences": 681,
       "provider": "PayOS"
     },
     {
@@ -6869,7 +6869,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1501,
+      "occurrences": 1506,
       "provider": "Telegram"
     }
   ],
@@ -12464,11 +12464,11 @@
       "path": "<dynamic-route>"
     }
   ],
-  "schema_version": "1.6",
+  "schema_version": "1.7",
   "source_files_discovered": 260,
   "source_files_scanned": 260,
-  "source_fingerprint_sha256": "762fdc6a09d432db632235c5c4d6599bc722204fb768b2e854f6210ece9e1e87",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast53-dispatch-audit",
+  "source_fingerprint_sha256": "3988751ab4562528fda2c078039d2873c93616c922e764e43514c392fb7364ac",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast54-prompt-library",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
