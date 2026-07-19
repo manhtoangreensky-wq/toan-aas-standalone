@@ -110,6 +110,7 @@ async def dashboard():
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
+        "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
         "STORAGE_ADDON_CALLBACK_CONTRACT.md",
     ):
         assert (docs_dir / name).is_file()
@@ -1487,6 +1488,99 @@ async def page(page_path):
     assert "STORAGE_ADDON_SOURCE_REVIEW_REQUIRED" in contract
     assert "STORAGE_ADDON_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
     assert "Storage quota add-on purchase is distinct from Xu top-up" in (
+        tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md"
+    ).read_text(encoding="utf-8")
+
+
+def test_static_audit_keeps_video_finalization_callbacks_out_of_browser_actions(tmp_path: Path) -> None:
+    """Bot vfinal state must never inherit a Web export/voice/subtitle route."""
+
+    audit = _load_audit_module()
+    routes = {"/video/finishing", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    reviewed = (
+        "vfinal|review",
+        "vfinal|export_ai",
+        "vfinal|voice_lang|vi",
+        "vfinal|tier|basic",
+    )
+    for callback in reviewed:
+        mapped = audit._map_callback(callback, "callback_data", evidence, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "reviewed_video_finalization_telegram_only"
+        assert mapped["source_dispositions"] == (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_VIDEO_FINALIZATION_SESSION_STATE",
+            "BOT_PENDING_MEDIA_OR_TEXT_STATE",
+            "CANONICAL_VIDEO_EXPORT_AND_PAYMENT_GUARDS",
+            "NO_RUNTIME_CLAIM",
+        )
+        assert "Web Video Finishing workflow" in mapped["source_evidence"]
+
+    reviewed_template = audit._map_callback_template("vfinal|tier|{*}", evidence, routes)
+    assert reviewed_template is not None
+    assert reviewed_template["target"] == "TELEGRAM_ONLY"
+    assert reviewed_template["status"] == "TELEGRAM_ONLY"
+    assert reviewed_template["resolution"] == "reviewed_video_finalization_telegram_only"
+
+    unknown = audit._map_callback("vfinal|future_export", "callback_data", evidence, routes)
+    audit._annotate_feature_disposition(unknown)
+    assert unknown["target"] == "VIDEO_FINALIZATION_SOURCE_REVIEW_REQUIRED"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unknown["fallback_family"] == "vfinal"
+
+    unknown_template = audit._map_callback_template("vfinal|tier|future_{*}", evidence, routes)
+    assert unknown_template is not None
+    assert unknown_template["target"] == "VIDEO_FINALIZATION_SOURCE_REVIEW_REQUIRED"
+    assert unknown_template["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+InlineKeyboardButton("Review", callback_data="vfinal|review")
+InlineKeyboardButton("Export", callback_data="vfinal|export_ai")
+InlineKeyboardButton("Voice", callback_data="vfinal|voice_lang|vi")
+tier = "basic"
+InlineKeyboardButton("Tier", callback_data=f"vfinal|tier|{tier}")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/video/finishing")
+async def video_finishing():
+    return {}
+@app.get("/{page_path:path}")
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    assert all(
+        callbacks[source]["target"] == "TELEGRAM_ONLY"
+        and callbacks[source]["status"] == "TELEGRAM_ONLY"
+        for source in reviewed[:-1]
+    )
+    templates = {item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]}
+    assert templates["vfinal|tier|{*}"]["target"] == "TELEGRAM_ONLY"
+    assert "vfinal" not in {
+        item["family"] for item in result["parity_gap"]["feature_disposition_backlog"]
+    }
+    contract = (tmp_path / "docs" / "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "vfinal\\|export_ai" in contract
+    assert "vfinal\\|tier\\|{*}" in contract
+    assert "VIDEO_FINALIZATION_SOURCE_REVIEW_REQUIRED" in contract
+    assert "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert "Bot Video Finishing callbacks remain Telegram-only" in (
         tmp_path / "docs" / "PAYOS_WALLET_JOB_MAP.md"
     ).read_text(encoding="utf-8")
 

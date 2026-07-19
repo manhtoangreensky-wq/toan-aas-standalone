@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 2134,
+      "line": 2168,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -176,7 +176,7 @@
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 202,
+    "database_tables": 203,
     "env_references": 192,
     "providers": 16,
     "routes": 621,
@@ -260,6 +260,12 @@
       "line": 37,
       "operation": "INSERT INTO",
       "table": "campaigns"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 3113,
+      "operation": "UPDATE",
+      "table": "choices"
     },
     {
       "file": "ai_assistant.py",
@@ -5345,6 +5351,7 @@
     "any",
     "b2b_projects",
     "campaigns",
+    "choices",
     "credit_events",
     "erp_approvals",
     "erp_assets",
@@ -6642,7 +6649,7 @@
         "docs/migration/ADMIN_DOMAIN_CENTERS_CONTRACT.md",
         "docs/migration/ADMIN_ERP_MAP.md"
       ],
-      "occurrences": 724,
+      "occurrences": 725,
       "provider": "PayOS"
     },
     {
@@ -6869,7 +6876,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1582,
+      "occurrences": 1596,
       "provider": "Telegram"
     }
   ],
@@ -12467,8 +12474,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 264,
   "source_files_scanned": 264,
-  "source_fingerprint_sha256": "ed61cebc9d1e066c0ef02c32a8e3a5cb0220fe5082b992f3cda21c84f9816a2b",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast59-storage-addon-disposition",
+  "source_fingerprint_sha256": "d74260b92b032596736a5de60bbb922f66d52d5f373fc0d1707990c69977d97c",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast60-video-finalization-disposition",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
