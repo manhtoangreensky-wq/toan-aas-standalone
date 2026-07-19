@@ -824,6 +824,53 @@
   const WORKSPACE_SETUP_GOALS = new Set(["organize_work", "create_content", "build_brand", "run_operations", "learn_workflows"]);
   const WORKSPACE_SETUP_EXPERIENCE = new Set(["new", "growing", "advanced"]);
   const WORKSPACE_SETUP_FOCUS = new Set(["projects", "content", "image", "voice", "music", "subtitle", "documents", "automation"]);
+  // This closed set controls only the Portal interface language.  It is
+  // deliberately separate from Studio workflow/source/target language fields.
+  const INTERFACE_LOCALES = new Set(["vi", "en", "zh"]);
+
+  function profileUpdateInterfaceLocale(value) {
+    if (value === undefined || value === null) return "vi";
+    if (typeof value !== "string") throw new Error("Ngôn ngữ giao diện không hợp lệ.");
+    const locale = value.trim().toLowerCase();
+    // An omitted select preserves the historical Vietnamese default. A
+    // malformed value is not silently rewritten: the signed API must receive
+    // only one of the reviewed interface catalogs.
+    if (!locale) return "vi";
+    if (!INTERFACE_LOCALES.has(locale)) throw new Error("Ngôn ngữ giao diện chỉ hỗ trợ Tiếng Việt, English hoặc 中文.");
+    return locale;
+  }
+
+  function profileUpdatePayload(fields) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    // Keep this allowlist intentionally tiny. In particular, interface locale
+    // must never be conflated with a workflow source/target language, and no
+    // browser-provided identity, role or Telegram identifier crosses it.
+    return {
+      display_name: typeof source.display_name === "string" ? source.display_name : "",
+      locale: profileUpdateInterfaceLocale(source.locale),
+      timezone: typeof source.timezone === "string" && source.timezone.trim()
+        ? source.timezone.trim()
+        : "Asia/Ho_Chi_Minh"
+    };
+  }
+
+  function confirmedProfileInterfaceLocale(result) {
+    const profile = result && result.data && result.data.account && result.data.account.profile;
+    const locale = typeof (profile && profile.locale) === "string"
+      ? profile.locale.trim().toLowerCase()
+      : "";
+    if (!INTERFACE_LOCALES.has(locale)) throw new Error("Máy chủ chưa xác nhận ngôn ngữ giao diện hợp lệ.");
+    return locale;
+  }
+
+  function applyConfirmedProfileInterfaceLocale(locale) {
+    // This changes document presentation only after the signed profile write
+    // returned an allowed server projection. The following hydrate() remains
+    // the sole state update and remounts the Portal from /auth/me; we never
+    // merge the response account, identity, role or workflow fields locally.
+    const i18n = window.TOANAASI18n;
+    if (i18n && typeof i18n.setLocale === "function") i18n.setLocale(locale, { emit: false });
+  }
   const WORKSPACE_SETUP_BOUNDARY_FALSE_FIELDS = [
     "bot_called", "bridge_called", "provider_called", "job_created", "wallet_mutated",
     "payment_started", "publish_action_created", "notification_sent"
@@ -895,7 +942,7 @@
     return {
       profile,
       preferences: {
-        locale: ["vi", "en"].includes(locale) ? locale : "vi",
+        locale: INTERFACE_LOCALES.has(locale) ? locale : "vi",
         timezone: /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+)$/.test(timezone) && timezone.length <= 64
           ? timezone
           : "Asia/Ho_Chi_Minh"
@@ -23961,17 +24008,18 @@
         return;
       }
       if (action === "update-profile") {
+        const payload = profileUpdatePayload(fields);
         const result = await api("/auth/profile", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            display_name: fields.display_name || "",
-            locale: fields.locale || "vi",
-            timezone: fields.timezone || "Asia/Ho_Chi_Minh"
-          })
+          body: JSON.stringify(payload)
         });
-        toast(result.message);
+        // Apply only the locale echoed by the signed profile endpoint. This
+        // makes the document language truthful immediately, then hydrate()
+        // obtains a fresh server-owned Portal context and remounts all UI.
+        applyConfirmedProfileInterfaceLocale(confirmedProfileInterfaceLocale(result));
         await hydrate();
+        toast(result.message);
         return;
       }
       if (action === "upgrade-telegram-account") {

@@ -64,6 +64,11 @@ BRIDGE_CALLBACK_MAX_FUTURE_SKEW_SECONDS = 30
 BRIDGE_CALLBACK_MAX_BODY_BYTES = 2_048
 BRIDGE_CALLBACK_REQUEST_ID_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{8,160}$")
 OAUTH_PROVIDER_NAMES = frozenset({"google", "github", "apple", "telegram"})
+# Interface locale is a Web-owned presentation preference.  It intentionally
+# does not select the language of any Studio workflow, Bot conversation or
+# provider request.
+INTERFACE_LOCALES = frozenset({"vi", "en", "zh"})
+DEFAULT_INTERFACE_LOCALE = "vi"
 # Only these providers have a verified-email contract.  Telegram's numeric
 # identity remains separate from contact email and from the Bot canonical ID.
 OAUTH_CONTACT_PROVIDERS = frozenset({"google", "github", "apple"})
@@ -112,6 +117,18 @@ def envelope(ok: bool, message: str, *, data: dict | None = None, status_name: s
         "data": data or {},
         "error_code": error_code,
     }
+
+
+def normalize_interface_locale(value: object) -> str:
+    """Return a closed, browser-safe Web interface locale.
+
+    This is deliberately a presentation setting only.  Callers must still
+    reject unsupported submitted values where the user requested an update;
+    this fallback is for persisted legacy/malformed rows before projection.
+    """
+
+    locale = str(value or "").strip().lower()
+    return locale if locale in INTERFACE_LOCALES else DEFAULT_INTERFACE_LOCALE
 
 
 def _bridge_callback_failure(
@@ -1096,7 +1113,7 @@ def browser_account_payload(account: dict) -> dict:
         "role": "admin" if account.get("role") == "admin" else "user",
         "telegram_linked": bool(account.get("canonical_user_id")),
         "profile": {
-            "locale": str(account.get("locale") or "vi"),
+            "locale": normalize_interface_locale(account.get("locale")),
             "timezone": str(account.get("timezone") or "Asia/Ho_Chi_Minh"),
             "avatar_style": str(account.get("avatar_style") or "gradient"),
         },
@@ -1160,7 +1177,7 @@ def current_session(request: Request) -> dict:
             "canonical_user_id": row[6],
             "role": row[7] or "user",
             "password_login_enabled": bool(row[9]),
-            "locale": row[10] or "vi",
+            "locale": normalize_interface_locale(row[10]),
             "timezone": row[11] or "Asia/Ho_Chi_Minh",
             "avatar_style": row[12] or "gradient",
         },
@@ -1519,7 +1536,7 @@ def _oauth_account_from_row(row: tuple) -> dict:
         "role": row[4] or "user",
         "is_active": bool(row[5]),
         "password_login_enabled": bool(row[6]),
-        "locale": row[7] or "vi",
+        "locale": normalize_interface_locale(row[7]),
         "timezone": row[8] or "Asia/Ho_Chi_Minh",
         "avatar_style": row[9] or "gradient",
     }
@@ -2540,7 +2557,7 @@ async def login(payload: LoginRequest, request: Request, response: Response):
             "id": row[0], "email": row[1], "display_name": row[3] or "",
             "canonical_user_id": row[4], "role": row[5] or "user",
             "password_login_enabled": bool(row[7]),
-            "locale": row[8] or "vi", "timezone": row[9] or "Asia/Ho_Chi_Minh", "avatar_style": row[10] or "gradient",
+            "locale": normalize_interface_locale(row[8]), "timezone": row[9] or "Asia/Ho_Chi_Minh", "avatar_style": row[10] or "gradient",
         }
         _record_audit(conn, account_id=row[0], canonical_user_id=row[4], action="auth.login", request_id=_request_id(request))
     session = _create_session(response, account["id"])
@@ -3947,7 +3964,7 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
     timezone_name = payload.timezone.strip()
     if any(ord(character) < 32 for character in display_name):
         return envelope(False, "Tên hiển thị có ký tự không hợp lệ.", status_name="failed", error_code="PROFILE_DISPLAY_NAME_INVALID")
-    if locale not in {"vi", "en"}:
+    if locale not in INTERFACE_LOCALES:
         return envelope(False, "Ngôn ngữ hồ sơ chưa được hỗ trợ.", status_name="failed", error_code="PROFILE_LOCALE_INVALID")
     if timezone_name not in {"Asia/Ho_Chi_Minh", "UTC"}:
         return envelope(False, "Múi giờ hồ sơ chưa được hỗ trợ.", status_name="failed", error_code="PROFILE_TIMEZONE_INVALID")
@@ -4494,7 +4511,7 @@ async def complete_telegram_login(request: Request, response: Response):
             "id": account_row[0], "email": account_row[1], "display_name": account_row[2] or "",
             "canonical_user_id": account_row[3], "role": account_row[4] or "user",
             "password_login_enabled": bool(account_row[6]),
-            "locale": account_row[7] or "vi", "timezone": account_row[8] or "Asia/Ho_Chi_Minh",
+            "locale": normalize_interface_locale(account_row[7]), "timezone": account_row[8] or "Asia/Ho_Chi_Minh",
             "avatar_style": account_row[9] or "gradient",
         }
         conn.execute("DELETE FROM telegram_login_codes WHERE code_hash=?", (row[0],))

@@ -18,7 +18,15 @@ from typing import Any, Callable
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, field_validator, model_validator
 
-from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
+from copyfast_auth import (
+    DEFAULT_INTERFACE_LOCALE,
+    INTERFACE_LOCALES,
+    _record_audit,
+    _request_id,
+    envelope,
+    require_account,
+    require_csrf,
+)
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now
 
 
@@ -154,10 +162,12 @@ def _safe_profile(row: tuple[Any, ...] | None) -> dict[str, Any]:
 
 
 def _safe_preferences(account: dict[str, Any]) -> dict[str, str]:
-    locale = str(account.get("locale") or "vi").strip().lower()
+    # The interface locale is a Web presentation setting.  It is not a
+    # workflow/source/target language and must remain a closed projection.
+    locale = str(account.get("locale") or DEFAULT_INTERFACE_LOCALE).strip().lower()
     timezone = str(account.get("timezone") or "Asia/Ho_Chi_Minh").strip()
     return {
-        "locale": locale if locale in {"vi", "en"} else "vi",
+        "locale": locale if locale in INTERFACE_LOCALES else DEFAULT_INTERFACE_LOCALE,
         "timezone": timezone if TIMEZONE_PATTERN.fullmatch(timezone) and len(timezone) <= 64 else "Asia/Ho_Chi_Minh",
     }
 

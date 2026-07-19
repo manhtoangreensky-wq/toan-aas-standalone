@@ -1,0 +1,1312 @@
+/*
+ * TOAN AAS Portal i18n foundation
+ *
+ * This is a deliberately small, local presentation catalog.  It translates
+ * only reviewed interface chrome and fixed product labels; project briefs,
+ * prompts, account content, generated drafts and provider responses remain
+ * customer/server data and are never translated in the browser.
+ *
+ * No persistence, network requests or workflow actions live here.  The
+ * signed account preference can be passed to setLocale by the integration
+ * layer, while a reload safely starts from the document/bootstrap locale.
+ */
+(function portalI18n(global) {
+  "use strict";
+
+  const DEFAULT_LOCALE = "vi";
+  const FALLBACK_LOCALE = "en";
+  const OWN = Object.prototype.hasOwnProperty;
+
+  const LOCALES = Object.freeze({
+    vi: Object.freeze({
+      code: "vi",
+      htmlLang: "vi",
+      nativeName: "Tiếng Việt",
+      displayName: "Vietnamese",
+      direction: "ltr"
+    }),
+    en: Object.freeze({
+      code: "en",
+      htmlLang: "en",
+      nativeName: "English",
+      displayName: "English",
+      direction: "ltr"
+    }),
+    zh: Object.freeze({
+      code: "zh",
+      htmlLang: "zh-CN",
+      nativeName: "中文",
+      displayName: "Chinese (Simplified)",
+      direction: "ltr"
+    })
+  });
+
+  // Chinese aliases intentionally resolve to the one reviewed Chinese UI
+  // catalog.  Other language preferences use the documented English fallback
+  // until a reviewed catalog exists for that interface language.
+  const LOCALE_ALIASES = Object.freeze({
+    vi: "vi", "vi-vn": "vi", "vi_vn": "vi",
+    en: "en", "en-us": "en", "en_us": "en", "en-gb": "en", "en_gb": "en",
+    zh: "zh", "zh-cn": "zh", "zh_cn": "zh", "zh-hans": "zh", "zh_hans": "zh",
+    "zh-sg": "zh", "zh_sg": "zh", "zh-tw": "zh", "zh_tw": "zh", "zh-hant": "zh", "zh_hant": "zh"
+  });
+
+  const MESSAGES = {
+    vi: {
+      "app.name": "TOAN AAS",
+      "app.workspace": "TOAN AAS Workspace",
+      "app.title": "TOAN AAS Workspace",
+
+      "chrome.skip_navigation": "Bỏ qua điều hướng",
+      "chrome.main_navigation": "Điều hướng chính",
+      "chrome.quick_navigation": "Điều hướng nhanh",
+      "chrome.menu": "Menu",
+      "chrome.close": "Đóng",
+      "chrome.open": "Mở",
+      "chrome.back": "Quay lại",
+      "chrome.search": "Tìm kiếm",
+      "chrome.command_palette": "Lệnh nhanh",
+      "chrome.notifications": "Thông báo",
+      "chrome.inbox": "Hộp thư",
+      "chrome.create": "Tạo mới",
+      "chrome.refresh": "Làm mới",
+      "chrome.save": "Lưu",
+      "chrome.cancel": "Hủy",
+      "chrome.continue": "Tiếp tục",
+      "chrome.confirm": "Xác nhận",
+      "chrome.edit": "Chỉnh sửa",
+      "chrome.delete": "Xóa",
+      "chrome.view_all": "Xem tất cả",
+      "chrome.loading": "Đang tải…",
+      "chrome.no_results": "Không tìm thấy kết quả.",
+      "chrome.retry": "Thử lại",
+      "chrome.status": "Trạng thái",
+      "chrome.settings": "Cài đặt",
+      "chrome.help": "Trợ giúp",
+      "chrome.sign_out": "Đăng xuất",
+      "chrome.install_app": "Cài đặt ứng dụng",
+      "chrome.offline": "Bạn đang ngoại tuyến.",
+      "chrome.online": "Đã kết nối lại.",
+      "chrome.required": "Bắt buộc",
+      "chrome.optional": "Tùy chọn",
+      "chrome.coming_soon": "Sắp ra mắt",
+
+      "nav.dashboard": "Tổng quan",
+      "nav.projects": "Dự án",
+      "nav.workspace_setup": "Thiết lập workspace",
+      "nav.starter_kits": "Starter Kits",
+      "nav.account": "Tài khoản",
+      "nav.wallet": "Ví Xu",
+      "nav.jobs": "Công việc",
+      "nav.assets": "Tài sản",
+      "nav.support": "Hỗ trợ",
+      "nav.pricing": "Bảng giá",
+      "nav.admin": "Quản trị",
+
+      "account.title": "Tài khoản",
+      "account.subtitle": "Quản lý hồ sơ, quyền riêng tư và phương thức truy cập của bạn.",
+      "account.profile": "Hồ sơ",
+      "account.profile_description": "Thông tin này chỉ dùng để cá nhân hóa workspace của bạn.",
+      "account.display_name": "Tên hiển thị",
+      "account.email": "Email",
+      "account.locale": "Ngôn ngữ giao diện",
+      "account.timezone": "Múi giờ",
+      "account.role": "Vai trò",
+      "account.account_id": "Mã tài khoản",
+      "account.save": "Lưu thay đổi",
+      "account.saved": "Đã lưu thay đổi.",
+      "account.save_error": "Không thể lưu thay đổi. Vui lòng thử lại.",
+      "account.security": "Bảo mật",
+      "account.security_description": "Xem và quản lý các phương thức truy cập được cấu hình cho tài khoản này.",
+      "account.password": "Mật khẩu",
+      "account.change_password": "Đổi mật khẩu",
+      "account.telegram": "Telegram",
+      "account.telegram_description": "Liên kết chỉ hoàn tất sau khi Telegram xác minh mã dùng một lần.",
+      "account.connected": "Đã liên kết",
+      "account.not_connected": "Chưa liên kết",
+      "account.identity": "Danh tính",
+      "account.sessions": "Phiên đăng nhập",
+      "account.oauth": "Đăng nhập liên kết",
+      "account.no_oauth": "Chưa có phương thức đăng nhập liên kết nào được cấu hình.",
+      "account.language_preference": "Tùy chọn ngôn ngữ",
+      "account.locale_help": "Ngôn ngữ giao diện không thay đổi nội dung dự án, tệp hoặc dữ liệu workflow của bạn.",
+
+      "locale.vi": "Tiếng Việt",
+      "locale.en": "English",
+      "locale.zh": "中文",
+
+      "workspace_setup.title": "Thiết lập workspace",
+      "workspace_setup.subtitle": "Hoàn tất vài thông tin nền tảng để TOAN AAS sắp xếp workspace theo cách bạn làm việc.",
+      "workspace_setup.intro": "Bạn có thể thay đổi các lựa chọn này sau trong phần Tài khoản.",
+      "workspace_setup.progress": "Bước {current} / {total}",
+      "workspace_setup.step_account": "Tài khoản",
+      "workspace_setup.step_intent": "Mục tiêu",
+      "workspace_setup.step_preferences": "Tùy chọn",
+      "workspace_setup.step_review": "Rà soát",
+      "workspace_setup.workspace_name": "Tên workspace",
+      "workspace_setup.workspace_name_placeholder": "Ví dụ: Studio nội dung của tôi",
+      "workspace_setup.primary_goal": "Mục tiêu chính",
+      "workspace_setup.role": "Vai trò của bạn",
+      "workspace_setup.team_size": "Quy mô nhóm",
+      "workspace_setup.working_language": "Ngôn ngữ làm việc",
+      "workspace_setup.timezone": "Múi giờ",
+      "workspace_setup.start": "Bắt đầu thiết lập",
+      "workspace_setup.next": "Tiếp tục",
+      "workspace_setup.previous": "Quay lại",
+      "workspace_setup.review": "Rà soát thiết lập",
+      "workspace_setup.complete": "Hoàn tất thiết lập",
+      "workspace_setup.completed": "Workspace đã sẵn sàng",
+      "workspace_setup.save_draft": "Lưu bản nháp",
+      "workspace_setup.setup_required": "Hoàn tất thiết lập workspace để tiếp tục.",
+      "workspace_setup.required_field": "Trường này là bắt buộc.",
+      "workspace_setup.optional_field": "Có thể bỏ qua và cập nhật sau.",
+      "workspace_setup.privacy_note": "Chỉ các dữ liệu cần thiết cho workspace được lưu; bạn luôn kiểm soát hồ sơ của mình.",
+      "workspace_setup.ready_message": "Thiết lập đã hoàn tất. Bạn có thể bắt đầu với một Starter Kit hoặc tạo dự án riêng.",
+      "workspace_setup.edit_setup": "Chỉnh sửa thiết lập",
+
+      "starter_kits.title": "Starter Kits",
+      "starter_kits.subtitle": "Bắt đầu một workspace có cấu trúc bằng mẫu dự án, tài liệu và checklist Web-native đã được rà soát.",
+      "starter_kits.browse": "Xem Starter Kits",
+      "starter_kits.detail": "Chi tiết Starter Kit",
+      "starter_kits.install": "Cài Starter Kit",
+      "starter_kits.install_now": "Cài vào workspace",
+      "starter_kits.continue_setup": "Hoàn tất thiết lập trước",
+      "starter_kits.setup_required": "Bạn cần hoàn tất thiết lập workspace trước khi cài Starter Kit.",
+      "starter_kits.recommended": "Đề xuất",
+      "starter_kits.installed": "Đã cài",
+      "starter_kits.not_installed": "Chưa cài",
+      "starter_kits.already_installed": "Starter Kit này đã có trong workspace của bạn.",
+      "starter_kits.confirmation_title": "Xác nhận cài Starter Kit",
+      "starter_kits.confirmation_copy": "Thao tác này sẽ tạo một dự án, tài liệu cấu trúc và checklist bản nháp trong workspace của bạn.",
+      "starter_kits.confirm_install": "Tôi hiểu, cài Starter Kit",
+      "starter_kits.cancel_install": "Hủy cài đặt",
+      "starter_kits.installing": "Đang cài Starter Kit…",
+      "starter_kits.install_success": "Starter Kit đã được cài dưới dạng bản nháp.",
+      "starter_kits.install_error": "Không thể cài Starter Kit. Vui lòng thử lại.",
+      "starter_kits.included_records": "Nội dung sẽ được tạo",
+      "starter_kits.project": "Dự án",
+      "starter_kits.documents": "Tài liệu",
+      "starter_kits.work_items": "Việc cần làm",
+      "starter_kits.scope": "Phạm vi",
+      "starter_kits.scope_description": "Starter Kits chỉ tạo cấu trúc Web-native trong workspace của bạn.",
+      "starter_kits.web_native": "Chỉ dùng dữ liệu Web-native",
+      "starter_kits.no_provider": "Không gọi nhà cung cấp AI",
+      "starter_kits.no_payment": "Không tạo thanh toán hoặc thay đổi số dư Xu",
+      "starter_kits.no_bot": "Không thay đổi Bot hoặc danh tính Telegram",
+      "starter_kits.no_output": "Không tạo file đầu ra hoặc giao kết quả giả",
+      "starter_kits.draft_only": "Mọi nội dung được tạo ở trạng thái bản nháp",
+      "starter_kits.open_project": "Mở dự án",
+      "starter_kits.return_catalog": "Quay lại Starter Kits",
+      "starter_kits.version": "Phiên bản {version}",
+      "starter_kits.status": "Trạng thái cài đặt",
+      "starter_kits.empty": "Chưa có Starter Kit phù hợp.",
+      "starter_kits.refresh": "Làm mới danh sách",
+      "starter_kits.not_available": "Starter Kits hiện chưa khả dụng.",
+
+      "page.dashboard.title": "Tổng quan · TOAN AAS",
+      "page.account.title": "Tài khoản · TOAN AAS",
+      "page.workspace_setup.title": "Thiết lập workspace · TOAN AAS",
+      "page.starter_kits.title": "Starter Kits · TOAN AAS",
+      "page.starter_kit_detail.title": "{name} · Starter Kits · TOAN AAS"
+    },
+
+    en: {
+      "app.name": "TOAN AAS",
+      "app.workspace": "TOAN AAS Workspace",
+      "app.title": "TOAN AAS Workspace",
+
+      "chrome.skip_navigation": "Skip navigation",
+      "chrome.main_navigation": "Main navigation",
+      "chrome.quick_navigation": "Quick navigation",
+      "chrome.menu": "Menu",
+      "chrome.close": "Close",
+      "chrome.open": "Open",
+      "chrome.back": "Back",
+      "chrome.search": "Search",
+      "chrome.command_palette": "Command palette",
+      "chrome.notifications": "Notifications",
+      "chrome.inbox": "Inbox",
+      "chrome.create": "Create",
+      "chrome.refresh": "Refresh",
+      "chrome.save": "Save",
+      "chrome.cancel": "Cancel",
+      "chrome.continue": "Continue",
+      "chrome.confirm": "Confirm",
+      "chrome.edit": "Edit",
+      "chrome.delete": "Delete",
+      "chrome.view_all": "View all",
+      "chrome.loading": "Loading…",
+      "chrome.no_results": "No results found.",
+      "chrome.retry": "Try again",
+      "chrome.status": "Status",
+      "chrome.settings": "Settings",
+      "chrome.help": "Help",
+      "chrome.sign_out": "Sign out",
+      "chrome.install_app": "Install app",
+      "chrome.offline": "You are offline.",
+      "chrome.online": "You are back online.",
+      "chrome.required": "Required",
+      "chrome.optional": "Optional",
+      "chrome.coming_soon": "Coming soon",
+
+      "nav.dashboard": "Overview",
+      "nav.projects": "Projects",
+      "nav.workspace_setup": "Workspace setup",
+      "nav.starter_kits": "Starter Kits",
+      "nav.account": "Account",
+      "nav.wallet": "Credit wallet",
+      "nav.jobs": "Jobs",
+      "nav.assets": "Assets",
+      "nav.support": "Support",
+      "nav.pricing": "Pricing",
+      "nav.admin": "Administration",
+
+      "account.title": "Account",
+      "account.subtitle": "Manage your profile, privacy and access methods.",
+      "account.profile": "Profile",
+      "account.profile_description": "This information is used only to personalize your workspace.",
+      "account.display_name": "Display name",
+      "account.email": "Email",
+      "account.locale": "Interface language",
+      "account.timezone": "Time zone",
+      "account.role": "Role",
+      "account.account_id": "Account ID",
+      "account.save": "Save changes",
+      "account.saved": "Changes saved.",
+      "account.save_error": "Could not save changes. Please try again.",
+      "account.security": "Security",
+      "account.security_description": "Review and manage the access methods configured for this account.",
+      "account.password": "Password",
+      "account.change_password": "Change password",
+      "account.telegram": "Telegram",
+      "account.telegram_description": "A link is completed only after Telegram verifies a one-time code.",
+      "account.connected": "Connected",
+      "account.not_connected": "Not connected",
+      "account.identity": "Identity",
+      "account.sessions": "Sign-in sessions",
+      "account.oauth": "Connected sign-in",
+      "account.no_oauth": "No connected sign-in method is configured.",
+      "account.language_preference": "Language preference",
+      "account.locale_help": "Interface language does not change your project content, files or workflow data.",
+
+      "locale.vi": "Tiếng Việt",
+      "locale.en": "English",
+      "locale.zh": "中文",
+
+      "workspace_setup.title": "Set up your workspace",
+      "workspace_setup.subtitle": "Complete a few foundations so TOAN AAS can organize the workspace around how you work.",
+      "workspace_setup.intro": "You can change these choices later from Account.",
+      "workspace_setup.progress": "Step {current} of {total}",
+      "workspace_setup.step_account": "Account",
+      "workspace_setup.step_intent": "Intent",
+      "workspace_setup.step_preferences": "Preferences",
+      "workspace_setup.step_review": "Review",
+      "workspace_setup.workspace_name": "Workspace name",
+      "workspace_setup.workspace_name_placeholder": "Example: My content studio",
+      "workspace_setup.primary_goal": "Primary goal",
+      "workspace_setup.role": "Your role",
+      "workspace_setup.team_size": "Team size",
+      "workspace_setup.working_language": "Working language",
+      "workspace_setup.timezone": "Time zone",
+      "workspace_setup.start": "Start setup",
+      "workspace_setup.next": "Continue",
+      "workspace_setup.previous": "Back",
+      "workspace_setup.review": "Review setup",
+      "workspace_setup.complete": "Complete setup",
+      "workspace_setup.completed": "Workspace is ready",
+      "workspace_setup.save_draft": "Save draft",
+      "workspace_setup.setup_required": "Complete workspace setup to continue.",
+      "workspace_setup.required_field": "This field is required.",
+      "workspace_setup.optional_field": "You can skip this and update it later.",
+      "workspace_setup.privacy_note": "Only workspace data that is needed is saved; you remain in control of your profile.",
+      "workspace_setup.ready_message": "Setup is complete. Start with a Starter Kit or create your own project.",
+      "workspace_setup.edit_setup": "Edit setup",
+
+      "starter_kits.title": "Starter Kits",
+      "starter_kits.subtitle": "Start with a structured workspace using reviewed Web-native project templates, documents and checklists.",
+      "starter_kits.browse": "Browse Starter Kits",
+      "starter_kits.detail": "Starter Kit details",
+      "starter_kits.install": "Install Starter Kit",
+      "starter_kits.install_now": "Install in workspace",
+      "starter_kits.continue_setup": "Complete setup first",
+      "starter_kits.setup_required": "Complete workspace setup before installing a Starter Kit.",
+      "starter_kits.recommended": "Recommended",
+      "starter_kits.installed": "Installed",
+      "starter_kits.not_installed": "Not installed",
+      "starter_kits.already_installed": "This Starter Kit is already in your workspace.",
+      "starter_kits.confirmation_title": "Confirm Starter Kit installation",
+      "starter_kits.confirmation_copy": "This creates one project, structured documents and a draft checklist in your workspace.",
+      "starter_kits.confirm_install": "I understand, install Starter Kit",
+      "starter_kits.cancel_install": "Cancel installation",
+      "starter_kits.installing": "Installing Starter Kit…",
+      "starter_kits.install_success": "Starter Kit installed as a draft.",
+      "starter_kits.install_error": "Could not install Starter Kit. Please try again.",
+      "starter_kits.included_records": "What will be created",
+      "starter_kits.project": "Project",
+      "starter_kits.documents": "Documents",
+      "starter_kits.work_items": "Work items",
+      "starter_kits.scope": "Scope",
+      "starter_kits.scope_description": "Starter Kits only create Web-native structure in your workspace.",
+      "starter_kits.web_native": "Uses Web-native data only",
+      "starter_kits.no_provider": "Does not call an AI provider",
+      "starter_kits.no_payment": "Does not create a payment or change your credit balance",
+      "starter_kits.no_bot": "Does not change the Bot or Telegram identity",
+      "starter_kits.no_output": "Does not create output files or pretend delivery",
+      "starter_kits.draft_only": "All created content starts as a draft",
+      "starter_kits.open_project": "Open project",
+      "starter_kits.return_catalog": "Back to Starter Kits",
+      "starter_kits.version": "Version {version}",
+      "starter_kits.status": "Installation status",
+      "starter_kits.empty": "No suitable Starter Kit is available yet.",
+      "starter_kits.refresh": "Refresh list",
+      "starter_kits.not_available": "Starter Kits are currently unavailable.",
+
+      "page.dashboard.title": "Overview · TOAN AAS",
+      "page.account.title": "Account · TOAN AAS",
+      "page.workspace_setup.title": "Workspace setup · TOAN AAS",
+      "page.starter_kits.title": "Starter Kits · TOAN AAS",
+      "page.starter_kit_detail.title": "{name} · Starter Kits · TOAN AAS"
+    },
+
+    zh: {
+      "app.name": "TOAN AAS",
+      "app.workspace": "TOAN AAS 工作台",
+      "app.title": "TOAN AAS 工作台",
+
+      "chrome.skip_navigation": "跳过导航",
+      "chrome.main_navigation": "主导航",
+      "chrome.quick_navigation": "快捷导航",
+      "chrome.menu": "菜单",
+      "chrome.close": "关闭",
+      "chrome.open": "打开",
+      "chrome.back": "返回",
+      "chrome.search": "搜索",
+      "chrome.command_palette": "快捷命令",
+      "chrome.notifications": "通知",
+      "chrome.inbox": "收件箱",
+      "chrome.create": "新建",
+      "chrome.refresh": "刷新",
+      "chrome.save": "保存",
+      "chrome.cancel": "取消",
+      "chrome.continue": "继续",
+      "chrome.confirm": "确认",
+      "chrome.edit": "编辑",
+      "chrome.delete": "删除",
+      "chrome.view_all": "查看全部",
+      "chrome.loading": "加载中…",
+      "chrome.no_results": "未找到结果。",
+      "chrome.retry": "重试",
+      "chrome.status": "状态",
+      "chrome.settings": "设置",
+      "chrome.help": "帮助",
+      "chrome.sign_out": "退出登录",
+      "chrome.install_app": "安装应用",
+      "chrome.offline": "当前处于离线状态。",
+      "chrome.online": "已重新连接。",
+      "chrome.required": "必填",
+      "chrome.optional": "可选",
+      "chrome.coming_soon": "即将推出",
+
+      "nav.dashboard": "概览",
+      "nav.projects": "项目",
+      "nav.workspace_setup": "工作台设置",
+      "nav.starter_kits": "入门套件",
+      "nav.account": "账户",
+      "nav.wallet": "积分钱包",
+      "nav.jobs": "任务",
+      "nav.assets": "资源",
+      "nav.support": "支持",
+      "nav.pricing": "价格",
+      "nav.admin": "管理",
+
+      "account.title": "账户",
+      "account.subtitle": "管理您的个人资料、隐私和访问方式。",
+      "account.profile": "个人资料",
+      "account.profile_description": "这些信息仅用于个性化您的工作台。",
+      "account.display_name": "显示名称",
+      "account.email": "电子邮箱",
+      "account.locale": "界面语言",
+      "account.timezone": "时区",
+      "account.role": "角色",
+      "account.account_id": "账户 ID",
+      "account.save": "保存更改",
+      "account.saved": "已保存更改。",
+      "account.save_error": "无法保存更改，请重试。",
+      "account.security": "安全",
+      "account.security_description": "查看并管理为此账户配置的访问方式。",
+      "account.password": "密码",
+      "account.change_password": "修改密码",
+      "account.telegram": "Telegram",
+      "account.telegram_description": "只有在 Telegram 验证一次性代码后，关联才会完成。",
+      "account.connected": "已关联",
+      "account.not_connected": "未关联",
+      "account.identity": "身份",
+      "account.sessions": "登录会话",
+      "account.oauth": "已关联登录",
+      "account.no_oauth": "尚未配置关联登录方式。",
+      "account.language_preference": "语言偏好",
+      "account.locale_help": "界面语言不会更改您的项目内容、文件或工作流数据。",
+
+      "locale.vi": "Tiếng Việt",
+      "locale.en": "English",
+      "locale.zh": "中文",
+
+      "workspace_setup.title": "设置工作台",
+      "workspace_setup.subtitle": "完成几项基础设置，让 TOAN AAS 按照您的工作方式组织工作台。",
+      "workspace_setup.intro": "您可稍后在“账户”中修改这些选项。",
+      "workspace_setup.progress": "第 {current} 步，共 {total} 步",
+      "workspace_setup.step_account": "账户",
+      "workspace_setup.step_intent": "目标",
+      "workspace_setup.step_preferences": "偏好",
+      "workspace_setup.step_review": "检查",
+      "workspace_setup.workspace_name": "工作台名称",
+      "workspace_setup.workspace_name_placeholder": "例如：我的内容工作室",
+      "workspace_setup.primary_goal": "主要目标",
+      "workspace_setup.role": "您的角色",
+      "workspace_setup.team_size": "团队规模",
+      "workspace_setup.working_language": "工作语言",
+      "workspace_setup.timezone": "时区",
+      "workspace_setup.start": "开始设置",
+      "workspace_setup.next": "继续",
+      "workspace_setup.previous": "返回",
+      "workspace_setup.review": "检查设置",
+      "workspace_setup.complete": "完成设置",
+      "workspace_setup.completed": "工作台已准备就绪",
+      "workspace_setup.save_draft": "保存草稿",
+      "workspace_setup.setup_required": "请先完成工作台设置。",
+      "workspace_setup.required_field": "此字段为必填项。",
+      "workspace_setup.optional_field": "您可以跳过此项，稍后再更新。",
+      "workspace_setup.privacy_note": "只会保存工作台所需的数据；您始终可以控制自己的个人资料。",
+      "workspace_setup.ready_message": "设置已完成。您可以从入门套件开始，或创建自己的项目。",
+      "workspace_setup.edit_setup": "编辑设置",
+
+      "starter_kits.title": "入门套件",
+      "starter_kits.subtitle": "使用经过审核的 Web 原生项目模板、文档和清单，快速建立结构化工作台。",
+      "starter_kits.browse": "浏览入门套件",
+      "starter_kits.detail": "入门套件详情",
+      "starter_kits.install": "安装入门套件",
+      "starter_kits.install_now": "安装到工作台",
+      "starter_kits.continue_setup": "请先完成设置",
+      "starter_kits.setup_required": "安装入门套件前，请先完成工作台设置。",
+      "starter_kits.recommended": "推荐",
+      "starter_kits.installed": "已安装",
+      "starter_kits.not_installed": "未安装",
+      "starter_kits.already_installed": "此入门套件已在您的工作台中。",
+      "starter_kits.confirmation_title": "确认安装入门套件",
+      "starter_kits.confirmation_copy": "此操作将在您的工作台中创建一个项目、结构化文档和草稿清单。",
+      "starter_kits.confirm_install": "我已了解，安装入门套件",
+      "starter_kits.cancel_install": "取消安装",
+      "starter_kits.installing": "正在安装入门套件…",
+      "starter_kits.install_success": "入门套件已作为草稿安装。",
+      "starter_kits.install_error": "无法安装入门套件，请重试。",
+      "starter_kits.included_records": "将创建的内容",
+      "starter_kits.project": "项目",
+      "starter_kits.documents": "文档",
+      "starter_kits.work_items": "待办事项",
+      "starter_kits.scope": "范围",
+      "starter_kits.scope_description": "入门套件只会在您的工作台中创建 Web 原生结构。",
+      "starter_kits.web_native": "仅使用 Web 原生数据",
+      "starter_kits.no_provider": "不会调用 AI 服务提供商",
+      "starter_kits.no_payment": "不会创建付款或更改积分余额",
+      "starter_kits.no_bot": "不会更改 Bot 或 Telegram 身份",
+      "starter_kits.no_output": "不会创建输出文件或伪造交付",
+      "starter_kits.draft_only": "所有创建的内容均以草稿状态开始",
+      "starter_kits.open_project": "打开项目",
+      "starter_kits.return_catalog": "返回入门套件",
+      "starter_kits.version": "版本 {version}",
+      "starter_kits.status": "安装状态",
+      "starter_kits.empty": "暂时没有适合的入门套件。",
+      "starter_kits.refresh": "刷新列表",
+      "starter_kits.not_available": "入门套件当前不可用。",
+
+      "page.dashboard.title": "概览 · TOAN AAS",
+      "page.account.title": "账户 · TOAN AAS",
+      "page.workspace_setup.title": "工作台设置 · TOAN AAS",
+      "page.starter_kits.title": "入门套件 · TOAN AAS",
+      "page.starter_kit_detail.title": "{name} · 入门套件 · TOAN AAS"
+    }
+  };
+
+  // These keys are the stable, compact vocabulary consumed by the Portal
+  // integration.  They intentionally point at interface concepts only;
+  // feature content remains data owned by the relevant workspace module.
+  const INTERFACE_EXTENSION_MESSAGES = {
+    vi: {
+      "chrome.newWorkflow": "Luồng công việc mới",
+      "chrome.searchWorkspace": "Tìm trong workspace",
+      "chrome.bridgeReady": "Kết nối nội bộ sẵn sàng",
+      "chrome.safeMode": "Chế độ an toàn",
+      "chrome.legalPrivacy": "Pháp lý & quyền riêng tư",
+      "chrome.openNavigation": "Mở điều hướng",
+      "chrome.closeNavigation": "Đóng điều hướng",
+      "chrome.installApp": "Cài đặt ứng dụng",
+      "chrome.openAccount": "Mở tài khoản",
+      "chrome.quickSwitch": "Chuyển nhanh",
+
+      "nav.workspace": "Workspace",
+      "nav.starterKits": "Starter Kits",
+      "nav.workboard": "Bảng công việc",
+      "nav.contentPlanning": "Lập kế hoạch nội dung",
+      "nav.aiLabs": "AI Labs",
+      "nav.create": "Tạo mới",
+      "nav.work": "Công việc",
+      "nav.accountSupport": "Tài khoản & hỗ trợ",
+
+      "mobile.workspace": "Workspace",
+      "mobile.studio": "Studio",
+      "mobile.jobs": "Việc",
+      "mobile.assets": "Tài sản",
+      "mobile.account": "Tài khoản",
+
+      "states.ready": "Sẵn sàng",
+      "states.draft": "Bản nháp",
+      "states.awaitingConfirm": "Chờ xác nhận",
+      "states.queued": "Đã xếp hàng",
+      "states.processing": "Đang xử lý",
+      "states.completed": "Hoàn tất",
+      "states.failed": "Thất bại",
+      "states.guarded": "Được bảo vệ",
+      "states.disabled": "Tạm khóa",
+      "states.readOnly": "Chỉ đọc",
+      "states.empty": "Chưa có dữ liệu",
+      "states.backlog": "Backlog",
+      "states.planned": "Đã lên kế hoạch",
+      "states.inProgress": "Đang thực hiện",
+      "states.done": "Hoàn tất",
+      "states.review": "Tự rà soát",
+      "states.reviewing": "Đang rà soát",
+      "states.scheduled": "Đã xếp lịch",
+      "states.archived": "Đã lưu trữ",
+
+      "account.interfaceLocale": "Ngôn ngữ giao diện",
+      "account.sessionValid": "Signed session hợp lệ",
+      "account.sessionPending": "Đang chờ xác minh",
+      "page.dashboard.description": "Theo dõi workspace, dự án và những việc quan trọng trong một không gian rõ ràng.",
+      "page.account.description": "Quản lý hồ sơ, bảo mật và các phương thức truy cập của tài khoản Web.",
+      "page.workspaceSetup.description": "Thiết lập các tùy chọn Web-native để Workspace phù hợp hơn với cách bạn làm việc.",
+      "page.starterKits.description": "Bắt đầu với cấu trúc Project, tài liệu và checklist Web-native đã được rà soát.",
+
+      "setup.title": "Thiết lập workspace",
+      "setup.subtitle": "Hoàn tất vài thông tin nền tảng để TOAN AAS sắp xếp workspace theo cách bạn làm việc.",
+      "setup.progress": "Bước {current} / {total}",
+      "setup.start": "Bắt đầu thiết lập",
+      "setup.next": "Tiếp tục",
+      "setup.previous": "Quay lại",
+      "setup.complete": "Hoàn tất thiết lập",
+      "setup.completed": "Workspace đã sẵn sàng",
+      "setup.required": "Trường này là bắt buộc.",
+      "setup.ready": "Thiết lập đã hoàn tất. Bạn có thể bắt đầu với một Starter Kit hoặc tạo dự án riêng.",
+      "setup.edit": "Chỉnh sửa thiết lập",
+
+      "starter.title": "Starter Kits",
+      "starter.browse": "Xem Starter Kits",
+      "starter.install": "Cài Starter Kit",
+      "starter.installNow": "Cài vào workspace",
+      "starter.confirm": "Tôi hiểu, cài Starter Kit",
+      "starter.confirmation": "Thao tác này sẽ tạo một dự án, tài liệu cấu trúc và checklist bản nháp trong workspace của bạn.",
+      "starter.installed": "Đã cài",
+      "starter.recommended": "Đề xuất",
+      "starter.project": "Dự án",
+      "starter.documents": "Tài liệu",
+      "starter.workItems": "Việc cần làm",
+      "starter.scope": "Phạm vi",
+      "starter.safeBoundary": "Không gọi nhà cung cấp AI, thanh toán, Bot hoặc tạo đầu ra giả.",
+      "starter.openProject": "Mở dự án",
+      "starter.returnCatalog": "Quay lại Starter Kits",
+      "starter.unavailable": "Starter Kits hiện chưa khả dụng.",
+      "setup.loadingTitle": "Đang tải thiết lập Workspace",
+      "setup.loadingBody": "Portal đang đọc hồ sơ riêng của signed Web account. Không dùng dữ liệu Bot, browser storage hay profile của phiên trước để thay thế.",
+      "setup.guardedKicker": "Cần signed account",
+      "setup.guardedTitle": "Thiết lập Workspace đang được bảo vệ",
+      "setup.guardedBody": "Máy chủ chưa trả hồ sơ thiết lập hợp lệ. Portal không hiển thị lựa chọn cũ hoặc tự tạo profile trong trình duyệt.",
+      "setup.refresh": "Tải lại thiết lập",
+      "setup.role": "Vai trò của bạn",
+      "setup.goal": "Mục tiêu chính",
+      "setup.experience": "Mức trải nghiệm",
+      "setup.chooseRole": "Chọn vai trò",
+      "setup.chooseGoal": "Chọn mục tiêu",
+      "setup.chooseExperience": "Chọn mức trải nghiệm",
+      "setup.roleHelp": "Dùng để sắp xếp điểm bắt đầu trong Web App.",
+      "setup.goalHelp": "Không mở thêm quyền hoặc engine.",
+      "setup.experienceHelp": "Bạn có thể thay đổi sau.",
+      "setup.focusTitle": "Chọn tối đa 3 nhóm studio ưu tiên",
+      "setup.focusHelp": "Chỉ chọn những không gian bạn muốn thấy trước. Đây không phải lệnh chạy hoặc tạo output.",
+      "setup.selectedFocus": "Đã chọn {count}/3 nhóm studio ưu tiên.",
+      "setup.maxFocus": "Đã chọn 3/3 nhóm studio ưu tiên. Bỏ chọn một nhóm để đổi.",
+      "setup.skip": "Bỏ qua lúc này",
+      "setup.openStarters": "Mở Starter Kits",
+      "setup.goDashboard": "Về Dashboard",
+      "setup.saveAndEnter": "Lưu và vào Workspace",
+      "setup.accountContext": "Ngữ cảnh tài khoản Web",
+      "setup.webNative": "Tùy chọn Web-native",
+      "setup.contextTitle": "Thiết lập theo cách bạn làm việc",
+      "setup.savedState": "Thiết lập đã lưu. Bạn có thể cập nhật khi cách làm việc thay đổi.",
+      "setup.skippedState": "Bạn đã bỏ qua trước đó; có thể chọn lại bất cứ lúc nào.",
+      "setup.defaultState": "Chọn một lần để Workspace đề xuất điểm bắt đầu phù hợp; bạn luôn có thể sửa sau.",
+      "setup.stepWork": "Cách làm việc",
+      "setup.stepWorkDetail": "Vai trò, mục tiêu và mức trải nghiệm.",
+      "setup.stepStudios": "Chọn studio",
+      "setup.stepStudiosDetail": "Tối đa ba nhóm ưu tiên.",
+      "setup.stepSave": "Lưu và điều chỉnh sau",
+      "setup.stepSaveDetail": "Một biểu mẫu, không có bước ẩn.",
+      "setup.saveNote": "Lưu theo signed Web account · revision {revision} · không có Bot, provider, job, ví hay thanh toán.",
+      "setup.roleSoloCreator": "Sáng tạo cá nhân",
+      "setup.roleTeamLead": "Dẫn dắt nhóm",
+      "setup.roleOperator": "Vận hành & điều phối",
+      "setup.roleLearner": "Học và thử quy trình",
+      "setup.goalOrganizeWork": "Tổ chức công việc",
+      "setup.goalCreateContent": "Xây nội dung",
+      "setup.goalBuildBrand": "Phát triển thương hiệu",
+      "setup.goalRunOperations": "Vận hành có kiểm soát",
+      "setup.goalLearnWorkflows": "Học workflow",
+      "setup.experienceNew": "Mới bắt đầu",
+      "setup.experienceGrowing": "Đang phát triển",
+      "setup.experienceAdvanced": "Đã quen workflow",
+      "setup.focusProjectsTitle": "Project Center",
+      "setup.focusProjectsBody": "Gom brief, tài liệu và phiên bản.",
+      "setup.focusContentTitle": "Content Studio",
+      "setup.focusContentBody": "Brief, caption, hook và script.",
+      "setup.focusImageTitle": "Image Studio",
+      "setup.focusImageBody": "Ý tưởng và artboard hình ảnh.",
+      "setup.focusVoiceTitle": "Voice Studio",
+      "setup.focusVoiceBody": "Kịch bản và direction giọng nói.",
+      "setup.focusMusicTitle": "Music Workspace",
+      "setup.focusMusicBody": "Brief âm thanh và collection riêng tư.",
+      "setup.focusSubtitleTitle": "Subtitle Studio",
+      "setup.focusSubtitleBody": "Caption authored và định dạng phụ đề.",
+      "setup.focusDocumentsTitle": "Document Workspace",
+      "setup.focusDocumentsBody": "Tài liệu, PDF brief và quy trình.",
+      "setup.focusAutomationTitle": "Workboard",
+      "setup.focusAutomationBody": "Theo dõi công việc và review rõ ràng.",
+      "starter.catalogKicker": "Khởi động dự án",
+      "starter.catalogTitle": "Chọn cách khởi động Project",
+      "starter.catalogBody": "Mỗi lựa chọn chỉ tạo cấu trúc planning rõ ràng để bạn tiếp tục review và biên tập trong Web App.",
+      "starter.viewAndCreate": "Xem & tạo Project",
+      "starter.viewRequirements": "Xem điều kiện",
+      "starter.recommendation": "Phù hợp với Workspace Setup của bạn",
+      "starter.installedNote": "Đã tạo {count} tài liệu và Workboard checklist vào {date}.",
+      "starter.recordDocuments": "Studio Documents",
+      "starter.recordWorkboard": "Workboard card",
+      "starter.recordChecklist": "Checklist",
+      "starter.scopeKicker": "Phạm vi rõ ràng",
+      "starter.scopeTitle": "Bạn luôn biết điều gì được tạo",
+      "starter.scopeCreatesTitle": "Starter Kit sẽ tạo",
+      "starter.scopeCreatesProject": "Một Project Web-owned",
+      "starter.scopeCreatesDocuments": "Các Studio Documents bản nháp",
+      "starter.scopeCreatesWorkboard": "Một Workboard card và checklist",
+      "starter.scopeExcludesTitle": "Starter Kit không tạo",
+      "starter.scopeExcludesOutput": "Không chạy công cụ hay sinh output",
+      "starter.scopeExcludesBalance": "Không thay đổi số dư hoặc giao dịch",
+      "starter.scopeExcludesPublish": "Không gửi thông báo hay phát hành nội dung",
+      "starter.scopeNote": "Bạn có thể review, chỉnh sửa hoặc xóa các record Web này sau khi tạo.",
+      "starter.createdKicker": "Đã tạo",
+      "starter.createdTitle": "Starter Kit này đã có trong Workspace",
+      "starter.createdBody": "Không tạo lại record trùng. Hãy tiếp tục từ Project Web hiện có.",
+      "starter.browseMore": "Xem Starter Kits khác",
+      "starter.prerequisiteKicker": "Bước cần trước",
+      "starter.prerequisiteTitle": "Hoàn tất Workspace Setup trước",
+      "starter.prerequisiteBody": "Starter Kit dùng revision của thiết lập hiện tại để tạo một Project phù hợp với cách bạn làm việc.",
+      "starter.openSetup": "Mở Workspace Setup",
+      "starter.maintenanceKicker": "Bảo trì",
+      "starter.maintenanceTitle": "Workboard chưa sẵn sàng",
+      "starter.maintenanceBody": "Để tránh tạo một Project thiếu checklist, Starter Kit đang tạm dừng đến khi Workboard hoạt động trở lại.",
+      "starter.checkAgain": "Kiểm tra lại",
+      "starter.confirmationKicker": "Xác nhận tạo Project",
+      "starter.confirmationTitle": "Tạo cấu trúc planning này?",
+      "starter.confirmationBody": "Server sẽ kiểm tra signed session, CSRF, Workspace Setup revision, idempotency và giới hạn Workboard trước khi tạo record.",
+      "starter.confirmCheckbox": "Tôi hiểu kit này chỉ tạo các record planning ở trên; không tạo kết quả hoàn tất hay chạy tác vụ bên ngoài.",
+      "starter.idempotencyNote": "Tạo một lần theo từng Starter Kit. Nhấn lại cùng yêu cầu sẽ nhận lại receipt an toàn, không nhân đôi record.",
+      "starter.createProject": "Tạo Project từ kit",
+      "starter.createsTitle": "Kit này sẽ tạo",
+      "starter.protectedTitle": "Starter Kits đang được bảo vệ",
+      "starter.protectedBody": "Đăng nhập bằng signed session để xem catalog Project Web-native của tài khoản hiện tại.",
+      "starter.loadingTitle": "Đang tải Starter Kits",
+      "starter.loadingBody": "Portal đang đọc catalog và receipt owner-scoped từ server. Không dùng cache cũ hoặc dữ liệu trình duyệt thay thế.",
+      "starter.guardedTitle": "Starter Kits chưa thể xác minh",
+      "starter.guardedBody": "Catalog đang được bảo vệ hoặc phản hồi không đúng contract. Hãy tải lại khi signed session còn hoạt động.",
+      "starter.reload": "Tải lại",
+      "starter.missingTitle": "Starter Kit không còn trong catalog",
+      "starter.missingBody": "Hãy quay về catalog để chọn một bộ khởi đầu đang được server công bố."
+    },
+    en: {
+      "chrome.newWorkflow": "New workflow",
+      "chrome.searchWorkspace": "Search workspace",
+      "chrome.bridgeReady": "Internal connection ready",
+      "chrome.safeMode": "Safe mode",
+      "chrome.legalPrivacy": "Legal & privacy",
+      "chrome.openNavigation": "Open navigation",
+      "chrome.closeNavigation": "Close navigation",
+      "chrome.installApp": "Install app",
+      "chrome.openAccount": "Open account",
+      "chrome.quickSwitch": "Quick switch",
+
+      "nav.workspace": "Workspace",
+      "nav.starterKits": "Starter Kits",
+      "nav.workboard": "Workboard",
+      "nav.contentPlanning": "Content planning",
+      "nav.aiLabs": "AI Labs",
+      "nav.create": "Create",
+      "nav.work": "Work",
+      "nav.accountSupport": "Account & support",
+
+      "mobile.workspace": "Workspace",
+      "mobile.studio": "Studio",
+      "mobile.jobs": "Jobs",
+      "mobile.assets": "Assets",
+      "mobile.account": "Account",
+
+      "states.ready": "Ready",
+      "states.draft": "Draft",
+      "states.awaitingConfirm": "Awaiting confirmation",
+      "states.queued": "Queued",
+      "states.processing": "Processing",
+      "states.completed": "Completed",
+      "states.failed": "Failed",
+      "states.guarded": "Guarded",
+      "states.disabled": "Disabled",
+      "states.readOnly": "Read only",
+      "states.empty": "No data yet",
+      "states.backlog": "Backlog",
+      "states.planned": "Planned",
+      "states.inProgress": "In progress",
+      "states.done": "Done",
+      "states.review": "Review",
+      "states.reviewing": "Reviewing",
+      "states.scheduled": "Scheduled",
+      "states.archived": "Archived",
+
+      "account.interfaceLocale": "Interface language",
+      "account.sessionValid": "Signed session is valid",
+      "account.sessionPending": "Awaiting verification",
+      "page.dashboard.description": "Track your workspace, projects and important work in one clear space.",
+      "page.account.description": "Manage your Web account profile, security and access methods.",
+      "page.workspaceSetup.description": "Set Web-native preferences so Workspace better fits how you work.",
+      "page.starterKits.description": "Start with reviewed Web-native project structure, documents and checklists.",
+
+      "setup.title": "Set up your workspace",
+      "setup.subtitle": "Complete a few foundations so TOAN AAS can organize the workspace around how you work.",
+      "setup.progress": "Step {current} of {total}",
+      "setup.start": "Start setup",
+      "setup.next": "Continue",
+      "setup.previous": "Back",
+      "setup.complete": "Complete setup",
+      "setup.completed": "Workspace is ready",
+      "setup.required": "This field is required.",
+      "setup.ready": "Setup is complete. Start with a Starter Kit or create your own project.",
+      "setup.edit": "Edit setup",
+
+      "starter.title": "Starter Kits",
+      "starter.browse": "Browse Starter Kits",
+      "starter.install": "Install Starter Kit",
+      "starter.installNow": "Install in workspace",
+      "starter.confirm": "I understand, install Starter Kit",
+      "starter.confirmation": "This creates one project, structured documents and a draft checklist in your workspace.",
+      "starter.installed": "Installed",
+      "starter.recommended": "Recommended",
+      "starter.project": "Project",
+      "starter.documents": "Documents",
+      "starter.workItems": "Work items",
+      "starter.scope": "Scope",
+      "starter.safeBoundary": "Does not call AI providers, payments, the Bot or create pretend outputs.",
+      "starter.openProject": "Open project",
+      "starter.returnCatalog": "Back to Starter Kits",
+      "starter.unavailable": "Starter Kits are currently unavailable.",
+      "setup.loadingTitle": "Loading workspace setup",
+      "setup.loadingBody": "The Portal is reading this signed Web account's private profile. It does not substitute Bot data, browser storage or a previous session's profile.",
+      "setup.guardedKicker": "Signed account required",
+      "setup.guardedTitle": "Workspace setup is protected",
+      "setup.guardedBody": "The server has not returned a valid setup profile. The Portal will not show old choices or create a profile in the browser.",
+      "setup.refresh": "Refresh setup",
+      "setup.role": "Your role",
+      "setup.goal": "Primary goal",
+      "setup.experience": "Experience level",
+      "setup.chooseRole": "Choose a role",
+      "setup.chooseGoal": "Choose a goal",
+      "setup.chooseExperience": "Choose an experience level",
+      "setup.roleHelp": "Used to arrange a sensible starting point in the Web App.",
+      "setup.goalHelp": "Does not grant extra permissions or engines.",
+      "setup.experienceHelp": "You can change this later.",
+      "setup.focusTitle": "Choose up to 3 priority studios",
+      "setup.focusHelp": "Choose only the spaces you want to see first. This is not a command to run or create output.",
+      "setup.selectedFocus": "{count}/3 priority studios selected.",
+      "setup.maxFocus": "3/3 priority studios selected. Clear one to change your selection.",
+      "setup.skip": "Skip for now",
+      "setup.openStarters": "Open Starter Kits",
+      "setup.goDashboard": "Go to dashboard",
+      "setup.saveAndEnter": "Save and enter Workspace",
+      "setup.accountContext": "Web account context",
+      "setup.webNative": "Web-native preference",
+      "setup.contextTitle": "Set up around how you work",
+      "setup.savedState": "Setup is saved. Update it whenever your way of working changes.",
+      "setup.skippedState": "You skipped this before; you can choose it at any time.",
+      "setup.defaultState": "Choose once so Workspace can suggest a relevant start; you can always edit it later.",
+      "setup.stepWork": "How you work",
+      "setup.stepWorkDetail": "Role, goal and experience level.",
+      "setup.stepStudios": "Choose studios",
+      "setup.stepStudiosDetail": "Up to three priority spaces.",
+      "setup.stepSave": "Save and adjust later",
+      "setup.stepSaveDetail": "One form, with no hidden steps.",
+      "setup.saveNote": "Saved to the signed Web account · revision {revision} · no Bot, provider, job, wallet or payment action.",
+      "setup.roleSoloCreator": "Solo creator",
+      "setup.roleTeamLead": "Team lead",
+      "setup.roleOperator": "Operations & coordination",
+      "setup.roleLearner": "Learn and explore workflows",
+      "setup.goalOrganizeWork": "Organize work",
+      "setup.goalCreateContent": "Create content",
+      "setup.goalBuildBrand": "Build a brand",
+      "setup.goalRunOperations": "Run controlled operations",
+      "setup.goalLearnWorkflows": "Learn workflows",
+      "setup.experienceNew": "New to it",
+      "setup.experienceGrowing": "Growing",
+      "setup.experienceAdvanced": "Comfortable with workflows",
+      "setup.focusProjectsTitle": "Project Center",
+      "setup.focusProjectsBody": "Bring briefs, documents and versions together.",
+      "setup.focusContentTitle": "Content Studio",
+      "setup.focusContentBody": "Briefs, captions, hooks and scripts.",
+      "setup.focusImageTitle": "Image Studio",
+      "setup.focusImageBody": "Visual ideas and image artboards.",
+      "setup.focusVoiceTitle": "Voice Studio",
+      "setup.focusVoiceBody": "Voice scripts and direction.",
+      "setup.focusMusicTitle": "Music Workspace",
+      "setup.focusMusicBody": "Audio briefs and private collections.",
+      "setup.focusSubtitleTitle": "Subtitle Studio",
+      "setup.focusSubtitleBody": "Authored captions and subtitle formats.",
+      "setup.focusDocumentsTitle": "Document Workspace",
+      "setup.focusDocumentsBody": "Documents, PDF briefs and processes.",
+      "setup.focusAutomationTitle": "Workboard",
+      "setup.focusAutomationBody": "Track work with clear reviews.",
+      "starter.catalogKicker": "Project launchpad",
+      "starter.catalogTitle": "Choose how to start a project",
+      "starter.catalogBody": "Each option creates only clear planning structure, so you can keep reviewing and editing in the Web App.",
+      "starter.viewAndCreate": "View & create project",
+      "starter.viewRequirements": "View requirements",
+      "starter.recommendation": "Fits your Workspace Setup",
+      "starter.installedNote": "Created {count} documents and a Workboard checklist on {date}.",
+      "starter.recordDocuments": "Studio documents",
+      "starter.recordWorkboard": "Workboard card",
+      "starter.recordChecklist": "Checklist",
+      "starter.scopeKicker": "Clear scope",
+      "starter.scopeTitle": "Always know what will be created",
+      "starter.scopeCreatesTitle": "A Starter Kit creates",
+      "starter.scopeCreatesProject": "One Web-owned project",
+      "starter.scopeCreatesDocuments": "Draft Studio documents",
+      "starter.scopeCreatesWorkboard": "One Workboard card and checklist",
+      "starter.scopeExcludesTitle": "A Starter Kit does not create",
+      "starter.scopeExcludesOutput": "It does not run tools or generate output",
+      "starter.scopeExcludesBalance": "It does not change balances or transactions",
+      "starter.scopeExcludesPublish": "It does not send notifications or publish content",
+      "starter.scopeNote": "You can review, edit or delete these Web records after creation.",
+      "starter.createdKicker": "Created",
+      "starter.createdTitle": "This Starter Kit is already in your Workspace",
+      "starter.createdBody": "Duplicate records are not created. Continue from the existing Web project.",
+      "starter.browseMore": "Browse other Starter Kits",
+      "starter.prerequisiteKicker": "Required first step",
+      "starter.prerequisiteTitle": "Complete Workspace Setup first",
+      "starter.prerequisiteBody": "The Starter Kit uses your current setup revision to create a project that fits how you work.",
+      "starter.openSetup": "Open Workspace Setup",
+      "starter.maintenanceKicker": "Maintenance",
+      "starter.maintenanceTitle": "Workboard is not ready",
+      "starter.maintenanceBody": "To avoid creating a project without its checklist, the Starter Kit is paused until Workboard is available again.",
+      "starter.checkAgain": "Check again",
+      "starter.confirmationKicker": "Confirm project creation",
+      "starter.confirmationTitle": "Create this planning structure?",
+      "starter.confirmationBody": "The server checks signed session, CSRF, Workspace Setup revision, idempotency and Workboard limits before it creates records.",
+      "starter.confirmCheckbox": "I understand this kit creates only the planning records above; it does not create completed results or run external work.",
+      "starter.idempotencyNote": "Create once per Starter Kit. Repeating the same request safely returns its receipt instead of duplicating records.",
+      "starter.createProject": "Create project from kit",
+      "starter.createsTitle": "This kit creates",
+      "starter.protectedTitle": "Starter Kits are protected",
+      "starter.protectedBody": "Sign in with a signed session to view this account's Web-native project catalog.",
+      "starter.loadingTitle": "Loading Starter Kits",
+      "starter.loadingBody": "The Portal is reading the owner-scoped catalog and receipts from the server. It does not substitute stale cache or browser data.",
+      "starter.guardedTitle": "Starter Kits cannot be verified yet",
+      "starter.guardedBody": "The catalog is protected or the response does not match its contract. Refresh while your signed session remains active.",
+      "starter.reload": "Reload",
+      "starter.missingTitle": "This Starter Kit is no longer in the catalog",
+      "starter.missingBody": "Return to the catalog to choose a starter currently published by the server."
+    },
+    zh: {
+      "chrome.newWorkflow": "新建工作流",
+      "chrome.searchWorkspace": "搜索工作台",
+      "chrome.bridgeReady": "内部连接已就绪",
+      "chrome.safeMode": "安全模式",
+      "chrome.legalPrivacy": "法律与隐私",
+      "chrome.openNavigation": "打开导航",
+      "chrome.closeNavigation": "关闭导航",
+      "chrome.installApp": "安装应用",
+      "chrome.openAccount": "打开账户",
+      "chrome.quickSwitch": "快速切换",
+
+      "nav.workspace": "工作台",
+      "nav.starterKits": "入门套件",
+      "nav.workboard": "工作看板",
+      "nav.contentPlanning": "内容规划",
+      "nav.aiLabs": "AI 实验室",
+      "nav.create": "新建",
+      "nav.work": "工作",
+      "nav.accountSupport": "账户与支持",
+
+      "mobile.workspace": "工作台",
+      "mobile.studio": "工作室",
+      "mobile.jobs": "任务",
+      "mobile.assets": "资源",
+      "mobile.account": "账户",
+
+      "states.ready": "就绪",
+      "states.draft": "草稿",
+      "states.awaitingConfirm": "等待确认",
+      "states.queued": "已排队",
+      "states.processing": "处理中",
+      "states.completed": "已完成",
+      "states.failed": "失败",
+      "states.guarded": "受保护",
+      "states.disabled": "已禁用",
+      "states.readOnly": "只读",
+      "states.empty": "暂无数据",
+      "states.backlog": "待办列表",
+      "states.planned": "已计划",
+      "states.inProgress": "进行中",
+      "states.done": "已完成",
+      "states.review": "审核",
+      "states.reviewing": "审核中",
+      "states.scheduled": "已排期",
+      "states.archived": "已归档",
+
+      "account.interfaceLocale": "界面语言",
+      "account.sessionValid": "已签名会话有效",
+      "account.sessionPending": "等待验证",
+      "page.dashboard.description": "在一个清晰的空间中跟踪您的工作台、项目和重要工作。",
+      "page.account.description": "管理您的 Web 账户资料、安全性和访问方式。",
+      "page.workspaceSetup.description": "设置 Web 原生偏好，让工作台更符合您的工作方式。",
+      "page.starterKits.description": "从经过审核的 Web 原生项目结构、文档和清单开始。",
+
+      "setup.title": "设置工作台",
+      "setup.subtitle": "完成几项基础设置，让 TOAN AAS 按照您的工作方式组织工作台。",
+      "setup.progress": "第 {current} 步，共 {total} 步",
+      "setup.start": "开始设置",
+      "setup.next": "继续",
+      "setup.previous": "返回",
+      "setup.complete": "完成设置",
+      "setup.completed": "工作台已准备就绪",
+      "setup.required": "此字段为必填项。",
+      "setup.ready": "设置已完成。您可以从入门套件开始，或创建自己的项目。",
+      "setup.edit": "编辑设置",
+
+      "starter.title": "入门套件",
+      "starter.browse": "浏览入门套件",
+      "starter.install": "安装入门套件",
+      "starter.installNow": "安装到工作台",
+      "starter.confirm": "我已了解，安装入门套件",
+      "starter.confirmation": "此操作将在您的工作台中创建一个项目、结构化文档和草稿清单。",
+      "starter.installed": "已安装",
+      "starter.recommended": "推荐",
+      "starter.project": "项目",
+      "starter.documents": "文档",
+      "starter.workItems": "待办事项",
+      "starter.scope": "范围",
+      "starter.safeBoundary": "不会调用 AI 服务提供商、付款、Bot，也不会伪造输出。",
+      "starter.openProject": "打开项目",
+      "starter.returnCatalog": "返回入门套件",
+      "starter.unavailable": "入门套件当前不可用。",
+      "setup.loadingTitle": "正在加载工作台设置",
+      "setup.loadingBody": "Portal 正在读取此已签名 Web 账户的私人资料，不会用 Bot 数据、浏览器存储或上一会话的资料替代它。",
+      "setup.guardedKicker": "需要已签名账户",
+      "setup.guardedTitle": "工作台设置受保护",
+      "setup.guardedBody": "服务器尚未返回有效的设置资料。Portal 不会显示旧选择，也不会在浏览器中创建资料。",
+      "setup.refresh": "刷新设置",
+      "setup.role": "您的角色",
+      "setup.goal": "主要目标",
+      "setup.experience": "经验水平",
+      "setup.chooseRole": "选择角色",
+      "setup.chooseGoal": "选择目标",
+      "setup.chooseExperience": "选择经验水平",
+      "setup.roleHelp": "用于在 Web App 中安排合适的起点。",
+      "setup.goalHelp": "不会授予额外权限或引擎。",
+      "setup.experienceHelp": "您可以稍后修改。",
+      "setup.focusTitle": "最多选择 3 个优先工作室",
+      "setup.focusHelp": "只选择您想优先看到的空间。这不是执行或创建输出的命令。",
+      "setup.selectedFocus": "已选择 {count}/3 个优先工作室。",
+      "setup.maxFocus": "已选择 3/3 个优先工作室。请取消选择一个再更改。",
+      "setup.skip": "暂时跳过",
+      "setup.openStarters": "打开入门套件",
+      "setup.goDashboard": "前往总览",
+      "setup.saveAndEnter": "保存并进入工作台",
+      "setup.accountContext": "Web 账户上下文",
+      "setup.webNative": "Web 原生偏好",
+      "setup.contextTitle": "按您的工作方式设置",
+      "setup.savedState": "设置已保存。您的工作方式变化时可以更新。",
+      "setup.skippedState": "您之前跳过了此项；可随时再选择。",
+      "setup.defaultState": "完成一次选择后，工作台可推荐相关起点；您随时可以修改。",
+      "setup.stepWork": "您的工作方式",
+      "setup.stepWorkDetail": "角色、目标和经验水平。",
+      "setup.stepStudios": "选择工作室",
+      "setup.stepStudiosDetail": "最多三个优先空间。",
+      "setup.stepSave": "保存后可再调整",
+      "setup.stepSaveDetail": "一份表单，没有隐藏步骤。",
+      "setup.saveNote": "保存到已签名 Web 账户 · 修订版本 {revision} · 不涉及 Bot、服务提供商、任务、钱包或付款操作。",
+      "setup.roleSoloCreator": "个人创作者",
+      "setup.roleTeamLead": "团队负责人",
+      "setup.roleOperator": "运营与协调",
+      "setup.roleLearner": "学习和探索工作流",
+      "setup.goalOrganizeWork": "组织工作",
+      "setup.goalCreateContent": "创建内容",
+      "setup.goalBuildBrand": "打造品牌",
+      "setup.goalRunOperations": "开展受控运营",
+      "setup.goalLearnWorkflows": "学习工作流",
+      "setup.experienceNew": "刚开始使用",
+      "setup.experienceGrowing": "正在成长",
+      "setup.experienceAdvanced": "熟悉工作流",
+      "setup.focusProjectsTitle": "项目中心",
+      "setup.focusProjectsBody": "集中管理简报、文档和版本。",
+      "setup.focusContentTitle": "内容工作室",
+      "setup.focusContentBody": "简报、标题、钩子和脚本。",
+      "setup.focusImageTitle": "图像工作室",
+      "setup.focusImageBody": "视觉创意和图像画板。",
+      "setup.focusVoiceTitle": "语音工作室",
+      "setup.focusVoiceBody": "语音脚本和表达方向。",
+      "setup.focusMusicTitle": "音乐工作台",
+      "setup.focusMusicBody": "音频简报和私人收藏。",
+      "setup.focusSubtitleTitle": "字幕工作室",
+      "setup.focusSubtitleBody": "编写字幕和字幕格式。",
+      "setup.focusDocumentsTitle": "文档工作台",
+      "setup.focusDocumentsBody": "文档、PDF 简报和流程。",
+      "setup.focusAutomationTitle": "工作看板",
+      "setup.focusAutomationBody": "以清晰审核跟踪工作。",
+      "starter.catalogKicker": "项目启动台",
+      "starter.catalogTitle": "选择如何开始项目",
+      "starter.catalogBody": "每个选项只创建清晰的规划结构，便于您继续在 Web App 中审核和编辑。",
+      "starter.viewAndCreate": "查看并创建项目",
+      "starter.viewRequirements": "查看条件",
+      "starter.recommendation": "适合您的工作台设置",
+      "starter.installedNote": "已于 {date} 创建 {count} 个文档和一个工作看板清单。",
+      "starter.recordDocuments": "工作室文档",
+      "starter.recordWorkboard": "工作看板卡片",
+      "starter.recordChecklist": "清单",
+      "starter.scopeKicker": "范围明确",
+      "starter.scopeTitle": "始终清楚将创建什么",
+      "starter.scopeCreatesTitle": "入门套件将创建",
+      "starter.scopeCreatesProject": "一个 Web 自有项目",
+      "starter.scopeCreatesDocuments": "工作室文档草稿",
+      "starter.scopeCreatesWorkboard": "一个工作看板卡片和清单",
+      "starter.scopeExcludesTitle": "入门套件不会创建",
+      "starter.scopeExcludesOutput": "不会运行工具或生成输出",
+      "starter.scopeExcludesBalance": "不会更改余额或交易",
+      "starter.scopeExcludesPublish": "不会发送通知或发布内容",
+      "starter.scopeNote": "创建后，您可以审核、编辑或删除这些 Web 记录。",
+      "starter.createdKicker": "已创建",
+      "starter.createdTitle": "此入门套件已在您的工作台中",
+      "starter.createdBody": "不会创建重复记录。请从现有 Web 项目继续。",
+      "starter.browseMore": "浏览其他入门套件",
+      "starter.prerequisiteKicker": "必要的第一步",
+      "starter.prerequisiteTitle": "请先完成工作台设置",
+      "starter.prerequisiteBody": "入门套件使用当前设置版本创建适合您工作方式的项目。",
+      "starter.openSetup": "打开工作台设置",
+      "starter.maintenanceKicker": "维护中",
+      "starter.maintenanceTitle": "工作看板尚未准备就绪",
+      "starter.maintenanceBody": "为避免创建缺少清单的项目，入门套件将暂停，直至工作看板再次可用。",
+      "starter.checkAgain": "再次检查",
+      "starter.confirmationKicker": "确认创建项目",
+      "starter.confirmationTitle": "创建此规划结构？",
+      "starter.confirmationBody": "服务器会在创建记录前检查已签名会话、CSRF、工作台设置版本、幂等性和工作看板限制。",
+      "starter.confirmCheckbox": "我了解此套件只会创建上述规划记录，不会创建完成结果或运行外部工作。",
+      "starter.idempotencyNote": "每个入门套件只创建一次。重复同一请求会安全地返回回执，而不会重复记录。",
+      "starter.createProject": "从套件创建项目",
+      "starter.createsTitle": "此套件将创建",
+      "starter.protectedTitle": "入门套件受保护",
+      "starter.protectedBody": "请使用已签名会话登录，以查看该账户的 Web 原生项目目录。",
+      "starter.loadingTitle": "正在加载入门套件",
+      "starter.loadingBody": "Portal 正在从服务器读取仅限所有者的目录和回执，不会用过期缓存或浏览器数据替代它们。",
+      "starter.guardedTitle": "入门套件暂时无法验证",
+      "starter.guardedBody": "目录受保护，或响应不符合其约定。请在已签名会话仍有效时刷新。",
+      "starter.reload": "重新加载",
+      "starter.missingTitle": "此入门套件已不在目录中",
+      "starter.missingBody": "请返回目录，选择服务器当前发布的入门套件。"
+    }
+  };
+
+  Object.keys(MESSAGES).forEach((locale) => Object.assign(MESSAGES[locale], INTERFACE_EXTENSION_MESSAGES[locale]));
+
+  function verifyEqualKeysets() {
+    const reference = Object.keys(MESSAGES[DEFAULT_LOCALE]).sort();
+    Object.keys(LOCALES).forEach((locale) => {
+      const keys = Object.keys(MESSAGES[locale]).sort();
+      if (keys.length !== reference.length || keys.some((key, index) => key !== reference[index])) {
+        throw new Error("TOAN AAS i18n locale keysets must remain equal.");
+      }
+    });
+  }
+
+  verifyEqualKeysets();
+
+  function deepFreeze(value) {
+    if (!value || typeof value !== "object" || Object.isFrozen(value)) return value;
+    Object.keys(value).forEach((key) => deepFreeze(value[key]));
+    return Object.freeze(value);
+  }
+
+  deepFreeze(MESSAGES);
+
+  function hasOwn(object, key) {
+    return Boolean(object) && OWN.call(object, key);
+  }
+
+  function canonicalLocale(value) {
+    if (typeof value !== "string") return null;
+    const candidate = value.trim().toLowerCase();
+    return hasOwn(LOCALE_ALIASES, candidate) ? LOCALE_ALIASES[candidate] : null;
+  }
+
+  function normalizeLocale(value, fallback) {
+    return canonicalLocale(value) || canonicalLocale(fallback) || FALLBACK_LOCALE;
+  }
+
+  function localeFallbackChain(value) {
+    const requested = canonicalLocale(value);
+    return Object.freeze([...new Set([requested, FALLBACK_LOCALE, DEFAULT_LOCALE].filter(Boolean))]);
+  }
+
+  function messageFor(key, locale) {
+    if (typeof key !== "string" || !key.trim()) return "";
+    const normalizedKey = key.trim();
+    for (const candidate of localeFallbackChain(locale)) {
+      const messages = MESSAGES[candidate];
+      if (hasOwn(messages, normalizedKey) && typeof messages[normalizedKey] === "string") {
+        return messages[normalizedKey];
+      }
+    }
+    return "";
+  }
+
+  function safeParameterValue(value) {
+    if (value === null || value === undefined) return "";
+    if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value);
+    return "";
+  }
+
+  function interpolate(message, params) {
+    if (typeof message !== "string" || !params || typeof params !== "object") return message || "";
+    return message.replace(/\{([A-Za-z0-9_.-]+)\}/g, function replaceParameter(token, name) {
+      return hasOwn(params, name) ? safeParameterValue(params[name]) : token;
+    });
+  }
+
+  function translate(key, params, locale) {
+    let resolvedParams = params;
+    let resolvedLocale = locale;
+    // t("key", "zh") is a convenient locale-only call.  A plain string is
+    // not a valid parameter map, so this does not make interpolation ambiguous.
+    if (typeof params === "string" && locale === undefined) {
+      resolvedLocale = params;
+      resolvedParams = undefined;
+    }
+    return interpolate(messageFor(key, resolvedLocale || activeLocale), resolvedParams);
+  }
+
+  function isKnownKey(key, locale) {
+    return Boolean(messageFor(key, locale));
+  }
+
+  function localeMetadata(value) {
+    return LOCALES[normalizeLocale(value)];
+  }
+
+  function bootstrapLocale() {
+    if (!global.document || typeof global.document.getElementById !== "function") return null;
+    const node = global.document.getElementById("portal-bootstrap");
+    if (!node || typeof node.textContent !== "string" || !node.textContent.trim()) return null;
+    try {
+      const bootstrap = JSON.parse(node.textContent);
+      const profile = bootstrap && bootstrap.account && bootstrap.account.profile;
+      return profile && typeof profile.locale === "string" ? profile.locale : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  const initialLocale = bootstrapLocale() || (global.document && global.document.documentElement && global.document.documentElement.lang);
+  let activeLocale = initialLocale ? normalizeLocale(initialLocale) : DEFAULT_LOCALE;
+
+  function applyDocumentLocale(locale) {
+    if (!global.document || !global.document.documentElement) return;
+    const metadata = localeMetadata(locale);
+    global.document.documentElement.lang = metadata.htmlLang;
+    global.document.documentElement.dir = metadata.direction;
+    global.document.documentElement.setAttribute("data-portal-locale", metadata.code);
+  }
+
+  function setDocumentTitle(key, params, locale) {
+    const message = translate(key, params, locale || activeLocale);
+    if (message && global.document) global.document.title = message;
+    return message;
+  }
+
+  function notifyLocaleChange(previousLocale) {
+    if (typeof global.dispatchEvent !== "function" || typeof global.CustomEvent !== "function") return;
+    global.dispatchEvent(new global.CustomEvent("toanaas:locale-change", {
+      detail: Object.freeze({
+        locale: activeLocale,
+        previousLocale: previousLocale || null,
+        metadata: localeMetadata(activeLocale)
+      })
+    }));
+  }
+
+  function setLocale(value, options) {
+    const settings = options && typeof options === "object" ? options : {};
+    const previousLocale = activeLocale;
+    activeLocale = normalizeLocale(value);
+    applyDocumentLocale(activeLocale);
+    if (typeof settings.titleKey === "string") {
+      setDocumentTitle(settings.titleKey, settings.titleParams, activeLocale);
+    }
+    if (settings.emit !== false && previousLocale !== activeLocale) notifyLocaleChange(previousLocale);
+    return activeLocale;
+  }
+
+  function getLocale() {
+    return activeLocale;
+  }
+
+  function getLocales() {
+    return Object.freeze(Object.keys(LOCALES).map((code) => LOCALES[code]));
+  }
+
+  // Make the document truthful on first paint without changing the server page
+  // title.  Integrations may call setDocumentTitle after resolving the route.
+  applyDocumentLocale(activeLocale);
+
+  const api = Object.freeze({
+    version: "1.0.0",
+    defaultLocale: DEFAULT_LOCALE,
+    fallbackLocale: FALLBACK_LOCALE,
+    locales: LOCALES,
+    messages: MESSAGES,
+    normalizeLocale,
+    localeFallbackChain,
+    localeMetadata,
+    localeMeta: localeMetadata,
+    getLocales,
+    getLocale,
+    currentLocale: getLocale,
+    setLocale,
+    setDocumentTitle,
+    has: isKnownKey,
+    t: translate,
+    translate
+  });
+
+  // Keep the primary name concise and provide the underscore form for modules
+  // that use the server-side TOAN_AAS naming convention.
+  Object.defineProperty(global, "TOANAASI18n", {
+    value: api,
+    enumerable: false,
+    configurable: true,
+    writable: false
+  });
+  Object.defineProperty(global, "TOAN_AAS_I18N", {
+    value: api,
+    enumerable: false,
+    configurable: true,
+    writable: false
+  });
+}(typeof window !== "undefined" ? window : globalThis));
