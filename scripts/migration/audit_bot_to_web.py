@@ -340,7 +340,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("manual|", "/wallet/topup", "customer"),
     ("shopai|", "/wallet/topup", "customer"),
     ("shopai_video_job|", "/wallet/topup", "customer"),
-    ("pkgbuy|", "/wallet/topup", "customer"),
     ("storage|", "/wallet/topup", "customer"),
     ("job|", "/jobs", "customer"),
     ("archive|", "/admin", "admin"),
@@ -378,6 +377,25 @@ PAYOS_ALERT_TELEGRAM_ONLY_CALLBACKS: dict[str, dict[str, Any]] = {
         "source_evidence": "After the Bot's admin guard, this callback only replaces the current Telegram expiry-reminder message. It does not persist a customer or Web reminder state.",
     },
 }
+
+# The frozen Bot has nine finite package catalog selectors. They only validate
+# a package catalog and redraw a Telegram detail/confirmation screen. The raw
+# package type/code is not safe Web input: the standalone catalog must load
+# its own current data after a signed Web session. The f-string confirmation
+# is deliberately separate below because it creates a canonical Bot order and
+# PayOS checkout.
+PACKAGE_PURCHASE_SELECTOR_CALLBACKS = frozenset({
+    "pkgbuy|combo|tiktok_99k",
+    "pkgbuy|combo|basic_199k",
+    "pkgbuy|combo|standard_299k",
+    "pkgbuy|combo|posting_499k",
+    "pkgbuy|combo|product_ads_699k",
+    "pkgbuy|monthly|starter_monthly",
+    "pkgbuy|monthly|creator_monthly",
+    "pkgbuy|monthly|shop_monthly",
+    "pkgbuy|monthly|pro_monthly",
+})
+PACKAGE_PURCHASE_CONFIRM_CALLBACK_TEMPLATE = "pkgbuy|confirm|{*}|{*}"
 
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
@@ -548,9 +566,11 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     },
     "pkgbuy": {
         "priority": "P0",
-        "candidate_boundary": "/wallet/topup",
-        "authority": "Canonical Bot wallet/PayOS bridge",
-        "next_contract": "Expose only verified package/read/confirm contracts. The Web must not price, credit Xu, finalize PayOS or create a second webhook.",
+        "candidate_boundary": "fresh /packages catalog navigation or canonical Bot package checkout",
+        "authority": "Canonical Bot package catalog, PayOS order and entitlement settlement",
+        "next_contract": "Only exact source-reviewed catalog selectors may open a fresh signed Web package catalog. Package checkout/confirmation stays Bot-canonical until a dedicated owner-scoped package-purchase bridge exists; Web must not price, create orders, finalize PayOS, grant entitlement or create a second webhook.",
+        "source_dispositions": ("CANONICAL_PACKAGE_PURCHASE_SOURCE_REVIEW", "SOURCE_STATE_MACHINE_REQUIRED", "NO_RUNTIME_CLAIM"),
+        "source_evidence": "The Bot package selector only renders a catalog detail, but its confirmation branch creates a pending canonical order, creates PayOS checkout, and later grants package entitlement after canonical settlement.",
     },
     "storage": {
         "priority": "P0",
@@ -2860,6 +2880,54 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             ),
             "evidence": evidence,
         }
+    if token in PACKAGE_PURCHASE_SELECTOR_CALLBACKS:
+        # These finite Bot buttons validate one catalog entry and display a
+        # Telegram detail/confirmation screen. The standalone Web opens its
+        # own signed package catalog without accepting the Bot type/code,
+        # Telegram identity, message, price, entitlement, or next action.
+        target = "/packages"
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_package_catalog_selector_navigation",
+            "source_dispositions": (
+                "FRESH_SIGNED_WEB_NAVIGATION",
+                "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot selector validates a catalog entry and redraws a Telegram detail with a later "
+                "confirmation button. The Web loads its own current signed catalog and never receives the "
+                "Bot package type/code, Telegram state, price, entitlement, or checkout action."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("pkgbuy|"):
+        # A new literal may be a catalog selector, support-only/manual path,
+        # or canonical checkout transition. It needs a finite source review;
+        # it cannot inherit either the Web catalog or the Xu top-up route.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "PACKAGE_PURCHASE_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "package_purchase_callback_requires_source_review",
+            "source_dispositions": (
+                "CANONICAL_PACKAGE_PURCHASE_SOURCE_REVIEW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot package namespace contains both read-only catalog selectors and a canonical "
+                "PayOS checkout branch. An unreviewed value cannot become a Web package, wallet, payment, "
+                "order, entitlement, or provider action."
+            ),
+            "evidence": evidence,
+        }
     if menu_entry is not None:
         # Only this finite catalog may become a fresh signed Web navigation.
         # It cannot carry hidden Bot state, a message id, a file id or a
@@ -3340,6 +3408,55 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     media_preview_mapping = _map_media_preview_callback_template(template, evidence)
     if media_preview_mapping is not None:
         return media_preview_mapping
+    if token == PACKAGE_PURCHASE_CONFIRM_CALLBACK_TEMPLATE:
+        # This one Bot f-string is the canonical package-payment transition:
+        # it creates a pending Bot order, calls PayOS, records checkout state
+        # and later settles entitlement through the canonical webhook. The
+        # Web's top-up API deliberately accepts only topup_xu, so neither a
+        # browser checkout nor /wallet/topup is an equivalent destination.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_canonical_package_checkout",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "CANONICAL_BOT_ORDER_REQUIRED",
+                "CANONICAL_BOT_PAYOS_CHECKOUT",
+                "CANONICAL_PACKAGE_ENTITLEMENT_SETTLEMENT",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot confirm branch calls start_package_purchase, which can create a pending order, "
+                "call PayOS, record checkout information and later grant package entitlement only after "
+                "canonical settlement. The Web has no approved package-purchase bridge contract."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("pkgbuy|"):
+        # Do not recover a dynamic suffix as a catalog item or checkout input.
+        # A later Bot callback requires a finite source review before it may
+        # gain any Web representation.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "PACKAGE_PURCHASE_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "package_purchase_callback_requires_source_review",
+            "source_dispositions": (
+                "CANONICAL_PACKAGE_PURCHASE_SOURCE_REVIEW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot package namespace combines catalog selection and canonical checkout/entitlement "
+                "state. An unreviewed dynamic suffix cannot become a Web catalog, wallet or payment action."
+            ),
+            "evidence": evidence,
+        }
     if token == FREE_HUB_LIBRARY_CATEGORY_CALLBACK_TEMPLATE:
         # The finite Bot suffix selects one global prompt-library suggestion
         # set and then writes a short-lived Telegram pending selection.  The
@@ -3992,6 +4109,32 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_ADMIN_ONLY, CANONICAL_BOT_PAYOS_ALERT_FLOW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    package_purchase_selector_sources = ", ".join(
+        f"`{source}`" for source in sorted(PACKAGE_PURCHASE_SELECTOR_CALLBACKS)
+    )
+    package_purchase_contract_rows = [
+        [
+            "nine exact package selectors",
+            "/packages",
+            "reviewed_package_catalog_selector_navigation",
+            "NAVIGATION_ONLY",
+            "FRESH_SIGNED_WEB_NAVIGATION, BOT_CATALOG_SELECTION_NOT_REPLAYED, NO_RUNTIME_CLAIM",
+        ],
+        [
+            PACKAGE_PURCHASE_CONFIRM_CALLBACK_TEMPLATE,
+            "TELEGRAM_ONLY",
+            "bot_canonical_package_checkout",
+            "TELEGRAM_ONLY",
+            "TELEGRAM_IDENTITY_CONTEXT, CANONICAL_BOT_ORDER_REQUIRED, CANONICAL_BOT_PAYOS_CHECKOUT, CANONICAL_PACKAGE_ENTITLEMENT_SETTLEMENT, NO_RUNTIME_CLAIM",
+        ],
+        [
+            "other pkgbuy|*",
+            "PACKAGE_PURCHASE_SOURCE_REVIEW_REQUIRED",
+            "package_purchase_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "CANONICAL_PACKAGE_PURCHASE_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ],
+    ]
 
     write(
         "README.md",
@@ -4017,6 +4160,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
         + "- [`PAYOS_ALERT_CALLBACK_CONTRACT.md`](PAYOS_ALERT_CALLBACK_CONTRACT.md) — exact Bot-admin PayOS alert dispositions; Web neither replays alert state nor becomes a payment/provider/deployment control.\n"
+        + "- [`PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`](PACKAGE_PURCHASE_CALLBACK_CONTRACT.md) — finite Bot package-selector navigation plus a canonical Bot checkout boundary; it does not turn a service package into Xu top-up or browser payment.\n"
         + "- [`CAPABILITY_HUB_CONTRACT.md`](CAPABILITY_HUB_CONTRACT.md) — aggregate static Bot-to-Web coverage for the product catalog; no raw commands, callbacks or engine-success claim.\n"
         + "- [`WEB_ENGINE_REGISTRY_CONTRACT.md`](WEB_ENGINE_REGISTRY_CONTRACT.md) — display-only classification of Web-native, Bot companion and guarded execution boundaries.\n"
         + "- [`SUBTITLE_FORMAT_LAB_CONTRACT.md`](SUBTITLE_FORMAT_LAB_CONTRACT.md) — signed, stateless SRT↔VTT and text→SRT transform with no Bot/provider/job/payment/file-delivery claim.\n"
@@ -4089,6 +4233,19 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\n`payosalert|manual` is the sole navigation-only exception: it opens a fresh signed, role-checked `/admin/payments` view. It does not create a payment, request a manual top-up, expose a customer route, carry Bot `USER_BILL_STATE`, add Xu, finalize PayOS, call a provider, change an environment variable, or create a webhook/ledger. `test`, `mute`, `renewed`, and `remind_later` stay Telegram-only until a separately reviewed, canonical admin contract exists.\n\n"
         "An unlisted `payosalert|*` value is deliberately unresolved. It must be source-reviewed before it can become a Web route, bridge method, payment action, diagnostics control, alert preference, or deployment setting.\n",
+    )
+    write(
+        "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
+        "# Package-purchase callback disposition contract\n\n"
+        "The frozen Bot has nine finite `pkgbuy` catalog-selector callbacks. Each validates a catalog package and redraws a Telegram detail/confirmation screen; it does not by itself create an order, call PayOS, grant entitlement, add Xu, or deliver an output. The Bot confirmation callback is a distinct stateful branch. It calls `start_package_purchase`, which may create a pending canonical order, create a PayOS checkout and later grant package entitlement only after canonical settlement.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            package_purchase_contract_rows,
+        )
+        + "\n\nThe exact catalog selectors are: "
+        + package_purchase_selector_sources
+        + ". They may open only a fresh signed `/packages` catalog. The Web receives no Bot package type/code, Telegram identity or pending state, price, entitlement, checkout URL, order ID, PayOS state, or confirmation action. `/packages` is not a browser checkout.\n\n"
+        "`pkgbuy|confirm|{*}|{*}` stays Telegram-only until a separately reviewed owner-scoped package-purchase bridge exists. The Web must not price a service package, create a canonical order, issue or finalize PayOS, credit Xu, grant package entitlement, create a second webhook/ledger, or infer success from a callback. Any unlisted `pkgbuy|*` value remains source-review-required.\n",
     )
     write(
         "inventory.md",
@@ -4439,6 +4596,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "- Web never calculates credit, finalizes redirect, stores a second order ledger, or exposes payment secrets.\n"
         "- Manual top-up stays a Bot handoff: the P0 bridge has no owner-scoped, redacted `pending_deposits` history adapter. Web must not accept bills/TXIDs, create a manual request, approve/reject it or claim a result before canonical wallet history reflects an approved Bot transaction.\n"
         "- The Bot's `payosalert|*` controls are admin-alert callbacks, not customer billing controls. Only the source-reviewed `manual` value may open a fresh signed `/admin/payments` view; it cannot replay Bot bill state or execute a payment action. See `PAYOS_ALERT_CALLBACK_CONTRACT.md`.\n"
+        "- Service package/combo checkout is distinct from Xu top-up. The Web can only open its fresh read-only `/packages` catalog for nine reviewed Bot selectors; its confirm callback stays Bot-only, and `POST /payments/create` must not accept a service package. See `PACKAGE_PURCHASE_CALLBACK_CONTRACT.md`.\n"
         "- Job completion means validated output bytes or a canonical queued task with a polling route; HTTP success alone is insufficient.\n"
         "- Retry/refund/freeze remain guarded until their existing canonical bot action has a tested adapter.\n",
     )

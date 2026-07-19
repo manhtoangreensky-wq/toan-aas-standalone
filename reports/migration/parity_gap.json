@@ -22959,12 +22959,17 @@
         "file": "bot.py",
         "line": 105490
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|combo|basic_199k",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -22972,12 +22977,17 @@
         "file": "bot.py",
         "line": 105491
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|combo|posting_499k",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -22985,12 +22995,17 @@
         "file": "bot.py",
         "line": 105492
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|combo|product_ads_699k",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -22998,12 +23013,17 @@
         "file": "bot.py",
         "line": 105491
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|combo|standard_299k",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -23011,12 +23031,17 @@
         "file": "bot.py",
         "line": 105490
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|combo|tiktok_99k",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -23024,12 +23049,17 @@
         "file": "bot.py",
         "line": 104967
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|monthly|creator_monthly",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -23037,12 +23067,17 @@
         "file": "bot.py",
         "line": 104971
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|monthly|pro_monthly",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -23050,12 +23085,17 @@
         "file": "bot.py",
         "line": 104970
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|monthly|shop_monthly",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "customer",
@@ -23063,12 +23103,17 @@
         "file": "bot.py",
         "line": 104966
       },
-      "fallback_family": "pkgbuy",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_package_catalog_selector_navigation",
       "source": "pkgbuy|monthly|starter_monthly",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_NAVIGATION",
+        "BOT_CATALOG_SELECTION_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot selector validates a catalog entry and redraws a Telegram detail with a later confirmation button. The Web loads its own current signed catalog and never receives the Bot package type/code, Telegram state, price, entitlement, or checkout action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
       "classification": "admin",
@@ -38833,11 +38878,19 @@
         "file": "bot.py",
         "line": 105933
       },
-      "resolution": "reviewed_namespace_compatibility_route",
+      "resolution": "bot_canonical_package_checkout",
       "source": "pkgbuy|confirm|{*}|{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "CANONICAL_BOT_ORDER_REQUIRED",
+        "CANONICAL_BOT_PAYOS_CHECKOUT",
+        "CANONICAL_PACKAGE_ENTITLEMENT_SETTLEMENT",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot confirm branch calls start_package_purchase, which can create a pending order, call PayOS, record checkout information and later grant package entitlement only after canonical settlement. The Web has no approved package-purchase bridge contract.",
       "source_kind": "callback_template",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -52129,28 +52182,6 @@
       ]
     },
     {
-      "authority": "Canonical Bot wallet/PayOS bridge",
-      "candidate_boundary": "/wallet/topup",
-      "count": 9,
-      "family": "pkgbuy",
-      "next_contract": "Expose only verified package/read/confirm contracts. The Web must not price, credit Xu, finalize PayOS or create a second webhook.",
-      "priority": "P0",
-      "sample_sources": [
-        "pkgbuy|combo|basic_199k",
-        "pkgbuy|combo|posting_499k",
-        "pkgbuy|combo|product_ads_699k",
-        "pkgbuy|combo|standard_299k",
-        "pkgbuy|combo|tiktok_99k",
-        "pkgbuy|monthly|creator_monthly",
-        "pkgbuy|monthly|pro_monthly",
-        "pkgbuy|monthly|shop_monthly",
-        "pkgbuy|monthly|starter_monthly"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Canonical Bot media-preview cache, Telegram delivery and selected-media state",
       "candidate_boundary": "separate Web media-catalog and owner-scoped selection contract",
       "count": 7,
@@ -52540,7 +52571,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 724,
+      "count": 715,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -52551,11 +52582,6 @@
         {
           "count": 130,
           "family": "vfinal",
-          "priority": "P0"
-        },
-        {
-          "count": 9,
-          "family": "pkgbuy",
           "priority": "P0"
         },
         {
@@ -52817,14 +52843,14 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 81.02,
+  "mapping_coverage_percent": 81.25,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2405,
+    "COPIED_GUARDED": 2404,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 458,
-    "NEEDS_FEATURE_DISPOSITION": 724,
-    "TELEGRAM_ONLY": 224
+    "NAVIGATION_ONLY": 467,
+    "NEEDS_FEATURE_DISPOSITION": 715,
+    "TELEGRAM_ONLY": 225
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -52845,7 +52871,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 81.02,
+  "safe_disposition_coverage_percent": 81.25,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -52855,15 +52881,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3090,
+    "resolved_static_source_count": 3099,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 46,
-    "unresolved_source_count": 724
+    "unresolved_source_count": 715
   },
-  "static_web_surface_coverage_percent": 63.08,
+  "static_web_surface_coverage_percent": 63.06,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
