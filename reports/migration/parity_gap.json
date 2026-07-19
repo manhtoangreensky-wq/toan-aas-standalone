@@ -22826,41 +22826,60 @@
       "target": "/dashboard"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 6851
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_payos_alert_admin_navigation",
       "source": "payosalert|manual",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_EPHEMERAL_BILL_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot handler first enforces is_admin_user, then stores only a ten-minute per-admin USER_BILL_STATE and redraws the Telegram manual-payment menu. The Web opens a fresh role-checked admin view and receives no Bot state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/payments"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 6908
       },
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_payos_alert_admin_navigation",
       "source": "payosalert|manual",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_EPHEMERAL_BILL_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot handler first enforces is_admin_user, then stores only a ten-minute per-admin USER_BILL_STATE and redraws the Telegram manual-payment menu. The Web opens a fresh role-checked admin view and receives no Bot state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/wallet/topup"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/payments"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 6852
       },
-      "fallback_family": "payosalert",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_payos_alert_telegram_admin_only",
       "source": "payosalert|mute",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_PROCESS_LOCAL_ALERT_STATE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "After the Bot's admin guard, this callback changes only the Bot process-local one-hour PayOS alert mute window. It is not persistent Web notification state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -22868,50 +22887,71 @@
         "file": "bot.py",
         "line": 6909
       },
-      "resolution": "telegram_only",
+      "resolution": "reviewed_payos_alert_telegram_admin_only",
       "source": "payosalert|remind_later",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "TELEGRAM_MESSAGE_DISMISSAL",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "After the Bot's admin guard, this callback only replaces the current Telegram expiry-reminder message. It does not persist a customer or Web reminder state.",
       "source_kind": "callback_data",
       "status": "TELEGRAM_ONLY",
       "target": "TELEGRAM_ONLY"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 6909
       },
-      "fallback_family": "payosalert",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_payos_alert_telegram_admin_only",
       "source": "payosalert|renewed",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "DEPLOYMENT_ENV_GUIDANCE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "After the Bot's admin guard, this callback only tells an operator that the PayOS registration-expiry deployment setting must be changed and redeployed; it does not change an environment value or PayOS state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 6851
       },
-      "fallback_family": "payosalert",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_payos_alert_telegram_admin_only",
       "source": "payosalert|test",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "TELEGRAM_COMMAND_GUIDANCE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "After the Bot's admin guard, this callback only displays masked Bot-command guidance for PayOS diagnostics; it does not perform a provider or payment test.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 6908
       },
-      "fallback_family": "payosalert",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_payos_alert_telegram_admin_only",
       "source": "payosalert|test",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "TELEGRAM_COMMAND_GUIDANCE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "After the Bot's admin guard, this callback only displays masked Bot-command guidance for PayOS diagnostics; it does not perform a provider or payment test.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -52136,22 +52176,6 @@
       ]
     },
     {
-      "authority": "Canonical Bot PayOS/admin alert flow",
-      "candidate_boundary": "TELEGRAM_ONLY",
-      "count": 4,
-      "family": "payosalert",
-      "next_contract": "Classify each alert action by source evidence; do not convert Telegram dismissal, test or renewal buttons into Web payment actions.",
-      "priority": "P0",
-      "sample_sources": [
-        "payosalert|mute",
-        "payosalert|renewed",
-        "payosalert|test"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Canonical Bot wallet/PayOS bridge",
       "candidate_boundary": "/wallet/topup",
       "count": 4,
@@ -52516,7 +52540,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 728,
+      "count": 724,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -52537,11 +52561,6 @@
         {
           "count": 7,
           "family": "media_preview",
-          "priority": "P0"
-        },
-        {
-          "count": 4,
-          "family": "payosalert",
           "priority": "P0"
         },
         {
@@ -52798,14 +52817,14 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 80.91,
+  "mapping_coverage_percent": 81.02,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2407,
+    "COPIED_GUARDED": 2405,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 456,
-    "NEEDS_FEATURE_DISPOSITION": 728,
-    "TELEGRAM_ONLY": 220
+    "NAVIGATION_ONLY": 458,
+    "NEEDS_FEATURE_DISPOSITION": 724,
+    "TELEGRAM_ONLY": 224
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -52826,7 +52845,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 80.91,
+  "safe_disposition_coverage_percent": 81.02,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -52836,15 +52855,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3086,
+    "resolved_static_source_count": 3090,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 46,
-    "unresolved_source_count": 728
+    "unresolved_source_count": 724
   },
-  "static_web_surface_coverage_percent": 63.14,
+  "static_web_surface_coverage_percent": 63.08,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
