@@ -67,6 +67,7 @@ import copyfast_video_operations
 import copyfast_video_studio
 import copyfast_voice_studio
 import copyfast_workboard
+import copyfast_workspace_setup
 from copyfast_auth import (
     current_session,
     ensure_auth_configuration,
@@ -343,6 +344,14 @@ WORKBOARD_BODY_MAX_BYTES = 128 * 1024
 # Partner & Lead CRM stores compact signed-account metadata and private notes;
 # it has no attachment, payout, referral, provider or contact-delivery body.
 PARTNER_CRM_BODY_MAX_BYTES = 16 * 1024
+# First-run Workspace Setup is an enum-only preference receipt. Its small
+# pre-parse cap protects the signed, CSRF-protected mutation from oversized
+# chunked JSON without turning it into a generic profile/import endpoint.
+WORKSPACE_SETUP_BODY_MAX_BYTES = 8 * 1024
+# Starlette redirects an unregistered trailing slash to the canonical route.
+# Treat both forms as the same bounded private endpoint before that redirect so
+# a malformed request cannot bypass the pre-parse body cap or fixed limiter.
+WORKSPACE_SETUP_API_PATHS = frozenset({"/api/v1/workspace/setup", "/api/v1/workspace/setup/"})
 # The scheduler sends a fixed, signed JSON receipt only.  Cap it well below
 # normal authoring routes before HMAC/JSON parsing so malformed chunked input
 # cannot become a memory-amplification path.
@@ -412,6 +421,7 @@ class PromptLibraryBodyLimitMiddleware:
         analytics_workspace_max_bytes: int = ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
         workboard_max_bytes: int = WORKBOARD_BODY_MAX_BYTES,
         partner_crm_max_bytes: int = PARTNER_CRM_BODY_MAX_BYTES,
+        workspace_setup_max_bytes: int = WORKSPACE_SETUP_BODY_MAX_BYTES,
         autopilot_tick_max_bytes: int = AUTOPILOT_TICK_BODY_MAX_BYTES,
         autopilot_approval_max_bytes: int = AUTOPILOT_APPROVAL_BODY_MAX_BYTES,
         reliability_followup_max_bytes: int = RELIABILITY_FOLLOWUP_BODY_MAX_BYTES,
@@ -445,6 +455,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.analytics_workspace_max_bytes = int(analytics_workspace_max_bytes)
         self.workboard_max_bytes = int(workboard_max_bytes)
         self.partner_crm_max_bytes = int(partner_crm_max_bytes)
+        self.workspace_setup_max_bytes = int(workspace_setup_max_bytes)
         self.autopilot_tick_max_bytes = int(autopilot_tick_max_bytes)
         self.autopilot_approval_max_bytes = int(autopilot_approval_max_bytes)
         self.reliability_followup_max_bytes = int(reliability_followup_max_bytes)
@@ -496,6 +507,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/analytics-workspace/")
                 or path.startswith("/api/v1/workboard/")
                 or path.startswith("/api/v1/partner-crm/")
+                or path in WORKSPACE_SETUP_API_PATHS
                 or path == "/internal/v1/operations/tick"
                 or path.startswith("/api/v1/operations/admin/approvals/")
                 or path.startswith("/api/v1/operations/admin/followups/")
@@ -565,6 +577,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.workboard_max_bytes
         if path.startswith("/api/v1/partner-crm/"):
             return self.partner_crm_max_bytes
+        if path in WORKSPACE_SETUP_API_PATHS:
+            return self.workspace_setup_max_bytes
         if path == "/internal/v1/operations/tick":
             return self.autopilot_tick_max_bytes
         if path.startswith("/api/v1/operations/admin/approvals/"):
@@ -622,6 +636,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_analytics_workspace = path.startswith("/api/v1/analytics-workspace/")
         is_workboard = path.startswith("/api/v1/workboard/")
         is_partner_crm = path.startswith("/api/v1/partner-crm/")
+        is_workspace_setup = path in WORKSPACE_SETUP_API_PATHS
         is_autopilot_tick = path == "/internal/v1/operations/tick"
         is_autopilot_approval = path.startswith("/api/v1/operations/admin/approvals/")
         is_reliability_followup = path.startswith("/api/v1/operations/admin/followups/")
@@ -656,6 +671,8 @@ class PromptLibraryBodyLimitMiddleware:
             if is_content_handoff
             else copyfast_partner_crm._boundary(lead_persisted=False)
             if is_partner_crm
+            else copyfast_workspace_setup._boundary(profile_persisted=False)
+            if is_workspace_setup
             else copyfast_channel_strategy._boundary(profile_persisted=False)
             if is_channel_strategy
             else copyfast_chat_workspace._boundary()
@@ -694,6 +711,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_content_handoff
                     else "Dữ liệu Partner & Lead CRM vượt giới hạn kích thước an toàn."
                     if is_partner_crm
+                    else "Dữ liệu thiết lập Workspace vượt giới hạn kích thước an toàn."
+                    if is_workspace_setup
                     else "Dữ liệu Creative Content Studio vượt giới hạn kích thước an toàn."
                     if is_content_studio
                     else "Dữ liệu Channel Strategy vượt giới hạn kích thước an toàn."
@@ -761,6 +780,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_content_handoff
                     else "WEB_PARTNER_CRM_BODY_TOO_LARGE"
                     if is_partner_crm
+                    else "WEB_WORKSPACE_SETUP_BODY_TOO_LARGE"
+                    if is_workspace_setup
                     else "WEB_CONTENT_STUDIO_BODY_TOO_LARGE"
                     if is_content_studio
                     else "WEB_CHANNEL_STRATEGY_BODY_TOO_LARGE"
@@ -933,6 +954,7 @@ app.add_middleware(
     analytics_workspace_max_bytes=ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
     workboard_max_bytes=WORKBOARD_BODY_MAX_BYTES,
     partner_crm_max_bytes=PARTNER_CRM_BODY_MAX_BYTES,
+    workspace_setup_max_bytes=WORKSPACE_SETUP_BODY_MAX_BYTES,
     autopilot_tick_max_bytes=AUTOPILOT_TICK_BODY_MAX_BYTES,
     autopilot_approval_max_bytes=AUTOPILOT_APPROVAL_BODY_MAX_BYTES,
     reliability_followup_max_bytes=RELIABILITY_FOLLOWUP_BODY_MAX_BYTES,
@@ -1314,6 +1336,12 @@ async def security_headers(request: Request, call_next):
     # publication or notification automation.
     workboard_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/workboard/")
     workboard_read = request.method == "GET" and request.url.path.startswith("/api/v1/workboard/")
+    # Workspace Setup is a compact account-preference route, not a general
+    # profile/update family. Fixed method/path buckets protect its read and
+    # CSRF-protected write before session/SQLite work without granting any
+    # Bot, bridge, provider, job, wallet, payment or publish capability.
+    workspace_setup_write = request.method == "POST" and request.url.path in WORKSPACE_SETUP_API_PATHS
+    workspace_setup_read = request.method == "GET" and request.url.path in WORKSPACE_SETUP_API_PATHS
     # Campaign schedule actions are anchored to a signed owner's Campaign
     # detail route.  The plan itself is the schedule source, so POST/PATCH
     # mutations and the detail/schedule GET views share fixed pre-DB buckets.
@@ -1455,6 +1483,10 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if workboard_read:
         rate_limit = 120
+    if workspace_setup_write:
+        rate_limit = 30
+    if workspace_setup_read:
+        rate_limit = 120
     if campaign_schedule_write:
         rate_limit = 40
     if campaign_schedule_read:
@@ -1521,6 +1553,8 @@ async def security_headers(request: Request, call_next):
             else "governance-read" if governance_read
             else "workboard-write" if workboard_write
             else "workboard-read" if workboard_read
+            else "workspace-setup-write" if workspace_setup_write
+            else "workspace-setup-read" if workspace_setup_read
             else "campaign-schedule-write" if campaign_schedule_write
             else "campaign-schedule-read" if campaign_schedule_read
             else "operations-admin-write" if operations_admin_write
@@ -1566,6 +1600,7 @@ async def security_headers(request: Request, call_next):
                 or admin_document_archive_download
             )
             is_workboard_request = workboard_write or workboard_read
+            is_workspace_setup_request = workspace_setup_write or workspace_setup_read
             is_campaign_schedule_request = campaign_schedule_write or campaign_schedule_read
             is_reliability_request = reliability_followup_write or reliability_followup_read
             is_inbox_request = inbox_write or inbox_read or notification_tick
@@ -1590,6 +1625,8 @@ async def security_headers(request: Request, call_next):
                         if is_governance_request
                         else copyfast_workboard._boundary()
                         if is_workboard_request
+                        else copyfast_workspace_setup._boundary(profile_persisted=False)
+                        if is_workspace_setup_request
                         else copyfast_api._campaign_schedule_boundary()
                         if is_campaign_schedule_request
                         else copyfast_reliability._boundary()
@@ -1794,6 +1831,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         is_analytics_workspace = request.url.path.startswith("/api/v1/analytics-workspace/")
         is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
         is_workboard = request.url.path.startswith("/api/v1/workboard/")
+        is_workspace_setup = request.url.path in WORKSPACE_SETUP_API_PATHS
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")
         is_admin_document_archive = request.url.path.startswith("/api/v1/admin/internal-documents/")
         is_reliability_followup = request.url.path.startswith("/api/v1/operations/admin/reliability/") or request.url.path.startswith("/api/v1/operations/admin/followups")
@@ -1811,6 +1849,8 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                     if is_growth_review
                     else copyfast_workboard._boundary()
                     if is_workboard
+                    else copyfast_workspace_setup._boundary(profile_persisted=False)
+                    if is_workspace_setup
                     else copyfast_admin_document_archive._boundary()
                     if is_admin_document_archive
                     else copyfast_governance._boundary()
@@ -1839,6 +1879,7 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
         is_governance = request.url.path.startswith("/api/v1/admin/governance/")
         is_admin_document_archive = request.url.path.startswith("/api/v1/admin/internal-documents/")
         is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
+        is_workspace_setup = request.url.path in WORKSPACE_SETUP_API_PATHS
         return JSONResponse(
             envelope(
                 False,
@@ -1852,6 +1893,8 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                     if is_growth_review
                     else copyfast_workboard._boundary()
                     if request.url.path.startswith("/api/v1/workboard/")
+                    else copyfast_workspace_setup._boundary(profile_persisted=False)
+                    if is_workspace_setup
                     else copyfast_admin_document_archive._boundary()
                     if is_admin_document_archive
                     else copyfast_governance._boundary()
@@ -2018,6 +2061,7 @@ app.include_router(copyfast_governance.router)
 app.include_router(copyfast_admin_document_archive.router)
 app.include_router(copyfast_workboard.router)
 app.include_router(copyfast_partner_crm.router)
+app.include_router(copyfast_workspace_setup.router)
 app.include_router(copyfast_support.router)
 app.include_router(copyfast_autopilot.router)
 app.include_router(copyfast_reliability.router)

@@ -674,6 +674,10 @@
     layout: "onboarding", fields: [], action: "start-telegram-link", actionLabel: "Tạo mã liên kết", status: "guarded",
     notes: ["Mã phải là one-time, hết hạn và được Core Bridge đánh dấu đã dùng.", "Không nhận Telegram ID thô từ URL hay localStorage."]
   });
+  customerPage("/workspace/setup", "Thiết lập Workspace", "Chọn cách làm việc và nhóm studio ưu tiên để Web App sắp xếp điểm bắt đầu phù hợp với bạn.", ICONS.dashboard, {
+    layout: "workspace-setup", fields: [], action: "none", status: "ready",
+    notes: ["Thiết lập này chỉ cá nhân hóa điều hướng Web; không kích hoạt Bot, bridge, provider, job, ví Xu, PayOS hay xuất bản.", "Lựa chọn được lưu theo signed Web account, có CSRF, revision và audit; không nhận Telegram ID từ browser."]
+  });
   customerPage("/account", "Tài khoản & bảo mật", "Quản lý thông tin hồ sơ và trạng thái liên kết theo dữ liệu server-side.", ICONS.account, {
     layout: "account", fields: [], action: "none", status: "ready",
     notes: ["Tên hiển thị, ngôn ngữ và múi giờ là metadata Web có thể cập nhật bằng signed session, CSRF và audit event.", "Telegram identity, role, Xu, PayOS, job và provider vẫn là dữ liệu canonical chỉ đọc từ bot/Core Bridge.", "Đăng xuất thu hồi signed session ở server, không chỉ xóa state tại browser."]
@@ -5395,6 +5399,59 @@
     return codes.length === 8 ? codes : [];
   }
 
+  const WORKSPACE_SETUP_BOOTSTRAP_READ_STATES = new Set(["loading", "read_only", "guarded"]);
+  const WORKSPACE_SETUP_BOOTSTRAP_STATES = new Set(["not_started", "completed", "skipped"]);
+  const WORKSPACE_SETUP_BOOTSTRAP_ROLES = new Set(["solo_creator", "team_lead", "operator", "learner"]);
+  const WORKSPACE_SETUP_BOOTSTRAP_GOALS = new Set(["organize_work", "create_content", "build_brand", "run_operations", "learn_workflows"]);
+  const WORKSPACE_SETUP_BOOTSTRAP_EXPERIENCE = new Set(["new", "growing", "advanced"]);
+  const WORKSPACE_SETUP_BOOTSTRAP_FOCUS = new Set(["projects", "content", "image", "voice", "music", "subtitle", "documents", "automation"]);
+
+  function workspaceSetupEmptyProfile() {
+    return { setup_state: "not_started", role: "", goal: "", experience: "", focus_areas: [], revision: 0, completed_at: "", updated_at: "" };
+  }
+
+  function normalizeWorkspaceSetupBootstrap(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const readState = WORKSPACE_SETUP_BOOTSTRAP_READ_STATES.has(String(source.readState || "").trim().toLowerCase())
+      ? String(source.readState).trim().toLowerCase()
+      : "guarded";
+    const empty = workspaceSetupEmptyProfile();
+    const rawProfile = source.profile && typeof source.profile === "object" ? source.profile : {};
+    const focusSeen = new Set();
+    const focusAreas = Array.isArray(rawProfile.focus_areas)
+      ? rawProfile.focus_areas.map((item) => String(item || "").trim().toLowerCase())
+        .filter((item) => WORKSPACE_SETUP_BOOTSTRAP_FOCUS.has(item) && !focusSeen.has(item) && focusSeen.add(item)).slice(0, 3)
+      : [];
+    const revision = Number.isSafeInteger(rawProfile.revision) && rawProfile.revision >= 0 && rawProfile.revision <= 2147483647
+      ? rawProfile.revision
+      : 0;
+    const profile = {
+      setup_state: WORKSPACE_SETUP_BOOTSTRAP_STATES.has(String(rawProfile.setup_state || ""))
+        ? String(rawProfile.setup_state)
+        : empty.setup_state,
+      role: WORKSPACE_SETUP_BOOTSTRAP_ROLES.has(String(rawProfile.role || "")) ? String(rawProfile.role) : "",
+      goal: WORKSPACE_SETUP_BOOTSTRAP_GOALS.has(String(rawProfile.goal || "")) ? String(rawProfile.goal) : "",
+      experience: WORKSPACE_SETUP_BOOTSTRAP_EXPERIENCE.has(String(rawProfile.experience || "")) ? String(rawProfile.experience) : "",
+      focus_areas: focusAreas,
+      revision,
+      completed_at: bootstrapSafeTimestamp(rawProfile.completed_at),
+      updated_at: bootstrapSafeTimestamp(rawProfile.updated_at)
+    };
+    const rawPreferences = source.preferences && typeof source.preferences === "object" ? source.preferences : {};
+    const locale = String(rawPreferences.locale || "vi").trim().toLowerCase();
+    const timezone = String(rawPreferences.timezone || "Asia/Ho_Chi_Minh").trim();
+    return {
+      profile,
+      preferences: {
+        locale: ["vi", "en"].includes(locale) ? locale : "vi",
+        timezone: /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+)$/.test(timezone) && timezone.length <= 64
+          ? timezone
+          : "Asia/Ho_Chi_Minh"
+      },
+      readState
+    };
+  }
+
   function normalizeAccountSecurityBootstrap(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const readState = ACCOUNT_SECURITY_BOOTSTRAP_READ_STATES.has(String(source.readState || "").trim().toLowerCase())
@@ -6307,6 +6364,11 @@
       // mounted page; it is never persisted in browser storage or rendered as
       // a session/database identifier.
       accountSecurity: normalizeAccountSecurityBootstrap(source.accountSecurity),
+      // Workspace Setup is a separate signed-account preference profile.
+      // Keep only its fixed enum choices, bounded revision/timestamps and
+      // display locale/timezone; it cannot inherit bridge, Bot, job, wallet,
+      // payment, provider or arbitrary profile data through a render cycle.
+      workspaceSetup: normalizeWorkspaceSetupBootstrap(source.workspaceSetup),
       // MFA has a deliberately separate, tightly validated projection. The
       // transient setup/challenge handles are accepted only from live
       // in-memory Portal state and are never read from browser storage.
@@ -12826,6 +12888,9 @@
 
   function renderDashboardWorkspaceSummary(context) {
     const name = displayName(context);
+    const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
+    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
+    const setupActionLabel = setupProfile.setup_state === "completed" ? "Điều chỉnh Workspace" : "Thiết lập Workspace";
     const drafts = dashboardActiveDrafts(context);
     const projects = (Array.isArray(context.projects) ? context.projects : []).filter((item) => item && typeof item === "object" && validProjectId(item.id) && String(item.state || "active") === "active");
     const jobs = Array.isArray(context.jobs) ? context.jobs : [];
@@ -12833,7 +12898,7 @@
     const processing = jobs.filter((item) => ["queued", "processing"].includes(jobStatus(item))).length;
     const deliveryReady = assets.filter((item) => item && item.delivery_ready === true && item.download_ready === true).length;
     return `<section class="portal-dashboard-overview" aria-labelledby="workspace-overview-title">
-      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">TOAN AAS / Workspace</span><h1 id="workspace-overview-title">Chào ${safeText(name)}</h1><p>Xây Project, tiếp tục brief và theo dõi công việc ở một nơi. Project và Studio Document hoạt động độc lập trên Web; Bot chỉ là integration tùy chọn cho các capability bạn chọn liên kết.</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects">Mở Project Center <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/features">Tạo workflow</a></div></div>
+      <div class="portal-dashboard-overview-copy"><span class="portal-section-kicker">TOAN AAS / Workspace</span><h1 id="workspace-overview-title">Chào ${safeText(name)}</h1><p>Xây Project, tiếp tục brief và theo dõi công việc ở một nơi. Project và Studio Document hoạt động độc lập trên Web; Bot chỉ là integration tùy chọn cho các capability bạn chọn liên kết.</p><div class="portal-dashboard-overview-actions"><a class="portal-button portal-button--primary" href="/projects">Mở Project Center <span aria-hidden="true">→</span></a><a class="portal-button portal-button--quiet" href="/features">Tạo workflow</a><a class="portal-button portal-button--quiet" href="/workspace/setup">${safeText(setupActionLabel)}</a></div></div>
       <dl class="portal-dashboard-overview-stats" aria-label="Tóm tắt workspace"><div><dt>Projects</dt><dd>${safeText(String(projects.length))}</dd><span>Web-owned</span></div><div><dt>Bản nháp</dt><dd>${safeText(String(drafts.length))}</dd><span>Web-owned</span></div><div><dt>Đang xử lý</dt><dd>${safeText(String(processing))}</dd><span>Integration</span></div><div><dt>Sẵn sàng tải</dt><dd>${safeText(String(deliveryReady))}</dd><span>Delivery đã kiểm tra</span></div></dl>
     </section>`;
   }
@@ -12863,7 +12928,10 @@
     const hasDrafts = dashboardActiveDrafts(context).length > 0;
     if (hasProjects || hasDrafts) return "";
     const linked = telegramIdentityLinked(context);
-    const steps = [
+    const workspaceSetup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
+    const setupProfile = workspaceSetup.profile && typeof workspaceSetup.profile === "object" ? workspaceSetup.profile : {};
+    const setupPending = workspaceSetup.readState === "read_only" && setupProfile.setup_state === "not_started";
+    const defaultSteps = [
       {
         number: "01",
         eyebrow: "Web-native",
@@ -12898,6 +12966,34 @@
           action: "Xem cách liên kết"
         }
     ];
+    const steps = setupPending
+      ? [
+          {
+            number: "01",
+            eyebrow: "Cá nhân hóa",
+            title: "Thiết lập Workspace",
+            description: "Chọn cách làm việc và tối đa ba studio để Web gợi ý đúng điểm bắt đầu.",
+            href: "/workspace/setup",
+            action: "Thiết lập ngay"
+          },
+          {
+            number: "02",
+            eyebrow: "Web-native",
+            title: "Tạo Project đầu tiên",
+            description: "Gom brief, tài liệu và phiên bản sáng tạo vào một nơi do Web sở hữu.",
+            href: "/projects",
+            action: "Mở Project Center"
+          },
+          {
+            number: "03",
+            eyebrow: "Planning",
+            title: "Chọn một Studio",
+            description: "Bắt đầu từ content, image, voice, music hoặc document bằng workflow rõ ràng.",
+            href: "/features",
+            action: "Khám phá Studio"
+          }
+        ]
+      : defaultSteps;
     return `<section class="portal-start-guide" data-dashboard-start-guide aria-labelledby="dashboard-start-guide-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">First session</span><h2 id="dashboard-start-guide-title">Bắt đầu nhanh, không bị khóa vào Telegram</h2><p>Web Workspace có thể dùng độc lập ngay từ bước đầu. Mỗi bước đều mở trang đích rõ ràng và không tự tạo job, charge hoặc dữ liệu provider.</p></div><span class="portal-start-guide-note">3 bước · tự chọn</span></div><div class="portal-start-guide-grid">${steps.map((step) => `<a class="portal-start-guide-step" href="${safeText(step.href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`).join("")}</div></section>`;
   }
 
@@ -17107,6 +17203,62 @@
     return `<section class="portal-card portal-card-pad" data-portal-link-status aria-live="polite"><div class="portal-card-header"><div><h2 class="portal-card-title">Liên kết Telegram đang tạm dừng</h2><p class="portal-card-subtitle">Cầu nối xác minh đang không sẵn sàng. Portal đã ẩn mã, deep link và lệnh Bot để không hướng bạn vào một luồng không thể hoàn tất.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Bạn vẫn có thể dùng Workspace Web độc lập. Khi máy chủ xác nhận lại cầu nối, hãy tạo mã mới; mã cũ không được dùng lại.</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-link-status" data-portal-route="/onboarding">Kiểm tra trạng thái</button></div></section>`;
   }
 
+  function renderWorkspaceSetup(page, context) {
+    const setup = context.workspaceSetup && typeof context.workspaceSetup === "object" ? context.workspaceSetup : {};
+    const profile = setup.profile && typeof setup.profile === "object" ? setup.profile : workspaceSetupEmptyProfile();
+    const preferences = setup.preferences && typeof setup.preferences === "object" ? setup.preferences : { locale: "vi", timezone: "Asia/Ho_Chi_Minh" };
+    const readState = String(setup.readState || "guarded");
+    const canSave = Boolean(context.capabilities && context.capabilities["workspace-setup-save"] === true && readState === "read_only");
+    const route = "/workspace/setup";
+    if (readState === "loading") {
+      return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-live="polite">${renderEmpty("Đang tải thiết lập Workspace", "Portal đang đọc hồ sơ riêng của signed Web account. Không dùng dữ liệu Bot, browser storage hay profile của phiên trước để thay thế.", ICONS.dashboard)}</section></article>`;
+    }
+    if (readState !== "read_only") {
+      return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}<section class="portal-card portal-card-pad" data-workspace-setup-status aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Signed account required</span><h2 class="portal-card-title">Thiết lập Workspace đang được bảo vệ</h2><p class="portal-card-subtitle">Máy chủ chưa trả hồ sơ thiết lập hợp lệ. Portal không hiển thị lựa chọn cũ hoặc tự tạo profile trong trình duyệt.</p></div>${badge("guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Hãy làm mới khi signed session còn hoạt động.</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-setup-refresh" data-portal-route="${route}">Tải lại thiết lập</button></div></section></article>`;
+    }
+    const roleOptions = [
+      ["solo_creator", "Sáng tạo cá nhân"], ["team_lead", "Dẫn dắt nhóm"], ["operator", "Vận hành & điều phối"], ["learner", "Học và thử quy trình"]
+    ];
+    const goalOptions = [
+      ["organize_work", "Tổ chức công việc"], ["create_content", "Xây nội dung"], ["build_brand", "Phát triển thương hiệu"], ["run_operations", "Vận hành có kiểm soát"], ["learn_workflows", "Học workflow"]
+    ];
+    const experienceOptions = [["new", "Mới bắt đầu"], ["growing", "Đang phát triển"], ["advanced", "Đã quen workflow"]];
+    const focusOptions = [
+      ["projects", "Project Center", "Gom brief, tài liệu và phiên bản.", ICONS.dashboard],
+      ["content", "Content Studio", "Brief, caption, hook và script.", ICONS.prompt],
+      ["image", "Image Studio", "Ý tưởng và artboard hình ảnh.", ICONS.image],
+      ["voice", "Voice Studio", "Kịch bản và direction giọng nói.", ICONS.voice],
+      ["music", "Music Workspace", "Brief âm thanh và collection riêng tư.", ICONS.music],
+      ["subtitle", "Subtitle Studio", "Caption authored và định dạng phụ đề.", ICONS.subtitle],
+      ["documents", "Document Workspace", "Tài liệu, PDF brief và quy trình.", ICONS.document],
+      ["automation", "Workboard", "Theo dõi công việc và review rõ ràng.", ICONS.workboard]
+    ];
+    const selected = (actual, value) => actual === value ? " selected" : "";
+    const disabled = canSave ? "" : " disabled";
+    const selectedFocus = new Set(Array.isArray(profile.focus_areas) ? profile.focus_areas : []);
+    const profileState = profile.setup_state === "completed" ? "completed" : profile.setup_state === "skipped" ? "ready" : "awaiting_confirm";
+    const stateCopy = profile.setup_state === "completed"
+      ? "Thiết lập đã lưu. Bạn có thể cập nhật khi cách làm việc thay đổi."
+      : profile.setup_state === "skipped"
+        ? "Bạn đã bỏ qua trước đó; có thể chọn lại bất cứ lúc nào."
+        : "Chọn một lần để Workspace đề xuất điểm bắt đầu phù hợp; bạn luôn có thể sửa sau.";
+    const options = (items, current, placeholder) => `<option value="">${safeText(placeholder)}</option>${items.map(([value, label]) => `<option value="${safeText(value)}"${selected(current, value)}>${safeText(label)}</option>`).join("")}`;
+    const selectedFocusCount = [...selectedFocus].filter((key) => focusOptions.some(([option]) => option === key)).length;
+    const focusStatus = selectedFocusCount >= 3
+      ? "Đã chọn 3/3 nhóm studio ưu tiên. Bỏ chọn một nhóm để đổi."
+      : `Đã chọn ${safeText(String(selectedFocusCount))}/3 nhóm studio ưu tiên.`;
+    const focusCards = focusOptions.map(([key, title, description, icon]) => `<label class="portal-workspace-setup-focus-card"><input type="checkbox" name="focus_${safeText(key)}" aria-describedby="workspace-setup-focus-status"${selectedFocus.has(key) ? " checked" : ""}${disabled}><span class="portal-workspace-setup-focus-icon" aria-hidden="true">${portalIcon(icon)}</span><span><strong>${safeText(title)}</strong><small>${safeText(description)}</small></span></label>`).join("");
+    const skip = profile.setup_state === "not_started"
+      ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="workspace-setup-skip" data-portal-route="${route}"${disabled}>Bỏ qua lúc này</button>`
+      : "";
+    const completionState = profile.setup_state === "completed" ? ' data-state="done"' : "";
+    const completionMarker = profile.setup_state === "completed" ? portalIcon(ICONS.check) : "1";
+    return `<article class="portal-page portal-workspace-setup">${renderHero(page, context)}
+      <ol class="portal-workspace-setup-steps" aria-label="Ba phần trong biểu mẫu Workspace"><li${completionState}><span aria-hidden="true">${completionMarker}</span><div><strong>Cách làm việc</strong><small>Vai trò, mục tiêu và mức trải nghiệm.</small></div></li><li${completionState}><span aria-hidden="true">${profile.setup_state === "completed" ? portalIcon(ICONS.check) : "2"}</span><div><strong>Chọn studio</strong><small>Tối đa ba nhóm ưu tiên.</small></div></li><li${completionState}><span aria-hidden="true">${profile.setup_state === "completed" ? portalIcon(ICONS.check) : "3"}</span><div><strong>Lưu và điều chỉnh sau</strong><small>Một biểu mẫu, không có bước ẩn.</small></div></li></ol>
+      <section class="portal-workspace-setup-context" aria-label="Ngữ cảnh tài khoản Web"><div><span class="portal-section-kicker">Web-native preference</span><h2>Thiết lập theo cách bạn làm việc</h2><p>${safeText(stateCopy)}</p></div>${badge(profileState)}<div class="portal-workspace-setup-context-meta"><span>${portalIcon(ICONS.account)} ${safeText(String(preferences.locale || "vi").toUpperCase())}</span><span>${portalIcon(ICONS.system)} ${safeText(String(preferences.timezone || "Asia/Ho_Chi_Minh"))}</span></div></section>
+      <form class="portal-form portal-workspace-setup-form" data-portal-form data-portal-no-transient data-workspace-setup-form data-workspace-setup-writable="${canSave ? "true" : "false"}" data-portal-action="workspace-setup-save" data-portal-route="${route}" novalidate><div class="portal-fields portal-workspace-setup-form-grid"><label class="portal-field"><span>Vai trò của bạn</span><select class="portal-select" name="role" required${disabled}>${options(roleOptions, profile.role, "Chọn vai trò")}</select><small class="portal-field-help">Dùng để sắp xếp điểm bắt đầu trong Web App.</small></label><label class="portal-field"><span>Mục tiêu chính</span><select class="portal-select" name="goal" required${disabled}>${options(goalOptions, profile.goal, "Chọn mục tiêu")}</select><small class="portal-field-help">Không mở thêm quyền hoặc engine.</small></label><label class="portal-field"><span>Mức trải nghiệm</span><select class="portal-select" name="experience" required${disabled}>${options(experienceOptions, profile.experience, "Chọn mức trải nghiệm")}</select><small class="portal-field-help">Bạn có thể thay đổi sau.</small></label></div><fieldset class="portal-workspace-setup-focus" aria-describedby="workspace-setup-focus-help workspace-setup-focus-status"><legend>Chọn tối đa 3 nhóm studio ưu tiên</legend><p id="workspace-setup-focus-help">Chỉ chọn những không gian bạn muốn thấy trước. Đây không phải lệnh chạy hoặc tạo output.</p><p class="portal-workspace-setup-focus-status" id="workspace-setup-focus-status" data-workspace-setup-focus-status role="status" aria-live="polite">${focusStatus}</p><div class="portal-workspace-setup-focus-grid">${focusCards}</div></fieldset><div class="portal-form-footer" data-workspace-setup-status aria-live="polite"><span class="portal-form-note">Lưu theo signed Web account · revision ${safeText(String(profile.revision || 0))} · không có Bot, provider, job, ví hay thanh toán.</span><button class="portal-button portal-button--primary" type="submit"${disabled}>Lưu và vào Workspace</button></div></form><div class="portal-workspace-setup-secondary">${skip}<a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard</a></div></article>`;
+  }
+
   function renderOnboarding(page, context) {
     const flow = context.linkFlow && typeof context.linkFlow === "object" ? context.linkFlow : {};
     const data = flow.data && typeof flow.data === "object" ? flow.data : {};
@@ -19229,6 +19381,7 @@
       case "membership": return renderMembership(page, context);
       case "service-status": return renderServiceStatus(page, context);
       case "media-studio": return renderMediaStudio(page, context);
+      case "workspace-setup": return renderWorkspaceSetup(page, context);
       case "read-only": return renderReadOnly(page, context);
       case "onboarding": return renderOnboarding(page, context);
       case "legal": return renderLegal(page, context);
@@ -19318,6 +19471,30 @@
       fields[input.name] = input.type === "checkbox" ? input.checked : input.value;
     });
     return fields;
+  }
+
+  function synchronizeWorkspaceSetupFocusLimit(form, changedInput) {
+    if (!form || !form.hasAttribute("data-workspace-setup-form")) return;
+    const inputs = Array.from(form.querySelectorAll('input[type="checkbox"][name^="focus_"]'));
+    if (!inputs.length) return;
+    let checked = inputs.filter((input) => input.checked);
+    if (changedInput && changedInput.checked && checked.length > 3) {
+      changedInput.checked = false;
+      checked = inputs.filter((input) => input.checked);
+      showToast("Bạn chỉ có thể chọn tối đa 3 nhóm studio. Bỏ một lựa chọn để chọn nhóm khác.", "warning");
+    }
+    const writable = form.getAttribute("data-workspace-setup-writable") === "true";
+    const atLimit = checked.length >= 3;
+    const status = form.querySelector("[data-workspace-setup-focus-status]");
+    if (status) {
+      status.textContent = atLimit
+        ? "Đã chọn 3/3 nhóm studio ưu tiên. Bỏ chọn một nhóm để đổi."
+        : `Đã chọn ${checked.length}/3 nhóm studio ưu tiên.`;
+    }
+    inputs.forEach((input) => {
+      input.disabled = !writable || (atLimit && !input.checked);
+      input.setAttribute("aria-disabled", String(input.disabled));
+    });
   }
 
   async function copyCanonicalDraftText(value) {
@@ -20081,6 +20258,9 @@
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
       if (form) {
+        if (form.hasAttribute("data-workspace-setup-form") && event.target && event.target.matches && event.target.matches('input[type="checkbox"][name^="focus_"]')) {
+          synchronizeWorkspaceSetupFocusLimit(form, event.target);
+        }
         if (form.hasAttribute("data-governance-type-map") && event.target && event.target.name === "department") {
           synchronizeGovernanceDocumentType(form);
         }
@@ -20189,6 +20369,7 @@
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
+    synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     syncDesktopFocusNavigation();
     bindInteractions();
     syncPwaInstallControl();

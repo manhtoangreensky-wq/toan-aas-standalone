@@ -1450,6 +1450,30 @@ def ensure_copyfast_schema() -> None:
             )
             """
         )
+        # First-run Workspace setup is strictly Web-owned preference metadata.
+        # It does not mirror Telegram identity, wallet/Xu, PayOS, Bot jobs or
+        # provider state, and it only guides signed-account navigation.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_workspace_setup_profiles (
+                account_id TEXT PRIMARY KEY,
+                setup_state TEXT NOT NULL DEFAULT 'not_started'
+                    CHECK(setup_state IN ('not_started', 'completed', 'skipped')),
+                role TEXT NOT NULL DEFAULT ''
+                    CHECK(role IN ('', 'solo_creator', 'team_lead', 'operator', 'learner')),
+                goal TEXT NOT NULL DEFAULT ''
+                    CHECK(goal IN ('', 'organize_work', 'create_content', 'build_brand', 'run_operations', 'learn_workflows')),
+                experience TEXT NOT NULL DEFAULT ''
+                    CHECK(experience IN ('', 'new', 'growing', 'advanced')),
+                focus_areas_json TEXT NOT NULL DEFAULT '[]',
+                revision INTEGER NOT NULL DEFAULT 0 CHECK(revision >= 0),
+                completed_at TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id)
+            )
+            """
+        )
         conn.execute(
             """
             CREATE TABLE IF NOT EXISTS telegram_link_codes (
