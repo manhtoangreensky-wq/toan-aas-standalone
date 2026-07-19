@@ -73,7 +73,7 @@ async def dashboard():
     assert result["bot_inventory"]["counts"]["callback_data"] == 1
     assert result["bot_inventory"]["env_references"][0]["name"] == "BOT_TOKEN"
     assert result["web_inventory"]["routes"][0]["path"] == "/dashboard"
-    assert result["parity_gap"]["command_mappings"][0]["status"] == "MAPPED_TO_EXISTING_ROUTE"
+    assert result["parity_gap"]["command_mappings"][0]["status"] == "NAVIGATION_ENTRYPOINT"
     assert result["preflight"]["bot"]["revision"] == {
         "checkout_sha": "",
         "baseline_relation": "not_a_git_worktree",
@@ -104,6 +104,7 @@ async def dashboard():
         "env-provider-map.md",
         "key4u-map.md",
         "known-gaps.md",
+        "FALLBACK_FEATURE_DISPOSITION.md",
     ):
         assert (docs_dir / name).is_file()
     assert "Manual top-up is a Telegram Bot-only handoff" in (docs_dir / "payos-wallet-jobs.md").read_text(encoding="utf-8")
@@ -601,7 +602,8 @@ async def web_page(page_path: str):
     }.issubset(concrete_tokens)
     assert not {"flow|save", "videoref|save", "videoidea|save"}.intersection(concrete_tokens)
     assert inventory["counts"]["callback_templates"] == len(template_values)
-    assert gap["source_counts"]["callback_templates"] == 0
+    assert gap["source_counts"]["callback_templates"] == len(template_values)
+    assert gap["source_counts"]["unresolved_callback_templates"] == 0
     assert gap["mapping_coverage_percent"] == 100.0
     template_records = {item["template"]: item for item in inventory["callback_templates"]}
     template_mappings = {item["source"]: item for item in gap["callback_template_mappings"]}
@@ -1056,6 +1058,79 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     # A variable prefix has no fixed namespace. The audit must not guess that
     # it is a save/action from any one Bot workflow.
     assert audit._map_callback_template("{*}|save", {"file": "bot.py", "line": 1}, routes) is None
+
+
+def test_static_audit_keeps_dashboard_fallbacks_actionable_instead_of_counting_feature_parity(tmp_path: Path) -> None:
+    """A route catch-all must not turn unknown Bot flows into a green metric."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        '''
+app.add_handler(CommandHandler("start", start_handler))
+app.add_handler(CommandHandler("opaque_flow", opaque_handler))
+button = InlineKeyboardButton("Video", callback_data="menu|video")
+''',
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get('/dashboard')
+async def dashboard():
+    return {}
+@app.get('/{page_path:path}')
+async def page(page_path):
+    return {}
+''',
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    gap = result["parity_gap"]
+    command_mappings = {item["source"]: item for item in gap["command_mappings"]}
+    callback_mappings = {item["source"]: item for item in gap["callback_mappings"]}
+
+    assert command_mappings["/start"]["status"] == "NAVIGATION_ENTRYPOINT"
+    assert command_mappings["/start"]["resolution"] == "reviewed_dashboard_navigation_entrypoint"
+    assert command_mappings["/opaque_flow"]["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert command_mappings["/opaque_flow"]["resolution"] == "unreviewed_dashboard_fallback_requires_feature_disposition"
+    assert callback_mappings["menu|video"]["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert callback_mappings["menu|video"]["resolution"] == "menu_callback_requires_explicit_feature_disposition"
+    assert gap["static_web_surface_coverage_percent"] == 0.0
+    assert gap["mapping_coverage_percent"] == 33.33
+    assert gap["workflow_equivalence"] == {
+        "status": "NOT_STATICALLY_VERIFIABLE",
+        "verified_mapping_count": 0,
+        "coverage_percent": 0.0,
+        "note": "This source-only audit can verify route and disposition evidence, not signed runtime behavior, provider execution, billing, job delivery, or owner-scoped output access.",
+    }
+    fallback_gap = next(item for item in gap["gaps"] if item["area"] == "dashboard_navigation_fallbacks")
+    assert fallback_gap["count"] == 2
+    backlog = {item["family"]: item for item in gap["feature_disposition_backlog"]}
+    assert backlog["menu"] == {
+        "family": "menu",
+        "priority": "P0",
+        "candidate_boundary": "/features",
+        "authority": "Web capability catalog",
+        "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
+        "count": 1,
+        "source_kinds": ["callback_data"],
+        "sample_sources": ["menu|video"],
+    }
+    assert backlog["command:opaque_flow"]["candidate_boundary"] == "source_review_required"
+    assert fallback_gap["families"] == [
+        {"family": "menu", "priority": "P0", "count": 1},
+        {"family": "command:opaque_flow", "priority": "P1", "count": 1},
+    ]
+
+    template = audit._map_callback_template("menu|video|{*}", {"file": "bot.py", "line": 1}, {"/{page_path:path}"})
+    assert template is not None
+    assert template["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert template["resolution"] == "menu_namespace_requires_explicit_feature_disposition"
 
 
 def test_static_audit_inventories_literal_tuple_keyboard_callbacks_in_small_and_monolithic_sources(tmp_path: Path) -> None:
