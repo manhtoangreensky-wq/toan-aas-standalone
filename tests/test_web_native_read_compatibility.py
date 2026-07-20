@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import importlib
 from io import BytesIO
 from pathlib import Path
@@ -273,3 +274,35 @@ def test_generic_assets_reads_completed_outputs_from_dedicated_projection(tmp_pa
         assert response.status_code == 200
         assert response.json()["ok"] is True
         assert calls and calls[0][1] == 100
+
+
+def test_audio_native_asset_delivery_uses_only_its_typed_verified_handler(tmp_path, monkeypatch):
+    """Generic Assets may dispatch audio only after its sealed read model says ready."""
+
+    with make_client(tmp_path, monkeypatch):
+        api = importlib.import_module("copyfast_api")
+        models = importlib.import_module("copyfast_native_read_models")
+        audio = importlib.import_module("copyfast_audio_asset_operations")
+        asset_id = models.encode_native_job_id("audio-asset-operation", "audio-owner-operation")
+        calls: list[tuple[str, str]] = []
+
+        monkeypatch.setattr(
+            api,
+            "get_native_job",
+            lambda account_id, public_id: {
+                "id": public_id,
+                "output": {"filename": "toan-aas-audio.m4a", "content_type": "audio/mp4", "byte_size": 64},
+            }
+            if account_id == "owner" and public_id == asset_id
+            else None,
+        )
+
+        async def typed_download(operation_id: str, account: dict):
+            calls.append((operation_id, str(account.get("id") or "")))
+            return {"ok": True, "status": "completed", "message": "typed", "data": {}}
+
+        monkeypatch.setattr(audio, "download_audio_asset_operation", typed_download)
+        response = asyncio.run(api._native_asset_delivery(asset_id, {"id": "owner"}))
+
+        assert response["ok"] is True
+        assert calls == [("audio-owner-operation", "owner")]

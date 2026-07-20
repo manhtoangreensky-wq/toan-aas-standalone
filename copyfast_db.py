@@ -103,6 +103,18 @@ def subtitle_asset_operations_enabled() -> bool:
     return os.environ.get("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def audio_asset_operations_enabled() -> bool:
+    """Whether bounded, private Audio Asset Operations are deliberately enabled.
+
+    This is an isolated local FFmpeg/ffprobe boundary for an owner's existing
+    Asset Vault audio.  It never turns on provider music/voice generation, Bot
+    work, a canonical job, wallet/Xu, PayOS, publishing or a generic media
+    executor.
+    """
+
+    return os.environ.get("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def image_to_pdf_enabled() -> bool:
     """Whether the Pillow-backed Image-to-PDF decoder is deliberately enabled.
 
@@ -947,6 +959,68 @@ def ensure_subtitle_asset_operations_persistence() -> Path | None:
     return subtitle_asset_operations_directory()
 
 
+def audio_asset_operations_directory() -> Path:
+    """Resolve an isolated root for verified local audio operation artifacts."""
+
+    if not audio_asset_operations_enabled():
+        raise RuntimeError("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED chưa được bật")
+    configured = os.environ.get("WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT", "").strip()
+    if configured:
+        candidate = Path(configured).expanduser()
+        if not candidate.is_absolute():
+            raise RuntimeError("WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT phải là đường dẫn tuyệt đối")
+    else:
+        persistent_directory = _persistent_session_directory()
+        candidate = (
+            persistent_directory / "toanaas_webapp_audio_asset_operations"
+            if persistent_directory is not None
+            else Path(session_database_path()).expanduser().resolve().parent / "toanaas_webapp_audio_asset_operations"
+        )
+    if candidate.exists() and candidate.is_symlink():
+        raise RuntimeError("WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT không được là symbolic link")
+    candidate = candidate.resolve()
+    static_directory = (Path(__file__).resolve().parent / "static").resolve()
+    if _is_within(candidate, static_directory):
+        raise RuntimeError("WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT không được nằm trong static")
+    private_roots: list[Path] = []
+    if asset_vault_enabled():
+        private_roots.append(asset_vault_directory().resolve())
+    if project_package_enabled():
+        private_roots.append(project_package_directory().resolve())
+    if document_operations_enabled():
+        private_roots.append(document_operations_directory().resolve())
+    if image_operations_enabled():
+        private_roots.append(image_operations_directory().resolve())
+    if subtitle_asset_operations_enabled():
+        private_roots.append(subtitle_asset_operations_directory().resolve())
+    for private_root in private_roots:
+        if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
+            raise RuntimeError(
+                "WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations và Subtitle Asset Operations"
+            )
+    if _is_production():
+        persistent_directory = _persistent_session_directory()
+        if persistent_directory is None:
+            raise RuntimeError("Audio Asset Operations production cần RAILWAY_VOLUME_MOUNT_PATH hợp lệ hoặc mount /data")
+        persistent_directory = persistent_directory.resolve()
+        if candidate == persistent_directory or not _is_within(candidate, persistent_directory):
+            raise RuntimeError("WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT phải là thư mục con của persistent volume khi production")
+    candidate.mkdir(parents=True, exist_ok=True)
+    if not candidate.is_dir() or candidate.is_symlink():
+        raise RuntimeError("WEBAPP_AUDIO_ASSET_OPERATIONS_ROOT không phải thư mục hợp lệ")
+    return candidate
+
+
+def ensure_audio_asset_operations_persistence() -> Path | None:
+    """Validate the opt-in private audio output root before it is served."""
+
+    if not audio_asset_operations_enabled():
+        return None
+    if not asset_vault_enabled():
+        raise RuntimeError("Audio Asset Operations cần WEBAPP_ASSET_VAULT_ENABLED=true")
+    return audio_asset_operations_directory()
+
+
 def video_operations_directory() -> Path:
     """Resolve the isolated private output root for Web-native video work.
 
@@ -986,10 +1060,12 @@ def video_operations_directory() -> Path:
         private_roots.append(document_operations_directory().resolve())
     if image_operations_enabled():
         private_roots.append(image_operations_directory().resolve())
+    if audio_asset_operations_enabled():
+        private_roots.append(audio_asset_operations_directory().resolve())
     for private_root in private_roots:
         if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
             raise RuntimeError(
-                "WEBAPP_VIDEO_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations và Image Operations"
+                "WEBAPP_VIDEO_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations và Audio Asset Operations"
             )
 
     if _is_production():
@@ -1064,6 +1140,8 @@ def frame_video_operations_directory() -> Path:
         private_roots.append(image_operations_directory().resolve())
     if subtitle_asset_operations_enabled():
         private_roots.append(subtitle_asset_operations_directory().resolve())
+    if audio_asset_operations_enabled():
+        private_roots.append(audio_asset_operations_directory().resolve())
     if video_operations_enabled():
         private_roots.append(video_operations_directory().resolve())
     if video_transform_operations_enabled():
@@ -1085,7 +1163,7 @@ def frame_video_operations_directory() -> Path:
     for private_root in private_roots:
         if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
             raise RuntimeError(
-                "WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations, Subtitle Asset Operations và Video Operations"
+                "WEBAPP_FRAME_VIDEO_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations, Subtitle Asset Operations, Audio Asset Operations và Video Operations"
             )
 
     if _is_production():
@@ -1159,6 +1237,8 @@ def video_transform_operations_directory() -> Path:
         private_roots.append(image_operations_directory().resolve())
     if subtitle_asset_operations_enabled():
         private_roots.append(subtitle_asset_operations_directory().resolve())
+    if audio_asset_operations_enabled():
+        private_roots.append(audio_asset_operations_directory().resolve())
     if video_operations_enabled():
         private_roots.append(video_operations_directory().resolve())
     if frame_video_operations_enabled():
@@ -1166,7 +1246,7 @@ def video_transform_operations_directory() -> Path:
     for private_root in private_roots:
         if candidate == private_root or _is_within(candidate, private_root) or _is_within(private_root, candidate):
             raise RuntimeError(
-                "WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations, Subtitle Asset Operations, Video Operations và Frame Video"
+                "WEBAPP_VIDEO_TRANSFORM_OPERATIONS_ROOT phải tách riêng Asset Vault, Project Package, Document Operations, Image Operations, Subtitle Asset Operations, Audio Asset Operations, Video Operations và Frame Video"
             )
 
     if _is_production():
@@ -4003,6 +4083,72 @@ def ensure_copyfast_schema() -> None:
         if "sequence" not in subtitle_asset_event_columns:
             conn.execute("ALTER TABLE web_subtitle_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
 
+        # Audio Asset Operations are a separate local execution boundary from
+        # Audio Library metadata, Video operations and Bot/provider media
+        # workflows. Rows keep only immutable source/output evidence plus
+        # bounded probe fields; raw audio, local paths, FFmpeg argv, provider
+        # handles, wallet/Xu and PayOS data never enter this table.
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_audio_asset_operations (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                source_asset_id TEXT NOT NULL,
+                project_id TEXT,
+                kind TEXT NOT NULL,
+                target_format TEXT,
+                normalization_profile TEXT,
+                state TEXT NOT NULL DEFAULT 'queued',
+                idempotency_key TEXT NOT NULL,
+                request_fingerprint TEXT NOT NULL,
+                source_sha256 TEXT NOT NULL,
+                source_byte_size INTEGER NOT NULL,
+                source_lifecycle_revision INTEGER NOT NULL,
+                source_format TEXT NOT NULL,
+                source_duration_ms INTEGER,
+                source_channels INTEGER,
+                source_sample_rate INTEGER,
+                source_codec TEXT,
+                output_duration_ms INTEGER,
+                output_channels INTEGER,
+                output_sample_rate INTEGER,
+                output_codec TEXT,
+                storage_key TEXT UNIQUE,
+                original_filename TEXT,
+                content_type TEXT,
+                byte_size INTEGER,
+                sha256 TEXT,
+                failure_code TEXT,
+                created_at TEXT NOT NULL,
+                queued_at TEXT NOT NULL,
+                started_at TEXT,
+                completed_at TEXT,
+                updated_at TEXT NOT NULL,
+                UNIQUE(account_id, kind, idempotency_key),
+                FOREIGN KEY(account_id) REFERENCES web_accounts(id),
+                FOREIGN KEY(source_asset_id) REFERENCES web_asset_files(id),
+                FOREIGN KEY(project_id) REFERENCES web_projects(id)
+            )
+            """
+        )
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS web_audio_asset_operation_events (
+                id TEXT PRIMARY KEY,
+                operation_id TEXT NOT NULL,
+                state TEXT NOT NULL,
+                sequence INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(operation_id) REFERENCES web_audio_asset_operations(id)
+            )
+            """
+        )
+        audio_asset_event_columns = {
+            row[1] for row in conn.execute("PRAGMA table_info(web_audio_asset_operation_events)").fetchall()
+        }
+        if "sequence" not in audio_asset_event_columns:
+            conn.execute("ALTER TABLE web_audio_asset_operation_events ADD COLUMN sequence INTEGER NOT NULL DEFAULT 0")
+
         # Storyboard Grid keeps its bounded scene cuts in a purpose-specific
         # table instead of overloading Web image transforms.  A completed
         # operation delivers one verified private JPEG-scene ZIP/manifest;
@@ -5234,6 +5380,21 @@ def ensure_copyfast_schema() -> None:
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_subtitle_asset_operation_events_operation_sequence ON web_subtitle_asset_operation_events(operation_id, sequence ASC, id ASC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operations_account_updated ON web_audio_asset_operations(account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operations_source_account ON web_audio_asset_operations(source_asset_id, account_id, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operations_state_kind_updated ON web_audio_asset_operations(state, kind, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operations_account_kind_state ON web_audio_asset_operations(account_id, kind, state, updated_at DESC, id DESC)"
+        )
+        conn.execute(
+            "CREATE INDEX IF NOT EXISTS idx_web_audio_asset_operation_events_operation_sequence ON web_audio_asset_operation_events(operation_id, sequence ASC, id ASC)"
         )
         conn.execute(
             "CREATE INDEX IF NOT EXISTS idx_web_video_operations_account_updated ON web_video_operations(account_id, updated_at DESC, id DESC)"

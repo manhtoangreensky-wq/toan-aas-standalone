@@ -27,6 +27,7 @@ import copyfast_admin_audit
 import copyfast_admin_document_archive
 import copyfast_admin_erp_navigation
 import copyfast_analytics_workspace
+import copyfast_audio_asset_operations
 import copyfast_autopilot
 import copyfast_assets
 import copyfast_auth
@@ -81,6 +82,7 @@ from copyfast_auth import (
 from copyfast_mfa import ensure_totp_mfa_configuration
 from copyfast_db import (
     ensure_admin_document_archive_persistence,
+    ensure_audio_asset_operations_persistence,
     ensure_asset_vault_persistence,
     ensure_copyfast_persistence,
     ensure_copyfast_schema,
@@ -106,6 +108,7 @@ STARTUP_RECONCILIATION_STEPS = (
     ("document_operations", copyfast_document_operations.reconcile_document_operation_storage),
     ("image_operations", copyfast_image_operations.reconcile_image_operation_storage),
     ("subtitle_asset_operations", copyfast_subtitle_asset_operations.reconcile_subtitle_asset_operation_storage),
+    ("audio_asset_operations", copyfast_audio_asset_operations.reconcile_audio_asset_operation_storage),
     ("video_operations", copyfast_video_operations.reconcile_video_operation_storage),
     ("frame_video_operations", copyfast_frame_video_operations.reconcile_frame_video_operation_storage),
     ("video_transform_operations", copyfast_video_transform_operations.reconcile_video_transform_operation_storage),
@@ -149,7 +152,7 @@ async def _run_startup_reconciliation(application: FastAPI) -> None:
     for name, reconcile in STARTUP_RECONCILIATION_STEPS:
         status["current_step"] = name
         try:
-            if name in {"image_operations", "subtitle_asset_operations", "video_operations", "frame_video_operations", "video_transform_operations", "storyboard_grid"} and interrupted_before:
+            if name in {"image_operations", "subtitle_asset_operations", "audio_asset_operations", "video_operations", "frame_video_operations", "video_transform_operations", "storyboard_grid"} and interrupted_before:
                 # These local transformations run synchronously in a request
                 # and have no worker to resume them. The deferred scan must
                 # only recover work that predates readiness; otherwise a
@@ -242,12 +245,14 @@ async def lifespan(application: FastAPI):
     ensure_document_operations_persistence()
     ensure_image_operations_persistence()
     ensure_subtitle_asset_operations_persistence()
+    ensure_audio_asset_operations_persistence()
     ensure_video_operations_persistence()
     ensure_frame_video_operations_persistence()
     ensure_video_transform_operations_persistence()
     copyfast_document_operations.ensure_document_operations_runtime()
     copyfast_image_operations.ensure_image_operations_runtime()
     copyfast_subtitle_asset_operations.ensure_subtitle_asset_operations_runtime()
+    copyfast_audio_asset_operations.ensure_audio_asset_operations_runtime()
     copyfast_video_operations.ensure_video_operations_runtime()
     copyfast_frame_video_operations.ensure_frame_video_operations_runtime()
     copyfast_video_transform_operations.ensure_video_transform_operations_runtime()
@@ -315,6 +320,10 @@ DOCUMENT_OPERATION_BODY_MAX_BYTES = 16 * 1024
 # receipt.  Enforce a narrow raw-body cap before any private source lookup or
 # SQLite work; the route never accepts subtitle text, uploads, URLs or paths.
 SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES = 16 * 1024
+# Audio Asset Operations receive only Asset Vault UUIDs, a closed target
+# format/profile enum and an idempotency receipt. Their source bytes and all
+# FFmpeg details remain server-side, so retain the narrow pre-parse bound.
+AUDIO_ASSET_OPERATION_BODY_MAX_BYTES = 16 * 1024
 # Video Poster receives only compact JSON containing an Asset Vault UUID,
 # one fixed position and an idempotency receipt. Count the raw stream before
 # FastAPI parses a potentially chunked body; the source video is never posted
@@ -419,6 +428,7 @@ class PromptLibraryBodyLimitMiddleware:
         document_workspace_max_bytes: int = DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
         document_operation_max_bytes: int = DOCUMENT_OPERATION_BODY_MAX_BYTES,
         subtitle_asset_operation_max_bytes: int = SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES,
+        audio_asset_operation_max_bytes: int = AUDIO_ASSET_OPERATION_BODY_MAX_BYTES,
         video_operation_max_bytes: int = VIDEO_OPERATION_BODY_MAX_BYTES,
         trend_research_max_bytes: int = TREND_RESEARCH_BODY_MAX_BYTES,
         growth_review_max_bytes: int = GROWTH_REVIEW_BODY_MAX_BYTES,
@@ -454,6 +464,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.document_workspace_max_bytes = int(document_workspace_max_bytes)
         self.document_operation_max_bytes = int(document_operation_max_bytes)
         self.subtitle_asset_operation_max_bytes = int(subtitle_asset_operation_max_bytes)
+        self.audio_asset_operation_max_bytes = int(audio_asset_operation_max_bytes)
         self.video_operation_max_bytes = int(video_operation_max_bytes)
         self.trend_research_max_bytes = int(trend_research_max_bytes)
         self.growth_review_max_bytes = int(growth_review_max_bytes)
@@ -503,6 +514,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/document-workspace/")
                 or path.startswith("/api/v1/document-operations/")
                 or path.startswith("/api/v1/subtitle-asset-operations/")
+                or path.startswith("/api/v1/audio-asset-operations/")
                 or path.startswith("/api/v1/video-operations/")
                 or path == "/api/v1/frame-video-operations"
                 or path.startswith("/api/v1/frame-video-operations/")
@@ -564,6 +576,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.document_operation_max_bytes
         if path.startswith("/api/v1/subtitle-asset-operations/"):
             return self.subtitle_asset_operation_max_bytes
+        if path.startswith("/api/v1/audio-asset-operations/"):
+            return self.audio_asset_operation_max_bytes
         if path.startswith("/api/v1/video-operations/"):
             return self.video_operation_max_bytes
         if path == "/api/v1/frame-video-operations" or path.startswith("/api/v1/frame-video-operations/"):
@@ -636,6 +650,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_image_studio = path.startswith("/api/v1/image-studio/")
         is_document_operation = path.startswith("/api/v1/document-operations/")
         is_subtitle_asset_operation = path.startswith("/api/v1/subtitle-asset-operations/")
+        is_audio_asset_operation = path.startswith("/api/v1/audio-asset-operations/")
         is_video_operation = path.startswith("/api/v1/video-operations/")
         is_frame_video_operation = path == "/api/v1/frame-video-operations" or path.startswith("/api/v1/frame-video-operations/")
         is_video_transform_operation = path == "/api/v1/video-transform-operations" or path.startswith("/api/v1/video-transform-operations/")
@@ -745,6 +760,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_operation
                     else "Dữ liệu Subtitle Asset Operations vượt giới hạn kích thước an toàn."
                     if is_subtitle_asset_operation
+                    else "Dữ liệu Audio Asset Operations vượt giới hạn kích thước an toàn."
+                    if is_audio_asset_operation
                     else "Dữ liệu Video Poster vượt giới hạn kích thước an toàn."
                     if is_video_operation
                     else "Dữ liệu Frame Video vượt giới hạn kích thước an toàn."
@@ -816,6 +833,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_document_operation
                     else "WEB_SUBTITLE_ASSET_OPERATION_BODY_TOO_LARGE"
                     if is_subtitle_asset_operation
+                    else "WEB_AUDIO_ASSET_OPERATION_BODY_TOO_LARGE"
+                    if is_audio_asset_operation
                     else "WEB_VIDEO_OPERATION_BODY_TOO_LARGE"
                     if is_video_operation
                     else "WEB_FRAME_VIDEO_OPERATION_BODY_TOO_LARGE"
@@ -874,11 +893,12 @@ class PromptLibraryBodyLimitMiddleware:
             response.headers["Referrer-Policy"] = "no-referrer"
             response.headers["Content-Security-Policy"] = "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
-        elif is_admin_document_archive_upload or is_video_operation or is_frame_video_operation or is_video_transform_operation:
+        elif is_admin_document_archive_upload or is_audio_asset_operation or is_video_operation or is_frame_video_operation or is_video_transform_operation:
             # An oversized private archive upload must receive the same
-            # cross-origin boundary as a normal archive response. Video Poster
-            # requests likewise identify private Asset Vault work, and this
-            # raw-body guard bypasses the normal post-route middleware.
+            # cross-origin boundary as a normal archive response. Audio and
+            # Video processor requests likewise identify private Asset Vault
+            # work, and this raw-body guard bypasses the normal post-route
+            # middleware.
             response.headers["Cross-Origin-Resource-Policy"] = "same-origin"
         await response(scope, receive, send)
 
@@ -964,6 +984,7 @@ app.add_middleware(
     document_workspace_max_bytes=DOCUMENT_WORKSPACE_BODY_MAX_BYTES,
     document_operation_max_bytes=DOCUMENT_OPERATION_BODY_MAX_BYTES,
     subtitle_asset_operation_max_bytes=SUBTITLE_ASSET_OPERATION_BODY_MAX_BYTES,
+    audio_asset_operation_max_bytes=AUDIO_ASSET_OPERATION_BODY_MAX_BYTES,
     video_operation_max_bytes=VIDEO_OPERATION_BODY_MAX_BYTES,
     trend_research_max_bytes=TREND_RESEARCH_BODY_MAX_BYTES,
     growth_review_max_bytes=GROWTH_REVIEW_BODY_MAX_BYTES,
@@ -1149,6 +1170,34 @@ async def security_headers(request: Request, call_next):
             or request.url.path.startswith("/api/v1/subtitle-asset-operations/")
         )
         and not subtitle_asset_operation_download
+    )
+    # Audio Asset Operations has the same owner-scoped Asset Vault boundary,
+    # but invokes a bounded local FFmpeg runtime for transforms. Keep all
+    # three family buckets fixed before CSRF, owner lookup, source copy,
+    # ffprobe or FFmpeg work.
+    audio_asset_operation_write = (
+        request.method == "POST"
+        and request.url.path in {
+            "/api/v1/audio-asset-operations/inspect",
+            "/api/v1/audio-asset-operations/convert",
+            "/api/v1/audio-asset-operations/normalize",
+        }
+    )
+    audio_asset_operation_download = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/audio-asset-operations/")
+        and request.url.path.endswith("/download")
+    )
+    audio_asset_operation_read = (
+        request.method == "GET"
+        and (
+            request.url.path in {
+                "/api/v1/audio-asset-operations",
+                "/api/v1/audio-asset-operations/",
+            }
+            or request.url.path.startswith("/api/v1/audio-asset-operations/")
+        )
+        and not audio_asset_operation_download
     )
     # Video Poster uses a fixed local FFmpeg invocation after it has verified
     # a private Asset Vault source. Keep its creation, status views and private
@@ -1428,6 +1477,15 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if subtitle_asset_operation_read:
         rate_limit = 120
+    if audio_asset_operation_write:
+        # A transform is synchronous and capacity-bounded. Keep its browser
+        # retry budget below the text-only subtitle executor and far below a
+        # generic API write family.
+        rate_limit = 10
+    if audio_asset_operation_download:
+        rate_limit = 20
+    if audio_asset_operation_read:
+        rate_limit = 120
     if video_operation_run:
         # FFmpeg work is additionally serialized and source/output validated;
         # this pre-DB limit blocks repeat browser execution attempts before an
@@ -1572,6 +1630,9 @@ async def security_headers(request: Request, call_next):
             else "subtitle-asset-operation-write" if subtitle_asset_operation_write
             else "subtitle-asset-operation-download" if subtitle_asset_operation_download
             else "subtitle-asset-operation-read" if subtitle_asset_operation_read
+            else "audio-asset-operation-write" if audio_asset_operation_write
+            else "audio-asset-operation-download" if audio_asset_operation_download
+            else "audio-asset-operation-read" if audio_asset_operation_read
             else "prompt-library-read" if prompt_library_read
             else "media-workspace-write" if media_workspace_write
             else "media-workspace-preview" if media_workspace_preview
@@ -1716,6 +1777,7 @@ async def security_headers(request: Request, call_next):
                 analytics_workspace_manual_csv_export
                 or data_controls_export
                 or subtitle_asset_operation_download
+                or audio_asset_operation_download
                 or admin_document_archive_download
                 or video_operation_download
                 or frame_video_operation_download
@@ -1764,6 +1826,7 @@ async def security_headers(request: Request, call_next):
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
     private_image_download = request.url.path.startswith("/api/v1/image-operations/") and request.url.path.endswith("/download")
     private_subtitle_asset_download = request.url.path.startswith("/api/v1/subtitle-asset-operations/") and request.url.path.endswith("/download")
+    private_audio_asset_download = request.url.path.startswith("/api/v1/audio-asset-operations/") and request.url.path.endswith("/download")
     private_video_operation = (
         request.url.path == "/api/v1/video-operations"
         or request.url.path == "/api/v1/video-operations/"
@@ -1830,7 +1893,7 @@ async def security_headers(request: Request, call_next):
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
     private_download = (
         private_asset_download or private_native_asset_download or private_package_download or private_document_download
-        or private_image_download or private_subtitle_asset_download or private_video_download or private_frame_video_download or private_video_transform_download or private_storyboard_grid_download
+        or private_image_download or private_subtitle_asset_download or private_audio_asset_download or private_video_download or private_frame_video_download or private_video_transform_download or private_storyboard_grid_download
         or private_support_evidence_download or private_media_workspace_preview or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
     )
@@ -2110,6 +2173,7 @@ app.include_router(copyfast_project_packages.router)
 app.include_router(copyfast_document_operations.router)
 app.include_router(copyfast_image_operations.router)
 app.include_router(copyfast_subtitle_asset_operations.router)
+app.include_router(copyfast_audio_asset_operations.router)
 app.include_router(copyfast_video_operations.router)
 app.include_router(copyfast_frame_video_operations.router)
 app.include_router(copyfast_video_transform_operations.router)

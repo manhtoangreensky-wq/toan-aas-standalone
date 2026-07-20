@@ -46,7 +46,10 @@ ARCHIVED_STATE = "archived"
 UNAVAILABLE_STATE = "unavailable"
 VISIBLE_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE})
 ALL_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE, UNAVAILABLE_STATE})
-REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle"})
+# Typed operation pickers must stay exact and server-side.  Audio is a
+# separate allowlisted family for Audio Asset Operations; it is deliberately
+# not implemented as a loose ``audio/*`` query.
+REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle", "audio"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 ASSET_ID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -1205,6 +1208,26 @@ async def list_assets(
         params.extend([
             ".srt", "application/x-subrip",
             ".vtt", "text/vtt",
+        ])
+    elif selected_reference_kind == "audio":
+        # Audio Asset Operations accepts only canonical Asset Vault pairs.
+        # Upload normalization may accept legacy browser MIME aliases, but it
+        # persists the canonical MIME above.  Pairing extension and MIME here
+        # prevents a malformed row from reaching the private processor simply
+        # because it happens to have an ``audio``-looking type.
+        where.append(
+            "("
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?)"
+            ")"
+        )
+        params.extend([
+            ".mp3", "audio/mpeg",
+            ".wav", "audio/wav",
+            ".m4a", "audio/mp4",
+            ".ogg", "audio/ogg",
         ])
     if needle:
         escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")

@@ -94,9 +94,15 @@ def seed_typed_reference_assets(db_path: Path, email: str, *, kind: str, count: 
             (".srt", "application/x-subrip"),
             (".vtt", "text/vtt"),
         ),
+        "audio": (
+            (".mp3", "audio/mpeg"),
+            (".wav", "audio/wav"),
+            (".m4a", "audio/mp4"),
+            (".ogg", "audio/ogg"),
+        ),
     }
     assert kind in media_by_kind
-    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle"}[kind]
+    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle", "audio": "Audio"}[kind]
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
         account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (account_email,)).fetchone()
@@ -139,6 +145,10 @@ def seed_malformed_reference_assets(db_path: Path, email: str) -> list[str]:
         (".srt", "text/plain"),
         (".srt", "text/vtt"),
         (".vtt", "application/x-subrip"),
+        (".mp3", "audio/mp4"),
+        (".wav", "audio/mpeg"),
+        (".m4a", "audio/ogg"),
+        (".ogg", "application/ogg"),
     )
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
@@ -368,10 +378,12 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         owner_pdf_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="pdf")
         owner_image_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="image")
         owner_subtitle_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="subtitle")
+        owner_audio_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="audio")
         malformed_ids = seed_malformed_reference_assets(db_path, "typed-reference-owner@example.com")
         foreign_pdf_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="pdf")
         foreign_image_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="image")
         foreign_subtitle_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="subtitle")
+        foreign_audio_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="audio")
 
         allowed_pairs = {
             "pdf": {(".pdf", "application/pdf")},
@@ -385,11 +397,18 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
                 (".srt", "application/x-subrip"),
                 (".vtt", "text/vtt"),
             },
+            "audio": {
+                (".mp3", "audio/mpeg"),
+                (".wav", "audio/wav"),
+                (".m4a", "audio/mp4"),
+                (".ogg", "audio/ogg"),
+            },
         }
         for kind, expected_ids in (
             ("pdf", owner_pdf_ids),
             ("image", owner_image_ids),
             ("subtitle", owner_subtitle_ids),
+            ("audio", owner_audio_ids),
         ):
             pages = []
             raw_pages = []
@@ -431,7 +450,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
             assert set().union(*pages) == set(expected_ids)
             assert not set().union(*pages).intersection(malformed_ids)
             assert not set().union(*pages).intersection(
-                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids)
+                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids) | set(foreign_audio_ids)
             )
             assert all("private-reference-blobs" not in body for body in raw_pages)
 

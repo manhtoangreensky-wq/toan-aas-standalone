@@ -608,6 +608,11 @@ def _flags() -> dict[str, bool]:
         # Bot/Core Bridge, provider, ASR, translation, dubbing, wallet/Xu or
         # PayOS work by itself.
         "subtitle_asset_operations_enabled": enabled("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED", False),
+        # Audio Asset Operations is a distinct local, private execution
+        # boundary over existing Asset Vault audio.  Its switch is false by
+        # default and never grants Bot/Core Bridge, provider, TTS/ASR/dubbing,
+        # wallet/Xu or PayOS authority.
+        "audio_asset_operations_enabled": enabled("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", False),
         # Image Creative Studio is authoring-only: it stores directions and
         # safe Asset Vault UUID references, never an image operation or
         # external execution capability.
@@ -2876,6 +2881,9 @@ async def _native_asset_delivery(asset_id: str, account: dict):
         if source == "subtitle-asset-operation":
             from copyfast_subtitle_asset_operations import download_subtitle_asset_operation
             return await download_subtitle_asset_operation(internal_id, account)
+        if source == "audio-asset-operation":
+            from copyfast_audio_asset_operations import download_audio_asset_operation
+            return await download_audio_asset_operation(internal_id, account)
         if source == "video-operation":
             from copyfast_video_operations import download_video_operation
             return await download_video_operation(internal_id, account)

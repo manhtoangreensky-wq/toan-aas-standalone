@@ -17,6 +17,7 @@ VALID_PACKAGE_KEY = "packages/" + ("a" * 32) + ".zip"
 VALID_DOCUMENT_KEY = "outputs/" + ("b" * 32) + ".pdf"
 VALID_IMAGE_KEY = "outputs/" + ("c" * 32) + ".png"
 VALID_SUBTITLE_KEY = "outputs/" + ("e" * 32) + ".vtt"
+VALID_AUDIO_KEY = "outputs/" + ("f" * 32) + ".m4a"
 VALID_VIDEO_KEY = "outputs/" + ("e" * 32) + ".jpg"
 VALID_SHA256 = "d" * 64
 SECRET = "provider-token-ultra-secret"
@@ -782,4 +783,100 @@ def test_subtitle_asset_projection_keeps_validate_outputless_and_hides_private_f
     assert projected[validate_id]["output"] is None
     serialized = json.dumps(projected, sort_keys=True)
     for forbidden in (SECRET, "asset-owner", "storage_key", "semantic_sha256", "D:\\private"):
+        assert forbidden not in serialized
+
+
+def test_audio_asset_projection_keeps_inspect_outputless_and_requires_verified_transform(monkeypatch) -> None:
+    connection = _database()
+    _install_read_transaction(monkeypatch, connection)
+    connection.executescript(
+        """
+        CREATE TABLE web_audio_asset_operations (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            source_asset_id TEXT,
+            project_id TEXT,
+            kind TEXT NOT NULL,
+            target_format TEXT,
+            normalization_profile TEXT,
+            state TEXT NOT NULL,
+            source_sha256 TEXT,
+            source_byte_size INTEGER,
+            source_lifecycle_revision INTEGER,
+            source_format TEXT,
+            source_duration_ms INTEGER,
+            source_channels INTEGER,
+            source_sample_rate INTEGER,
+            source_codec TEXT,
+            output_duration_ms INTEGER,
+            output_channels INTEGER,
+            output_sample_rate INTEGER,
+            output_codec TEXT,
+            storage_key TEXT,
+            original_filename TEXT,
+            content_type TEXT,
+            byte_size INTEGER,
+            sha256 TEXT,
+            failure_code TEXT,
+            created_at TEXT NOT NULL,
+            queued_at TEXT NOT NULL,
+            started_at TEXT,
+            completed_at TEXT,
+            updated_at TEXT NOT NULL
+        );
+        """
+    )
+    connection.executemany(
+        """INSERT INTO web_audio_asset_operations
+           (id, account_id, source_asset_id, project_id, kind, target_format,
+            normalization_profile, state, source_sha256, source_byte_size,
+            source_lifecycle_revision, source_format, source_duration_ms,
+            source_channels, source_sample_rate, source_codec,
+            output_duration_ms, output_channels, output_sample_rate,
+            output_codec, storage_key, original_filename, content_type,
+            byte_size, sha256, failure_code, created_at, queued_at, started_at,
+            completed_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+        [
+            (
+                "audio-normalize-owner", OWNER, "audio-source-owner", "project-owner",
+                "audio_normalize", "m4a", "speech_safe_v1", "completed",
+                VALID_SHA256, 200, 4, "wav", 3_000, 1, 48_000, SECRET,
+                2_980, 1, 48_000, "aac", VALID_AUDIO_KEY, r"D:\\private\\output.m4a",
+                "audio/mp4", 80, VALID_SHA256, SECRET, NOW, NOW, NOW, NOW,
+                "2026-07-18T01:00:00+00:00",
+            ),
+            (
+                "audio-inspect-owner", OWNER, "audio-source-owner", None,
+                "audio_inspect", None, None, "completed",
+                VALID_SHA256, 200, 4, "mp3", 1_500, 2, 44_100, SECRET,
+                None, None, None, None, None, None, None, None, None, SECRET,
+                NOW, NOW, NOW, NOW, "2026-07-18T01:01:00+00:00",
+            ),
+        ],
+    )
+    monkeypatch.setattr(models, "subtitle_asset_operations_enabled", lambda: False)
+    monkeypatch.setattr(models, "frame_video_operations_enabled", lambda: False)
+    monkeypatch.setattr(models, "video_transform_operations_enabled", lambda: False)
+    monkeypatch.setattr(models, "audio_asset_operations_enabled", lambda: True)
+    monkeypatch.setattr(models, "verified_audio_asset_output_available", lambda **_kwargs: True)
+
+    jobs = models.list_native_jobs(OWNER)
+    normalize_id = models.encode_native_job_id("audio-asset-operation", "audio-normalize-owner")
+    inspect_id = models.encode_native_job_id("audio-asset-operation", "audio-inspect-owner")
+    projected = {job["id"]: job for job in jobs}
+
+    assert projected[normalize_id]["output"] == {
+        "filename": "toan-aas-audio.m4a",
+        "content_type": "audio/mp4",
+        "byte_size": 80,
+    }
+    assert projected[normalize_id]["summary"]["normalization_profile"] == "speech_safe_v1"
+    assert projected[inspect_id]["output"] is None
+    completed_outputs = models.list_native_completed_outputs(OWNER)
+    assert normalize_id in {item["id"] for item in completed_outputs}
+    assert inspect_id not in {item["id"] for item in completed_outputs}
+
+    serialized = json.dumps(projected, sort_keys=True)
+    for forbidden in (SECRET, "audio-source-owner", "project-owner", "storage_key", "source_sha256", "D:\\private"):
         assert forbidden not in serialized
