@@ -87,6 +87,38 @@ storage keys, hashes, idempotency data or failure internals. Retrying an
 existing idempotency receipt replays its immutable result even if its source
 has subsequently been archived; a new receipt still requires an active source.
 
+## Portal route and browser contract
+
+The dedicated customer route is /subtitle/assets. It is separate from the
+legacy /subtitle family, Subtitle Studio and the text-only SRT/VTT Lab.
+
+- The Portal enables reads only when a signed account, Asset Vault and
+  WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED are all present. It then asks only
+  the typed Asset Vault selector for active subtitle metadata and the narrow
+  Subtitle Asset Operations history endpoint; it never uses generic Jobs,
+  generic Assets, Bot state or a browser cache as a fallback.
+- The typed selector accepts only canonical active .srt/application/x-subrip
+  and .vtt/text/vtt records. Browser state holds bounded display metadata and
+  a current picker page only; it never holds subtitle bytes, text, path, URL,
+  storage key, digest or a source from another signed account.
+- The browser sends exactly source_asset_id plus idempotency_key for validate,
+  or source_asset_id plus target_format plus idempotency_key for convert.
+  The selected target is always the opposite SRT/VTT container. A validate
+  receipt must not expose a download; a convert receipt is accepted as success
+  only when the server marks its verified output available.
+- Route/session/epoch changes invalidate in-flight reads. A failed private
+  read clears previous source and history projections instead of displaying
+  stale browser data. Pagination can preserve the currently selected
+  owner-scoped metadata row without carrying that selection into storage.
+- Metadata hydration is a Portal read state, not an operation lifecycle: the
+  UI says that private metadata is loading and locks source/page/write controls
+  until the owner-scoped read is ready. A conversion without a verified output
+  is displayed as unavailable, never as a completed downloadable result.
+- Download is a same-origin attachment fetch with no-store, attachment,
+  nosniff, no-referrer, same-origin CORP, MIME, length and Blob-size checks.
+  The Portal creates a temporary object URL only after those checks and
+  revokes it immediately after the browser handoff.
+
 ## Explicit non-goals
 
 - No Bot/Core Bridge call, Telegram upload/download, provider call, paid API,

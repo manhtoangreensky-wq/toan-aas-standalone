@@ -10,6 +10,9 @@
   const IMAGE_OCR_ROUTE = "/documents/ocr";
   const PDF_OCR_ROUTE = "/documents/pdf-ocr";
   const PDF_OCR_WORD_ROUTE = "/documents/pdf-ocr-to-word";
+  const SUBTITLE_ASSET_OPERATIONS_ROUTE = "/subtitle/assets";
+  const SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT = 50;
+  const SUBTITLE_ASSET_OPERATIONS_MAX_BYTES = 96 * 1024;
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -119,6 +122,7 @@
   let assetVaultSessionEpoch = 0;
   let assetVaultListHydrationEpoch = 0;
   let assetVaultLifecycleHydrationEpoch = 0;
+  let subtitleAssetOperationsHydrationEpoch = 0;
   // Campaign plans, Project Center records and Studio Documents are private
   // Web-owned planning data.  Keep their list/detail reads independently
   // ordered so a delayed response cannot cross a signed account, route or
@@ -350,7 +354,7 @@
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
     "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
-    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/pdf-ocr": "documents_pdf_ocr", "/documents/pdf-ocr-to-word": "documents_pdf_ocr_word", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
+    "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/assets": "subtitle_asset_operations", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/pdf-ocr": "documents_pdf_ocr", "/documents/pdf-ocr-to-word": "documents_pdf_ocr_word", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
     "/admin": "/admin/summary", "/admin/users": "/admin/users", "/admin/jobs": "/admin/jobs",
@@ -9189,6 +9193,7 @@
     ++operationHistorySessionEpoch;
     ++assetVaultSessionEpoch;
     ++assetVaultLifecycleHydrationEpoch;
+    ++subtitleAssetOperationsHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignCalendarHydrationEpoch;
     ++projectCenterSessionEpoch;
@@ -9437,6 +9442,12 @@
     // stateless deterministic text transform. It does not inherit a project,
     // provider, Bot, job, payment or output-delivery capability.
     const subtitleFormatToolsEnabled = subtitleStudioEnabled;
+    // Subtitle Asset Operations is a separate private storage boundary. Its
+    // flag never enables Subtitle Studio, ASR, translation, dubbing, a Bot,
+    // provider, job, wallet, PayOS or public file delivery. Asset Vault is a
+    // separate prerequisite and the server still checks topology on every API
+    // request, so this is only a conservative presentation gate.
+    const subtitleAssetOperationsEnabled = Boolean(status.flags && status.flags.subtitle_asset_operations_enabled === true);
     // Image Creative Studio is deliberately fail-closed by its own feature
     // flag.  A true flag permits private art-direction records only; it never
     // indicates an image provider, generator, preview, job, wallet or payment
@@ -9854,6 +9865,10 @@
       "subtitle-cue-reorder": Boolean(account && me.csrf_token && subtitleStudioEnabled),
       "subtitle-text-export": Boolean(account && subtitleStudioEnabled),
       "subtitle-format-convert": Boolean(account && me.csrf_token && subtitleFormatToolsEnabled),
+      "subtitle-asset-operation-view": Boolean(account && assetVaultEnabled && subtitleAssetOperationsEnabled),
+      "subtitle-asset-operation-refresh": Boolean(account && assetVaultEnabled && subtitleAssetOperationsEnabled),
+      "subtitle-asset-operation-submit": Boolean(account && me.csrf_token && assetVaultEnabled && subtitleAssetOperationsEnabled),
+      "subtitle-asset-operation-download": Boolean(account && assetVaultEnabled && subtitleAssetOperationsEnabled),
       "image-studio-view": Boolean(account && imageStudioEnabled),
       "image-studio-refresh": Boolean(account && imageStudioEnabled),
       "image-studio-filter": Boolean(account && imageStudioEnabled),
@@ -10002,6 +10017,7 @@
     ++assetVaultSessionEpoch;
     ++assetVaultListHydrationEpoch;
     ++assetVaultLifecycleHydrationEpoch;
+    ++subtitleAssetOperationsHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignListHydrationEpoch;
     ++campaignDetailHydrationEpoch;
@@ -10252,6 +10268,7 @@
       storyboardComposerEnabled,
       subtitleStudioEnabled,
       subtitleFormatToolsEnabled,
+      subtitleAssetOperationsEnabled,
       imageStudioEnabled,
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
@@ -10509,6 +10526,13 @@
       // is deliberately cleared on every signed bootstrap so no prior
       // account's caption text can survive a session change or failure.
       subtitleFormatResult: {},
+      // These projections contain owner-scoped Asset Vault metadata and
+      // verified operation receipts. Clear them before each signed bootstrap
+      // so no prior account's filename, lifecycle or download-ready state can
+      // survive a session change or a failed guarded read.
+      subtitleAssetReferences: { items: [], selected: null, pagination: { limit: SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      subtitleAssetOperations: [],
+      subtitleAssetOperationsReadState: account && assetVaultEnabled && subtitleAssetOperationsEnabled ? "loading" : "guarded",
       // Explicitly clear owner-scoped creative metadata during every session
       // refresh. A disabled flag or failed request must not leave a prior
       // artboard, asset reference, prompt or history visible in the browser.
@@ -10742,6 +10766,7 @@
         "/video-studio/storyboard-composer": account && storyboardComposerEnabled ? "ready" : "guarded",
         "/subtitle-studio": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/subtitle-studio/new": account && subtitleStudioEnabled ? "processing" : "guarded",
+        "/subtitle/assets": account && assetVaultEnabled && subtitleAssetOperationsEnabled ? "processing" : "guarded",
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
@@ -11084,6 +11109,14 @@
         subtitleStudioFilter: { q: "", state: "active" }, subtitleStudioListing: { filters: { q: "", state: "active" }, pagination: { limit: 50, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
         subtitleStudioReadState: "guarded", pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
       });
+    }
+    if (currentPath === SUBTITLE_ASSET_OPERATIONS_ROUTE) {
+      // Subtitle Asset Operations has its own narrow, owner-scoped source
+      // picker and history.  Do not reuse legacy Subtitle Studio, generic
+      // Assets/Jobs or a prior account's state when the private storage gate
+      // is unavailable.
+      if (account && assetVaultEnabled && subtitleAssetOperationsEnabled) await hydrateSubtitleAssetOperations();
+      else clearSubtitleAssetOperationsProjection("guarded");
     }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
@@ -14949,6 +14982,253 @@
     if (documentKind) return hydrateDocumentAssetReferences(documentKind);
     if (IMAGE_OPERATION_ASSET_REFERENCE_ROUTES.has(path)) return hydrateImageOperationAssetReferences();
     return null;
+  }
+
+  function subtitleAssetOperationsPathIsCurrent(path) {
+    return String(path || "").split("?")[0] === SUBTITLE_ASSET_OPERATIONS_ROUTE;
+  }
+
+  function subtitleAssetReferenceItem(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = String(source.created_at || "").trim();
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || !((extension === ".srt" && contentType === "application/x-subrip") || (extension === ".vtt" && contentType === "text/vtt"))
+      || !Number.isInteger(byteSize) || byteSize < 1 || byteSize > SUBTITLE_ASSET_OPERATIONS_MAX_BYTES
+      || (createdAt && (createdAt.length > 80 || /[\u0000-\u001f\u007f]/.test(createdAt)))) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: createdAt };
+  }
+
+  function subtitleAssetOperationItem(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const kind = String(source.kind || "").trim();
+    const state = String(source.state || source.status || "").trim();
+    const sourceFormat = source.source_format === null ? null : String(source.source_format || "").trim().toLowerCase();
+    const targetFormat = source.target_format === null ? null : String(source.target_format || "").trim().toLowerCase();
+    const cueCountRaw = source.cue_count;
+    const durationRaw = source.timed_duration_ms;
+    const cueCount = cueCountRaw === null ? null : Number(cueCountRaw);
+    const duration = durationRaw === null ? null : Number(durationRaw);
+    const createdAt = String(source.created_at || "").trim();
+    const updatedAt = String(source.updated_at || "").trim();
+    const allowedFormats = new Set(["srt", "vtt"]);
+    const allowedStates = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+    if (!validVaultAssetId(id) || !["subtitle_validate", "subtitle_convert"].includes(kind) || !allowedStates.has(state)
+      || (sourceFormat !== null && !allowedFormats.has(sourceFormat)) || (targetFormat !== null && !allowedFormats.has(targetFormat))
+      || (cueCount !== null && (!Number.isInteger(cueCount) || cueCount < 0 || cueCount > 500))
+      || (duration !== null && (!Number.isInteger(duration) || duration < 0 || duration > 86400000))
+      || !createdAt || createdAt.length > 80 || updatedAt.length > 80 || /[\u0000-\u001f\u007f]/.test(createdAt + updatedAt)) return null;
+    const outputAvailable = source.output_available === true;
+    const filename = String(source.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const expectedMime = targetFormat === "srt" ? "application/x-subrip" : targetFormat === "vtt" ? "text/vtt" : "";
+    const safeOutput = outputAvailable
+      && kind === "subtitle_convert" && state === "completed" && Boolean(expectedMime)
+      && contentType === expectedMime && filename.length > 0 && filename.length <= 180
+      && Number.isInteger(byteSize) && byteSize > 0 && byteSize <= SUBTITLE_ASSET_OPERATIONS_MAX_BYTES;
+    return {
+      id, kind, state, status: state, source_format: sourceFormat, target_format: targetFormat,
+      cue_count: cueCount, timed_duration_ms: duration,
+      output_available: safeOutput,
+      filename: safeOutput ? filename : null,
+      content_type: safeOutput ? contentType : null,
+      byte_size: safeOutput ? byteSize : null,
+      created_at: createdAt, updated_at: updatedAt
+    };
+  }
+
+  function subtitleAssetReferenceOffset(value) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+  }
+
+  function subtitleAssetReferencesProjection(data, offset, selectedId, previous) {
+    const source = data && typeof data === "object" ? data : {};
+    const currentOffset = subtitleAssetReferenceOffset(offset);
+    const items = Array.isArray(source.items) ? source.items.map(subtitleAssetReferenceItem).filter(Boolean).slice(0, SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT) : [];
+    const currentId = validVaultAssetId(selectedId) ? String(selectedId).trim() : "";
+    const previousSelected = previous && typeof previous === "object" ? subtitleAssetReferenceItem(previous.selected) : null;
+    const selected = items.find((item) => item.id === currentId) || (previousSelected && previousSelected.id === currentId ? previousSelected : null);
+    const rawNext = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items, selected,
+      pagination: {
+        limit: SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT,
+        offset: currentOffset,
+        returned: items.length,
+        has_more: hasMore,
+        next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT ? currentOffset - SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function subtitleAssetOperationsProjection(data) {
+    const source = data && typeof data === "object" ? data : {};
+    const seen = new Set();
+    return Array.isArray(source.operations)
+      ? source.operations.map(subtitleAssetOperationItem).filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true)).slice(0, SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT)
+      : [];
+  }
+
+  function subtitleAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === subtitleAssetOperationsHydrationEpoch
+      && sessionEpoch === assetVaultSessionEpoch
+      && currentPortalPath() === expectedPath
+      && subtitleAssetOperationsPathIsCurrent(expectedPath)
+      && base().assetVaultEnabled === true
+      && base().subtitleAssetOperationsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function clearSubtitleAssetOperationsProjection(readState) {
+    const normalizedReadState = ["loading", "failed", "guarded"].includes(String(readState || ""))
+      ? String(readState) : "guarded";
+    merge({
+      subtitleAssetReferences: { items: [], selected: null, pagination: { limit: SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      subtitleAssetOperations: [],
+      subtitleAssetOperationsReadState: normalizedReadState,
+      // Metadata hydration is not an operation lifecycle.  Keep the generic
+      // portal chrome read-only while the dedicated page announces its own
+      // loading state, instead of claiming a subtitle job is processing.
+      pageStates: { ...(base().pageStates || {}), [SUBTITLE_ASSET_OPERATIONS_ROUTE]: normalizedReadState === "loading" ? "read_only" : normalizedReadState }
+    });
+  }
+
+  async function hydrateSubtitleAssetOperations(options) {
+    const source = options && typeof options === "object" ? options : {};
+    const requestEpoch = ++subtitleAssetOperationsHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!subtitleAssetOperationsPathIsCurrent(expectedPath) || base().assetVaultEnabled !== true || base().subtitleAssetOperationsEnabled !== true) {
+      if (subtitleAssetOperationsPathIsCurrent(expectedPath)) clearSubtitleAssetOperationsProjection("guarded");
+      return null;
+    }
+    const previous = base().subtitleAssetReferences && typeof base().subtitleAssetReferences === "object" ? base().subtitleAssetReferences : {};
+    const previousPagination = previous.pagination && typeof previous.pagination === "object" ? previous.pagination : {};
+    const offset = subtitleAssetReferenceOffset(source.offset === undefined ? previousPagination.offset : source.offset);
+    const selectedId = validVaultAssetId(source.selectedId) ? String(source.selectedId).trim() : (subtitleAssetReferenceItem(previous.selected) || {}).id || "";
+    merge({ subtitleAssetOperationsReadState: "loading", pageStates: { ...(base().pageStates || {}), [SUBTITLE_ASSET_OPERATIONS_ROUTE]: "read_only" } });
+    try {
+      const [referencesResult, operationsResult] = await Promise.all([
+        api(`/asset-vault?state=active&reference_kind=subtitle&limit=${SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT}&offset=${offset}`, { cache: "no-store" }),
+        api(`/subtitle-asset-operations?limit=${SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT}`, { cache: "no-store" })
+      ]);
+      if (!subtitleAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const references = subtitleAssetReferencesProjection(referencesResult.data, offset, selectedId, previous);
+      const operations = subtitleAssetOperationsProjection(operationsResult.data);
+      if (!subtitleAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        subtitleAssetReferences: references,
+        subtitleAssetOperations: operations,
+        subtitleAssetOperationsReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [SUBTITLE_ASSET_OPERATIONS_ROUTE]: "ready" }
+      });
+      return { references, operations };
+    } catch (_) {
+      if (!subtitleAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearSubtitleAssetOperationsProjection("failed");
+      return null;
+    }
+  }
+
+  function subtitleAssetOperationPayload(fields) {
+    const source = fields && typeof fields === "object" ? fields : {};
+    const sourceAssetId = String(source.source_asset_id || "").trim();
+    const operation = String(source.operation || "").trim().toLowerCase();
+    const selected = subtitleAssetOperationSourcesFromState().find((item) => item.id === sourceAssetId);
+    if (!selected || !validVaultAssetId(sourceAssetId)) throw new Error("Hãy chọn SRT/VTT private đang active từ Asset Vault.");
+    if (operation === "validate") return { scope: `subtitle-asset-operation:validate:${sourceAssetId}`, path: "/subtitle-asset-operations/validate", payload: { source_asset_id: sourceAssetId } };
+    const targetFormat = String(source.target_format || "").trim().toLowerCase();
+    const sourceFormat = String(selected.extension || "").replace(".", "");
+    if (operation !== "convert" || !["srt", "vtt"].includes(targetFormat) || targetFormat === sourceFormat) {
+      throw new Error("Chuyển subtitle chỉ nhận SRT ↔ VTT với định dạng đích khác nguồn.");
+    }
+    return { scope: `subtitle-asset-operation:convert:${sourceAssetId}:${targetFormat}`, path: "/subtitle-asset-operations/convert", payload: { source_asset_id: sourceAssetId, target_format: targetFormat } };
+  }
+
+  function subtitleAssetOperationReceipt(result, expectedKind) {
+    const data = result && result.data && typeof result.data === "object" ? result.data : {};
+    const operation = subtitleAssetOperationItem(data.operation);
+    if (!operation || operation.kind !== expectedKind || operation.state !== "completed") {
+      throw new Error("Máy chủ chưa trả receipt Subtitle Asset đã hoàn tất an toàn.");
+    }
+    if (expectedKind === "subtitle_validate" && operation.output_available === true) {
+      throw new Error("Receipt kiểm định không được công bố file output.");
+    }
+    if (expectedKind === "subtitle_convert" && operation.output_available !== true) {
+      throw new Error("Máy chủ chưa xác minh output subtitle private để tải.");
+    }
+    return operation;
+  }
+
+  function subtitleAssetOperationSourcesFromState() {
+    const references = base().subtitleAssetReferences && typeof base().subtitleAssetReferences === "object" ? base().subtitleAssetReferences : {};
+    const rows = Array.isArray(references.items) ? references.items : [];
+    const selected = subtitleAssetReferenceItem(references.selected);
+    const candidates = selected ? [selected, ...rows] : rows;
+    const seen = new Set();
+    return candidates.map(subtitleAssetReferenceItem).filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true));
+  }
+
+  function subtitleAssetOperationFromState(operationId) {
+    const id = String(operationId || "").trim();
+    return (Array.isArray(base().subtitleAssetOperations) ? base().subtitleAssetOperations : [])
+      .map(subtitleAssetOperationItem).find((item) => item && item.id === id) || null;
+  }
+
+  async function downloadSubtitleAssetOperation(operationId) {
+    const operation = subtitleAssetOperationFromState(operationId);
+    if (!operation || operation.output_available !== true || operation.kind !== "subtitle_convert" || operation.state !== "completed") {
+      throw new Error("Output subtitle private chưa được server xác nhận sẵn sàng để tải.");
+    }
+    const expectedMime = operation.target_format === "srt" ? "application/x-subrip" : operation.target_format === "vtt" ? "text/vtt" : "";
+    const expectedSize = Number(operation.byte_size);
+    const filename = String(operation.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    if (!expectedMime || !Number.isInteger(expectedSize) || expectedSize < 1 || expectedSize > SUBTITLE_ASSET_OPERATIONS_MAX_BYTES || !filename || filename.length > 180) {
+      throw new Error("Metadata output subtitle private không hợp lệ.");
+    }
+    const headers = new Headers({ Accept: `${expectedMime}, application/json`, "X-Request-ID": randomKey("web") });
+    const response = await fetch(`${API}/subtitle-asset-operations/${encodeURIComponent(operation.id)}/download`, { credentials: "same-origin", headers, cache: "no-store" });
+    const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* guarded envelope remains generic */ }
+      throw new Error(payload && payload.message ? payload.message : "Máy chủ chưa xác nhận output subtitle private có thể tải.");
+    }
+    const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+    const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+    const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+    const referrerPolicy = String(response.headers.get("Referrer-Policy") || "").toLowerCase();
+    const corp = String(response.headers.get("Cross-Origin-Resource-Policy") || "").toLowerCase();
+    const byteSize = Number(response.headers.get("Content-Length"));
+    const actualMime = contentType.split(";", 1)[0].trim();
+    if (!response.ok || !disposition.includes("attachment") || !cacheControl.includes("no-store") || nosniff !== "nosniff"
+      || !referrerPolicy.includes("no-referrer") || corp !== "same-origin" || actualMime !== expectedMime
+      || !Number.isInteger(byteSize) || byteSize !== expectedSize) {
+      throw new Error("Private attachment không qua kiểm tra delivery của browser.");
+    }
+    const blob = await response.blob();
+    if (blob.size !== expectedSize || blob.size > SUBTITLE_ASSET_OPERATIONS_MAX_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== expectedMime) {
+      throw new Error("Private attachment không qua kiểm tra kích thước hoặc định dạng.");
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
   }
 
   const OPERATION_HISTORY_LIST_LIMIT = 50;
@@ -22043,6 +22323,111 @@
         const offset = Number(fields.__subtitleStudioOffset);
         if (!Number.isInteger(offset) || offset < 0 || offset > SUBTITLE_STUDIO_MAX_LIST_OFFSET) throw new Error("Trang Subtitle Studio không hợp lệ.");
         await hydrateSubtitleStudio({ offset });
+        return;
+      }
+      if (action === "subtitle-asset-operation-refresh") {
+        if (route !== SUBTITLE_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== SUBTITLE_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể làm mới Subtitle Asset Operations từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["subtitle-asset-operation-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và subtitle storage để xem dữ liệu private.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateSubtitleAssetOperations();
+          if (!refreshed && base().subtitleAssetOperationsReadState !== "ready") {
+            throw new Error("Không thể tải Subtitle Asset Operations owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã làm mới nguồn SRT/VTT và lịch sử subtitle private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "subtitle-asset-reference-page") {
+        if (route !== SUBTITLE_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== SUBTITLE_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi trang subtitle private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["subtitle-asset-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem nguồn SRT/VTT private.");
+        }
+        const offset = Number(fields.__subtitleAssetReferenceOffset);
+        if (!Number.isInteger(offset) || offset < 0 || offset > 10000) throw new Error("Trang nguồn subtitle private không hợp lệ.");
+        const selectedId = String(fields.__subtitleAssetReferenceSelectedId || "").trim();
+        if (selectedId && !validVaultAssetId(selectedId)) throw new Error("Nguồn subtitle đang chọn không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateSubtitleAssetOperations({ offset, selectedId });
+          if (!refreshed && base().subtitleAssetOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang nguồn SRT/VTT owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang nguồn SRT/VTT private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "subtitle-asset-operation-submit") {
+        if (route !== SUBTITLE_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== SUBTITLE_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể gửi Subtitle Asset Operation từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["subtitle-asset-operation-submit"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng cho thao tác subtitle private.");
+        }
+        const intent = subtitleAssetOperationPayload(fields);
+        const expectedKind = intent.path.endsWith("/validate") ? "subtitle_validate" : "subtitle_convert";
+        const submission = acquireSubmission(intent.scope, JSON.stringify(intent.payload));
+        if (!submission) {
+          toast("Thao tác subtitle private đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "warning");
+          return;
+        }
+        let acknowledged = false;
+        setActionBusy(action, route, true);
+        try {
+          // A pre-existing list read must not overwrite the verified receipt
+          // that follows this write. The browser still waits for a fresh
+          // owner-scoped read; it never fabricates output locally.
+          ++subtitleAssetOperationsHydrationEpoch;
+          const result = await api(intent.path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...intent.payload, idempotency_key: submission.key })
+          });
+          acknowledged = true;
+          subtitleAssetOperationReceipt(result, expectedKind);
+          const refreshed = await hydrateSubtitleAssetOperations({ selectedId: intent.payload.source_asset_id });
+          if (!refreshed && base().subtitleAssetOperationsReadState !== "ready") {
+            throw new Error("Máy chủ đã nhận thao tác nhưng chưa thể tải lại lịch sử subtitle private an toàn.");
+          }
+          toast(result.message || (expectedKind === "subtitle_validate"
+            ? "Đã kiểm định subtitle private. Thao tác này không tạo file."
+            : "Đã chuyển đổi subtitle private sau khi server xác minh output."));
+        } catch (error) {
+          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          throw error;
+        } finally {
+          releaseSubmission(submission);
+          if (acknowledged) discardSubmission(intent.scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "subtitle-asset-operation-download") {
+        if (route !== SUBTITLE_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== SUBTITLE_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể tải output subtitle private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["subtitle-asset-operation-download"] === true)) {
+          throw new Error("Cần signed Web session để tải output subtitle private.");
+        }
+        const operationId = String(fields.__subtitleAssetOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã output subtitle private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await downloadSubtitleAssetOperation(operationId);
+          toast("Đã bắt đầu tải attachment subtitle private đã được xác minh.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "subtitle-format-convert") {

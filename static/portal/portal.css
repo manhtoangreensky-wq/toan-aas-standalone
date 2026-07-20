@@ -1826,6 +1826,40 @@ a { color: inherit; text-decoration: none; }
 .portal-subtitle-format-output { width: 100%; min-height: 260px; max-height: 510px; margin: 1px 0 0; padding: 16px; resize: vertical; border: 1px solid rgba(203, 167, 255, .16); border-radius: 14px; outline: none; background: rgba(5, 12, 26, .6); color: #ece5ff; font: 11px/1.65 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; white-space: pre; overflow-wrap: normal; }
 .portal-subtitle-format-output:focus { border-color: rgba(213, 176, 255, .58); box-shadow: 0 0 0 3px rgba(175, 101, 255, .12); }
 
+/* Subtitle Asset Operations is a private, Web-native file boundary. Keep its
+   visual language app-first and teal/dark-slate so it is distinct from the
+   text-only SRT/VTT Lab and does not imply a Bot/provider workflow. */
+.portal-subtitle-asset-operations { display: grid; gap: 18px; min-width: 0; }
+.portal-subtitle-assets-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid rgba(45, 212, 191, .28); border-radius: 22px; background: radial-gradient(circle at 88% 10%, rgba(45, 212, 191, .17), transparent 18rem), linear-gradient(145deg, #121a26, #0a0f17); box-shadow: 0 19px 47px rgba(0, 0, 0, .17); }
+.portal-subtitle-assets-intro h2 { margin: 7px 0 8px; color: #f8fafc; font-size: clamp(26px, 3vw, 39px); letter-spacing: -.047em; }
+.portal-subtitle-assets-intro p { max-width: 770px; margin: 0; color: #aab8c7; line-height: 1.72; }
+.portal-subtitle-assets-intro dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-subtitle-assets-intro dl > div { min-width: 0; min-height: 106px; padding: 15px; border: 1px solid rgba(45, 212, 191, .16); border-radius: 15px; background: rgba(10, 15, 23, .66); }
+.portal-subtitle-assets-intro dt { color: #8ff5e7; font-size: 19px; font-weight: 820; letter-spacing: -.035em; }
+.portal-subtitle-assets-intro dd { margin: 7px 0 0; color: #aab8c7; font-size: 12px; line-height: 1.45; }
+.portal-subtitle-assets-layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
+.portal-subtitle-assets-form { background: linear-gradient(150deg, rgba(18, 34, 38, .96), rgba(10, 15, 23, .99)); }
+.portal-subtitle-assets-boundary, .portal-subtitle-assets-history { background: linear-gradient(150deg, rgba(18, 26, 38, .96), rgba(10, 15, 23, .99)); }
+.portal-subtitle-assets-guard-list { display: grid; gap: 9px; margin-top: 14px; }
+.portal-subtitle-assets-guard-list > span { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px; border: 1px solid rgba(42, 57, 75, .9); border-radius: 12px; background: rgba(10, 15, 23, .58); }
+.portal-subtitle-assets-guard-list strong { color: #dce6ef; font-size: 12px; }
+.portal-subtitle-assets-guard-list em { color: #aab8c7; font-size: 12px; font-style: normal; text-transform: uppercase; letter-spacing: .07em; }
+.portal-subtitle-assets-source-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(45, 212, 191, .18); color: #aab8c7; font-size: 12px; font-weight: 700; }
+.portal-subtitle-assets-source-pager .portal-button { min-height: 44px; padding-inline: 12px; }
+.portal-subtitle-assets-form [data-subtitle-asset-target-field].is-muted { opacity: .68; }
+.portal-subtitle-asset-operation-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.portal-subtitle-asset-operation-list > li { display: grid; gap: 10px; padding: 14px; border: 1px solid rgba(42, 57, 75, .92); border-radius: 14px; background: rgba(10, 15, 23, .58); }
+.portal-subtitle-asset-operation-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.portal-subtitle-asset-operation-meta > div { min-width: 0; display: grid; gap: 4px; }
+.portal-subtitle-asset-operation-meta strong { color: #f8fafc; font-size: 13px; }
+.portal-subtitle-asset-operation-meta span { color: #aab8c7; font-size: 12px; line-height: 1.5; }
+.portal-subtitle-asset-operation-meta small { color: #74e3d4; font-size: 12px; line-height: 1.45; overflow-wrap: anywhere; }
+.portal-subtitle-asset-operation-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #aab8c7; font-size: 12px; }
+.portal-subtitle-asset-operation-actions .portal-button { min-height: 44px; }
+.portal-subtitle-asset-empty { display: grid; gap: 6px; min-height: 118px; padding: 18px; border: 1px dashed rgba(45, 212, 191, .3); border-radius: 14px; background: rgba(10, 15, 23, .45); }
+.portal-subtitle-asset-empty strong { color: #dffdf8; font-size: 13px; }
+.portal-subtitle-asset-empty span { color: #aab8c7; font-size: 12px; line-height: 1.6; }
+
 /* Content Prompt Pack is a deliberately local text-planning tool.  Its visual
    treatment keeps the editable draft and the execution boundary equally
    legible without suggesting a provider call, generated media or publishing. */
@@ -2100,7 +2134,7 @@ a { color: inherit; text-decoration: none; }
   .portal-document-workspace-intro, .portal-document-workspace-detail-summary, .portal-document-workspace-layout, .portal-document-workspace-detail-grid, .portal-document-workspace-history-grid { grid-template-columns: 1fr; }
   .portal-chat-workspace-intro, .portal-chat-thread-summary, .portal-chat-workspace-layout, .portal-chat-workspace-detail-grid, .portal-chat-workspace-history, .portal-chat-execution-layout { grid-template-columns: 1fr; }
   .portal-analytics-intro, .portal-analytics-detail-summary, .portal-analytics-layout, .portal-analytics-detail-grid, .portal-analytics-history-grid { grid-template-columns: 1fr; }
-  .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-studio-layout, .portal-subtitle-studio-detail-grid, .portal-subtitle-studio-history-grid, .portal-subtitle-preview-grid, .portal-subtitle-format-lab-intro, .portal-subtitle-format-lab-layout { grid-template-columns: 1fr; }
+  .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-studio-layout, .portal-subtitle-studio-detail-grid, .portal-subtitle-studio-history-grid, .portal-subtitle-preview-grid, .portal-subtitle-format-lab-intro, .portal-subtitle-format-lab-layout, .portal-subtitle-assets-intro, .portal-subtitle-assets-layout { grid-template-columns: 1fr; }
   .portal-media-workspace-intro, .portal-media-detail-summary, .portal-media-workspace-layout, .portal-media-detail-grid { grid-template-columns: 1fr; }
   .portal-media-filter { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .portal-support-intro, .portal-support-admin-intro, .portal-support-case-hero, .portal-support-layout, .portal-support-detail-layout { grid-template-columns: 1fr; }
@@ -2250,8 +2284,9 @@ a { color: inherit; text-decoration: none; }
   .portal-document-plan-handoff-action { justify-items: start; min-width: 0; }
   .portal-document-plan-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-document-version-list > article { align-items: flex-start; flex-direction: column; }
-  .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-format-lab-intro { padding: 20px; border-radius: 18px; }
-  .portal-subtitle-studio-intro dl, .portal-subtitle-studio-detail-summary dl, .portal-subtitle-format-lab-intro dl, .portal-subtitle-estimate-grid, .portal-subtitle-studio-guard-list { grid-template-columns: 1fr; }
+  .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-format-lab-intro, .portal-subtitle-assets-intro { padding: 20px; border-radius: 18px; }
+  .portal-subtitle-studio-intro dl, .portal-subtitle-studio-detail-summary dl, .portal-subtitle-format-lab-intro dl, .portal-subtitle-assets-intro dl, .portal-subtitle-estimate-grid, .portal-subtitle-studio-guard-list { grid-template-columns: 1fr; }
+  .portal-subtitle-asset-operation-meta, .portal-subtitle-asset-operation-actions, .portal-subtitle-assets-source-pager { align-items: flex-start; flex-direction: column; }
   .portal-subtitle-cue-form .portal-fields { grid-template-columns: 1fr; }
   .portal-subtitle-cue-form .portal-field--wide { grid-column: auto; }
   .portal-subtitle-version-list > article { align-items: flex-start; flex-direction: column; }

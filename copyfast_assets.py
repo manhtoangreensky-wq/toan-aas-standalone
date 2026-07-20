@@ -46,7 +46,7 @@ ARCHIVED_STATE = "archived"
 UNAVAILABLE_STATE = "unavailable"
 VISIBLE_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE})
 ALL_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE, UNAVAILABLE_STATE})
-REFERENCE_KINDS = frozenset({"all", "pdf", "image"})
+REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 ASSET_ID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -1191,6 +1191,20 @@ async def list_assets(
         params.extend([
             ".jpg", "image/jpeg", ".jpeg", "image/jpeg",
             ".png", "image/png", ".webp", "image/webp",
+        ])
+    elif selected_reference_kind == "subtitle":
+        # Subtitle asset operations accept only canonical SRT/VTT pairs.  Do
+        # not treat generic text files (or an extension with a mismatched
+        # MIME type) as a subtitle source merely because they are readable.
+        where.append(
+            "("
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?)"
+            ")"
+        )
+        params.extend([
+            ".srt", "application/x-subrip",
+            ".vtt", "text/vtt",
         ])
     if needle:
         escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
