@@ -76,3 +76,4 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`ENGINE_DELIVERY_ADAPTER_BACKLOG.md`](ENGINE_DELIVERY_ADAPTER_BACKLOG.md) — canonical job/output/delivery prerequisites.
 - [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.
 - [`ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md`](ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md) — opt-in local-admin private document archive with isolated immutable versions; it does not migrate or call Bot internal-document state.
+- [`ADMIN_AUTOMATION_MONITOR_CONTRACT.md`](ADMIN_AUTOMATION_MONITOR_CONTRACT.md) — signed local-admin, redacted read-only Inbox scheduler receipt monitor; it has no tick/control plane, Bot/provider/payment/wallet/deploy action or external delivery claim.

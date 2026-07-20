@@ -198,6 +198,7 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_leads", "Leads", "admin", "/admin/leads", "admin"),
     WebFeature("admin_tickets", "CSKH", "admin", "/admin/tickets", "admin"),
     WebFeature("admin_operations", "Operations Autopilot", "admin", "/admin/operations", "admin"),
+    WebFeature("admin_automation", "Automation Monitor", "admin", "/admin/automation", "admin", description="Bảng giám sát chỉ đọc receipt Inbox scheduler đã được redaction; không có tick, retry, Bot, provider, wallet/Xu, PayOS hay deploy control."),
     WebFeature("admin_reliability", "Reliability Follow-up", "admin", "/admin/reliability", "admin"),
     WebFeature("admin_campaigns", "Campaign Center", "admin", "/admin/campaigns", "admin"),
     WebFeature("admin_calendar", "Content Calendar", "admin", "/admin/calendar", "admin"),

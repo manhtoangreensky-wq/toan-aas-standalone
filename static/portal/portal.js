@@ -1502,6 +1502,15 @@
       "Approval chỉ ghi audit record; không tự chạy money, provider, Bot, job, deploy, phản hồi khách hàng hoặc thay đổi code."
     ]
   }, ["/admin/autopilot"]);
+  adminPage("/admin/automation", "Automation Monitor", "Giám sát receipt Inbox scheduler Web-native đã được redaction; không phải control plane hoặc cơ chế tự sửa.", ICONS.system, {
+    // This is an observer, never a scheduler/job lifecycle.  Its live state
+    // is guarded until the signed server read completes.
+    layout: "admin-automation-monitor", action: "none", status: "read_only",
+    notes: [
+      "Chỉ signed Web admin do máy chủ xác minh mới xem được metadata receipt đã redact; browser không gửi role, admin ID hoặc Telegram ID.",
+      "Không có tick, retry, Bot, provider, wallet/Xu, PayOS, job, delivery, deploy, secret hay tự sửa từ màn hình này."
+    ]
+  });
   adminPage("/admin/reliability", "Reliability Follow-up", "Hàng chờ tra xét nội bộ từ lỗi Web đã được sanitize và complaint triage; không phải log, tự sửa hay kênh liên hệ khách.", ICONS.system, {
     layout: "reliability-admin", action: "none", status: "processing",
     notes: [
@@ -16931,6 +16940,81 @@
     </article>`;
   }
 
+  function automationMonitorStateLabel(value) {
+    return ({
+      ready: "Sẵn sàng", center_disabled: "Inbox đang tắt", automation_disabled: "Chế độ quan sát",
+      persistent_store_unverified: "Chưa xác minh persistent store", topology_unverified: "Chưa xác minh topology",
+      single_replica_required: "Yêu cầu một replica", limits_unverified: "Chưa xác minh giới hạn", guarded: "Đang bảo vệ",
+      started: "Đang ghi nhận", completed: "Hoàn tất", failed: "Có lỗi đã bảo vệ"
+    }[String(value || "").toLowerCase()] || "Đang bảo vệ");
+  }
+
+  function automationMonitorBadgeState(value) {
+    const normalized = String(value || "").toLowerCase();
+    if (normalized === "ready" || normalized === "completed") return "read_only";
+    if (normalized === "started") return "processing";
+    return "guarded";
+  }
+
+  function automationMonitorCount(value) {
+    return Number.isInteger(value) && value >= 0 && value <= 1000000000 ? String(value) : "—";
+  }
+
+  function renderAdminAutomationMonitor(page, context) {
+    const summary = context.adminAutomationMonitorSummary && typeof context.adminAutomationMonitorSummary === "object"
+      ? context.adminAutomationMonitorSummary : {};
+    const scheduler = summary.scheduler && typeof summary.scheduler === "object" ? summary.scheduler : {};
+    const latest = summary.latest_run && typeof summary.latest_run === "object" ? summary.latest_run : null;
+    const counts = summary.run_counts && typeof summary.run_counts === "object" ? summary.run_counts : null;
+    const integrityGuarded = context.adminAutomationMonitorIntegrityGuarded === true;
+    const visibleCounts = integrityGuarded ? null : counts;
+    const runs = Array.isArray(context.adminAutomationMonitorRuns) ? context.adminAutomationMonitorRuns : [];
+    const readState = String(context.adminAutomationMonitorReadState || "guarded");
+    const responseState = String(context.adminAutomationMonitorStatus || "guarded");
+    const loading = readState === "loading";
+    const ready = readState === "ready" && Boolean(context.adminAutomationMonitorEnabled);
+    const serverRoute = serverAuthorizesAdminRoute(context, "/admin/automation");
+    const canRefresh = ready && serverRoute && context.capabilities && context.capabilities["admin-automation-monitor-refresh"] === true;
+    if (!ready) {
+      return `<article class="portal-page portal-admin-automation-monitor">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">${loading ? "◌" : "⌘"}</span><div><h2>${loading ? "Đang xác minh receipt private" : "Automation Monitor chưa khả dụng"}</h2><p>${loading ? "Máy chủ đang xác minh signed Web admin session và nạp lại projection receipt đã được redaction. Dữ liệu cũ cùng các nút đọc được giữ ẩn cho tới khi phản hồi hiện tại hợp lệ." : "Trang không dùng browser role, dữ liệu Bot, log thô hay cache cũ để thay thế kết quả server-side."}</p></div></div></section></article>`;
+    }
+    const schedulerState = String(scheduler.state || "guarded");
+    const schedulerBadge = responseState === "read_only" ? automationMonitorBadgeState(schedulerState) : "guarded";
+    const latestCopy = latest
+      ? `${automationMonitorStateLabel(latest.state)} · ${safeText(supportCaseTimestamp(latest.finished_at || latest.started_at))}`
+      : "Chưa có receipt được xác minh";
+    const latestDetail = latest
+      ? `${automationMonitorCount(latest.action_count)} action · ${automationMonitorCount(latest.candidate_count)} candidate`
+      : "Không dùng số 0 thay cho lịch sử chưa có hoặc đang bảo vệ.";
+    const runRows = runs.length
+      ? runs.map((item) => `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(automationMonitorStateLabel(item && item.state))}</strong><small>${safeText(supportCaseTimestamp(item && (item.finished_at || item.started_at)))} · ${safeText(automationMonitorCount(item && item.action_count))} action · ${safeText(automationMonitorCount(item && item.candidate_count))} candidate</small></div><div class="portal-operations-run-meta">${badge(automationMonitorBadgeState(item && item.state))}</div></article>`).join("")
+      : renderEmpty("Chưa có receipt hiển thị", "Không có receipt đã được server xác minh cho trang này; Portal không tạo record mẫu hoặc suy đoán scheduler đang hoạt động.", "·");
+    const runListing = context.adminAutomationMonitorListing && typeof context.adminAutomationMonitorListing === "object" ? context.adminAutomationMonitorListing : {};
+    const pagination = runListing.pagination && typeof runListing.pagination === "object" ? runListing.pagination : {};
+    const previous = Number.isInteger(pagination.previousOffset) ? pagination.previousOffset : null;
+    const next = Number.isInteger(pagination.nextOffset) ? pagination.nextOffset : null;
+    const disabled = canRefresh ? "" : " disabled";
+    const pager = previous === null && next === null ? "" : `<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-page" data-portal-route="/admin/automation" data-admin-automation-offset="${safeText(String(previous === null ? 0 : previous))}"${previous === null ? " disabled" : disabled}>← Trang trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-page" data-portal-route="/admin/automation" data-admin-automation-offset="${safeText(String(next === null ? 0 : next))}"${next === null ? " disabled" : disabled}>Trang sau →</button></div>`;
+    const historyState = responseState === "read_only" ? "read_only" : "guarded";
+    const unverifiedCount = counts && Number.isInteger(counts.unknown) && counts.unknown > 0 ? counts.unknown : 0;
+    const aggregateTitle = integrityGuarded || unverifiedCount ? "Tổng hợp trạng thái · cần xác minh" : "Tổng hợp trạng thái";
+    const aggregateCopy = integrityGuarded
+      ? "Có receipt chưa đạt schema redacted; số đếm được ẩn thay vì trình bày aggregate một phần như dữ liệu đã xác minh."
+      : unverifiedCount
+        ? "Có receipt chưa phân loại; toàn bộ monitor vẫn guarded và không suy đoán nguyên nhân."
+        : "Không có nguồn guarded nào được hiển thị thành 0 hoặc “healthy”.";
+    const unverifiedRow = integrityGuarded || unverifiedCount
+      ? `<article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Chưa xác minh</strong><small>Receipt không đạt schema redacted hoặc chưa phân loại; không suy đoán nguyên nhân hay tự sửa.</small></div><div class="portal-operations-run-meta"><strong>${safeText(integrityGuarded ? "—" : automationMonitorCount(unverifiedCount))}</strong></div></article>`
+      : "";
+    const details = `<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Read-only scheduler boundary</span><h2 class="portal-card-title">Có quan sát, không có control plane</h2><p class="portal-card-subtitle">Receipt chỉ cho biết Web scheduler đã ghi nhận metadata nội bộ theo policy. Nó không chứng minh Telegram/email/web push, provider run, delivery, payment, job hay một lỗi đã được tự sửa.</p></div>${badge("read_only")}</div><ul class="portal-operations-boundary-list"><li>Không hiển thị run/request ID, nonce, HMAC, lease, receipt JSON, source, account hay nội dung khách.</li><li>Không có tick, retry, webhook, secret, restart, deploy, wallet/Xu, PayOS hoặc provider action.</li><li>Refresh chỉ đọc lại projection signed server-side; không chạy scheduler trong browser.</li></ul></section>`;
+    return `<article class="portal-page portal-admin-automation-monitor">${renderHero(page, context)}
+      <section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">Web-native Automation Monitor</span><h2>Quan sát scheduler an toàn, không tự tạo hành động</h2><p>Trạng thái hiện tại: ${safeText(automationMonitorStateLabel(schedulerState))}. Chỉ metadata receipt đã được redaction được hiển thị; trạng thái guarded luôn được giữ nguyên thay vì thay bằng dữ liệu cũ.</p></div><dl><div><dt>${safeText(automationMonitorStateLabel(schedulerState))}</dt><dd>Preflight do server xác minh</dd></div><div><dt>${safeText(responseState === "read_only" ? "Chỉ đọc" : "Bảo vệ")}</dt><dd>Không có mutation</dd></div></dl></section>
+      <section class="portal-operations-metrics" aria-label="Tổng quan Automation Monitor"><div class="portal-metric"><span>Inbox Center</span><strong>${scheduler.center_enabled === true ? "Bật" : scheduler.center_enabled === false ? "Tắt" : "—"}</strong><em>Không phải external delivery</em></div><div class="portal-metric"><span>Scheduler</span><strong>${scheduler.automation_enabled === true ? "Quan sát" : scheduler.automation_enabled === false ? "Tắt" : "—"}</strong><em>${safeText(automationMonitorStateLabel(schedulerState))}</em></div><div class="portal-metric"><span>Receipt gần nhất</span><strong>${safeText(latest ? automationMonitorStateLabel(latest.state) : "—")}</strong><em>${safeText(latestDetail)}</em></div><div class="portal-metric"><span>Receipt completed</span><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.completed) : "—")}</strong><em>${integrityGuarded ? "Đang chờ receipt được xác minh" : "Counter đã redact"}</em></div></section>
+      <div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Receipt gần nhất</h2><p class="portal-card-subtitle">${safeText(latestCopy)}</p></div>${badge(schedulerBadge)}</div><div class="portal-operations-run"><div class="portal-operations-run-copy"><strong>${safeText(latest ? automationMonitorStateLabel(latest.state) : "Chưa có receipt")}</strong><small>${safeText(latestDetail)}</small></div><div class="portal-operations-run-meta">${latest ? badge(automationMonitorBadgeState(latest.state)) : badge(historyState)}</div></div></section><section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">${safeText(aggregateTitle)}</h2><p class="portal-card-subtitle">${safeText(aggregateCopy)}</p></div>${badge(integrityGuarded || unverifiedCount ? "guarded" : historyState)}</div><div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Started</strong><small>Receipt đang mở</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.started) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Completed</strong><small>Receipt đã đóng hợp lệ</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.completed) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Failed</strong><small>Không giả định đã tự sửa</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.failed) : "—")}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Guarded</strong><small>Scheduler giữ ranh giới an toàn</small></div><div class="portal-operations-run-meta"><strong>${safeText(visibleCounts ? automationMonitorCount(visibleCounts.guarded) : "—")}</strong></div></article>${unverifiedRow}</div></section></div>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử receipt đã redact</h2><p class="portal-card-subtitle">Không có filter/search/detail vì các trường nhận dạng và source không được đưa ra Portal.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="admin-automation-monitor-refresh" data-portal-route="/admin/automation"${canRefresh ? "" : " disabled"}>Làm mới</button></div><div class="portal-operations-run-list">${runRows}</div>${pager}</section>${details}
+    </article>`;
+  }
+
   function renderReliabilityAdmin(page, context) {
     const summary = context.reliabilitySummary && typeof context.reliabilitySummary === "object" ? context.reliabilitySummary : {};
     const role = String(summary.operator_role || "").trim();
@@ -18827,7 +18911,7 @@
     if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance"].includes(path)) return "finance";
     if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
     if (["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics"].includes(path)) return "content-ops";
-    if (["/admin/jobs", "/admin/jobs/failed", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
+    if (["/admin/jobs", "/admin/jobs/failed", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/automation", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
     return "governance";
   }
 
@@ -20463,6 +20547,7 @@
       case "notification-automation": return renderNotificationAutomation(page, context);
       case "operations": return renderOperations(page, context);
       case "operations-admin": return renderOperationsAdmin(page, context);
+      case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
       case "reliability-admin": return renderReliabilityAdmin(page, context);
       case "operations-desk": return renderOperationsDesk(page, context);
       case "tickets": return renderTickets(page, context);
@@ -20983,6 +21068,9 @@
     }
     if (String(action || "").startsWith("operations-desk-")) {
       Object.assign(fields, { __operationsDeskOffset: source.getAttribute("data-operations-desk-offset") || "" });
+    }
+    if (String(action || "").startsWith("admin-automation-monitor-")) {
+      Object.assign(fields, { __adminAutomationMonitorOffset: source.getAttribute("data-admin-automation-offset") || "" });
     }
     if (String(action || "").startsWith("reliability-")) {
       Object.assign(fields, {

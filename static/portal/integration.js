@@ -251,6 +251,11 @@
   let operationsCustomerHydrationEpoch = 0;
   let operationsAdminHydrationEpoch = 0;
   let reliabilityHydrationEpoch = 0;
+  // The local-admin scheduler monitor is intentionally separate from
+  // Operations Autopilot. It reads a different redacted receipt model and
+  // must not survive a session change, route change or newer refresh.
+  let adminAutomationMonitorSessionEpoch = 0;
+  let adminAutomationMonitorHydrationEpoch = 0;
   // Operations Desk is a separate, read-only staff projection.  It gets its
   // own session/request fence so a delayed aggregate cannot cross a logout,
   // account switch, feature disablement, route change or newer filter read.
@@ -1405,6 +1410,14 @@
 
   function isNativeOperationsDeskPath(path) {
     return String(path || "").split("?")[0] === "/admin/work-queue";
+  }
+
+  // This is a local Web-admin view of Inbox scheduler receipts, not the
+  // customer Automation Center or Operations Autopilot. Keep it out of all
+  // generic bridge hydration paths so a linked Telegram account can never
+  // replace a guarded monitor with canonical Bot data.
+  function isNativeAdminAutomationMonitorPath(path) {
+    return String(path || "").split("?")[0] === "/admin/automation";
   }
 
   // Governance is a Web-native staff control plane, not a compatibility view
@@ -9519,6 +9532,11 @@
     // only a client visibility/read trigger; every Desk endpoint separately
     // checks the signed support role on the server.
     const operationsDeskEnabled = Boolean(status.flags && status.flags.admin_erp_enabled === true);
+    // Automation Monitor follows the Admin ERP umbrella only. The browser
+    // gets no authority from this boolean: the dedicated GET routes repeat a
+    // signed local-admin check and return a guarded, empty projection when
+    // the server-side ERP gate is off.
+    const adminAutomationMonitorEnabled = Boolean(status.flags && status.flags.admin_erp_enabled === true);
     // Inbox Automation is a different, more constrained scheduler boundary.
     // A true center flag grants only signed read/write of in-app records; the
     // automation flag may remain false while the customer safely sees policy.
@@ -10006,6 +10024,9 @@
       "operations-desk-refresh": Boolean(account && operationsDeskEnabled),
       "operations-desk-filter": Boolean(account && operationsDeskEnabled),
       "operations-desk-page": Boolean(account && operationsDeskEnabled),
+      "admin-automation-monitor-view": Boolean(account && adminAutomationMonitorEnabled),
+      "admin-automation-monitor-refresh": Boolean(account && adminAutomationMonitorEnabled),
+      "admin-automation-monitor-page": Boolean(account && adminAutomationMonitorEnabled),
       "inbox-view": Boolean(account && notificationCenterEnabled),
       "inbox-refresh": Boolean(account && notificationCenterEnabled),
       "inbox-page": Boolean(account && notificationCenterEnabled),
@@ -10111,6 +10132,8 @@
     ++operationsCustomerHydrationEpoch;
     ++operationsAdminHydrationEpoch;
     ++reliabilityHydrationEpoch;
+    ++adminAutomationMonitorSessionEpoch;
+    ++adminAutomationMonitorHydrationEpoch;
     ++operationsDeskSessionEpoch;
     ++operationsDeskHydrationEpoch;
     ++notificationSessionEpoch;
@@ -10671,6 +10694,15 @@
       operationsApprovalListing: operationsApprovalListingProjection(0, {}, 0),
       operationsAdminQueueStates: operationsAdminQueueStatesProjection({}, account && autopilotEnabled ? "loading" : "guarded"),
       operationsAdminReadState: account && autopilotEnabled ? "loading" : "guarded",
+      // Inbox scheduler receipts are a different redacted staff projection.
+      // Reset it before every signed bootstrap; no previous account or page
+      // may keep its receipt timing/counters after a failed fresh read.
+      adminAutomationMonitorEnabled,
+      adminAutomationMonitorSummary: {},
+      adminAutomationMonitorRuns: [],
+      adminAutomationMonitorListing: adminAutomationMonitorListingProjection(0, {}, 0),
+      adminAutomationMonitorStatus: "guarded",
+      adminAutomationMonitorReadState: account && adminAutomationMonitorEnabled ? "loading" : "guarded",
       // Reliability follow-ups are staff-private. Clear them separately
       // before every signed hydration so a stale runtime bucket, follow-up
       // state or prior staff session can never remain visible in the browser.
@@ -10745,6 +10777,9 @@
         "/admin/governance": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/governance/documents": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/internal-documents": account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint ? "processing" : "guarded",
+        // A private read monitor is never a job lifecycle.  Keep this guarded
+        // until its independent signed-server projection has been verified.
+        "/admin/automation": "guarded",
         "/calendar": account ? "read_only" : "guarded",
         "/prompt-library": account && promptLibraryEnabled ? "processing" : "guarded",
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
@@ -11219,6 +11254,21 @@
         pageStates: { ...(base().pageStates || {}), "/admin/work-queue": "guarded" }
       });
     }
+    if (account && adminAutomationMonitorEnabled && currentPath === "/admin/automation") {
+      await hydrateAdminAutomationMonitor();
+    } else if (isNativeAdminAutomationMonitorPath(currentPath)) {
+      // This ERP page never falls back to customer Inbox metadata, Operations
+      // Autopilot, generic admin bridge data or a previous local-admin read.
+      // The dedicated redacted receipt endpoint is its sole source.
+      merge({
+        adminAutomationMonitorSummary: {},
+        adminAutomationMonitorRuns: [],
+        adminAutomationMonitorListing: adminAutomationMonitorListingProjection(0, {}, 0),
+        adminAutomationMonitorStatus: "guarded",
+        adminAutomationMonitorReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), "/admin/automation": "guarded" }
+      });
+    }
     if (account && autopilotEnabled) {
       if (currentPath === "/operations") await hydrateOperations();
       else if (["/admin/operations", "/admin/autopilot"].includes(currentPath)) await hydrateOperationsAdmin();
@@ -11318,7 +11368,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -14497,6 +14547,225 @@
       && currentPortalPath() === expectedPath
       && base().notificationCenterEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  // Admin Automation Monitor only accepts a closed, identifier-free receipt
+  // DTO. Keep these validators separate from Inbox and Operations because
+  // those services intentionally use richer, differently authorized models.
+  const ADMIN_AUTOMATION_MONITOR_RUN_STATES = new Set(["started", "completed", "failed", "guarded"]);
+  const ADMIN_AUTOMATION_MONITOR_SCHEDULER_STATES = new Set([
+    "ready", "center_disabled", "automation_disabled", "persistent_store_unverified",
+    "topology_unverified", "single_replica_required", "limits_unverified", "guarded"
+  ]);
+  const ADMIN_AUTOMATION_MONITOR_LIMIT = 25;
+  const ADMIN_AUTOMATION_MONITOR_MAX_OFFSET = 10000;
+  const ADMIN_AUTOMATION_MONITOR_TIMESTAMP = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:[+-]\d{2}:\d{2}|Z)$/;
+
+  function adminAutomationMonitorOffset(value) {
+    const number = Number(value);
+    return Number.isInteger(number) && number >= 0 && number <= ADMIN_AUTOMATION_MONITOR_MAX_OFFSET ? number : 0;
+  }
+
+  function adminAutomationMonitorObjectHasOnly(value, allowed) {
+    return value && typeof value === "object" && !Array.isArray(value)
+      && Object.keys(value).every((key) => allowed.has(key));
+  }
+
+  function adminAutomationMonitorTimestamp(value, optional) {
+    const raw = String(value || "").trim();
+    if (!raw && optional) return null;
+    if (!ADMIN_AUTOMATION_MONITOR_TIMESTAMP.test(raw) || Number.isNaN(Date.parse(raw))) return null;
+    return raw;
+  }
+
+  function adminAutomationMonitorCount(value, maximum) {
+    return Number.isInteger(value) && value >= 0 && value <= maximum ? value : null;
+  }
+
+  function adminAutomationMonitorRunProjection(value) {
+    const allowed = new Set(["state", "action_count", "candidate_count", "started_at", "finished_at"]);
+    if (!adminAutomationMonitorObjectHasOnly(value, allowed)) return null;
+    const state = String(value.state || "").trim().toLowerCase();
+    const actionCount = adminAutomationMonitorCount(value.action_count, 20);
+    const candidateCount = adminAutomationMonitorCount(value.candidate_count, 100);
+    const startedAt = adminAutomationMonitorTimestamp(value.started_at, false);
+    const finishedAt = adminAutomationMonitorTimestamp(value.finished_at, true);
+    if (!ADMIN_AUTOMATION_MONITOR_RUN_STATES.has(state) || actionCount === null || candidateCount === null || startedAt === null) return null;
+    if ((state === "started" && finishedAt !== null) || (state !== "started" && finishedAt === null)) return null;
+    return { state, action_count: actionCount, candidate_count: candidateCount, started_at: startedAt, finished_at: finishedAt };
+  }
+
+  function adminAutomationMonitorSchedulerProjection(value) {
+    const allowed = new Set(["center_enabled", "automation_enabled", "state"]);
+    if (!adminAutomationMonitorObjectHasOnly(value, allowed)) return null;
+    const state = String(value.state || "").trim().toLowerCase();
+    if (typeof value.center_enabled !== "boolean" || typeof value.automation_enabled !== "boolean" || !ADMIN_AUTOMATION_MONITOR_SCHEDULER_STATES.has(state)) return null;
+    return { center_enabled: value.center_enabled, automation_enabled: value.automation_enabled, state };
+  }
+
+  function adminAutomationMonitorCountsProjection(value) {
+    if (value === null || value === undefined) return null;
+    const allowed = new Set(["started", "completed", "failed", "guarded", "unknown"]);
+    if (!adminAutomationMonitorObjectHasOnly(value, allowed) || Object.keys(value).length !== allowed.size) return null;
+    const counts = {};
+    for (const key of allowed) {
+      const count = adminAutomationMonitorCount(value[key], 1000000000);
+      if (count === null) return null;
+      counts[key] = count;
+    }
+    return counts;
+  }
+
+  function adminAutomationMonitorBaseProjection(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    if (
+      source.source !== "web_notification_runs_redacted"
+      || source.policy_version !== "web_admin_automation_monitor_v1"
+      || source.read_only !== true
+      || !Array.isArray(source.boundaries)
+      || source.boundaries.length < 2
+      || source.boundaries.some((item) => typeof item !== "string" || item.length < 8 || item.length > 260)
+    ) return null;
+    return adminAutomationMonitorSchedulerProjection(source.scheduler);
+  }
+
+  function adminAutomationMonitorSummaryProjection(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const allowed = new Set(["source", "policy_version", "read_only", "boundaries", "scheduler", "latest_run", "run_counts", "integrity_guarded"]);
+    if (!adminAutomationMonitorObjectHasOnly(source, allowed)) return null;
+    const scheduler = adminAutomationMonitorBaseProjection(source);
+    const latest = source.latest_run === null ? null : adminAutomationMonitorRunProjection(source.latest_run);
+    const counts = adminAutomationMonitorCountsProjection(source.run_counts);
+    if (!scheduler || typeof source.integrity_guarded !== "boolean" || (source.latest_run !== null && latest === null)) return null;
+    if (scheduler.state === "center_disabled" && (latest !== null || counts !== null)) return null;
+    // ERP's directory switch intentionally returns an empty, guarded summary
+    // without reading receipts. It is valid only for this exact no-history
+    // shape; every other non-center scheduler state still needs counts.
+    const emptyDirectoryGuard = scheduler.state === "guarded" && latest === null && source.integrity_guarded === false;
+    if (scheduler.state !== "center_disabled" && counts === null && !emptyDirectoryGuard) return null;
+    return { scheduler, latest_run: latest, run_counts: counts, integrity_guarded: source.integrity_guarded };
+  }
+
+  function adminAutomationMonitorListingProjection(offsetValue, source, returned) {
+    const offset = adminAutomationMonitorOffset(offsetValue);
+    const data = source && typeof source === "object" && !Array.isArray(source) ? source : {};
+    const hasMore = data.has_more === true;
+    const nextOffset = hasMore && Number.isInteger(data.next_offset) && data.next_offset === offset + ADMIN_AUTOMATION_MONITOR_LIMIT
+      && data.next_offset <= ADMIN_AUTOMATION_MONITOR_MAX_OFFSET ? data.next_offset : null;
+    return {
+      pagination: {
+        limit: ADMIN_AUTOMATION_MONITOR_LIMIT,
+        offset,
+        returned: Number.isInteger(returned) && returned >= 0 ? returned : 0,
+        hasMore: hasMore && nextOffset !== null,
+        nextOffset,
+        previousOffset: offset >= ADMIN_AUTOMATION_MONITOR_LIMIT ? offset - ADMIN_AUTOMATION_MONITOR_LIMIT : null
+      }
+    };
+  }
+
+  function adminAutomationMonitorRunsProjection(value, offsetValue) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const allowed = new Set([
+      "source", "policy_version", "read_only", "boundaries", "scheduler", "items", "returned", "limit", "offset", "has_more", "next_offset"
+    ]);
+    if (!adminAutomationMonitorObjectHasOnly(source, allowed)) return null;
+    const scheduler = adminAutomationMonitorBaseProjection(source);
+    const offset = adminAutomationMonitorOffset(offsetValue);
+    if (!scheduler || !Array.isArray(source.items) || source.items.length > ADMIN_AUTOMATION_MONITOR_LIMIT
+      || source.limit !== ADMIN_AUTOMATION_MONITOR_LIMIT || source.offset !== offset || source.returned !== source.items.length
+      || typeof source.has_more !== "boolean" || (source.has_more
+        ? (source.next_offset !== offset + ADMIN_AUTOMATION_MONITOR_LIMIT || source.next_offset > ADMIN_AUTOMATION_MONITOR_MAX_OFFSET)
+        : source.next_offset !== null)) return null;
+    const items = source.items.map(adminAutomationMonitorRunProjection);
+    if (items.some((item) => item === null)) return null;
+    if (scheduler.state === "center_disabled" && items.length) return null;
+    return { scheduler, items, listing: adminAutomationMonitorListingProjection(offset, source, items.length) };
+  }
+
+  function adminAutomationMonitorRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === adminAutomationMonitorHydrationEpoch
+      && sessionEpoch === adminAutomationMonitorSessionEpoch
+      && expectedPath === "/admin/automation"
+      && currentPortalPath() === expectedPath
+      && base().adminAutomationMonitorEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function adminAutomationMonitorRunsPath(offsetValue) {
+    const parameters = new URLSearchParams({ limit: String(ADMIN_AUTOMATION_MONITOR_LIMIT), offset: String(adminAutomationMonitorOffset(offsetValue)) });
+    return `/admin/automation/runs?${parameters.toString()}`;
+  }
+
+  async function hydrateAdminAutomationMonitor(offsetValue) {
+    // This is pull-to-refresh only. The browser never starts, schedules or
+    // retries a tick and never treats a guarded receipt as a completed repair.
+    const requestEpoch = ++adminAutomationMonitorHydrationEpoch;
+    const sessionEpoch = adminAutomationMonitorSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (expectedPath !== "/admin/automation") return { stale: true };
+    const current = base().adminAutomationMonitorListing && typeof base().adminAutomationMonitorListing === "object" ? base().adminAutomationMonitorListing : {};
+    const pagination = current.pagination && typeof current.pagination === "object" ? current.pagination : {};
+    const offset = adminAutomationMonitorOffset(offsetValue === undefined ? pagination.offset : offsetValue);
+    if (!adminAutomationMonitorRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+    // A revalidation must never leave a previously authorized receipt visible
+    // while a newer account/session/route check is outstanding.  Clear first;
+    // only a complete, same-epoch pair of server reads can repopulate it.
+    merge({
+      adminAutomationMonitorSummary: {},
+      adminAutomationMonitorRuns: [],
+      adminAutomationMonitorListing: adminAutomationMonitorListingProjection(offset, {}, 0),
+      adminAutomationMonitorIntegrityGuarded: false,
+      adminAutomationMonitorStatus: "guarded",
+      adminAutomationMonitorReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), "/admin/automation": "guarded" }
+    });
+    try {
+      const [summaryResult, runsResult] = await Promise.all([
+        api("/admin/automation/summary", { cache: "no-store" }),
+        api(adminAutomationMonitorRunsPath(offset), { cache: "no-store" })
+      ]);
+      const summary = adminAutomationMonitorSummaryProjection(summaryResult && summaryResult.data);
+      const runs = adminAutomationMonitorRunsProjection(runsResult && runsResult.data, offset);
+      const summaryStatus = String(summaryResult && summaryResult.status || "");
+      const runsStatus = String(runsResult && runsResult.status || "");
+      if (!summary || !runs || !["read_only", "guarded"].includes(summaryStatus) || summaryStatus !== runsStatus
+        || (summary.integrity_guarded === true && summaryStatus !== "guarded")
+        || summary.scheduler.state !== runs.scheduler.state) {
+        throw new Error("Máy chủ chưa trả Automation Monitor redacted projection hợp lệ.");
+      }
+      if (!adminAutomationMonitorRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        adminAutomationMonitorSummary: summary,
+        adminAutomationMonitorRuns: runs.items,
+        adminAutomationMonitorListing: runs.listing,
+        adminAutomationMonitorIntegrityGuarded: summary.integrity_guarded,
+        adminAutomationMonitorStatus: summaryStatus,
+        adminAutomationMonitorReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/admin/automation": summaryStatus === "read_only" ? "read_only" : "guarded" }
+      });
+      return { summary, runs: runs.items, listing: runs.listing, status: summaryStatus };
+    } catch (_) {
+      if (!adminAutomationMonitorRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        adminAutomationMonitorSummary: {},
+        adminAutomationMonitorRuns: [],
+        adminAutomationMonitorListing: adminAutomationMonitorListingProjection(offset, {}, 0),
+        adminAutomationMonitorIntegrityGuarded: false,
+        adminAutomationMonitorStatus: "guarded",
+        adminAutomationMonitorReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/admin/automation": "guarded" }
+      });
+      return null;
+    }
+  }
+
+  function setAdminAutomationMonitorReadBusy(route, busy) {
+    // Refresh and paging are the same read transaction from the user's point
+    // of view.  Lock both controls so a rapid click cannot fan out duplicate
+    // privileged reads while the old projection is intentionally hidden.
+    setActionBusy("admin-automation-monitor-refresh", route, busy);
+    setActionBusy("admin-automation-monitor-page", route, busy);
   }
 
   async function hydrateOperations(incidentOffsetValue) {
@@ -23620,6 +23889,32 @@
         if (!(base().capabilities && base().capabilities["operations-desk-page"] === true)) throw new Error("Cần signed Web session để xem thêm Operations Desk.");
         await hydrateOperationsDesk(undefined, operationsDeskOffset(fields.__operationsDeskOffset));
         toast(base().operationsDeskReadState === "failed" ? "Không thể tải thêm metadata Operations Desk." : "Đã tải trang Operations Desk đã redaction.", base().operationsDeskReadState === "failed" ? "error" : undefined);
+        return;
+      }
+      if (action === "admin-automation-monitor-refresh") {
+        if (route !== "/admin/automation" || currentPortalPath() !== route) throw new Error("Chỉ có thể làm mới Automation Monitor từ trang hiện tại.");
+        if (!(base().capabilities && base().capabilities["admin-automation-monitor-refresh"] === true)) throw new Error("Cần signed Web session để đọc Automation Monitor.");
+        setAdminAutomationMonitorReadBusy(route, true);
+        try {
+          await hydrateAdminAutomationMonitor();
+          if (base().adminAutomationMonitorReadState === "ready") toast("Đã làm mới receipt Automation Monitor từ máy chủ.");
+          else toast("Automation Monitor chưa trả projection redacted đã được xác minh.", "error");
+        } finally {
+          setAdminAutomationMonitorReadBusy(route, false);
+        }
+        return;
+      }
+      if (action === "admin-automation-monitor-page") {
+        if (route !== "/admin/automation" || currentPortalPath() !== route) throw new Error("Chỉ có thể xem thêm receipt từ Automation Monitor hiện tại.");
+        if (!(base().capabilities && base().capabilities["admin-automation-monitor-page"] === true)) throw new Error("Cần signed Web session để xem thêm receipt Automation Monitor.");
+        setAdminAutomationMonitorReadBusy(route, true);
+        try {
+          await hydrateAdminAutomationMonitor(adminAutomationMonitorOffset(fields.__adminAutomationMonitorOffset));
+          if (base().adminAutomationMonitorReadState === "ready") toast("Đã tải trang receipt Automation Monitor đã redaction.");
+          else toast("Automation Monitor chưa trả projection redacted đã được xác minh.", "error");
+        } finally {
+          setAdminAutomationMonitorReadBusy(route, false);
+        }
         return;
       }
       if (action === "operations-refresh") {

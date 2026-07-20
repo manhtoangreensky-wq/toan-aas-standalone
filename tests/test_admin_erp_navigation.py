@@ -213,11 +213,13 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "web_private_crm",
         "web_governance_documents",
         "web_internal_document_archive",
+        "web_automation_monitor",
     }
     assert _module_ids(body) == {
         "partner_crm_manager",
         "governance_documents",
         "internal_document_archive",
+        "automation_monitor",
     }
     assert all(
         module["authority"] == "web_local_admin"
@@ -235,3 +237,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     assert archive["authority"] == "web_local_admin"
     assert archive["availability"] == "guarded"
     assert archive["capability"] == "owner_scoped_immutable_private_document_versions"
+    automation = groups["web_automation_monitor"]["modules"][0]
+    assert automation["authority"] == "web_local_admin"
+    assert automation["availability"] == "web_native"
+    assert automation["capability"] == "redacted_scheduler_receipt_read_only"
