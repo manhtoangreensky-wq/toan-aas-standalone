@@ -502,6 +502,20 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "authority": "SIGNED_CUSTOMER",
         "launch_mode": "NAVIGATION_SHELL",
     },
+    "menu|main_ai": {
+        "capability_key": "chat_workspace",
+        "target": "/chat",
+        "feature_key": "chat",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_ai_prompt": {
+        "capability_key": "prompt_studio",
+        "target": "/prompt-studio",
+        "feature_key": "prompt_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
     "menu|main_profile": {
         "capability_key": "account",
         "target": "/account",
@@ -515,6 +529,20 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "feature_key": "wallet_topup",
         "authority": "CORE_CANONICAL_PAYMENT",
         "launch_mode": "BRIDGE_GUARDED_PROXY",
+    },
+    "menu|guide_credits": {
+        "capability_key": "wallet",
+        "target": "/wallet",
+        "feature_key": "wallet",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "menu|hint_pricing": {
+        "capability_key": "pricing",
+        "target": "/pricing",
+        "feature_key": "pricing",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
     },
     "menu|main_docs": {
         "capability_key": "documents",
@@ -530,10 +558,80 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "authority": "SIGNED_CUSTOMER",
         "launch_mode": "WEB_NAVIGATION",
     },
+    "menu|hint_doc_pdf_to_word": {
+        "capability_key": "documents_pdf_to_word",
+        "target": "/documents/pdf-to-word",
+        "feature_key": "documents_pdf_to_word",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_doc_image_to_pdf": {
+        "capability_key": "documents_image_to_pdf",
+        "target": "/documents/image-to-pdf",
+        "feature_key": "documents_image_to_pdf",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_doc_compress_pdf": {
+        "capability_key": "documents_compress",
+        "target": "/documents/compress",
+        "feature_key": "documents_compress",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_doc_split_pdf": {
+        "capability_key": "documents_split",
+        "target": "/documents/split",
+        "feature_key": "documents_split",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_doc_merge_pdf": {
+        "capability_key": "documents_merge",
+        "target": "/documents/merge",
+        "feature_key": "documents_merge",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_doc_save_document": {
+        "capability_key": "asset_vault",
+        "target": "/asset-vault",
+        "feature_key": "asset_vault",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
     "menu|main_image": {
         "capability_key": "image_studio",
         "target": "/image-studio",
         "feature_key": "image_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_image_tools": {
+        "capability_key": "image_studio",
+        "target": "/image-studio",
+        "feature_key": "image_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|image_prompt_start": {
+        "capability_key": "image_prompt_composer",
+        "target": "/image/prompt-composer",
+        "feature_key": "image_prompt_composer",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|image_edit_start": {
+        "capability_key": "image_edit",
+        "target": "/image/edit",
+        "feature_key": "image_edit",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|image_upscale_start": {
+        "capability_key": "image_upscale",
+        "target": "/image/upscale",
+        "feature_key": "image_upscale",
         "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
     },
@@ -570,6 +668,20 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "target": "/guides",
         "feature_key": "guides",
         "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|guide_image_ai": {
+        "capability_key": "image_studio",
+        "target": "/image-studio",
+        "feature_key": "image_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|guide_music_add": {
+        "capability_key": "media_workspace",
+        "target": "/media-workspace",
+        "feature_key": "media_workspace",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
     },
     "menu|support": {
@@ -2653,7 +2765,7 @@ def _compatibility_surface_exists(candidate: str, routes: set[str]) -> bool:
         return False
     normalized = candidate.rstrip("/") or "/"
     prefixes = (
-        "/dashboard", "/account", "/onboarding", "/wallet", "/packages", "/jobs", "/assets", "/asset-vault", "/support", "/tickets", "/analytics",
+        "/dashboard", "/account", "/onboarding", "/chat", "/prompt-studio", "/wallet", "/packages", "/jobs", "/assets", "/asset-vault", "/support", "/tickets", "/analytics",
         "/membership", "/status", "/studio", "/workboard", "/trend-research", "/media-factory", "/media-workspace", "/creative-flow", "/video-studio",
         "/notes", "/reminders", "/referrals", "/rewards", "/community", "/guides", "/growth", "/campaign", "/calendar", "/approvals",
         "/pricing", "/legal", "/privacy", "/prompt-library", "/free-prompt-gallery", "/content", "/image", "/video", "/voice", "/music", "/subtitle",
@@ -3537,7 +3649,13 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         "source_kind": source_kind,
         "source": identifier,
         "target": target if not telegram_only else "TELEGRAM_ONLY",
-        "classification": "admin" if admin else "customer",
+        # A finite catalog entry is reviewed as a customer navigation before
+        # keyword heuristics run. For example, the public Bot help button
+        # ``menu|hint_pricing`` contains an admin-like word but never grants
+        # an admin surface in Web. The catalog currently contains only
+        # customer destinations; a future admin action needs its own explicit
+        # role-reviewed contract rather than a name-based inference.
+        "classification": "customer" if menu_entry is not None else "admin" if admin else "customer",
         "status": status,
         "resolution": resolution,
         "evidence": evidence,

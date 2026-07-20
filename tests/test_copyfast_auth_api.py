@@ -529,9 +529,12 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
 
     by_key = {item["key"]: item for item in menu}
     assert {
-        "workspace_home", "account", "wallet_topup", "documents", "image_studio",
-        "video_studio", "media_workspace", "guides", "support", "media_factory",
-        "video_factory_workflow",
+        "workspace_home", "account", "chat_workspace", "prompt_studio", "wallet",
+        "wallet_topup", "documents", "documents_pdf_to_word", "documents_image_to_pdf",
+        "documents_compress", "documents_split", "documents_merge", "asset_vault",
+        "image_studio", "image_prompt_composer", "image_edit", "image_upscale",
+        "video_studio", "media_workspace", "guides", "pricing", "support",
+        "media_factory", "video_factory_workflow",
     } == set(by_key)
     assert by_key["account"] == {
         "key": "account",
@@ -549,6 +552,11 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
     assert by_key["wallet_topup"]["authority"] == "CORE_CANONICAL_PAYMENT"
     assert by_key["wallet_topup"]["launch_mode"] == "BRIDGE_GUARDED_PROXY"
     assert by_key["wallet_topup"]["availability"] == "GUARDED"
+    assert by_key["wallet"]["authority"] == "CORE_CANONICAL_READ"
+    assert by_key["wallet"]["launch_mode"] == "READ_ONLY_CANONICAL"
+    assert by_key["wallet"]["availability"] == "GUARDED"
+    assert by_key["asset_vault"]["route"] == "/asset-vault"
+    assert by_key["documents_split"]["route"] == "/documents/split"
     assert all(item["execution"] == "NO_EXECUTION_CLAIM" for item in menu)
     allowed_fields = {
         "key", "feature_key", "title", "group", "route", "authority",

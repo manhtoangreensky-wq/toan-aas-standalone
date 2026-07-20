@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 2175,
+      "line": 2287,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -263,7 +263,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3120,
+      "line": 3232,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6654,7 +6654,7 @@
         "docs/migration/ADMIN_DOMAIN_CENTERS_CONTRACT.md",
         "docs/migration/ADMIN_ERP_MAP.md"
       ],
-      "occurrences": 728,
+      "occurrences": 733,
       "provider": "PayOS"
     },
     {
@@ -6881,7 +6881,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1805,
+      "occurrences": 1821,
       "provider": "Telegram"
     }
   ],
@@ -12486,10 +12486,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 265,
-  "source_files_scanned": 265,
-  "source_fingerprint_sha256": "2281e2e1c7e5eb321d9148b9b24fe218d81ea5c95489f5fe7f8b4f9d645273e8",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast61-owned-media-preview",
+  "source_files_discovered": 266,
+  "source_files_scanned": 266,
+  "source_fingerprint_sha256": "702e4ba11903184bc208403a40e1e9f307dda178519b69249203a1be71dc1985",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast62-nonvideo-menu-catalog",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

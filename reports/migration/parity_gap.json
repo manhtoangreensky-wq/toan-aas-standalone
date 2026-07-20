@@ -12945,12 +12945,15 @@
         "file": "bot.py",
         "line": 49727
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_READ",
+      "menu_capability_key": "wallet",
+      "menu_feature_key": "wallet",
+      "menu_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_credits",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet"
     },
     {
       "classification": "customer",
@@ -12958,12 +12961,15 @@
         "file": "bot.py",
         "line": 49735
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_READ",
+      "menu_capability_key": "wallet",
+      "menu_feature_key": "wallet",
+      "menu_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_credits",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet"
     },
     {
       "classification": "customer",
@@ -12971,12 +12977,15 @@
         "file": "bot.py",
         "line": 56788
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_READ",
+      "menu_capability_key": "wallet",
+      "menu_feature_key": "wallet",
+      "menu_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_credits",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet"
     },
     {
       "classification": "customer",
@@ -12984,12 +12993,15 @@
         "file": "bot.py",
         "line": 56797
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_READ",
+      "menu_capability_key": "wallet",
+      "menu_feature_key": "wallet",
+      "menu_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_credits",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet"
     },
     {
       "classification": "customer",
@@ -13049,12 +13061,15 @@
         "file": "bot.py",
         "line": 49725
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "image_studio",
+      "menu_feature_key": "image_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_image_ai",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image-studio"
     },
     {
       "classification": "customer",
@@ -13062,12 +13077,15 @@
         "file": "bot.py",
         "line": 49733
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "image_studio",
+      "menu_feature_key": "image_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_image_ai",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image-studio"
     },
     {
       "classification": "customer",
@@ -13075,12 +13093,15 @@
         "file": "bot.py",
         "line": 49726
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "media_workspace",
+      "menu_feature_key": "media_workspace",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_music_add",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/media-workspace"
     },
     {
       "classification": "customer",
@@ -13088,12 +13109,15 @@
         "file": "bot.py",
         "line": 49734
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "media_workspace",
+      "menu_feature_key": "media_workspace",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide_music_add",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/media-workspace"
     },
     {
       "classification": "customer",
@@ -13153,12 +13177,15 @@
         "file": "bot.py",
         "line": 49495
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "prompt_studio",
+      "menu_feature_key": "prompt_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_ai_prompt",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/prompt-studio"
     },
     {
       "classification": "customer",
@@ -13166,12 +13193,15 @@
         "file": "bot.py",
         "line": 49500
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "prompt_studio",
+      "menu_feature_key": "prompt_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_ai_prompt",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/prompt-studio"
     },
     {
       "classification": "customer",
@@ -13192,12 +13222,15 @@
         "file": "bot.py",
         "line": 46654
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_compress",
+      "menu_feature_key": "documents_compress",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_compress_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/compress"
     },
     {
       "classification": "customer",
@@ -13205,12 +13238,15 @@
         "file": "bot.py",
         "line": 49529
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_compress",
+      "menu_feature_key": "documents_compress",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_compress_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/compress"
     },
     {
       "classification": "customer",
@@ -13218,12 +13254,15 @@
         "file": "bot.py",
         "line": 84480
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_compress",
+      "menu_feature_key": "documents_compress",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_compress_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/compress"
     },
     {
       "classification": "customer",
@@ -13231,12 +13270,15 @@
         "file": "bot.py",
         "line": 40874
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_image_to_pdf",
+      "menu_feature_key": "documents_image_to_pdf",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_image_to_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/image-to-pdf"
     },
     {
       "classification": "customer",
@@ -13244,12 +13286,15 @@
         "file": "bot.py",
         "line": 40880
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_image_to_pdf",
+      "menu_feature_key": "documents_image_to_pdf",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_image_to_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/image-to-pdf"
     },
     {
       "classification": "customer",
@@ -13257,12 +13302,15 @@
         "file": "bot.py",
         "line": 46652
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_image_to_pdf",
+      "menu_feature_key": "documents_image_to_pdf",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_image_to_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/image-to-pdf"
     },
     {
       "classification": "customer",
@@ -13270,12 +13318,15 @@
         "file": "bot.py",
         "line": 49528
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_image_to_pdf",
+      "menu_feature_key": "documents_image_to_pdf",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_image_to_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/image-to-pdf"
     },
     {
       "classification": "customer",
@@ -13283,12 +13334,15 @@
         "file": "bot.py",
         "line": 84479
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_image_to_pdf",
+      "menu_feature_key": "documents_image_to_pdf",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_image_to_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/image-to-pdf"
     },
     {
       "classification": "customer",
@@ -13296,12 +13350,15 @@
         "file": "bot.py",
         "line": 49531
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_merge",
+      "menu_feature_key": "documents_merge",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_merge_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/merge"
     },
     {
       "classification": "customer",
@@ -13309,12 +13366,15 @@
         "file": "bot.py",
         "line": 84482
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_merge",
+      "menu_feature_key": "documents_merge",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_merge_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/merge"
     },
     {
       "classification": "customer",
@@ -13322,12 +13382,15 @@
         "file": "bot.py",
         "line": 49527
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_pdf_to_word",
+      "menu_feature_key": "documents_pdf_to_word",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_pdf_to_word",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/pdf-to-word"
     },
     {
       "classification": "customer",
@@ -13335,12 +13398,15 @@
         "file": "bot.py",
         "line": 84478
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_pdf_to_word",
+      "menu_feature_key": "documents_pdf_to_word",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_pdf_to_word",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/pdf-to-word"
     },
     {
       "classification": "customer",
@@ -13348,12 +13414,15 @@
         "file": "bot.py",
         "line": 49511
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "asset_vault",
+      "menu_feature_key": "asset_vault",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_save_document",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/asset-vault"
     },
     {
       "classification": "customer",
@@ -13361,12 +13430,15 @@
         "file": "bot.py",
         "line": 49530
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_split",
+      "menu_feature_key": "documents_split",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_split_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/split"
     },
     {
       "classification": "customer",
@@ -13374,12 +13446,15 @@
         "file": "bot.py",
         "line": 84481
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "documents_split",
+      "menu_feature_key": "documents_split",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_doc_split_pdf",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents/split"
     },
     {
       "classification": "customer",
@@ -13569,12 +13644,15 @@
         "file": "bot.py",
         "line": 49544
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "image_edit",
+      "menu_feature_key": "image_edit",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|image_edit_start",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/edit"
     },
     {
       "classification": "customer",
@@ -13582,12 +13660,15 @@
         "file": "bot.py",
         "line": 49542
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "image_prompt_composer",
+      "menu_feature_key": "image_prompt_composer",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|image_prompt_start",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/image/prompt-composer"
     },
     {
       "classification": "customer",
@@ -53684,7 +53765,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 197,
+      "count": 170,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -53692,15 +53773,15 @@
         "menu|admin_confirm_ack_{*}",
         "menu|billing",
         "menu|clear_stale_jobs_help",
-        "menu|guide_credits",
         "menu|guide_faq",
         "menu|guide_guided_video",
-        "menu|guide_image_ai",
-        "menu|guide_music_add",
         "menu|guide_quick_start",
         "menu|guide_video_ai",
-        "menu|hint_ai_prompt",
-        "menu|hint_campaign_preset"
+        "menu|hint_campaign_preset",
+        "menu|hint_film_blueprint",
+        "menu|hint_growth_loop",
+        "menu|hint_naptien",
+        "menu|hint_postback_setup"
       ],
       "source_kinds": [
         "callback_data",
@@ -54043,11 +54124,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 573,
+      "count": 546,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 197,
+          "count": 170,
           "family": "menu",
           "priority": "P0"
         },
@@ -54295,13 +54376,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 84.98,
+  "mapping_coverage_percent": 85.68,
   "mapping_status_counts": {
     "COPIED_GUARDED": 2326,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 468,
-    "NEEDS_FEATURE_DISPOSITION": 573,
+    "NAVIGATION_ONLY": 495,
+    "NEEDS_FEATURE_DISPOSITION": 546,
     "TELEGRAM_ONLY": 444
   },
   "metric_scope": {
@@ -54323,7 +54404,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 84.98,
+  "safe_disposition_coverage_percent": 85.68,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -54333,13 +54414,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3241,
+    "resolved_static_source_count": 3268,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 39,
-    "unresolved_source_count": 573
+    "unresolved_source_count": 546
   },
   "static_web_surface_coverage_percent": 61.01,
   "telegram_link_callback_contract": {
