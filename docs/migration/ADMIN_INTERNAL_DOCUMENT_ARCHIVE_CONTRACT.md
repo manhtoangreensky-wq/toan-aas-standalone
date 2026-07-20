@@ -8,13 +8,16 @@ decision, or a Bot integration.
 
 ## Bot mapping and explicit migration boundary
 
-The frozen Bot is read-only reference material. Its useful interaction model
-is mapped, while its state and Telegram transport remain **TELEGRAM_ONLY**:
+The frozen Bot is read-only reference material. Only a finite set of reviewed
+admin menu literals may open a **fresh** Web Archive directory; all Bot state,
+record identifiers and Telegram transport remain outside the Web App:
 
 | Bot reference | Web mapping | Boundary |
 | --- | --- | --- |
 | `/internal_docs`, `/search_internal_doc` | Private Admin Internal Document Archive page and metadata search | No Bot command execution or callback forwarding |
-| `archive|dept|*`, `archive|type|*`, `archive|quick`, `archive|recent`, `archive|search*` callbacks | Server-validated department/type selection, upload, list and search | No Telegram conversation state or notification |
+| `archive|root`, `archive|help`, `archive|quick`, `archive|recent`, `archive|search`, `archive|search_dept`, `archive|types`, `archive|dept|tax_invoice`, `archive|type|general` | Fresh signed `/admin/internal-documents` directory | No department/type/query/file/record/pending state is forwarded or prefilled |
+| `archive|back_department`, `archive|change_dept`, `archive|discard_to_dept`, `archive|edit`, and every unreviewed dynamic `archive|…{*}` value | `ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED` | No generic `/admin` fallback; source state/identifier must be reviewed first |
+| `archive|preview`, `archive|save` | **TELEGRAM_ONLY** | No Bot record lookup, pending upload/edit, file delivery or mutation is replayed |
 | `internal_documents` table, `owner_admin_id`, Telegram attachment/file identifiers | `web_admin_archive_documents`, `web_admin_archive_versions`, `web_admin_archive_events` | No read, write, copy, migration or reconciliation of Bot records/files |
 | Bot recent/detail/send-file workflow | Owner-scoped list/detail and verified private Web download | No Telegram `send_document`, file ID, chat ID or public URL |
 
@@ -22,6 +25,22 @@ Historical Bot records remain in their original authority. The Web archive does
 not infer ownership from Telegram identity and does not import old metadata or
 attachments. A future one-time migration would require a separate signed,
 audited export/import plan and is outside this release.
+
+### Callback navigation boundary
+
+Each reviewed navigation literal is audit-classified as `NAVIGATION_ONLY` with
+`BOT_ADMIN_ONLY`, `BOT_ARCHIVE_SELECTION_STATE_NOT_REPLAYED`,
+`FRESH_SIGNED_WEB_ADMIN_NAVIGATION` and `NO_RUNTIME_CLAIM`. It only opens a
+blank role-checked Archive directory. In particular, the literal
+`archive|dept|tax_invoice` is never routed by keyword matching to Voice or any
+other customer feature.
+
+The callback token is never copied into a URL, query, browser storage, form,
+API body or hidden action. The Web directory independently loads only
+server-authorized Web archive records for the live canonical administrator.
+It never accepts a Bot department, type, search query, Telegram chat/message/
+file ID, Bot record ID, pending upload/edit state, output/download receipt or
+delivery action.
 
 ## Authority and enablement
 
