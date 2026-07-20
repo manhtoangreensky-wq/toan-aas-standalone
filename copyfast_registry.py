@@ -238,6 +238,22 @@ MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
         "Hồ sơ và bảo mật Web theo signed session, tách khỏi callback Bot.",
     ),
     MenuCapability(
+        "memory_center",
+        "notes",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Memory Center Web-owned với tổng quan, ghi chú, tag, archive và version history; không đọc quota, add-on hay dữ liệu Memory của Bot.",
+    ),
+    MenuCapability(
+        "reminder_center",
+        "reminders",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Reminder Web-native theo signed account; không chuyển state Telegram hoặc hứa gửi Telegram, email hay push notification.",
+    ),
+    MenuCapability(
         "chat_workspace",
         "chat",
         "SIGNED_CUSTOMER_WEB_NATIVE",

@@ -14,6 +14,9 @@ output has been copied into the browser.
 | --- | --- | --- | --- |
 | `menu|main_ai` | `/chat` | signed Web-native customer | starts an empty Web chat workspace; no Telegram conversation/context |
 | `menu|hint_ai_prompt` | `/prompt-studio` | signed Web-native customer | starts a fresh prompt brief; no model/provider call from navigation |
+| `menu|main_memory`, `freehub|docs`, `freehub|notes` | `/notes` | signed Web-native customer | opens a fresh Memory Center; no Bot notes, quota, add-on, Free Hub or Telegram context |
+| `menu|hint_note`, `menu|hint_search_note`, `memory|create`, `memory|list`, `memory|search`, `memory|delete_start` | `/notes` | signed Web-native customer | starts independent Web create/search/archive flows; no Bot pending text, query, note ID or mutation is replayed |
+| `menu|hint_remind` | `/reminders` | signed Web-native customer | opens independent Web reminders; no Bot reminder, Telegram identity or notification delivery is transferred |
 | `menu|guide_credits` | `/wallet` | canonical read | no checkout, Xu write, pricing change or webhook |
 | `menu|hint_pricing` | `/pricing` | signed customer | reference-only navigation; no order or payment action |
 | `menu|hint_doc_pdf_to_word` | `/documents/pdf-to-word` | signed Web-native customer | Web Asset Vault source; no Telegram file or pending confirmation |
@@ -33,10 +36,13 @@ output has been copied into the browser.
 - All `menu|main_video`, `menu|video_*`, video guide and video execution
   actions remain outside this batch. The requested video-menu implementation
   is last and requires its own finite source catalog.
-- `menu|main_memory` remains unresolved: the Bot root mixes notes, document
-  storage quota/add-ons and transient pending state. The separate Web Memory
-  Center is already Web-owned and must not be mislabeled as Bot storage
-  parity.
-- Translation, storage add-ons, payment/admin writes, provider controls and
-  any dynamic menu template remain source-state/authority reviewed or
-  `TELEGRAM_ONLY`; none receive a fallback browser route.
+- `menu|memory_storage_status` and `menu|memory_storage_addon` remain
+  `TELEGRAM_ONLY`: the former reads canonical Bot quota/add-on state and the
+  latter enters the Bot storage/PayOS settlement flow. Neither is a Web Notes,
+  Asset Vault or wallet route.
+- `menu|memory_storage_cleanup` remains an explicit Web-storage-contract gap.
+  The Bot action gives guidance only and does not delete data; Web note archive
+  and Asset Vault retention are independent contracts, not a parity claim.
+- Translation, payment/admin writes, provider controls and any other dynamic
+  menu template remain source-state/authority reviewed or `TELEGRAM_ONLY`;
+  none receive a fallback browser route.
