@@ -1726,6 +1726,7 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "freehub|main": ("/dashboard", "workspace_home", "dashboard", "SIGNED_CUSTOMER", "NAVIGATION_SHELL"),
         "menu|main_ai": ("/chat", "chat_workspace", "chat", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_ai_prompt": ("/prompt-studio", "prompt_studio", "prompt_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|hint_campaign_preset": ("/campaigns", "campaign_planner", "campaign_planner", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|main_memory": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_note": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
@@ -1805,6 +1806,27 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert mapped["resolution"] == "reviewed_memory_fresh_web_navigation"
         assert mapped["source_dispositions"] == descriptor["source_dispositions"]
         assert mapped["memory_capability_key"] == descriptor["capability_key"]
+
+    # Marketing literals can only launch a fresh account-owned Campaign
+    # Planner.  No suggestion index, custom brief, selection, campaign ID,
+    # Bot save/schedule receipt or Telegram state becomes a browser value.
+    for callback in sorted(audit.MARKETING_FRESH_WEB_NAVIGATION_ACTIONS):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        descriptor = audit.MARKETING_FRESH_WEB_NAVIGATION_ACTIONS[callback]
+        assert mapped["target"] == "/campaigns"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_marketing_fresh_web_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["marketing_capability_key"] == "campaign_planner"
+        assert mapped["marketing_feature_key"] == "campaign_planner"
+        assert mapped["marketing_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
+        assert mapped["marketing_launch_mode"] == "WEB_NAVIGATION"
+
+    marketing_dynamic = audit._map_callback_template("marketing|future_{*}", {"file": "bot.py", "line": 1}, routes)
+    assert marketing_dynamic is not None
+    assert marketing_dynamic["target"] == "MARKETING_SOURCE_REVIEW_REQUIRED"
+    assert marketing_dynamic["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert marketing_dynamic["resolution"] == "marketing_callback_template_requires_source_review"
 
     for callback in sorted(audit.MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS):
         mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)

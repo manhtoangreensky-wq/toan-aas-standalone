@@ -529,7 +529,7 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
 
     by_key = {item["key"]: item for item in menu}
     assert {
-        "workspace_home", "account", "memory_center", "reminder_center", "chat_workspace", "prompt_studio", "wallet",
+        "workspace_home", "account", "memory_center", "reminder_center", "campaign_planner", "chat_workspace", "prompt_studio", "wallet",
         "wallet_topup", "membership", "packages", "documents", "subtitle_studio", "documents_pdf_to_word", "documents_image_to_pdf",
         "documents_compress", "documents_split", "documents_merge", "asset_vault",
         "image_studio", "image_prompt_composer", "image_edit", "image_upscale",
@@ -570,6 +570,18 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
     assert by_key["reminder_center"]["feature_key"] == "reminders"
     assert by_key["reminder_center"]["route"] == "/reminders"
     assert by_key["reminder_center"]["authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
+    assert by_key["campaign_planner"] == {
+        "key": "campaign_planner",
+        "feature_key": "campaign_planner",
+        "title": "Campaign Planner",
+        "group": "content",
+        "route": "/campaigns",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "availability": "NAVIGATION_ONLY",
+        "execution": "NO_EXECUTION_CLAIM",
+        "description": "Mở Campaign Planner Web-owned với brief, mục tiêu, calendar marker và self-review riêng; không nhập suggestion, pending state, save/schedule hay publishing state của Telegram.",
+    }
     assert by_key["membership"]["route"] == "/membership"
     assert by_key["membership"]["authority"] == "CORE_CANONICAL_READ"
     assert by_key["membership"]["launch_mode"] == "READ_ONLY_CANONICAL"

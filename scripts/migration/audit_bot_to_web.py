@@ -696,6 +696,189 @@ MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "memory|delete_yes|{*}",
 })
 
+# The frozen Bot marketing namespace is a short-lived Telegram conversation:
+# it contains suggestion indexes, product/kind choices, pending custom text,
+# a Bot save/schedule transition and an optional video handoff.  The standalone
+# Web now owns a richer Campaign Planner, but a raw Bot action must only ever
+# open a **fresh** signed Web workspace.  It never receives the selection,
+# brief, KPI, destination, pending context, Bot campaign identifier, save or
+# schedule state that the Telegram conversation held.
+#
+# Keep this finite allow-list separate from the generic menu registry.  The
+# browser-safe product catalog exposes only the ``campaign_planner`` concept;
+# these raw Bot tokens remain inside the static audit and cannot become a
+# browser payload or API parameter.  Caption and video handoffs retain their
+# existing dedicated dispositions below instead of being relabelled as a
+# Campaign action.
+MARKETING_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "marketing|start": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_SUGGESTIONS_NOT_REPLAYED",
+            "BOT_MARKETING_PENDING_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action starts its marketing conversation and may render short-lived suggestions. "
+            "The Web opens a blank account-owned Campaign Planner and never receives Bot suggestions, "
+            "Telegram identity, campaign rows or conversation state."
+        ),
+    },
+    "marketing|back_suggestions": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_SUGGESTIONS_NOT_REPLAYED",
+            "BOT_MARKETING_PENDING_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action redraws its own suggestion state. The Web opens a fresh Campaign Planner "
+            "without importing a suggestion index, selected idea or pending Telegram context."
+        ),
+    },
+    "marketing|refresh": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_SUGGESTIONS_NOT_REPLAYED",
+            "BOT_MARKETING_PENDING_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot refresh regenerates or redraws its local conversation suggestions. The Web starts "
+            "a new signed planner surface and does not regenerate, copy or receive Bot suggestions."
+        ),
+    },
+    "marketing|brief_custom": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_PENDING_CUSTOM_BRIEF_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action waits for custom Telegram text. The Web opens its independently authorized "
+            "brief form; no Bot draft, message, suggestion or conversation state crosses the boundary."
+        ),
+    },
+    "marketing|choice|1": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_SUGGESTION_CHOICE_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot choice selects a transient suggestion. The Web does not accept that index and opens a blank signed Campaign Planner.",
+    },
+    "marketing|choice|2": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_SUGGESTION_CHOICE_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot choice selects a transient suggestion. The Web does not accept that index and opens a blank signed Campaign Planner.",
+    },
+    "marketing|choice|3": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_SUGGESTION_CHOICE_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot choice selects a transient suggestion. The Web does not accept that index and opens a blank signed Campaign Planner.",
+    },
+    "marketing|cskh": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_CSKH_CONTEXT_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Web starts a new campaign brief and does not import the Bot customer-care branch, recipient data or conversation state.",
+    },
+    "marketing|kind_custom": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_PENDING_MARKETING_KIND_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot waits for a custom kind. The Web opens a blank planner and never receives the Bot text or pending-state selection.",
+    },
+    "marketing|kind|affiliate": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_KIND_SELECTION_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot kind selection remains Bot-local. The Web opens a fresh Campaign Planner without preselecting or storing the Telegram choice.",
+    },
+    "marketing|kind|food": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_KIND_SELECTION_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot kind selection remains Bot-local. The Web opens a fresh Campaign Planner without preselecting or storing the Telegram choice.",
+    },
+    "marketing|kind|physical": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_KIND_SELECTION_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot kind selection remains Bot-local. The Web opens a fresh Campaign Planner without preselecting or storing the Telegram choice.",
+    },
+    "marketing|kind|realestate": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_KIND_SELECTION_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot kind selection remains Bot-local. The Web opens a fresh Campaign Planner without preselecting or storing the Telegram choice.",
+    },
+    "marketing|kind|service": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_KIND_SELECTION_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Bot kind selection remains Bot-local. The Web opens a fresh Campaign Planner without preselecting or storing the Telegram choice.",
+    },
+    "marketing|kpi": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "BOT_MARKETING_KPI_CONTEXT_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The Web starts a new owner-scoped plan and does not import Bot KPI text, thresholds or conversation context.",
+    },
+    "marketing|save": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "CANONICAL_BOT_CAMPAIGN_SAVE_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "A Bot save transition is not replayed. The Web merely opens its own blank Campaign Planner; any Web plan write requires its own signed session, CSRF, idempotency and owner checks.",
+    },
+    "marketing|schedule": {
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_CAMPAIGN_NAVIGATION",
+            "CANONICAL_BOT_CAMPAIGN_SCHEDULE_NOT_REPLAYED",
+            "BOT_MARKETING_CONVERSATION_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "A Bot schedule transition is not replayed. The Web opens its own planner; its calendar marker is inert and its private Inbox intent has a separate opt-in contract.",
+    },
+}
+
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
 # callback tokens must never be sent to the browser.  The product-facing
@@ -741,6 +924,13 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "capability_key": "prompt_studio",
         "target": "/prompt-studio",
         "feature_key": "prompt_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_campaign_preset": {
+        "capability_key": "campaign_planner",
+        "target": "/campaigns",
+        "feature_key": "campaign_planner",
         "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
     },
@@ -3510,6 +3700,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     dashboard_fallback = False
     menu_entry = MENU_ACTION_REGISTRY.get(token)
     memory_navigation_entry = MEMORY_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
+    marketing_navigation_entry = MARKETING_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     memory_storage_telegram_only = MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.get(token)
     memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
@@ -3542,6 +3733,27 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             result["menu_authority"] = menu_entry["authority"]
             result["menu_launch_mode"] = menu_entry["launch_mode"]
         return result
+    if marketing_navigation_entry is not None:
+        # Marketing callbacks are only a fresh signed Web launch.  The Bot
+        # source stores a per-Telegram conversation, choices and potentially a
+        # canonical save/schedule transition; none of those values may cross
+        # into the independent Campaign Planner.
+        target = "/campaigns"
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_marketing_fresh_web_navigation",
+            "source_dispositions": tuple(marketing_navigation_entry["source_dispositions"]),
+            "source_evidence": str(marketing_navigation_entry["source_evidence"]),
+            "marketing_capability_key": "campaign_planner",
+            "marketing_feature_key": "campaign_planner",
+            "marketing_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+            "marketing_launch_mode": "WEB_NAVIGATION",
+            "evidence": evidence,
+        }
     if memory_storage_telegram_only is not None:
         # Bot quota and add-on purchase are canonical storage/payment state.
         # Do not make a convenient-looking Web Notes, Asset Vault or wallet
@@ -4482,6 +4694,31 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
             "source_evidence": (
                 "The Bot Memory namespace can include per-Telegram note IDs, pending input, search state "
                 "or canonical mutations. A new dynamic value must be reviewed before it gains any Web meaning."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("marketing|"):
+        # A dynamic marketing value can carry a Bot suggestion index, campaign
+        # identifier, pending custom text, save/schedule transition or another
+        # piece of Telegram-local conversation state.  It may never inherit a
+        # browser meaning merely because a finite literal can open a fresh Web
+        # Campaign Planner.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "MARKETING_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "marketing_callback_template_requires_source_review",
+            "source_dispositions": (
+                "BOT_MARKETING_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "A new dynamic marketing callback may encode Bot suggestions, selected campaign state, "
+                "pending custom text or canonical save/schedule context. It must receive source review "
+                "before it has any independent Web contract."
             ),
             "evidence": evidence,
         }
