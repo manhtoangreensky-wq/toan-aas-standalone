@@ -45,6 +45,12 @@ must reconfirm that future intent against the new revision; no time is silently
 rescheduled and no Inbox delivery, Bot call, provider call or publish action is
 created by that write.
 
+The finite Bot Marketing menu disposition is documented in
+[`MARKETING_CAMPAIGN_NAVIGATION_CONTRACT.md`](MARKETING_CAMPAIGN_NAVIGATION_CONTRACT.md).
+It can only open a fresh signed Web Planner; it never transfers a Telegram
+brief, suggestion, selected kind, KPI, campaign ID, save/schedule state or
+canonical publication context.
+
 The state label **approved** means “ready in this personal Web plan,” not a
 staff/canonical publication approval. There is no `published` state,
 calendar-triggered reminder, channel automation or publication scheduling. The

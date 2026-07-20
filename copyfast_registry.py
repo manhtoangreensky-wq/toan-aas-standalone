@@ -74,6 +74,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("chat", "AI Chat Workspace", "content", "/chat", description="Workspace hội thoại riêng tư: context, prompt/decision do bạn soạn và revision history. Chưa gọi model, Bot, provider, Xu hay job."),
     WebFeature("analytics_workspace", "Analytics Workspace", "content", "/analytics", description="Báo cáo, metric, snapshot và nhận định do chính tài khoản Web nhập; chỉ so sánh xác định từ dữ liệu đã lưu, không kết nối platform/Bot/provider, không tạo AI insight, Xu, PayOS, job hay publish."),
     WebFeature("workboard", "Workboard & Review Queue", "content", "/workboard", description="Kanban và checklist riêng tư để điều phối Project, Campaign, Studio, Analytics, Note hoặc Draft do Web account sở hữu; không tạo job, publish, thông báo, provider, Bot, Xu hay PayOS."),
+    WebFeature("campaign_planner", "Campaign Planner", "content", "/campaigns", description="Lập brief, mục tiêu, nền tảng, mốc lịch nội bộ và self-review theo signed Web account; không nhận state Telegram, không publish, không gọi analytics/provider/Bot, job, Xu hoặc PayOS."),
     WebFeature("prompt_studio", "Prompt Studio", "content", "/prompt-studio", description="Blueprint prompt deterministic từ brief biên tập để tự review; không lưu template, gọi AI/Bot/provider, tạo job, Xu/PayOS, asset, publish hay delivery.", input_hint="Mô tả mục tiêu nội dung."),
     WebFeature("prompt_library", "Prompt Library", "content", "/prompt-library", description="Kho template prompt riêng tư có tag, metadata, version history và preview cục bộ; không gọi AI engine hoặc Bot."),
     WebFeature("free_prompt_gallery", "Free Prompt Gallery", "content", "/free-prompt-gallery", description="Snapshot 140 prompt seed đã rà soát từ Free Hub của Bot, có lọc/copy và lưu tường minh vào Prompt Library riêng; Gallery không gọi Bot/provider/job/ví Xu/PayOS hoặc publish."),
@@ -252,6 +253,14 @@ MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
         "WEB_NAVIGATION",
         "NAVIGATION_ONLY",
         "Mở Reminder Web-native theo signed account; không chuyển state Telegram hoặc hứa gửi Telegram, email hay push notification.",
+    ),
+    MenuCapability(
+        "campaign_planner",
+        "campaign_planner",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Campaign Planner Web-owned với brief, mục tiêu, calendar marker và self-review riêng; không nhập suggestion, pending state, save/schedule hay publishing state của Telegram.",
     ),
     MenuCapability(
         "chat_workspace",
