@@ -284,6 +284,12 @@
   let governanceDocumentsSessionEpoch = 0;
   let governanceDocumentsHydrationEpoch = 0;
   let governanceDocumentDetailHydrationEpoch = 0;
+  // Admin Internal Document Archive owns private binaries and redacted
+  // metadata. Its reads must not share a fence with text Governance records,
+  // Asset Vault, Bot documents or generic ERP state.
+  let adminArchiveSessionEpoch = 0;
+  let adminArchiveHydrationEpoch = 0;
+  let adminArchiveDetailHydrationEpoch = 0;
   let workspaceDraftSessionEpoch = 0;
   let workspaceDraftHydrationEpoch = 0;
   // Telegram linking and the PayOS entry metadata are signed account state.
@@ -1406,6 +1412,20 @@
     const normalized = String(path || "").split("?")[0];
     return normalized === "/admin/governance" || normalized === "/admin/governance/documents"
       || Boolean(governanceDocumentIdFromPath(normalized));
+  }
+
+  // The private file archive is deliberately not an extension of Governance
+  // Documents.  A signed Web admin may have both routes, but data from one
+  // must never hydrate the other after navigation, logout or a late response.
+  function adminArchiveDocumentIdFromPath(path) {
+    const match = /^\/admin\/internal-documents\/documents\/([0-9a-f-]{36})$/i.exec(String(path || "").split("?")[0]);
+    const id = match ? String(match[1] || "").toLowerCase() : "";
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) ? id : "";
+  }
+
+  function isNativeAdminArchivePath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/admin/internal-documents" || Boolean(adminArchiveDocumentIdFromPath(normalized));
   }
 
   // Notification Center has an isolated scheduler identity, data boundary and
@@ -9202,6 +9222,9 @@
     ++governanceDocumentsSessionEpoch;
     ++governanceDocumentsHydrationEpoch;
     ++governanceDocumentDetailHydrationEpoch;
+    ++adminArchiveSessionEpoch;
+    ++adminArchiveHydrationEpoch;
+    ++adminArchiveDetailHydrationEpoch;
     ++workspaceDraftSessionEpoch;
     ++telegramLinkStatusSessionEpoch;
     ++paymentOptionsSessionEpoch;
@@ -9264,6 +9287,11 @@
     // customer-data authority from another feature flag.
     const governanceDocumentsEnabled = Boolean(status.flags && status.flags.governance_documents_enabled === true);
     const governanceAdminSessionHint = Boolean(account && account.role === "admin");
+    // Private Archive is independently gated from Governance and the generic
+    // ERP/Bridge paths. Browser role only chooses whether it can request the
+    // dedicated route; `require_admin` remains the actual authority.
+    const adminDocumentArchiveEnabled = Boolean(status.flags && status.flags.admin_document_archive_enabled === true);
+    const adminDocumentArchiveAdminSessionHint = Boolean(account && account.role === "admin");
     const assetVaultEnabled = Boolean(status.flags && status.flags.asset_vault_enabled === true);
     const projectPackageEnabled = Boolean(status.flags && status.flags.project_package_enabled === true);
     const documentOperationsEnabled = Boolean(status.flags && status.flags.document_operations_enabled === true);
@@ -9572,6 +9600,17 @@
       "governance-document-reject": Boolean(account && me.csrf_token && governanceDocumentsEnabled && governanceAdminSessionHint),
       "governance-document-archive": Boolean(account && me.csrf_token && governanceDocumentsEnabled && governanceAdminSessionHint),
       "governance-document-restore": Boolean(account && me.csrf_token && governanceDocumentsEnabled && governanceAdminSessionHint),
+      // Admin Archive stays a private, local-Web admin surface. These values
+      // never grant access: every archive route rechecks the signed session,
+      // canonical Web admin role, ownership and (for writes) CSRF server-side.
+      "admin-archive-documents-view": Boolean(account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-documents-refresh": Boolean(account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-document-create": Boolean(account && me.csrf_token && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-document-update": Boolean(account && me.csrf_token && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-document-version-upload": Boolean(account && me.csrf_token && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-document-archive": Boolean(account && me.csrf_token && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-document-restore": Boolean(account && me.csrf_token && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
+      "admin-archive-document-download": Boolean(account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint),
       // Web-owned Campaign Planner writes require only a signed Web session
       // and CSRF. They do not imply that a Telegram/Core Bridge/provider
       // adapter is available and never publish or create canonical state.
@@ -10142,6 +10181,20 @@
       governanceDocumentVersions: [],
       governanceDocumentEvents: [],
       governanceReadState: account && governanceDocumentsEnabled && governanceAdminSessionHint ? "loading" : "guarded",
+      // Archive metadata belongs to a distinct private file model. Do not
+      // retain storage paths, hashes, account IDs or binary payloads in this
+      // projection, and clear all records on every signed bootstrap.
+      adminDocumentArchiveEnabled,
+      adminDocumentArchiveAdminSessionHint,
+      adminDocumentArchiveServerAdmin: false,
+      adminDocumentArchivePolicy: {},
+      adminDocumentArchiveSummary: {},
+      adminDocumentArchiveDocuments: [],
+      adminDocumentArchiveListing: { department: "", document_type: "", state: "all", q: "", limit: ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT, offset: 0, hasMore: false, nextOffset: null },
+      adminDocumentArchiveDetail: {},
+      adminDocumentArchiveVersions: [],
+      adminDocumentArchiveEvents: [],
+      adminDocumentArchiveReadState: account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint ? "loading" : "guarded",
       workspaceDrafts: [],
       workspaceDraftListing: workspaceDraftListingProjection(
         { q: "", state: "all", feature_key: "" }, 0, {}, 0, WORKSPACE_DRAFT_LIST_LIMIT
@@ -10644,6 +10697,7 @@
         "/account/data-controls": account && dataControlsEnabled ? "processing" : "guarded",
         "/admin/governance": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/governance/documents": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
+        "/admin/internal-documents": account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint ? "processing" : "guarded",
         "/calendar": account ? "read_only" : "guarded",
         "/prompt-library": account && promptLibraryEnabled ? "processing" : "guarded",
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
@@ -11147,6 +11201,15 @@
       // browser-provided role. The dedicated server route is its only source.
       clearGovernanceProjection("guarded");
     }
+    if (account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint) {
+      if (currentPath === "/admin/internal-documents") await hydrateAdminArchiveDocuments();
+      else if (adminArchiveDocumentIdFromPath(currentPath)) await hydrateAdminArchiveDocumentDetail(adminArchiveDocumentIdFromPath(currentPath));
+    } else if (isNativeAdminArchivePath(currentPath)) {
+      // A failed/disabled private archive must never display a previous file
+      // list, Governance text, Bot document, generic admin card or browser
+      // draft. The dedicated signed Web-admin archive API is the sole source.
+      clearAdminArchiveProjection("guarded");
+    }
     if (account && currentPath === "/account/activity") await hydrateAccountActivity();
     if (account && currentPath === "/account/security") await hydrateAccountSecurity();
     if (account && dataControlsEnabled && currentPath === "/account/data-controls") {
@@ -11191,7 +11254,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -16558,6 +16621,614 @@
       if (acknowledged) discardSubmission(scope, submission);
       setActionBusy(action, route, false);
     }
+  }
+
+  // Admin Internal Document Archive is a sealed Web-native file registry.
+  // It intentionally has its own allow-list and request flow rather than
+  // sharing Governance text records, Asset Vault, Bot documents or Core
+  // Bridge state.  Server-side signed-admin, ownership, CSRF, revision and
+  // idempotency checks remain authoritative; these checks only stop an
+  // unexpected response from becoming a convincing browser projection.
+  const ADMIN_ARCHIVE_DOCUMENT_STATES = new Set(["active", "archived", "unavailable"]);
+  const ADMIN_ARCHIVE_RETENTION_LABELS = new Set(["manual_review", "3_years", "5_years", "10_years", "permanent"]);
+  const ADMIN_ARCHIVE_CONFIDENTIALITY_LEVELS = new Set(["internal", "confidential", "restricted"]);
+  const ADMIN_ARCHIVE_EXTENSIONS = new Set(["pdf", "docx", "txt"]);
+  const ADMIN_ARCHIVE_MIME_BY_EXTENSION = Object.freeze({
+    pdf: "application/pdf",
+    docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    txt: "text/plain"
+  });
+  const ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT = 30;
+  const ADMIN_ARCHIVE_MAX_LIST_OFFSET = 5000;
+  const ADMIN_ARCHIVE_MAX_FILE_BYTES = 25 * 1024 * 1024;
+  const ADMIN_ARCHIVE_ACTIONS = new Set(["created", "version_added", "metadata_updated", "archived", "restored", "unavailable"]);
+
+  function adminArchiveSafeInteger(value, minimum, maximum) {
+    const number = Number(value);
+    return Number.isSafeInteger(number) && number >= minimum && number <= maximum ? number : null;
+  }
+
+  function adminArchiveSafeText(value, minimum, maximum) {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function adminArchiveSafeMultiline(value, minimum, maximum) {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function adminArchiveSafeToken(value, maximum) {
+    const token = adminArchiveSafeText(value, 1, maximum || 80).toLowerCase();
+    return /^[a-z][a-z0-9_-]{0,79}$/.test(token) ? token : "";
+  }
+
+  function adminArchiveId(value) {
+    const id = String(value || "").trim().toLowerCase();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) ? id : "";
+  }
+
+  function adminArchiveBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" && !Array.isArray(source.boundary)
+      ? source.boundary
+      : source;
+    return boundary.execution === "web_native_admin_internal_document_archive_only"
+      && boundary.data_origin === "web_admin_archive_tables_and_private_volume_only"
+      && boundary.external_effects === "none"
+      && boundary.legacy_bot_scope === "TELEGRAM_ONLY";
+  }
+
+  function adminArchiveResultData(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : {};
+    if (!data.boundary && result && result.boundary && typeof result.boundary === "object" && !Array.isArray(result.boundary)) {
+      return { ...data, boundary: result.boundary };
+    }
+    return data;
+  }
+
+  function adminArchiveTags(value, maximum) {
+    if (!Array.isArray(value) || value.length > (maximum || 12)) return null;
+    const tags = [];
+    const seen = new Set();
+    for (const candidate of value) {
+      const tag = adminArchiveSafeText(candidate, 1, 64);
+      const key = tag.toLowerCase();
+      if (!tag || seen.has(key)) return null;
+      seen.add(key);
+      tags.push(tag);
+    }
+    return tags;
+  }
+
+  function adminArchiveVersionProjection(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = adminArchiveId(source.id);
+    const versionNumber = adminArchiveSafeInteger(source.version_number, 1, 1000000);
+    const filename = adminArchiveSafeText(source.filename, 1, 180);
+    const extension = adminArchiveSafeText(source.extension, 1, 8).toLowerCase();
+    const contentType = adminArchiveSafeText(source.content_type, 1, 120).toLowerCase();
+    const byteSize = adminArchiveSafeInteger(source.byte_size, 1, ADMIN_ARCHIVE_MAX_FILE_BYTES);
+    const availability = String(source.availability || "").trim().toLowerCase();
+    const createdAt = adminArchiveSafeText(source.created_at, 1, 80);
+    const expectedType = ADMIN_ARCHIVE_MIME_BY_EXTENSION[extension];
+    if (!id || versionNumber === null || !filename || !ADMIN_ARCHIVE_EXTENSIONS.has(extension)
+      || !expectedType || contentType !== expectedType || byteSize === null
+      || !["available", "unavailable"].includes(availability) || !createdAt || typeof source.is_current !== "boolean") return null;
+    return { id, versionNumber, filename, extension, contentType, byteSize, availability, createdAt, isCurrent: source.is_current === true };
+  }
+
+  function adminArchivePermissions(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const keys = ["can_update", "can_add_version", "can_download", "can_archive", "can_restore"];
+    if (!keys.every((key) => typeof source[key] === "boolean")) return null;
+    return {
+      canUpdate: source.can_update === true,
+      canAddVersion: source.can_add_version === true,
+      canDownload: source.can_download === true,
+      canArchive: source.can_archive === true,
+      canRestore: source.can_restore === true
+    };
+  }
+
+  function adminArchiveDocumentProjection(value, detail) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = adminArchiveId(source.id);
+    const department = adminArchiveSafeToken(source.department, 48);
+    const departmentLabel = adminArchiveSafeText(source.department_label, 1, 120);
+    const documentType = adminArchiveSafeToken(source.document_type, 64);
+    const documentTypeLabel = adminArchiveSafeText(source.document_type_label, 1, 120);
+    const title = adminArchiveSafeText(source.title, 3, 180);
+    const retentionLabel = adminArchiveSafeText(source.retention_label, 1, 32).toLowerCase();
+    const confidentialityLevel = adminArchiveSafeText(source.confidentiality_level, 1, 32).toLowerCase();
+    const state = String(source.state || "").trim().toLowerCase();
+    const revision = adminArchiveSafeInteger(source.revision, 1, 1000000);
+    const createdAt = adminArchiveSafeText(source.created_at, 1, 80);
+    const updatedAt = adminArchiveSafeText(source.updated_at, 1, 80);
+    const archivedAt = source.archived_at === null ? null : adminArchiveSafeText(source.archived_at, 1, 80);
+    const tags = adminArchiveTags(source.tags || []);
+    const currentVersion = source.current_version && typeof source.current_version === "object"
+      ? adminArchiveVersionProjection(source.current_version)
+      : null;
+    const permissions = adminArchivePermissions(source.permissions);
+    if (!id || !department || !departmentLabel || !documentType || !documentTypeLabel || !title
+      || !ADMIN_ARCHIVE_RETENTION_LABELS.has(retentionLabel) || !ADMIN_ARCHIVE_CONFIDENTIALITY_LEVELS.has(confidentialityLevel)
+      || !ADMIN_ARCHIVE_DOCUMENT_STATES.has(state) || revision === null || !createdAt || !updatedAt
+      || (source.archived_at !== null && !archivedAt) || !tags || !currentVersion || !permissions) return null;
+    const document = {
+      id, department, departmentLabel, documentType, documentTypeLabel, title, tags,
+      retentionLabel, confidentialityLevel, state, revision, createdAt, updatedAt, archivedAt,
+      currentVersion, permissions
+    };
+    if (!detail) return document;
+    const description = source.description === undefined || source.description === null ? "" : adminArchiveSafeMultiline(source.description, 0, 2000);
+    const ownerRelation = source.owner_relation === "self" ? "self" : "";
+    const archivePolicy = adminArchiveSafeText(source.archive_policy, 1, 180);
+    if ((source.description !== undefined && source.description !== null && description === "" && source.description !== "")
+      || !ownerRelation || !archivePolicy) return null;
+    return { ...document, description, ownerRelation, archivePolicy };
+  }
+
+  function adminArchiveCatalogEntries(value) {
+    const entries = [];
+    const seen = new Set();
+    for (const candidate of (Array.isArray(value) ? value.slice(0, 80) : [])) {
+      const source = candidate && typeof candidate === "object" ? candidate : {};
+      const key = adminArchiveSafeToken(source.key, 64);
+      const label = adminArchiveSafeText(source.label, 1, 120) || key;
+      if (!key || !label || seen.has(key)) return null;
+      seen.add(key);
+      entries.push({ key, label });
+    }
+    return entries;
+  }
+
+  function adminArchivePolicyProjection(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const source = data.policy && typeof data.policy === "object" && !Array.isArray(data.policy) ? data.policy : data;
+    if (!adminArchiveBoundaryIsSafe(data) && !adminArchiveBoundaryIsSafe(source)) return null;
+    const departments = [];
+    const documentTypes = [];
+    const departmentTypes = {};
+    const seenDepartments = new Set();
+    const seenTypes = new Set();
+    for (const rawDepartment of (Array.isArray(source.departments) ? source.departments.slice(0, 24) : [])) {
+      const department = rawDepartment && typeof rawDepartment === "object" ? rawDepartment : {};
+      const key = adminArchiveSafeToken(department.key, 48);
+      const label = adminArchiveSafeText(department.label, 1, 120) || key;
+      const types = adminArchiveCatalogEntries(department.document_types);
+      if (!key || !label || !types || !types.length || seenDepartments.has(key)) return null;
+      seenDepartments.add(key);
+      departments.push({ key, label, documentTypes: types });
+      departmentTypes[key] = types.map((item) => item.key);
+      for (const type of types) {
+        if (seenTypes.has(type.key)) return null;
+        seenTypes.add(type.key);
+        documentTypes.push(type);
+      }
+    }
+    const lifecycle = source.lifecycle && typeof source.lifecycle === "object" ? source.lifecycle : {};
+    const lifecycleStates = (Array.isArray(lifecycle.states) ? lifecycle.states : [])
+      .map((item) => String(item || "").trim().toLowerCase());
+    const confirmations = source.confirmations && typeof source.confirmations === "object" ? source.confirmations : {};
+    const limits = source.limits && typeof source.limits === "object" ? source.limits : {};
+    const retentionLabels = (Array.isArray(limits.retention_labels) ? limits.retention_labels : [])
+      .map((item) => String(item || "").trim().toLowerCase());
+    const confidentialityLevels = (Array.isArray(limits.confidentiality_levels) ? limits.confidentiality_levels : [])
+      .map((item) => String(item || "").trim().toLowerCase());
+    const extensions = (Array.isArray(limits.allowed_extensions) ? limits.allowed_extensions : [])
+      .map((item) => String(item || "").trim().toLowerCase().replace(/^\./, ""));
+    const fileBytes = adminArchiveSafeInteger(limits.file_bytes, 1, ADMIN_ARCHIVE_MAX_FILE_BYTES);
+    const retainedBytes = adminArchiveSafeInteger(limits.account_retained_bytes, 1, 1024 * 1024 * 1024);
+    const versionsMax = adminArchiveSafeInteger(limits.versions_per_document, 1, 1000);
+    const documentsMax = adminArchiveSafeInteger(limits.documents_per_admin, 1, 100000);
+    const tagsMax = adminArchiveSafeInteger(limits.tags, 0, 100);
+    if (!departments.length || !documentTypes.length || lifecycleStates.length !== ADMIN_ARCHIVE_DOCUMENT_STATES.size
+      || new Set(lifecycleStates).size !== lifecycleStates.length || !lifecycleStates.every((item) => ADMIN_ARCHIVE_DOCUMENT_STATES.has(item))
+      || retentionLabels.length !== ADMIN_ARCHIVE_RETENTION_LABELS.size || new Set(retentionLabels).size !== retentionLabels.length
+      || !retentionLabels.every((item) => ADMIN_ARCHIVE_RETENTION_LABELS.has(item))
+      || confidentialityLevels.length !== ADMIN_ARCHIVE_CONFIDENTIALITY_LEVELS.size || new Set(confidentialityLevels).size !== confidentialityLevels.length
+      || !confidentialityLevels.every((item) => ADMIN_ARCHIVE_CONFIDENTIALITY_LEVELS.has(item))
+      || extensions.length !== ADMIN_ARCHIVE_EXTENSIONS.size || new Set(extensions).size !== extensions.length
+      || !extensions.every((item) => ADMIN_ARCHIVE_EXTENSIONS.has(item))
+      || confirmations.archive !== "ARCHIVE INTERNAL DOCUMENT" || confirmations.restore !== "RESTORE INTERNAL DOCUMENT"
+      || fileBytes === null || retainedBytes === null || versionsMax === null || documentsMax === null || tagsMax === null) return null;
+    return {
+      departments, documentTypes, departmentTypes, retentionLabels, confidentialityLevels, extensions,
+      acknowledgements: { archive: confirmations.archive, restore: confirmations.restore },
+      limits: { fileBytes, retainedBytes, versionsMax, documentsMax, tagsMax }
+    };
+  }
+
+  function adminArchiveSummaryProjection(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const source = data.summary && typeof data.summary === "object" && !Array.isArray(data.summary) ? data.summary : data;
+    if (!adminArchiveBoundaryIsSafe(data) && !adminArchiveBoundaryIsSafe(source)) return null;
+    const rawCounts = source.by_state && typeof source.by_state === "object" ? source.by_state : {};
+    const counts = {};
+    for (const state of ADMIN_ARCHIVE_DOCUMENT_STATES) {
+      const count = adminArchiveSafeInteger(rawCounts[state], 0, 100000000);
+      if (count === null) return null;
+      counts[state] = count;
+    }
+    const retainedBytes = adminArchiveSafeInteger(source.retained_bytes, 0, 1024 * 1024 * 1024);
+    const retainedBytesLimit = adminArchiveSafeInteger(source.retained_bytes_limit, 1, 1024 * 1024 * 1024);
+    const retainedBytesRemaining = adminArchiveSafeInteger(source.retained_bytes_remaining, 0, 1024 * 1024 * 1024);
+    const unavailableVersions = adminArchiveSafeInteger(source.unavailable_versions, 0, 100000000);
+    if (retainedBytes === null || retainedBytesLimit === null || retainedBytesRemaining === null || unavailableVersions === null
+      || retainedBytes > retainedBytesLimit || retainedBytes + retainedBytesRemaining !== retainedBytesLimit || source.external_sync !== "none") return null;
+    return { counts, retainedBytes, retainedBytesLimit, retainedBytesRemaining, unavailableVersions };
+  }
+
+  function adminArchiveDocumentFilter(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const rawDepartment = String(source.department || "").trim().toLowerCase();
+    const rawType = String(source.document_type || "").trim().toLowerCase();
+    const department = rawDepartment === "all" ? "" : adminArchiveSafeToken(rawDepartment, 48);
+    const documentType = rawType === "all" ? "" : adminArchiveSafeToken(rawType, 64);
+    const state = String(source.state || "all").trim().toLowerCase();
+    const q = String(source.q || "").replace(/\s+/g, " ").trim();
+    if ((rawDepartment && rawDepartment !== "all" && !department) || (rawType && rawType !== "all" && !documentType)
+      || (state !== "all" && !ADMIN_ARCHIVE_DOCUMENT_STATES.has(state)) || q.length > 100 || /[\u0000-\u001f\u007f]/.test(q)) {
+      throw new Error("Bộ lọc kho hồ sơ nội bộ không hợp lệ.");
+    }
+    return { department, document_type: documentType, state, q };
+  }
+
+  function adminArchiveListingProjection(value, filter, offset) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const requestedFilter = adminArchiveDocumentFilter(filter);
+    const requestedOffset = adminArchiveSafeInteger(offset, 0, ADMIN_ARCHIVE_MAX_LIST_OFFSET);
+    const documents = Array.isArray(data.documents) ? data.documents : null;
+    if (!adminArchiveBoundaryIsSafe(data) || !documents || documents.length > ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT || requestedOffset === null) return null;
+    const projection = documents.map((item) => adminArchiveDocumentProjection(item, false));
+    const returnedFilter = adminArchiveDocumentFilter(data.filters || {});
+    const hasMore = data.has_more === true;
+    const nextOffset = data.next_offset === null ? null : adminArchiveSafeInteger(data.next_offset, 0, ADMIN_ARCHIVE_MAX_LIST_OFFSET);
+    if (projection.some((item) => !item) || JSON.stringify(returnedFilter) !== JSON.stringify(requestedFilter)
+      || (hasMore && (nextOffset === null || nextOffset !== requestedOffset + ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT))
+      || (!hasMore && nextOffset !== null)) return null;
+    return {
+      documents: projection,
+      listing: { ...requestedFilter, limit: ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT, offset: requestedOffset, hasMore, nextOffset }
+    };
+  }
+
+  function adminArchiveDetailProjection(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    return adminArchiveBoundaryIsSafe(data) && data.document && typeof data.document === "object"
+      ? adminArchiveDocumentProjection(data.document, true)
+      : null;
+  }
+
+  function adminArchiveVersionListProjection(value, documentId) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = adminArchiveId(documentId);
+    const document = adminArchiveId(data.document_id);
+    const versions = Array.isArray(data.versions) ? data.versions : null;
+    if (!id || !adminArchiveBoundaryIsSafe(data) || document !== id || data.immutable_history !== true || !versions || versions.length > 30) return null;
+    const projection = versions.map(adminArchiveVersionProjection);
+    return projection.some((item) => !item) ? null : projection;
+  }
+
+  function adminArchiveEventProjection(candidate) {
+    const source = candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
+    const eventId = adminArchiveId(source.id);
+    const action = adminArchiveSafeToken(source.action, 48);
+    const actionLabel = adminArchiveSafeText(source.action_label, 1, 120);
+    const fromState = source.from_state === null ? null : String(source.from_state || "").trim().toLowerCase();
+    const toState = String(source.to_state || "").trim().toLowerCase();
+    const revision = adminArchiveSafeInteger(source.revision, 1, 1000000);
+    const versionNumber = source.version_number === null ? null : adminArchiveSafeInteger(source.version_number, 1, 1000000);
+    const createdAt = adminArchiveSafeText(source.created_at, 1, 80);
+    const actorRelation = source.actor_relation === "self" || source.actor_relation === "another_admin" ? source.actor_relation : "";
+    if (!eventId || !ADMIN_ARCHIVE_ACTIONS.has(action) || !actionLabel
+      || (fromState !== null && !ADMIN_ARCHIVE_DOCUMENT_STATES.has(fromState)) || !ADMIN_ARCHIVE_DOCUMENT_STATES.has(toState)
+      || revision === null || !createdAt || !actorRelation || (source.version_number !== null && versionNumber === null)) return null;
+    return { id: eventId, action, actionLabel, fromState, toState, revision, versionNumber, createdAt, actorRelation };
+  }
+
+  function adminArchiveEventListProjection(value, documentId) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = adminArchiveId(documentId);
+    const document = adminArchiveId(data.document_id);
+    const events = Array.isArray(data.events) ? data.events : null;
+    if (!id || !adminArchiveBoundaryIsSafe(data) || document !== id || !events || events.length > 30) return null;
+    const projection = events.map(adminArchiveEventProjection);
+    return projection.some((item) => !item) ? null : projection;
+  }
+
+  function adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, detail) {
+    return requestEpoch === (detail ? adminArchiveDetailHydrationEpoch : adminArchiveHydrationEpoch)
+      && sessionEpoch === adminArchiveSessionEpoch
+      && currentPortalPath() === expectedPath
+      && isNativeAdminArchivePath(expectedPath)
+      && Boolean(base().session && base().session.authenticated === true)
+      && base().adminDocumentArchiveEnabled === true
+      && base().adminDocumentArchiveAdminSessionHint === true;
+  }
+
+  function adminArchiveOffset(value) {
+    const offset = adminArchiveSafeInteger(value, 0, ADMIN_ARCHIVE_MAX_LIST_OFFSET);
+    return offset === null ? 0 : offset;
+  }
+
+  function adminArchiveDocumentsPath(filter, offset) {
+    const source = adminArchiveDocumentFilter(filter);
+    const parameters = new URLSearchParams({
+      department: source.department || "all", document_type: source.document_type || "all", state: source.state,
+      limit: String(ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT), offset: String(adminArchiveOffset(offset))
+    });
+    if (source.q) parameters.set("q", source.q);
+    return `/admin/internal-documents/documents?${parameters.toString()}`;
+  }
+
+  function adminArchiveDocumentChildrenPath(documentId, child) {
+    const id = adminArchiveId(documentId);
+    if (!id || !["versions", "events"].includes(child)) return "";
+    return `/admin/internal-documents/documents/${encodeURIComponent(id)}/${child}?limit=30&offset=0`;
+  }
+
+  function clearAdminArchiveProjection(readState) {
+    const currentPath = currentPortalPath();
+    const pageState = readState === "loading" ? "processing" : "guarded";
+    merge({
+      adminDocumentArchiveServerAdmin: false,
+      adminDocumentArchivePolicy: {}, adminDocumentArchiveSummary: {}, adminDocumentArchiveDocuments: [],
+      adminDocumentArchiveListing: { department: "", document_type: "", state: "all", q: "", limit: ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT, offset: 0, hasMore: false, nextOffset: null },
+      adminDocumentArchiveDetail: {}, adminDocumentArchiveVersions: [], adminDocumentArchiveEvents: [], adminDocumentArchiveReadState: readState || "guarded",
+      pageStates: {
+        ...(base().pageStates || {}),
+        "/admin/internal-documents": pageState,
+        [currentPath]: pageState
+      }
+    });
+  }
+
+  async function hydrateAdminArchiveDocuments(filterValue, offsetValue) {
+    const requestEpoch = ++adminArchiveHydrationEpoch;
+    const sessionEpoch = adminArchiveSessionEpoch;
+    const expectedPath = currentPortalPath();
+    const priorListing = base().adminDocumentArchiveListing && typeof base().adminDocumentArchiveListing === "object"
+      ? base().adminDocumentArchiveListing
+      : {};
+    const filter = adminArchiveDocumentFilter(filterValue === undefined ? priorListing : filterValue);
+    const offset = adminArchiveOffset(offsetValue === undefined ? priorListing.offset : offsetValue);
+    if (!adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, false)) return null;
+    clearAdminArchiveProjection("loading");
+    try {
+      const [policyResult, summaryResult, documentsResult] = await Promise.all([
+        api("/admin/internal-documents/policy"), api("/admin/internal-documents/summary"), api(adminArchiveDocumentsPath(filter, offset))
+      ]);
+      if (!adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, false)) return null;
+      const policy = adminArchivePolicyProjection(adminArchiveResultData(policyResult));
+      const summary = adminArchiveSummaryProjection(adminArchiveResultData(summaryResult));
+      const page = adminArchiveListingProjection(adminArchiveResultData(documentsResult), filter, offset);
+      if (!policy || !summary || !page) throw new Error("Archive server chưa trả projection nội bộ hợp lệ.");
+      merge({
+        adminDocumentArchiveServerAdmin: true, adminDocumentArchivePolicy: policy, adminDocumentArchiveSummary: summary,
+        adminDocumentArchiveDocuments: page.documents, adminDocumentArchiveListing: page.listing,
+        adminDocumentArchiveDetail: {}, adminDocumentArchiveVersions: [], adminDocumentArchiveEvents: [],
+        adminDocumentArchiveReadState: "read_only",
+        pageStates: { ...(base().pageStates || {}), "/admin/internal-documents": "read_only", [expectedPath]: "read_only" }
+      });
+      return { policy, summary, ...page };
+    } catch (_) {
+      if (!adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, false)) return null;
+      clearAdminArchiveProjection("guarded");
+      return null;
+    }
+  }
+
+  async function hydrateAdminArchiveDocumentDetail(documentId) {
+    const id = adminArchiveId(documentId);
+    const requestEpoch = ++adminArchiveDetailHydrationEpoch;
+    const sessionEpoch = adminArchiveSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!id || !adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, true)
+      || adminArchiveDocumentIdFromPath(expectedPath) !== id) return null;
+    clearAdminArchiveProjection("loading");
+    try {
+      const encoded = encodeURIComponent(id);
+      const versionsPath = adminArchiveDocumentChildrenPath(id, "versions");
+      const eventsPath = adminArchiveDocumentChildrenPath(id, "events");
+      if (!versionsPath || !eventsPath) throw new Error("Mã hồ sơ nội bộ không hợp lệ.");
+      const [policyResult, summaryResult, documentResult, versionsResult, eventsResult] = await Promise.all([
+        api("/admin/internal-documents/policy"), api("/admin/internal-documents/summary"),
+        api(`/admin/internal-documents/documents/${encoded}`), api(versionsPath), api(eventsPath)
+      ]);
+      if (!adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, true)) return null;
+      const policy = adminArchivePolicyProjection(adminArchiveResultData(policyResult));
+      const summary = adminArchiveSummaryProjection(adminArchiveResultData(summaryResult));
+      const document = adminArchiveDetailProjection(adminArchiveResultData(documentResult));
+      const versions = adminArchiveVersionListProjection(adminArchiveResultData(versionsResult), id);
+      const events = adminArchiveEventListProjection(adminArchiveResultData(eventsResult), id);
+      if (!policy || !summary || !document || document.id !== id || !versions || !events) throw new Error("Archive server chưa trả chi tiết hồ sơ hợp lệ.");
+      merge({
+        adminDocumentArchiveServerAdmin: true, adminDocumentArchivePolicy: policy, adminDocumentArchiveSummary: summary,
+        adminDocumentArchiveDocuments: [],
+        adminDocumentArchiveListing: { department: "", document_type: "", state: "all", q: "", limit: ADMIN_ARCHIVE_DOCUMENT_LIST_LIMIT, offset: 0, hasMore: false, nextOffset: null },
+        adminDocumentArchiveDetail: document, adminDocumentArchiveVersions: versions, adminDocumentArchiveEvents: events,
+        adminDocumentArchiveReadState: "read_only", pageStates: { ...(base().pageStates || {}), [expectedPath]: "read_only" }
+      });
+      return { policy, summary, document, versions, events };
+    } catch (_) {
+      if (!adminArchiveRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath, true)) return null;
+      clearAdminArchiveProjection("guarded");
+      return null;
+    }
+  }
+
+  function adminArchiveWriteReceipt(result, documentId) {
+    const data = adminArchiveResultData(result);
+    const document = data.document && typeof data.document === "object" && !Array.isArray(data.document) ? data.document : {};
+    const id = adminArchiveId(document.id);
+    const revision = adminArchiveSafeInteger(document.revision, 1, 1000000);
+    const state = String(document.state || "").trim().toLowerCase();
+    const updatedAt = adminArchiveSafeText(document.updated_at, 1, 80);
+    const action = adminArchiveSafeToken(data.action, 48);
+    const versionNumber = document.version_number === undefined ? null : adminArchiveSafeInteger(document.version_number, 1, 1000000);
+    if (!adminArchiveBoundaryIsSafe(data) || !id || (documentId && id !== documentId) || revision === null
+      || !ADMIN_ARCHIVE_DOCUMENT_STATES.has(state) || !updatedAt || !ADMIN_ARCHIVE_ACTIONS.has(action)
+      || (document.version_number !== undefined && versionNumber === null)) {
+      throw new Error("Archive server chưa xác nhận receipt write nội bộ hợp lệ.");
+    }
+    return { id, revision, state, updatedAt, action, versionNumber };
+  }
+
+  function adminArchiveTagInput(value, maximum) {
+    const raw = String(value || "").trim();
+    const tags = raw ? raw.split(",").map((item) => item.trim()).filter(Boolean) : [];
+    const normalized = adminArchiveTags(tags, maximum);
+    return normalized && normalized.length <= maximum ? normalized : null;
+  }
+
+  function adminArchiveMetadataPayload(fields, policy, includeTaxonomy) {
+    const source = fields && typeof fields === "object" ? fields : {};
+    const departments = new Set((policy && Array.isArray(policy.departments) ? policy.departments : []).map((item) => item.key));
+    const documentTypes = new Set((policy && Array.isArray(policy.documentTypes) ? policy.documentTypes : []).map((item) => item.key));
+    const department = adminArchiveSafeToken(source.department, 48);
+    const documentType = adminArchiveSafeToken(source.document_type, 64);
+    const title = adminArchiveSafeText(source.title, 3, 180);
+    const description = adminArchiveSafeMultiline(source.description, 0, 2000);
+    const tags = adminArchiveTagInput(source.tags, policy && policy.limits ? policy.limits.tagsMax : 12);
+    const retentionLabel = String(source.retention_label || "").trim().toLowerCase();
+    const confidentialityLevel = String(source.confidentiality_level || "").trim().toLowerCase();
+    const allowedTypes = policy && policy.departmentTypes && Array.isArray(policy.departmentTypes[department])
+      ? new Set(policy.departmentTypes[department])
+      : new Set();
+    const baseValid = !!title && (description !== "" || source.description === "" || source.description === undefined || source.description === null)
+      && !!tags && tags.length <= (policy && policy.limits ? policy.limits.tagsMax : 12)
+      && policy && Array.isArray(policy.retentionLabels) && policy.retentionLabels.includes(retentionLabel)
+      && policy && Array.isArray(policy.confidentialityLevels) && policy.confidentialityLevels.includes(confidentialityLevel);
+    if (!baseValid || (includeTaxonomy && (!departments.has(department) || !documentTypes.has(documentType) || !allowedTypes.has(documentType)))) {
+      throw new Error("Metadata kho hồ sơ không hợp lệ hoặc vượt policy server đã công bố.");
+    }
+    const payload = { title, tags, description, retention_label: retentionLabel, confidentiality_level: confidentialityLevel };
+    return includeTaxonomy ? { department, document_type: documentType, ...payload } : { department, document_type: documentType, ...payload };
+  }
+
+  function adminArchiveUploadFile(fields, policy) {
+    const file = fields && fields.file;
+    if (!(file instanceof File) || !file.name) throw new Error("Hãy chọn đúng một tệp PDF, DOCX hoặc TXT.");
+    const filename = String(file.name || "").trim();
+    const extension = filename.includes(".") ? filename.split(".").pop().toLowerCase() : "";
+    const maximum = policy && policy.limits ? adminArchiveSafeInteger(policy.limits.fileBytes, 1, ADMIN_ARCHIVE_MAX_FILE_BYTES) || ADMIN_ARCHIVE_MAX_FILE_BYTES : ADMIN_ARCHIVE_MAX_FILE_BYTES;
+    if (!ADMIN_ARCHIVE_EXTENSIONS.has(extension) || !Number.isFinite(Number(file.size)) || file.size < 1 || file.size > maximum) {
+      throw new Error("Tệp private phải là PDF, DOCX hoặc TXT hợp lệ và không vượt giới hạn policy.");
+    }
+    return { file, extension };
+  }
+
+  async function adminArchiveMultipartMutation({ action, route, scope, path, formData, documentId, onSuccess }) {
+    const submission = acquireSubmission(scope, Array.from(formData.keys()).sort().join(":"));
+    if (!submission) {
+      toast("Thao tác kho hồ sơ đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      // Do not route multipart through the JSON helper. In particular, never
+      // manufacture a Content-Type boundary in browser code; fetch supplies
+      // the multipart boundary for this exact FormData body while the server
+      // enforces its closed field list and file validator.
+      const context = base();
+      const headers = new Headers({
+        Accept: "application/json", "X-Request-ID": randomKey("web"), "Idempotency-Key": submission.key
+      });
+      if (context.session && context.session.csrfToken) headers.set("X-CSRF-Token", context.session.csrfToken);
+      const response = await fetch(`${API}${path}`, { credentials: "same-origin", method: "POST", headers, body: formData });
+      let result = {};
+      try { result = await response.json(); } catch (_) { /* safe generic rejection below */ }
+      if (!response.ok || !result.ok) {
+        const error = new Error(result.message || "Yêu cầu upload chưa được máy chủ xác nhận.");
+        error.payload = result;
+        error.status = response.status;
+        throw error;
+      }
+      acknowledged = true;
+      const receipt = adminArchiveWriteReceipt(result, documentId);
+      if (typeof onSuccess === "function") await onSuccess(receipt, result);
+      return receipt;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
+  async function adminArchiveJsonMutation({ action, route, scope, path, payload, documentId, method, onSuccess }) {
+    const submission = acquireSubmission(scope, JSON.stringify(payload));
+    if (!submission) {
+      toast("Thao tác kho hồ sơ đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "error");
+      return null;
+    }
+    let acknowledged = false;
+    setActionBusy(action, route, true);
+    try {
+      const result = await api(path, {
+        method: method || "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...payload, idempotency_key: submission.key })
+      });
+      acknowledged = true;
+      const receipt = adminArchiveWriteReceipt(result, documentId);
+      if (typeof onSuccess === "function") await onSuccess(receipt, result);
+      return receipt;
+    } catch (error) {
+      acknowledged = Boolean(error && Number.isInteger(error.status) && error.status > 0);
+      throw error;
+    } finally {
+      releaseSubmission(submission);
+      if (acknowledged) discardSubmission(scope, submission);
+      setActionBusy(action, route, false);
+    }
+  }
+
+  async function downloadAdminArchivePrivateFile(path, expectedVersion) {
+    const version = expectedVersion && typeof expectedVersion === "object" ? expectedVersion : {};
+    const extension = String(version.extension || "").trim().toLowerCase();
+    const expectedMime = ADMIN_ARCHIVE_MIME_BY_EXTENSION[extension];
+    const expectedSize = adminArchiveSafeInteger(version.byteSize, 1, ADMIN_ARCHIVE_MAX_FILE_BYTES);
+    const filename = adminArchiveSafeText(version.filename, 1, 180);
+    if (!expectedMime || expectedSize === null || !filename || !/^(\/admin\/internal-documents\/documents\/[0-9a-f-]{36}\/download|\/admin\/internal-documents\/versions\/[0-9a-f-]{36}\/download)$/i.test(String(path || ""))) {
+      throw new Error("Yêu cầu tải private không hợp lệ.");
+    }
+    const headers = new Headers({
+      Accept: `${expectedMime}, application/json`, "X-Request-ID": randomKey("web")
+    });
+    const response = await fetch(`${API}${path}`, { credentials: "same-origin", headers, cache: "no-store" });
+    const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* envelope remains guarded */ }
+      throw new Error(payload && payload.message ? payload.message : "Máy chủ chưa xác nhận file private có thể tải.");
+    }
+    const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+    const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+    const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+    const byteHeader = adminArchiveSafeInteger(response.headers.get("Content-Length"), 1, ADMIN_ARCHIVE_MAX_FILE_BYTES);
+    const actualMime = contentType.split(";")[0].trim();
+    if (!response.ok || !disposition.includes("attachment") || !cacheControl.includes("no-store") || nosniff !== "nosniff"
+      || actualMime !== expectedMime || byteHeader === null || byteHeader !== expectedSize) {
+      throw new Error("Máy chủ chưa trả private attachment qua kiểm tra an toàn.");
+    }
+    const blob = await response.blob();
+    if (blob.size !== expectedSize || blob.size > ADMIN_ARCHIVE_MAX_FILE_BYTES || blob.type.split(";")[0].toLowerCase() !== expectedMime) {
+      throw new Error("Private attachment không qua kiểm tra kích thước hoặc định dạng.");
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
   }
 
   function dataControlsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
@@ -24244,6 +24915,203 @@
             toast(result.message || "Đã ghi nhận lifecycle Governance nội bộ. Không có thông báo, file, Bot hay external action nào được tạo.");
           }
         });
+        return;
+      }
+      if (action === "archive-documents-refresh") {
+        if (route !== currentPortalPath() || !isNativeAdminArchivePath(route)) {
+          throw new Error("Chỉ có thể làm mới kho hồ sơ từ Portal quản trị hiện tại.");
+        }
+        if (!(base().capabilities && base().capabilities["admin-archive-documents-refresh"] === true)) {
+          throw new Error("Kho hồ sơ nội bộ đang tắt hoặc signed admin session không còn hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const documentId = adminArchiveDocumentIdFromPath(route);
+          const projection = documentId ? await hydrateAdminArchiveDocumentDetail(documentId) : await hydrateAdminArchiveDocuments();
+          if (projection) toast("Đã làm mới kho hồ sơ nội bộ từ server-admin boundary.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "archive-documents-filter" || action === "archive-documents-filter-clear") {
+        if (route !== "/admin/internal-documents" || currentPortalPath() !== route) {
+          throw new Error("Bộ lọc chỉ dùng tại danh sách kho hồ sơ nội bộ hiện tại.");
+        }
+        if (!(base().capabilities && base().capabilities["admin-archive-documents-view"] === true)) {
+          throw new Error("Cần signed admin session để xem kho hồ sơ nội bộ.");
+        }
+        const filter = action === "archive-documents-filter-clear"
+          ? { department: "", document_type: "", state: "all", q: "" }
+          : adminArchiveDocumentFilter(fields);
+        await hydrateAdminArchiveDocuments(filter, 0);
+        toast(action === "archive-documents-filter-clear" ? "Đã xóa bộ lọc kho hồ sơ nội bộ." : "Đã áp dụng bộ lọc kho hồ sơ nội bộ.");
+        return;
+      }
+      if (action === "archive-documents-page") {
+        if (route !== "/admin/internal-documents" || currentPortalPath() !== route) {
+          throw new Error("Phân trang chỉ dùng tại danh sách kho hồ sơ nội bộ hiện tại.");
+        }
+        if (!(base().capabilities && base().capabilities["admin-archive-documents-view"] === true)) {
+          throw new Error("Cần signed admin session để xem kho hồ sơ nội bộ.");
+        }
+        await hydrateAdminArchiveDocuments(undefined, adminArchiveOffset(fields.__adminArchiveOffset));
+        toast("Đã tải trang kho hồ sơ nội bộ từ server-admin boundary.");
+        return;
+      }
+      if (action === "archive-document-create-upload") {
+        if (route !== "/admin/internal-documents" || currentPortalPath() !== route) {
+          throw new Error("Chỉ có thể thêm hồ sơ từ danh sách kho nội bộ hiện tại.");
+        }
+        if (!(base().capabilities && base().capabilities["admin-archive-document-create"] === true)) {
+          throw new Error("Cần signed admin session, CSRF và Archive đang bật để thêm hồ sơ private.");
+        }
+        const policy = base().adminDocumentArchivePolicy;
+        const metadata = adminArchiveMetadataPayload(fields, policy, true);
+        const upload = adminArchiveUploadFile(fields, policy);
+        const formData = new FormData();
+        formData.append("file", upload.file, upload.file.name);
+        formData.append("department", metadata.department);
+        formData.append("document_type", metadata.document_type);
+        formData.append("title", metadata.title);
+        formData.append("tags_json", JSON.stringify(metadata.tags));
+        formData.append("description", metadata.description);
+        formData.append("retention_label", metadata.retention_label);
+        formData.append("confidentiality_level", metadata.confidentiality_level);
+        await adminArchiveMultipartMutation({
+          action, route, scope: `admin-archive:document:create:${metadata.department}:${metadata.document_type}:${metadata.title}`,
+          path: "/admin/internal-documents/documents/upload", formData,
+          onSuccess: async (receipt, result) => {
+            toast(result.message || "Đã ghi nhận hồ sơ private. Máy chủ sẽ xác minh metadata và attachment trước khi cho tải.");
+            window.location.assign(`/admin/internal-documents/documents/${encodeURIComponent(receipt.id)}`);
+          }
+        });
+        return;
+      }
+      if (action === "archive-document-update") {
+        const documentId = adminArchiveDocumentIdFromPath(route);
+        const current = base().adminDocumentArchiveDetail && typeof base().adminDocumentArchiveDetail === "object"
+          ? base().adminDocumentArchiveDetail
+          : {};
+        const expectedRevision = adminArchiveSafeInteger(fields.expected_revision, 1, 1000000);
+        if (route !== currentPortalPath() || !documentId || current.id !== documentId || String(fields.document_id || "").toLowerCase() !== documentId
+          || expectedRevision === null || expectedRevision !== current.revision) {
+          throw new Error("Hồ sơ hoặc revision không còn khớp với projection signed hiện tại. Hãy làm mới trước khi lưu.");
+        }
+        if (!(base().capabilities && base().capabilities["admin-archive-document-update"] === true) || !(current.permissions && current.permissions.canUpdate === true)) {
+          throw new Error("Cần signed admin session, CSRF và trạng thái active để cập nhật metadata hồ sơ.");
+        }
+        const payload = { ...adminArchiveMetadataPayload(fields, base().adminDocumentArchivePolicy, true), expected_revision: expectedRevision };
+        await adminArchiveJsonMutation({
+          action, route, scope: `admin-archive:document:${documentId}:metadata:${expectedRevision}`,
+          path: `/admin/internal-documents/documents/${encodeURIComponent(documentId)}`, payload, documentId, method: "PATCH",
+          onSuccess: async (_receipt, result) => {
+            const projection = await hydrateAdminArchiveDocumentDetail(documentId);
+            if (!projection) throw new Error("Máy chủ chưa trả lại hồ sơ private sau khi lưu metadata.");
+            toast(result.message || "Đã lưu revision metadata của hồ sơ private.");
+          }
+        });
+        return;
+      }
+      if (action === "archive-document-version-upload") {
+        const documentId = adminArchiveDocumentIdFromPath(route);
+        const current = base().adminDocumentArchiveDetail && typeof base().adminDocumentArchiveDetail === "object"
+          ? base().adminDocumentArchiveDetail
+          : {};
+        const expectedRevision = adminArchiveSafeInteger(fields.expected_revision, 1, 1000000);
+        if (route !== currentPortalPath() || !documentId || current.id !== documentId || String(fields.document_id || "").toLowerCase() !== documentId
+          || expectedRevision === null || expectedRevision !== current.revision) {
+          throw new Error("Hồ sơ hoặc revision không còn khớp với projection signed hiện tại. Hãy làm mới trước khi thêm phiên bản.");
+        }
+        if (!(base().capabilities && base().capabilities["admin-archive-document-version-upload"] === true) || !(current.permissions && current.permissions.canAddVersion === true)) {
+          throw new Error("Cần signed admin session, CSRF và trạng thái active để thêm phiên bản private.");
+        }
+        const upload = adminArchiveUploadFile(fields, base().adminDocumentArchivePolicy);
+        const displayName = String(fields.display_name || "").trim();
+        if (displayName && !adminArchiveSafeText(displayName, 1, 180)) throw new Error("Tên hiển thị phiên bản không hợp lệ.");
+        const formData = new FormData();
+        formData.append("file", upload.file, upload.file.name);
+        if (displayName) formData.append("display_name", displayName);
+        formData.append("expected_revision", String(expectedRevision));
+        await adminArchiveMultipartMutation({
+          action, route, scope: `admin-archive:document:${documentId}:version:${expectedRevision}`,
+          path: `/admin/internal-documents/documents/${encodeURIComponent(documentId)}/versions/upload`, formData, documentId,
+          onSuccess: async (_receipt, result) => {
+            const projection = await hydrateAdminArchiveDocumentDetail(documentId);
+            if (!projection) throw new Error("Máy chủ chưa trả lại hồ sơ private sau khi thêm phiên bản.");
+            toast(result.message || "Đã ghi nhận phiên bản bất biến mới của hồ sơ private.");
+          }
+        });
+        return;
+      }
+      if (["archive-document-archive", "archive-document-restore"].includes(action)) {
+        const operation = action.replace("archive-document-", "");
+        const documentId = adminArchiveDocumentIdFromPath(route);
+        const current = base().adminDocumentArchiveDetail && typeof base().adminDocumentArchiveDetail === "object"
+          ? base().adminDocumentArchiveDetail
+          : {};
+        const expectedRevision = adminArchiveSafeInteger(fields.expected_revision, 1, 1000000);
+        const confirmed = fields.archive_confirmation === true || String(fields.archive_confirmation || "").toLowerCase() === "on";
+        const policy = base().adminDocumentArchivePolicy && typeof base().adminDocumentArchivePolicy === "object" ? base().adminDocumentArchivePolicy : {};
+        const acknowledgement = policy.acknowledgements && policy.acknowledgements[operation];
+        const permission = operation === "archive" ? "canArchive" : "canRestore";
+        if (route !== currentPortalPath() || !documentId || current.id !== documentId || String(fields.document_id || "").toLowerCase() !== documentId
+          || expectedRevision === null || expectedRevision !== current.revision || !confirmed || !acknowledgement) {
+          throw new Error("Cần xác nhận đúng lifecycle và revision hiện tại trước khi gửi máy chủ.");
+        }
+        if (!(base().capabilities && base().capabilities[`admin-archive-document-${operation}`] === true) || !(current.permissions && current.permissions[permission] === true)) {
+          throw new Error("Signed admin session chưa được cấp thao tác lifecycle này cho hồ sơ hiện tại.");
+        }
+        await adminArchiveJsonMutation({
+          action, route, scope: `admin-archive:document:${documentId}:${operation}:${expectedRevision}`,
+          path: `/admin/internal-documents/documents/${encodeURIComponent(documentId)}/${encodeURIComponent(operation)}`,
+          payload: { expected_revision: expectedRevision, acknowledgement, confirm: true }, documentId,
+          onSuccess: async (_receipt, result) => {
+            const projection = await hydrateAdminArchiveDocumentDetail(documentId);
+            if (!projection) throw new Error("Máy chủ chưa trả lại lifecycle hồ sơ private sau khi cập nhật.");
+            toast(result.message || "Đã ghi nhận lifecycle hồ sơ nội bộ. Không có hard delete, Bot hay external action nào được tạo.");
+          }
+        });
+        return;
+      }
+      if (action === "archive-document-download-current" || action === "archive-document-download-version") {
+        const documentId = adminArchiveDocumentIdFromPath(route);
+        const current = base().adminDocumentArchiveDetail && typeof base().adminDocumentArchiveDetail === "object"
+          ? base().adminDocumentArchiveDetail
+          : {};
+        if (route !== currentPortalPath() || !documentId || current.id !== documentId || !(base().capabilities && base().capabilities["admin-archive-document-download"] === true)) {
+          throw new Error("Chỉ signed admin session hiện tại mới có thể yêu cầu private attachment.");
+        }
+        let downloadPath = "";
+        let version = null;
+        if (action === "archive-document-download-current") {
+          version = current.currentVersion && typeof current.currentVersion === "object" ? current.currentVersion : null;
+          if (!(current.permissions && current.permissions.canDownload === true) || !version || version.availability !== "available") {
+            throw new Error("Phiên bản hiện tại chưa qua điều kiện tải private.");
+          }
+          downloadPath = `/admin/internal-documents/documents/${encodeURIComponent(documentId)}/download`;
+        } else {
+          const requestedVersion = adminArchiveId(fields.version_id);
+          const versions = Array.isArray(base().adminDocumentArchiveVersions) ? base().adminDocumentArchiveVersions : [];
+          version = versions.find((candidate) => candidate && candidate.id === requestedVersion) || null;
+          if (current.state !== "active" || !version || version.availability !== "available") {
+            throw new Error("Phiên bản private không còn được projection signed cho phép tải.");
+          }
+          downloadPath = `/admin/internal-documents/versions/${encodeURIComponent(requestedVersion)}/download`;
+        }
+        setActionBusy(action, route, true);
+        try {
+          await downloadAdminArchivePrivateFile(downloadPath, version);
+          toast("Đã nhận private attachment đã qua kiểm tra integrity từ máy chủ.");
+        } catch (error) {
+          // A guarded JSON reply can mean the server just marked a version
+          // unavailable. Refresh only the signed current record before the
+          // common error handler reports it; never fabricate a download.
+          await hydrateAdminArchiveDocumentDetail(documentId);
+          throw error;
+        } finally {
+          setActionBusy(action, route, false);
+        }
         return;
       }
       if (action === "data-controls-refresh") {
