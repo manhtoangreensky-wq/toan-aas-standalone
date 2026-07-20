@@ -22758,133 +22758,214 @@
       "target": "/features/video"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114351
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_growth",
+      "operator_category_title": "Affiliate",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_affiliate",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/growth"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114360
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_runtime",
+      "operator_category_title": "API/Auto",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_api",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/runtime"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114347
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_overview",
+      "operator_category_title": "Điều hành",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_control",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114363
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_audit",
+      "operator_category_title": "Nội bộ",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_internal",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/audit"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114359
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_finance",
+      "operator_category_title": "Doanh thu",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_money",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/finance"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114355
       },
       "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "operator_production_category_deferred_until_video_menu_phase",
       "source": "opmenu|cat_production",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_VIDEO_PRODUCTION_COMMANDS",
+        "VIDEO_MENU_LAST",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The production category contains video creation, film, worker, output, review and render-related command snippets. It remains explicitly deferred until the final finite Video menu catalog, rather than inheriting an Admin or Job route.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_ADMIN_MENU_DEFERRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114356
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_publishing",
+      "operator_category_title": "Đăng bài",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_publish",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/publishing"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114352
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_calendar",
+      "operator_category_title": "Kênh & lịch",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_schedule",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/calendar"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114348
       },
-      "resolution": "explicit_static_route_mapping",
+      "operator_admin_feature_key": "admin_trends",
+      "operator_category_title": "Trend",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|cat_trend",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/trends"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114364
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_overview",
+      "operator_category_title": "Dashboard",
+      "resolution": "reviewed_operator_menu_category_navigation",
       "source": "opmenu|dashboard",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback checks ADMIN_ID, then renders a category of command snippets. The Web destination starts a fresh signed Admin ERP session and independently checks canonical role, route authorization, CSRF and each module contract.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
       "classification": "customer",
@@ -53998,29 +54079,6 @@
       ]
     },
     {
-      "authority": "Server-authorized Admin ERP",
-      "candidate_boundary": "/admin",
-      "count": 11,
-      "family": "opmenu",
-      "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
-      "priority": "P1",
-      "sample_sources": [
-        "opmenu|cat_affiliate",
-        "opmenu|cat_api",
-        "opmenu|cat_control",
-        "opmenu|cat_internal",
-        "opmenu|cat_money",
-        "opmenu|cat_production",
-        "opmenu|cat_publish",
-        "opmenu|cat_schedule",
-        "opmenu|dashboard",
-        "opmenu|root"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Web-native planning",
       "candidate_boundary": "/video-studio/image-motion-planner",
       "count": 8,
@@ -54036,6 +54094,21 @@
         "motion|refresh",
         "motion|start",
         "motion|topic|custom"
+      ],
+      "source_kinds": [
+        "callback_data"
+      ]
+    },
+    {
+      "authority": "Server-authorized Admin ERP",
+      "candidate_boundary": "/admin",
+      "count": 3,
+      "family": "opmenu",
+      "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
+      "priority": "P1",
+      "sample_sources": [
+        "opmenu|cat_production",
+        "opmenu|root"
       ],
       "source_kinds": [
         "callback_data"
@@ -54124,7 +54197,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 546,
+      "count": 538,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -54173,13 +54246,13 @@
           "priority": "P1"
         },
         {
-          "count": 11,
-          "family": "opmenu",
+          "count": 8,
+          "family": "motion",
           "priority": "P1"
         },
         {
-          "count": 8,
-          "family": "motion",
+          "count": 3,
+          "family": "opmenu",
           "priority": "P1"
         },
         {
@@ -54376,13 +54449,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 85.68,
+  "mapping_coverage_percent": 85.89,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2326,
+    "COPIED_GUARDED": 2325,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 495,
-    "NEEDS_FEATURE_DISPOSITION": 546,
+    "NAVIGATION_ONLY": 504,
+    "NEEDS_FEATURE_DISPOSITION": 538,
     "TELEGRAM_ONLY": 444
   },
   "metric_scope": {
@@ -54404,7 +54477,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 85.68,
+  "safe_disposition_coverage_percent": 85.89,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -54414,15 +54487,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3268,
+    "resolved_static_source_count": 3276,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 39,
-    "unresolved_source_count": 546
+    "unresolved_source_count": 538
   },
-  "static_web_surface_coverage_percent": 61.01,
+  "static_web_surface_coverage_percent": 60.99,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

@@ -1779,6 +1779,54 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
     assert dynamic["resolution"] == "dynamic_menu_action_requires_finite_catalog"
 
 
+def test_operator_menu_category_navigation_is_admin_only_and_defers_video_production() -> None:
+    """The Bot Operator menu may open a fresh ERP directory, never a command."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {
+        "opmenu|cat_control": ("/admin", "admin_overview", "Điều hành"),
+        "opmenu|cat_trend": ("/admin/trends", "admin_trends", "Trend"),
+        "opmenu|cat_affiliate": ("/admin/growth", "admin_growth", "Affiliate"),
+        "opmenu|cat_schedule": ("/admin/calendar", "admin_calendar", "Kênh & lịch"),
+        "opmenu|cat_publish": ("/admin/publishing", "admin_publishing", "Đăng bài"),
+        "opmenu|cat_money": ("/admin/finance", "admin_finance", "Doanh thu"),
+        "opmenu|cat_api": ("/admin/runtime", "admin_runtime", "API/Auto"),
+        "opmenu|cat_internal": ("/admin/audit", "admin_audit", "Nội bộ"),
+        "opmenu|dashboard": ("/admin", "admin_overview", "Dashboard"),
+    }
+    assert set(audit.OPERATOR_MENU_CATEGORY_REGISTRY) == set(expected)
+
+    for callback, (target, feature_key, title) in expected.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == target
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_operator_menu_category_navigation"
+        assert mapped["operator_admin_feature_key"] == feature_key
+        assert mapped["operator_category_title"] == title
+        assert mapped["source_dispositions"] == (
+            "BOT_ADMIN_ONLY",
+            "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "NO_RUNTIME_CLAIM",
+        )
+
+    deferred = audit._map_callback("opmenu|cat_production", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert deferred["classification"] == "admin"
+    assert deferred["target"] == "VIDEO_ADMIN_MENU_DEFERRED"
+    assert deferred["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert deferred["resolution"] == "operator_production_category_deferred_until_video_menu_phase"
+    assert "VIDEO_MENU_LAST" in deferred["source_dispositions"]
+
+    # The audit knows private Bot tokens only to prove source coverage. The
+    # browser-safe customer catalog cannot leak an operator token or turn it
+    # into a client-side authority grant.
+    from copyfast_registry import menu_capability_catalog
+
+    assert "opmenu|" not in json.dumps(menu_capability_catalog(), ensure_ascii=False)
+
+
 def test_reviewed_menu_navigation_does_not_inflate_static_feature_parity(tmp_path: Path) -> None:
     """Opening a fresh Web workspace is not proof of Bot workflow parity."""
     audit = _load_audit_module()
