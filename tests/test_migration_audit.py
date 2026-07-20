@@ -1710,6 +1710,11 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|main_ai": ("/chat", "chat_workspace", "chat", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_ai_prompt": ("/prompt-studio", "prompt_studio", "prompt_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|translate": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|translation_language_hub": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|translation_text": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|translation_transcript": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|translation_document": ("/documents", "documents", "documents", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|profile_packages": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
         "menu|main_topup": ("/wallet/topup", "wallet_topup", "wallet_topup", "CORE_CANONICAL_PAYMENT", "BRIDGE_GUARDED_PROXY"),
         "menu|guide_credits": ("/wallet", "wallet", "wallet", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
@@ -1845,6 +1850,100 @@ def test_profile_benefits_and_pricing_read_navigation_preserve_the_referral_boun
     serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
     assert "profile_ref_" not in serialized_catalog
     assert "pricing|" not in serialized_catalog
+
+
+def test_translation_menu_opens_only_fresh_authoring_workspaces_and_defers_bot_sessions() -> None:
+    """Translation Bot state must never leak into a Web navigation catalog."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    navigation = {
+        "menu|translate": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
+        "menu|translation_language_hub": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
+        "menu|translation_text": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
+        "menu|translation_transcript": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
+        "menu|translation_document": ("/documents", "documents", "documents", "SIGNED_CUSTOMER"),
+    }
+    for callback, (target, capability_key, feature_key, authority) in navigation.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == target
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_exact_menu_navigation"
+        assert mapped["menu_capability_key"] == capability_key
+        assert mapped["menu_feature_key"] == feature_key
+        assert mapped["menu_authority"] == authority
+        assert mapped["menu_launch_mode"] == "WEB_NAVIGATION"
+
+    telegram_only = {
+        "menu|translate_more", "menu|translate_off", "menu|translate_set_ar", "menu|translate_set_en",
+        "menu|translate_set_ja", "menu|translate_set_ko", "menu|translate_set_th", "menu|translate_set_vi",
+        "menu|translate_set_zh", "menu|translation_auto_target", "menu|translation_language",
+        "menu|translation_live_conversation", "menu|translation_output_voice", "menu|translation_stop_session",
+        "menu|translation_swap_languages", "menu|translation_text_target_custom", "menu|translation_text_target_en",
+        "menu|translation_text_target_ja", "menu|translation_text_target_ko", "menu|translation_text_target_th",
+        "menu|translation_text_target_vi", "menu|translation_text_target_zh", "menu|translation_two_way",
+        "menu|translation_voice",
+    }
+    assert audit.MENU_TRANSLATION_TELEGRAM_ONLY_ACTIONS == telegram_only
+    for callback in sorted(telegram_only):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "translation_session_requires_web_owned_contract"
+        assert mapped["source_dispositions"] == (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+            "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+            "PROVIDER_GUARD_OR_TTS_PATH",
+            "NO_RUNTIME_CLAIM",
+        )
+
+    deferred = audit._map_callback("menu|translation_video_factory", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert deferred["target"] == "VIDEO_TRANSLATION_MENU_DEFERRED"
+    assert deferred["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert deferred["resolution"] == "translation_video_factory_deferred_until_video_menu_phase"
+    assert deferred["source_dispositions"] == (
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_VIDEO_DUBBING_PENDING_STATE",
+        "VIDEO_MENU_LAST",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM",
+    )
+
+    templates = {
+        "menu|translation_pair_back_{*}",
+        "menu|translation_pair_start_{*}",
+        "menu|translation_pair_swap_{*}",
+    }
+    assert audit.TRANSLATION_SESSION_TELEGRAM_ONLY_CALLBACK_TEMPLATES == templates
+    for template in sorted(templates):
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "translation_session_template_requires_web_owned_contract"
+        assert mapped["source_dispositions"] == (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_TRANSLATION_PAIR_DRAFT_STATE",
+            "BOT_TRANSLATION_SESSION_STATE",
+            "NO_RUNTIME_CLAIM",
+        )
+
+    unknown = audit._map_callback_template("menu|translation_pair_future_{*}", {"file": "bot.py", "line": 1}, routes)
+    assert unknown is not None
+    assert unknown["target"] == "UNRESOLVED_DYNAMIC_MENU_ACTION"
+    assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    from copyfast_registry import menu_capability_catalog
+
+    public_catalog = {item["key"]: item for item in menu_capability_catalog()}
+    assert public_catalog["subtitle_studio"]["route"] == "/subtitle-studio"
+    assert public_catalog["subtitle_studio"]["authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
+    serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    assert "translation_pair" not in serialized_catalog
+    assert "translation_video_factory" not in serialized_catalog
 
 
 def test_operator_menu_category_navigation_is_admin_only_and_defers_video_production() -> None:

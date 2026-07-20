@@ -523,6 +523,41 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "authority": "SIGNED_CUSTOMER",
         "launch_mode": "WEB_NAVIGATION",
     },
+    "menu|translate": {
+        "capability_key": "subtitle_studio",
+        "target": "/subtitle-studio",
+        "feature_key": "subtitle_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|translation_language_hub": {
+        "capability_key": "subtitle_studio",
+        "target": "/subtitle-studio",
+        "feature_key": "subtitle_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|translation_text": {
+        "capability_key": "subtitle_studio",
+        "target": "/subtitle-studio",
+        "feature_key": "subtitle_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|translation_transcript": {
+        "capability_key": "subtitle_studio",
+        "target": "/subtitle-studio",
+        "feature_key": "subtitle_studio",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|translation_document": {
+        "capability_key": "documents",
+        "target": "/documents",
+        "feature_key": "documents",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
     "menu|profile_packages": {
         "capability_key": "membership",
         "target": "/membership",
@@ -802,6 +837,50 @@ PROFILE_REFERRAL_TELEGRAM_ONLY_ACTIONS = frozenset({
     "menu|profile_ref_policy",
     "menu|profile_ref_stats",
 })
+
+# Translation session callbacks mutate Bot-local pending state, a Telegram
+# user preference, or a provider-gated voice/audio path.  The Web Subtitle
+# Studio is an independently owned authoring workspace; it must never import
+# these session values or claim it can translate, transcribe, synthesize
+# speech, or retain the Bot's auto-translation mode.
+MENU_TRANSLATION_TELEGRAM_ONLY_ACTIONS = frozenset({
+    "menu|translate_more",
+    "menu|translate_off",
+    "menu|translate_set_ar",
+    "menu|translate_set_en",
+    "menu|translate_set_ja",
+    "menu|translate_set_ko",
+    "menu|translate_set_th",
+    "menu|translate_set_vi",
+    "menu|translate_set_zh",
+    "menu|translation_auto_target",
+    "menu|translation_language",
+    "menu|translation_live_conversation",
+    "menu|translation_output_voice",
+    "menu|translation_stop_session",
+    "menu|translation_swap_languages",
+    "menu|translation_text_target_custom",
+    "menu|translation_text_target_en",
+    "menu|translation_text_target_ja",
+    "menu|translation_text_target_ko",
+    "menu|translation_text_target_th",
+    "menu|translation_text_target_vi",
+    "menu|translation_text_target_zh",
+    "menu|translation_two_way",
+    "menu|translation_voice",
+})
+
+TRANSLATION_SESSION_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "menu|translation_pair_back_{*}",
+    "menu|translation_pair_start_{*}",
+    "menu|translation_pair_swap_{*}",
+})
+
+# Video dubbing starts from a Telegram pending video and can later select
+# voice/provider/output actions. The user requested Video menus be handled
+# last, so this one entry remains deliberately actionable rather than falling
+# through to the dashboard or pretending the generic /dubbing route is safe.
+TRANSLATION_VIDEO_MENU_DEFERRED_ACTIONS = frozenset({"menu|translation_video_factory"})
 
 # The Bot's ``/operator_menu`` handler is not an execution dispatcher.  Its
 # buttons render command snippets for one Telegram admin, and many snippets
@@ -3430,6 +3509,50 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             ),
             "evidence": evidence,
         }
+    if token in MENU_TRANSLATION_TELEGRAM_ONLY_ACTIONS:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "translation_session_requires_web_owned_contract",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+                "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+                "PROVIDER_GUARD_OR_TTS_PATH",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot callback changes a per-Telegram-user translation session, language preference, "
+                "pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent "
+                "signed authoring workspace and cannot accept these Bot values or claim translation/TTS output."
+            ),
+            "evidence": evidence,
+        }
+    if token in TRANSLATION_VIDEO_MENU_DEFERRED_ACTIONS:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "VIDEO_TRANSLATION_MENU_DEFERRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "translation_video_factory_deferred_until_video_menu_phase",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_VIDEO_DUBBING_PENDING_STATE",
+                "VIDEO_MENU_LAST",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot translation-video entry creates a pending video dubbing state and later reaches "
+                "voice/provider/output controls. It is deferred with the final Video menu rather than opening "
+                "a generic browser dubbing route without a verified owner-scoped source contract."
+            ),
+            "evidence": evidence,
+        }
     if pricing_read_entry is not None:
         target = pricing_read_entry["target"]
         return {
@@ -3992,6 +4115,27 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # Preserve the family-specific source boundary rather than allowing a
         # generic dynamic namespace route to imply Web ownership of that state.
         return _map_tvflow_callback(template, "callback_template", evidence)
+    if token in TRANSLATION_SESSION_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "translation_session_template_requires_web_owned_contract",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_TRANSLATION_PAIR_DRAFT_STATE",
+                "BOT_TRANSLATION_SESSION_STATE",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The dynamic value selects, swaps, starts or returns to a Bot translation-pair draft for "
+                "one Telegram user. A Web workspace cannot receive that opaque mode/value or infer a "
+                "translation result, session, provider action or output."
+            ),
+            "evidence": evidence,
+        }
     if token in VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         return {
             "source_kind": "callback_template",

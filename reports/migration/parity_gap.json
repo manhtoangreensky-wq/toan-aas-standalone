@@ -20898,12 +20898,15 @@
         "file": "bot.py",
         "line": 56787
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_READ",
+      "menu_capability_key": "membership",
+      "menu_feature_key": "membership",
+      "menu_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|profile_packages",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
       "classification": "customer",
@@ -20911,12 +20914,15 @@
         "file": "bot.py",
         "line": 56796
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_READ",
+      "menu_capability_key": "membership",
+      "menu_feature_key": "membership",
+      "menu_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|profile_packages",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
       "classification": "customer",
@@ -20924,12 +20930,18 @@
         "file": "bot.py",
         "line": 56789
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "profile_referral_requires_canonical_bot_adapter",
       "source": "menu|profile_ref_link",
+      "source_dispositions": [
+        "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+        "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+        "NO_WEB_REFERRAL_READ_ADAPTER",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot profile callback derives a Telegram referral deep link or reads referral statistics/policy backed by canonical member and reward state. The Web has no reviewed internal referral adapter, so it cannot mint a link or render rewards.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20937,12 +20949,18 @@
         "file": "bot.py",
         "line": 56798
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "profile_referral_requires_canonical_bot_adapter",
       "source": "menu|profile_ref_link",
+      "source_dispositions": [
+        "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+        "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+        "NO_WEB_REFERRAL_READ_ADAPTER",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot profile callback derives a Telegram referral deep link or reads referral statistics/policy backed by canonical member and reward state. The Web has no reviewed internal referral adapter, so it cannot mint a link or render rewards.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20950,12 +20968,18 @@
         "file": "bot.py",
         "line": 56790
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "profile_referral_requires_canonical_bot_adapter",
       "source": "menu|profile_ref_policy",
+      "source_dispositions": [
+        "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+        "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+        "NO_WEB_REFERRAL_READ_ADAPTER",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot profile callback derives a Telegram referral deep link or reads referral statistics/policy backed by canonical member and reward state. The Web has no reviewed internal referral adapter, so it cannot mint a link or render rewards.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20963,12 +20987,18 @@
         "file": "bot.py",
         "line": 56799
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "profile_referral_requires_canonical_bot_adapter",
       "source": "menu|profile_ref_policy",
+      "source_dispositions": [
+        "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+        "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+        "NO_WEB_REFERRAL_READ_ADAPTER",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot profile callback derives a Telegram referral deep link or reads referral statistics/policy backed by canonical member and reward state. The Web has no reviewed internal referral adapter, so it cannot mint a link or render rewards.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20976,12 +21006,18 @@
         "file": "bot.py",
         "line": 56789
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "profile_referral_requires_canonical_bot_adapter",
       "source": "menu|profile_ref_stats",
+      "source_dispositions": [
+        "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+        "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+        "NO_WEB_REFERRAL_READ_ADAPTER",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot profile callback derives a Telegram referral deep link or reads referral statistics/policy backed by canonical member and reward state. The Web has no reviewed internal referral adapter, so it cannot mint a link or render rewards.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -20989,12 +21025,18 @@
         "file": "bot.py",
         "line": 56798
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "profile_referral_requires_canonical_bot_adapter",
       "source": "menu|profile_ref_stats",
+      "source_dispositions": [
+        "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+        "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+        "NO_WEB_REFERRAL_READ_ADAPTER",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot profile callback derives a Telegram referral deep link or reads referral statistics/policy backed by canonical member and reward state. The Web has no reviewed internal referral adapter, so it cannot mint a link or render rewards.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -21792,12 +21834,15 @@
         "file": "bot.py",
         "line": 46981
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21805,12 +21850,15 @@
         "file": "bot.py",
         "line": 47027
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21818,12 +21866,15 @@
         "file": "bot.py",
         "line": 47039
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21831,12 +21882,15 @@
         "file": "bot.py",
         "line": 47050
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21844,12 +21898,15 @@
         "file": "bot.py",
         "line": 49610
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21857,12 +21914,15 @@
         "file": "bot.py",
         "line": 49695
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21870,12 +21930,15 @@
         "file": "bot.py",
         "line": 49702
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translate",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -21883,12 +21946,19 @@
         "file": "bot.py",
         "line": 49685
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_more",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21896,12 +21966,19 @@
         "file": "bot.py",
         "line": 49674
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_off",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21909,12 +21986,19 @@
         "file": "bot.py",
         "line": 49686
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_off",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21922,12 +22006,19 @@
         "file": "bot.py",
         "line": 49672
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_ar",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21935,12 +22026,19 @@
         "file": "bot.py",
         "line": 49683
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_en",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21948,12 +22046,19 @@
         "file": "bot.py",
         "line": 49671
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_ja",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21961,12 +22066,19 @@
         "file": "bot.py",
         "line": 49671
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_ko",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21974,12 +22086,19 @@
         "file": "bot.py",
         "line": 49672
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_th",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -21987,12 +22106,19 @@
         "file": "bot.py",
         "line": 49682
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_vi",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22000,12 +22126,19 @@
         "file": "bot.py",
         "line": 49684
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translate_set_zh",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22013,12 +22146,19 @@
         "file": "bot.py",
         "line": 49606
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_auto_target",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22026,12 +22166,19 @@
         "file": "bot.py",
         "line": 49656
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_auto_target",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22039,12 +22186,19 @@
         "file": "bot.py",
         "line": 49673
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_auto_target",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22052,12 +22206,15 @@
         "file": "bot.py",
         "line": 49603
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_capability_key": "documents",
+      "menu_feature_key": "documents",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_document",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/documents"
     },
     {
       "classification": "customer",
@@ -22065,12 +22222,19 @@
         "file": "bot.py",
         "line": 49605
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_language",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22078,12 +22242,15 @@
         "file": "bot.py",
         "line": 30403
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22091,12 +22258,15 @@
         "file": "bot.py",
         "line": 30441
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22104,12 +22274,15 @@
         "file": "bot.py",
         "line": 30498
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22117,12 +22290,15 @@
         "file": "bot.py",
         "line": 49576
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22130,12 +22306,15 @@
         "file": "bot.py",
         "line": 49635
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22143,12 +22322,15 @@
         "file": "bot.py",
         "line": 49646
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22156,12 +22338,15 @@
         "file": "bot.py",
         "line": 49659
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22169,12 +22354,15 @@
         "file": "bot.py",
         "line": 49687
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_language_hub",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22182,12 +22370,19 @@
         "file": "bot.py",
         "line": 49601
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_live_conversation",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22195,12 +22390,19 @@
         "file": "bot.py",
         "line": 30400
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_output_voice",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22208,12 +22410,19 @@
         "file": "bot.py",
         "line": 30496
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_output_voice",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22221,12 +22430,19 @@
         "file": "bot.py",
         "line": 30401
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_stop_session",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22234,12 +22450,19 @@
         "file": "bot.py",
         "line": 49608
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_stop_session",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22247,12 +22470,19 @@
         "file": "bot.py",
         "line": 30398
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_swap_languages",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22260,12 +22490,15 @@
         "file": "bot.py",
         "line": 49602
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_text",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22273,12 +22506,15 @@
         "file": "bot.py",
         "line": 49644
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_text",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22286,12 +22522,15 @@
         "file": "bot.py",
         "line": 49645
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_text",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22299,12 +22538,19 @@
         "file": "bot.py",
         "line": 49633
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_custom",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22312,12 +22558,19 @@
         "file": "bot.py",
         "line": 49628
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_en",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22325,12 +22578,19 @@
         "file": "bot.py",
         "line": 49630
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_ja",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22338,12 +22598,19 @@
         "file": "bot.py",
         "line": 49631
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_ko",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22351,12 +22618,19 @@
         "file": "bot.py",
         "line": 49632
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_th",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22364,12 +22638,19 @@
         "file": "bot.py",
         "line": 49627
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_vi",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22377,12 +22658,19 @@
         "file": "bot.py",
         "line": 49629
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_text_target_zh",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22390,12 +22678,15 @@
         "file": "bot.py",
         "line": 49607
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "menu_capability_key": "subtitle_studio",
+      "menu_feature_key": "subtitle_studio",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|translation_transcript",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/subtitle-studio"
     },
     {
       "classification": "customer",
@@ -22403,12 +22694,19 @@
         "file": "bot.py",
         "line": 49600
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_two_way",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -22417,11 +22715,19 @@
         "line": 49577
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_video_factory_deferred_until_video_menu_phase",
       "source": "menu|translation_video_factory",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_VIDEO_DUBBING_PENDING_STATE",
+        "VIDEO_MENU_LAST",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot translation-video entry creates a pending video dubbing state and later reaches voice/provider/output controls. It is deferred with the final Video menu rather than opening a generic browser dubbing route without a verified owner-scoped source contract.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "VIDEO_TRANSLATION_MENU_DEFERRED"
     },
     {
       "classification": "customer",
@@ -22429,12 +22735,19 @@
         "file": "bot.py",
         "line": 49604
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "translation_session_requires_web_owned_contract",
       "source": "menu|translation_voice",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_SESSION_OR_PREFERENCE_STATE",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "PROVIDER_GUARD_OR_TTS_PATH",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot callback changes a per-Telegram-user translation session, language preference, pending text/media or provider-gated voice output. Web Subtitle Studio starts an independent signed authoring workspace and cannot accept these Bot values or claim translation/TTS output.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "admin",
@@ -23320,88 +23633,165 @@
       "target": "/admin/callbacks"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104892
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104907
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105164
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105169
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105174
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105290
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105485
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|catalog",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
       "classification": "admin",
@@ -23500,784 +23890,1499 @@
       "target": "/admin/callbacks"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 45363
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 45368
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 45380
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 45411
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 45417
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 45427
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 46945
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 46983
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 47029
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 47041
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 47052
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 49718
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 56786
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 56795
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104928
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104940
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104947
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104986
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104995
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105001
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105009
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105018
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105165
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105170
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105175
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 107191
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "SIGNED_CUSTOMER",
+      "pricing_capability_key": "pricing",
+      "pricing_feature_key": "pricing",
+      "pricing_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|main",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/pricing"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 56787
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|member",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 56796
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|member",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104994
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|member",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105000
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|member",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105008
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|member",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 37389
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104940
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104974
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105492
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105500
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105506
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105511
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105959
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105970
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 132937
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|my_packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104927
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|package_summary",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104897
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104911
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104975
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105290
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105478
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105493
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105501
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105507
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105512
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "packages",
+      "pricing_feature_key": "packages",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|packages",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/packages"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 37390
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104939
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104983
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105016
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105501
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105507
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105512
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105897
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105948
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105960
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105971
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 106099
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 106110
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 106210
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "membership",
+      "pricing_feature_key": "membership",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|plans",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/membership"
     },
     {
       "classification": "admin",
@@ -24364,28 +25469,50 @@
       "target": "/admin/callbacks"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 104984
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "wallet",
+      "pricing_feature_key": "wallet",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|xu",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet"
     },
     {
-      "classification": "admin",
+      "classification": "customer",
       "evidence": {
         "file": "bot.py",
         "line": 105015
       },
-      "resolution": "explicit_static_route_mapping",
+      "pricing_authority": "CORE_CANONICAL_READ",
+      "pricing_capability_key": "wallet",
+      "pricing_feature_key": "wallet",
+      "pricing_launch_mode": "READ_ONLY_CANONICAL",
+      "resolution": "reviewed_pricing_read_navigation",
       "source": "pricing|xu",
+      "source_dispositions": [
+        "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_READ",
+        "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu information panel. The Web opens a fresh signed destination with the authority declared by this exact catalog entry; it does not carry a Bot selector, pending purchase or confirmation state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet"
     },
     {
       "classification": "customer",
@@ -40032,12 +41159,18 @@
         "file": "bot.py",
         "line": 30472
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "translation_session_template_requires_web_owned_contract",
       "source": "menu|translation_pair_back_{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_PAIR_DRAFT_STATE",
+        "BOT_TRANSLATION_SESSION_STATE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The dynamic value selects, swaps, starts or returns to a Bot translation-pair draft for one Telegram user. A Web workspace cannot receive that opaque mode/value or infer a translation result, session, provider action or output.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -40045,12 +41178,18 @@
         "file": "bot.py",
         "line": 30439
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "translation_session_template_requires_web_owned_contract",
       "source": "menu|translation_pair_start_{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_PAIR_DRAFT_STATE",
+        "BOT_TRANSLATION_SESSION_STATE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The dynamic value selects, swaps, starts or returns to a Bot translation-pair draft for one Telegram user. A Web workspace cannot receive that opaque mode/value or infer a translation result, session, provider action or output.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -40058,12 +41197,18 @@
         "file": "bot.py",
         "line": 30438
       },
-      "fallback_family": "menu",
-      "resolution": "dynamic_menu_action_requires_finite_catalog",
+      "resolution": "translation_session_template_requires_web_owned_contract",
       "source": "menu|translation_pair_swap_{*}",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_TRANSLATION_PAIR_DRAFT_STATE",
+        "BOT_TRANSLATION_SESSION_STATE",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The dynamic value selects, swaps, starts or returns to a Bot translation-pair draft for one Telegram user. A Web workspace cannot receive that opaque mode/value or infer a translation result, session, provider action or output.",
       "source_kind": "callback_template",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "UNRESOLVED_DYNAMIC_MENU_ACTION"
+      "status": "TELEGRAM_ONLY",
+      "target": "TELEGRAM_ONLY"
     },
     {
       "classification": "customer",
@@ -53846,7 +54991,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 170,
+      "count": 110,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -54197,11 +55342,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 538,
+      "count": 478,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 170,
+          "count": 110,
           "family": "menu",
           "priority": "P0"
         },
@@ -54305,7 +55450,7 @@
     },
     {
       "area": "dynamic_callback_templates",
-      "count": 39,
+      "count": 36,
       "detail": "Only templates without a manually reviewed namespace-to-workflow route remain unresolved. A resolved template proves a guarded route family, never a dynamic value or runtime execution.",
       "severity": "high"
     },
@@ -54449,14 +55594,14 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 85.89,
+  "mapping_coverage_percent": 87.47,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2325,
+    "COPIED_GUARDED": 2251,
     "MAPPED_TO_EXISTING_ROUTE": 1,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 504,
-    "NEEDS_FEATURE_DISPOSITION": 538,
-    "TELEGRAM_ONLY": 444
+    "NAVIGATION_ONLY": 600,
+    "NEEDS_FEATURE_DISPOSITION": 478,
+    "TELEGRAM_ONLY": 482
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -54477,7 +55622,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 85.89,
+  "safe_disposition_coverage_percent": 87.47,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2815,
@@ -54487,15 +55632,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3814,
-    "resolved_static_source_count": 3276,
+    "resolved_static_source_count": 3336,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3925,
     "total_mappings": 3814,
     "unreferenced_static_module_records": 57,
-    "unresolved_callback_templates": 39,
-    "unresolved_source_count": 538
+    "unresolved_callback_templates": 36,
+    "unresolved_source_count": 478
   },
-  "static_web_surface_coverage_percent": 60.99,
+  "static_web_surface_coverage_percent": 59.05,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
