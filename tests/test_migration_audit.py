@@ -1646,7 +1646,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         "videoaddon|export|{*}": "/video/add-ons",
         "manual|history|{*}": "/wallet/topup",
         "shopai|confirm|{*}": "/wallet/topup",
-        "archive|dept|{*}": "/admin",
     }
     for template, target in expected.items():
         mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
@@ -1674,6 +1673,9 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     admin = audit._map_callback_template("archive|dept|{*}", {"file": "bot.py", "line": 1}, routes)
     assert admin is not None
     assert admin["classification"] == "admin"
+    assert admin["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+    assert admin["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert admin["resolution"] == "archive_callback_requires_source_review"
 
     for template in ("trend|video|{*}", "manual|approve_expected|{*}", "adconcept|admin_video_smoke|{*}"):
         bot_only = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
@@ -1685,6 +1687,48 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     # A variable prefix has no fixed namespace. The audit must not guess that
     # it is a save/action from any one Bot workflow.
     assert audit._map_callback_template("{*}|save", {"file": "bot.py", "line": 1}, routes) is None
+
+
+def test_static_audit_maps_only_reviewed_archive_literals_to_fresh_admin_navigation() -> None:
+    """Archive callbacks never forward Bot state or fall through to keyword routes."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    for token in sorted(audit.ARCHIVE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "/admin/internal-documents"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_archive_fresh_admin_navigation"
+        assert mapped["archive_authority"] == "SIGNED_CANONICAL_ADMIN_WEB_NATIVE"
+        assert mapped["archive_launch_mode"] == "WEB_NAVIGATION"
+        assert "BOT_ARCHIVE_SELECTION_STATE_NOT_REPLAYED" in mapped["source_dispositions"]
+
+    tax_invoice = audit._map_callback("archive|dept|tax_invoice", "callback_data", evidence, routes)
+    assert tax_invoice["target"] == "/admin/internal-documents"
+    assert "voice" not in tax_invoice["target"]
+
+    for token in sorted(audit.ARCHIVE_SOURCE_REVIEW_ACTIONS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "reviewed_archive_callback_requires_source_review"
+
+    for token in sorted(audit.ARCHIVE_TELEGRAM_ONLY_ACTIONS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "archive_preview_or_save_requires_telegram_state"
+
+    unreviewed = audit._map_callback("archive|future_record", "callback_data", evidence, routes)
+    assert unreviewed["target"] == "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED"
+    assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unreviewed["resolution"] == "archive_callback_requires_source_review"
+    assert not any(prefix == "archive|" for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
 
 
 def test_static_audit_keeps_dashboard_fallbacks_actionable_instead_of_counting_feature_parity(tmp_path: Path) -> None:

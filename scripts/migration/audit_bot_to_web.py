@@ -359,6 +359,34 @@ DOCUMENT_FRESH_WEB_NAVIGATION_DISPOSITIONS = (
     "NO_RUNTIME_CLAIM",
 )
 
+# The internal-document Archive callback family is admin-only and carries Bot
+# department/type selections, pending upload/edit state and Telegram delivery
+# controls.  Only these finite, source-reviewed literals may open a fresh
+# signed Admin Archive directory.  They never forward the selector, search
+# text, file identifier, pending record or mutation into the browser.
+ARCHIVE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS = frozenset(
+    {
+        "archive|root",
+        "archive|help",
+        "archive|quick",
+        "archive|recent",
+        "archive|search",
+        "archive|search_dept",
+        "archive|types",
+        "archive|dept|tax_invoice",
+        "archive|type|general",
+    }
+)
+ARCHIVE_SOURCE_REVIEW_ACTIONS = frozenset(
+    {
+        "archive|back_department",
+        "archive|change_dept",
+        "archive|discard_to_dept",
+        "archive|edit",
+    }
+)
+ARCHIVE_TELEGRAM_ONLY_ACTIONS = frozenset({"archive|preview", "archive|save"})
+
 # Dynamic Bot callbacks are intentionally inventory-only by default: the
 # auditor must never evaluate their formatted values.  A small number of
 # namespaces have nevertheless been manually reviewed against real signed Web
@@ -396,7 +424,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("manual|", "/wallet/topup", "customer"),
     ("shopai|", "/wallet/topup", "customer"),
     ("shopai_video_job|", "/wallet/topup", "customer"),
-    ("archive|", "/admin", "admin"),
     ("opmenu|", "/admin", "admin"),
 )
 
@@ -3692,6 +3719,88 @@ def _map_docflow_callback(identifier: str, source_kind: str, evidence: dict[str,
     }
 
 
+def _map_archive_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
+    """Keep Bot Archive callbacks inside a finite, role-checked boundary.
+
+    A Bot archive token can include a department/type choice, temporary search
+    state, pending upload/edit record or a Telegram file-delivery action.  The
+    independently owned Admin Archive may only start blank from a reviewed
+    directory literal; every other source remains explicit source review or
+    Telegram-only rather than inheriting a generic Admin route.
+    """
+
+    token = str(identifier or "").casefold()
+    if token in ARCHIVE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS:
+        target = "/admin/internal-documents"
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "admin",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_archive_fresh_admin_navigation",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "BOT_ARCHIVE_SELECTION_STATE_NOT_REPLAYED",
+                "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The reviewed Bot archive literal only opens/redraws an admin archive menu, type or search "
+                "choice. The Web starts a fresh canonical-admin Archive directory and receives no Bot "
+                "department, type, query, pending file, record, upload, edit or delivery context."
+            ),
+            "archive_authority": "SIGNED_CANONICAL_ADMIN_WEB_NATIVE",
+            "archive_launch_mode": "WEB_NAVIGATION",
+            "evidence": evidence,
+        }
+    if token in ARCHIVE_TELEGRAM_ONLY_ACTIONS:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "admin",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "archive_preview_or_save_requires_telegram_state",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "TELEGRAM_ARCHIVE_RECORD_OR_DELIVERY_STATE",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot preview/save branch resolves a Telegram-side archive record, pending edit/upload or "
+                "file delivery path. The standalone Web Archive has separate records and never accepts the "
+                "Bot identifier or replays this action."
+            ),
+            "evidence": evidence,
+        }
+    review_label = (
+        "reviewed_archive_callback_requires_source_review"
+        if token in ARCHIVE_SOURCE_REVIEW_ACTIONS
+        else "archive_callback_requires_source_review"
+    )
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "ADMIN_INTERNAL_DOCUMENT_ARCHIVE_SOURCE_REVIEW_REQUIRED",
+        "classification": "admin",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": review_label,
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_ARCHIVE_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "An Archive callback may carry Bot department/type/search state, a pending record identifier, "
+            "an edit transition, upload/delivery control or another canonical Bot archive action. It must "
+            "receive finite source review before it can gain any Web meaning."
+        ),
+        "evidence": evidence,
+    }
+
+
 def _map_tvflow_callback(identifier: str, source_kind: str, evidence: dict[str, Any]) -> dict[str, Any]:
     """Record a finite Bot trend-video flow without inventing Web parity.
 
@@ -3771,6 +3880,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     token = identifier.casefold()
     if token.startswith("docflow|"):
         return _map_docflow_callback(identifier, source_kind, evidence)
+    if token.startswith("archive|"):
+        return _map_archive_callback(identifier, source_kind, evidence, existing_routes)
     if token.startswith("tvflow|"):
         return _map_tvflow_callback(identifier, source_kind, evidence)
     admin = _is_admin_command(token, "")
@@ -4726,6 +4837,11 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     token = str(template or "").casefold()
     if "{*}" not in token:
         return _map_callback(token, "callback_template", evidence, existing_routes)
+    if token.startswith("archive|"):
+        # Dynamic Archive suffixes can encode Bot department/type/search state
+        # or identifiers.  Keep all of them fail-closed instead of inheriting
+        # the generic Admin route or a finite Archive directory literal.
+        return _map_archive_callback(template, "callback_template", evidence, existing_routes)
     if token in MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         # These callbacks embed a Bot note identifier. `delete_yes` is a
         # canonical Bot write, while view/delete resolve the same Bot row for
