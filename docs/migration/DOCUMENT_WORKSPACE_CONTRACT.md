@@ -270,3 +270,8 @@ path, state hay metadata của account khác.
   permitted in the new Workspace module.
 - PWA regression confirms the private native route/API are excluded from cache;
   browser refresh does not replay mutations or expose a prior account's data.
+
+See also [`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md)
+for the limited fresh-Web handoff of reviewed Bot document command entrypoints.
+It never transfers `USER_PENDING`, files, selections, confirmation, charge,
+execution or delivery state into this Workspace.

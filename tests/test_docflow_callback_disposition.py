@@ -47,6 +47,7 @@ def test_docflow_callback_dispositions_remain_non_runtime_source_evidence() -> N
     assert {token: item["target"] for token, item in mappings.items()} == expected
     assert {item["status"] for item in mappings.values()} == {"NEEDS_FEATURE_DISPOSITION"}
     assert all("NO_RUNTIME_CLAIM" in item["source_dispositions"] for item in mappings.values())
+    assert all("document_capability_key" not in item for item in mappings.values())
     assert "PROFILE_SEMANTICS_MISMATCH" in mappings["docflow|compress|light"]["source_dispositions"]
     assert "BOT_EXECUTION_DELIVERY_BOUNDARY" in mappings["docflow|run"]["source_dispositions"]
 

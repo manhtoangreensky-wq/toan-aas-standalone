@@ -24,6 +24,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.
 - [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.
 - [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.
+- [`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md) — finite Bot document command entrypoints that only open fresh signed Web-native document pages; no Bot state or raw API is replayed.
 - [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.
 - [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.
 - [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.

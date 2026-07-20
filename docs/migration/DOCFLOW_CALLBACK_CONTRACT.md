@@ -75,3 +75,8 @@ must not raise static Web coverage or be presented as feature completion.
 See also [`DOCUMENT_WORKSPACE_CONTRACT.md`](DOCUMENT_WORKSPACE_CONTRACT.md)
 and the individual Document Operations contracts for owner-scoped execution and
 delivery rules.
+
+Finite Bot command entrypoints that may open a new Document Operations page are
+separately constrained by
+[`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md).
+That catalog never changes the `docflow|*` source-state dispositions above.

@@ -272,10 +272,8 @@ COMMAND_ROUTE_OVERRIDES = {
     "job_context": "/jobs",
     "transcribe": "/asr",
     "remove_bg": "/image/remove-background",
-    "image_to_pdf": "/documents/pdf",
     "pdf_to_images": "/documents/pdf-to-images",
     "ocr_image": "/documents/ocr",
-    "ocr_pdf": "/api/v1/document-operations/ocr-pdf",
     "add_voice_to_video": "/video/add-ons",
     "video_music": "/video/add-ons",
     "help": "/guides",
@@ -300,6 +298,66 @@ COMMAND_ROUTE_OVERRIDES = {
     "uudai": "/rewards",
     "cancel": "/jobs",
 }
+
+# These finite customer commands can open a **fresh**, signed Web Document
+# Operations surface.  They intentionally do not turn a Bot command into a
+# browser execution request: the Web must obtain its own owner-scoped Asset
+# Vault source, validate input, require CSRF/idempotency for writes and verify
+# any private delivery independently.  Keep this catalog separate from the
+# generic route overrides so a convenient-looking route cannot silently claim
+# that the Bot pending file, page range, compression profile, confirmation,
+# charge or delivery state was transferred.
+DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS: dict[str, dict[str, str]] = {
+    "doc_tools": {
+        "target": "/documents",
+        "capability_key": "documents",
+        "feature_key": "documents",
+        "surface": "document_directory",
+    },
+    "pdf_to_word": {
+        "target": "/documents/pdf-to-word",
+        "capability_key": "documents_pdf_to_word",
+        "feature_key": "documents_pdf_to_word",
+        "surface": "pdf_to_word",
+    },
+    "compress_pdf": {
+        "target": "/documents/compress",
+        "capability_key": "documents_compress",
+        "feature_key": "documents_compress",
+        "surface": "pdf_optimize",
+    },
+    "split_pdf": {
+        "target": "/documents/split",
+        "capability_key": "documents_split",
+        "feature_key": "documents_split",
+        "surface": "pdf_split",
+    },
+    "merge_pdf": {
+        "target": "/documents/merge",
+        "capability_key": "documents_merge",
+        "feature_key": "documents_merge",
+        "surface": "pdf_merge",
+    },
+    "image_to_pdf": {
+        "target": "/documents/image-to-pdf",
+        "capability_key": "documents_image_to_pdf",
+        "feature_key": "documents_image_to_pdf",
+        "surface": "image_to_pdf",
+    },
+    "ocr_pdf": {
+        "target": "/documents/pdf-ocr",
+        "capability_key": "documents_pdf_ocr",
+        "feature_key": "documents_pdf_ocr",
+        "surface": "pdf_ocr",
+    },
+}
+
+DOCUMENT_FRESH_WEB_NAVIGATION_DISPOSITIONS = (
+    "FRESH_SIGNED_WEB_DOCUMENT_NAVIGATION",
+    "BOT_PENDING_DOCUMENT_STATE_NOT_REPLAYED",
+    "BOT_EXECUTION_DELIVERY_NOT_REPLAYED",
+    "NO_RUNTIME_CLAIM",
+)
 
 # Dynamic Bot callbacks are intentionally inventory-only by default: the
 # auditor must never evaluate their formatted values.  A small number of
@@ -3501,12 +3559,16 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
     name = command["command"].casefold()
     admin = _is_admin_command(name, command["handler"], admin_guarded=bool(command.get("admin_guarded")))
     telegram_only = _is_telegram_only(name)
+    document_navigation_entry = DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS.get(name)
     route_override = COMMAND_ROUTE_OVERRIDES.get(name)
     if admin and not telegram_only:
         target = f"/admin/{name}"
+    elif document_navigation_entry is not None:
+        target = str(document_navigation_entry["target"])
     else:
         target = route_override or _feature_route(name)
     navigation_entrypoint = not telegram_only and not admin and name in DASHBOARD_ENTRYPOINT_COMMANDS and target == "/dashboard"
+    document_navigation = not telegram_only and not admin and document_navigation_entry is not None
     dashboard_fallback = not telegram_only and not navigation_entrypoint and route_override is None and target == "/dashboard"
     status = _mapping_status(
         target,
@@ -3514,16 +3576,19 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         telegram_only,
         dashboard_fallback=dashboard_fallback,
         navigation_entrypoint=navigation_entrypoint,
+        navigation_only=document_navigation,
     )
     if telegram_only:
         resolution = "telegram_only"
     elif navigation_entrypoint:
         resolution = "reviewed_dashboard_navigation_entrypoint"
+    elif document_navigation:
+        resolution = "reviewed_document_fresh_web_navigation"
     elif dashboard_fallback:
         resolution = "unreviewed_dashboard_fallback_requires_feature_disposition"
     else:
         resolution = "explicit_static_route_mapping"
-    return {
+    mapping = {
         "source_kind": "command",
         "source": f"/{command['command']}",
         "handler": command["handler"],
@@ -3533,6 +3598,19 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         "resolution": resolution,
         "evidence": {"file": command["file"], "line": command["line"]},
     }
+    if document_navigation_entry is not None and not telegram_only and not admin:
+        mapping.update(
+            {
+                "source_dispositions": DOCUMENT_FRESH_WEB_NAVIGATION_DISPOSITIONS,
+                "source_evidence": "The command may only open a fresh signed Web-native document surface. Bot pending files, file order, page range, compression profile, confirmation, execution, charge and delivery state are never transferred.",
+                "document_capability_key": str(document_navigation_entry["capability_key"]),
+                "document_feature_key": str(document_navigation_entry["feature_key"]),
+                "document_surface": str(document_navigation_entry["surface"]),
+                "document_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+                "document_launch_mode": "WEB_NAVIGATION",
+            }
+        )
+    return mapping
 
 
 def _map_callback_handler_registration(record: dict[str, Any]) -> dict[str, Any]:
@@ -5751,6 +5829,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`UNREFERENCED_STATIC_MODULES.md`](UNREFERENCED_STATIC_MODULES.md) — scoped legacy Bot `handlers/` package evidence outside the observed `bot.py` import closure; it is not silently counted as live parity.\n"
         + "- [`FALLBACK_FEATURE_DISPOSITION.md`](FALLBACK_FEATURE_DISPOSITION.md) — every dashboard/catch-all fallback grouped by its required authority boundary; a candidate boundary is not an implementation claim.\n"
         + "- [`DOCFLOW_CALLBACK_CONTRACT.md`](DOCFLOW_CALLBACK_CONTRACT.md) — exact Bot document-flow callback dispositions and the navigation-only boundary to independent Web document tools.\n"
+        + "- [`DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md`](DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md) — finite Bot document command entrypoints that only open fresh signed Web-native document pages; no Bot state or raw API is replayed.\n"
         + "- [`TVFLOW_CALLBACK_CONTRACT.md`](TVFLOW_CALLBACK_CONTRACT.md) — exact Bot trend-video callback dispositions; each is a Bot-state boundary, not Web feature parity.\n"
         + "- [`MEDIA_PREVIEW_CALLBACK_CONTRACT.md`](MEDIA_PREVIEW_CALLBACK_CONTRACT.md) — dynamic Bot media-preview callback boundaries; cache indexes and Telegram delivery are not Web media identifiers or playback claims.\n"
         + "- [`FREE_PROMPT_GALLERY_CONTRACT.md`](FREE_PROMPT_GALLERY_CONTRACT.md) — independent signed Free Prompt Gallery, including the navigation-only boundary for finite Free Hub library category callbacks.\n"
