@@ -13,6 +13,10 @@
   const SUBTITLE_ASSET_OPERATIONS_ROUTE = "/subtitle/assets";
   const SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT = 50;
   const SUBTITLE_ASSET_OPERATIONS_MAX_BYTES = 96 * 1024;
+  const AUDIO_ASSET_OPERATIONS_ROUTE = "/audio/assets";
+  const AUDIO_ASSET_OPERATIONS_LIST_LIMIT = 50;
+  const AUDIO_ASSET_OPERATIONS_MAX_INPUT_BYTES = 25 * 1024 * 1024;
+  const AUDIO_ASSET_OPERATIONS_MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -123,6 +127,7 @@
   let assetVaultListHydrationEpoch = 0;
   let assetVaultLifecycleHydrationEpoch = 0;
   let subtitleAssetOperationsHydrationEpoch = 0;
+  let audioAssetOperationsHydrationEpoch = 0;
   // Campaign plans, Project Center records and Studio Documents are private
   // Web-owned planning data.  Keep their list/detail reads independently
   // ordered so a delayed response cannot cross a signed account, route or
@@ -353,7 +358,7 @@
     "/video": "video_single", "/video/create": "video_single", "/video/long": "video_long", "/video/image-to-video": "video_image_to_video",
     "/video/product": "video_product", "/video/trend": "video_trend", "/video/multiscene": "video_multiscene", "/video/text-to-video": "video_text_to_video", "/video/quick": "video_quick", "/video/progress": "video_progress", "/video/preview": "video_preview", "/video/export": "video_export", "/video/add-ons": "video_addons", "/video/mux": "video_mux",
     "/voice": "voice_vault", "/voice/create": "voice_tts", "/voice/tts": "voice_tts", "/voice/vault": "voice_saved_tts", "/voice/saved": "voice_saved_tts", "/voice/clone": "voice_clone", "/voice/preview": "voice_preview", "/voice/outputs": "voice_outputs",
-    "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload",
+    "/music": "music_background", "/music/library": "music_library", "/music/sfx-library": "sfx_library", "/music/ai": "music_background", "/music/create": "music_background", "/music/song": "music_song", "/music/sfx": "music_sfx", "/music/upload": "music_upload", "/audio/assets": "audio_asset_operations",
     "/subtitle": "subtitle_asr", "/subtitle/create": "subtitle_create", "/translate": "subtitle_translate", "/dubbing": "video_dub", "/asr": "asr", "/subtitle/assets": "subtitle_asset_operations", "/subtitle/formats": "subtitle_formats", "/documents": "documents", "/documents/pdf": "documents_pdf", "/documents/ocr": "documents_ocr", "/documents/pdf-ocr": "documents_pdf_ocr", "/documents/pdf-ocr-to-word": "documents_pdf_ocr_word", "/documents/merge": "documents_merge", "/documents/split": "documents_split", "/documents/compress": "documents_compress", "/documents/image-to-pdf": "documents_image_to_pdf", "/documents/pdf-to-images": "documents_pdf_to_images", "/documents/pdf-to-word": "documents_pdf_to_word", "/documents/translate": "documents_translate"
   };
   const ADMIN_DIRECT_ENDPOINTS = Object.freeze({
@@ -9194,6 +9199,7 @@
     ++assetVaultSessionEpoch;
     ++assetVaultLifecycleHydrationEpoch;
     ++subtitleAssetOperationsHydrationEpoch;
+    ++audioAssetOperationsHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignCalendarHydrationEpoch;
     ++projectCenterSessionEpoch;
@@ -9448,6 +9454,11 @@
     // separate prerequisite and the server still checks topology on every API
     // request, so this is only a conservative presentation gate.
     const subtitleAssetOperationsEnabled = Boolean(status.flags && status.flags.subtitle_asset_operations_enabled === true);
+    // Audio Asset Operations is an independent bounded local utility. This
+    // flag never opens Bot/provider music or voice generation, TTS/ASR,
+    // wallet/Xu, PayOS, canonical jobs, a public media URL or a browser-owned
+    // audio processor. Asset Vault, topology and runtime checks stay server-side.
+    const audioAssetOperationsEnabled = Boolean(status.flags && status.flags.audio_asset_operations_enabled === true);
     // Image Creative Studio is deliberately fail-closed by its own feature
     // flag.  A true flag permits private art-direction records only; it never
     // indicates an image provider, generator, preview, job, wallet or payment
@@ -9869,6 +9880,10 @@
       "subtitle-asset-operation-refresh": Boolean(account && assetVaultEnabled && subtitleAssetOperationsEnabled),
       "subtitle-asset-operation-submit": Boolean(account && me.csrf_token && assetVaultEnabled && subtitleAssetOperationsEnabled),
       "subtitle-asset-operation-download": Boolean(account && assetVaultEnabled && subtitleAssetOperationsEnabled),
+      "audio-asset-operation-view": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
+      "audio-asset-operation-refresh": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
+      "audio-asset-operation-submit": Boolean(account && me.csrf_token && assetVaultEnabled && audioAssetOperationsEnabled),
+      "audio-asset-operation-download": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
       "image-studio-view": Boolean(account && imageStudioEnabled),
       "image-studio-refresh": Boolean(account && imageStudioEnabled),
       "image-studio-filter": Boolean(account && imageStudioEnabled),
@@ -10018,6 +10033,7 @@
     ++assetVaultListHydrationEpoch;
     ++assetVaultLifecycleHydrationEpoch;
     ++subtitleAssetOperationsHydrationEpoch;
+    ++audioAssetOperationsHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignListHydrationEpoch;
     ++campaignDetailHydrationEpoch;
@@ -10269,6 +10285,7 @@
       subtitleStudioEnabled,
       subtitleFormatToolsEnabled,
       subtitleAssetOperationsEnabled,
+      audioAssetOperationsEnabled,
       imageStudioEnabled,
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
@@ -10533,6 +10550,12 @@
       subtitleAssetReferences: { items: [], selected: null, pagination: { limit: SUBTITLE_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
       subtitleAssetOperations: [],
       subtitleAssetOperationsReadState: account && assetVaultEnabled && subtitleAssetOperationsEnabled ? "loading" : "guarded",
+      // Audio source metadata and transformation receipts are also private.
+      // Clear them at bootstrap so a delayed prior-account response can never
+      // offer a stale output, filename or selected source in this session.
+      audioAssetReferences: { items: [], selected: null, pagination: { limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      audioAssetOperations: [],
+      audioAssetOperationsReadState: account && assetVaultEnabled && audioAssetOperationsEnabled ? "loading" : "guarded",
       // Explicitly clear owner-scoped creative metadata during every session
       // refresh. A disabled flag or failed request must not leave a prior
       // artboard, asset reference, prompt or history visible in the browser.
@@ -10767,6 +10790,7 @@
         "/subtitle-studio": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/subtitle-studio/new": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/subtitle/assets": account && assetVaultEnabled && subtitleAssetOperationsEnabled ? "processing" : "guarded",
+        "/audio/assets": account && assetVaultEnabled && audioAssetOperationsEnabled ? "processing" : "guarded",
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
@@ -11117,6 +11141,13 @@
       // is unavailable.
       if (account && assetVaultEnabled && subtitleAssetOperationsEnabled) await hydrateSubtitleAssetOperations();
       else clearSubtitleAssetOperationsProjection("guarded");
+    }
+    if (currentPath === AUDIO_ASSET_OPERATIONS_ROUTE) {
+      // Audio Asset Operations owns a typed audio picker and a distinct
+      // local execution receipt. Never substitute generic Asset/Job history,
+      // legacy Audio Library metadata or a prior session's private selection.
+      if (account && assetVaultEnabled && audioAssetOperationsEnabled) await hydrateAudioAssetOperations();
+      else clearAudioAssetOperationsProjection("guarded");
     }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
@@ -15217,6 +15248,292 @@
     }
     const blob = await response.blob();
     if (blob.size !== expectedSize || blob.size > SUBTITLE_ASSET_OPERATIONS_MAX_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== expectedMime) {
+      throw new Error("Private attachment không qua kiểm tra kích thước hoặc định dạng.");
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
+  }
+
+  function audioAssetOperationsPathIsCurrent(path) {
+    return String(path || "").split("?")[0] === AUDIO_ASSET_OPERATIONS_ROUTE;
+  }
+
+  function audioAssetReferenceItem(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = String(source.created_at || "").trim();
+    const typedAudio = (extension === ".mp3" && contentType === "audio/mpeg")
+      || (extension === ".wav" && (contentType === "audio/wav" || contentType === "audio/x-wav"))
+      || (extension === ".m4a" && contentType === "audio/mp4")
+      || (extension === ".ogg" && (contentType === "audio/ogg" || contentType === "application/ogg"));
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || !typedAudio || !Number.isInteger(byteSize) || byteSize < 1 || byteSize > AUDIO_ASSET_OPERATIONS_MAX_INPUT_BYTES
+      || (createdAt && (createdAt.length > 80 || /[\u0000-\u001f\u007f]/.test(createdAt)))) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: createdAt };
+  }
+
+  function audioAssetOperationItem(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const kind = String(source.kind || "").trim();
+    const state = String(source.state || source.status || "").trim();
+    const sourceFormat = source.source_format === null ? null : String(source.source_format || "").trim().toLowerCase();
+    const targetFormat = source.target_format === null ? null : String(source.target_format || "").trim().toLowerCase();
+    const normalizationProfile = source.normalization_profile === null ? null : String(source.normalization_profile || "").trim();
+    const createdAt = String(source.created_at || "").trim();
+    const updatedAt = String(source.updated_at || "").trim();
+    const allowedSourceFormats = new Set(["mp3", "wav", "m4a", "ogg"]);
+    const allowedTargetFormats = new Set(["mp3", "m4a"]);
+    const allowedStates = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+    const measurement = (value, minimum, maximum) => {
+      if (value === null || value === undefined) return null;
+      const number = Number(value);
+      return Number.isInteger(number) && number >= minimum && number <= maximum ? number : null;
+    };
+    const sourceDuration = measurement(source.source_duration_ms, 0, 600000);
+    const sourceChannels = measurement(source.source_channels, 1, 2);
+    const sourceSampleRate = measurement(source.source_sample_rate, 8000, 48000);
+    const outputDuration = measurement(source.output_duration_ms, 0, 600000);
+    const outputChannels = measurement(source.output_channels, 1, 2);
+    const outputSampleRate = measurement(source.output_sample_rate, 8000, 48000);
+    const sourceCodec = String(source.source_codec || "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    const outputCodec = String(source.output_codec || "").replace(/[\u0000-\u001f\u007f]/g, "").trim();
+    if (!validVaultAssetId(id) || !["audio_inspect", "audio_convert", "audio_normalize"].includes(kind) || !allowedStates.has(state)
+      || (sourceFormat !== null && !allowedSourceFormats.has(sourceFormat)) || (targetFormat !== null && !allowedTargetFormats.has(targetFormat))
+      || (normalizationProfile !== null && normalizationProfile !== "speech_safe_v1")
+      || (kind === "audio_inspect" && (targetFormat !== null || normalizationProfile !== null))
+      || (kind === "audio_convert" && targetFormat !== null && !allowedTargetFormats.has(targetFormat))
+      || (kind === "audio_normalize" && targetFormat !== null && targetFormat !== "m4a")
+      || (kind === "audio_normalize" && normalizationProfile !== null && normalizationProfile !== "speech_safe_v1")
+      || (source.source_duration_ms !== null && source.source_duration_ms !== undefined && sourceDuration === null)
+      || (source.source_channels !== null && source.source_channels !== undefined && sourceChannels === null)
+      || (source.source_sample_rate !== null && source.source_sample_rate !== undefined && sourceSampleRate === null)
+      || (source.output_duration_ms !== null && source.output_duration_ms !== undefined && outputDuration === null)
+      || (source.output_channels !== null && source.output_channels !== undefined && outputChannels === null)
+      || (source.output_sample_rate !== null && source.output_sample_rate !== undefined && outputSampleRate === null)
+      || sourceCodec.length > 48 || outputCodec.length > 48 || !createdAt || createdAt.length > 80 || updatedAt.length > 80
+      || /[\u0000-\u001f\u007f]/.test(createdAt + updatedAt)) return null;
+    const outputAvailable = source.output_available === true;
+    const filename = String(source.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const expectedMime = targetFormat === "mp3" ? "audio/mpeg" : targetFormat === "m4a" ? "audio/mp4" : "";
+    const expectedCodec = targetFormat === "mp3" ? "mp3" : targetFormat === "m4a" ? "aac" : "";
+    const safeOutput = outputAvailable && (kind === "audio_convert" || kind === "audio_normalize") && state === "completed"
+      && Boolean(expectedMime) && contentType === expectedMime && outputCodec === expectedCodec
+      && Number.isInteger(outputDuration) && Number.isInteger(outputChannels) && outputSampleRate === 48000
+      && filename.length > 0 && filename.length <= 180 && Number.isInteger(byteSize) && byteSize > 0 && byteSize <= AUDIO_ASSET_OPERATIONS_MAX_OUTPUT_BYTES;
+    return {
+      id, kind, state, status: state, source_format: sourceFormat, target_format: targetFormat,
+      normalization_profile: kind === "audio_normalize" && normalizationProfile === "speech_safe_v1" ? normalizationProfile : null,
+      source_duration_ms: sourceDuration, source_channels: sourceChannels, source_sample_rate: sourceSampleRate, source_codec: sourceCodec || null,
+      output_duration_ms: safeOutput ? outputDuration : null, output_channels: safeOutput ? outputChannels : null,
+      output_sample_rate: safeOutput ? outputSampleRate : null, output_codec: safeOutput ? outputCodec : null,
+      output_available: safeOutput, filename: safeOutput ? filename : null, content_type: safeOutput ? contentType : null,
+      byte_size: safeOutput ? byteSize : null, created_at: createdAt, updated_at: updatedAt
+    };
+  }
+
+  function audioAssetReferenceOffset(value) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+  }
+
+  function audioAssetReferencesProjection(data, offset, selectedId, previous) {
+    const source = data && typeof data === "object" ? data : {};
+    const currentOffset = audioAssetReferenceOffset(offset);
+    const items = Array.isArray(source.items) ? source.items.map(audioAssetReferenceItem).filter(Boolean).slice(0, AUDIO_ASSET_OPERATIONS_LIST_LIMIT) : [];
+    const currentId = validVaultAssetId(selectedId) ? String(selectedId).trim() : "";
+    const previousSelected = previous && typeof previous === "object" ? audioAssetReferenceItem(previous.selected) : null;
+    const selected = items.find((item) => item.id === currentId) || (previousSelected && previousSelected.id === currentId ? previousSelected : null);
+    const rawNext = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items, selected,
+      pagination: {
+        limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT, offset: currentOffset, returned: items.length,
+        has_more: hasMore, next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= AUDIO_ASSET_OPERATIONS_LIST_LIMIT ? currentOffset - AUDIO_ASSET_OPERATIONS_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function audioAssetOperationsProjection(data) {
+    const source = data && typeof data === "object" ? data : {};
+    const seen = new Set();
+    return Array.isArray(source.operations)
+      ? source.operations.map(audioAssetOperationItem).filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true)).slice(0, AUDIO_ASSET_OPERATIONS_LIST_LIMIT)
+      : [];
+  }
+
+  function audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === audioAssetOperationsHydrationEpoch
+      && sessionEpoch === assetVaultSessionEpoch
+      && currentPortalPath() === expectedPath
+      && audioAssetOperationsPathIsCurrent(expectedPath)
+      && base().assetVaultEnabled === true
+      && base().audioAssetOperationsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function clearAudioAssetOperationsProjection(readState) {
+    const normalizedReadState = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    merge({
+      audioAssetReferences: { items: [], selected: null, pagination: { limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      audioAssetOperations: [],
+      audioAssetOperationsReadState: normalizedReadState,
+      pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: normalizedReadState === "loading" ? "read_only" : normalizedReadState }
+    });
+  }
+
+  async function hydrateAudioAssetOperations(options) {
+    const source = options && typeof options === "object" ? options : {};
+    const requestEpoch = ++audioAssetOperationsHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!audioAssetOperationsPathIsCurrent(expectedPath) || base().assetVaultEnabled !== true || base().audioAssetOperationsEnabled !== true) {
+      if (audioAssetOperationsPathIsCurrent(expectedPath)) clearAudioAssetOperationsProjection("guarded");
+      return null;
+    }
+    const previous = base().audioAssetReferences && typeof base().audioAssetReferences === "object" ? base().audioAssetReferences : {};
+    const previousPagination = previous.pagination && typeof previous.pagination === "object" ? previous.pagination : {};
+    const offset = audioAssetReferenceOffset(source.offset === undefined ? previousPagination.offset : source.offset);
+    const selectedId = validVaultAssetId(source.selectedId) ? String(source.selectedId).trim() : (audioAssetReferenceItem(previous.selected) || {}).id || "";
+    merge({ audioAssetOperationsReadState: "loading", pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: "read_only" } });
+    try {
+      const [referencesResult, operationsResult] = await Promise.all([
+        api(`/asset-vault?state=active&reference_kind=audio&limit=${AUDIO_ASSET_OPERATIONS_LIST_LIMIT}&offset=${offset}`, { cache: "no-store" }),
+        api(`/audio-asset-operations?limit=${AUDIO_ASSET_OPERATIONS_LIST_LIMIT}`, { cache: "no-store" })
+      ]);
+      if (!audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const references = audioAssetReferencesProjection(referencesResult.data, offset, selectedId, previous);
+      const operations = audioAssetOperationsProjection(operationsResult.data);
+      if (!audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        audioAssetReferences: references, audioAssetOperations: operations, audioAssetOperationsReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [AUDIO_ASSET_OPERATIONS_ROUTE]: "ready" }
+      });
+      return { references, operations };
+    } catch (_) {
+      if (!audioAssetOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearAudioAssetOperationsProjection("failed");
+      return null;
+    }
+  }
+
+  function audioAssetOperationPayload(fields) {
+    const source = fields && typeof fields === "object" ? fields : {};
+    const sourceAssetId = String(source.source_asset_id || "").trim();
+    const operation = String(source.operation || "").trim();
+    if (!validVaultAssetId(sourceAssetId)) throw new Error("Cần chọn audio private hợp lệ từ Asset Vault.");
+    const selected = audioAssetOperationSourcesFromState().find((item) => item.id === sourceAssetId);
+    if (!selected) throw new Error("Audio nguồn không còn trong metadata private của phiên này. Hãy làm mới rồi chọn lại.");
+    if (operation === "inspect") return { scope: `audio-asset-operation:inspect:${sourceAssetId}`, path: "/audio-asset-operations/inspect", payload: { source_asset_id: sourceAssetId }, expectedKind: "audio_inspect" };
+    if (operation === "convert_mp3") return { scope: `audio-asset-operation:convert:${sourceAssetId}:mp3`, path: "/audio-asset-operations/convert", payload: { source_asset_id: sourceAssetId, target_format: "mp3" }, expectedKind: "audio_convert" };
+    if (operation === "convert_m4a") return { scope: `audio-asset-operation:convert:${sourceAssetId}:m4a`, path: "/audio-asset-operations/convert", payload: { source_asset_id: sourceAssetId, target_format: "m4a" }, expectedKind: "audio_convert" };
+    if (operation === "normalize") return { scope: `audio-asset-operation:normalize:${sourceAssetId}`, path: "/audio-asset-operations/normalize", payload: { source_asset_id: sourceAssetId }, expectedKind: "audio_normalize" };
+    throw new Error("Thao tác Audio Asset không hợp lệ.");
+  }
+
+  function audioAssetOperationReceipt(result, expectedKind) {
+    const data = result && result.data && typeof result.data === "object" ? result.data : {};
+    // Validate the raw server receipt before projecting it for display.  The
+    // display projection intentionally clears unsafe fields; accepting a
+    // cleared value here could turn a malformed inspect/normalize receipt into
+    // a misleading success toast.
+    const raw = data.operation && typeof data.operation === "object" && !Array.isArray(data.operation) ? data.operation : null;
+    if (!raw || raw.kind !== expectedKind || raw.state !== "completed") {
+      throw new Error("Máy chủ chưa trả receipt Audio Asset đã hoàn tất an toàn.");
+    }
+    if (expectedKind === "audio_inspect") {
+      const inspectHasOutput = raw.output_available !== false || raw.target_format !== null || raw.normalization_profile !== null
+        || raw.filename !== null || raw.content_type !== null || raw.byte_size !== null || raw.output_duration_ms !== null
+        || raw.output_channels !== null || raw.output_sample_rate !== null || raw.output_codec !== null;
+      if (inspectHasOutput) throw new Error("Receipt kiểm định audio không được công bố file output.");
+    } else if (expectedKind === "audio_convert") {
+      if (raw.output_available !== true || raw.normalization_profile !== null || !["mp3", "m4a"].includes(raw.target_format)) {
+        throw new Error("Receipt chuyển đổi audio chưa đúng contract output private.");
+      }
+    } else if (expectedKind === "audio_normalize") {
+      if (raw.output_available !== true || raw.target_format !== "m4a" || raw.normalization_profile !== "speech_safe_v1") {
+        throw new Error("Receipt chuẩn hóa audio chưa đúng profile M4A cố định.");
+      }
+    } else {
+      throw new Error("Loại receipt Audio Asset không hợp lệ.");
+    }
+    const operation = audioAssetOperationItem(raw);
+    if (!operation || operation.kind !== expectedKind || operation.state !== "completed") {
+      throw new Error("Máy chủ chưa trả receipt Audio Asset đã hoàn tất an toàn.");
+    }
+    if (expectedKind === "audio_inspect" && operation.output_available === true) {
+      throw new Error("Receipt kiểm định audio không được công bố file output.");
+    }
+    if ((expectedKind === "audio_convert" || expectedKind === "audio_normalize") && operation.output_available !== true) {
+      throw new Error("Máy chủ chưa xác minh output audio private để tải.");
+    }
+    return operation;
+  }
+
+  function audioAssetOperationSourcesFromState() {
+    const references = base().audioAssetReferences && typeof base().audioAssetReferences === "object" ? base().audioAssetReferences : {};
+    const rows = Array.isArray(references.items) ? references.items : [];
+    const selected = audioAssetReferenceItem(references.selected);
+    const candidates = selected ? [selected, ...rows] : rows;
+    const seen = new Set();
+    return candidates.map(audioAssetReferenceItem).filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true));
+  }
+
+  function audioAssetOperationFromState(operationId) {
+    const id = String(operationId || "").trim();
+    return (Array.isArray(base().audioAssetOperations) ? base().audioAssetOperations : [])
+      .map(audioAssetOperationItem).find((item) => item && item.id === id) || null;
+  }
+
+  async function downloadAudioAssetOperation(operationId) {
+    const operation = audioAssetOperationFromState(operationId);
+    if (!operation || operation.output_available !== true || !["audio_convert", "audio_normalize"].includes(operation.kind) || operation.state !== "completed") {
+      throw new Error("Output audio private chưa được server xác nhận sẵn sàng để tải.");
+    }
+    const expectedMime = operation.target_format === "mp3" ? "audio/mpeg" : operation.target_format === "m4a" ? "audio/mp4" : "";
+    const expectedSize = Number(operation.byte_size);
+    const filename = String(operation.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    if (!expectedMime || !Number.isInteger(expectedSize) || expectedSize < 1 || expectedSize > AUDIO_ASSET_OPERATIONS_MAX_OUTPUT_BYTES || !filename || filename.length > 180) {
+      throw new Error("Metadata output audio private không hợp lệ.");
+    }
+    const headers = new Headers({ Accept: `${expectedMime}, application/json`, "X-Request-ID": randomKey("web") });
+    const response = await fetch(`${API}/audio-asset-operations/${encodeURIComponent(operation.id)}/download`, { credentials: "same-origin", headers, cache: "no-store" });
+    const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* guarded envelope remains generic */ }
+      throw new Error(payload && payload.message ? payload.message : "Máy chủ chưa xác nhận output audio private có thể tải.");
+    }
+    const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+    const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+    const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+    const referrerPolicy = String(response.headers.get("Referrer-Policy") || "").toLowerCase();
+    const corp = String(response.headers.get("Cross-Origin-Resource-Policy") || "").toLowerCase();
+    const byteSize = Number(response.headers.get("Content-Length"));
+    const actualMime = contentType.split(";", 1)[0].trim();
+    if (!response.ok || !disposition.includes("attachment") || !cacheControl.includes("no-store") || nosniff !== "nosniff"
+      || !referrerPolicy.includes("no-referrer") || corp !== "same-origin" || actualMime !== expectedMime
+      || !Number.isInteger(byteSize) || byteSize !== expectedSize) {
+      throw new Error("Private attachment không qua kiểm tra delivery của browser.");
+    }
+    const blob = await response.blob();
+    if (blob.size !== expectedSize || blob.size > AUDIO_ASSET_OPERATIONS_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== expectedMime) {
       throw new Error("Private attachment không qua kiểm tra kích thước hoặc định dạng.");
     }
     const objectUrl = URL.createObjectURL(blob);
@@ -22425,6 +22742,111 @@
         try {
           await downloadSubtitleAssetOperation(operationId);
           toast("Đã bắt đầu tải attachment subtitle private đã được xác minh.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "audio-asset-operation-refresh") {
+        if (route !== AUDIO_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== AUDIO_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể làm mới Audio Asset Operations từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["audio-asset-operation-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và audio runtime để xem dữ liệu private.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateAudioAssetOperations();
+          if (!refreshed && base().audioAssetOperationsReadState !== "ready") {
+            throw new Error("Không thể tải Audio Asset Operations owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã làm mới nguồn audio và lịch sử private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "audio-asset-reference-page") {
+        if (route !== AUDIO_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== AUDIO_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi trang audio private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["audio-asset-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem nguồn audio private.");
+        }
+        const offset = Number(fields.__audioAssetReferenceOffset);
+        if (!Number.isInteger(offset) || offset < 0 || offset > 10000) throw new Error("Trang nguồn audio private không hợp lệ.");
+        const selectedId = String(fields.__audioAssetReferenceSelectedId || "").trim();
+        if (selectedId && !validVaultAssetId(selectedId)) throw new Error("Nguồn audio đang chọn không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateAudioAssetOperations({ offset, selectedId });
+          if (!refreshed && base().audioAssetOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang nguồn audio owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang nguồn audio private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "audio-asset-operation-submit") {
+        if (route !== AUDIO_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== AUDIO_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể gửi Audio Asset Operation từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["audio-asset-operation-submit"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng cho thao tác audio private.");
+        }
+        const intent = audioAssetOperationPayload(fields);
+        const submission = acquireSubmission(intent.scope, JSON.stringify(intent.payload));
+        if (!submission) {
+          toast("Thao tác audio private đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "warning");
+          return;
+        }
+        let receiptAndRefreshConfirmed = false;
+        setActionBusy(action, route, true);
+        try {
+          // A pending metadata read must never replace the receipt from this
+          // write. Rehydrate from owner-scoped APIs rather than inventing an
+          // output or a completed state in the browser.
+          ++audioAssetOperationsHydrationEpoch;
+          const result = await api(intent.path, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...intent.payload, idempotency_key: submission.key })
+          });
+          audioAssetOperationReceipt(result, intent.expectedKind);
+          const refreshed = await hydrateAudioAssetOperations({ selectedId: intent.payload.source_asset_id });
+          // Do not discard this key when a confirmed write cannot be followed
+          // by a fresh private projection. Retrying this exact intent must
+          // replay its immutable receipt, never create a second output.
+          if (!refreshed) throw new Error("Máy chủ đã xác nhận thao tác nhưng chưa thể tải lại lịch sử audio private an toàn. Hãy làm mới hoặc thử lại; cùng idempotency key sẽ được tái sử dụng.");
+          const fallback = intent.expectedKind === "audio_inspect"
+            ? "Đã kiểm định audio private. Thao tác này không tạo file."
+            : intent.expectedKind === "audio_normalize"
+              ? "Đã chuẩn hóa audio private theo profile M4A cố định và xác minh output."
+              : "Đã chuyển đổi audio private sau khi server xác minh output.";
+          receiptAndRefreshConfirmed = true;
+          toast(result.message || fallback);
+        } finally {
+          releaseSubmission(submission);
+          if (receiptAndRefreshConfirmed) discardSubmission(intent.scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "audio-asset-operation-download") {
+        if (route !== AUDIO_ASSET_OPERATIONS_ROUTE || currentPortalPath() !== AUDIO_ASSET_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể tải output audio private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["audio-asset-operation-download"] === true)) {
+          throw new Error("Cần signed Web session để tải output audio private.");
+        }
+        const operationId = String(fields.__audioAssetOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã output audio private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await downloadAudioAssetOperation(operationId);
+          toast("Đã bắt đầu tải attachment audio private đã được xác minh.");
         } finally {
           setActionBusy(action, route, false);
         }

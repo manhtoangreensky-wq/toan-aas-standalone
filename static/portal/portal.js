@@ -1354,6 +1354,13 @@
   featurePage("/music/create", "Tạo nhạc AI", "Tạo bản nháp nhạc AI và đợi engine/ước tính từ Core Bridge.", ICONS.music, FIELD_SETS.music, ["/music/ai"]);
   featurePage("/music/song", "AI Song", "Chuẩn bị yêu cầu bài hát, cấu trúc và mood; job chỉ được tạo sau confirm.", ICONS.music, FIELD_SETS.musicSong);
   featurePage("/music/upload", "Nhạc của tôi", "Upload nhạc chỉ được bật qua URL ký tạm thời và kiểm tra MIME server-side.", ICONS.music, FIELD_SETS.musicUpload);
+  customerPage("/audio/assets", "Audio Asset Operations", "Kiểm định, chuyển định dạng hoặc chuẩn hóa audio private đã có trong Asset Vault; chỉ phát file sau khi server xác minh output.", ICONS.music, {
+    layout: "audio-asset-operations", type: "audio-asset-operations", fields: [], action: "none", status: "processing",
+    notes: [
+      "Chỉ metadata audio active của Asset Vault thuộc signed Web account hiện tại được chọn. Browser không gửi bytes, path, URL, hash, FFmpeg argument hay normalization profile.",
+      "Kiểm định không tạo file. Chuyển đổi và chuẩn hóa chỉ phát attachment private sau khi server rehash, probe và xác minh output cuối cùng."
+    ]
+  });
 
   featurePage("/subtitle", "Phụ đề", "Chuẩn bị phụ đề từ media nguồn với export SRT/VTT do job engine trả về.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
   featurePage("/subtitle/create", "Tạo phụ đề", "Tạo bản nháp phụ đề, không giả lập transcript hay file SRT/VTT.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
@@ -7195,9 +7202,22 @@
     return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
   }
 
+  function audioAssetOperationsReadBadge(value) {
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
+      ? String(value) : "guarded";
+    const presentation = {
+      loading: { status: "read_only", label: "Đang tải metadata private" },
+      ready: { status: "ready", label: "Sẵn sàng" },
+      failed: { status: "failed", label: "Chưa tải được metadata" },
+      guarded: { status: "guarded", label: "Đang bảo vệ" }
+    }[readState];
+    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+  }
+
   function pageStatusBadge(page, context) {
     const route = String((page && (page.routePath || page.path)) || "").split("?")[0];
     if (route === "/subtitle/assets") return subtitleAssetOperationsReadBadge(context && context.subtitleAssetOperationsReadState);
+    if (route === "/audio/assets") return audioAssetOperationsReadBadge(context && context.audioAssetOperationsReadState);
     return badge(stateFor(page, context));
   }
 
@@ -7363,7 +7383,7 @@
       {
         label: "AI Labs & Media",
         links: [
-          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music]
+          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music], ["/audio/assets", "Audio Asset Operations", ICONS.music]
         ]
       },
       {
@@ -13236,6 +13256,120 @@
       <div class="portal-subtitle-assets-layout"><section class="portal-card portal-card-pad portal-subtitle-assets-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault source</span><h2 class="portal-card-title">Kiểm định hoặc chuyển định dạng</h2><p class="portal-card-subtitle">Chọn tệp owner-scoped đã có. Kiểm định không tạo file; chuyển đổi chỉ hỗ trợ SRT ↔ VTT và không thay đổi nội dung cue.</p></div>${stateBadge}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="subtitle-asset-operation-submit" data-portal-route="/subtitle/assets" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="subtitle-asset-source">Subtitle nguồn <span class="portal-required-mark" aria-hidden="true">*</span></label><select id="subtitle-asset-source" class="portal-select" name="source_asset_id" aria-describedby="subtitle-asset-source-hint" required${disabled}><option value="">Chọn SRT/VTT private từ Asset Vault</option>${sourceOptions}</select><small id="subtitle-asset-source-hint" role="status" aria-live="polite">${safeText(sourceHint)}</small>${sourcePager}</div><label class="portal-field"><span>Thao tác <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="operation" required${disabled}><option value="validate">Kiểm định caption</option><option value="convert">Chuyển SRT ↔ VTT</option></select><small>Server luôn parse lại nội dung; browser không quyết định trạng thái thành công.</small></label><label class="portal-field" data-subtitle-asset-target-field><span>Định dạng đích khi chuyển</span><select class="portal-select" name="target_format" data-subtitle-asset-target${disabled}><option value="vtt">VTT</option><option value="srt">SRT</option></select><small data-subtitle-asset-target-hint>Chọn một subtitle nguồn để hệ thống đặt định dạng đích khác nguồn.</small></label></div><div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, không upload, không đưa đường dẫn hoặc URL. Thao tác write dùng signed session, CSRF và idempotency do browser tạo.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><button class="portal-button portal-button--primary" type="submit"${disabled}>Xác nhận thao tác</button></div></div></form></section><aside class="portal-card portal-card-pad portal-subtitle-assets-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không tạo transcript hoặc media</h2><p class="portal-card-subtitle">Đây là xử lý container subtitle private. Nó không đọc audio/video, không dịch, không gọi Bot/provider và không tạo Job, Xu hay PayOS action.</p></div>${badge("guarded")}</div><div class="portal-subtitle-assets-guard-list"><span><strong>Upload / URL / path</strong><em>off</em></span><span><strong>ASR / translate / dubbing</strong><em>off</em></span><span><strong>Bot / provider / payment</strong><em>off</em></span><span><strong>Public preview / cache</strong><em>off</em></span></div></aside></div>
       <section class="portal-card portal-card-pad portal-subtitle-assets-history"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped history</span><h2 class="portal-card-title">Lịch sử Subtitle Asset</h2><p class="portal-card-subtitle">Kết quả chỉ được gọi là sẵn sàng khi output verified. Một lần kiểm định hoàn tất vẫn không có file để tải.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-asset-operation-refresh" data-portal-route="/subtitle/assets"${canView ? "" : " disabled"}>${readState === "failed" ? "Thử lại" : "Làm mới"}</button></div>${historyMarkup}</section>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Tệp caption vẫn thuộc riêng bạn</h2><p class="portal-card-subtitle">Source và output đều được server owner-scope. Download dùng attachment private đã tái kiểm tra, không có URL công khai, static file hay browser cache.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function audioAssetOperationStateLabel(value) {
+    return ({
+      queued: "Đang chờ", processing: "Đang xử lý", completed: "Hoàn tất", failed: "Không thể hoàn tất",
+      guarded: "Đang bảo vệ", unavailable: "Output chưa sẵn sàng"
+    })[String(value || "")] || "Đang bảo vệ";
+  }
+  function audioAssetOperationKindLabel(value) {
+    return ({ audio_inspect: "Kiểm định", audio_convert: "Chuyển định dạng", audio_normalize: "Chuẩn hóa âm lượng" })[String(value || "")] || "Audio operation";
+  }
+  function audioAssetOperationDuration(value) {
+    const milliseconds = Number(value);
+    if (!Number.isInteger(milliseconds) || milliseconds < 0 || milliseconds > 600000) return "—";
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    return minutes ? `${minutes}m ${String(seconds % 60).padStart(2, "0")}s` : `${seconds}s`;
+  }
+  function audioAssetOperationSources(context) {
+    const references = context.audioAssetReferences && typeof context.audioAssetReferences === "object" ? context.audioAssetReferences : {};
+    const items = Array.isArray(references.items) ? references.items : [];
+    const selected = references.selected && typeof references.selected === "object" ? references.selected : null;
+    const seen = new Set();
+    return (selected ? [selected, ...items] : items).filter((item) => {
+      const source = item && typeof item === "object" ? item : {};
+      const name = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      const extension = String(source.extension || "").trim().toLowerCase();
+      const contentType = String(source.content_type || "").trim().toLowerCase();
+      const size = Number(source.byte_size);
+      const id = String(source.id || "").trim();
+      const typedAudio = (extension === ".mp3" && contentType === "audio/mpeg")
+        || (extension === ".wav" && (contentType === "audio/wav" || contentType === "audio/x-wav"))
+        || (extension === ".m4a" && contentType === "audio/mp4")
+        || (extension === ".ogg" && (contentType === "audio/ogg" || contentType === "application/ogg"));
+      const valid = validVaultAssetId(id) && String(source.state || "") === "active" && Boolean(name) && name.length <= 120
+        && typedAudio && Number.isInteger(size) && size > 0 && size <= 25 * 1024 * 1024;
+      return valid && !seen.has(id) && (seen.add(id), true);
+    }).slice(0, 51);
+  }
+  function audioAssetOperationCanDownload(item) {
+    const source = item && typeof item === "object" ? item : {};
+    const kind = String(source.kind || "");
+    const target = String(source.target_format || "").toLowerCase();
+    const expectedMime = target === "mp3" ? "audio/mpeg" : target === "m4a" ? "audio/mp4" : "";
+    const name = String(source.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    const size = Number(source.byte_size);
+    return validVaultAssetId(source.id) && (kind === "audio_convert" || kind === "audio_normalize")
+      && String(source.state || "") === "completed" && source.output_available === true
+      && Boolean(expectedMime) && String(source.content_type || "").toLowerCase() === expectedMime
+      && Boolean(name) && name.length <= 180 && Number.isInteger(size) && size > 0 && size <= 12 * 1024 * 1024;
+  }
+  function renderAudioAssetOperations(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["audio-asset-operation-view"] === true);
+    const canSubmit = Boolean(context.capabilities && context.capabilities["audio-asset-operation-submit"] === true);
+    const canDownload = Boolean(context.capabilities && context.capabilities["audio-asset-operation-download"] === true);
+    const references = context.audioAssetReferences && typeof context.audioAssetReferences === "object" ? context.audioAssetReferences : {};
+    const pagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.audioAssetOperationsReadState || ""))
+      ? String(context.audioAssetOperationsReadState) : "guarded";
+    const selectedId = references.selected && validVaultAssetId(references.selected.id) ? String(references.selected.id) : "";
+    const sources = audioAssetOperationSources(context);
+    const operations = (Array.isArray(context.audioAssetOperations) ? context.audioAssetOperations : [])
+      .filter((item) => item && validVaultAssetId(item.id)).slice(0, 100);
+    const sourceOptions = sources.map((item) => {
+      const name = String(item.display_name || "Audio Asset").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      const format = String(item.extension || "").replace(".", "").toUpperCase();
+      return `<option value="${safeText(String(item.id))}"${String(item.id) === selectedId ? " selected" : ""}>${safeText(name)} · ${safeText(format)} · ${safeText(vaultBytes(Number(item.byte_size)))}</option>`;
+    }).join("");
+    const readyForInteraction = readState === "ready";
+    const disabled = canSubmit && sources.length && readyForInteraction ? "" : " disabled";
+    const sourceHint = !canView
+      ? "Module đang được bảo vệ cho môi trường này. Asset Vault và audio runtime phải được server bật đầy đủ."
+      : readState === "loading"
+        ? "Đang tải metadata audio từ Asset Vault owner-scoped. Browser không đọc file audio, URL hoặc generic Asset history."
+        : readState === "failed"
+          ? "Không thể tải metadata private an toàn. Hãy làm mới; danh sách cũ đã được xóa thay vì dùng cache hoặc nguồn khác."
+          : !sources.length
+            ? "Chưa có MP3, WAV, M4A hoặc OGG active hợp lệ (tối đa 25 MiB) trong Asset Vault. Hãy thêm tệp private rồi quay lại."
+            : "Chỉ metadata audio đã được server lọc theo ownership mới xuất hiện ở đây; không có raw upload, URL, path hay player.";
+    const previousOffset = Number(pagination.previous_offset);
+    const nextOffset = Number(pagination.next_offset);
+    const canPrevious = Number.isInteger(previousOffset) && previousOffset >= 0;
+    const canNext = Number.isInteger(nextOffset) && nextOffset >= 0;
+    const currentOffset = Number.isInteger(Number(pagination.offset)) && Number(pagination.offset) >= 0 ? Number(pagination.offset) : 0;
+    const currentReturned = Number.isInteger(Number(pagination.returned)) && Number(pagination.returned) >= 0 ? Number(pagination.returned) : 0;
+    const sourcePageRange = currentReturned ? `Đang xem ${safeText(String(currentOffset + 1))}–${safeText(String(currentOffset + currentReturned))}` : `Trang từ vị trí ${safeText(String(currentOffset + 1))}`;
+    const sourcePager = canPrevious || canNext
+      ? `<div class="portal-audio-assets-source-pager" role="group" aria-label="Trang audio private"><span>${sourcePageRange}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-reference-page" data-portal-route="/audio/assets" data-audio-asset-reference-offset="${canPrevious ? safeText(String(previousOffset)) : ""}"${canView && readyForInteraction && canPrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-reference-page" data-portal-route="/audio/assets" data-audio-asset-reference-offset="${canNext ? safeText(String(nextOffset)) : ""}"${canView && readyForInteraction && canNext ? "" : " disabled"}>Sau</button></div></div>`
+      : "";
+    const stateBadge = audioAssetOperationsReadBadge(readState);
+    const historyMarkup = operations.length ? `<ul class="portal-audio-asset-operation-list">${operations.map((item) => {
+      const kind = String(item.kind || "");
+      const source = String(item.source_format || "").toUpperCase();
+      const target = String(item.target_format || "").toUpperCase();
+      const outputReady = audioAssetOperationCanDownload(item);
+      const transform = kind === "audio_convert" || kind === "audio_normalize";
+      const displayState = transform && String(item.state || "") === "completed" && !outputReady ? "unavailable" : String(item.state || "guarded");
+      const outputDuration = audioAssetOperationDuration(item.output_duration_ms);
+      const sourceDuration = audioAssetOperationDuration(item.source_duration_ms);
+      const detail = transform ? `${source || "Audio"} → ${target || "M4A"} · ${outputDuration}` : `${source || "Audio"} · ${sourceDuration}`;
+      const channels = Number(item.output_channels || item.source_channels);
+      const audioFacts = `${Number.isInteger(channels) ? `${channels} kênh` : "Kênh chưa xác nhận"} · ${String(item.output_sample_rate || item.source_sample_rate || "—")} Hz`;
+      const file = outputReady ? `${String(item.filename || "Audio")} · ${vaultBytes(Number(item.byte_size))}` : kind === "audio_inspect" ? "Kiểm định không tạo file output" : "Output chưa sẵn sàng để tải";
+      const download = outputReady && canDownload
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-operation-download" data-portal-route="/audio/assets" data-audio-asset-operation-id="${safeText(String(item.id))}">Tải private</button>`
+        : "";
+      return `<li><div class="portal-audio-asset-operation-meta"><div><strong>${safeText(audioAssetOperationKindLabel(kind))}</strong><span>${safeText(detail)} · ${safeText(audioFacts)}</span><small>${safeText(file)}</small></div>${badge(displayState)}</div><div class="portal-audio-asset-operation-actions"><span>${safeText(audioAssetOperationStateLabel(displayState))}</span>${download}</div></li>`;
+    }).join("")}</ul>` : `<div class="portal-audio-asset-empty"><strong>${readState === "loading" ? "Đang tải lịch sử audio" : readState === "failed" ? "Chưa thể tải lịch sử audio private" : "Chưa có thao tác audio"}</strong><span>${readState === "loading" ? "Đang đọc metadata owner-scoped; browser chưa suy đoán trạng thái hoặc output nào." : readState === "failed" ? "Hãy làm mới để yêu cầu lại API private. Danh sách cũ đã được xóa, không dùng cache hoặc dữ liệu của account khác." : "Chọn một audio private để kiểm định, tạo bản chuyển định dạng hoặc chuẩn hóa bằng profile server cố định."}</span></div>`;
+    return `<article class="portal-page portal-audio-asset-operations">${renderHero(page, context)}
+      <section class="portal-audio-assets-intro"><div><span class="portal-section-kicker">Private deterministic operation</span><h2>Audio private, xử lý rõ ràng và kiểm chứng trước khi tải.</h2><p>Chọn audio đã có trong Asset Vault để kiểm định metadata, tạo một bản MP3/M4A hoặc chuẩn hóa âm lượng theo profile cố định. Máy chủ giữ ownership, codec settings và kiểm tra output cuối cùng.</p></div><dl><div><dt>25 MiB</dt><dd>Input tối đa</dd></div><div><dt>10 phút</dt><dd>Thời lượng tối đa</dd></div><div><dt>Private</dt><dd>Không public URL hay cache</dd></div></dl></section>
+      <div class="portal-audio-assets-layout"><section class="portal-card portal-card-pad portal-audio-assets-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault source</span><h2 class="portal-card-title">Kiểm định hoặc tạo bản audio mới</h2><p class="portal-card-subtitle">Audio gốc không bị thay thế. Chỉ có các profile cố định do server kiểm soát; không có prompt, player, waveform hay browser-side processing.</p></div>${stateBadge}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="audio-asset-operation-submit" data-portal-route="/audio/assets" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="audio-asset-source">Audio nguồn <span class="portal-required-mark" aria-hidden="true">*</span></label><select id="audio-asset-source" class="portal-select" name="source_asset_id" aria-describedby="audio-asset-source-hint" required${disabled}><option value="">Chọn audio private từ Asset Vault</option>${sourceOptions}</select><small id="audio-asset-source-hint" role="status" aria-live="polite">${safeText(sourceHint)}</small>${sourcePager}</div><label class="portal-field"><span>Thao tác <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="operation" required${disabled}><option value="inspect">Kiểm định metadata (không tạo file)</option><option value="convert_mp3">Tạo bản sao MP3</option><option value="convert_m4a">Tạo bản sao M4A</option><option value="normalize">Chuẩn hóa âm lượng → M4A</option></select><small>Chuẩn hóa dùng profile M4A cố định của server; không có trường chỉnh codec, gain hoặc FFmpeg argument từ browser.</small></label></div><div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, không upload, không đưa path hoặc URL. Write request dùng signed session, CSRF và idempotency do browser tạo; không gọi Bot, provider, wallet/Xu hay PayOS.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><button class="portal-button portal-button--primary" type="submit"${disabled}>Xác nhận thao tác</button></div></div></form></section><aside class="portal-card portal-card-pad portal-audio-assets-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không giả AI enhancement hoặc media delivery</h2><p class="portal-card-subtitle">Đây là utility audio Web-native có giới hạn. Nó không tạo nhạc/giọng, không TTS, ASR, dubbing, voice clone, provider, Bot job, wallet/Xu hay PayOS action.</p></div>${badge("guarded")}</div><div class="portal-audio-assets-guard-list"><span><strong>Upload / URL / path / player</strong><em>off</em></span><span><strong>AI music / TTS / clone / ASR</strong><em>off</em></span><span><strong>Bot / provider / payment</strong><em>off</em></span><span><strong>Public preview / browser cache</strong><em>off</em></span></div></aside></div>
+      <section class="portal-card portal-card-pad portal-audio-assets-history"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped history</span><h2 class="portal-card-title">Lịch sử Audio Asset</h2><p class="portal-card-subtitle">Chỉ transform có output verified mới có nút tải. Một lần kiểm định hoàn tất hợp lệ vẫn không có file đầu ra.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="audio-asset-operation-refresh" data-portal-route="/audio/assets"${canView ? "" : " disabled"}>${readState === "failed" ? "Thử lại" : "Làm mới"}</button></div>${historyMarkup}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Tệp audio vẫn thuộc riêng bạn</h2><p class="portal-card-subtitle">Source và output đều được owner-scope. Download dùng attachment private đã tái kiểm tra, không public URL, static file, audio player hoặc PWA cache.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -20291,6 +20425,7 @@
       case "subtitle-studio": return renderSubtitleStudio(page, context);
       case "subtitle-studio-detail": return renderSubtitleStudioDetail(page, context);
       case "subtitle-asset-operations": return renderSubtitleAssetOperations(page, context);
+      case "audio-asset-operations": return renderAudioAssetOperations(page, context);
       case "subtitle-format-lab": return renderSubtitleFormatLab(page, context);
       case "voice-direction-composer": return renderVoiceDirectionComposer(page, context);
       case "voice-studio": return renderVoiceStudio(page, context);
@@ -20643,6 +20778,17 @@
         __subtitleAssetReferenceOffset: source.getAttribute("data-subtitle-asset-reference-offset") || "",
         __subtitleAssetReferenceSelectedId: subtitleSource ? String(subtitleSource.value || "").trim() : "",
         __subtitleAssetOperationId: source.getAttribute("data-subtitle-asset-operation-id") || ""
+      });
+    }
+    // Audio Asset Operations keeps its UUID selection and pagination in the
+    // immediate owner-scoped event. Never retain raw audio, paths, URLs,
+    // hashes, codecs or FFmpeg arguments in generic browser state.
+    if (String(action || "").startsWith("audio-asset-")) {
+      const audioSource = form && form.querySelector('select[name="source_asset_id"]');
+      Object.assign(fields, {
+        __audioAssetReferenceOffset: source.getAttribute("data-audio-asset-reference-offset") || "",
+        __audioAssetReferenceSelectedId: audioSource ? String(audioSource.value || "").trim() : "",
+        __audioAssetOperationId: source.getAttribute("data-audio-asset-operation-id") || ""
       });
     }
     if (String(action || "").startsWith("document-operation-")) {

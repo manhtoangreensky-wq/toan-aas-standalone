@@ -83,6 +83,32 @@ def test_subtitle_asset_operations_catalog_is_fail_closed_and_private(monkeypatc
     assert engine_spec("subtitle_asset_operations").requires_asset_vault is True
 
 
+def test_audio_asset_operations_catalog_is_fail_closed_and_private(monkeypatch) -> None:
+    monkeypatch.delenv("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", raising=False)
+    assert _flags()["audio_asset_operations_enabled"] is False
+
+    monkeypatch.setenv("WEBAPP_AUDIO_ASSET_OPERATIONS_ENABLED", "true")
+    assert _flags()["audio_asset_operations_enabled"] is True
+    assert FEATURE_BY_KEY["audio_asset_operations"].route == "/audio/assets"
+
+    missing_vault = engine_descriptor(
+        "audio_asset_operations",
+        {"audio_asset_operations_enabled": True, "provider_calls_enabled": True},
+    )
+    ready = engine_descriptor(
+        "audio_asset_operations",
+        {"asset_vault_enabled": True, "audio_asset_operations_enabled": True},
+    )
+
+    assert missing_vault == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "guarded"}
+    assert ready == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "ready"}
+    assert engine_spec("audio_asset_operations").required_flags == (
+        "asset_vault_enabled",
+        "audio_asset_operations_enabled",
+    )
+    assert engine_spec("audio_asset_operations").requires_asset_vault is True
+
+
 def test_bot_companion_and_future_adapters_never_claim_public_execution() -> None:
     companion = engine_descriptor("wallet", {"copyfast_enabled": True})
     future_adapter = engine_descriptor("music_song", {"provider_calls_enabled": True, "copyfast_enabled": True})

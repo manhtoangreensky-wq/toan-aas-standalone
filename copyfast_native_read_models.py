@@ -15,11 +15,13 @@ import re
 from typing import Any
 
 from copyfast_db import (
+    audio_asset_operations_enabled,
     frame_video_operations_enabled,
     read_transaction,
     subtitle_asset_operations_enabled,
     video_transform_operations_enabled,
 )
+from copyfast_audio_asset_operations import verified_audio_asset_output_available
 from copyfast_subtitle_asset_operations import verified_subtitle_asset_output_available
 
 
@@ -34,6 +36,7 @@ _JOB_SOURCES = frozenset(
         "document-operation",
         "image-operation",
         "subtitle-asset-operation",
+        "audio-asset-operation",
         "video-operation",
         "frame-video-operation",
         "video-transform-operation",
@@ -50,6 +53,7 @@ _PACKAGE_STORAGE_KEY_PATTERN = re.compile(r"^packages/[0-9a-f]{32}\.zip$")
 _DOCUMENT_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:pdf|docx|png|txt|zip)$")
 _IMAGE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.png$")
 _SUBTITLE_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:srt|vtt)$")
+_AUDIO_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.(?:mp3|m4a)$")
 _VIDEO_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.jpg$")
 _FRAME_VIDEO_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.mp4$")
 _VIDEO_TRANSFORM_STORAGE_KEY_PATTERN = re.compile(r"^outputs/[0-9a-f]{32}\.mp4$")
@@ -81,6 +85,13 @@ _SUBTITLE_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
     "srt": (".srt", "application/x-subrip", "toan-aas-subtitle.srt"),
     "vtt": (".vtt", "text/vtt", "toan-aas-subtitle.vtt"),
 }
+_AUDIO_OUTPUT_SPECS: dict[str, tuple[str, str, str]] = {
+    "mp3": (".mp3", "audio/mpeg", "toan-aas-audio.mp3"),
+    "m4a": (".m4a", "audio/mp4", "toan-aas-audio.m4a"),
+}
+_AUDIO_SOURCE_FORMATS = frozenset({"mp3", "wav", "m4a", "ogg"})
+_AUDIO_TRANSFORM_KINDS = frozenset({"audio_convert", "audio_normalize"})
+_AUDIO_NORMALIZE_PROFILE = "speech_safe_v1"
 _VIDEO_POSTER_OUTPUT_SPEC = (".jpg", "image/jpeg", "toan-aas-video-poster.jpg")
 _FRAME_VIDEO_OUTPUT_SPEC = (".mp4", "video/mp4", "toan-aas-frame-video.mp4")
 _VIDEO_TRANSFORM_OUTPUT_SPEC = (".mp4", "video/mp4", "toan-aas-video-finished.mp4")
@@ -541,6 +552,101 @@ def _project_subtitle_asset_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     }
 
 
+def _project_audio_asset_operation(row: tuple[Any, ...]) -> dict[str, Any]:
+    """Project a bounded Audio Asset Operation without source internals.
+
+    ``audio_inspect`` is intentionally retained as a completed generic job
+    with no output.  Only a completed conversion/normalization with an exact
+    stored contract and a second filesystem verification becomes a generic
+    Assets download candidate.
+    """
+
+    (
+        record_id,
+        operation_kind,
+        state,
+        source_format,
+        target_format,
+        normalization_profile,
+        source_duration_ms,
+        source_channels,
+        source_sample_rate,
+        _source_codec,
+        output_duration_ms,
+        output_channels,
+        output_sample_rate,
+        output_codec,
+        storage_key,
+        _filename,
+        content_type,
+        byte_size,
+        sha256,
+        created_at,
+        queued_at,
+        started_at,
+        completed_at,
+        updated_at,
+    ) = row
+    exact_state = str(state or "")
+    kind = str(operation_kind or "")
+    source = str(source_format or "")
+    target = str(target_format or "")
+    output_spec = _AUDIO_OUTPUT_SPECS.get(target)
+    output = None
+    if (
+        audio_asset_operations_enabled()
+        and kind in _AUDIO_TRANSFORM_KINDS
+        and output_spec is not None
+        and verified_audio_asset_output_available(
+            target_format=target,
+            storage_key=storage_key,
+            content_type=content_type,
+            byte_size=byte_size,
+            digest=sha256,
+            output_duration_ms=output_duration_ms,
+            output_channels=output_channels,
+            output_sample_rate=output_sample_rate,
+            output_codec=output_codec,
+        )
+    ):
+        output = _sealed_output(
+            state=state,
+            storage_key=storage_key,
+            storage_pattern=_AUDIO_STORAGE_KEY_PATTERN,
+            content_type=content_type,
+            byte_size=byte_size,
+            sha256=sha256,
+            expected_suffix=output_spec[0],
+            expected_content_type=output_spec[1],
+            filename=output_spec[2],
+        )
+    return {
+        "id": encode_native_job_id("audio-asset-operation", record_id),
+        "kind": "audio-asset-operation",
+        "operation_kind": kind,
+        "state": exact_state,
+        "status": exact_state,
+        "created_at": _timestamp(created_at),
+        "queued_at": _timestamp(queued_at),
+        "started_at": _timestamp(started_at),
+        "completed_at": _timestamp(completed_at),
+        "updated_at": _timestamp(updated_at),
+        "summary": {
+            "source_format": source if source in _AUDIO_SOURCE_FORMATS else None,
+            "target_format": target if target in _AUDIO_OUTPUT_SPECS else None,
+            "normalization_profile": (
+                _AUDIO_NORMALIZE_PROFILE
+                if kind == "audio_normalize" and str(normalization_profile or "") == _AUDIO_NORMALIZE_PROFILE
+                else None
+            ),
+            "source_duration_ms": _positive_int(source_duration_ms),
+            "source_channels": _positive_int(source_channels),
+            "source_sample_rate": _positive_int(source_sample_rate),
+        },
+        "output": output,
+    }
+
+
 def _project_video_operation(row: tuple[Any, ...]) -> dict[str, Any]:
     """Project one verified Video Poster record without source identifiers."""
 
@@ -830,6 +936,18 @@ _SUBTITLE_ASSET_OPERATION_QUERY = """
      LIMIT ?
 """
 
+_AUDIO_ASSET_OPERATION_QUERY = """
+    SELECT id, kind, state, source_format, target_format, normalization_profile,
+           source_duration_ms, source_channels, source_sample_rate, source_codec,
+           output_duration_ms, output_channels, output_sample_rate, output_codec,
+           storage_key, original_filename, content_type, byte_size, sha256,
+           created_at, queued_at, started_at, completed_at, updated_at
+      FROM web_audio_asset_operations
+     WHERE account_id=?
+     ORDER BY updated_at DESC, id DESC
+     LIMIT ?
+"""
+
 _VIDEO_QUERY = """
     SELECT id, kind, state, poster_position, source_duration_ms,
            source_width, source_height, frame_timestamp_ms, output_width,
@@ -879,6 +997,9 @@ _PACKAGE_COMPLETED_QUERY = _PACKAGE_QUERY.replace("WHERE account_id=?", "WHERE a
 _DOCUMENT_COMPLETED_QUERY = _DOCUMENT_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
 _IMAGE_COMPLETED_QUERY = _IMAGE_QUERY.replace("WHERE account_id=?", "WHERE account_id=? AND state='completed'")
 _SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY = _SUBTITLE_ASSET_OPERATION_QUERY.replace(
+    "WHERE account_id=?", "WHERE account_id=? AND state='completed'"
+)
+_AUDIO_ASSET_OPERATION_COMPLETED_QUERY = _AUDIO_ASSET_OPERATION_QUERY.replace(
     "WHERE account_id=?", "WHERE account_id=? AND state='completed'"
 )
 _VIDEO_COMPLETED_QUERY = _VIDEO_QUERY.replace(
@@ -936,6 +1057,17 @@ def _projected_jobs_for_account(
                 "subtitle-asset-operation",
                 _SUBTITLE_ASSET_OPERATION_COMPLETED_QUERY if completed_outputs_only else _SUBTITLE_ASSET_OPERATION_QUERY,
                 _project_subtitle_asset_operation,
+            )
+        )
+    # Audio operations are optional and own a separate runtime/storage
+    # contract.  Do not query their table while their executor is paused so a
+    # pre-feature database remains a safe read-only source for Jobs/Assets.
+    if audio_asset_operations_enabled():
+        sources.append(
+            (
+                "audio-asset-operation",
+                _AUDIO_ASSET_OPERATION_COMPLETED_QUERY if completed_outputs_only else _AUDIO_ASSET_OPERATION_QUERY,
+                _project_audio_asset_operation,
             )
         )
     if frame_video_operations_enabled():
@@ -1025,6 +1157,8 @@ def resolve_native_job(conn: Any, account_id: str, public_id: str) -> dict[str, 
     source, internal_id = parsed
     if source == "subtitle-asset-operation" and not subtitle_asset_operations_enabled():
         return None
+    if source == "audio-asset-operation" and not audio_asset_operations_enabled():
+        return None
     if source == "frame-video-operation" and not frame_video_operations_enabled():
         return None
     if source == "video-transform-operation" and not video_transform_operations_enabled():
@@ -1034,6 +1168,7 @@ def resolve_native_job(conn: Any, account_id: str, public_id: str) -> dict[str, 
         "document-operation": (_DOCUMENT_QUERY, _project_document_operation),
         "image-operation": (_IMAGE_QUERY, _project_image_operation),
         "subtitle-asset-operation": (_SUBTITLE_ASSET_OPERATION_QUERY, _project_subtitle_asset_operation),
+        "audio-asset-operation": (_AUDIO_ASSET_OPERATION_QUERY, _project_audio_asset_operation),
         "video-operation": (_VIDEO_QUERY, _project_video_operation),
         "frame-video-operation": (_FRAME_VIDEO_QUERY, _project_frame_video_operation),
         "video-transform-operation": (_VIDEO_TRANSFORM_QUERY, _project_video_transform_operation),

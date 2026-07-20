@@ -172,6 +172,11 @@ ENGINE_SPECS.update(_many(("subtitle_formats",), mode=ENGINE_MODE_WEB_NATIVE, fl
 # PayOS behavior; its own route remains responsible for CSRF, ownership,
 # topology, idempotency and verified-output enforcement.
 ENGINE_SPECS.update(_many(("subtitle_asset_operations",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "subtitle_asset_operations_enabled"), handler="subtitle_asset_operations", asset_vault=True))
+# Audio Asset Operations is an isolated owner-scoped local artifact boundary
+# over Asset Vault audio.  It cannot unlock Bot/Core Bridge, provider,
+# TTS/ASR/dubbing, wallet/Xu or PayOS behavior; its typed routes own runtime,
+# CSRF, ownership, topology, idempotency and output-verification enforcement.
+ENGINE_SPECS.update(_many(("audio_asset_operations",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "audio_asset_operations_enabled"), handler="audio_asset_operations", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("image_studio_enabled",), handler="image_studio"))
 # Prompt Composer adapts only the Bot's deterministic prompt templates.  It
 # never inspects an image or calls a model/provider, creates media/output,
