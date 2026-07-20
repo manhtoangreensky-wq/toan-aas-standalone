@@ -294,6 +294,14 @@ MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
         "Mở Document & PDF Workspace; từng thao tác file vẫn tự kiểm tra quyền và capability riêng.",
     ),
     MenuCapability(
+        "subtitle_studio",
+        "subtitle_studio",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở Subtitle & Transcript Workspace Web-native để soạn transcript/cue và bản dịch thủ công; không nhận session Telegram hoặc gọi ASR, dịch, TTS, dubbing hay provider.",
+    ),
+    MenuCapability(
         "documents_pdf_to_word",
         "documents_pdf_to_word",
         "SIGNED_CUSTOMER_WEB_NATIVE",

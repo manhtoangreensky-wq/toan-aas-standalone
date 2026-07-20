@@ -161,7 +161,7 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 2350,
+      "line": 2518,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -263,7 +263,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3296,
+      "line": 3465,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6881,7 +6881,7 @@
         "copyfast_support.py",
         "copyfast_trend_research.py"
       ],
-      "occurrences": 1825,
+      "occurrences": 1881,
       "provider": "Telegram"
     }
   ],
@@ -12486,10 +12486,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 267,
-  "source_files_scanned": 267,
-  "source_fingerprint_sha256": "10d56706d08a007874f88d2962f4e08aa95561ed92c1f00657d7740f45ad2d97",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast63-admin-operator-catalog",
+  "source_files_discovered": 269,
+  "source_files_scanned": 269,
+  "source_fingerprint_sha256": "f4ebc2a67ac3f062339b250cc040d3e3139705c358a28223866d596f5e6645c1",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast65-translation-navigation",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
