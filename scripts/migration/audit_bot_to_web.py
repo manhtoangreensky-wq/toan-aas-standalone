@@ -299,6 +299,23 @@ COMMAND_ROUTE_OVERRIDES = {
     "cancel": "/jobs",
 }
 
+# The signed Web interface preference is deliberately closed to these three
+# reviewed catalogs.  Bot language callbacks can set Bot-owned user/menu
+# state, so only the finite values below may open the fresh Web Account
+# settings surface.  They never apply a locale automatically or transfer Bot
+# language/menu state into the browser.
+INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_COMMANDS = frozenset({"lang", "language"})
+INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_ACTIONS = frozenset({"lang|vi", "lang|en", "lang|zh"})
+INTERFACE_LOCALE_SOURCE_REVIEW_ACTIONS = frozenset(
+    {"lang|ar", "lang|ja", "lang|ko", "lang|th", "lang_more", "back_lang"}
+)
+INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS = (
+    "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+    "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+    "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+    "NO_RUNTIME_CLAIM",
+)
+
 # These finite customer commands can open a **fresh**, signed Web Document
 # Operations surface.  They intentionally do not turn a Bot command into a
 # browser execution request: the Web must obtain its own owner-scoped Asset
@@ -3586,15 +3603,23 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
     name = command["command"].casefold()
     admin = _is_admin_command(name, command["handler"], admin_guarded=bool(command.get("admin_guarded")))
     telegram_only = _is_telegram_only(name)
+    interface_locale_navigation = (
+        not telegram_only
+        and not admin
+        and name in INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_COMMANDS
+    )
     document_navigation_entry = DOCUMENT_FRESH_WEB_NAVIGATION_COMMANDS.get(name)
     route_override = COMMAND_ROUTE_OVERRIDES.get(name)
     if admin and not telegram_only:
         target = f"/admin/{name}"
+    elif interface_locale_navigation:
+        target = "/account"
     elif document_navigation_entry is not None:
         target = str(document_navigation_entry["target"])
     else:
         target = route_override or _feature_route(name)
     navigation_entrypoint = not telegram_only and not admin and name in DASHBOARD_ENTRYPOINT_COMMANDS and target == "/dashboard"
+    interface_locale_navigation = interface_locale_navigation and target == "/account"
     document_navigation = not telegram_only and not admin and document_navigation_entry is not None
     dashboard_fallback = not telegram_only and not navigation_entrypoint and route_override is None and target == "/dashboard"
     status = _mapping_status(
@@ -3603,12 +3628,14 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
         telegram_only,
         dashboard_fallback=dashboard_fallback,
         navigation_entrypoint=navigation_entrypoint,
-        navigation_only=document_navigation,
+        navigation_only=document_navigation or interface_locale_navigation,
     )
     if telegram_only:
         resolution = "telegram_only"
     elif navigation_entrypoint:
         resolution = "reviewed_dashboard_navigation_entrypoint"
+    elif interface_locale_navigation:
+        resolution = "reviewed_interface_locale_fresh_web_navigation"
     elif document_navigation:
         resolution = "reviewed_document_fresh_web_navigation"
     elif dashboard_fallback:
@@ -3635,6 +3662,21 @@ def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str
                 "document_surface": str(document_navigation_entry["surface"]),
                 "document_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
                 "document_launch_mode": "WEB_NAVIGATION",
+            }
+        )
+    if interface_locale_navigation:
+        mapping.update(
+            {
+                "source_dispositions": INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS,
+                "source_evidence": (
+                    "The Bot command opens a language/menu chooser for a Telegram user. The Web opens a fresh "
+                    "signed Account preference page only; it does not receive a Bot user ID, locale, menu, "
+                    "pending state, translation mode or workflow language. A customer must explicitly choose "
+                    "and CSRF-save one reviewed Web interface locale."
+                ),
+                "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+                "interface_locale_launch_mode": "WEB_NAVIGATION",
+                "interface_locale_supported_values": ("vi", "en", "zh"),
             }
         )
     return mapping
@@ -3801,6 +3843,71 @@ def _map_archive_callback(identifier: str, source_kind: str, evidence: dict[str,
     }
 
 
+def _map_interface_locale_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Keep Bot language/menu callbacks inside the signed Web profile boundary.
+
+    A Bot language action writes a Telegram-user preference and redraws a Bot
+    menu.  The three reviewed Web display catalogs may therefore open only a
+    fresh Account page.  They are not browser locale writes: the signed Web
+    customer must choose and CSRF-save an allowed profile value independently.
+    Every other language action, including opaque formatted values, remains
+    source-review-required rather than inheriting a dashboard or account route.
+    """
+
+    token = str(identifier or "").casefold()
+    if token in INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_ACTIONS:
+        target = "/account"
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_interface_locale_fresh_web_navigation",
+            "source_dispositions": INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS,
+            "source_evidence": (
+                "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open "
+                "a fresh signed Web Account preference page; no Bot locale, Telegram identity, menu, translation "
+                "mode, workflow language or pending state reaches the browser, and the Web locale is not changed "
+                "until the customer explicitly saves an allowed profile value through CSRF protection."
+            ),
+            "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+            "interface_locale_launch_mode": "WEB_NAVIGATION",
+            "interface_locale_supported_values": ("vi", "en", "zh"),
+            "evidence": evidence,
+        }
+
+    review_label = (
+        "reviewed_interface_locale_callback_requires_source_review"
+        if token in INTERFACE_LOCALE_SOURCE_REVIEW_ACTIONS
+        else "interface_locale_callback_requires_source_review"
+    )
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": review_label,
+        "source_dispositions": (
+            "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return "
+            "to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so "
+            "it must not become a browser locale write, translation setting, workflow-language value or route."
+        ),
+        "evidence": evidence,
+    }
+
+
 def _map_tvflow_callback(identifier: str, source_kind: str, evidence: dict[str, Any]) -> dict[str, Any]:
     """Record a finite Bot trend-video flow without inventing Web parity.
 
@@ -3884,6 +3991,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         return _map_archive_callback(identifier, source_kind, evidence, existing_routes)
     if token.startswith("tvflow|"):
         return _map_tvflow_callback(identifier, source_kind, evidence)
+    if token.startswith("lang|") or token in INTERFACE_LOCALE_SOURCE_REVIEW_ACTIONS:
+        return _map_interface_locale_callback(identifier, source_kind, evidence, existing_routes)
     admin = _is_admin_command(token, "")
     telegram_only = _is_telegram_only(token)
     dashboard_fallback = False
@@ -4842,6 +4951,11 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # or identifiers.  Keep all of them fail-closed instead of inheriting
         # the generic Admin route or a finite Archive directory literal.
         return _map_archive_callback(template, "callback_template", evidence, existing_routes)
+    if token.startswith("lang|"):
+        # Formatted language suffixes are opaque Bot state. Only the exact
+        # reviewed literals are handled above by _map_callback; a template
+        # must remain an explicit source-review boundary.
+        return _map_interface_locale_callback(template, "callback_template", evidence, existing_routes)
     if token in MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         # These callbacks embed a Bot note identifier. `delete_yes` is a
         # canonical Bot write, while view/delete resolve the same Bot row for
@@ -5310,7 +5424,7 @@ def _fallback_feature_family(item: dict[str, Any]) -> str:
         return "freelance"
     if lowered == "menu_mxh" or lowered.startswith("mxh_"):
         return "social_navigation"
-    if lowered in {"back_lang", "lang_more"}:
+    if lowered.startswith("lang|") or lowered in {"back_lang", "lang_more"}:
         return "locale_navigation"
     if lowered == "back_main":
         return "root_navigation"

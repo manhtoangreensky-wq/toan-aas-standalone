@@ -492,6 +492,71 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
         assert "document_capability_key" not in mapped
 
 
+def test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs() -> None:
+    """Bot language menus open a fresh signed preference page, never a locale write."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    for command in sorted(audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_COMMANDS):
+        mapped = audit._map_command(
+            {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
+            routes,
+        )
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/account"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_interface_locale_fresh_web_navigation"
+        assert mapped["source_dispositions"] == audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS
+        assert mapped["interface_locale_authority"] == "SIGNED_CUSTOMER_WEB_PROFILE"
+        assert mapped["interface_locale_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["interface_locale_supported_values"] == ("vi", "en", "zh")
+
+    for token in sorted(audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_ACTIONS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "/account"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_interface_locale_fresh_web_navigation"
+        assert mapped["source_dispositions"] == audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS
+        assert mapped["interface_locale_authority"] == "SIGNED_CUSTOMER_WEB_PROFILE"
+        assert mapped["interface_locale_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["interface_locale_supported_values"] == ("vi", "en", "zh")
+
+    for token in sorted(audit.INTERFACE_LOCALE_SOURCE_REVIEW_ACTIONS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "reviewed_interface_locale_callback_requires_source_review"
+        assert "BOT_INTERFACE_LOCALE_OR_MENU_STATE" in mapped["source_dispositions"]
+
+    for template in ("lang|{*}", "lang|future_locale|{*}"):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["source_kind"] == "callback_template"
+        assert mapped["target"] == "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "interface_locale_callback_requires_source_review"
+
+    # Translation-pair commands are workflow concerns. They may retain their
+    # existing account route, but must not masquerade as an interface locale
+    # catalog or inherit the new navigation-only metadata.
+    for command in ("en_vi", "vi_en", "ja_vi", "ko_vi", "zh_vi"):
+        mapped = audit._map_command(
+            {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
+            routes,
+        )
+        assert mapped["target"] == "/account"
+        assert "interface_locale_authority" not in mapped
+        assert "interface_locale_supported_values" not in mapped
+
+    assert not any(
+        prefix == "lang|"
+        for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES
+    )
+
+
 def test_static_audit_classifies_neutrally_named_handlers_with_an_admin_guard_as_admin(tmp_path: Path) -> None:
     audit = _load_audit_module()
     bot_root = tmp_path / "bot"
