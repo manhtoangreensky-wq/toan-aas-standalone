@@ -71,6 +71,41 @@ absolute paths, blob hashes, session IDs and other account IDs. A non-owner or
 unknown record is handled as a guarded archive response rather than exposing
 whether another administrator has a record.
 
+## Portal delivery contract
+
+`/admin/internal-documents` is a real signed-admin ERP workspace, not an
+admin landing card. It loads policy, summary and a bounded owner-scoped list
+in parallel, then provides metadata filtering, upload and pagination. The
+detail route loads the exact record, immutable version history and redacted
+lifecycle events in parallel.
+
+The Portal accepts only a narrow presentation allow-list: UUIDs, taxonomy
+keys/labels, title/description/tags, lifecycle/revision/timestamps, safe
+version filename/extension/MIME/size/availability and redacted actor relation.
+It rejects a response unless its boundary explicitly states:
+
+```text
+execution=web_native_admin_internal_document_archive_only
+data_origin=web_admin_archive_tables_and_private_volume_only
+external_effects=none
+legacy_bot_scope=TELEGRAM_ONLY
+```
+
+All archive forms are marked as non-transient: no document metadata, search
+term, upload selection, record ID or version ID is saved to local/session
+storage or browser URL state. Create/version uploads use exact `FormData`
+field sets with an `Idempotency-Key` header; metadata and lifecycle writes use
+CSRF, idempotency, the currently server-projected `expected_revision` and
+server policy acknowledgement. The browser validates its current detail
+projection before it submits an ID or version action, while the server remains
+the authority for every owner/role/permission decision.
+
+Downloads are requested only from the current signed detail projection. Before
+creating a temporary browser object URL, the Portal rejects JSON guarded
+envelopes and requires an attachment disposition, `no-store`, `nosniff`, the
+expected canonical MIME, exact expected byte size and a bounded blob. It never
+uses `window.open`, a persistent URL, preview, share link or synthetic file.
+
 ## Isolated records, immutable versions and private storage
 
 The archive owns three Web tables only:

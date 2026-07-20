@@ -1509,6 +1509,13 @@
       "Đây là record nội bộ Web-native, không phải tư vấn pháp lý, Bot internal_documents, Telegram file, export, notification, PayOS/Xu, provider, job hay publish bên ngoài."
     ]
   }, ["/admin/governance/documents"]);
+  adminPage("/admin/internal-documents", "Kho hồ sơ nội bộ", "Kho private Web-native cho local admin: metadata, file PDF/DOCX/TXT đã xác minh, version bất biến, lifecycle và download kiểm tra integrity.", ICONS.security, {
+    layout: "admin-document-archive", action: "none", status: "processing",
+    notes: [
+      "Chỉ signed local-admin do máy chủ xác minh mới có thể đọc hoặc ghi. Browser không gửi admin ID, Telegram ID, role, storage path, hash hoặc quyền tự khai.",
+      "Kho này tách khỏi Bot internal_documents, Telegram file, Asset Vault khách hàng, Governance Documents, wallet/Xu, PayOS, provider, job, publish và external notification."
+    ]
+  });
   adminPage("/admin/campaigns", "Campaign Center", "Campaign, brief và kết quả chỉ đọc từ Bot canonical; chưa có adapter write nào được mở từ browser.", ICONS.prompt, {}, ["/admin/campaign", "/admin/campaign_new", "/admin/campaign_preset"]);
   adminPage("/admin/calendar", "Content Calendar", "Lịch nội dung chỉ hiển thị khi Bot cấp adapter read-only có redaction; không tạo hoặc publish lịch giả.", ICONS.system, {}, ["/admin/calendar_plan"]);
   adminPage("/admin/approvals", "Approval Queue", "Duyệt job/publish cần workflow canonical, confirmation và audit; Web giữ chế độ chỉ đọc cho đến khi adapter được phê duyệt.", ICONS.security, {}, ["/admin/approve_ready", "/admin/approve_job", "/admin/approve_publish"]);
@@ -5336,6 +5343,223 @@
     return { enabled: true, serverAdmin: source.serverAdmin === true, policy, summary: { counts, ownDocuments, reviewable }, documents, listing, detail, versions, events, readState: "read_only" };
   }
 
+  // Admin Internal Document Archive is deliberately a different data model
+  // from Governance text documents. Keep a second presentation allow-list so
+  // private file metadata can never be replaced by Bot/bridge/admin payloads
+  // after a Portal remount or a late signed request.
+  const ADMIN_ARCHIVE_BOOTSTRAP_READ_STATES = new Set(["loading", "read_only", "guarded", "failed"]);
+  const ADMIN_ARCHIVE_BOOTSTRAP_STATES = new Set(["active", "archived", "unavailable"]);
+  const ADMIN_ARCHIVE_BOOTSTRAP_RETENTION = new Set(["manual_review", "3_years", "5_years", "10_years", "permanent"]);
+  const ADMIN_ARCHIVE_BOOTSTRAP_CONFIDENTIALITY = new Set(["internal", "confidential", "restricted"]);
+  const ADMIN_ARCHIVE_BOOTSTRAP_EXTENSIONS = new Set(["pdf", "docx", "txt"]);
+
+  function adminArchiveBootstrapText(value, minimum, maximum) {
+    const text = typeof value === "string" ? value.trim() : "";
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function adminArchiveBootstrapMultiline(value, minimum, maximum) {
+    const text = typeof value === "string" ? value.trim() : "";
+    // Descriptions are explicitly multiline server-side. Preserve ordinary
+    // newlines/tabs while still rejecting invisible control characters.
+    return text.length >= minimum && text.length <= maximum && !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(text) ? text : "";
+  }
+
+  function adminArchiveBootstrapToken(value, maximum) {
+    const token = adminArchiveBootstrapText(value, 1, maximum || 80).toLowerCase();
+    return /^[a-z][a-z0-9_-]{0,79}$/.test(token) ? token : "";
+  }
+
+  function adminArchiveBootstrapId(value) {
+    const id = String(value || "").trim().toLowerCase();
+    return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(id) ? id : "";
+  }
+
+  function adminArchiveBootstrapCount(value, maximum) {
+    const count = Number(value);
+    return Number.isSafeInteger(count) && count >= 0 && count <= (maximum || 100000000) ? count : null;
+  }
+
+  function normalizeAdminArchiveBootstrapVersion(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const id = adminArchiveBootstrapId(source.id);
+    const versionNumber = adminArchiveBootstrapCount(source.versionNumber, 1000000);
+    const filename = adminArchiveBootstrapText(source.filename, 1, 180);
+    const extension = adminArchiveBootstrapText(source.extension, 1, 8).toLowerCase();
+    const contentType = adminArchiveBootstrapText(source.contentType, 1, 120).toLowerCase();
+    const byteSize = adminArchiveBootstrapCount(source.byteSize, 25 * 1024 * 1024);
+    const availability = String(source.availability || "").trim().toLowerCase();
+    const createdAt = adminArchiveBootstrapText(source.createdAt, 1, 80);
+    if (!id || versionNumber === null || !filename || !ADMIN_ARCHIVE_BOOTSTRAP_EXTENSIONS.has(extension)
+      || !contentType || byteSize === null || !["available", "unavailable"].includes(availability) || !createdAt
+      || typeof source.isCurrent !== "boolean") return null;
+    return { id, versionNumber, filename, extension, contentType, byteSize, availability, createdAt, isCurrent: source.isCurrent === true };
+  }
+
+  function normalizeAdminArchiveBootstrapDocument(raw, detail) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const id = adminArchiveBootstrapId(source.id);
+    const department = adminArchiveBootstrapToken(source.department, 48);
+    const departmentLabel = adminArchiveBootstrapText(source.departmentLabel, 1, 120);
+    const documentType = adminArchiveBootstrapToken(source.documentType, 64);
+    const documentTypeLabel = adminArchiveBootstrapText(source.documentTypeLabel, 1, 120);
+    const title = adminArchiveBootstrapText(source.title, 3, 240);
+    const retentionLabel = adminArchiveBootstrapText(source.retentionLabel, 1, 32).toLowerCase();
+    const confidentialityLevel = adminArchiveBootstrapText(source.confidentialityLevel, 1, 32).toLowerCase();
+    const state = String(source.state || "").trim().toLowerCase();
+    const revision = adminArchiveBootstrapCount(source.revision, 1000000);
+    const createdAt = adminArchiveBootstrapText(source.createdAt, 1, 80);
+    const updatedAt = adminArchiveBootstrapText(source.updatedAt, 1, 80);
+    const archivedAt = source.archivedAt === null ? null : adminArchiveBootstrapText(source.archivedAt, 1, 80);
+    const tags = Array.isArray(source.tags) ? source.tags : [];
+    const normalizedTags = [];
+    const seenTags = new Set();
+    for (const rawTag of tags) {
+      const tag = adminArchiveBootstrapText(rawTag, 1, 48).toLowerCase();
+      if (!tag || seenTags.has(tag)) return null;
+      seenTags.add(tag);
+      normalizedTags.push(tag);
+    }
+    const currentVersion = source.currentVersion && typeof source.currentVersion === "object"
+      ? normalizeAdminArchiveBootstrapVersion(source.currentVersion)
+      : null;
+    const permissionsSource = source.permissions && typeof source.permissions === "object" ? source.permissions : {};
+    const permissionKeys = ["canUpdate", "canAddVersion", "canDownload", "canArchive", "canRestore"];
+    if (!id || !department || !departmentLabel || !documentType || !documentTypeLabel || !title
+      || !ADMIN_ARCHIVE_BOOTSTRAP_RETENTION.has(retentionLabel) || !ADMIN_ARCHIVE_BOOTSTRAP_CONFIDENTIALITY.has(confidentialityLevel)
+      || !ADMIN_ARCHIVE_BOOTSTRAP_STATES.has(state) || revision === null || !createdAt || !updatedAt
+      || (source.archivedAt !== null && !archivedAt) || tags.length > 12 || !currentVersion
+      || !permissionKeys.every((key) => typeof permissionsSource[key] === "boolean")) return null;
+    const item = {
+      id, department, departmentLabel, documentType, documentTypeLabel, title, tags: normalizedTags,
+      retentionLabel, confidentialityLevel, state, revision, createdAt, updatedAt, archivedAt, currentVersion,
+      permissions: {
+        canUpdate: permissionsSource.canUpdate === true,
+        canAddVersion: permissionsSource.canAddVersion === true,
+        canDownload: permissionsSource.canDownload === true,
+        canArchive: permissionsSource.canArchive === true,
+        canRestore: permissionsSource.canRestore === true
+      }
+    };
+    if (!detail) return item;
+    const description = source.description === "" ? "" : adminArchiveBootstrapMultiline(source.description, 0, 2000);
+    if (description === "" && source.description !== "") return null;
+    return { ...item, description, ownerRelation: source.ownerRelation === "self" ? "self" : "", archivePolicy: adminArchiveBootstrapText(source.archivePolicy, 1, 180) };
+  }
+
+  function normalizeAdminArchiveBootstrap(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    const enabled = source.enabled === true;
+    const readState = ADMIN_ARCHIVE_BOOTSTRAP_READ_STATES.has(String(source.readState || "").trim().toLowerCase())
+      ? String(source.readState).trim().toLowerCase()
+      : "guarded";
+    const empty = {
+      enabled, serverAdmin: false, policy: {}, summary: {}, documents: [],
+      listing: { department: "", document_type: "", state: "all", q: "", limit: 30, offset: 0, hasMore: false, nextOffset: null },
+      detail: {}, versions: [], events: [], readState
+    };
+    if (!enabled || readState !== "read_only") return empty;
+    const policySource = source.policy && typeof source.policy === "object" ? source.policy : {};
+    const departments = Array.isArray(policySource.departments) ? policySource.departments : [];
+    const normalizedDepartments = [];
+    const departmentTypes = {};
+    const documentTypes = [];
+    const seenDepartments = new Set();
+    const seenTypes = new Set();
+    for (const rawDepartment of departments) {
+      const item = rawDepartment && typeof rawDepartment === "object" ? rawDepartment : {};
+      const key = adminArchiveBootstrapToken(item.key, 48);
+      const label = adminArchiveBootstrapText(item.label, 1, 120) || key;
+      const types = Array.isArray(item.documentTypes) ? item.documentTypes : [];
+      const normalizedTypes = [];
+      if (!key || !label || seenDepartments.has(key) || !types.length) return { ...empty, readState: "guarded" };
+      seenDepartments.add(key);
+      for (const rawType of types) {
+        const type = rawType && typeof rawType === "object" ? rawType : {};
+        const typeKey = adminArchiveBootstrapToken(type.key, 64);
+        const typeLabel = adminArchiveBootstrapText(type.label, 1, 120) || typeKey;
+        if (!typeKey || !typeLabel || seenTypes.has(typeKey)) return { ...empty, readState: "guarded" };
+        seenTypes.add(typeKey);
+        normalizedTypes.push({ key: typeKey, label: typeLabel });
+        documentTypes.push({ key: typeKey, label: typeLabel });
+      }
+      departmentTypes[key] = normalizedTypes.map((item) => item.key);
+      normalizedDepartments.push({ key, label, documentTypes: normalizedTypes });
+    }
+    const retentionLabels = Array.isArray(policySource.retentionLabels) ? policySource.retentionLabels.map((item) => String(item || "").trim().toLowerCase()) : [];
+    const confidentialityLevels = Array.isArray(policySource.confidentialityLevels) ? policySource.confidentialityLevels.map((item) => String(item || "").trim().toLowerCase()) : [];
+    const extensions = Array.isArray(policySource.extensions) ? policySource.extensions.map((item) => String(item || "").trim().toLowerCase()) : [];
+    const acknowledgements = policySource.acknowledgements && typeof policySource.acknowledgements === "object" ? policySource.acknowledgements : {};
+    const limits = policySource.limits && typeof policySource.limits === "object" ? policySource.limits : {};
+    const fileBytes = adminArchiveBootstrapCount(limits.fileBytes, 25 * 1024 * 1024);
+    const retainedBytes = adminArchiveBootstrapCount(limits.retainedBytes, 250 * 1024 * 1024);
+    const versionsMax = adminArchiveBootstrapCount(limits.versionsMax, 50);
+    const documentsMax = adminArchiveBootstrapCount(limits.documentsMax, 1000);
+    const tagsMax = adminArchiveBootstrapCount(limits.tagsMax, 12);
+    const validPolicy = normalizedDepartments.length > 0 && documentTypes.length > 0
+      && retentionLabels.length === ADMIN_ARCHIVE_BOOTSTRAP_RETENTION.size && new Set(retentionLabels).size === retentionLabels.length
+      && retentionLabels.every((item) => ADMIN_ARCHIVE_BOOTSTRAP_RETENTION.has(item))
+      && confidentialityLevels.length === ADMIN_ARCHIVE_BOOTSTRAP_CONFIDENTIALITY.size && new Set(confidentialityLevels).size === confidentialityLevels.length
+      && confidentialityLevels.every((item) => ADMIN_ARCHIVE_BOOTSTRAP_CONFIDENTIALITY.has(item))
+      && extensions.length === ADMIN_ARCHIVE_BOOTSTRAP_EXTENSIONS.size && new Set(extensions).size === extensions.length
+      && extensions.every((item) => ADMIN_ARCHIVE_BOOTSTRAP_EXTENSIONS.has(item))
+      && acknowledgements.archive === "ARCHIVE INTERNAL DOCUMENT" && acknowledgements.restore === "RESTORE INTERNAL DOCUMENT"
+      && fileBytes !== null && retainedBytes !== null && versionsMax !== null && documentsMax !== null && tagsMax !== null;
+    const summarySource = source.summary && typeof source.summary === "object" ? source.summary : {};
+    const rawCounts = summarySource.counts && typeof summarySource.counts === "object" ? summarySource.counts : {};
+    const counts = {};
+    for (const state of ADMIN_ARCHIVE_BOOTSTRAP_STATES) {
+      const count = adminArchiveBootstrapCount(rawCounts[state]);
+      if (count === null) return { ...empty, readState: "guarded" };
+      counts[state] = count;
+    }
+    const retainedBytesUsed = adminArchiveBootstrapCount(summarySource.retainedBytes, retainedBytes || 0);
+    const retainedBytesRemaining = adminArchiveBootstrapCount(summarySource.retainedBytesRemaining, retainedBytes || 0);
+    const unavailableVersions = adminArchiveBootstrapCount(summarySource.unavailableVersions, 1000000);
+    const rawDocuments = Array.isArray(source.documents) ? source.documents : [];
+    const documents = rawDocuments.map((item) => normalizeAdminArchiveBootstrapDocument(item, false));
+    const detail = source.detail && typeof source.detail === "object" && Object.keys(source.detail).length ? normalizeAdminArchiveBootstrapDocument(source.detail, true) : {};
+    const listingSource = source.listing && typeof source.listing === "object" ? source.listing : {};
+    const listing = {
+      department: listingSource.department ? adminArchiveBootstrapToken(listingSource.department, 48) : "",
+      document_type: listingSource.document_type ? adminArchiveBootstrapToken(listingSource.document_type, 64) : "",
+      state: String(listingSource.state || "all").trim().toLowerCase(),
+      q: adminArchiveBootstrapText(listingSource.q || "", 0, 100),
+      limit: Number(listingSource.limit), offset: Number(listingSource.offset),
+      hasMore: listingSource.hasMore === true, nextOffset: listingSource.nextOffset === null ? null : Number(listingSource.nextOffset)
+    };
+    const versions = (Array.isArray(source.versions) ? source.versions : []).map(normalizeAdminArchiveBootstrapVersion);
+    const events = (Array.isArray(source.events) ? source.events : []).map((rawEvent) => {
+      const event = rawEvent && typeof rawEvent === "object" ? rawEvent : {};
+      const id = adminArchiveBootstrapId(event.id);
+      const action = adminArchiveBootstrapToken(event.action, 48);
+      const actionLabel = adminArchiveBootstrapText(event.actionLabel, 1, 120);
+      const fromState = event.fromState === null ? null : String(event.fromState || "").trim().toLowerCase();
+      const toState = String(event.toState || "").trim().toLowerCase();
+      const revision = adminArchiveBootstrapCount(event.revision, 1000000);
+      const versionNumber = event.versionNumber === null ? null : adminArchiveBootstrapCount(event.versionNumber, 1000000);
+      const createdAt = adminArchiveBootstrapText(event.createdAt, 1, 80);
+      const actorRelation = event.actorRelation === "self" || event.actorRelation === "another_admin" ? event.actorRelation : "";
+      return id && action && actionLabel && (fromState === null || ADMIN_ARCHIVE_BOOTSTRAP_STATES.has(fromState))
+        && ADMIN_ARCHIVE_BOOTSTRAP_STATES.has(toState) && revision !== null && (versionNumber === null || versionNumber > 0)
+        && createdAt && actorRelation ? { id, action, actionLabel, fromState, toState, revision, versionNumber, createdAt, actorRelation } : null;
+    });
+    if (!validPolicy || retainedBytesUsed === null || retainedBytesRemaining === null || unavailableVersions === null
+      || retainedBytesUsed + retainedBytesRemaining !== retainedBytes || rawDocuments.length !== documents.length || documents.some((item) => !item)
+      || (Object.keys(source.detail || {}).length && (!detail || detail.ownerRelation !== "self"))
+      || !["all", ...ADMIN_ARCHIVE_BOOTSTRAP_STATES].includes(listing.state) || (!listing.department && listingSource.department)
+      || (!listing.document_type && listingSource.document_type) || listing.limit !== 30 || !Number.isInteger(listing.offset) || listing.offset < 0 || listing.offset > 5000
+      || (listing.hasMore && (!Number.isInteger(listing.nextOffset) || listing.nextOffset <= listing.offset || listing.nextOffset > 5000))
+      || (!listing.hasMore && listing.nextOffset !== null) || versions.some((item) => !item) || events.some((item) => !item)
+      || versions.length > 30 || events.length > 30) return { ...empty, readState: "guarded" };
+    return {
+      enabled: true, serverAdmin: source.serverAdmin === true,
+      policy: { departments: normalizedDepartments, documentTypes, departmentTypes, retentionLabels, confidentialityLevels, extensions, acknowledgements, limits: { fileBytes, retainedBytes, versionsMax, documentsMax, tagsMax } },
+      summary: { counts, retainedBytes: retainedBytesUsed, retainedBytesLimit: retainedBytes, retainedBytesRemaining, unavailableVersions },
+      documents, listing, detail, versions, events, readState: "read_only"
+    };
+  }
+
   function normalizeAssetVaultLifecycle(raw) {
     const source = raw && typeof raw === "object" ? raw : {};
     const assetId = validVaultAssetId(source.asset_id) ? String(source.asset_id).trim().toLowerCase() : "";
@@ -5751,6 +5975,18 @@
       versions: source.governanceDocumentVersions,
       events: source.governanceDocumentEvents,
       readState: source.governanceReadState
+    });
+    const adminArchive = normalizeAdminArchiveBootstrap({
+      enabled: source.adminDocumentArchiveEnabled === true,
+      serverAdmin: source.adminDocumentArchiveServerAdmin === true,
+      policy: source.adminDocumentArchivePolicy,
+      summary: source.adminDocumentArchiveSummary,
+      documents: source.adminDocumentArchiveDocuments,
+      listing: source.adminDocumentArchiveListing,
+      detail: source.adminDocumentArchiveDetail,
+      versions: source.adminDocumentArchiveVersions,
+      events: source.adminDocumentArchiveEvents,
+      readState: source.adminDocumentArchiveReadState
     });
     // Video Studio data is first owner-scoped and boundary-checked by the
     // integration layer, then projected again here.  Keep only the bounded
@@ -6547,6 +6783,12 @@
       governanceDocumentsEnabled: governance.enabled,
       governanceAdminSessionHint: source.governanceAdminSessionHint === true,
       governance,
+      // Private binary archive metadata has its own strict allow-list. It is
+      // not Governance content, Asset Vault, Bot internal_documents or a
+      // generic ERP projection, even when the signed browser has admin UI.
+      adminDocumentArchiveEnabled: adminArchive.enabled,
+      adminDocumentArchiveAdminSessionHint: source.adminDocumentArchiveAdminSessionHint === true,
+      adminDocumentArchive: adminArchive,
       adminData: source.adminData && typeof source.adminData === "object" ? source.adminData : {},
       // Do not let a normal render cycle discard the redacted Audit Explorer
       // projection that integration.js just hydrated. Both helpers above
@@ -6632,6 +6874,16 @@
         status: "processing", access: "admin", layout: "governance-document-detail", action: "none", actionLabel: "", fields: [],
         recordId: documentId,
         notes: ["Mỗi write yêu cầu signed admin session, CSRF, confirmation, idempotency và revision ở server.", "Không có file, export, Telegram/Bot, wallet/Xu, PayOS, provider, job, notification hoặc external publish từ lifecycle này."]
+      });
+    }
+    if (/^\/admin\/internal-documents\/documents\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
+      const documentId = normalized.split("/").pop();
+      return Object.freeze({
+        path: "/admin/internal-documents/documents/:id", routePath: normalized, title: "Chi tiết hồ sơ nội bộ", icon: ICONS.security, section: "Internal Document Archive",
+        description: "Xem metadata, phiên bản bất biến, lifecycle và private download đã qua integrity check của một hồ sơ Web-native.",
+        status: "processing", access: "admin", layout: "admin-document-archive-detail", action: "none", actionLabel: "", fields: [],
+        recordId: documentId,
+        notes: ["Mỗi read/write đều cần signed local-admin session; browser không gửi admin ID, Telegram ID, role, file path, hash hay quyền tự khai.", "Kho này không là Bot internal_documents, Telegram file, Asset Vault khách hàng, Governance Documents, wallet/Xu, PayOS, provider, job, publish hay external notification."]
       });
     }
     if (/^\/workboard\/[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(normalized)) {
@@ -7250,8 +7502,9 @@
     if (linkPath === "/admin/providers") return matchesRouteFamily(path, "/admin/providers") || path === "/admin/provider-cost";
     if (linkPath === "/admin/audit") return matchesRouteFamily(path, "/admin/audit") || ["/admin/security", "/admin/access"].includes(path);
     if (linkPath === "/admin/governance") return matchesRouteFamily(path, "/admin/governance");
+    if (linkPath === "/admin/internal-documents") return matchesRouteFamily(path, "/admin/internal-documents");
     if (linkPath === "/admin") {
-      const directAdminFamilies = ["/admin/users", "/admin/jobs", "/admin/payments", "/admin/providers", "/admin/provider-cost", "/admin/audit", "/admin/security", "/admin/access", "/admin/governance"];
+      const directAdminFamilies = ["/admin/users", "/admin/jobs", "/admin/payments", "/admin/providers", "/admin/provider-cost", "/admin/audit", "/admin/security", "/admin/access", "/admin/governance", "/admin/internal-documents"];
       return path === "/admin" || (matchesRouteFamily(path, "/admin") && !directAdminFamilies.some((root) => matchesRouteFamily(path, root)));
     }
     return matchesRouteFamily(path, linkPath);
@@ -17386,6 +17639,232 @@
       + '<section class="portal-card portal-card-pad"><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/admin/governance">← Danh sách Governance Documents</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="governance-documents-refresh" data-portal-route="' + safeText(route) + '">Làm mới record</button></div></section></article>';
   }
 
+  function adminArchiveStateLabel(value) {
+    return ({ active: 'Đang hoạt động', archived: 'Đã lưu trữ', unavailable: 'Không khả dụng' })[String(value || '').toLowerCase()] || 'Đang được bảo vệ';
+  }
+
+  function adminArchiveBytes(value) {
+    const bytes = Number(value);
+    if (!Number.isFinite(bytes) || bytes < 0) return '—';
+    if (bytes < 1024) return String(Math.round(bytes)) + ' B';
+    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function adminArchiveOptions(items, selected, placeholder, includeAll) {
+    const rows = [];
+    if (includeAll) rows.push('<option value="">' + safeText(placeholder || 'Tất cả') + '</option>');
+    (Array.isArray(items) ? items : []).forEach((item) => {
+      const key = item && typeof item.key === 'string' ? item.key : '';
+      const label = item && typeof item.label === 'string' ? item.label : '';
+      if (!key || !label) return;
+      rows.push('<option value="' + safeText(key) + '"' + (key === selected ? ' selected' : '') + '>' + safeText(label) + '</option>');
+    });
+    return rows.join('');
+  }
+
+  function adminArchiveDepartmentTypeMapAttribute(policy) {
+    const source = policy && policy.departmentTypes && typeof policy.departmentTypes === 'object' ? policy.departmentTypes : {};
+    const safe = {};
+    Object.entries(source).forEach(([department, types]) => {
+      const key = String(department || '').trim().toLowerCase();
+      const values = Array.isArray(types)
+        ? types.map((item) => String(item || '').trim().toLowerCase()).filter((item) => /^[a-z][a-z0-9_-]{0,79}$/.test(item))
+        : [];
+      if (/^[a-z][a-z0-9_-]{0,79}$/.test(key) && values.length && new Set(values).size === values.length) safe[key] = values;
+    });
+    return safeText(JSON.stringify(safe));
+  }
+
+  function synchronizeAdminArchiveDocumentType(form) {
+    if (!form || !form.hasAttribute('data-admin-archive-type-map')) return;
+    const departmentSelect = form.querySelector('[name="department"]');
+    const typeSelect = form.querySelector('[name="document_type"]');
+    if (!departmentSelect || !typeSelect) return;
+    let map = {};
+    try {
+      const parsed = JSON.parse(form.getAttribute('data-admin-archive-type-map') || '{}');
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) map = parsed;
+    } catch (_) {
+      return;
+    }
+    const department = String(departmentSelect.value || '').trim().toLowerCase();
+    const rawAllowed = department && Array.isArray(map[department]) ? map[department] : null;
+    const allowed = rawAllowed ? new Set(rawAllowed.filter((item) => /^[a-z][a-z0-9_-]{0,79}$/.test(String(item || '')))) : null;
+    if (rawAllowed && !allowed.size) return;
+    Array.from(typeSelect.options).forEach((option) => {
+      const value = String(option.value || '').trim().toLowerCase();
+      const visible = !allowed || !value || allowed.has(value);
+      option.hidden = !visible;
+      option.disabled = !visible;
+    });
+    const selected = String(typeSelect.value || '').trim().toLowerCase();
+    if (allowed && selected && !allowed.has(selected)) {
+      const firstAllowed = Array.from(typeSelect.options).find((option) => allowed.has(String(option.value || '').trim().toLowerCase()));
+      if (firstAllowed) typeSelect.value = firstAllowed.value;
+    }
+  }
+
+  function adminArchiveBoundaryCard() {
+    return '<aside class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Private Web-admin archive</span><h2 class="portal-card-title">Ranh giới hồ sơ rõ ràng</h2><p class="portal-card-subtitle">Kho này chỉ phục vụ signed local-admin và attachment đã được máy chủ kiểm tra integrity.</p></div>' + badge('read_only') + '</div><ol class="portal-project-steps"><li><strong>Không public hoặc chia sẻ</strong><span>Không có preview, URL công khai, export, hard delete hay notification.</span></li><li><strong>Không dùng nguồn Bot</strong><span>Không đọc Bot internal_documents, Telegram file, Asset Vault khách, Core Bridge, Xu, PayOS, provider hay jobs.</span></li><li><strong>Phiên bản bất biến</strong><span>Mỗi upload tạo phiên bản mới; lifecycle và metadata luôn cần CSRF, revision, idempotency và audit ở server.</span></li></ol></aside>';
+  }
+
+  function adminArchiveFilterFields(policy, listing, enabled) {
+    const source = listing && typeof listing === 'object' ? listing : {};
+    const state = String(source.state || 'all');
+    const disabled = enabled ? '' : ' disabled';
+    return '<div class="portal-fields"><label class="portal-field"><span>Nhóm hồ sơ</span><select class="portal-select" name="department"' + disabled + '>'
+      + adminArchiveOptions(policy && policy.departments, String(source.department || ''), 'Tất cả nhóm', true) + '</select></label>'
+      + '<label class="portal-field"><span>Loại hồ sơ</span><select class="portal-select" name="document_type"' + disabled + '>'
+      + adminArchiveOptions(policy && policy.documentTypes, String(source.document_type || ''), 'Tất cả loại', true) + '</select></label>'
+      + '<label class="portal-field"><span>Trạng thái</span><select class="portal-select" name="state"' + disabled + '><option value="all"' + (state === 'all' ? ' selected' : '') + '>Tất cả trạng thái</option><option value="active"' + (state === 'active' ? ' selected' : '') + '>Đang hoạt động</option><option value="archived"' + (state === 'archived' ? ' selected' : '') + '>Đã lưu trữ</option><option value="unavailable"' + (state === 'unavailable' ? ' selected' : '') + '>Không khả dụng</option></select></label>'
+      + '<label class="portal-field"><span>Tìm metadata</span><input class="portal-input" type="search" name="q" maxlength="100" value="' + safeText(String(source.q || '')) + '" placeholder="Tiêu đề, tag, mô tả..."' + disabled + '></label></div>';
+  }
+
+  function adminArchiveMetadataFields(policy, document, includeFile, enabled) {
+    const source = document && typeof document === 'object' ? document : {};
+    const departments = policy && Array.isArray(policy.departments) ? policy.departments : [];
+    const documentTypes = policy && Array.isArray(policy.documentTypes) ? policy.documentTypes : [];
+    const retentionLabels = policy && Array.isArray(policy.retentionLabels) ? policy.retentionLabels : [];
+    const confidentialityLevels = policy && Array.isArray(policy.confidentialityLevels) ? policy.confidentialityLevels : [];
+    const disabled = enabled ? '' : ' disabled';
+    const retentionOptions = retentionLabels.map((item) => '<option value="' + safeText(item) + '"' + (item === source.retentionLabel ? ' selected' : '') + '>' + safeText(item.replace(/_/g, ' ')) + '</option>').join('');
+    const confidentialityOptions = confidentialityLevels.map((item) => '<option value="' + safeText(item) + '"' + (item === source.confidentialityLevel ? ' selected' : '') + '>' + safeText(item.replace(/_/g, ' ')) + '</option>').join('');
+    const fileField = includeFile
+      ? '<label class="portal-field portal-field--wide"><span>Tệp private <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" type="file" name="file" accept=".pdf,.docx,.txt" required' + disabled + '><span class="portal-field-help">Chỉ PDF, DOCX hoặc TXT. Browser chỉ kiểm tra lựa chọn cơ bản; máy chủ kiểm tra cấu trúc, DLP, dung lượng và integrity trước khi giữ tệp.</span></label>'
+      : '';
+    return '<div class="portal-fields"><label class="portal-field"><span>Nhóm hồ sơ</span><select class="portal-select" name="department" required' + disabled + '>'
+      + adminArchiveOptions(departments, String(source.department || (departments[0] && departments[0].key) || ''), 'Chọn nhóm', false) + '</select></label>'
+      + '<label class="portal-field"><span>Loại hồ sơ</span><select class="portal-select" name="document_type" required' + disabled + '>'
+      + adminArchiveOptions(documentTypes, String(source.documentType || (documentTypes[0] && documentTypes[0].key) || ''), 'Chọn loại', false) + '</select></label>'
+      + '<label class="portal-field portal-field--wide"><span>Tiêu đề <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" type="text" name="title" minlength="3" maxlength="180" required value="' + safeText(String(source.title || '')) + '" placeholder="Tên hồ sơ để quản trị nội bộ"' + disabled + '></label>'
+      + '<label class="portal-field"><span>Nhãn lưu giữ</span><select class="portal-select" name="retention_label" required' + disabled + '>' + retentionOptions + '</select></label>'
+      + '<label class="portal-field"><span>Mức bảo mật</span><select class="portal-select" name="confidentiality_level" required' + disabled + '>' + confidentialityOptions + '</select></label>'
+      + '<label class="portal-field portal-field--wide"><span>Tag</span><input class="portal-input" type="text" name="tags" maxlength="767" value="' + safeText(Array.isArray(source.tags) ? source.tags.join(', ') : '') + '" placeholder="Ví dụ: policy, finance, q3"' + disabled + '><span class="portal-field-help">Phân cách bằng dấu phẩy; không nhập token, đường dẫn hệ thống, Telegram file ID hoặc dữ liệu nhạy cảm không cần thiết.</span></label>'
+      + '<label class="portal-field portal-field--wide"><span>Mô tả</span><textarea class="portal-textarea" name="description" maxlength="2000" placeholder="Ngữ cảnh vận hành tối thiểu..."' + disabled + '>' + safeText(String(source.description || '')) + '</textarea></label>'
+      + fileField + '</div>';
+  }
+
+  function adminArchiveDocumentsTable(documents, policy) {
+    const rows = Array.isArray(documents) ? documents : [];
+    return renderRowsTable(['Hồ sơ', 'Phân loại', 'Lifecycle', 'Phiên bản', 'Cập nhật'], rows, (document) => {
+      const href = '/admin/internal-documents/documents/' + encodeURIComponent(String(document.id || ''));
+      const labels = (Array.isArray(policy && policy.departments) ? policy.departments : []).find((item) => item && item.key === document.department);
+      const department = labels && labels.label ? labels.label : (document.departmentLabel || document.department || '—');
+      return '<td><a class="portal-table-link" href="' + safeText(href) + '">' + safeText(String(document.title || 'Hồ sơ nội bộ')) + '</a><small>' + safeText(Array.isArray(document.tags) && document.tags.length ? document.tags.join(' · ') : 'Không tag') + '</small></td><td>' + safeText(String(department)) + '<small>' + safeText(String(document.documentTypeLabel || document.documentType || '—')) + '</small></td><td>' + badge(String(document.state || 'guarded')) + '<small>' + safeText(adminArchiveStateLabel(document.state)) + '</small></td><td>v' + safeText(String(document.currentVersion && document.currentVersion.versionNumber || '—')) + '<small>' + safeText(adminArchiveBytes(document.currentVersion && document.currentVersion.byteSize)) + '</small></td><td>' + safeText(String(document.updatedAt || '—')) + '</td>';
+    }, 'Chưa có hồ sơ private', 'Thêm hồ sơ đầu tiên với một attachment đã được máy chủ kiểm tra. Portal không tạo bản ghi hoặc file giả.');
+  }
+
+  function adminArchivePagination(listing, enabled) {
+    const source = listing && typeof listing === 'object' ? listing : {};
+    const offset = Number(source.offset || 0);
+    const previous = offset >= 30 ? offset - 30 : null;
+    const next = source.hasMore === true && Number.isInteger(source.nextOffset) && source.nextOffset > offset ? source.nextOffset : null;
+    if (previous === null && next === null) return '';
+    const disabled = enabled ? '' : ' disabled';
+    return '<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc và phân trang chỉ sống trong phiên hiện tại; metadata private không vào URL hay browser storage.</span><div class="portal-inline-actions">'
+      + (previous === null ? '' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="archive-documents-page" data-portal-route="/admin/internal-documents" data-admin-archive-offset="' + safeText(String(previous)) + '"' + disabled + '>← Trang trước</button>')
+      + (next === null ? '' : '<button class="portal-button portal-button--quiet" type="button" data-portal-action="archive-documents-page" data-portal-route="/admin/internal-documents" data-admin-archive-offset="' + safeText(String(next)) + '"' + disabled + '>Trang sau →</button>')
+      + '</div></div>';
+  }
+
+  function renderAdminDocumentArchive(page, context) {
+    const archive = context.adminDocumentArchive && typeof context.adminDocumentArchive === 'object' ? context.adminDocumentArchive : {};
+    const enabled = context.adminDocumentArchiveEnabled === true && archive.enabled === true;
+    const canView = Boolean(enabled && archive.serverAdmin === true && context.capabilities && context.capabilities['admin-archive-documents-view'] === true);
+    const canCreate = Boolean(canView && context.capabilities && context.capabilities['admin-archive-document-create'] === true);
+    const readState = String(archive.readState || 'guarded');
+    if (enabled && context.adminDocumentArchiveAdminSessionHint === true && readState === 'loading') {
+      return '<article class="portal-page portal-admin-document-archive">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><div><h2>Đang xác minh kho hồ sơ nội bộ</h2><p>Portal đang chờ policy, signed admin authority và projection metadata riêng. Không dùng cache, Bot hay dữ liệu text Governance để lấp màn hình.</p></div></div></section></article>';
+    }
+    if (!enabled || !canView || readState !== 'read_only' || !archive.policy || !Array.isArray(archive.policy.departments)) {
+      const reason = !enabled
+        ? 'Kho hồ sơ nội bộ đang tắt theo release flag máy chủ. Portal không hiển thị file cũ hoặc tạo metadata giả.'
+        : 'Cần signed local-admin session và projection Archive riêng được máy chủ xác nhận.';
+      return '<article class="portal-page portal-admin-document-archive">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><div><h2>Kho hồ sơ nội bộ đang được bảo vệ</h2><p>' + safeText(reason) + '</p><div class="portal-state-meta"><span>Private Web-admin only</span><span>Không đọc Bot documents</span><span>Không có external action</span></div></div></div></section>' + adminArchiveBoundaryCard() + '</article>';
+    }
+    const policy = archive.policy;
+    const summary = archive.summary && typeof archive.summary === 'object' ? archive.summary : {};
+    const counts = summary.counts && typeof summary.counts === 'object' ? summary.counts : {};
+    const listing = archive.listing && typeof archive.listing === 'object' ? archive.listing : {};
+    const documents = Array.isArray(archive.documents) ? archive.documents : [];
+    const createForm = '<form class="portal-form" data-portal-form data-portal-no-transient data-admin-archive-type-map="' + adminArchiveDepartmentTypeMapAttribute(policy) + '" data-portal-action="archive-document-create-upload" data-portal-route="/admin/internal-documents" novalidate>'
+      + adminArchiveMetadataFields(policy, { retentionLabel: policy.retentionLabels && policy.retentionLabels[0], confidentialityLevel: policy.confidentialityLevels && policy.confidentialityLevels[0] }, true, canCreate)
+      + '<div class="portal-form-footer"><span class="portal-form-note">Tạo hồ sơ chỉ gửi multipart đúng policy qua CSRF + idempotency. Không có public link, preview, share, export, Bot hay auto-notification.</span><button class="portal-button portal-button--primary" type="submit"' + (canCreate ? '' : ' disabled') + '>Thêm hồ sơ private</button></div></form>';
+    const filterForm = '<form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="archive-documents-filter" data-portal-route="/admin/internal-documents" novalidate>'
+      + adminArchiveFilterFields(policy, listing, canView)
+      + '<div class="portal-form-footer"><span class="portal-form-note">Máy chủ xác nhận lại nhóm, loại, trạng thái và signed admin scope cho mọi truy vấn.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="archive-documents-filter-clear" data-portal-route="/admin/internal-documents"' + (canView ? '' : ' disabled') + '>Xóa lọc</button><button class="portal-button portal-button--primary" type="submit"' + (canView ? '' : ' disabled') + '>Áp dụng</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="archive-documents-refresh" data-portal-route="/admin/internal-documents"' + (canView ? '' : ' disabled') + '>Làm mới</button></div></div></form>';
+    return '<article class="portal-page portal-admin-document-archive">' + renderHero(page, context)
+      + '<section class="portal-support-intro"><div><span class="portal-section-kicker">Admin ERP / Private Archive</span><h2>Hồ sơ private có lifecycle, phiên bản và integrity kiểm soát</h2><p>Chỉ metadata đã redaction và attachment được server kiểm tra mới xuất hiện. Không có public URL, preview, hard delete hay external delivery.</p></div><dl><div><dt>' + safeText(String(counts.active || 0)) + '</dt><dd>Đang hoạt động</dd></div><div><dt>' + safeText(String(counts.archived || 0)) + '</dt><dd>Đã lưu trữ</dd></div><div><dt>' + safeText(String(counts.unavailable || 0)) + '</dt><dd>Không khả dụng</dd></div><div><dt>' + safeText(adminArchiveBytes(summary.retainedBytes)) + '</dt><dd>Đã giữ / ' + safeText(adminArchiveBytes(summary.retainedBytesLimit)) + '</dd></div></dl></section>'
+      + '<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm hồ sơ private</h2><p class="portal-card-subtitle">Chỉ PDF, DOCX hoặc TXT theo policy. Mỗi tệp tạo version 1 bất biến khi máy chủ xác nhận.</p></div>' + badge(canCreate ? 'ready' : 'guarded') + '</div>' + createForm + '</section>' + adminArchiveBoundaryCard() + '</div>'
+      + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Tìm metadata</h2><p class="portal-card-subtitle">Bộ lọc đọc lại từ server; không lưu từ khóa private hoặc kết quả vào URL/browser storage.</p></div>' + badge('read_only') + '</div>' + filterForm + '</section>'
+      + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Danh sách hồ sơ</h2><p class="portal-card-subtitle">Mở record để cập nhật metadata, thêm version, đổi lifecycle hoặc yêu cầu private attachment theo quyền đã cấp.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="archive-documents-refresh" data-portal-route="/admin/internal-documents"' + (canView ? '' : ' disabled') + '>Làm mới</button></div>' + adminArchiveDocumentsTable(documents, policy) + adminArchivePagination(listing, canView) + '</section></article>';
+  }
+
+  function adminArchiveLifecycleForm(document, operation, canAct) {
+    const source = document && typeof document === 'object' ? document : {};
+    const route = '/admin/internal-documents/documents/' + encodeURIComponent(String(source.id || ''));
+    const isArchive = operation === 'archive';
+    const title = isArchive ? 'Lưu trữ hồ sơ' : 'Khôi phục hồ sơ';
+    const description = isArchive
+      ? 'Archive giữ metadata và toàn bộ version; không có hard delete, export hoặc action ngoài Web.'
+      : 'Restore chỉ thành công nếu version hiện tại vẫn available sau integrity check của máy chủ.';
+    const confirmation = isArchive
+      ? 'Lưu trữ hồ sơ private này? History bất biến vẫn được giữ và không có hard delete hoặc external action.'
+      : 'Khôi phục hồ sơ private này? Máy chủ sẽ kiểm tra version hiện tại trước khi đưa về active.';
+    return '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">' + safeText(title) + '</h2><p class="portal-card-subtitle">' + safeText(description) + '</p></div>' + badge(String(source.state || 'guarded')) + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="archive-document-' + safeText(operation) + '" data-portal-route="' + safeText(route) + '" data-portal-confirm="' + safeText(confirmation) + '" novalidate><input type="hidden" name="document_id" value="' + safeText(String(source.id || '')) + '"><input type="hidden" name="expected_revision" value="' + safeText(String(source.revision || '')) + '"><div class="portal-fields"><label class="portal-checkbox"><input name="archive_confirmation" type="checkbox" value="true" required' + (canAct ? '' : ' disabled') + '><span>Tôi xác nhận thay đổi lifecycle này chỉ áp dụng cho record Archive private hiện tại.</span></label></div><div class="portal-form-footer"><span class="portal-form-note">Máy chủ yêu cầu acknowledgement chính xác, CSRF, idempotency và revision. Browser không tự đổi state.</span><button class="portal-button portal-button--primary" type="submit"' + (canAct ? '' : ' disabled') + '>' + safeText(title) + '</button></div></form></section>';
+  }
+
+  function adminArchiveVersionRows(document, versions, context) {
+    const canDownload = Boolean(context.capabilities && context.capabilities['admin-archive-document-download'] === true && document && document.state === 'active');
+    return renderRowsTable(['Phiên bản', 'Tệp đã kiểm tra', 'Tình trạng', 'Tạo lúc', 'Thao tác'], Array.isArray(versions) ? versions : [], (version) => {
+      const download = canDownload && version && version.availability === 'available'
+        ? '<form class="portal-inline-form" data-portal-form data-portal-no-transient data-portal-action="archive-document-download-version" data-portal-route="/admin/internal-documents/documents/' + safeText(String(document.id || '')) + '"><input type="hidden" name="version_id" value="' + safeText(String(version.id || '')) + '"><button class="portal-button portal-button--quiet" type="submit">Tải private</button></form>'
+        : '<span class="portal-form-note">Không thể tải</span>';
+      return '<td>v' + safeText(String(version.versionNumber || '—')) + (version.isCurrent === true ? '<small>Phiên bản hiện tại</small>' : '') + '</td><td>' + safeText(String(version.filename || '—')) + '<small>' + safeText(String(version.extension || '').toUpperCase() + ' · ' + adminArchiveBytes(version.byteSize)) + '</small></td><td>' + badge(String(version.availability || 'guarded')) + '</td><td>' + safeText(String(version.createdAt || '—')) + '</td><td>' + download + '</td>';
+    }, 'Chưa có version history', 'Version đầu tiên được tạo cùng hồ sơ; không có sửa, xóa hoặc tải giả trong browser.');
+  }
+
+  function adminArchiveEventRows(events) {
+    return renderRowsTable(['Revision', 'Thao tác', 'Chuyển trạng thái', 'Actor', 'Thời điểm'], Array.isArray(events) ? events : [], (event) => '<td>v' + safeText(String(event.revision || '—')) + '</td><td>' + safeText(String(event.actionLabel || 'Cập nhật nội bộ')) + (event.versionNumber ? '<small>Version ' + safeText(String(event.versionNumber)) + '</small>' : '') + '</td><td>' + safeText(event.fromState ? adminArchiveStateLabel(event.fromState) : '—') + ' → ' + safeText(adminArchiveStateLabel(event.toState)) + '</td><td>' + safeText(event.actorRelation === 'self' ? 'Tôi' : 'Quản trị viên khác') + '</td><td>' + safeText(String(event.createdAt || '—')) + '</td>', 'Chưa có audit lifecycle', 'Audit chỉ hiển thị action đã redaction; không lộ danh tính, storage path, hash hoặc binary data.');
+  }
+
+  function renderAdminDocumentArchiveDetail(page, context) {
+    const archive = context.adminDocumentArchive && typeof context.adminDocumentArchive === 'object' ? context.adminDocumentArchive : {};
+    const enabled = context.adminDocumentArchiveEnabled === true && archive.enabled === true;
+    const document = archive.detail && typeof archive.detail === 'object' && archive.detail.id ? archive.detail : null;
+    const canView = Boolean(enabled && archive.serverAdmin === true && context.capabilities && context.capabilities['admin-archive-documents-view'] === true);
+    const readState = String(archive.readState || 'guarded');
+    if (enabled && context.adminDocumentArchiveAdminSessionHint === true && readState === 'loading') {
+      return '<article class="portal-page portal-admin-document-archive-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-state" data-state="processing"><div><h2>Đang nạp hồ sơ private</h2><p>Máy chủ đang kiểm tra signed admin authority, owner scope, metadata và version history của đúng record.</p></div></div></section></article>';
+    }
+    if (!enabled || !canView || !document || readState !== 'read_only') {
+      return '<article class="portal-page portal-admin-document-archive-detail">' + renderHero(page, context) + '<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded"><div><h2>Hồ sơ private không khả dụng</h2><p>Record không tồn tại, không thuộc signed local-admin scope hiện tại hoặc Archive đang được bảo vệ. Portal không dùng dữ liệu cũ, Bot hay generic admin fallback.</p></div></div><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/admin/internal-documents">Quay lại danh sách</a></div></section></article>';
+    }
+    const policy = archive.policy && typeof archive.policy === 'object' ? archive.policy : {};
+    const route = page.routePath || ('/admin/internal-documents/documents/' + encodeURIComponent(String(document.id)));
+    const canUpdate = Boolean(document.permissions && document.permissions.canUpdate === true && context.capabilities && context.capabilities['admin-archive-document-update'] === true);
+    const canAddVersion = Boolean(document.permissions && document.permissions.canAddVersion === true && context.capabilities && context.capabilities['admin-archive-document-version-upload'] === true);
+    const canDownloadCurrent = Boolean(document.permissions && document.permissions.canDownload === true && context.capabilities && context.capabilities['admin-archive-document-download'] === true && document.currentVersion && document.currentVersion.availability === 'available');
+    const updateForm = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Metadata hồ sơ</h2><p class="portal-card-subtitle">Lưu toàn bộ metadata hiển thị bằng revision mới. Policy server vẫn là authority cho taxonomy, DLP và lifecycle.</p></div>' + badge(canUpdate ? 'ready' : 'read_only') + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-admin-archive-type-map="' + adminArchiveDepartmentTypeMapAttribute(policy) + '" data-portal-action="archive-document-update" data-portal-route="' + safeText(route) + '" data-portal-confirm="Lưu revision metadata mới cho hồ sơ private này? Máy chủ sẽ kiểm tra CSRF, policy, revision và idempotency." novalidate><input type="hidden" name="document_id" value="' + safeText(String(document.id)) + '"><input type="hidden" name="expected_revision" value="' + safeText(String(document.revision)) + '">' + adminArchiveMetadataFields(policy, document, false, canUpdate) + '<div class="portal-form-footer"><span class="portal-form-note">Không hiển thị hoặc gửi storage path, SHA-256, Telegram reference hay account ID trong Portal.</span><button class="portal-button portal-button--primary" type="submit"' + (canUpdate ? '' : ' disabled') + '>Lưu metadata</button></div></form></section>';
+    const currentVersion = document.currentVersion && typeof document.currentVersion === 'object' ? document.currentVersion : {};
+    const downloadForm = canDownloadCurrent
+      ? '<form class="portal-inline-form" data-portal-form data-portal-no-transient data-portal-action="archive-document-download-current" data-portal-route="' + safeText(route) + '"><button class="portal-button portal-button--primary" type="submit">Tải attachment private</button></form>'
+      : '<p class="portal-form-note">Phiên bản hiện tại chưa được server cho phép tải. Không có fallback URL hoặc file giả.</p>';
+    const versionForm = '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm phiên bản bất biến</h2><p class="portal-card-subtitle">Tệp mới thay phiên bản hiện tại sau integrity check; version cũ vẫn giữ history riêng.</p></div>' + badge(canAddVersion ? 'ready' : 'read_only') + '</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="archive-document-version-upload" data-portal-route="' + safeText(route) + '" novalidate><input type="hidden" name="document_id" value="' + safeText(String(document.id)) + '"><input type="hidden" name="expected_revision" value="' + safeText(String(document.revision)) + '"><div class="portal-fields"><label class="portal-field portal-field--wide"><span>Tệp thay thế <span class="portal-required-mark" aria-hidden="true">*</span></span><input class="portal-input" type="file" name="file" accept=".pdf,.docx,.txt" required' + (canAddVersion ? '' : ' disabled') + '><span class="portal-field-help">Tạo version mới; không sửa binary của version cũ. Máy chủ kiểm tra PDF/DOCX/TXT, DLP, dung lượng và integrity.</span></label><label class="portal-field portal-field--wide"><span>Tên hiển thị (tùy chọn)</span><input class="portal-input" type="text" name="display_name" maxlength="180" placeholder="Giữ trống để dùng tên tệp đã kiểm tra"' + (canAddVersion ? '' : ' disabled') + '></label></div><div class="portal-form-footer"><span class="portal-form-note">Upload có CSRF + idempotency header và exact revision; không có preview/public link.</span><button class="portal-button portal-button--primary" type="submit"' + (canAddVersion ? '' : ' disabled') + '>Thêm phiên bản</button></div></form></section>';
+    const lifecycle = document.state === 'active' && document.permissions && document.permissions.canArchive === true
+      ? adminArchiveLifecycleForm(document, 'archive', Boolean(context.capabilities && context.capabilities['admin-archive-document-archive'] === true))
+      : (document.state === 'archived' && document.permissions && document.permissions.canRestore === true
+        ? adminArchiveLifecycleForm(document, 'restore', Boolean(context.capabilities && context.capabilities['admin-archive-document-restore'] === true))
+        : '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lifecycle có kiểm soát</h2><p class="portal-card-subtitle">Không có transition write nào đang được server cấp cho record này.</p></div>' + badge('read_only') + '</div><p class="portal-form-note">Record unavailable không có recovery browser-side. Cần kiểm tra máy chủ, storage và audit trước khi bất kỳ xử lý nào khác được triển khai.</p></section>');
+    return '<article class="portal-page portal-admin-document-archive-detail">' + renderHero(page, context)
+      + '<section class="portal-support-case-hero"><div><div class="portal-support-case-head"><span class="portal-support-case-category">' + safeText(String(document.departmentLabel || document.department || 'Hồ sơ nội bộ')) + ' · ' + safeText(String(document.documentTypeLabel || document.documentType || '')) + '</span>' + badge(String(document.state || 'guarded')) + '</div><h2>' + safeText(String(document.title || 'Hồ sơ private')) + '</h2><p>' + safeText(String(document.description || 'Không có mô tả.')) + '</p><small>' + safeText(Array.isArray(document.tags) && document.tags.length ? document.tags.join(' · ') : 'Không tag') + '</small></div><dl><div><dt>Lifecycle</dt><dd>' + safeText(adminArchiveStateLabel(document.state)) + '</dd></div><div><dt>Revision</dt><dd>v' + safeText(String(document.revision || '—')) + '</dd></div><div><dt>Retention</dt><dd>' + safeText(String(document.retentionLabel || '—').replace(/_/g, ' ')) + '</dd></div><div><dt>Bảo mật</dt><dd>' + safeText(String(document.confidentialityLevel || '—').replace(/_/g, ' ')) + '</dd></div></dl></section>'
+      + '<div class="portal-work-grid">' + updateForm + '<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Phiên bản hiện tại</h2><p class="portal-card-subtitle">Chỉ attachment được server verify mới có thể tải riêng tư.</p></div>' + badge(String(currentVersion.availability || 'guarded')) + '</div><dl class="portal-summary-list"><div class="portal-summary-item"><span class="portal-summary-key">Tệp</span><span class="portal-summary-value">' + safeText(String(currentVersion.filename || '—')) + '</span></div><div class="portal-summary-item"><span class="portal-summary-key">Version</span><span class="portal-summary-value">v' + safeText(String(currentVersion.versionNumber || '—')) + '</span></div><div class="portal-summary-item"><span class="portal-summary-key">Kích thước</span><span class="portal-summary-value">' + safeText(adminArchiveBytes(currentVersion.byteSize)) + '</span></div><div class="portal-summary-item"><span class="portal-summary-key">Tạo lúc</span><span class="portal-summary-value">' + safeText(String(currentVersion.createdAt || '—')) + '</span></div></dl><div class="portal-form-footer">' + downloadForm + '</div></section></div>'
+      + '<div class="portal-work-grid">' + versionForm + adminArchiveBoundaryCard() + '</div>' + lifecycle
+      + '<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Lịch sử phiên bản</h2><p class="portal-card-subtitle">Mỗi binary là immutable; Portal chỉ hiển thị metadata được server allow-list.</p></div>' + badge('read_only') + '</div>' + adminArchiveVersionRows(document, archive.versions, context) + '</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Audit lifecycle</h2><p class="portal-card-subtitle">Actor identity đã redaction, không có path/hash/file content hoặc external audit fallback.</p></div>' + badge('read_only') + '</div>' + adminArchiveEventRows(archive.events) + '</section></div>'
+      + '<section class="portal-card portal-card-pad"><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/admin/internal-documents">← Danh sách hồ sơ</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="archive-documents-refresh" data-portal-route="' + safeText(route) + '">Làm mới record</button></div></section></article>';
+  }
+
   function renderLegal(page, context) {
     const privacy = page.path === "/privacy";
     return `<article class="portal-page">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-notice portal-notice--info"><span class="portal-notice-icon" aria-hidden="true">i</span><div><strong>Khung nội dung phiên bản hóa</strong><p>${privacy ? "Chính sách chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực." : "Điều khoản chính thức cần được máy chủ phát hành cùng phiên bản và ngày hiệu lực."}</p></div></div>
@@ -19722,6 +20201,8 @@
       case "account-data-controls": return renderAccountDataControls(page, context);
       case "governance-documents": return renderGovernanceDocuments(page, context);
       case "governance-document-detail": return renderGovernanceDocumentDetail(page, context);
+      case "admin-document-archive": return renderAdminDocumentArchive(page, context);
+      case "admin-document-archive-detail": return renderAdminDocumentArchiveDetail(page, context);
       case "membership": return renderMembership(page, context);
       case "service-status": return renderServiceStatus(page, context);
       case "media-studio": return renderMediaStudio(page, context);
@@ -20143,6 +20624,12 @@
     // authority assertion; the server still validates the signed admin scope.
     if (String(action || "").startsWith("governance-documents-")) {
       Object.assign(fields, { __governanceOffset: source.getAttribute("data-governance-offset") || "" });
+    }
+    // Archive paging carries only a bounded offset rendered by its own signed
+    // list projection. Document and version identifiers are validated again
+    // against the current detail projection in integration.js.
+    if (String(action || "").startsWith("archive-documents-")) {
+      Object.assign(fields, { __adminArchiveOffset: source.getAttribute("data-admin-archive-offset") || "" });
     }
     if (String(action || "").startsWith("support-cases-")) {
       Object.assign(fields, { __supportCaseOffset: source.getAttribute("data-support-case-offset") || "" });
@@ -20609,6 +21096,9 @@
         if (form.hasAttribute("data-governance-type-map") && event.target && event.target.name === "department") {
           synchronizeGovernanceDocumentType(form);
         }
+        if (form.hasAttribute("data-admin-archive-type-map") && event.target && event.target.name === "department") {
+          synchronizeAdminArchiveDocumentType(form);
+        }
         if (form.getAttribute("data-portal-action") === "content-prompt-pack-compose" && event.target && event.target.name === "kind") {
           synchronizeContentPromptPackSuggestions(form);
         }
@@ -20719,6 +21209,7 @@
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
+    main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
     syncDesktopFocusNavigation();
     bindInteractions();
     syncPwaInstallControl();
