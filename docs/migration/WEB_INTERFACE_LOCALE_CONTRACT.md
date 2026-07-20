@@ -35,6 +35,28 @@ reviewed Web interface translation for those languages.
 - The i18n bundle has no storage, network, bridge, Bot, payment or workflow
   action. It cannot create identity, Xu, job, provider or notification state.
 
+## Bot-to-Web navigation boundary
+
+The migration audit treats the Bot's language menu as a separate state machine,
+not a browser preference API. Its only reviewed Web counterpart is a fresh
+signed Account page; it does **not** carry a Telegram identity, current Bot
+locale/menu, translation mode, workflow language, pending state or callback
+value into the browser.
+
+| Frozen Bot source | Web disposition | Why |
+| --- | --- | --- |
+| `/lang`, `/language` | `NAVIGATION_ONLY` to `/account` | Opens the Web account preference surface only. The customer must explicitly select and CSRF-save `vi`, `en` or `zh`. |
+| `lang|vi`, `lang|en`, `lang|zh` | `NAVIGATION_ONLY` to `/account` | The Bot literal is reviewed solely as a fresh Web navigation entry; it never auto-applies a browser locale. |
+| `lang|ar`, `lang|ja`, `lang|ko`, `lang|th`, `lang_more`, `back_lang` | `INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED` | No reviewed Web interface catalog or signed-profile navigation behavior is inferred from the Bot menu action. |
+| `lang|{*}` or any later `lang|…` value | `INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED` | Opaque or new Bot language values fail closed and cannot inherit `/account`, a translation setting or a workflow field. |
+
+The account page may change presentation only after the signed Web profile
+endpoint accepts an allowed value with CSRF protection and returns the allowed
+profile projection. A Bot callback and a raw browser-supplied language code
+never bypass that confirmation. Translation-pair commands such as `/en_vi` and
+`/vi_en` are intentionally outside this interface-locale mapping; they remain
+workflow/translation concerns, not presentation preferences.
+
 ## Load and PWA contract
 
 `portal-i18n.js` loads before `portal.js` and `integration.js` in both the
@@ -55,6 +77,7 @@ Run the focused contracts after changing this surface:
 ```powershell
 node --check static/portal/portal-i18n.js
 python -m pytest -q tests/test_portal_i18n_locale_contracts.py tests/test_portal_i18n_bundle_contracts.py
+python -m pytest -q tests/test_migration_audit.py -k interface_locale
 ```
 
 The runtime contract loads the bundle in an isolated Node context and verifies
