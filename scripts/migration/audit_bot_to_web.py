@@ -714,6 +714,69 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
     },
 }
 
+# The Bot's ``/operator_menu`` handler is not an execution dispatcher.  Its
+# buttons render command snippets for one Telegram admin, and many snippets
+# include a later write, provider call, worker run, PayOS lookup or video
+# production step.  Only these *top-level, non-production category* buttons
+# can therefore open a fresh, independently authorized Admin ERP directory.
+#
+# Keep this registry separate from ``MENU_ACTION_REGISTRY``: it is not a
+# customer capability and must never be emitted by the browser-safe public
+# catalog.  The target Admin route still requires the signed server session
+# plus the current canonical role; this audit mapping grants neither.
+OPERATOR_MENU_CATEGORY_REGISTRY: dict[str, dict[str, str]] = {
+    "opmenu|cat_control": {
+        "target": "/admin",
+        "admin_feature_key": "admin_overview",
+        "title": "Điều hành",
+    },
+    "opmenu|cat_trend": {
+        "target": "/admin/trends",
+        "admin_feature_key": "admin_trends",
+        "title": "Trend",
+    },
+    "opmenu|cat_affiliate": {
+        "target": "/admin/growth",
+        "admin_feature_key": "admin_growth",
+        "title": "Affiliate",
+    },
+    "opmenu|cat_schedule": {
+        "target": "/admin/calendar",
+        "admin_feature_key": "admin_calendar",
+        "title": "Kênh & lịch",
+    },
+    "opmenu|cat_publish": {
+        "target": "/admin/publishing",
+        "admin_feature_key": "admin_publishing",
+        "title": "Đăng bài",
+    },
+    "opmenu|cat_money": {
+        "target": "/admin/finance",
+        "admin_feature_key": "admin_finance",
+        "title": "Doanh thu",
+    },
+    "opmenu|cat_api": {
+        "target": "/admin/runtime",
+        "admin_feature_key": "admin_runtime",
+        "title": "API/Auto",
+    },
+    "opmenu|cat_internal": {
+        "target": "/admin/audit",
+        "admin_feature_key": "admin_audit",
+        "title": "Nội bộ",
+    },
+    "opmenu|dashboard": {
+        "target": "/admin",
+        "admin_feature_key": "admin_overview",
+        "title": "Dashboard",
+    },
+}
+
+# Production contains the Bot's ``makevideo``, film, worker, render, output
+# and review snippets.  The user explicitly asked for the Video menu last, so
+# even the category button remains a visible source-review disposition here.
+OPERATOR_MENU_DEFERRED_CATEGORIES = frozenset({"opmenu|cat_production"})
+
 # A dashboard is an intentional signed entry point for a person starting the
 # Web App. It is not evidence that an arbitrary Bot callback has an equivalent
 # Web workflow. Keep this distinction in the static report so a catch-all
@@ -3009,6 +3072,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     dashboard_fallback = False
     menu_entry = MENU_ACTION_REGISTRY.get(token)
     navigation_only = menu_entry is not None
+    operator_category = OPERATOR_MENU_CATEGORY_REGISTRY.get(token)
     if token == "payosalert|manual":
         # The Bot emits this only in its owner/admin PayOS-alert keyboards.
         # It creates a short-lived Bot-local manual-bill menu state for that
@@ -3252,6 +3316,56 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
                 "The Bot vfinal namespace mixes draft choices with pending Telegram media/text, selected-media "
                 "state, provider/readiness checks, quote/package rules and guarded exports. An unreviewed value "
                 "cannot become a Web route, asset reference, render/export, provider, wallet or payment action."
+            ),
+            "evidence": evidence,
+        }
+    if operator_category is not None:
+        # A category opens only the independently protected ERP *directory*.
+        # It does not replay a Telegram command snippet, preserve Bot context,
+        # or create an Operator API, worker, provider, payment, publish or
+        # video-production action in the browser.
+        target = operator_category["target"]
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "admin",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_operator_menu_category_navigation",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "BOT_COMMAND_SNIPPET_NOT_REPLAYED",
+                "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot callback checks ADMIN_ID, then renders a category of command snippets. "
+                "The Web destination starts a fresh signed Admin ERP session and independently "
+                "checks canonical role, route authorization, CSRF and each module contract."
+            ),
+            "operator_category_title": operator_category["title"],
+            "operator_admin_feature_key": operator_category["admin_feature_key"],
+            "evidence": evidence,
+        }
+    if token in OPERATOR_MENU_DEFERRED_CATEGORIES:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "VIDEO_ADMIN_MENU_DEFERRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "operator_production_category_deferred_until_video_menu_phase",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "BOT_VIDEO_PRODUCTION_COMMANDS",
+                "VIDEO_MENU_LAST",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The production category contains video creation, film, worker, output, review and "
+                "render-related command snippets. It remains explicitly deferred until the final "
+                "finite Video menu catalog, rather than inheriting an Admin or Job route."
             ),
             "evidence": evidence,
         }
