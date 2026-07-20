@@ -530,7 +530,7 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
     by_key = {item["key"]: item for item in menu}
     assert {
         "workspace_home", "account", "chat_workspace", "prompt_studio", "wallet",
-        "wallet_topup", "documents", "documents_pdf_to_word", "documents_image_to_pdf",
+        "wallet_topup", "membership", "packages", "documents", "documents_pdf_to_word", "documents_image_to_pdf",
         "documents_compress", "documents_split", "documents_merge", "asset_vault",
         "image_studio", "image_prompt_composer", "image_edit", "image_upscale",
         "video_studio", "media_workspace", "guides", "pricing", "support",
@@ -555,6 +555,14 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
     assert by_key["wallet"]["authority"] == "CORE_CANONICAL_READ"
     assert by_key["wallet"]["launch_mode"] == "READ_ONLY_CANONICAL"
     assert by_key["wallet"]["availability"] == "GUARDED"
+    assert by_key["membership"]["route"] == "/membership"
+    assert by_key["membership"]["authority"] == "CORE_CANONICAL_READ"
+    assert by_key["membership"]["launch_mode"] == "READ_ONLY_CANONICAL"
+    assert by_key["membership"]["availability"] == "GUARDED"
+    assert by_key["packages"]["route"] == "/packages"
+    assert by_key["packages"]["authority"] == "CORE_CANONICAL_READ"
+    assert by_key["packages"]["launch_mode"] == "READ_ONLY_CANONICAL"
+    assert by_key["packages"]["availability"] == "GUARDED"
     assert by_key["asset_vault"]["route"] == "/asset-vault"
     assert by_key["documents_split"]["route"] == "/documents/split"
     assert all(item["execution"] == "NO_EXECUTION_CLAIM" for item in menu)

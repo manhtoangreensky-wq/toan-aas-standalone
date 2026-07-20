@@ -1710,6 +1710,7 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|main_ai": ("/chat", "chat_workspace", "chat", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_ai_prompt": ("/prompt-studio", "prompt_studio", "prompt_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|profile_packages": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
         "menu|main_topup": ("/wallet/topup", "wallet_topup", "wallet_topup", "CORE_CANONICAL_PAYMENT", "BRIDGE_GUARDED_PROXY"),
         "menu|guide_credits": ("/wallet", "wallet", "wallet", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
         "menu|hint_pricing": ("/pricing", "pricing", "pricing", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
@@ -1777,6 +1778,73 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
     assert dynamic["target"] == "UNRESOLVED_DYNAMIC_MENU_ACTION"
     assert dynamic["status"] == "NEEDS_FEATURE_DISPOSITION"
     assert dynamic["resolution"] == "dynamic_menu_action_requires_finite_catalog"
+
+
+def test_profile_benefits_and_pricing_read_navigation_preserve_the_referral_boundary() -> None:
+    """Only reviewed informational panels may open fresh canonical Web reads."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected_pricing = {
+        "pricing|main": ("/pricing", "pricing", "pricing", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "pricing|catalog": ("/pricing", "pricing", "pricing", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "pricing|xu": ("/wallet", "wallet", "wallet", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+        "pricing|packages": ("/packages", "packages", "packages", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+        "pricing|package_summary": ("/packages", "packages", "packages", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+        "pricing|my_packages": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+        "pricing|plans": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+        "pricing|vip": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+        "pricing|member": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
+    }
+    assert set(audit.PRICING_READ_NAVIGATION_REGISTRY) == set(expected_pricing)
+
+    for callback, (target, capability_key, feature_key, authority, launch_mode) in expected_pricing.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == target
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_pricing_read_navigation"
+        assert mapped["pricing_capability_key"] == capability_key
+        assert mapped["pricing_feature_key"] == feature_key
+        assert mapped["pricing_authority"] == authority
+        assert mapped["pricing_launch_mode"] == launch_mode
+        assert mapped["source_dispositions"] == (
+            "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+            "FRESH_SIGNED_WEB_CANONICAL_READ"
+            if authority == "CORE_CANONICAL_READ"
+            else "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+            "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+            "NO_RUNTIME_CLAIM",
+        )
+
+    for callback in sorted(audit.PROFILE_REFERRAL_TELEGRAM_ONLY_ACTIONS):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "profile_referral_requires_canonical_bot_adapter"
+        assert mapped["source_dispositions"] == (
+            "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+            "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+            "NO_WEB_REFERRAL_READ_ADAPTER",
+            "NO_RUNTIME_CLAIM",
+        )
+
+    # Exact audit descriptors remain constrained by the public browser-safe
+    # catalog. Referral tokens are intentionally absent: no browser input can
+    # grant referral reads, synthesize a Telegram link, or adjust rewards.
+    from copyfast_registry import menu_capability_catalog
+
+    public_catalog = {item["key"]: item for item in menu_capability_catalog()}
+    for descriptor in audit.PRICING_READ_NAVIGATION_REGISTRY.values():
+        public_entry = public_catalog[descriptor["capability_key"]]
+        assert public_entry["feature_key"] == descriptor["feature_key"]
+        assert public_entry["route"] == descriptor["target"]
+        assert public_entry["authority"] == descriptor["authority"]
+        assert public_entry["launch_mode"] == descriptor["launch_mode"]
+    serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    assert "profile_ref_" not in serialized_catalog
+    assert "pricing|" not in serialized_catalog
 
 
 def test_operator_menu_category_navigation_is_admin_only_and_defers_video_production() -> None:
