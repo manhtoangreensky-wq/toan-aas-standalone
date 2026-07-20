@@ -2506,7 +2506,10 @@ def test_telegram_callback_caps_body_validates_after_hmac_and_binds_audit_to_sig
             code,
             canonical_user_id="telegram-future-clock",
             request_id="future-callback-0001",
-            timestamp=int(time.time()) + 31,
+            # Leave a deliberate margin beyond the 30-second allowed skew.
+            # A slow CI request must not turn this security assertion into a
+            # race with the wall clock.
+            timestamp=int(time.time()) + 120,
         )
         assert future.status_code == 401
         assert client.get("/api/v1/auth/me").json()["data"]["account"]["telegram_linked"] is False
