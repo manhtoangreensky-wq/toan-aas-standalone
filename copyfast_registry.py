@@ -270,6 +270,22 @@ MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
         "Mở bề mặt nạp Xu canonical có guard; request đi qua core bridge, còn Web không tự định giá, cộng Xu hoặc xử lý webhook PayOS.",
     ),
     MenuCapability(
+        "membership",
+        "membership",
+        "CORE_CANONICAL_READ",
+        "READ_ONLY_CANONICAL",
+        "GUARDED",
+        "Mở tier, quyền lợi và package metadata theo signed owner; Web không tự cấp VIP, trial, referral reward hoặc sửa Xu.",
+    ),
+    MenuCapability(
+        "packages",
+        "packages",
+        "CORE_CANONICAL_READ",
+        "READ_ONLY_CANONICAL",
+        "GUARDED",
+        "Mở catalog gói canonical theo signed session; không tạo purchase, đổi giá, entitlement hoặc payment request từ điều hướng.",
+    ),
+    MenuCapability(
         "documents",
         "documents",
         "SIGNED_CUSTOMER",

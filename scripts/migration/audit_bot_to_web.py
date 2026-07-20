@@ -523,6 +523,13 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "authority": "SIGNED_CUSTOMER",
         "launch_mode": "WEB_NAVIGATION",
     },
+    "menu|profile_packages": {
+        "capability_key": "membership",
+        "target": "/membership",
+        "feature_key": "membership",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
     "menu|main_topup": {
         "capability_key": "wallet_topup",
         "target": "/wallet/topup",
@@ -713,6 +720,88 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "launch_mode": "WEB_NAVIGATION",
     },
 }
+
+# Exact pricing panels that merely render an informational/catalog summary in
+# the Bot may open a fresh Web read surface.  This remains separate from
+# ``MENU_ACTION_REGISTRY`` because it is a pricing namespace, not a general
+# customer menu.  The Web never accepts a Bot package selector or purchase
+# confirmation: canonical adapter/flag checks still govern each page.
+PRICING_READ_NAVIGATION_REGISTRY: dict[str, dict[str, str]] = {
+    "pricing|main": {
+        "capability_key": "pricing",
+        "target": "/pricing",
+        "feature_key": "pricing",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "pricing|catalog": {
+        "capability_key": "pricing",
+        "target": "/pricing",
+        "feature_key": "pricing",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "pricing|xu": {
+        "capability_key": "wallet",
+        "target": "/wallet",
+        "feature_key": "wallet",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "pricing|packages": {
+        "capability_key": "packages",
+        "target": "/packages",
+        "feature_key": "packages",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "pricing|package_summary": {
+        "capability_key": "packages",
+        "target": "/packages",
+        "feature_key": "packages",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "pricing|my_packages": {
+        "capability_key": "membership",
+        "target": "/membership",
+        "feature_key": "membership",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "pricing|plans": {
+        "capability_key": "membership",
+        "target": "/membership",
+        "feature_key": "membership",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "pricing|vip": {
+        "capability_key": "membership",
+        "target": "/membership",
+        "feature_key": "membership",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+    "pricing|member": {
+        "capability_key": "membership",
+        "target": "/membership",
+        "feature_key": "membership",
+        "authority": "CORE_CANONICAL_READ",
+        "launch_mode": "READ_ONLY_CANONICAL",
+    },
+}
+
+# The profile referral buttons are not merely static help.  Bot derives a
+# Telegram deep link from the bot username and reads referral/reward state
+# that can affect canonical Xu rewards.  The standalone Web currently has no
+# reviewed internal referral read contract, so these exact actions must not
+# inherit a route, generate a link, or show synthetic statistics.
+PROFILE_REFERRAL_TELEGRAM_ONLY_ACTIONS = frozenset({
+    "menu|profile_ref_link",
+    "menu|profile_ref_policy",
+    "menu|profile_ref_stats",
+})
 
 # The Bot's ``/operator_menu`` handler is not an execution dispatcher.  Its
 # buttons render command snippets for one Telegram admin, and many snippets
@@ -3073,6 +3162,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     menu_entry = MENU_ACTION_REGISTRY.get(token)
     navigation_only = menu_entry is not None
     operator_category = OPERATOR_MENU_CATEGORY_REGISTRY.get(token)
+    pricing_read_entry = PRICING_READ_NAVIGATION_REGISTRY.get(token)
     if token == "payosalert|manual":
         # The Bot emits this only in its owner/admin PayOS-alert keyboards.
         # It creates a short-lived Bot-local manual-bill menu state for that
@@ -3317,6 +3407,56 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
                 "state, provider/readiness checks, quote/package rules and guarded exports. An unreviewed value "
                 "cannot become a Web route, asset reference, render/export, provider, wallet or payment action."
             ),
+            "evidence": evidence,
+        }
+    if token in PROFILE_REFERRAL_TELEGRAM_ONLY_ACTIONS:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "profile_referral_requires_canonical_bot_adapter",
+            "source_dispositions": (
+                "BOT_TELEGRAM_DEEP_LINK_IDENTITY",
+                "BOT_CANONICAL_REFERRAL_REWARD_STATE",
+                "NO_WEB_REFERRAL_READ_ADAPTER",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot profile callback derives a Telegram referral deep link or reads referral "
+                "statistics/policy backed by canonical member and reward state. The Web has no "
+                "reviewed internal referral adapter, so it cannot mint a link or render rewards."
+            ),
+            "evidence": evidence,
+        }
+    if pricing_read_entry is not None:
+        target = pricing_read_entry["target"]
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_pricing_read_navigation",
+            "source_dispositions": (
+                "BOT_INFORMATION_PANEL_NOT_REPLAYED",
+                "FRESH_SIGNED_WEB_CANONICAL_READ"
+                if pricing_read_entry["authority"] == "CORE_CANONICAL_READ"
+                else "FRESH_SIGNED_WEB_INFORMATION_NAVIGATION",
+                "NO_PURCHASE_OR_ENTITLEMENT_ACTION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The reviewed Bot pricing branch renders a static pricing, package, tier, VIP or Xu "
+                "information panel. The Web opens a fresh signed destination with the authority "
+                "declared by this exact catalog entry; it does not carry a Bot selector, pending "
+                "purchase or confirmation state."
+            ),
+            "pricing_capability_key": pricing_read_entry["capability_key"],
+            "pricing_feature_key": pricing_read_entry["feature_key"],
+            "pricing_authority": pricing_read_entry["authority"],
+            "pricing_launch_mode": pricing_read_entry["launch_mode"],
             "evidence": evidence,
         }
     if operator_category is not None:
