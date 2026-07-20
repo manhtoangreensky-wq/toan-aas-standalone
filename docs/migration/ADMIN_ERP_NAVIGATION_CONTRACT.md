@@ -10,6 +10,7 @@ not an ERP data API and it never substitutes for a module's own authorization.
 | --- | --- | --- | --- |
 | Canonical Admin | Signed Web session plus live `require_canonical_admin` confirmation | Command Center, Commerce, Delivery & Runtime, Content/Growth directory, Governance | The Bot/Core Bridge remains authoritative for identity, wallet/Xu, PayOS, jobs, provider state and canonical write rules. |
 | Web Support | Signed Web session plus `require_support_staff` | Support Desk, Operations, Reliability | Web-owned case and metadata workflow only; it cannot mutate Bot, PayOS, wallet, provider jobs, deployment, delivery or customer notification. |
+| Web Local Admin | Signed Web session plus local `require_admin` | CRM Manager Directory, Automation Monitor, Governance Documents, Internal Document Archive, Security & Access Posture | Identifier-free Web-owned read models only; this does not grant canonical Bot admin authority or session/MFA/role control. |
 
 A cached browser role, `admin_id`, email allow-list or query parameter never
 creates an Admin navigation entry. For a non-admin account, the response is a

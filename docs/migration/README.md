@@ -77,3 +77,4 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`ADMIN_FAILED_JOB_INCIDENTS.md`](ADMIN_FAILED_JOB_INCIDENTS.md) and [`ADMIN_WRITE_CONTRACT.md`](ADMIN_WRITE_CONTRACT.md) — guarded Admin incident/write boundaries.
 - [`ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md`](ADMIN_INTERNAL_DOCUMENT_ARCHIVE_CONTRACT.md) — opt-in local-admin private document archive with isolated immutable versions; it does not migrate or call Bot internal-document state.
 - [`ADMIN_AUTOMATION_MONITOR_CONTRACT.md`](ADMIN_AUTOMATION_MONITOR_CONTRACT.md) — signed local-admin, redacted read-only Inbox scheduler receipt monitor; it has no tick/control plane, Bot/provider/payment/wallet/deploy action or external delivery claim.
+- [`ADMIN_SECURITY_ACCESS_POSTURE_CONTRACT.md`](ADMIN_SECURITY_ACCESS_POSTURE_CONTRACT.md) — signed local-admin, redacted Web-native Security & Access posture; no raw account/session/MFA/audit data, Bot bridge or security-control mutation.

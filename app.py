@@ -27,6 +27,7 @@ import copyfast_admin_audit
 import copyfast_admin_automation
 import copyfast_admin_document_archive
 import copyfast_admin_erp_navigation
+import copyfast_admin_security_posture
 import copyfast_analytics_workspace
 import copyfast_audio_asset_operations
 import copyfast_autopilot
@@ -2169,6 +2170,7 @@ app.include_router(copyfast_api.router)
 app.include_router(copyfast_admin_erp_navigation.router)
 app.include_router(copyfast_admin_audit.router)
 app.include_router(copyfast_admin_automation.router)
+app.include_router(copyfast_admin_security_posture.router)
 app.include_router(copyfast_projects.router)
 app.include_router(copyfast_assets.router)
 app.include_router(copyfast_project_packages.router)
@@ -2315,6 +2317,11 @@ async def page(page_path: str, request: Request):
     # Web-owned Inbox scheduler receipt table. It deliberately does not
     # inherit canonical Bot admin authority or a broad /admin prefix.
     elif normalized == "/admin/automation":
+        copyfast_auth.require_admin(request)
+    # Security and Access are deliberately exact, signed-Web-admin posture
+    # views.  They operate on redacted aggregates owned by this application;
+    # they are not a compatibility shell for a Bot/Core Bridge security feed.
+    elif normalized in {"/admin/security", "/admin/access"}:
         copyfast_auth.require_admin(request)
     # Internal Document Archive is an independently flagged, signed-Web-admin
     # surface. It has its own owner, CSRF, confirmation, revision, audit and

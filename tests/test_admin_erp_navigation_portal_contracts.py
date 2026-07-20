@@ -26,7 +26,10 @@ def test_portal_hydrates_a_server_authorized_admin_manifest_and_fails_closed() -
     assert "WEBAPP_ADMIN_ERP_ENABLED" not in integration
     assert '"/admin/providers": "/admin/providers"' in integration
     assert '"packages"' in integration
-    assert '"access"' in integration
+    assert "isNativeAdminSecurityAccessPosturePath" in integration
+    assert '"/admin/security"' in integration
+    assert '"/admin/access"' in integration
+    assert '"audit", "security", "access", "reports"' not in integration
 
 
 def test_portal_sidebar_directory_and_palette_use_the_server_manifest_not_browser_role() -> None:
