@@ -166,6 +166,12 @@ ENGINE_SPECS.update(_many(("subtitle_studio",), mode=ENGINE_MODE_WEB_NATIVE, fla
 # Studio's maintenance flag.  It is not ASR, translation, TTS, dubbing, a
 # file/media output, provider call, Bot companion, job, wallet or payment.
 ENGINE_SPECS.update(_many(("subtitle_formats",), mode=ENGINE_MODE_WEB_NATIVE, flags=("subtitle_studio_enabled",), handler="subtitle_format_lab"))
+# Subtitle Asset Operations is a distinct, owner-scoped private artifact
+# boundary over an existing SRT/VTT Asset Vault file. It cannot unlock Subtitle
+# Studio, Bot/Core Bridge, provider, ASR, translation, dubbing, wallet/Xu or
+# PayOS behavior; its own route remains responsible for CSRF, ownership,
+# topology, idempotency and verified-output enforcement.
+ENGINE_SPECS.update(_many(("subtitle_asset_operations",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "subtitle_asset_operations_enabled"), handler="subtitle_asset_operations", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("image_studio_enabled",), handler="image_studio"))
 # Prompt Composer adapts only the Bot's deterministic prompt templates.  It
 # never inspects an image or calls a model/provider, creates media/output,

@@ -602,6 +602,12 @@ def _flags() -> dict[str, bool]:
         # or payment action.
         "video_studio_enabled": enabled("WEBAPP_VIDEO_STUDIO_ENABLED", True),
         "subtitle_studio_enabled": enabled("WEBAPP_SUBTITLE_STUDIO_ENABLED", True),
+        # Subtitle Asset Operations is a separate, bounded private SRT/VTT
+        # validation/conversion boundary over existing Asset Vault files. It
+        # stays false by default and never enables Subtitle Studio authoring,
+        # Bot/Core Bridge, provider, ASR, translation, dubbing, wallet/Xu or
+        # PayOS work by itself.
+        "subtitle_asset_operations_enabled": enabled("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED", False),
         # Image Creative Studio is authoring-only: it stores directions and
         # safe Asset Vault UUID references, never an image operation or
         # external execution capability.

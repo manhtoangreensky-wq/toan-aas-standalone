@@ -256,6 +256,31 @@ def test_validate_never_creates_file_and_invalid_subtitle_never_reports_success(
         assert list((tmp_path / "private-subtitle-outputs" / "outputs").glob("*")) == []
 
 
+def test_completed_conversion_without_verified_output_never_claims_success(tmp_path, monkeypatch):
+    with make_client(tmp_path, monkeypatch):
+        operations = importlib.import_module("copyfast_subtitle_asset_operations")
+        result = operations._operation_envelope(
+            {
+                "id": "4bc39e0c-b524-4bf9-bb66-d41384c985aa",
+                "kind": "subtitle_convert",
+                "state": "completed",
+                "source_format": "srt",
+                "target_format": "vtt",
+                "output_available": False,
+                "filename": None,
+                "content_type": None,
+                "byte_size": None,
+            }
+        )
+
+    assert result["ok"] is False
+    assert result["status"] == "unavailable"
+    assert result["error_code"] == "WEB_SUBTITLE_ASSET_OUTPUT_UNAVAILABLE"
+    assert "xác minh output" not in result["message"].lower()
+    assert result["data"]["operation"]["state"] == "completed"
+    assert result["data"]["operation"]["output_available"] is False
+
+
 def test_raw_body_limit_and_topology_guard_fail_closed(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         too_large = client.post(

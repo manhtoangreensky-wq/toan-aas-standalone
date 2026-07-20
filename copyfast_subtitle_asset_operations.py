@@ -571,12 +571,24 @@ def _operation_envelope(operation: dict[str, Any], *, replay: bool = False) -> d
             data={"operation": operation, "replay": replay},
             status_name="completed",
         )
-    if state == "completed" and kind == SUBTITLE_CONVERT_KIND:
+    if state == "completed" and kind == SUBTITLE_CONVERT_KIND and operation.get("output_available") is True:
         return envelope(
             True,
             "Đã chuyển đổi subtitle private và xác minh output.",
             data={"operation": operation, "replay": replay},
             status_name="completed",
+        )
+    if state == "completed" and kind == SUBTITLE_CONVERT_KIND:
+        # A completion row is not a delivery claim. A descriptor/hash/semantic
+        # recheck can invalidate the private output between execution and the
+        # response (for example volume loss or tamper). Fail closed instead of
+        # returning a success envelope or saying that a file was verified.
+        return envelope(
+            False,
+            "Output subtitle private chưa qua xác minh để phát an toàn.",
+            data={"operation": operation, "replay": replay},
+            status_name="unavailable",
+            error_code="WEB_SUBTITLE_ASSET_OUTPUT_UNAVAILABLE",
         )
     if state in {"queued", "processing"}:
         return envelope(

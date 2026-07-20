@@ -90,9 +90,13 @@ def seed_typed_reference_assets(db_path: Path, email: str, *, kind: str, count: 
             (".png", "image/png"),
             (".webp", "image/webp"),
         ),
+        "subtitle": (
+            (".srt", "application/x-subrip"),
+            (".vtt", "text/vtt"),
+        ),
     }
     assert kind in media_by_kind
-    label = "PDF" if kind == "pdf" else "Image"
+    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle"}[kind]
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
         account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (account_email,)).fetchone()
@@ -132,6 +136,9 @@ def seed_malformed_reference_assets(db_path: Path, email: str) -> list[str]:
         (".png", "application/pdf"),
         (".gif", "image/gif"),
         (".txt", "text/plain"),
+        (".srt", "text/plain"),
+        (".srt", "text/vtt"),
+        (".vtt", "application/x-subrip"),
     )
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
@@ -349,7 +356,7 @@ def test_asset_vault_library_search_filters_pagination_and_owner_scope(tmp_path,
 
 
 def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_storage(tmp_path, monkeypatch):
-    """PDF/image picker pages remain complete, owner-scoped and metadata-only."""
+    """Typed picker pages remain complete, owner-scoped and metadata-only."""
     db_path = tmp_path / "copyfast-assets-test.db"
     with make_client(tmp_path, monkeypatch) as owner:
         register_and_login(owner, "typed-reference-owner@example.com")
@@ -360,9 +367,11 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         # asset that a first-page-only client would otherwise hide.
         owner_pdf_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="pdf")
         owner_image_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="image")
+        owner_subtitle_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="subtitle")
         malformed_ids = seed_malformed_reference_assets(db_path, "typed-reference-owner@example.com")
         foreign_pdf_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="pdf")
         foreign_image_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="image")
+        foreign_subtitle_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="subtitle")
 
         allowed_pairs = {
             "pdf": {(".pdf", "application/pdf")},
@@ -372,8 +381,16 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
                 (".png", "image/png"),
                 (".webp", "image/webp"),
             },
+            "subtitle": {
+                (".srt", "application/x-subrip"),
+                (".vtt", "text/vtt"),
+            },
         }
-        for kind, expected_ids in (("pdf", owner_pdf_ids), ("image", owner_image_ids)):
+        for kind, expected_ids in (
+            ("pdf", owner_pdf_ids),
+            ("image", owner_image_ids),
+            ("subtitle", owner_subtitle_ids),
+        ):
             pages = []
             raw_pages = []
             for offset, expected_returned, expected_more, expected_next in (
@@ -413,7 +430,9 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
             assert pages[1].isdisjoint(pages[2])
             assert set().union(*pages) == set(expected_ids)
             assert not set().union(*pages).intersection(malformed_ids)
-            assert not set().union(*pages).intersection(set(foreign_pdf_ids) | set(foreign_image_ids))
+            assert not set().union(*pages).intersection(
+                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids)
+            )
             assert all("private-reference-blobs" not in body for body in raw_pages)
 
         default_kind = owner.get(
@@ -423,6 +442,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         assert default_kind.status_code == 200
         assert default_kind.json()["data"]["filters"]["reference_kind"] == "all"
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video"}).status_code == 422
+        assert owner.get("/api/v1/asset-vault", params={"reference_kind": "subtitles"}).status_code == 422
 
 
 def test_asset_vault_rejects_unsafe_input_and_fails_closed_when_blob_changes(tmp_path, monkeypatch):

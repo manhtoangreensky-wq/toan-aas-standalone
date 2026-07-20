@@ -11,6 +11,7 @@ from copyfast_web_engine import (
     engine_descriptor,
     engine_spec,
 )
+from copyfast_api import _flags
 from copyfast_registry import FEATURE_BY_KEY
 
 
@@ -54,6 +55,32 @@ def test_native_image_history_remains_readable_when_new_image_writes_are_paused(
     assert disabled == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "guarded"}
     assert enabled == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "ready"}
     assert engine_spec("image_history").requires_asset_vault is True
+
+
+def test_subtitle_asset_operations_catalog_is_fail_closed_and_private(monkeypatch) -> None:
+    monkeypatch.delenv("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED", raising=False)
+    assert _flags()["subtitle_asset_operations_enabled"] is False
+
+    monkeypatch.setenv("WEBAPP_SUBTITLE_ASSET_OPERATIONS_ENABLED", "true")
+    assert _flags()["subtitle_asset_operations_enabled"] is True
+    assert FEATURE_BY_KEY["subtitle_asset_operations"].route == "/subtitle/assets"
+
+    missing_vault = engine_descriptor(
+        "subtitle_asset_operations",
+        {"subtitle_asset_operations_enabled": True, "provider_calls_enabled": True},
+    )
+    ready = engine_descriptor(
+        "subtitle_asset_operations",
+        {"asset_vault_enabled": True, "subtitle_asset_operations_enabled": True},
+    )
+
+    assert missing_vault == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "guarded"}
+    assert ready == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "ready"}
+    assert engine_spec("subtitle_asset_operations").required_flags == (
+        "asset_vault_enabled",
+        "subtitle_asset_operations_enabled",
+    )
+    assert engine_spec("subtitle_asset_operations").requires_asset_vault is True
 
 
 def test_bot_companion_and_future_adapters_never_claim_public_execution() -> None:

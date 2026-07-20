@@ -1360,6 +1360,13 @@
   featurePage("/translate", "Dịch nội dung", "Chuẩn bị yêu cầu dịch, giữ nguyên tên thương hiệu và ngôn ngữ mục tiêu.", ICONS.subtitle, FIELD_SETS.subtitleTranslate);
   featurePage("/dubbing", "Lồng tiếng", "Chuẩn bị dubbing với giọng/đích ngôn ngữ do Core Bridge xác minh.", ICONS.subtitle, FIELD_SETS.dubbing);
   featurePage("/asr", "Nhận dạng giọng nói", "Bản nháp ASR chờ output hợp lệ; không tự sinh transcript trong UI.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
+  customerPage("/subtitle/assets", "Subtitle Asset Operations", "Kiểm định hoặc chuyển SRT/VTT private đã có trong Asset Vault; chỉ phát file sau khi server xác minh output.", ICONS.subtitle, {
+    layout: "subtitle-asset-operations", type: "subtitle-asset-operations", fields: [], action: "none", status: "processing",
+    notes: [
+      "Chỉ chọn SRT/VTT active thuộc Asset Vault của signed Web account hiện tại. Browser không gửi text, bytes, path, URL, hash hay storage key.",
+      "Kiểm định không tạo file. Chuyển đổi chỉ đổi container SRT/VTT và chỉ cho tải attachment private khi server đã kiểm tra lại integrity và semantic cue."
+    ]
+  });
   customerPage("/subtitle/formats", "SRT / VTT Format Lab", "Chuyển đổi SRT ↔ VTT hoặc tạo SRT từ text bằng thuật toán Web-native, không cần Bot hay provider.", ICONS.subtitle, {
     layout: "subtitle-format-lab", type: "subtitle-format-lab", fields: [], action: "none", status: "ready",
     notes: [
@@ -7176,6 +7183,24 @@
     return `<span class="portal-badge" data-status="${normalized}">${safeText(stateLabel(normalized))}</span>`;
   }
 
+  function subtitleAssetOperationsReadBadge(value) {
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(value || ""))
+      ? String(value) : "guarded";
+    const presentation = {
+      loading: { status: "read_only", label: "Đang tải metadata private" },
+      ready: { status: "ready", label: "Sẵn sàng" },
+      failed: { status: "failed", label: "Chưa tải được metadata" },
+      guarded: { status: "guarded", label: "Đang bảo vệ" }
+    }[readState];
+    return `<span class="portal-badge" data-status="${presentation.status}">${safeText(presentation.label)}</span>`;
+  }
+
+  function pageStatusBadge(page, context) {
+    const route = String((page && (page.routePath || page.path)) || "").split("?")[0];
+    if (route === "/subtitle/assets") return subtitleAssetOperationsReadBadge(context && context.subtitleAssetOperationsReadState);
+    return badge(stateFor(page, context));
+  }
+
   function icon(name) { return safeText(ICONS[name] || name || ICONS.default); }
 
   function displayName(context) {
@@ -7338,7 +7363,7 @@
       {
         label: "AI Labs & Media",
         links: [
-          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music]
+          ["/image/prompt-composer", "Image Prompt Composer", ICONS.image], ["/image-studio", "Image Studio", ICONS.image], ["/document-workspace", "Document Workspace", ICONS.document], ["/subtitle-studio", "Subtitle Studio", ICONS.subtitle], ["/subtitle/assets", "Subtitle Asset Operations", ICONS.subtitle], ["/subtitle/formats", "SRT/VTT Lab", ICONS.subtitle], ["/voice-studio", "Voice Studio", ICONS.voice], ["/voice-studio/direction-composer", "Voice Direction Composer", ICONS.voice], ["/media-workspace", "Audio Library", ICONS.music]
         ]
       },
       {
@@ -7470,6 +7495,7 @@
     if (linkPath === "/video-studio/storyboard-composer") return path === "/video-studio/storyboard-composer";
     if (linkPath === "/video-studio") return !["/video-studio/workflow", "/video-studio/story-video-plan", "/video-studio/prompt-planner", "/video-studio/idea-planner", "/video-studio/long-form-planner", "/video-studio/self-shot-planner", "/video-studio/script-to-screen-planner", "/video-studio/cinematic-concept", "/video-studio/image-motion-planner", "/video-studio/reference-format-planner", "/video-studio/storyboard-composer"].includes(path) && matchesRouteFamily(path, "/video-studio");
     if (linkPath === "/subtitle-studio") return matchesRouteFamily(path, "/subtitle-studio");
+    if (linkPath === "/subtitle/assets") return path === "/subtitle/assets";
     if (linkPath === "/subtitle/formats") return path === "/subtitle/formats";
     // Direct composer pages need their own single active navigation item;
     // otherwise the parent Voice Studio link and the child link are both
@@ -7517,7 +7543,7 @@
   function isMobileNavCurrent(key, page) {
     const path = normalizePath(page.routePath || page.path);
     if (key === "dashboard") {
-      return ["/dashboard", "/starter-kits", "/projects", "/workboard", "/project-packages", "/workspace", "/prompt-library", "/free-prompt-gallery", "/content-studio", "/content/channel-strategy", "/content/handoffs", "/crm/leads", "/content/prompt-pack", "/content/contextual-prompt", "/trend-research", "/image/prompt-composer", "/image-studio", "/document-workspace", "/media-factory", "/creative-flow", "/guides/source-rights", "/subtitle-studio", "/subtitle/formats", "/voice-studio", "/media-workspace", "/analytics", "/notes", "/reminders", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/starter-kits/") || path.startsWith("/projects/") || path.startsWith("/workboard/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/content/channel-strategy/") || path.startsWith("/content/handoffs/") || path.startsWith("/crm/leads/") || path.startsWith("/document-workspace/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/");
+      return ["/dashboard", "/starter-kits", "/projects", "/workboard", "/project-packages", "/workspace", "/prompt-library", "/free-prompt-gallery", "/content-studio", "/content/channel-strategy", "/content/handoffs", "/crm/leads", "/content/prompt-pack", "/content/contextual-prompt", "/trend-research", "/image/prompt-composer", "/image-studio", "/document-workspace", "/media-factory", "/creative-flow", "/guides/source-rights", "/subtitle-studio", "/subtitle/assets", "/subtitle/formats", "/voice-studio", "/media-workspace", "/analytics", "/notes", "/reminders", "/campaigns", "/calendar", "/approvals"].includes(path) || path.startsWith("/starter-kits/") || path.startsWith("/projects/") || path.startsWith("/workboard/") || path.startsWith("/prompt-library/") || path.startsWith("/content-studio/") || path.startsWith("/content/channel-strategy/") || path.startsWith("/content/handoffs/") || path.startsWith("/crm/leads/") || path.startsWith("/document-workspace/") || path.startsWith("/subtitle-studio/") || path.startsWith("/voice-studio/") || path.startsWith("/media-workspace/") || path.startsWith("/analytics/");
     }
     if (key === "studio") {
       return isNavCurrent("/features", page) || isNavCurrent("/tools", page) || isNavCurrent("/studio", page)
@@ -7657,7 +7683,7 @@
       <div class="portal-header-actions">
         ${canOfferPwaInstall ? `<button class="portal-pwa-install-trigger" type="button" aria-label="${safeText(uiText("chrome.installApp", "Cài TOAN AAS trên thiết bị"))}" hidden data-portal-install-app><span aria-hidden="true">${portalIcon(ICONS.download)}</span><span class="portal-pwa-install-label">${safeText(uiText("chrome.installApp", "Cài app"))}</span></button>` : ""}
         <button class="portal-command-trigger" type="button" aria-label="${safeText(uiText("chrome.quickSwitch", "Mở chuyển nhanh"))}" aria-haspopup="dialog" aria-controls="portal-command-palette" data-portal-open-command-palette><span aria-hidden="true">${portalIcon(ICONS.search)}</span><span class="portal-command-trigger-label">${safeText(uiText("chrome.searchWorkspace", "Tìm hoặc chuyển workspace"))}</span><kbd>Ctrl K</kbd></button>
-        ${badge(stateFor(page, context))}
+        ${pageStatusBadge(page, context)}
         <a class="portal-session-chip" href="${accountHref}" aria-label="${safeText(uiText("chrome.openAccount", "Mở tài khoản"))}">
           <span class="portal-session-avatar" aria-hidden="true">${initials(name)}</span><span class="portal-session-copy">${safeText(name)}</span>
         </a>
@@ -7978,7 +8004,6 @@
   }
 
   function renderHero(page, context) {
-    const state = stateFor(page, context);
     const route = page.routePath || page.path;
     const linkPending = page.action === "start-telegram-link" && context.linkFlow && context.linkFlow.data && context.linkFlow.data.code && !(context.linkStatus && context.linkStatus.linked === true);
     // A completed Telegram link is a terminal identity state.  The server
@@ -7994,7 +8019,7 @@
     const reason = actionBlockReason(page, context);
     return `<section class="portal-hero"><div class="portal-hero-copy"><div class="portal-eyebrow">${safeText(localizedNavigationLabel(page.section || "TOAN AAS"))}</div>
       <h1 class="portal-title">${safeText(localizedPageTitle(page, context))}</h1><p class="portal-description">${safeText(localizedPageDescription(page))}</p></div>
-      <div class="portal-hero-actions">${badge(state)}${showHeroAction ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button>` : ""}</div>
+      <div class="portal-hero-actions">${pageStatusBadge(page, context)}${showHeroAction ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="${safeText(page.action)}" data-portal-route="${safeText(route)}"${enabled ? "" : ` disabled title="${safeText(reason)}"`}>${safeText(page.actionLabel)}</button>` : ""}</div>
     </section>`;
   }
 
@@ -13101,6 +13126,116 @@
       <div class="portal-subtitle-format-lab-layout"><section class="portal-card portal-card-pad portal-subtitle-format-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Format converter</span><h2 class="portal-card-title">Dán text để chuyển đổi</h2><p class="portal-card-subtitle">Session và CSRF được server kiểm tra trước khi xử lý. Nội dung không được lưu thành project, asset, job hoặc audit detail.</p></div>${badge(canConvert ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="subtitle-format-convert" data-portal-route="/subtitle/formats" novalidate>${renderFields(subtitleFormatLabFields(), canConvert, context, defaultValues, "subtitle-format-lab")}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, mã thanh toán hoặc nội dung không có quyền sử dụng. SRT/VTT metadata và style không được giữ lại.</span><button class="portal-button portal-button--primary" type="submit"${canConvert ? "" : " disabled"}>Chuyển đổi văn bản</button></div></form></section><aside class="portal-card portal-card-pad portal-subtitle-format-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không gọi engine bên ngoài</h2><p class="portal-card-subtitle">Module này chỉ parse và render text. Với media, ASR, dịch, TTS hoặc dubbing, dùng workflow guarded có contract riêng.</p></div>${badge("guarded")}</div><div class="portal-subtitle-studio-guard-list"><span><strong>Media / upload</strong><em>off</em></span><span><strong>Provider / Bot</strong><em>off</em></span><span><strong>Job / payment</strong><em>off</em></span><span><strong>File delivery</strong><em>off</em></span></div></aside></div>
       ${resultMarkup}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Đúng việc của Format Lab</h2><p class="portal-card-subtitle">Sử dụng kết quả để review hoặc dán vào công cụ khác; nếu cần file media hoặc transcript từ audio/video, trang sẽ giữ guarded cho đến khi engine có contract riêng.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function subtitleAssetOperationStateLabel(value) {
+    return ({
+      queued: "Đang chờ", processing: "Đang kiểm tra", completed: "Hoàn tất", failed: "Không thể hoàn tất",
+      guarded: "Đang bảo vệ", unavailable: "Output không còn sẵn sàng"
+    })[String(value || "")] || "Đang bảo vệ";
+  }
+  function subtitleAssetOperationDuration(value) {
+    const milliseconds = Number(value);
+    if (!Number.isInteger(milliseconds) || milliseconds < 0 || milliseconds > 86400000) return "—";
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    return minutes ? `${minutes}m ${String(seconds % 60).padStart(2, "0")}s` : `${seconds}s`;
+  }
+  function subtitleAssetOperationSources(context) {
+    const references = context.subtitleAssetReferences && typeof context.subtitleAssetReferences === "object" ? context.subtitleAssetReferences : {};
+    const items = Array.isArray(references.items) ? references.items : [];
+    const selected = references.selected && typeof references.selected === "object" ? references.selected : null;
+    const seen = new Set();
+    return (selected ? [selected, ...items] : items).filter((item) => {
+      const source = item && typeof item === "object" ? item : {};
+      const name = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      const extension = String(source.extension || "").trim().toLowerCase();
+      const contentType = String(source.content_type || "").trim().toLowerCase();
+      const size = Number(source.byte_size);
+      const id = String(source.id || "").trim();
+      const valid = validVaultAssetId(id) && String(source.state || "") === "active" && Boolean(name) && name.length <= 120
+        && ((extension === ".srt" && contentType === "application/x-subrip") || (extension === ".vtt" && contentType === "text/vtt"))
+        && Number.isInteger(size) && size > 0 && size <= 96 * 1024;
+      return valid && !seen.has(id) && (seen.add(id), true);
+    }).slice(0, 51);
+  }
+  function subtitleAssetOperationCanDownload(item) {
+    const source = item && typeof item === "object" ? item : {};
+    const target = String(source.target_format || "").toLowerCase();
+    const expectedMime = target === "srt" ? "application/x-subrip" : target === "vtt" ? "text/vtt" : "";
+    const name = String(source.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    const size = Number(source.byte_size);
+    return validVaultAssetId(source.id) && String(source.kind || "") === "subtitle_convert" && String(source.state || "") === "completed"
+      && source.output_available === true && Boolean(expectedMime) && String(source.content_type || "").toLowerCase() === expectedMime
+      && Boolean(name) && name.length <= 180 && Number.isInteger(size) && size > 0 && size <= 96 * 1024;
+  }
+  function renderSubtitleAssetOperations(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["subtitle-asset-operation-view"] === true);
+    const canSubmit = Boolean(context.capabilities && context.capabilities["subtitle-asset-operation-submit"] === true);
+    const canDownload = Boolean(context.capabilities && context.capabilities["subtitle-asset-operation-download"] === true);
+    const references = context.subtitleAssetReferences && typeof context.subtitleAssetReferences === "object" ? context.subtitleAssetReferences : {};
+    const pagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.subtitleAssetOperationsReadState || ""))
+      ? String(context.subtitleAssetOperationsReadState) : "guarded";
+    const selectedId = references.selected && validVaultAssetId(references.selected.id) ? String(references.selected.id) : "";
+    const sources = subtitleAssetOperationSources(context);
+    const operations = (Array.isArray(context.subtitleAssetOperations) ? context.subtitleAssetOperations : [])
+      .filter((item) => item && validVaultAssetId(item.id)).slice(0, 100);
+    const sourceOptions = sources.map((item) => {
+      const name = String(item.display_name || "Subtitle Asset").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      const formatKey = String(item.extension || "").replace(".", "").toLowerCase();
+      const format = formatKey.toUpperCase();
+      return `<option value="${safeText(String(item.id))}" data-subtitle-asset-format="${safeText(formatKey)}"${String(item.id) === selectedId ? " selected" : ""}>${safeText(name)} · ${safeText(format)} · ${safeText(vaultBytes(Number(item.byte_size)))}</option>`;
+    }).join("");
+    // A refresh/page change intentionally keeps safe metadata visible, but
+    // must not let an older selection be submitted while a new owner-scoped
+    // read is still in flight.
+    const readyForInteraction = readState === "ready";
+    const disabled = canSubmit && sources.length && readyForInteraction ? "" : " disabled";
+    const sourceHint = !canView
+      ? "Module đang được bảo vệ cho môi trường này. Asset Vault và subtitle storage phải được server bật đầy đủ."
+      : readState === "loading"
+        ? "Đang tải metadata SRT/VTT từ Asset Vault owner-scoped. Browser không đọc raw file hoặc generic Asset history."
+        : readState === "failed"
+          ? "Không thể tải metadata private an toàn. Hãy làm mới; browser đã xóa danh sách cũ thay vì dùng cache hoặc nguồn khác."
+      : !sources.length
+        ? "Chưa có SRT/VTT active hợp lệ (tối đa 96 KiB) trong Asset Vault. Hãy thêm tệp private rồi quay lại."
+        : "Chỉ metadata SRT/VTT đã được server lọc theo ownership mới xuất hiện ở đây; không có raw upload hoặc URL nguồn.";
+    const previousOffset = Number(pagination.previous_offset);
+    const nextOffset = Number(pagination.next_offset);
+    const canPrevious = Number.isInteger(previousOffset) && previousOffset >= 0;
+    const canNext = Number.isInteger(nextOffset) && nextOffset >= 0;
+    const currentOffset = Number.isInteger(Number(pagination.offset)) && Number(pagination.offset) >= 0 ? Number(pagination.offset) : 0;
+    const currentReturned = Number.isInteger(Number(pagination.returned)) && Number(pagination.returned) >= 0
+      ? Number(pagination.returned) : 0;
+    const sourcePageRange = currentReturned
+      ? `Đang xem ${safeText(String(currentOffset + 1))}–${safeText(String(currentOffset + currentReturned))}`
+      : `Trang từ vị trí ${safeText(String(currentOffset + 1))}`;
+    const sourcePager = canPrevious || canNext
+      ? `<div class="portal-subtitle-assets-source-pager" role="group" aria-label="Trang subtitle private"><span>${sourcePageRange}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-asset-reference-page" data-portal-route="/subtitle/assets" data-subtitle-asset-reference-offset="${canPrevious ? safeText(String(previousOffset)) : ""}"${canView && readyForInteraction && canPrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-asset-reference-page" data-portal-route="/subtitle/assets" data-subtitle-asset-reference-offset="${canNext ? safeText(String(nextOffset)) : ""}"${canView && readyForInteraction && canNext ? "" : " disabled"}>Sau</button></div></div>`
+      : "";
+    const stateBadge = subtitleAssetOperationsReadBadge(readState);
+    const historyMarkup = operations.length ? `<ul class="portal-subtitle-asset-operation-list">${operations.map((item) => {
+      const kind = String(item.kind || "") === "subtitle_validate" ? "Kiểm định" : "Chuyển định dạng";
+      const target = String(item.target_format || "").toUpperCase();
+      const source = String(item.source_format || "").toUpperCase();
+      const detail = source && target ? `${source} → ${target}` : source || target || "SRT/VTT";
+      const outputReady = subtitleAssetOperationCanDownload(item);
+      const displayState = String(item.kind || "") === "subtitle_convert" && String(item.state || "") === "completed" && !outputReady
+        ? "unavailable" : String(item.state || "guarded");
+      const file = outputReady ? `${String(item.filename || "Subtitle")} · ${vaultBytes(Number(item.byte_size))}` : "Không có file output";
+      const download = outputReady && canDownload
+        ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-asset-operation-download" data-portal-route="/subtitle/assets" data-subtitle-asset-operation-id="${safeText(String(item.id))}">Tải private</button>`
+        : "";
+      const cueCount = Number.isInteger(Number(item.cue_count)) && Number(item.cue_count) >= 0 ? String(Number(item.cue_count)) : "—";
+      return `<li><div class="portal-subtitle-asset-operation-meta"><div><strong>${safeText(kind)}</strong><span>${safeText(detail)} · ${safeText(cueCount)} cue · ${safeText(subtitleAssetOperationDuration(item.timed_duration_ms))}</span><small>${safeText(file)}</small></div>${badge(displayState)}</div><div class="portal-subtitle-asset-operation-actions"><span>${safeText(subtitleAssetOperationStateLabel(displayState))}</span>${download}</div></li>`;
+    }).join("")}</ul>` : `<div class="portal-subtitle-asset-empty"><strong>${readState === "loading" ? "Đang tải lịch sử subtitle" : readState === "failed" ? "Chưa thể tải lịch sử subtitle private" : "Chưa có thao tác subtitle"}</strong><span>${readState === "loading" ? "Đang đọc metadata owner-scoped; chưa có trạng thái hoặc file nào được suy đoán trong browser." : readState === "failed" ? "Hãy làm mới để yêu cầu lại API private. Danh sách trước đã được xóa, không dùng cache hoặc dữ liệu của account khác." : "Chọn một SRT/VTT private để kiểm định hoặc chuyển đổi. Hệ thống sẽ không tạo lịch sử hay file giả trước khi server xác nhận."}</span></div>`;
+    return `<article class="portal-page portal-subtitle-asset-operations">${renderHero(page, context)}
+      <section class="portal-subtitle-assets-intro"><div><span class="portal-section-kicker">Private deterministic operation</span><h2>SRT/VTT private, có kiểm chứng trước khi tải.</h2><p>Chọn caption đã có trong Asset Vault để kiểm định hoặc đổi container SRT ↔ VTT. Máy chủ giữ ownership, kiểm tra cue semantic và chỉ phát attachment sau khi xác thực lại output.</p></div><dl><div><dt>96 KiB</dt><dd>Giới hạn input / output</dd></div><div><dt>500</dt><dd>Cue tối đa mỗi file</dd></div><div><dt>Private</dt><dd>Không public URL hay cache</dd></div></dl></section>
+      <div class="portal-subtitle-assets-layout"><section class="portal-card portal-card-pad portal-subtitle-assets-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault source</span><h2 class="portal-card-title">Kiểm định hoặc chuyển định dạng</h2><p class="portal-card-subtitle">Chọn tệp owner-scoped đã có. Kiểm định không tạo file; chuyển đổi chỉ hỗ trợ SRT ↔ VTT và không thay đổi nội dung cue.</p></div>${stateBadge}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="subtitle-asset-operation-submit" data-portal-route="/subtitle/assets" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="subtitle-asset-source">Subtitle nguồn <span class="portal-required-mark" aria-hidden="true">*</span></label><select id="subtitle-asset-source" class="portal-select" name="source_asset_id" aria-describedby="subtitle-asset-source-hint" required${disabled}><option value="">Chọn SRT/VTT private từ Asset Vault</option>${sourceOptions}</select><small id="subtitle-asset-source-hint" role="status" aria-live="polite">${safeText(sourceHint)}</small>${sourcePager}</div><label class="portal-field"><span>Thao tác <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="operation" required${disabled}><option value="validate">Kiểm định caption</option><option value="convert">Chuyển SRT ↔ VTT</option></select><small>Server luôn parse lại nội dung; browser không quyết định trạng thái thành công.</small></label><label class="portal-field" data-subtitle-asset-target-field><span>Định dạng đích khi chuyển</span><select class="portal-select" name="target_format" data-subtitle-asset-target${disabled}><option value="vtt">VTT</option><option value="srt">SRT</option></select><small data-subtitle-asset-target-hint>Chọn một subtitle nguồn để hệ thống đặt định dạng đích khác nguồn.</small></label></div><div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, không upload, không đưa đường dẫn hoặc URL. Thao tác write dùng signed session, CSRF và idempotency do browser tạo.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><button class="portal-button portal-button--primary" type="submit"${disabled}>Xác nhận thao tác</button></div></div></form></section><aside class="portal-card portal-card-pad portal-subtitle-assets-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Không tạo transcript hoặc media</h2><p class="portal-card-subtitle">Đây là xử lý container subtitle private. Nó không đọc audio/video, không dịch, không gọi Bot/provider và không tạo Job, Xu hay PayOS action.</p></div>${badge("guarded")}</div><div class="portal-subtitle-assets-guard-list"><span><strong>Upload / URL / path</strong><em>off</em></span><span><strong>ASR / translate / dubbing</strong><em>off</em></span><span><strong>Bot / provider / payment</strong><em>off</em></span><span><strong>Public preview / cache</strong><em>off</em></span></div></aside></div>
+      <section class="portal-card portal-card-pad portal-subtitle-assets-history"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped history</span><h2 class="portal-card-title">Lịch sử Subtitle Asset</h2><p class="portal-card-subtitle">Kết quả chỉ được gọi là sẵn sàng khi output verified. Một lần kiểm định hoàn tất vẫn không có file để tải.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-asset-operation-refresh" data-portal-route="/subtitle/assets"${canView ? "" : " disabled"}>${readState === "failed" ? "Thử lại" : "Làm mới"}</button></div>${historyMarkup}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Tệp caption vẫn thuộc riêng bạn</h2><p class="portal-card-subtitle">Source và output đều được server owner-scope. Download dùng attachment private đã tái kiểm tra, không có URL công khai, static file hay browser cache.</p></div></div>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -20155,6 +20290,7 @@
       case "video-studio-detail": return renderVideoStudioDetail(page, context);
       case "subtitle-studio": return renderSubtitleStudio(page, context);
       case "subtitle-studio-detail": return renderSubtitleStudioDetail(page, context);
+      case "subtitle-asset-operations": return renderSubtitleAssetOperations(page, context);
       case "subtitle-format-lab": return renderSubtitleFormatLab(page, context);
       case "voice-direction-composer": return renderVoiceDirectionComposer(page, context);
       case "voice-studio": return renderVoiceStudio(page, context);
@@ -20282,6 +20418,32 @@
       if (requiredMessage) requiredMessage.hidden = !isCustom || name === "tone";
       if (!isCustom) input.value = name === "tone" ? "neutral" : "";
     });
+  }
+
+  function synchronizeSubtitleAssetOperationForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "subtitle-asset-operation-submit") return;
+    const source = form.querySelector('select[name="source_asset_id"]');
+    const operation = form.querySelector('select[name="operation"]');
+    const target = form.querySelector('select[name="target_format"][data-subtitle-asset-target]');
+    const field = form.querySelector("[data-subtitle-asset-target-field]");
+    const hint = form.querySelector("[data-subtitle-asset-target-hint]");
+    if (!source || !operation || !target) return;
+    const selected = source.selectedOptions && source.selectedOptions.length ? source.selectedOptions[0] : null;
+    const sourceFormat = selected ? String(selected.getAttribute("data-subtitle-asset-format") || "").trim().toLowerCase() : "";
+    const convert = operation.value === "convert";
+    const canChooseTarget = !source.disabled && convert && (sourceFormat === "srt" || sourceFormat === "vtt");
+    target.disabled = !canChooseTarget;
+    target.setAttribute("aria-disabled", String(!canChooseTarget));
+    if (field) field.classList.toggle("is-muted", !canChooseTarget);
+    if (hint) {
+      hint.setAttribute("aria-live", "polite");
+      if (!convert) hint.textContent = "Kiểm định không tạo file output, nên không cần chọn định dạng đích.";
+      else if (!sourceFormat) hint.textContent = "Chọn một subtitle nguồn để hệ thống đặt định dạng đích khác nguồn.";
+      else {
+        target.value = sourceFormat === "srt" ? "vtt" : "srt";
+        hint.textContent = `Đã chọn ${target.value.toUpperCase()} để luôn khác subtitle nguồn ${sourceFormat.toUpperCase()}.`;
+      }
+    }
   }
 
   function collectFormFields(form) {
@@ -20420,7 +20582,7 @@
     const route = source.getAttribute("data-portal-route") || context.path;
     const formId = source.getAttribute("data-portal-form-id") || "";
     const form = source.matches("form") ? source : (source.closest("form") || (formId ? document.getElementById(formId) : null));
-    const operationAssetReferenceAction = ["document-asset-reference-filter", "document-asset-reference-filter-clear", "document-asset-reference-page", "image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page"].includes(action);
+    const operationAssetReferenceAction = ["document-asset-reference-filter", "document-asset-reference-filter-clear", "document-asset-reference-page", "image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page", "subtitle-asset-reference-page"].includes(action);
     const documentWorkspaceLibraryAction = ["document-workspace-filter", "document-workspace-filter-clear", "document-workspace-page"].includes(action);
     // Picker controls belong to the operation form so the existing in-memory
     // draft map retains selected slots while paging.  They must not trigger
@@ -20470,6 +20632,17 @@
       Object.assign(fields, {
         __imageOperationAssetReferenceOffset: source.getAttribute("data-image-operation-asset-reference-offset") || "",
         __imageOperationAssetReferenceSelections: operationAssetReferenceSelections(fields)
+      });
+    }
+    // Subtitle Asset Operations reads a distinct, typed SRT/VTT selector.
+    // Keep its UUID and page offset inside this one event only; never infer a
+    // source from generic Vault history, a raw path, a URL or browser storage.
+    if (String(action || "").startsWith("subtitle-asset-")) {
+      const subtitleSource = form && form.querySelector('select[name="source_asset_id"]');
+      Object.assign(fields, {
+        __subtitleAssetReferenceOffset: source.getAttribute("data-subtitle-asset-reference-offset") || "",
+        __subtitleAssetReferenceSelectedId: subtitleSource ? String(subtitleSource.value || "").trim() : "",
+        __subtitleAssetOperationId: source.getAttribute("data-subtitle-asset-operation-id") || ""
       });
     }
     if (String(action || "").startsWith("document-operation-")) {
@@ -21106,6 +21279,10 @@
           synchronizeImageResizePreset(form);
           synchronizeImageEnhancePreset(form);
         }
+        if (form.getAttribute("data-portal-action") === "subtitle-asset-operation-submit"
+          && event.target && ["source_asset_id", "operation"].includes(event.target.name)) {
+          synchronizeSubtitleAssetOperationForm(form);
+        }
         rememberTransientFormDraft(form);
       }
     });
@@ -21209,6 +21386,7 @@
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
+    main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
     syncDesktopFocusNavigation();
     bindInteractions();
