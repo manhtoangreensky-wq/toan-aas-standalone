@@ -414,8 +414,8 @@ async def status():
     assert mapped["status"] == "COPIED_GUARDED"
 
 
-def test_static_audit_resolves_mounted_router_prefixes_for_native_api_routes(tmp_path: Path) -> None:
-    """A mounted APIRouter prefix is part of the deployed API path."""
+def test_static_audit_does_not_expose_a_raw_document_operation_api_as_a_command_route(tmp_path: Path) -> None:
+    """A Bot command opens the safe Web page, never a write-capable raw API."""
 
     audit = _load_audit_module()
     bot_root = tmp_path / "bot"
@@ -427,6 +427,9 @@ def test_static_audit_resolves_mounted_router_prefixes_for_native_api_routes(tmp
         """
 app = FastAPI()
 app.include_router(document_ops.router)
+@app.get('/documents/pdf-ocr')
+async def pdf_ocr_page():
+    return {}
 """,
         encoding="utf-8",
     )
@@ -443,8 +446,50 @@ async def ocr_pdf():
     result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
 
     mapped = result["parity_gap"]["command_mappings"][0]
-    assert mapped["target"] == "/api/v1/document-operations/ocr-pdf"
-    assert mapped["status"] == "MAPPED_TO_EXISTING_ROUTE"
+    assert mapped["target"] == "/documents/pdf-ocr"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_document_fresh_web_navigation"
+    assert mapped["document_capability_key"] == "documents_pdf_ocr"
+    assert "/api/v1/document-operations/ocr-pdf" not in mapped["target"]
+
+
+def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigation() -> None:
+    """Document entrypoints never carry Bot files, choices or execution state."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {
+        "doc_tools": ("/documents", "documents", "documents", "document_directory"),
+        "pdf_to_word": ("/documents/pdf-to-word", "documents_pdf_to_word", "documents_pdf_to_word", "pdf_to_word"),
+        "compress_pdf": ("/documents/compress", "documents_compress", "documents_compress", "pdf_optimize"),
+        "split_pdf": ("/documents/split", "documents_split", "documents_split", "pdf_split"),
+        "merge_pdf": ("/documents/merge", "documents_merge", "documents_merge", "pdf_merge"),
+        "image_to_pdf": ("/documents/image-to-pdf", "documents_image_to_pdf", "documents_image_to_pdf", "image_to_pdf"),
+        "ocr_pdf": ("/documents/pdf-ocr", "documents_pdf_ocr", "documents_pdf_ocr", "pdf_ocr"),
+    }
+
+    for command, (target, capability, feature, surface) in expected.items():
+        mapped = audit._map_command(
+            {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
+            routes,
+        )
+        assert mapped["classification"] == "customer"
+        assert mapped["target"] == target
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_document_fresh_web_navigation"
+        assert mapped["source_dispositions"] == audit.DOCUMENT_FRESH_WEB_NAVIGATION_DISPOSITIONS
+        assert mapped["document_capability_key"] == capability
+        assert mapped["document_feature_key"] == feature
+        assert mapped["document_surface"] == surface
+        assert mapped["document_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE"
+        assert mapped["document_launch_mode"] == "WEB_NAVIGATION"
+
+    for command in ("translate_file", "pdf_to_images", "ocr_image"):
+        mapped = audit._map_command(
+            {"command": command, "handler": "customer_handler", "file": "bot.py", "line": 1},
+            routes,
+        )
+        assert "document_capability_key" not in mapped
 
 
 def test_static_audit_classifies_neutrally_named_handlers_with_an_admin_guard_as_admin(tmp_path: Path) -> None:

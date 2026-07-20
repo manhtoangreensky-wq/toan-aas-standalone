@@ -15,6 +15,40 @@ IMAGE_TO_PDF_CONTRACT = (ROOT / "docs" / "migration" / "IMAGE_TO_PDF_CONTRACT.md
 PDF_TO_WORD_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_WORD_CONTRACT.md").read_text(encoding="utf-8")
 PDF_TO_IMAGES_CONTRACT = (ROOT / "docs" / "migration" / "PDF_TO_IMAGES_CONTRACT.md").read_text(encoding="utf-8")
 PDF_OCR_CONTRACT = (ROOT / "docs" / "migration" / "PDF_OCR_CONTRACT.md").read_text(encoding="utf-8")
+DOCUMENT_COMMAND_NAVIGATION_CONTRACT = (
+    ROOT / "docs" / "migration" / "DOCUMENT_COMMAND_NAVIGATION_CONTRACT.md"
+).read_text(encoding="utf-8")
+
+
+def test_document_command_navigation_only_opens_existing_private_web_surfaces() -> None:
+    expected = {
+        "/doc_tools": "/documents",
+        "/pdf_to_word": "/documents/pdf-to-word",
+        "/compress_pdf": "/documents/compress",
+        "/split_pdf": "/documents/split",
+        "/merge_pdf": "/documents/merge",
+        "/image_to_pdf": "/documents/image-to-pdf",
+        "/ocr_pdf": "/documents/pdf-ocr",
+    }
+    for command, route in expected.items():
+        assert command in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+        assert route in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+        assert route in PORTAL
+
+    for phrase in (
+        "NAVIGATION_ONLY",
+        "FRESH_SIGNED_WEB_DOCUMENT_NAVIGATION",
+        "NO_RUNTIME_CLAIM",
+        "Asset Vault",
+        "CSRF",
+        "idempotency",
+        "PayOS",
+        "Telegram",
+    ):
+        assert phrase in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+    assert "/api/v1/..." in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+    assert "raw `/api/v1/...` write endpoint" in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
+    assert "`/translate_file` stays outside this catalog" in DOCUMENT_COMMAND_NAVIGATION_CONTRACT
 
 
 def test_pdf_split_replaces_the_generic_bot_feature_form_with_a_native_web_surface() -> None:
