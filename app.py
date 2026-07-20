@@ -24,6 +24,7 @@ from fastapi.staticfiles import StaticFiles
 
 import copyfast_api
 import copyfast_admin_audit
+import copyfast_admin_automation
 import copyfast_admin_document_archive
 import copyfast_admin_erp_navigation
 import copyfast_analytics_workspace
@@ -2167,6 +2168,7 @@ app.include_router(copyfast_mfa.router)
 app.include_router(copyfast_api.router)
 app.include_router(copyfast_admin_erp_navigation.router)
 app.include_router(copyfast_admin_audit.router)
+app.include_router(copyfast_admin_automation.router)
 app.include_router(copyfast_projects.router)
 app.include_router(copyfast_assets.router)
 app.include_router(copyfast_project_packages.router)
@@ -2308,6 +2310,11 @@ async def page(page_path: str, request: Request):
     # Web admin role.  No Bot bridge call is appropriate for this one
     # Web-native, read-only view.
     elif normalized == "/admin/crm/leads":
+        copyfast_auth.require_admin(request)
+    # Automation Monitor is a local Web-admin, read-only projection of the
+    # Web-owned Inbox scheduler receipt table. It deliberately does not
+    # inherit canonical Bot admin authority or a broad /admin prefix.
+    elif normalized == "/admin/automation":
         copyfast_auth.require_admin(request)
     # Internal Document Archive is an independently flagged, signed-Web-admin
     # surface. It has its own owner, CSRF, confirmation, revision, audit and

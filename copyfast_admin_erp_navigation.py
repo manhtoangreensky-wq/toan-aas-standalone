@@ -357,10 +357,11 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
     """Return standalone Web admin surfaces that are not Bot-canonical.
 
     ``/admin/crm/leads`` independently uses ``require_admin`` and returns
-    only redacted cross-account pipeline metadata. ``/admin/governance`` and
+    only redacted cross-account pipeline metadata. ``/admin/automation`` is a
+    Web-owned read-only scheduler receipt monitor. ``/admin/governance`` and
     ``/admin/internal-documents`` are separately flagged Web-owned internal
-    document surfaces. Keeping all three in distinct authority groups prevents
-    a signed Web administrator from being visually or semantically promoted
+    document surfaces. Keeping these in distinct authority groups prevents a
+    signed Web administrator from being visually or semantically promoted
     into a Bot/canonical administrator.
     """
 
@@ -377,6 +378,7 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
         and _enabled("WEBAPP_ADMIN_DOCUMENT_ARCHIVE_ENABLED", default=False)
         else "guarded"
     )
+    automation_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
     return [
         _group(
             "web_private_crm",
@@ -423,6 +425,22 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
                     source="web_native",
                     availability=archive_state,
                     capability="owner_scoped_immutable_private_document_versions",
+                ),
+            ],
+        ),
+        _group(
+            "web_automation_monitor",
+            "Automation Monitor",
+            authority="web_local_admin",
+            modules=[
+                _module(
+                    "automation_monitor",
+                    "Automation Monitor",
+                    "/admin/automation",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=automation_state,
+                    capability="redacted_scheduler_receipt_read_only",
                 ),
             ],
         ),
