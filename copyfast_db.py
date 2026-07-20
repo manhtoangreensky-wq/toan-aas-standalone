@@ -374,6 +374,21 @@ def music_media_workspace_enabled() -> bool:
     return os.environ.get("WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def music_media_workspace_preview_enabled() -> bool:
+    """Whether signed owners may stream an attached Web Asset Vault audio reference.
+
+    This is deliberately disabled unless an operator enables it.  It is not a
+    provider catalog, Bot-cache adapter, remote URL fetcher, media generator,
+    wallet/payment flow or output-delivery signal: the route can only read a
+    previously verified, owner-scoped audio file already attached to a Web
+    Media Workspace collection.
+    """
+
+    return music_media_workspace_enabled() and os.environ.get(
+        "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED", "false"
+    ).strip().lower() in {"1", "true", "yes", "on"}
+
+
 def content_studio_enabled() -> bool:
     """Whether the independently owned Creative Content Studio is available.
 

@@ -1119,13 +1119,15 @@ TVFLOW_DEFAULT_DISPOSITION: dict[str, Any] = {
 # These dynamic preview callbacks are emitted only by the Bot media-preview
 # keyboard. Their formatted values are either a media kind/index pair or an
 # index into a short-lived per-Telegram-user cache; they are not owner-scoped
-# Web asset or media identifiers. Keep future Web work visible as a typed
-# disposition, but never turn this template into a Web route or browser
-# action.
+# Web asset or media identifiers. The independently owned Web Media Workspace
+# now offers a separate Asset Vault reference/preview boundary, but it cannot
+# consume or replay these opaque Bot values. Each original callback is thus
+# explicitly Telegram-only instead of an unresolved Web feature gap.
 MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     "play_{*}|{*}": {
-        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
-        "resolution": "media_preview_play_requires_bot_cache_and_telegram_delivery",
+        "target": "TELEGRAM_ONLY",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "reviewed_bot_preview_play_telegram_only_web_owned_preview_separate",
         "source_dispositions": (
             "BOT_MEDIA_PREVIEW_CACHE",
             "TELEGRAM_CHAT_DELIVERY",
@@ -1135,8 +1137,9 @@ MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_evidence": "Bot resolves a music/SFX index from its short-lived per-Telegram-user preview cache and sends the audio preview into Telegram chat. The formatted values are not Web asset IDs or a browser playback contract.",
     },
     "select_{*}|{*}": {
-        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
-        "resolution": "media_preview_select_requires_bot_cache_and_selection_state",
+        "target": "TELEGRAM_ONLY",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "reviewed_bot_media_select_telegram_only_web_owned_reference_separate",
         "source_dispositions": (
             "BOT_MEDIA_PREVIEW_CACHE",
             "BOT_MEDIA_SELECTION_STATE",
@@ -1146,8 +1149,9 @@ MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_evidence": "Bot resolves a cached music/SFX result then writes selected-media state for later Bot video/image/trend/cinematic flows. The formatted values are not a Web-owned media selection or asset reference.",
     },
     "license_{*}|1": {
-        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
-        "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
+        "target": "TELEGRAM_ONLY",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "reviewed_bot_media_license_telegram_only_web_rights_note_separate",
         "source_dispositions": (
             "BOT_MEDIA_PREVIEW_CACHE",
             "TELEGRAM_CHAT_GUIDANCE",
@@ -1157,8 +1161,9 @@ MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_evidence": "Bot reads the first current music/SFX preview result from its per-user cache and sends a Telegram license notice. The callback does not establish Web catalog ownership, license verification, or a browser media contract.",
     },
     "license_music|{*}": {
-        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_GUIDANCE_REQUIRED",
-        "resolution": "media_preview_license_requires_bot_cache_and_telegram_guidance",
+        "target": "TELEGRAM_ONLY",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "reviewed_bot_media_license_telegram_only_web_rights_note_separate",
         "source_dispositions": (
             "BOT_MEDIA_PREVIEW_CACHE",
             "TELEGRAM_CHAT_GUIDANCE",
@@ -1168,8 +1173,9 @@ MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_evidence": "Bot resolves the formatted music index from its short-lived per-user preview cache and sends a Telegram license notice. The value is not a Web media ID, catalog authority, license verification, or browser media contract.",
     },
     "play_media|{*}": {
-        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_TELEGRAM_DELIVERY_REQUIRED",
-        "resolution": "media_preview_play_requires_bot_cache_and_telegram_delivery",
+        "target": "TELEGRAM_ONLY",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "reviewed_bot_preview_play_telegram_only_web_owned_preview_separate",
         "source_dispositions": (
             "BOT_MEDIA_PREVIEW_CACHE",
             "TELEGRAM_CHAT_DELIVERY",
@@ -1179,8 +1185,9 @@ MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS: dict[str, dict[str, Any]] = {
         "source_evidence": "Bot resolves the formatted media index from its short-lived per-user media-preview cache and sends the preview or source into Telegram chat. The value is not a Web asset ID or browser playback contract.",
     },
     "select_media|{*}": {
-        "target": "BOT_MEDIA_PREVIEW_CACHE_AND_SELECTION_STATE_REQUIRED",
-        "resolution": "media_preview_select_requires_bot_cache_and_selection_state",
+        "target": "TELEGRAM_ONLY",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "reviewed_bot_media_select_telegram_only_web_owned_reference_separate",
         "source_dispositions": (
             "BOT_MEDIA_PREVIEW_CACHE",
             "BOT_MEDIA_SELECTION_STATE",
@@ -2855,7 +2862,7 @@ def _map_media_preview_callback_template(template: str, evidence: dict[str, Any]
         "source": template,
         "target": str(policy["target"]),
         "classification": "customer",
-        "status": "NEEDS_FEATURE_DISPOSITION",
+        "status": str(policy.get("status") or "NEEDS_FEATURE_DISPOSITION"),
         "resolution": str(policy["resolution"]),
         "source_dispositions": [str(value) for value in policy["source_dispositions"]],
         "source_evidence": str(policy["source_evidence"]),
@@ -4415,7 +4422,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             source,
             str(policy["target"]),
             str(policy["resolution"]),
-            "NEEDS_FEATURE_DISPOSITION",
+            str(policy.get("status") or "NEEDS_FEATURE_DISPOSITION"),
             ", ".join(str(value) for value in policy["source_dispositions"]),
         ]
         for source, policy in MEDIA_PREVIEW_CALLBACK_TEMPLATE_DISPOSITIONS.items()
@@ -4634,7 +4641,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     write(
         "MEDIA_PREVIEW_CALLBACK_CONTRACT.md",
         "# Dynamic media-preview callback disposition contract\n\n"
-        "The Bot emits these dynamic music/SFX and media-library preview callbacks only from its Telegram media-preview keyboards. Their formatted values are a media kind/index pair or short-lived cache index, not an owner-scoped Web asset, catalog record, playback authorization, media license verification, or downstream Web media-selection contract. Every entry remains `NEEDS_FEATURE_DISPOSITION`; its target is a symbolic Bot authority boundary, **not** a Web route, browser callback, bridge implementation, provider action, wallet/payment action, job action, asset claim, or output-delivery claim.\n\n"
+        "The Bot emits these dynamic music/SFX and media-library preview callbacks only from its Telegram media-preview keyboards. Their formatted values are a media kind/index pair or short-lived cache index, not an owner-scoped Web asset, catalog record, playback authorization, media license verification, or downstream Web media-selection contract. Every original Bot callback is explicitly `TELEGRAM_ONLY`: it neither becomes a browser callback nor carries its cache index into Web. The independently owned Web Media Workspace may preview an account's separately attached Asset Vault audio reference when its dedicated feature flag is enabled; it does not consume Bot cache, selected-media state, provider results or Telegram delivery state.\n\n"
         + _markdown_table(
             ["Bot callback template", "Required authority boundary", "Audit resolution", "Status", "Source dispositions"],
             media_preview_contract_rows,
@@ -4957,7 +4964,11 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "They do not contain an API key and must not be used as a provider, Bot,\n"
         + "PayOS, wallet, webhook or production-deployment toggle. Enabling the feature\n"
         + "also requires the existing private Asset Vault gate and a separately supplied\n"
-        + "FFmpeg/ffprobe runtime.\n",
+        + "FFmpeg/ffprobe runtime.\n\n"
+        + "## Web-native Media Workspace preview environment\n\n"
+        + "- `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` (default `true`) enables the signed Web-owned collection workspace.\n"
+        + "- `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` (default `false`) permits same-origin inline preview only for an active audio Asset Vault file already attached to the requesting account's active collection.\n\n"
+        + "The preview flag is not a provider/library, Bot-cache, Telegram, wallet, PayOS, job, output-delivery or public-URL switch. It remains disabled until an operator accepts the private storage and traffic implications.\n",
     )
     key4u_features = [
         ("Video", "video_single, video_multiscene, video_long"),
@@ -5081,7 +5092,11 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "Only variable names are inventoried; values, tokens and keys are never read or copied.\n\n"
         + "\n".join(f"- `{record['name']}`" for record in bot["env_references"][:500])
         + "\n\n"
-        + _markdown_table(["Provider", "Occurrences", "Sample files"], provider_rows or [["None detected", "", ""]]),
+        + _markdown_table(["Provider", "Occurrences", "Sample files"], provider_rows or [["None detected", "", ""]])
+        + "\n\n## Web-native Media Workspace preview\n\n"
+        + "- `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` defaults to `true` for signed Web-owned collections.\n"
+        + "- `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` defaults to `false`; when enabled it permits only verified, owner-scoped, same-origin inline preview of an attached active Asset Vault audio file.\n"
+        + "- This flag never enables a Bot cache/provider catalog, Telegram delivery, wallet/PayOS action, job, output claim or public URL.\n",
     )
     write(
         "KEY4U_CURRENT_DOCS_MAP.md",

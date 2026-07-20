@@ -1257,6 +1257,14 @@ async def security_headers(request: Request, call_next):
     # provider, Bot job or delivery capability appear available.
     media_workspace_write = request.method in {"POST", "PATCH"} and request.url.path.startswith("/api/v1/media-workspace/")
     media_workspace_read = request.method == "GET" and request.url.path.startswith("/api/v1/media-workspace/")
+    # Inline audio preview rehashes and streams a private Vault blob. It is
+    # narrower than metadata reads, so it receives a download-strength gate
+    # and cache/header boundary rather than the general workspace read cap.
+    media_workspace_preview = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/media-workspace/collections/")
+        and request.url.path.endswith("/preview")
+    )
     # Creative Content Studio persists owner-scoped authored text and version
     # snapshots. Keep fixed route-family buckets before SQLite/CSRF work so
     # arbitrary UUIDs/query strings cannot bypass the pre-DB limit. This does
@@ -1459,6 +1467,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if media_workspace_read:
         rate_limit = 120
+    if media_workspace_preview:
+        rate_limit = 20
     if content_studio_write:
         rate_limit = 40
     if content_studio_read:
@@ -1564,6 +1574,7 @@ async def security_headers(request: Request, call_next):
             else "subtitle-asset-operation-read" if subtitle_asset_operation_read
             else "prompt-library-read" if prompt_library_read
             else "media-workspace-write" if media_workspace_write
+            else "media-workspace-preview" if media_workspace_preview
             else "media-workspace-read" if media_workspace_read
             else "content-studio-write" if content_studio_write
             else "content-studio-read" if content_studio_read
@@ -1780,6 +1791,11 @@ async def security_headers(request: Request, call_next):
     # keep the check route-family based rather than trying to infer a case ID
     # from untrusted path segments.
     private_support_evidence_download = request.url.path.startswith("/api/v1/support/") and request.url.path.endswith("/download")
+    private_media_workspace_preview = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/media-workspace/collections/")
+        and request.url.path.endswith("/preview")
+    )
     private_prompt_export = request.method == "POST" and request.url.path == "/api/v1/prompt-library/export"
     private_manual_analytics_csv_export = (
         request.method == "POST"
@@ -1815,7 +1831,7 @@ async def security_headers(request: Request, call_next):
     private_download = (
         private_asset_download or private_native_asset_download or private_package_download or private_document_download
         or private_image_download or private_subtitle_asset_download or private_video_download or private_frame_video_download or private_video_transform_download or private_storyboard_grid_download
-        or private_support_evidence_download or private_prompt_export
+        or private_support_evidence_download or private_media_workspace_preview or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
     )
     response.headers["Referrer-Policy"] = "no-referrer" if private_download or mailbox_confirmation else "same-origin"

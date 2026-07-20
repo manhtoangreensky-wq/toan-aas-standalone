@@ -17,6 +17,7 @@ SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(en
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 APP = (ROOT / "app.py").read_text(encoding="utf-8")
 ROUTER = (ROOT / "copyfast_music_media.py").read_text(encoding="utf-8")
+DB = (ROOT / "copyfast_db.py").read_text(encoding="utf-8")
 
 
 def test_media_workspace_is_a_real_signed_web_route_not_a_bot_music_shell() -> None:
@@ -157,6 +158,29 @@ def test_media_workspace_has_no_raw_player_provider_import_or_private_pwa_cache(
         ".portal-media-collection-grid { grid-template-columns: 1fr; }",
     ):
         assert selector in CSS
+
+
+def test_media_workspace_preview_is_an_opt_in_private_asset_boundary_not_a_bot_adapter() -> None:
+    # The UI deliberately remains free of a raw player until its separate UX
+    # scope.  This server route only makes a future same-origin player
+    # possible for one attached owner Asset Vault file.
+    assert 'WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED", "false"' in DB
+    assert '@router.get("/collections/{collection_id}/items/{item_id}/preview")' in ROUTER
+    assert "_previewable_item_asset_row" in ROUTER
+    assert "open_verified_private_asset_stream" in ROUTER
+    assert "seal_verified_private_file" in ROUTER
+    assert "private_asset_inline_response" in ROUTER
+    assert "WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED" in ROUTER
+    assert "selected-media state" in ROUTER
+    assert "there is no public/signed URL, range support" in ROUTER
+    assert "media_workspace_preview" in APP
+    assert '"media-workspace-preview" if media_workspace_preview' in APP
+    assert "rate_limit = 20" in APP
+    assert "private_media_workspace_preview" in APP
+    assert "Cross-Origin-Resource-Policy" in (ROOT / "copyfast_assets.py").read_text(encoding="utf-8")
+    assert "from copyfast_bridge import" not in ROUTER
+    assert "import requests" not in ROUTER
+    assert "import httpx" not in ROUTER
 
 
 def test_media_workspace_reads_ignore_late_session_route_and_page_responses() -> None:

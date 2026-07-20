@@ -22,8 +22,17 @@ from typing import Any, Callable
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field, StrictInt, StrictStr, field_validator
 
+from copyfast_assets import open_verified_private_asset_stream, private_asset_inline_response, seal_verified_private_file
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
-from copyfast_db import ensure_copyfast_schema, memory_center_enabled, music_media_workspace_enabled, read_transaction, transaction, utc_now
+from copyfast_db import (
+    ensure_copyfast_schema,
+    memory_center_enabled,
+    music_media_workspace_enabled,
+    music_media_workspace_preview_enabled,
+    read_transaction,
+    transaction,
+    utc_now,
+)
 
 
 router = APIRouter(prefix="/api/v1/media-workspace", tags=["Web Audio Library & Briefing"])
@@ -146,6 +155,14 @@ def _require_enabled() -> None:
         raise HTTPException(
             status_code=503,
             detail="Audio Library & Briefing đang tạm dừng để bảo trì. WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED chưa được bật.",
+        )
+
+
+def _require_preview_enabled() -> None:
+    if not music_media_workspace_preview_enabled():
+        raise HTTPException(
+            status_code=503,
+            detail="Preview audio riêng tư đang tạm dừng. WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED chưa được bật.",
         )
 
 
@@ -554,6 +571,38 @@ def _audio_asset_not_found() -> dict[str, Any]:
         status_name="guarded",
         error_code="WEB_MEDIA_AUDIO_ASSET_NOT_FOUND",
     )
+
+
+def _previewable_item_asset_row(
+    conn: Any,
+    *,
+    collection_id: str,
+    item_id: str,
+    account_id: str,
+) -> tuple[Any, ...] | None:
+    """Return only an active, attached, owner-scoped audio blob projection.
+
+    The Bot's media-preview indexes and selected-media state never enter this
+    query.  An archived collection, detached item, foreign item, non-audio
+    asset or inactive Asset Vault record has the same non-enumerating result.
+    """
+
+    row = conn.execute(
+        """SELECT i.id, a.id, a.original_filename, a.extension, a.content_type,
+                  a.byte_size, a.sha256, a.storage_key
+           FROM web_media_items AS i
+           JOIN web_media_collections AS c
+             ON c.id=i.collection_id AND c.account_id=i.account_id
+           JOIN web_asset_files AS a
+             ON a.id=i.asset_id AND a.account_id=i.account_id
+           WHERE i.id=? AND i.collection_id=? AND i.account_id=?
+             AND c.state='active' AND a.state='active'
+           LIMIT 1""",
+        (item_id, collection_id, account_id),
+    ).fetchone()
+    if not row or not _is_audio_asset(row[3], row[4]):
+        return None
+    return row
 
 
 def _item_public(row: tuple[Any, ...]) -> dict[str, Any]:
@@ -1671,6 +1720,69 @@ async def list_audio_assets(
             "source": "asset_vault_owner_scoped",
         },
         status_name="read_only",
+    )
+
+
+@router.get("/collections/{collection_id}/items/{item_id}/preview")
+async def preview_media_item(
+    collection_id: str,
+    item_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    """Stream one verified, owner-attached Web audio reference inline.
+
+    This is a Web-native convenience for files the account uploaded and
+    attached to its active collection.  It deliberately does not turn the
+    Bot's short-lived cache indexes, Telegram file IDs, provider previews,
+    selected-media state or a remote URL into a browser resource.  Every
+    request reauthorizes ownership and rehashes the descriptor-pinned blob;
+    there is no public/signed URL, range support, provider call, job, charge
+    or output claim.
+    """
+
+    _require_enabled()
+    _require_preview_enabled()
+    collection_id = _uuid(collection_id, label="Collection ID")
+    item_id = _uuid(item_id, label="Media item ID")
+    account_id = str(account["id"])
+    with read_transaction() as conn:
+        row = _previewable_item_asset_row(
+            conn,
+            collection_id=collection_id,
+            item_id=item_id,
+            account_id=account_id,
+        )
+    if not row:
+        raise HTTPException(status_code=404, detail="Không tìm thấy audio preview thuộc collection hiện tại")
+    stream = open_verified_private_asset_stream(
+        storage_key=str(row[7]),
+        expected_bytes=int(row[5]),
+        expected_digest=str(row[6]),
+    )
+    if stream is None:
+        raise HTTPException(status_code=404, detail="Audio preview không còn sẵn sàng")
+    sealed_stream = seal_verified_private_file(
+        stream,
+        expected_bytes=int(row[5]),
+        expected_digest=str(row[6]),
+    )
+    if sealed_stream is None:
+        raise HTTPException(status_code=404, detail="Audio preview không còn sẵn sàng")
+    with transaction() as conn:
+        _audit(
+            conn,
+            request=request,
+            account=account,
+            action="web.media.item.preview",
+            target=str(row[0]),
+            detail=f"collection={collection_id};asset=owner_scoped_verified;delivery=inline_no_range",
+        )
+    return private_asset_inline_response(
+        sealed_stream,
+        byte_size=int(row[5]),
+        media_type=str(row[4]),
+        filename=str(row[2]),
     )
 
 

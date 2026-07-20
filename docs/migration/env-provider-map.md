@@ -409,3 +409,10 @@ They do not contain an API key and must not be used as a provider, Bot,
 PayOS, wallet, webhook or production-deployment toggle. Enabling the feature
 also requires the existing private Asset Vault gate and a separately supplied
 FFmpeg/ffprobe runtime.
+
+## Web-native Media Workspace preview environment
+
+- `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` (default `true`) enables the signed Web-owned collection workspace.
+- `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` (default `false`) permits same-origin inline preview only for an active audio Asset Vault file already attached to the requesting account's active collection.
+
+The preview flag is not a provider/library, Bot-cache, Telegram, wallet, PayOS, job, output-delivery or public-URL switch. It remains disabled until an operator accepts the private storage and traffic implications.

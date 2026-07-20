@@ -384,3 +384,9 @@ Only variable names are inventoried; values, tokens and keys are never read or c
 | Runway | 45 | bot.py, handlers/tools_handler.py, README.md |
 | Replicate | 18 | bot.py, docs/STABLE_REVENUE_BOT_STATUS.md |
 | Telegram | 594 | AGENTS.md, ARCHITECTURE.md, bot.py, CODEX_NEXT_TASK.md, docs/ADMIN_REPORTING_AND_MODES.md |
+
+## Web-native Media Workspace preview
+
+- `WEBAPP_MUSIC_MEDIA_WORKSPACE_ENABLED` defaults to `true` for signed Web-owned collections.
+- `WEBAPP_MEDIA_WORKSPACE_PREVIEW_ENABLED` defaults to `false`; when enabled it permits only verified, owner-scoped, same-origin inline preview of an attached active Asset Vault audio file.
+- This flag never enables a Bot cache/provider catalog, Telegram delivery, wallet/PayOS action, job, output claim or public URL.
