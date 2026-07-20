@@ -36,6 +36,28 @@ tables and handlers around `bot.py:3531` and `bot.py:87055`–`87789`.
 | `/note_ai` classification | Manual tagging/category/priority | **Guarded gap**. No provider or Xu/charge adapter is invoked, and the Web never fabricates an AI classification. |
 | `/memory_status`, storage quota/add-on and PayOS storage checkout | None in this module | Remains Bot/canonical billing scope; the Web Memory Center does not duplicate quota, ledger or webhook logic. |
 
+## Parent-menu navigation boundary
+
+The following finite Bot entries can open a **fresh** Web workspace. This is a
+navigation conversion, not a data migration: the browser receives neither a
+raw callback, Telegram identity, Bot note/reminder row, pending text/query,
+storage quota, add-on entitlement nor payment context.
+
+| Bot entry | Fresh Web destination | What is deliberately not replayed |
+| --- | --- | --- |
+| `menu|main_memory`, `freehub|docs`, `freehub|notes` | `/notes` | Bot Memory/Free Hub context, Bot notes, reminder rows, storage quota and add-ons |
+| `menu|hint_note`, `menu|hint_search_note`, `memory|create`, `memory|list`, `memory|search`, `memory|delete_start` | `/notes` | Bot pending note/search text, list, note ID, deletion selection or mutation |
+| `menu|hint_remind` | `/reminders` | Bot reminder state and Telegram/email/push delivery state |
+
+`menu|memory_storage_status` and `menu|memory_storage_addon` remain
+`TELEGRAM_ONLY`: they respectively read Bot canonical quota/entitlements or
+enter the Bot storage/PayOS checkout flow. `menu|memory_storage_cleanup` is
+not mapped to Web archive or Asset Vault retention because the Bot text only
+gives cleanup guidance and explicitly performs no deletion. Dynamic
+`memory|view|{*}`, `memory|delete|{*}` and `memory|delete_yes|{*}` remain
+Telegram-only because their opaque identifier resolves a Bot-owned note, and
+the confirmation can mutate that canonical record.
+
 ## State model
 
 ### Notes

@@ -1019,7 +1019,11 @@ def test_static_audit_maps_free_hub_gallery_upload_docs_and_server_recomputed_sa
         mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
         assert mapped["classification"] == "customer"
         assert mapped["target"] == target
-        assert mapped["status"] == "COPIED_GUARDED"
+        if callback in audit.MEMORY_FRESH_WEB_NAVIGATION_ACTIONS:
+            assert mapped["status"] == "NAVIGATION_ONLY"
+            assert mapped["resolution"] == "reviewed_memory_fresh_web_navigation"
+        else:
+            assert mapped["status"] == "COPIED_GUARDED"
 
     save = audit._map_callback("freehub|save", "callback_data", {"file": "bot.py", "line": 1}, routes)
     assert save["target"] == "/content/prompt-pack"
@@ -1589,7 +1593,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
     expected = {
-        "memory|view|{*}": "/notes",
         "ticket|reply|{*}": "/support",
         "pipe|stage|review|{*}": "/workboard",
         "storyboard|mode_ai|{*}": "/video-studio/storyboard-composer",
@@ -1608,6 +1611,20 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         assert mapped["target"] == target
         assert mapped["status"] == "COPIED_GUARDED"
         assert mapped["resolution"] == "reviewed_namespace_compatibility_route"
+
+    for template in sorted(audit.MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_memory_record_identifier_requires_telegram_context"
+        assert "BOT_MEMORY_NOTE_IDENTIFIER" in mapped["source_dispositions"]
+
+    unreviewed_memory = audit._map_callback_template("memory|new_action|{*}", {"file": "bot.py", "line": 1}, routes)
+    assert unreviewed_memory is not None
+    assert unreviewed_memory["target"] == "BOT_MEMORY_SOURCE_REVIEW_REQUIRED"
+    assert unreviewed_memory["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert unreviewed_memory["resolution"] == "memory_callback_template_requires_source_review"
 
     admin = audit._map_callback_template("archive|dept|{*}", {"file": "bot.py", "line": 1}, routes)
     assert admin is not None
@@ -1710,6 +1727,12 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|main_ai": ("/chat", "chat_workspace", "chat", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_ai_prompt": ("/prompt-studio", "prompt_studio", "prompt_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|main_memory": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|hint_note": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|hint_search_note": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|hint_remind": ("/reminders", "reminder_center", "reminders", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "freehub|docs": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "freehub|notes": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|translate": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|translation_language_hub": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|translation_text": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
@@ -1751,7 +1774,8 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert mapped["classification"] == "customer"
         assert mapped["target"] == target
         assert mapped["status"] == "NAVIGATION_ONLY"
-        assert mapped["resolution"] == "reviewed_exact_menu_navigation"
+        expected_resolution = "reviewed_memory_fresh_web_navigation" if callback in audit.MEMORY_FRESH_WEB_NAVIGATION_ACTIONS else "reviewed_exact_menu_navigation"
+        assert mapped["resolution"] == expected_resolution
         assert mapped["menu_capability_key"] == capability
         assert mapped["menu_feature_key"] == feature
         assert mapped["menu_authority"] == authority
@@ -1771,12 +1795,27 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert public_entry["authority"] == descriptor["authority"]
         assert public_entry["launch_mode"] == descriptor["launch_mode"]
 
-    # This family combines Bot storage, notes and temporary context.  It is
-    # deliberately not promoted to a convenient-looking Notes route.
-    unresolved = audit._map_callback("menu|main_memory", "callback_data", {"file": "bot.py", "line": 1}, routes)
-    assert unresolved["target"] == "/dashboard"
-    assert unresolved["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert unresolved["resolution"] == "menu_callback_requires_explicit_feature_disposition"
+    # Parent/help actions can open a fresh Web Memory form/list only; no
+    # Bot records, pending text/query, or Telegram state travels with them.
+    for callback in sorted(audit.MEMORY_FRESH_WEB_NAVIGATION_ACTIONS):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        descriptor = audit.MEMORY_FRESH_WEB_NAVIGATION_ACTIONS[callback]
+        assert mapped["target"] == descriptor["target"]
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_memory_fresh_web_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["memory_capability_key"] == descriptor["capability_key"]
+
+    for callback in sorted(audit.MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_canonical_memory_storage_requires_adapter"
+
+    cleanup = audit._map_callback("menu|memory_storage_cleanup", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert cleanup["target"] == "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED"
+    assert cleanup["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert cleanup["resolution"] == "bot_storage_cleanup_guidance_requires_web_storage_contract"
 
     dynamic = audit._map_callback_template("menu|translation_pair_{*}", {"file": "bot.py", "line": 1}, routes)
     assert dynamic is not None

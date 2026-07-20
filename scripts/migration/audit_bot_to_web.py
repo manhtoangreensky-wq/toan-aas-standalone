@@ -312,7 +312,6 @@ COMMAND_ROUTE_OVERRIDES = {
 # deep link from a Telegram object ID.  The Web must obtain any record through
 # its own signed, owner/role-checked API after navigation.
 DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
-    ("memory|", "/notes", "customer"),
     ("ticket|", "/support", "customer"),
     ("support|", "/support", "customer"),
     ("pipe|", "/workboard", "customer"),
@@ -468,6 +467,235 @@ VIDEO_FINALIZATION_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "vfinal|tier|{*}",
 })
 
+# The Bot's Memory Center has two sharply different kinds of source action.
+# A few buttons merely open a parent/help surface or ask for a new note/search
+# input; those may open an independently signed Web Memory Center without
+# carrying the Telegram context, note/query text or Bot records.  Record-ID
+# callbacks, storage status and purchase actions are deliberately separated
+# below because they read or mutate canonical Bot state.
+MEMORY_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|main_memory": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_MEMORY_MENU_CONTEXT_NOT_REPLAYED",
+            "BOT_STORAGE_QUOTA_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot callback only renders its Memory/Document parent menu. The Web opens a fresh signed "
+            "Memory Center and never receives Bot note rows, reminder rows, storage quota, add-ons, "
+            "Telegram identity, pending context or a payment action."
+        ),
+    },
+    "menu|hint_note": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_PENDING_NOTE_INPUT_NOT_REPLAYED",
+            "BOT_MEMORY_RECORDS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot note hint can enter a Telegram pending-text flow. The Web starts a blank, owner-scoped "
+            "note workflow and never accepts the Bot input, note ID, message or pending state."
+        ),
+    },
+    "menu|hint_search_note": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_PENDING_SEARCH_QUERY_NOT_REPLAYED",
+            "BOT_MEMORY_RECORDS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot search hint can wait for a Telegram query. The Web opens its independently authorized "
+            "search form and never receives the Bot query, result list, note ID or Telegram state."
+        ),
+    },
+    "freehub|docs": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_FREEHUB_CONTEXT_NOT_REPLAYED",
+            "BOT_MEMORY_AND_STORAGE_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot Free Hub action clears its local context then renders the same Memory/Document menu. "
+            "The Web starts its own signed Memory Center and does not import the Free Hub or Bot storage state."
+        ),
+    },
+    "freehub|notes": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_FREEHUB_CONTEXT_NOT_REPLAYED",
+            "BOT_MEMORY_AND_STORAGE_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot Free Hub action clears its local context then renders the same Memory/Document menu. "
+            "The Web starts its own signed Memory Center and does not import the Free Hub or Bot storage state."
+        ),
+    },
+    "menu|hint_remind": {
+        "capability_key": "reminder_center",
+        "feature_key": "reminders",
+        "target": "/reminders",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_REMINDER_NAVIGATION",
+            "BOT_COMMAND_GUIDANCE_NOT_REPLAYED",
+            "TELEGRAM_REMINDER_DELIVERY_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot reminder hint only renders command guidance. The Web starts an independent reminder "
+            "workspace and does not receive a Bot reminder, Telegram identity or notification-delivery state."
+        ),
+    },
+    "memory|create": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_PENDING_NOTE_INPUT_NOT_REPLAYED",
+            "BOT_MEMORY_RECORDS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action starts a Telegram note-input state. The Web opens a new signed note form and "
+            "does not accept any pending Bot text, note ID or message context."
+        ),
+    },
+    "memory|list": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_MEMORY_RECORDS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot list reads its own note rows. The Web opens an independent signed account list and "
+            "never reads the Bot table or accepts a Bot note identifier."
+        ),
+    },
+    "memory|search": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_PENDING_SEARCH_QUERY_NOT_REPLAYED",
+            "BOT_MEMORY_RECORDS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action starts a Telegram search-query state. The Web opens an independent signed search "
+            "form and never receives the Bot query, result list, note ID or Telegram state."
+        ),
+    },
+    "memory|delete_start": {
+        "capability_key": "memory_center",
+        "feature_key": "notes",
+        "target": "/notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_MEMORY_NAVIGATION",
+            "BOT_NOTE_DELETE_SELECTION_NOT_REPLAYED",
+            "BOT_MEMORY_RECORDS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action starts a Telegram note-delete selection. The Web opens its own archive-oriented "
+            "notes surface and cannot receive a Bot record ID, deletion choice or mutation state."
+        ),
+    },
+}
+
+MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|memory_storage_status": {
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_CANONICAL_MEMORY_STORAGE_QUOTA",
+            "BOT_STORAGE_ADDON_ENTITLEMENTS",
+            "NO_WEB_STORAGE_STATUS_ADAPTER",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot status surface reads its canonical storage plan, usage and active add-on entitlement. "
+            "The Web Memory summary is intentionally separate and has no reviewed storage-status bridge."
+        ),
+    },
+    "menu|memory_storage_addon": {
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "CANONICAL_BOT_STORAGE_ADDON_CATALOG",
+            "CANONICAL_BOT_PAYOS_CHECKOUT",
+            "CANONICAL_STORAGE_ENTITLEMENT_SETTLEMENT",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot menu enters the canonical storage add-on catalog and payment flow. It must not become "
+            "a Web amount, wallet top-up, checkout, storage order, quota grant or second PayOS ledger."
+        ),
+    },
+}
+
+MEMORY_STORAGE_GUIDANCE_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|memory_storage_cleanup": {
+        "source_dispositions": (
+            "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+            "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
+            "NO_WEB_STORAGE_CLEANUP_EQUIVALENCE",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot cleanup text explicitly performs no deletion and refers to Bot notes, temporary files and "
+            "their TTL. Web note archive and Asset Vault retention are independent contracts."
+        ),
+    },
+}
+
+MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "memory|view|{*}",
+    "memory|delete|{*}",
+    "memory|delete_yes|{*}",
+})
+
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
 # callback tokens must never be sent to the browser.  The product-facing
@@ -521,6 +749,48 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "target": "/account",
         "feature_key": "account",
         "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|main_memory": {
+        "capability_key": "memory_center",
+        "target": "/notes",
+        "feature_key": "notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_note": {
+        "capability_key": "memory_center",
+        "target": "/notes",
+        "feature_key": "notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_search_note": {
+        "capability_key": "memory_center",
+        "target": "/notes",
+        "feature_key": "notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|hint_remind": {
+        "capability_key": "reminder_center",
+        "target": "/reminders",
+        "feature_key": "reminders",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "freehub|docs": {
+        "capability_key": "memory_center",
+        "target": "/notes",
+        "feature_key": "notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "freehub|notes": {
+        "capability_key": "memory_center",
+        "target": "/notes",
+        "feature_key": "notes",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
     },
     "menu|translate": {
@@ -3239,9 +3509,69 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     telegram_only = _is_telegram_only(token)
     dashboard_fallback = False
     menu_entry = MENU_ACTION_REGISTRY.get(token)
+    memory_navigation_entry = MEMORY_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
+    memory_storage_telegram_only = MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.get(token)
+    memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
     operator_category = OPERATOR_MENU_CATEGORY_REGISTRY.get(token)
     pricing_read_entry = PRICING_READ_NAVIGATION_REGISTRY.get(token)
+    if memory_navigation_entry is not None:
+        # This is a fresh Web workspace launch, not a translation of the
+        # Telegram button. The detailed boundary is kept here rather than in
+        # a label/namespace heuristic so Bot state can never leak into the
+        # browser even when the destinations happen to share a product name.
+        target = str(memory_navigation_entry["target"])
+        result = {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_memory_fresh_web_navigation",
+            "source_dispositions": tuple(memory_navigation_entry["source_dispositions"]),
+            "source_evidence": str(memory_navigation_entry["source_evidence"]),
+            "memory_capability_key": str(memory_navigation_entry["capability_key"]),
+            "memory_feature_key": str(memory_navigation_entry["feature_key"]),
+            "memory_authority": str(memory_navigation_entry["authority"]),
+            "memory_launch_mode": str(memory_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+        if menu_entry is not None:
+            result["menu_capability_key"] = menu_entry["capability_key"]
+            result["menu_feature_key"] = menu_entry["feature_key"]
+            result["menu_authority"] = menu_entry["authority"]
+            result["menu_launch_mode"] = menu_entry["launch_mode"]
+        return result
+    if memory_storage_telegram_only is not None:
+        # Bot quota and add-on purchase are canonical storage/payment state.
+        # Do not make a convenient-looking Web Notes, Asset Vault or wallet
+        # route stand in for the Bot record or its PayOS settlement path.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_canonical_memory_storage_requires_adapter",
+            "source_dispositions": tuple(memory_storage_telegram_only["source_dispositions"]),
+            "source_evidence": str(memory_storage_telegram_only["source_evidence"]),
+            "evidence": evidence,
+        }
+    if memory_storage_guidance is not None:
+        # The Bot says this is guidance only; no deletion actually occurs.
+        # Preserve that absence of a Web equivalent rather than claiming that
+        # archive or Asset Vault retention is a storage-cleanup workflow.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "bot_storage_cleanup_guidance_requires_web_storage_contract",
+            "source_dispositions": tuple(memory_storage_guidance["source_dispositions"]),
+            "source_evidence": str(memory_storage_guidance["source_evidence"]),
+            "evidence": evidence,
+        }
     if token == "payosalert|manual":
         # The Bot emits this only in its owner/admin PayOS-alert keyboards.
         # It creates a short-lived Bot-local manual-bill menu state for that
@@ -3677,10 +4007,6 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         # Route the customer to the independently owned, validated Asset Vault
         # instead; it does not recreate a hidden Bot pending chain.
         target = "/asset-vault"
-    elif token in {"freehub|docs", "freehub|notes"}:
-        # Bot opens its memory/doc menu.  Web Notes is the direct Web-owned
-        # counterpart; document transforms retain separate private routes.
-        target = "/notes"
     elif token in {"freehub|docs_split_merge", "freehub|docs_summary_guard"}:
         # Summary stays guarded and split/merge remains separately scoped;
         # this parent menu maps only to the Web document hub.
@@ -4110,6 +4436,55 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     token = str(template or "").casefold()
     if "{*}" not in token:
         return _map_callback(token, "callback_template", evidence, existing_routes)
+    if token in MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        # These callbacks embed a Bot note identifier. `delete_yes` is a
+        # canonical Bot write, while view/delete resolve the same Bot row for
+        # a Telegram user. A signed Web Memory Center owns different UUIDs and
+        # must never accept, look up or mutate this opaque value.
+        mutation = token == "memory|delete_yes|{*}"
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "bot_memory_record_identifier_requires_telegram_context",
+            "source_dispositions": (
+                "TELEGRAM_IDENTITY_CONTEXT",
+                "BOT_MEMORY_NOTE_IDENTIFIER",
+                "BOT_MEMORY_RECORD_STATE",
+                *( ("CANONICAL_BOT_MEMORY_MUTATION",) if mutation else () ),
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot template resolves an opaque memory note ID against its Telegram-owned table"
+                + (" and mutates the canonical Bot record." if mutation else ".")
+                + " The Web never accepts the ID or replays that state."
+            ),
+            "evidence": evidence,
+        }
+    if token.startswith("memory|"):
+        # A future Memory template must be source-reviewed. It may carry a
+        # record identifier, delete transition, pending text/query or other
+        # Bot-local state, so it cannot inherit /notes merely from the prefix.
+        return {
+            "source_kind": "callback_template",
+            "source": template,
+            "target": "BOT_MEMORY_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "memory_callback_template_requires_source_review",
+            "source_dispositions": (
+                "BOT_MEMORY_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The Bot Memory namespace can include per-Telegram note IDs, pending input, search state "
+                "or canonical mutations. A new dynamic value must be reviewed before it gains any Web meaning."
+            ),
+            "evidence": evidence,
+        }
     if token.startswith("tvflow|"):
         # Dynamic trend-video values include Bot job, scene and choice context.
         # Preserve the family-specific source boundary rather than allowing a
@@ -5073,6 +5448,51 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "CANONICAL_BOT_STORAGE_ADDON_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    memory_menu_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_memory_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in MEMORY_FRESH_WEB_NAVIGATION_ACTIONS.items()
+    ] + [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "bot_canonical_memory_storage_requires_adapter",
+            "TELEGRAM_ONLY",
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.items()
+    ] + [
+        [
+            source,
+            "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED",
+            "bot_storage_cleanup_guidance_requires_web_storage_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in MEMORY_STORAGE_GUIDANCE_ACTIONS.items()
+    ] + [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "bot_memory_record_identifier_requires_telegram_context",
+            "TELEGRAM_ONLY",
+            "TELEGRAM_IDENTITY_CONTEXT, BOT_MEMORY_NOTE_IDENTIFIER, BOT_MEMORY_RECORD_STATE, NO_RUNTIME_CLAIM",
+        ]
+        for source in sorted(MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES)
+    ] + [
+        [
+            "other memory|{*}",
+            "BOT_MEMORY_SOURCE_REVIEW_REQUIRED",
+            "memory_callback_template_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_MEMORY_STATE_OR_IDENTIFIER_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ],
+    ]
 
     write(
         "README.md",
@@ -5136,6 +5556,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) and [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — bounded local private image artifacts.\n"
         + "- [`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md) — disabled-by-default, bounded private JPEG poster extraction from an owner-scoped Asset Vault video; it is not Video Studio rendering, a Bot job, provider call, wallet/Xu or PayOS flow.\n"
         + "- [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.\n"
+        + "- [`MEMORY_MENU_CALLBACK_CONTRACT.md`](MEMORY_MENU_CALLBACK_CONTRACT.md) — exact Memory menu/callback boundaries; fresh Web navigation never imports Bot notes, quota, add-ons, IDs or Telegram state.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"
         + "- [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.\n"
         + "- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.\n"
@@ -5219,6 +5640,27 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\nNo value above becomes `/wallet/topup`, a Web amount/code, a browser checkout, a Web storage ledger, a second PayOS webhook, or a quota grant. The Web may later add a separately reviewed owner-scoped Storage Center and bridge contract, but it must start from canonical current state rather than replay a Bot callback or Telegram pending value.\n\n"
         "Any unlisted `storage|*` value remains source-review-required. It must not create an order, call PayOS, grant quota, write storage usage, call a provider, or claim that a storage purchase succeeded.\n",
+    )
+    write(
+        "MEMORY_MENU_CALLBACK_CONTRACT.md",
+        "# Memory menu and callback disposition contract\n\n"
+        "The standalone Web Memory Center is a signed, Web-owned notes and reminders workspace. The frozen Bot's "
+        "Memory menu, dynamic note identifiers, storage quota and storage add-on checkout are separate source "
+        "concerns. A Browser never receives a raw callback token, Telegram identity, Bot note ID, pending text, "
+        "search query, Bot record, quota, add-on, order or checkout state.\n\n"
+        + _markdown_table(
+            ["Bot callback source", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            memory_menu_contract_rows,
+        )
+        + "\n\nThe reviewed navigation entries open a **fresh** signed Web form/list only. They do not inspect, copy "
+        "or mutate Bot `memory_*` tables, and reminder navigation does not claim Telegram, email, push or any "
+        "other delivery. `menu|memory_storage_status` and `menu|memory_storage_addon` remain Telegram-only "
+        "until a separate owner-scoped canonical storage adapter is designed. `menu|memory_storage_cleanup` "
+        "is intentionally not mapped to archive or Asset Vault retention: the Bot action only gives cleanup "
+        "guidance and does not delete data.\n\n"
+        "A dynamic `memory|view|{*}`, `memory|delete|{*}` or `memory|delete_yes|{*}` value carries a Bot "
+        "record identifier and remains Telegram-only. Any other dynamic `memory|{*}` value requires source "
+        "review before it can gain a Web contract.\n",
     )
     write(
         "inventory.md",
