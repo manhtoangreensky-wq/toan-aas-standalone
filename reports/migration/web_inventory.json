@@ -173,12 +173,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3290,
+      "line": 3423,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3298,
+      "line": 3431,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -280,7 +280,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4637,
+      "line": 4791,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6775,7 +6775,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 858,
+      "occurrences": 867,
       "provider": "PayOS"
     },
     {
@@ -7003,7 +7003,7 @@
         "copyfast_subtitle_workspace.py",
         "copyfast_support.py"
       ],
-      "occurrences": 2094,
+      "occurrences": 2132,
       "provider": "Telegram"
     }
   ],
@@ -9486,7 +9486,7 @@
     {
       "endpoint": "navigation",
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 503,
+      "line": 522,
       "methods": [
         "GET"
       ],
@@ -12725,10 +12725,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 281,
-  "source_files_scanned": 281,
-  "source_fingerprint_sha256": "ae89a8d0590ed8a81a7db7bd189a955345bc87f57dd2538fd70cfa17f9ff0d1c",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast81-guided-start-capability-navigator",
+  "source_files_discovered": 283,
+  "source_files_scanned": 283,
+  "source_fingerprint_sha256": "6bf6a6d35809a49c533743a95d3b54577b1c2df915d7c0af590f26d1af5565a1",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast82-system-data-stewardship",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

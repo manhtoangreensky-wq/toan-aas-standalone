@@ -51,9 +51,10 @@ storage quota, add-on entitlement nor payment context.
 
 `menu|memory_storage_status` and `menu|memory_storage_addon` remain
 `TELEGRAM_ONLY`: they respectively read Bot canonical quota/entitlements or
-enter the Bot storage/PayOS checkout flow. `menu|memory_storage_cleanup` is
-not mapped to Web archive or Asset Vault retention because the Bot text only
-gives cleanup guidance and explicitly performs no deletion. Dynamic
+enter the Bot storage/PayOS checkout flow. `menu|memory_storage_cleanup` now
+opens only the separate signed Web Workspace Care directory; it remains
+guidance and does not map to archive or Asset Vault retention, inspect quota,
+delete data or act on Bot storage. Dynamic
 `memory|view|{*}`, `memory|delete|{*}` and `memory|delete_yes|{*}` remain
 Telegram-only because their opaque identifier resolves a Bot-owned note, and
 the confirmation can mutate that canonical record.

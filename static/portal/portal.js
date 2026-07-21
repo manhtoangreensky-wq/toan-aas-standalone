@@ -773,6 +773,10 @@
     layout: "account-data-controls", fields: [], action: "none", status: "guarded",
     notes: ["Release này chỉ kiểm soát hồ sơ Web, Memory Center, Prompt Library và Workboard thuộc signed account hiện tại.", "Export là attachment trực tiếp từ server; yêu cầu xóa chỉ được ghi nhận để review, không tự xóa account, file hoặc dữ liệu Telegram/Bot."]
   });
+  customerPage("/account/workspace-care", "Chăm sóc dữ liệu Web", "Rà soát các không gian do Web account sở hữu và đi tới đúng công cụ an toàn; không đụng dữ liệu Bot hoặc hệ thống canonical.", ICONS.security, {
+    layout: "workspace-care", fields: [], action: "none", status: "read_only",
+    notes: ["Trang này chỉ điều hướng. Không quét, xoá, archive, tính quota hoặc tạo yêu cầu ngầm.", "Ghi chú, nhắc việc và Data Controls đều có server-side ownership, confirmation và audit riêng; dữ liệu Telegram/Bot, Xu, PayOS, job, provider và output nằm ngoài phạm vi."]
+  });
   customerPage("/membership", "Gói thành viên", "Xem tier, trial, quyền lợi và catalog gói từ Bot canonical; Web không tự cấp VIP hoặc thay đổi Xu.", ICONS.pricing, {
     layout: "membership", type: "membership", fields: [], action: "none", status: "read_only",
     notes: ["Tier, trial, grant, rank và package entitlement vẫn do Bot canonical quyết định.", "Trang này chỉ hiển thị metadata bridge đã redaction; không tự áp ưu đãi, grant quyền lợi hoặc sửa ledger Xu."]
@@ -1613,6 +1617,10 @@
   adminPage("/admin/runtime", "Runtime", "Tình trạng runtime và queue chỉ đọc, không thao tác hạ tầng từ browser.", ICONS.system);
   adminPage("/admin/system", "Hệ thống", "Xem thiết lập hệ thống được redaction; write actions không nằm ở shell.", ICONS.system);
   adminPage("/admin/backups", "Sao lưu", "Trạng thái backup/disaster recovery là dữ liệu server-side được phân quyền.", ICONS.system, {}, ["/admin/backup"]);
+  adminPage("/admin/system-stewardship", "System & Data Stewardship", "Hub điều hướng read-only tới các bề mặt quản trị Web và canonical đã được bảo vệ độc lập.", ICONS.system, {
+    layout: "admin-system-stewardship", action: "none", status: "read_only",
+    notes: ["Trang không gọi bridge, không đọc runtime/raw log và không cung cấp deploy, repair, provider, payment, Xu hay ledger control.", "Mỗi card luôn kiểm tra signed session và authority tại route đích; local Web admin không được nâng thành canonical Bot admin."]
+  });
 
   function safeText(value, fallback) {
     if (typeof value !== "string") return fallback || "";
@@ -7740,7 +7748,7 @@
       {
         label: "Tài khoản & hỗ trợ",
         links: [
-          ["/account", "Tài khoản", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
+          ["/account", "Tài khoản", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/account/workspace-care", "Chăm sóc dữ liệu Web", ICONS.security], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
         ]
       },
       {
@@ -7871,6 +7879,7 @@
     if (linkPath === "/membership") return path === "/membership";
     if (linkPath === "/account/activity") return matchesRouteFamily(path, "/account/activity");
     if (linkPath === "/account/data-controls") return matchesRouteFamily(path, "/account/data-controls");
+    if (linkPath === "/account/workspace-care") return matchesRouteFamily(path, "/account/workspace-care");
     if (linkPath === "/account") return path === "/account" || path === "/onboarding";
     if (linkPath === "/operations") return path === "/operations";
     if (linkPath === "/inbox") return path === "/inbox";
@@ -7907,7 +7916,7 @@
     if (key === "jobs") return matchesRouteFamily(path, "/jobs");
     if (key === "assets") return matchesRouteFamily(path, "/assets") || matchesRouteFamily(path, "/asset-vault");
     if (key === "account") {
-      return isNavCurrent("/account", page) || ["/account/activity", "/account/data-controls", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/inbox", "/automation", "/tickets", "/support", "/operations", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
+      return isNavCurrent("/account", page) || ["/account/activity", "/account/data-controls", "/account/workspace-care", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/inbox", "/automation", "/tickets", "/support", "/operations", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
     }
     return false;
   }
@@ -18776,6 +18785,48 @@
     return "guarded";
   }
 
+  function renderWorkspaceCare(page, context) {
+    // This is deliberately a guidance and navigation surface. It does not
+    // query storage, infer retention, archive records or create a deletion
+    // request: the target modules each own their signed account checks and
+    // confirmation lifecycle.
+    const cards = [
+      {
+        route: "/notes",
+        icon: ICONS.prompt,
+        eyebrow: "Web-owned workspace",
+        title: "Memory Center",
+        description: "Rà soát ghi chú, tag, priority và archive trong không gian thuộc Web account hiện tại.",
+        action: "Mở ghi chú"
+      },
+      {
+        route: "/reminders",
+        icon: ICONS.jobs,
+        eyebrow: "Web-owned planning",
+        title: "Nhắc việc",
+        description: "Xem hoặc điều chỉnh reminder Web-native theo luồng pause, resume và complete đã được bảo vệ.",
+        action: "Mở nhắc việc"
+      },
+      {
+        route: "/account/data-controls",
+        icon: ICONS.security,
+        eyebrow: "Review-only privacy",
+        title: "Kiểm soát dữ liệu",
+        description: "Xuất phạm vi authoring Web hoặc tạo yêu cầu review xóa với confirmation riêng, không tự xóa.",
+        action: "Mở Data Controls"
+      }
+    ];
+    const navigationCards = cards.map((card) => {
+      const route = safeCatalogRoute(card.route);
+      return `<a class="portal-workspace-care-card" href="${safeText(route)}"><span class="portal-workspace-care-card-icon" aria-hidden="true">${portalIcon(card.icon)}</span><span class="portal-workspace-care-card-copy"><small>${safeText(card.eyebrow)}</small><strong>${safeText(card.title)}</strong><span>${safeText(card.description)}</span><em>${safeText(card.action)} <b aria-hidden="true">→</b></em></span></a>`;
+    }).join("");
+    return `<article class="portal-page portal-workspace-care">${renderHero(page, context)}
+      <section class="portal-workspace-care-intro"><div><span class="portal-section-kicker">Web-owned only</span><h2>Chọn đúng nơi trước khi thay đổi dữ liệu</h2><p>Đây là một điểm bắt đầu rõ ràng cho dữ liệu do Web App sở hữu. Mỗi khu vực bên dưới có quy tắc ownership, trạng thái và xác nhận độc lập; trang này không thực hiện thao tác ngầm.</p></div><div class="portal-workspace-care-status"><span class="portal-workspace-care-status-icon" aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Không có dọn dẹp tự động</strong><small>Không quét quota hoặc retention</small></span></div></section>
+      <section class="portal-workspace-care-grid" aria-label="Công cụ chăm sóc dữ liệu Web">${navigationCards}</section>
+      <section class="portal-card portal-card-pad portal-workspace-care-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới rõ ràng</span><h2 class="portal-card-title">Dữ liệu nào không nằm ở đây?</h2><p class="portal-card-subtitle">Trang không thay thế bất kỳ hệ thống canonical hoặc luồng quản trị nào.</p></div>${badge("read_only")}</div><ul><li><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Telegram và Bot companion</strong><small>Không nhận identity, message, state hoặc record từ Bot.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><span><strong>Xu, PayOS và entitlement</strong><small>Không kiểm tra số dư, tạo checkout hoặc thay đổi ledger.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.jobs)}</span><span><strong>Job, provider và output</strong><small>Không tạo, dọn, retry hay khẳng định delivery.</small></span></li></ul></section>
+    </article>`;
+  }
+
   function renderAccountDataControls(page, context) {
     const controls = context.dataControls && typeof context.dataControls === "object" ? context.dataControls : {};
     const enabled = context.dataControlsEnabled === true && controls.enabled === true;
@@ -20156,6 +20207,47 @@
     const readinessRows = readiness.slice(0, 8);
     const authority = `<details class="portal-admin-authority"><summary>Authority & ranh giới quản trị</summary>${renderSummary(page, context)}</details>`;
     return `<article class="portal-page portal-admin-home">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-admin-guard"><div class="portal-state" data-state="guarded"><span class="portal-state-icon" aria-hidden="true">⌘</span><div><span class="portal-section-kicker">ERP control center</span><h2>${canonicalAdmin ? "Canonical admin đã được server xác nhận" : "Admin ERP đang chờ signed authority"}</h2><p>${canonicalAdmin ? "Tất cả read/write vẫn cần capability và Core Bridge; shell không tự thực hiện tác vụ quản trị." : "Client route không đủ để cấp quyền. FastAPI cần kiểm tra signed session và canonical authority trước khi render dữ liệu."}</p></div></div></section><section class="portal-admin-grid">${metrics.map(([label, value, note]) => `<div class="portal-metric"><span>${label}</span><strong>${value}</strong><em>${note}</em></div>`).join("")}</section>${renderAdminWorkQueues(context)}<div class="portal-work-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Readiness</span><h2 class="portal-card-title">Trạng thái hệ thống</h2><p class="portal-card-subtitle">Chỉ xem trạng thái Bot đã redaction; không bật/tắt provider từ trình duyệt.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="refresh-admin" data-portal-route="/admin"${refreshEnabled ? "" : " disabled"}>Làm mới</button></div>${renderRowsTable(["Tính năng", "Trạng thái", "Adapter"], readinessRows, ([key, item]) => `<td>${safeText(key)}</td><td>${badge(item && item.public_ready ? "ready" : "guarded")}</td><td>${safeText(item && item.adapter || "—")}</td>`, "Chưa có readiness được cấp", "Core Bridge sẽ chỉ trả trạng thái khi signed admin session còn hiệu lực.")}</section>${authority}</div>${renderAdminDirectory(context)}</article>`;
+  }
+
+  function renderAdminSystemStewardship(page, context) {
+    // This is an app-first map, not an Admin/Core Bridge read model. Card
+    // visibility comes from the small signed server navigation manifest, and
+    // every destination repeats its own authorization boundary on the server.
+    const navigation = adminErpNavigation(context);
+    const canonicalAdmin = hasLiveCanonicalAdmin(context);
+    const localCards = [
+      { route: "/admin/automation", icon: ICONS.system, title: "Automation Monitor", description: "Receipt scheduler Web-native đã redaction, chỉ đọc và không có control plane." },
+      { route: "/admin/security", icon: ICONS.security, title: "Security Posture", description: "Aggregate bảo mật Web-native đã redaction; không có session, secret hoặc control." },
+      { route: "/admin/access", icon: ICONS.users, title: "Access Posture", description: "Tổng quan access Web-native đã redaction, không có grant hoặc revoke quyền." },
+      { route: "/admin/governance", icon: ICONS.security, title: "Governance Documents", description: "Tài liệu vận hành Web-native có lifecycle, review và audit riêng." },
+      { route: "/admin/internal-documents", icon: ICONS.document, title: "Internal Document Archive", description: "Kho hồ sơ private với version bất biến và delivery được kiểm tra." }
+    ];
+    const canonicalCards = [
+      { route: "/admin/system", icon: ICONS.system, title: "System", description: "System read model do canonical authority cấp và redaction." },
+      { route: "/admin/runtime", icon: ICONS.system, title: "Runtime", description: "Runtime metadata canonical đã redaction; không có deploy hoặc repair executor." },
+      { route: "/admin/backups", icon: ICONS.document, title: "Backups", description: "Backup metadata canonical chỉ đọc; không có restore action trong release này." }
+    ];
+    const renderCard = (card, authority) => {
+      const allowed = serverAuthorizesAdminRoute(context, card.route) && (authority !== "canonical" || canonicalAdmin);
+      const marker = authority === "canonical" ? "Canonical authority" : "Web-local admin";
+      const state = allowed ? "read_only" : "guarded";
+      const body = `<span class="portal-stewardship-card-icon" aria-hidden="true">${portalIcon(card.icon)}</span><span class="portal-stewardship-card-copy"><small>${safeText(marker)}</small><strong>${safeText(card.title)}</strong><span>${safeText(card.description)}</span><em>${allowed ? "Mở khu vực" : (authority === "canonical" ? "Cần canonical authority" : "Chờ máy chủ xác minh quyền")} <b aria-hidden="true">→</b></em></span><span class="portal-stewardship-card-state">${badge(state)}</span>`;
+      return allowed
+        ? `<a class="portal-stewardship-card" href="${safeText(card.route)}">${body}</a>`
+        : `<div class="portal-stewardship-card portal-stewardship-card--guarded" aria-label="${safeText(card.title)} đang được bảo vệ">${body}</div>`;
+    };
+    const manifestReady = navigation.groups.length > 0;
+    const localContent = localCards.map((card) => renderCard(card, "local")).join("");
+    const canonicalContent = canonicalCards.map((card) => renderCard(card, "canonical")).join("");
+    const manifestMessage = manifestReady
+      ? "Các điểm đến dưới đây được lọc theo manifest mà máy chủ cấp cho phiên hiện tại."
+      : "Máy chủ chưa cấp manifest điều hướng cho phiên hiện tại; các khu vực vẫn được giữ ở trạng thái bảo vệ.";
+    return `<article class="portal-page portal-admin-system-stewardship">${renderHero(page, context)}
+      <section class="portal-stewardship-intro"><div><span class="portal-section-kicker">Admin navigation · read-only</span><h2>Điều hướng rõ ràng, authority tách biệt</h2><p>${safeText(manifestMessage)} Không có số liệu runtime, log, secret, provider state hay action vận hành được dựng tại hub này.</p></div><div class="portal-stewardship-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${canonicalAdmin ? "Canonical authority đã xác minh" : "Canonical authority tách biệt"}</strong><small>Local Web admin không tự mở quyền canonical</small></span></div></section>
+      <section class="portal-stewardship-section" aria-labelledby="stewardship-local-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web-owned surfaces</span><h2 id="stewardship-local-title">Observability và hồ sơ nội bộ</h2><p>Các màn hình local vẫn cần signed Web admin và kiểm tra server-side tại từng route.</p></div>${badge("read_only")}</div><div class="portal-stewardship-grid">${localContent}</div></section>
+      <section class="portal-stewardship-section" aria-labelledby="stewardship-canonical-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Separately guarded</span><h2 id="stewardship-canonical-title">System, runtime và backup canonical</h2><p>Chỉ mở khi authority canonical còn hợp lệ; hub không proxy, cache hoặc thay thế read model này.</p></div>${badge(canonicalAdmin ? "read_only" : "guarded")}</div><div class="portal-stewardship-grid">${canonicalContent}</div></section>
+      <section class="portal-card portal-card-pad portal-stewardship-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">No hidden controls</span><h2 class="portal-card-title">Ranh giới vận hành</h2><p class="portal-card-subtitle">Đây là directory có chủ ý, không phải control plane, trình tự xử lý lỗi hay cơ chế tự sửa.</p></div>${badge("read_only")}</div><ul><li><span aria-hidden="true">${portalIcon(ICONS.system)}</span><span><strong>Không deploy hoặc repair</strong><small>Không có runbook executor, healthcheck, restart, restore hay hành động hạ tầng trong browser.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.providers)}</span><span><strong>Không gọi provider hoặc bridge</strong><small>Không tạo request provider, không đọc payload, credential, raw log hoặc trạng thái runtime.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><span><strong>Không có payment hoặc ledger action</strong><small>Không tác động Xu, PayOS, entitlement, refund, job charge hoặc canonical record.</small></span></li></ul></section>
+    </article>`;
   }
 
   function adminModuleKey(page, context) {
@@ -21733,6 +21825,7 @@
       case "operations": return renderOperations(page, context);
       case "operations-admin": return renderOperationsAdmin(page, context);
       case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
+      case "admin-system-stewardship": return renderAdminSystemStewardship(page, context);
       case "admin-security-access-posture": return renderAdminSecurityAccessPosture(page, context);
       case "reliability-admin": return renderReliabilityAdmin(page, context);
       case "operations-desk": return renderOperationsDesk(page, context);
@@ -21741,6 +21834,7 @@
       case "account-security": return renderAccountSecurity(page, context);
       case "account-activity": return renderAccountActivity(page, context);
       case "account-data-controls": return renderAccountDataControls(page, context);
+      case "workspace-care": return renderWorkspaceCare(page, context);
       case "governance-documents": return renderGovernanceDocuments(page, context);
       case "governance-document-detail": return renderGovernanceDocumentDetail(page, context);
       case "admin-document-archive": return renderAdminDocumentArchive(page, context);

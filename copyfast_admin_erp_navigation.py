@@ -73,6 +73,7 @@ _MODULE_DESCRIPTIONS = {
     "partner_crm_manager": "Directory CRM Web-native đã redaction, chỉ đọc; không có cross-account write hay dữ liệu liên hệ.",
     "governance_documents": "Kho tài liệu vận hành nội bộ Web-native có review/version/audit; không đọc tài liệu, file hay authority Telegram Bot.",
     "internal_document_archive": "Kho hồ sơ Web-native local-admin có blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents.",
+    "system_stewardship": "Hub điều hướng read-only cho System & Data Web-native; không đọc runtime Bot, không có deploy, repair, provider, payment hay ledger control.",
 }
 
 _GROUP_DESCRIPTIONS = {
@@ -86,6 +87,7 @@ _GROUP_DESCRIPTIONS = {
     "web_governance_documents": "Kho tài liệu Governance Web-native, có lifecycle nội bộ nhưng không phải tư vấn pháp lý, file export hay Bot authority.",
     "web_internal_document_archive": "Kho hồ sơ nội bộ Web-native local-admin có file private và version bất biến; không phải Bot archive, Asset Vault khách hàng, ledger, PayOS hay provider action.",
     "web_security_access_posture": "Security và Access posture Web-native, chỉ đọc aggregate đã redaction; không gọi Bot/Core Bridge hoặc thực hiện session, MFA hay quyền control.",
+    "web_system_stewardship": "Hub System & Data Web-native, chỉ điều hướng tới các bề mặt được bảo vệ độc lập; không biến local admin thành canonical Bot administrator.",
 }
 
 
@@ -380,6 +382,7 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
     )
     automation_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
     security_access_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
+    stewardship_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
     return [
         _group(
             "web_private_crm",
@@ -442,6 +445,22 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
                     source="web_native",
                     availability=automation_state,
                     capability="redacted_scheduler_receipt_read_only",
+                ),
+            ],
+        ),
+        _group(
+            "web_system_stewardship",
+            "System & Data Stewardship",
+            authority="web_local_admin",
+            modules=[
+                _module(
+                    "system_stewardship",
+                    "System & Data Stewardship",
+                    "/admin/system-stewardship",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=stewardship_state,
+                    capability="local_admin_navigation_to_separately_guarded_read_surfaces",
                 ),
             ],
         ),
