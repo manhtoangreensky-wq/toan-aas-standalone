@@ -1632,6 +1632,50 @@
     "content", "image", "video", "voice", "music", "subtitle", "documents", "commerce", "delivery", "workspace"
   ]);
 
+  // `/api/v1/catalog` publishes a closed navigation catalog, but a customer
+  // should not have to scan every migrated route to begin useful work. Keep
+  // this small list browser-owned and exact: a malformed or newly added server
+  // entry cannot become a new guided-start card, and neither video nor a
+  // payment/admin action is quietly promoted into the first-session flow.
+  const GUIDED_START_CAPABILITY_SPECS = Object.freeze([
+    Object.freeze({
+      key: "guided_start", featureKey: "feature_catalog", route: "/features",
+      authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY",
+      number: "01", eyebrow: "Khởi đầu", title: "Khám phá theo mục tiêu",
+      description: "Duyệt danh mục gọn theo mục tiêu, rồi mở workspace phù hợp.", action: "Xem tất cả công cụ"
+    }),
+    Object.freeze({
+      key: "prompt_studio", featureKey: "prompt_studio", route: "/prompt-studio",
+      authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY",
+      number: "02", eyebrow: "Nội dung", title: "Soạn brief & prompt",
+      description: "Chuyển ý tưởng thành brief rõ ràng trước khi vào các Studio khác.", action: "Mở Prompt Studio"
+    }),
+    Object.freeze({
+      key: "image_studio", featureKey: "image_studio", route: "/image-studio",
+      authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY",
+      number: "03", eyebrow: "Hình ảnh", title: "Lên direction hình ảnh",
+      description: "Tổ chức art direction, reference và self-review trong Image Studio.", action: "Mở Image Studio"
+    }),
+    Object.freeze({
+      key: "media_workspace", featureKey: "media_workspace", route: "/media-workspace",
+      authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY",
+      number: "04", eyebrow: "Âm thanh", title: "Lên direction âm thanh",
+      description: "Chuẩn bị music, SFX và audio brief trong một workspace riêng.", action: "Mở Media Workspace"
+    }),
+    Object.freeze({
+      key: "wallet", featureKey: "wallet", route: "/wallet",
+      authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED",
+      number: "05", eyebrow: "Tài khoản", title: "Xem Ví Xu",
+      description: "Đọc số dư và lịch sử canonical khi account đã được liên kết hợp lệ.", action: "Mở Ví Xu"
+    }),
+    Object.freeze({
+      key: "support", featureKey: "support", route: "/support",
+      authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY",
+      number: "06", eyebrow: "Hỗ trợ", title: "Cần một hướng dẫn cụ thể?",
+      description: "Bắt đầu ticket theo account của bạn, không cần nhập Telegram ID thô.", action: "Mở Support Desk"
+    })
+  ]);
+
   function safeHubCount(value) {
     const count = Number(value);
     return Number.isInteger(count) && count >= 0 && count <= 100000 ? count : 0;
@@ -1644,6 +1688,32 @@
   function safeHubRoute(value) {
     const route = safeHubText(value, 181);
     return /^\/[a-z0-9][a-z0-9/_-]{0,180}$/i.test(route) && !route.startsWith("//") && !route.includes("\\") ? route : "";
+  }
+
+  // The client accepts only a finite, route-paired subset of catalog metadata
+  // for Guided Start. It is navigation presentation, not a capability grant:
+  // every destination repeats signed-session, ownership and feature checks on
+  // the server when it opens.
+  function normalizeMenuCapabilities(raw) {
+    const source = Array.isArray(raw) ? raw : [];
+    const byKey = new Map();
+    source.forEach((item) => {
+      if (!item || typeof item !== "object") return;
+      const key = safeHubText(item.key, 64);
+      if (key && !byKey.has(key)) byKey.set(key, item);
+    });
+    return GUIDED_START_CAPABILITY_SPECS.reduce((items, spec) => {
+      const item = byKey.get(spec.key);
+      if (!item) return items;
+      const matches = safeHubText(item.feature_key, 80) === spec.featureKey
+        && safeHubRoute(item.route) === spec.route
+        && safeHubText(item.authority, 80) === spec.authority
+        && safeHubText(item.launch_mode, 80) === spec.launchMode
+        && safeHubText(item.availability, 80) === spec.availability
+        && safeHubText(item.execution, 80) === "NO_EXECUTION_CLAIM";
+      if (matches) items.push({ ...spec });
+      return items;
+    }, []);
   }
 
   // Capability Hub is intentionally a small aggregate from the static Bot
@@ -6276,6 +6346,10 @@
       // The registry is static, redacted route metadata. Do not truncate it:
       // `/features` must be able to disclose every mapped customer workflow.
       catalog: Array.isArray(source.catalog) ? source.catalog.slice() : [],
+      // A strictly projected subset powers the intent-led Guided Start cards.
+      // It cannot add an arbitrary destination, execute a workflow or bypass
+      // the destination's own signed-session and feature authorization.
+      menuCapabilities: normalizeMenuCapabilities(source.menuCapabilities),
       capabilityHub: normalizeCapabilityHub(source.capabilityHub),
       workspaceDraftFeatures,
       apiBase: typeof source.apiBase === "string" ? source.apiBase : "",
@@ -8534,6 +8608,19 @@
     return `<section><div class="portal-section-heading"><div><span class="portal-section-kicker">Khám phá nhanh</span><h2>Bắt đầu từ workflow phù hợp</h2><p>Một số workspace tiêu biểu; toàn bộ route Web được xem trong danh mục riêng.</p></div><a class="portal-button portal-button--quiet" href="/features">Xem tất cả công cụ →</a></div><div class="portal-module-grid">${cards}</div></section>`;
   }
 
+  function renderFeatureGuidedStart(context) {
+    const steps = Array.isArray(context && context.menuCapabilities) ? context.menuCapabilities : [];
+    if (!steps.length) return "";
+    const cards = steps.map((step) => {
+      // The first card confirms the fresh `/features` route mapped from the
+      // Bot guide. Since this component already lives on that page, use a
+      // local skip target instead of reloading the same signed workspace.
+      const href = step.route === "/features" ? "#feature-catalog-list" : step.route;
+      return `<a class="portal-start-guide-step" href="${safeText(href)}"><span class="portal-start-guide-number" aria-hidden="true">${safeText(step.number)}</span><span class="portal-start-guide-copy"><small>${safeText(step.eyebrow)}</small><strong>${safeText(step.title)}</strong><p>${safeText(step.description)}</p><em>${safeText(step.action)} <b aria-hidden="true">${portalIcon(ICONS.arrowRight)}</b></em></span></a>`;
+    }).join("");
+    return `<section class="portal-start-guide portal-feature-guided-start" data-feature-guided-start aria-labelledby="feature-guided-start-title"><div class="portal-start-guide-head"><div><span class="portal-section-kicker">Guided Start</span><h2 id="feature-guided-start-title">Bạn muốn bắt đầu việc gì?</h2><p>Chọn một lối đi ngắn hoặc duyệt toàn bộ catalog. Khi mở workspace, ứng dụng sẽ kiểm tra quyền và trạng thái thực tế của phiên hiện tại.</p></div><span class="portal-start-guide-note">${safeText(String(steps.length))} lối đi ngắn</span></div><div class="portal-start-guide-grid">${cards}</div></section>`;
+  }
+
   function renderFeatureCatalog(page, context) {
     const entries = customerCatalog(context);
     const grouped = FEATURE_CATALOG_GROUPS.map((group) => ({ ...group, entries: entries.filter((entry) => entry && typeof entry === "object" && entry.group === group.key) })).filter((group) => group.entries.length);
@@ -8550,7 +8637,7 @@
     const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">Tìm công cụ</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="Ví dụ: OCR, TTS, video sản phẩm, dịch…" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>Xóa</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(String(entries.length))} workflow đang hiển thị.</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>Không tìm thấy workflow</h3><p>Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên.</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>Chọn theo mục tiêu, không theo lệnh chat</strong><p>Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng.</p></div>${badge("read_only")}</section>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
   }
 
   function validWorkspaceDraftId(value) {

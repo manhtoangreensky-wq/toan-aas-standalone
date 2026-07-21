@@ -12,6 +12,7 @@ output has been copied into the browser.
 
 | Bot source action | Web destination | Web authority | Boundary preserved |
 | --- | --- | --- | --- |
+| `menu|guide_quick_start` | `/features` | signed Web-native customer | opens the intent-led Guided Start/catalog; no Bot guide prose, child callback, conversation or execution state |
 | `menu|main_ai` | `/chat` | signed Web-native customer | starts an empty Web chat workspace; no Telegram conversation/context |
 | `menu|hint_ai_prompt` | `/prompt-studio` | signed Web-native customer | starts a fresh prompt brief; no model/provider call from navigation |
 | `menu|main_memory`, `freehub|docs`, `freehub|notes` | `/notes` | signed Web-native customer | opens a fresh Memory Center; no Bot notes, quota, add-on, Free Hub or Telegram context |
@@ -30,12 +31,17 @@ output has been copied into the browser.
 | `menu|image_edit_start` | `/image/edit` | signed Web-native customer | independently selects owner-scoped Asset Vault input |
 | `menu|image_upscale_start` | `/image/upscale` | signed Web-native customer | retains the Web runtime guard; does not call a provider by navigation |
 | `menu|guide_music_add` | `/media-workspace` | signed Web-native customer | opens Web audio briefing/library; no Bot product context or media cache |
+| `menu|guide_faq` | `/support` | signed customer | starts owner-scoped Web support; no raw Telegram ID, Bot chat/support/refund state or automatic action |
 
 ## Explicitly deferred
 
-- All `menu|main_video`, `menu|video_*`, video guide and video execution
-  actions remain outside this batch. The requested video-menu implementation
-  is last and requires its own finite source catalog.
+- `menu|guide_video_ai` and `menu|guide_guided_video` remain explicit
+  `GUIDED_VIDEO_MENU_DEFERRED` / `NEEDS_FEATURE_DISPOSITION` records with
+  `VIDEO_MENU_LAST`; they do not fall back to Dashboard or a generic Web Video
+  route. The requested video-menu implementation is last and requires its own
+  finite source catalog.
+- All remaining `menu|main_video`, `menu|video_*` and video execution actions
+  remain outside this batch for the same reason.
 - `menu|memory_storage_status` and `menu|memory_storage_addon` remain
   `TELEGRAM_ONLY`: the former reads canonical Bot quota/add-on state and the
   latter enters the Bot storage/PayOS settlement flow. Neither is a Web Notes,

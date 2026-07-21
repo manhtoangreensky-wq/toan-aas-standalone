@@ -9480,6 +9480,11 @@
     if (bootstrapEpoch !== portalHydrationEpoch) return;
     const catalogData = catalogResponse && catalogResponse.data && typeof catalogResponse.data === "object" ? catalogResponse.data : {};
     const catalog = Array.isArray(catalogData.features) ? catalogData.features : [];
+    // This catalog is closed, browser-safe navigation metadata only. Portal
+    // later projects a finite Guided Start subset and never receives raw Bot
+    // callbacks, pending conversation state, provider/payment controls or a
+    // route-derived permission from this response.
+    const menuCapabilities = Array.isArray(catalogData.menu_capabilities) ? catalogData.menu_capabilities : [];
     // This is only aggregate static migration metadata.  It contains no raw
     // Bot command/callback, admin action, source location, secret or runtime
     // provider state, and it never grants a feature capability on its own.
@@ -10406,6 +10411,7 @@
     merge({
       ...context,
       catalog,
+      menuCapabilities,
       capabilityHub,
       oauthProviders,
       telegramConnection,

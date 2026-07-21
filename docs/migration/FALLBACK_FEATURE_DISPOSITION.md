@@ -4,7 +4,7 @@ Concrete callbacks below were previously able to fall through to dashboard/catch
 
 | Priority | Bot family | Entries | Candidate boundary | Authority | Source disposition | Source evidence | Required next contract |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| P0 | menu | 75 | /features | Web capability catalog |  |  | Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword. |
+| P0 | menu | 71 | /features | Web capability catalog |  |  | Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword. |
 | P1 | adconcept | 107 | /video-studio/cinematic-concept | Web-native planning; runtime separately guarded |  |  | Map text concept choices to the cinematic planner; finalization/lock/runtime actions require an explicit capability contract. |
 | P1 | vproduct | 67 | /video-studio/script-to-screen-planner | Web-native planning; runtime separately guarded |  |  | Map finite Script-to-Screen planning choices to a recomputed Web Video Plan; render/export stays a distinct runtime boundary. |
 | P1 | storypack | 40 | /video-studio/storyboard-composer | Web-native planning |  |  | Map finite brief/concept/template choices to the signed storyboard composer and keep copy/export effects locally reviewable. |

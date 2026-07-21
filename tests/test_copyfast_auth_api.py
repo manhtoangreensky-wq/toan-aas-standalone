@@ -529,7 +529,7 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
 
     by_key = {item["key"]: item for item in menu}
     assert {
-        "workspace_home", "account", "memory_center", "reminder_center", "campaign_planner", "chat_workspace", "prompt_studio", "wallet",
+        "workspace_home", "guided_start", "account", "memory_center", "reminder_center", "campaign_planner", "chat_workspace", "prompt_studio", "wallet",
         "wallet_topup", "membership", "packages", "documents", "subtitle_studio", "documents_pdf_to_word", "documents_image_to_pdf",
         "documents_compress", "documents_split", "documents_merge", "asset_vault",
         "image_studio", "image_prompt_composer", "image_edit", "image_upscale",
@@ -555,6 +555,18 @@ def test_catalog_exposes_a_closed_browser_safe_menu_capability_catalog(tmp_path,
     assert by_key["wallet"]["authority"] == "CORE_CANONICAL_READ"
     assert by_key["wallet"]["launch_mode"] == "READ_ONLY_CANONICAL"
     assert by_key["wallet"]["availability"] == "GUARDED"
+    assert by_key["guided_start"] == {
+        "key": "guided_start",
+        "feature_key": "feature_catalog",
+        "title": "Tất cả công cụ",
+        "group": "content",
+        "route": "/features",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "availability": "NAVIGATION_ONLY",
+        "execution": "NO_EXECUTION_CLAIM",
+        "description": "Mở catalog Web theo mục tiêu để bắt đầu workflow mới; không phát lại guide, callback, state hoặc child action của Telegram.",
+    }
     assert by_key["memory_center"] == {
         "key": "memory_center",
         "feature_key": "notes",

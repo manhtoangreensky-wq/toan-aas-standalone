@@ -642,7 +642,7 @@ a { color: inherit; text-decoration: none; }
 .portal-module-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; color: #a4c6d1; font-size: 10px; font-weight: 760; }
 .portal-module-arrow { color: var(--portal-accent); font-size: 15px; }
 .portal-flow-note { flex: 1 1 220px; color: #e5c982; font-size: 11px; line-height: 1.5; }
-.portal-feature-catalog { display: grid; gap: 24px; }
+.portal-feature-catalog { display: grid; gap: 24px; scroll-margin-top: 20px; }
 .portal-catalog-search { display: grid; gap: 7px; max-width: 620px; }
 .portal-catalog-search > label { color: var(--portal-muted); font-size: 11px; font-weight: 760; }
 .portal-catalog-search-control { display: flex; align-items: center; gap: 9px; min-height: 44px; padding: 0 9px 0 12px; border: 1px solid rgba(151, 191, 205, .22); border-radius: 12px; background: rgba(3, 20, 31, .46); }
@@ -3674,7 +3674,8 @@ button, a, input, select, textarea { touch-action: manipulation; }
 
 @media (prefers-reduced-motion: reduce) {
   .portal-sidebar-create, .portal-sidebar-search, .portal-nav-link, .portal-button,
-  .portal-command-item, .portal-studio-card, .portal-module-card, .portal-action-card { transition: none !important; }
+  .portal-command-item, .portal-studio-card, .portal-module-card, .portal-action-card,
+  .portal-start-guide-step { transition: none !important; }
 }
 
 /* Access, dashboard and onboarding refinement.  These rules deliberately sit
