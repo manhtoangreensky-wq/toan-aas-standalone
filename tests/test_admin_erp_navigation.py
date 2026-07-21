@@ -154,6 +154,17 @@ def test_canonical_groups_require_flag_and_live_authority(monkeypatch) -> None:
         assert module["source"] == "core_bridge"
         assert module["availability"] == "canonical_read"
         assert module["capability"] == "canonical_read"
+    tax_readiness = next(candidate for candidate in canonical_modules if candidate["id"] == "tax_readiness")
+    assert tax_readiness == {
+        "id": "tax_readiness",
+        "title": "Tax Readiness & Accounting Guidance",
+        "route": "/admin/finance/tax-readiness",
+        "authority": "canonical_admin",
+        "source": "portal_directory",
+        "availability": "guarded_directory",
+        "capability": "navigation_only",
+        "description": "Hướng dẫn chuẩn bị hồ sơ tax/accounting chỉ đọc; không tính thuế, không đọc ledger, không export hay thay đổi cấu hình tài chính.",
+    }
     assert all("write" not in module["capability"] for module in canonical_modules)
 
     # Turning the feature flag off must fail closed before a live bridge call
@@ -237,6 +248,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "security_posture",
         "access_posture",
     }
+    assert "tax_readiness" not in _module_ids(body)
     assert all(
         module["authority"] == "web_local_admin"
         for group in groups.values()

@@ -2476,6 +2476,67 @@ def test_system_data_stewardship_navigation_is_finite_and_never_leaks_bot_state(
     assert "menu|memory_storage_cleanup" not in serialized_catalog
 
 
+def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_finance_adapter() -> None:
+    """Only reviewed tax-menu guidance can open the static canonical-admin page."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {
+        "menu|finance_tax",
+        "menu|tax_checklist",
+        "menu|tax_export",
+        "menu|tax_custom_help",
+        "menu|tax_export_custom_help",
+    }
+    assert set(audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == expected
+
+    for callback in expected:
+        descriptor = audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS[callback]
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "/admin/finance/tax-readiness"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_tax_accounting_guidance_fresh_web_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["tax_accounting_guidance_feature_key"] == "admin_tax_readiness"
+        assert mapped["tax_accounting_guidance_authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+        assert mapped["tax_accounting_guidance_launch_mode"] == "WEB_NAVIGATION"
+        for disposition in (
+            "BOT_ADMIN_ONLY",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ):
+            assert disposition in mapped["source_dispositions"]
+
+    # A finite review is never a `menu|tax_*` authorization. Calculations,
+    # tax profile/configuration, period exports, compliance and archive state
+    # remain distinct canonical/source-review boundaries.
+    for token in (
+        "menu|tax_estimate",
+        "menu|tax_config",
+        "menu|tax_export_month",
+        "menu|tax_export_previous",
+        "menu|tax_export_quarter",
+        "menu|finance_compliance",
+        "archive|dept|tax_invoice",
+        "menu|tax_future",
+    ):
+        assert token not in audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
+        mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] != "/admin/finance/tax-readiness"
+        assert mapped["resolution"] != "reviewed_tax_accounting_guidance_fresh_web_navigation"
+
+    from copyfast_registry import menu_capability_catalog
+
+    serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    for callback in expected:
+        assert callback not in serialized_catalog
+
+
 def test_reviewed_menu_navigation_does_not_inflate_static_feature_parity(tmp_path: Path) -> None:
     """Opening a fresh Web workspace is not proof of Bot workflow parity."""
     audit = _load_audit_module()

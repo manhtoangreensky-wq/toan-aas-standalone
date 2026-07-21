@@ -50,6 +50,7 @@ _MODULE_DESCRIPTIONS = {
     "pricing": "Giá và gói theo cấu hình canonical đang được công bố.",
     "packages": "Package read model có role check riêng.",
     "promos": "Danh mục khuyến mãi có guard và audit riêng.",
+    "tax_readiness": "Hướng dẫn chuẩn bị hồ sơ tax/accounting chỉ đọc; không tính thuế, không đọc ledger, không export hay thay đổi cấu hình tài chính.",
     "jobs": "Job read model, status và output vẫn cần ownership/delivery check.",
     "failed_jobs": "Danh sách job lỗi chỉ đọc; retry không được suy đoán.",
     "providers": "Provider health/cost đã redaction, không có credential hoặc control trực tiếp.",
@@ -231,6 +232,7 @@ def canonical_groups() -> list[dict[str, Any]]:
                 _canonical_module("packages", "Packages", "/admin/packages"),
                 _canonical_module("promos", "Khuyến mãi", "/admin/promos"),
                 _directory_module("finance", "Finance & Revenue", "/admin/finance"),
+                _directory_module("tax_readiness", "Tax Readiness & Accounting Guidance", "/admin/finance/tax-readiness"),
             ],
         ),
         _group(
