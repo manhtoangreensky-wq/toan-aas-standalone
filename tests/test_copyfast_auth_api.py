@@ -2174,6 +2174,50 @@ def test_web_local_admin_crm_page_is_signed_role_only_and_never_queries_bot_brid
         assert denied.json()["error_code"] == "REQUEST_DENIED"
 
 
+def test_web_local_admin_security_access_pages_and_retired_bridge_paths_never_query_bot(tmp_path, monkeypatch):
+    """Security posture is Web-owned and rejects historic bridge URLs early."""
+
+    monkeypatch.setenv("WEBAPP_ADMIN_ERP_ENABLED", "true")
+    with make_client(tmp_path, monkeypatch) as client:
+        registered = client.post(
+            "/api/v1/auth/register",
+            json={"email": "security-posture-admin@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registered.status_code == 200
+        signed_in = client.post(
+            "/api/v1/auth/login",
+            json={"email": "security-posture-admin@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert signed_in.status_code == 200
+        with sqlite3.connect(tmp_path / "copyfast-test.db") as conn:
+            conn.execute(
+                "UPDATE web_accounts SET role_cache='admin' WHERE email=?",
+                ("security-posture-admin@example.com",),
+            )
+            conn.commit()
+
+        application_module = sys.modules["app"]
+        bridge_calls: list[str] = []
+
+        async def unexpected_canonical_check(_request):
+            bridge_calls.append("called")
+            raise AssertionError("Web Security & Access posture must not query the Bot bridge")
+
+        monkeypatch.setattr(application_module, "require_canonical_admin", unexpected_canonical_check)
+        for path in ("/admin/security", "/admin/access"):
+            page = client.get(path, follow_redirects=False)
+            assert page.status_code == 200
+        assert bridge_calls == []
+
+        # Fixed retired routes are registered before the generic dynamic
+        # module bridge, so they return 404 instead of resolving its
+        # canonical-admin/bridge dependency.
+        for path in ("/api/v1/admin/modules/security", "/api/v1/admin/modules/access"):
+            retired = client.get(path, follow_redirects=False)
+            assert retired.status_code == 404
+        assert bridge_calls == []
+
+
 def test_web_support_content_handoff_queue_uses_its_own_server_role_not_bot_admin(tmp_path, monkeypatch):
     """The staff queue advertised by Admin ERP must not require Bot authority.
 

@@ -214,12 +214,15 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "web_governance_documents",
         "web_internal_document_archive",
         "web_automation_monitor",
+        "web_security_access_posture",
     }
     assert _module_ids(body) == {
         "partner_crm_manager",
         "governance_documents",
         "internal_document_archive",
         "automation_monitor",
+        "security_posture",
+        "access_posture",
     }
     assert all(
         module["authority"] == "web_local_admin"
@@ -241,3 +244,18 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     assert automation["authority"] == "web_local_admin"
     assert automation["availability"] == "web_native"
     assert automation["capability"] == "redacted_scheduler_receipt_read_only"
+    security = next(module for module in groups["web_security_access_posture"]["modules"] if module["id"] == "security_posture")
+    access = next(module for module in groups["web_security_access_posture"]["modules"] if module["id"] == "access_posture")
+    assert security == {
+        "id": "security_posture",
+        "title": "Security Posture",
+        "route": "/admin/security",
+        "authority": "web_local_admin",
+        "source": "web_native",
+        "availability": "web_native",
+        "capability": "redacted_web_security_posture_read_only",
+        "description": "Security posture Web-native đã redaction; chỉ aggregate Web-owned, không có session, secret hay control từ browser.",
+    }
+    assert access["route"] == "/admin/access"
+    assert access["authority"] == "web_local_admin"
+    assert access["capability"] == "redacted_web_access_posture_read_only"

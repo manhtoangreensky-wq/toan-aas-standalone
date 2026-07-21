@@ -9,6 +9,7 @@ from starlette.requests import Request
 
 from copyfast_bridge import CoreBridgeClient
 from copyfast_api import (
+    ADMIN_BRIDGE_MODULES,
     FeatureRequest, FreezeRequest, PaymentRequest, TicketRequest, _bridge, _feature_action, _payment_topup_packages,
     _project_surface_data,
     admin_freeze_feature, admin_module, admin_refund_job, admin_retry_job, asset_download, create_payment, job_detail,
@@ -1015,3 +1016,28 @@ async def test_web_feature_flags_guard_bridge_calls_before_identity_or_network(m
     assert admin_disabled["status"] == "guarded"
     assert admin_disabled["error_code"] == "WEBAPP_ADMIN_ERP_DISABLED"
     assert calls == []
+
+
+def test_generic_admin_projection_drops_unbounded_incident_text_and_retired_modules() -> None:
+    """Compatibility records cannot make bridge incident text browser-visible."""
+
+    marker = "synthetic-secret-marker-0123456789"
+    projected = _project_surface_data(
+        {
+            "module": "audit",
+            "items": [
+                {
+                    "id": "safe-row",
+                    "status": "guarded",
+                    "reason": marker,
+                    "action": "internal.security.rotate",
+                }
+            ],
+        },
+        "admin",
+    )
+    assert "security" not in ADMIN_BRIDGE_MODULES
+    assert "access" not in ADMIN_BRIDGE_MODULES
+    assert marker not in str(projected)
+    assert "internal.security.rotate" not in str(projected)
+    assert projected["items"] == [{"id": "safe-row", "status": "guarded"}]

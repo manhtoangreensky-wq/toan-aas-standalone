@@ -63,8 +63,8 @@ _MODULE_DESCRIPTIONS = {
     "reports": "Báo cáo/export chỉ khi adapter được công bố.",
     "system": "System read model, không lộ secret hoặc deployment control.",
     "backups": "Backup metadata chỉ đọc, không có restore action trong release này.",
-    "security": "Security posture đã redaction; không có session/secret control từ browser.",
-    "access": "Access read model; thay đổi quyền cần contract riêng.",
+    "security_posture": "Security posture Web-native đã redaction; chỉ aggregate Web-owned, không có session, secret hay control từ browser.",
+    "access_posture": "Access posture Web-native chỉ đọc; không có danh tính, role grant/revoke hay thay đổi quyền.",
     "operations_desk": "Bàn điều phối chỉ đọc, tổng hợp metadata Web-native đã redaction; không có Bot, provider, payment, wallet, job hoặc delivery action.",
     "support": "Case queue Web-native; không thay đổi Bot, Xu, PayOS hay delivery.",
     "operations": "Operations metadata và recorded approvals, không có external executor.",
@@ -80,11 +80,12 @@ _GROUP_DESCRIPTIONS = {
     "commerce": "Finance read models; wallet/PayOS authority vẫn ở canonical core.",
     "delivery_runtime": "Jobs, readiness và runtime metadata; không có provider control trực tiếp.",
     "content_growth": "Điều hướng các center content/growth; directory vẫn guarded cho đến khi có adapter riêng.",
-    "governance": "Audit, reports và security read models có redaction/authority riêng.",
+    "governance": "Audit, reports và system read models canonical có redaction/authority riêng.",
     "support_operations": "Web-native CSKH và Operations metadata, không có financial/provider executor.",
     "web_private_crm": "Giám sát CRM Web-native đã redaction; tách biệt với canonical Bot Admin và financial authority.",
     "web_governance_documents": "Kho tài liệu Governance Web-native, có lifecycle nội bộ nhưng không phải tư vấn pháp lý, file export hay Bot authority.",
     "web_internal_document_archive": "Kho hồ sơ nội bộ Web-native local-admin có file private và version bất biến; không phải Bot archive, Asset Vault khách hàng, ledger, PayOS hay provider action.",
+    "web_security_access_posture": "Security và Access posture Web-native, chỉ đọc aggregate đã redaction; không gọi Bot/Core Bridge hoặc thực hiện session, MFA hay quyền control.",
 }
 
 
@@ -269,8 +270,6 @@ def canonical_groups() -> list[dict[str, Any]]:
                 _canonical_module("reports", "Báo cáo", "/admin/reports"),
                 _canonical_module("system", "Hệ thống", "/admin/system"),
                 _canonical_module("backups", "Sao lưu", "/admin/backups"),
-                _canonical_module("security", "Bảo mật", "/admin/security"),
-                _canonical_module("access", "Quyền truy cập", "/admin/access"),
             ],
         ),
     ]
@@ -358,11 +357,12 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
 
     ``/admin/crm/leads`` independently uses ``require_admin`` and returns
     only redacted cross-account pipeline metadata. ``/admin/automation`` is a
-    Web-owned read-only scheduler receipt monitor. ``/admin/governance`` and
-    ``/admin/internal-documents`` are separately flagged Web-owned internal
-    document surfaces. Keeping these in distinct authority groups prevents a
-    signed Web administrator from being visually or semantically promoted
-    into a Bot/canonical administrator.
+    Web-owned read-only scheduler receipt monitor. ``/admin/security`` and
+    ``/admin/access`` share an identifier-free security/access posture read
+    model. ``/admin/governance`` and ``/admin/internal-documents`` are
+    separately flagged Web-owned internal document surfaces. Keeping these in
+    distinct authority groups prevents a signed Web administrator from being
+    visually or semantically promoted into a Bot/canonical administrator.
     """
 
     crm_state = "web_native" if _enabled("WEBAPP_PARTNER_CRM_ENABLED", default=True) else "guarded"
@@ -379,6 +379,7 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
         else "guarded"
     )
     automation_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
+    security_access_state = "web_native" if _enabled("WEBAPP_ADMIN_ERP_ENABLED", default=True) else "guarded"
     return [
         _group(
             "web_private_crm",
@@ -441,6 +442,31 @@ def web_local_admin_groups() -> list[dict[str, Any]]:
                     source="web_native",
                     availability=automation_state,
                     capability="redacted_scheduler_receipt_read_only",
+                ),
+            ],
+        ),
+        _group(
+            "web_security_access_posture",
+            "Security & Access Posture",
+            authority="web_local_admin",
+            modules=[
+                _module(
+                    "security_posture",
+                    "Security Posture",
+                    "/admin/security",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=security_access_state,
+                    capability="redacted_web_security_posture_read_only",
+                ),
+                _module(
+                    "access_posture",
+                    "Access Posture",
+                    "/admin/access",
+                    authority="web_local_admin",
+                    source="web_native",
+                    availability=security_access_state,
+                    capability="redacted_web_access_posture_read_only",
                 ),
             ],
         ),

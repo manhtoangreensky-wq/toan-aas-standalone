@@ -1511,6 +1511,20 @@
       "Không có tick, retry, Bot, provider, wallet/Xu, PayOS, job, delivery, deploy, secret hay tự sửa từ màn hình này."
     ]
   });
+  adminPage("/admin/security", "Security Posture", "Tổng quan bảo mật Web-native đã redaction: enforcement, MFA và activity aggregate; không có log, session hay control từ browser.", ICONS.security, {
+    layout: "admin-security-access-posture", action: "none", status: "read_only",
+    notes: [
+      "Chỉ signed Web admin do máy chủ xác minh mới xem được aggregate. Browser không gửi role, admin ID, Telegram ID hoặc bridge credential.",
+      "Không hiển thị account, email, session, token, secret, IP, audit detail hoặc raw action; không có reset MFA, thu hồi session, cấp quyền hay sửa credential."
+    ]
+  });
+  adminPage("/admin/access", "Access Posture", "Tổng quan quyền truy cập Web-native đã redaction: account role aggregate, session state và throttle aggregate; không có identity hoặc role control.", ICONS.users, {
+    layout: "admin-security-access-posture", action: "none", status: "read_only",
+    notes: [
+      "Chỉ signed Web admin do máy chủ xác minh mới xem được aggregate. Browser không gửi role, admin ID, Telegram ID hoặc bridge credential.",
+      "Không hiển thị account, email, session, token, secret, IP, audit detail hoặc raw action; không có grant/revoke role, thu hồi session, reset MFA hay thay đổi credential."
+    ]
+  });
   adminPage("/admin/reliability", "Reliability Follow-up", "Hàng chờ tra xét nội bộ từ lỗi Web đã được sanitize và complaint triage; không phải log, tự sửa hay kênh liên hệ khách.", ICONS.system, {
     layout: "reliability-admin", action: "none", status: "processing",
     notes: [
@@ -1553,8 +1567,6 @@
   adminPage("/admin/runtime", "Runtime", "Tình trạng runtime và queue chỉ đọc, không thao tác hạ tầng từ browser.", ICONS.system);
   adminPage("/admin/system", "Hệ thống", "Xem thiết lập hệ thống được redaction; write actions không nằm ở shell.", ICONS.system);
   adminPage("/admin/backups", "Sao lưu", "Trạng thái backup/disaster recovery là dữ liệu server-side được phân quyền.", ICONS.system, {}, ["/admin/backup"]);
-  adminPage("/admin/security", "Bảo mật", "Kiểm tra access control, session và secret hygiene với audit event.", ICONS.security);
-  adminPage("/admin/access", "Quyền truy cập", "Review role/capability canonical; client không tự quyết định quyền.", ICONS.security);
 
   function safeText(value, fallback) {
     if (typeof value !== "string") return fallback || "";
@@ -3910,6 +3922,115 @@
     };
   }
 
+  // Security & Access Posture is an aggregate-only, Web-native admin view.
+  // Project it a second time in the presentation shell so a malformed
+  // bootstrap or remount cannot turn into raw security metadata in HTML.
+  const ADMIN_SECURITY_ACCESS_POSTURE_POLICY = "web_security_access_posture_v1";
+  const ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES = Object.freeze([
+    "Chỉ hiển thị aggregate Web-native; không có account, email, session, token, secret, IP hoặc audit detail.",
+    "Trang chỉ đọc; không cấp role, thu hồi session, reset MFA hoặc thay đổi credential.",
+    "Không gọi Bot/Core Bridge, provider, PayOS, ví Xu, job, webhook hoặc deploy."
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_ACCESS_KEYS = Object.freeze([
+    "active_accounts", "inactive_accounts", "privileged_accounts", "admin_accounts",
+    "support_manager_accounts", "support_operator_accounts", "unknown_role_accounts"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_SESSION_KEYS = Object.freeze(["active", "revoked_recent", "expired_unrevoked"]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_MFA_KEYS = Object.freeze([
+    "active_factors", "pending_enrollments", "locked_login_challenges", "pending_login_challenges", "active_recovery_codes"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_THROTTLE_KEYS = Object.freeze([
+    "login_active_buckets", "register_active_buckets", "password_change_active_buckets"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_ACTIVITY_KEYS = Object.freeze([
+    "window_hours", "sign_in_completed", "sign_in_guarded", "mfa_completed", "mfa_guarded",
+    "credential_change_completed", "credential_change_guarded", "session_control_completed", "session_control_guarded"
+  ]);
+
+  function adminSecurityAccessPostureBootstrapObjectHasOnly(value, keys) {
+    return value && typeof value === "object" && !Array.isArray(value)
+      && Object.keys(value).length === keys.length
+      && Object.keys(value).every((key) => keys.includes(key));
+  }
+
+  function normalizeAdminSecurityAccessPostureCountGroup(raw, keys, integrityGuarded) {
+    if (!adminSecurityAccessPostureBootstrapObjectHasOnly(raw, keys)) return null;
+    const result = {};
+    for (const key of keys) {
+      const value = raw[key];
+      if (integrityGuarded) {
+        if (value !== null) return null;
+        result[key] = null;
+      } else {
+        if (!Number.isInteger(value) || value < 0 || value > 1000000000) return null;
+        result[key] = value;
+      }
+    }
+    return result;
+  }
+
+  function normalizeAdminSecurityAccessPostureBootstrap(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const allowed = [
+      "source", "policy_version", "read_only", "integrity_guarded", "enforcement", "access",
+      "sessions", "mfa", "throttle", "security_activity", "boundaries"
+    ];
+    if (!adminSecurityAccessPostureBootstrapObjectHasOnly(source, allowed)
+      || source.source !== ADMIN_SECURITY_ACCESS_POSTURE_POLICY
+      || source.policy_version !== ADMIN_SECURITY_ACCESS_POSTURE_POLICY
+      || source.read_only !== true
+      || typeof source.integrity_guarded !== "boolean"
+      || !Array.isArray(source.boundaries)
+      || source.boundaries.length !== ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES.length
+      || source.boundaries.some((item, index) => item !== ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES[index])) return {};
+    const integrityGuarded = source.integrity_guarded;
+    const enforcement = source.enforcement;
+    const enforcementKeys = ["mfa_runtime", "email_verification_delivery", "oauth_feature_flags"];
+    const oauth = enforcement && enforcement.oauth_feature_flags;
+    const oauthKeys = ["google", "github", "apple"];
+    if (!adminSecurityAccessPostureBootstrapObjectHasOnly(enforcement, enforcementKeys)
+      || !["enabled", "disabled", "misconfigured"].includes(String(enforcement.mfa_runtime || ""))
+      || !["available", "disabled_or_unavailable"].includes(String(enforcement.email_verification_delivery || ""))
+      || !adminSecurityAccessPostureBootstrapObjectHasOnly(oauth, oauthKeys)
+      || oauthKeys.some((key) => typeof oauth[key] !== "boolean")) return {};
+    const access = normalizeAdminSecurityAccessPostureCountGroup(source.access, ADMIN_SECURITY_ACCESS_POSTURE_ACCESS_KEYS, integrityGuarded);
+    const sessions = normalizeAdminSecurityAccessPostureCountGroup(source.sessions, ADMIN_SECURITY_ACCESS_POSTURE_SESSION_KEYS, integrityGuarded);
+    const mfa = normalizeAdminSecurityAccessPostureCountGroup(source.mfa, ADMIN_SECURITY_ACCESS_POSTURE_MFA_KEYS, integrityGuarded);
+    const throttle = normalizeAdminSecurityAccessPostureCountGroup(source.throttle, ADMIN_SECURITY_ACCESS_POSTURE_THROTTLE_KEYS, integrityGuarded);
+    const activity = source.security_activity;
+    if (!adminSecurityAccessPostureBootstrapObjectHasOnly(activity, ADMIN_SECURITY_ACCESS_POSTURE_ACTIVITY_KEYS) || activity.window_hours !== 24) return {};
+    const securityActivity = { window_hours: 24 };
+    for (const key of ADMIN_SECURITY_ACCESS_POSTURE_ACTIVITY_KEYS.slice(1)) {
+      const value = activity[key];
+      if (integrityGuarded) {
+        if (value !== null) return {};
+        securityActivity[key] = null;
+      } else {
+        if (!Number.isInteger(value) || value < 0 || value > 1000000000) return {};
+        securityActivity[key] = value;
+      }
+    }
+    if (!access || !sessions || !mfa || !throttle
+      || (!integrityGuarded && access.privileged_accounts !== (access.admin_accounts + access.support_manager_accounts + access.support_operator_accounts))) return {};
+    return {
+      source: ADMIN_SECURITY_ACCESS_POSTURE_POLICY,
+      policy_version: ADMIN_SECURITY_ACCESS_POSTURE_POLICY,
+      read_only: true,
+      integrity_guarded: integrityGuarded,
+      enforcement: {
+        mfa_runtime: enforcement.mfa_runtime,
+        email_verification_delivery: enforcement.email_verification_delivery,
+        oauth_feature_flags: { google: oauth.google, github: oauth.github, apple: oauth.apple }
+      },
+      access,
+      sessions,
+      mfa,
+      throttle,
+      security_activity: securityActivity,
+      boundaries: [...ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES]
+    };
+  }
+
   // Operation histories are private, owner-scoped output projections. Keep
   // their pagination contract independent of generic Asset Vault lists so a
   // route cannot render stale rows after a page/session change.
@@ -6011,6 +6132,7 @@
       events: source.adminDocumentArchiveEvents,
       readState: source.adminDocumentArchiveReadState
     });
+    const adminSecurityAccessPosture = normalizeAdminSecurityAccessPostureBootstrap(source.adminSecurityAccessPosture);
     // Video Studio data is first owner-scoped and boundary-checked by the
     // integration layer, then projected again here.  Keep only the bounded
     // authoring metadata the renderer needs; reject the whole detached
@@ -6820,6 +6942,17 @@
       adminAuditListing: normalizeAdminAuditListing(source.adminAuditListing),
       adminAuditReadState: ["loading", "read_only", "guarded", "failed"].includes(String(source.adminAuditReadState || ""))
         ? String(source.adminAuditReadState)
+        : "guarded",
+      // The Security & Access aggregate is constrained here again even after
+      // integration.js validates it. No raw audit, identity, session, role or
+      // provider property can survive a render cycle through this object.
+      adminSecurityAccessPostureEnabled: source.adminSecurityAccessPostureEnabled === true,
+      adminSecurityAccessPosture,
+      adminSecurityAccessPostureStatus: ["read_only", "guarded"].includes(String(source.adminSecurityAccessPostureStatus || ""))
+        ? String(source.adminSecurityAccessPostureStatus)
+        : "guarded",
+      adminSecurityAccessPostureReadState: ["loading", "ready", "guarded", "failed"].includes(String(source.adminSecurityAccessPostureReadState || ""))
+        ? String(source.adminSecurityAccessPostureReadState)
         : "guarded",
       // The ERP navigation directory is a small server-authorized projection
       // fetched after signed bootstrap.  It must survive this presentation
@@ -16960,6 +17093,74 @@
     return Number.isInteger(value) && value >= 0 && value <= 1000000000 ? String(value) : "—";
   }
 
+  function adminSecurityAccessPostureCount(value) {
+    return Number.isInteger(value) && value >= 0 && value <= 1000000000
+      ? value.toLocaleString("vi-VN")
+      : "—";
+  }
+
+  function adminSecurityAccessMfaRuntimeLabel(value) {
+    return ({ enabled: "Đang bật", disabled: "Đang tắt", misconfigured: "Cần cấu hình" }[String(value || "")] || "Đang bảo vệ");
+  }
+
+  function adminSecurityAccessEmailLabel(value) {
+    return ({ available: "Có thể gửi", disabled_or_unavailable: "Không khả dụng" }[String(value || "")] || "Đang bảo vệ");
+  }
+
+  function adminSecurityAccessOauthLabel(value) {
+    return value === true ? "Cờ bật" : "Chưa bật";
+  }
+
+  function renderAdminSecurityAccessPosture(page, context) {
+    const route = normalizePath(page.routePath || page.path);
+    const isSecurityView = route === "/admin/security";
+    const summary = context.adminSecurityAccessPosture && typeof context.adminSecurityAccessPosture === "object"
+      ? context.adminSecurityAccessPosture
+      : {};
+    const readState = String(context.adminSecurityAccessPostureReadState || "guarded");
+    const responseState = String(context.adminSecurityAccessPostureStatus || "guarded");
+    const loading = readState === "loading";
+    const serverRoute = serverAuthorizesAdminRoute(context, route);
+    const integrityGuarded = summary.integrity_guarded === true;
+    const hasClosedProjection = summary.source === ADMIN_SECURITY_ACCESS_POSTURE_POLICY
+      && summary.policy_version === ADMIN_SECURITY_ACCESS_POSTURE_POLICY
+      && summary.read_only === true;
+    const readable = readState === "ready" && responseState === "read_only"
+      && integrityGuarded === false && hasClosedProjection
+      && context.adminSecurityAccessPostureEnabled === true && serverRoute;
+    const boundaryList = `<ul class="portal-operations-boundary-list">${ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES.map((item) => `<li>${safeText(item)}</li>`).join("")}</ul>`;
+    if (loading) {
+      return `<article class="portal-page portal-admin-security-access-posture">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded" aria-live="polite"><div><h2>Đang xác minh Security &amp; Access Posture</h2><p>Máy chủ đang kiểm tra signed Web admin session và nạp lại aggregate đã redaction. Số liệu cũ được giữ ẩn cho tới khi response hiện tại đạt contract kín.</p></div></div></section></article>`;
+    }
+    if (integrityGuarded && hasClosedProjection && responseState === "guarded") {
+      return `<article class="portal-page portal-admin-security-access-posture">${renderHero(page, context)}<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-state" data-state="guarded" role="status"><div><h2>Security &amp; Access Posture đang được bảo vệ</h2><p>Máy chủ phát hiện projection chưa đủ để xác minh. Portal không hiển thị số 0, số liệu một phần hoặc dữ liệu từ phiên trước.</p></div></div>${boundaryList}</section></article>`;
+    }
+    if (!readable) {
+      return `<article class="portal-page portal-admin-security-access-posture">${renderHero(page, context)}<section class="portal-card portal-card-pad"><div class="portal-state" data-state="guarded" role="status"><div><h2>Security &amp; Access Posture chưa khả dụng</h2><p>Trang này chỉ dùng aggregate Web-native đã redaction, được máy chủ cấp quyền cho đúng route. Portal không thay thế bằng bridge, audit thô, dữ liệu trình duyệt hoặc role tự khai.</p></div></div></section></article>`;
+    }
+    const enforcement = summary.enforcement;
+    const access = summary.access;
+    const sessions = summary.sessions;
+    const mfa = summary.mfa;
+    const throttle = summary.throttle;
+    const activity = summary.security_activity;
+    const activityWindow = `${adminSecurityAccessPostureCount(activity.window_hours)} giờ gần nhất`;
+    const securityMetrics = `<section class="portal-operations-metrics" aria-label="Security Posture aggregate"><div class="portal-metric"><span>MFA runtime</span><strong>${safeText(adminSecurityAccessMfaRuntimeLabel(enforcement.mfa_runtime))}</strong><em>Không lộ cấu hình mã hóa</em></div><div class="portal-metric"><span>Xác minh email</span><strong>${safeText(adminSecurityAccessEmailLabel(enforcement.email_verification_delivery))}</strong><em>Chỉ trạng thái khả dụng</em></div><div class="portal-metric"><span>MFA đang hoạt động</span><strong>${safeText(adminSecurityAccessPostureCount(mfa.active_factors))}</strong><em>Aggregate Web-native</em></div><div class="portal-metric"><span>Challenge bị khóa</span><strong>${safeText(adminSecurityAccessPostureCount(mfa.locked_login_challenges))}</strong><em>Không có mã challenge</em></div></section>`;
+    const accessMetrics = `<section class="portal-operations-metrics" aria-label="Access Posture aggregate"><div class="portal-metric"><span>Tài khoản active</span><strong>${safeText(adminSecurityAccessPostureCount(access.active_accounts))}</strong><em>Không có identity</em></div><div class="portal-metric"><span>Role đặc quyền</span><strong>${safeText(adminSecurityAccessPostureCount(access.privileged_accounts))}</strong><em>Admin &amp; Support aggregate</em></div><div class="portal-metric"><span>Phiên active</span><strong>${safeText(adminSecurityAccessPostureCount(sessions.active))}</strong><em>Không có session reference</em></div><div class="portal-metric"><span>Throttle active</span><strong>${safeText(adminSecurityAccessPostureCount(throttle.login_active_buckets + throttle.register_active_buckets + throttle.password_change_active_buckets))}</strong><em>Không đại diện người dùng/IP</em></div></section>`;
+    const enforcementRows = `<div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Google OAuth</strong><small>Feature flag Web, không phải credential hoặc phiên đăng nhập.</small></div><div class="portal-operations-run-meta">${badge(enforcement.oauth_feature_flags.google ? "read_only" : "guarded")}<strong>${safeText(adminSecurityAccessOauthLabel(enforcement.oauth_feature_flags.google))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>GitHub OAuth</strong><small>Feature flag Web, không phải credential hoặc phiên đăng nhập.</small></div><div class="portal-operations-run-meta">${badge(enforcement.oauth_feature_flags.github ? "read_only" : "guarded")}<strong>${safeText(adminSecurityAccessOauthLabel(enforcement.oauth_feature_flags.github))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Apple OAuth</strong><small>Feature flag Web, không phải credential hoặc phiên đăng nhập.</small></div><div class="portal-operations-run-meta">${badge(enforcement.oauth_feature_flags.apple ? "read_only" : "guarded")}<strong>${safeText(adminSecurityAccessOauthLabel(enforcement.oauth_feature_flags.apple))}</strong></div></article></div>`;
+    const securityActivityRows = `<div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Đăng nhập</strong><small>${safeText(activityWindow)} · completed / guarded</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(activity.sign_in_completed))} / ${safeText(adminSecurityAccessPostureCount(activity.sign_in_guarded))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Xác thực MFA</strong><small>${safeText(activityWindow)} · completed / guarded</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(activity.mfa_completed))} / ${safeText(adminSecurityAccessPostureCount(activity.mfa_guarded))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Credential</strong><small>${safeText(activityWindow)} · completed / guarded</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(activity.credential_change_completed))} / ${safeText(adminSecurityAccessPostureCount(activity.credential_change_guarded))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Session control</strong><small>${safeText(activityWindow)} · completed / guarded</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(activity.session_control_completed))} / ${safeText(adminSecurityAccessPostureCount(activity.session_control_guarded))}</strong></div></article></div>`;
+    const accessRows = `<div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Tài khoản inactive</strong><small>Aggregate theo trạng thái Web, không có account ID.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(access.inactive_accounts))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Admin / Support manager / Support operator</strong><small>Chỉ số lượng role cache đã được tổng hợp.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(access.admin_accounts))} / ${safeText(adminSecurityAccessPostureCount(access.support_manager_accounts))} / ${safeText(adminSecurityAccessPostureCount(access.support_operator_accounts))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Role chưa nhận diện</strong><small>Không suy đoán, gán lại hoặc sửa role từ trang này.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(access.unknown_role_accounts))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Phiên revoked gần đây / expired</strong><small>Metadata aggregate, không có session reference.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(sessions.revoked_recent))} / ${safeText(adminSecurityAccessPostureCount(sessions.expired_unrevoked))}</strong></div></article></div>`;
+    const throttleRows = `<div class="portal-operations-run-list"><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Login throttle</strong><small>Đếm bucket active, không phải account hoặc IP.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(throttle.login_active_buckets))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Register throttle</strong><small>Đếm bucket active, không phải account hoặc IP.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(throttle.register_active_buckets))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>Đổi mật khẩu throttle</strong><small>Đếm bucket active, không phải account hoặc IP.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(throttle.password_change_active_buckets))}</strong></div></article><article class="portal-operations-run"><div class="portal-operations-run-copy"><strong>MFA pending / recovery code active</strong><small>Aggregate vòng đời, không có factor hoặc code.</small></div><div class="portal-operations-run-meta"><strong>${safeText(adminSecurityAccessPostureCount(mfa.pending_enrollments))} / ${safeText(adminSecurityAccessPostureCount(mfa.active_recovery_codes))}</strong></div></article></div>`;
+    const title = isSecurityView ? "Security Posture" : "Access Posture";
+    const description = isSecurityView
+      ? "Quan sát enforcement, MFA và aggregate activity Web trong phạm vi 24 giờ; không có log, secret, session hay control action."
+      : "Quan sát aggregate account role, session state và throttle Web; không có danh tính, role grant/revoke hay session control.";
+    const primary = isSecurityView
+      ? `<div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Enforcement</h2><p class="portal-card-subtitle">Trạng thái policy đã được rút gọn, không phải trang cấu hình hoặc credential manager.</p></div>${badge("read_only")}</div>${enforcementRows}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Security activity</h2><p class="portal-card-subtitle">Chỉ aggregate action đã allow-list trong ${safeText(activityWindow)}; không có audit event, raw action hoặc request detail.</p></div>${badge("read_only")}</div>${securityActivityRows}</section></div>`
+      : `<div class="portal-operations-admin-grid"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Account &amp; session aggregate</h2><p class="portal-card-subtitle">Không có identity, role cụ thể, session reference hoặc hành động thay đổi quyền.</p></div>${badge("read_only")}</div>${accessRows}</section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Rate-limit aggregate</h2><p class="portal-card-subtitle">Bucket active là metadata vận hành; không suy ra người dùng, IP, email hoặc client fingerprint.</p></div>${badge("read_only")}</div>${throttleRows}</section></div>`;
+    return `<article class="portal-page portal-admin-security-access-posture">${renderHero(page, context)}<section class="portal-operations-admin-intro"><div><span class="portal-section-kicker">Web-native · aggregate only</span><h2>${safeText(title)}</h2><p>${safeText(description)}</p></div><dl><div><dt>Chỉ đọc</dt><dd>Không có control action</dd></div><div><dt>Đã redaction</dt><dd>Không có identity hoặc secret</dd></div></dl></section>${isSecurityView ? securityMetrics : accessMetrics}${primary}<section class="portal-card portal-card-pad portal-operations-boundary"><div class="portal-card-header"><div><h2 class="portal-card-title">Ranh giới dữ liệu</h2><p class="portal-card-subtitle">Màn hình này là observability Web-native, không phải control plane hay bridge compatibility module.</p></div>${badge("read_only")}</div>${boundaryList}</section></article>`;
+  }
+
   function renderAdminAutomationMonitor(page, context) {
     const summary = context.adminAutomationMonitorSummary && typeof context.adminAutomationMonitorSummary === "object"
       ? context.adminAutomationMonitorSummary : {};
@@ -19099,7 +19300,7 @@
     if (["tickets", "support"].includes(module)) {
       return renderRowsTable(["Ticket", "Loại", "Ưu tiên", "Trạng thái", "Đính kèm", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.code || "—")}</td><td>${safeText(item.category || item.related_tool || "—")}</td><td>${safeText(item.priority || "—")}</td><td>${badge(ticketStatus(item))}</td><td>${item.has_attachment ? "Có" : "Không"}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Chưa có metadata ticket được cấp", "Nội dung, username, Telegram attachment ID và thread ticket không được render trong bảng ERP này.");
     }
-    if (["audit", "security"].includes(module)) {
+    if (module === "audit") {
       return renderRowsTable(["Sự kiện", "Hành động", "Kết quả", "Thời điểm"], rows, (item) => `<td>${safeText(item.id || "—")}</td><td>${safeText(item.action || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.created_at || "—")}</td>`, "Chưa có audit event được cấp", "Không render raw audit payload, detail, token, file ID hoặc danh tính người dùng.");
     }
     return renderRowsTable(["Đối tượng", "Trạng thái", "Cập nhật"], rows, (item) => `<td>${safeText(item.id || item.feature || item.user_id || "—")}</td><td>${badge(jobStatus(item))}</td><td>${safeText(item.updated_at || item.created_at || "—")}</td>`, "Module đang chờ adapter canonical", "Không tạo record, số liệu hoặc action thay thế khi bot chưa có read-only adapter phù hợp.");
@@ -20548,6 +20749,7 @@
       case "operations": return renderOperations(page, context);
       case "operations-admin": return renderOperationsAdmin(page, context);
       case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
+      case "admin-security-access-posture": return renderAdminSecurityAccessPosture(page, context);
       case "reliability-admin": return renderReliabilityAdmin(page, context);
       case "operations-desk": return renderOperationsDesk(page, context);
       case "tickets": return renderTickets(page, context);

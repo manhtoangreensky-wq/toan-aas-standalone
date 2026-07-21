@@ -427,7 +427,7 @@ ADMIN_BRIDGE_MODULES = frozenset({
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
     "jobs", "failed-jobs", "providers", "provider-cost", "workers", "features", "freezes", "pricing",
     "packages", "promos", "leads", "tickets", "support", "audit", "reports", "runtime", "system",
-    "backups", "security", "access",
+    "backups",
 })
 ADMIN_BRIDGE_MODULE_ALIASES = {"backup": "backups", "export": "reports"}
 
@@ -1386,7 +1386,13 @@ def _project_surface_data(data: Any, surface: str, *, allow_admin_user_refs: boo
             result["counts"] = safe_counts
         if "readiness" in value:
             result["readiness"] = _project_readiness(value.get("readiness"))
-        fields = ("id", "feature", "job_type", "status", "created_at", "updated_at", "balance_xu", "total_spent_xu", "is_vip", "amount_vnd", "xu", "type", "paid_at", "refund_status", "output_available", "error_category", "download_ready", "reason", "action", "priority", "category", "related_tool", "has_attachment")
+        # Generic bridge records never expose arbitrary ``reason`` or
+        # ``action`` strings.  Adapter-owned incident text can include
+        # implementation detail, routing names or other operational context
+        # that does not belong in a browser payload.  Read models that need a
+        # human label must project a closed, Web-owned enum in their dedicated
+        # router instead of reusing this compatibility surface.
+        fields = ("id", "feature", "job_type", "status", "created_at", "updated_at", "balance_xu", "total_spent_xu", "is_vip", "amount_vnd", "xu", "type", "paid_at", "refund_status", "output_available", "error_category", "download_ready", "priority", "category", "related_tool", "has_attachment")
         if isinstance(value.get("items"), list):
             result["items"] = _project_items(value.get("items"), fields, allow_admin_user_refs=allow_admin_user_refs)
         return result
@@ -4397,6 +4403,20 @@ async def admin_providers(request: Request, account: dict = Depends(require_cano
 @router.get("/admin/tickets")
 async def admin_tickets(request: Request, account: dict = Depends(require_canonical_admin)):
     return await _bridge("GET", "/internal/v1/admin/tickets", account=account, request=request, admin_read=True)
+
+
+@router.get("/admin/modules/security", include_in_schema=False)
+@router.get("/admin/modules/access", include_in_schema=False)
+async def retired_generic_admin_security_module() -> None:
+    """Retire the unsafe compatibility path before any admin/bridge check.
+
+    Security and Access posture are now Web-owned, redacted aggregate reads.
+    Keeping explicit fixed routes *before* ``/admin/modules/{module}`` means
+    FastAPI rejects these historic bridge URLs without first resolving the
+    canonical-admin dependency or contacting the Core Bridge.
+    """
+
+    raise HTTPException(status_code=404, detail="Module Admin chưa được công bố")
 
 
 @router.get("/admin/modules/{module}")

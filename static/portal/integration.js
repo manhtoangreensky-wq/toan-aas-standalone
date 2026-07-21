@@ -256,6 +256,11 @@
   // must not survive a session change, route change or newer refresh.
   let adminAutomationMonitorSessionEpoch = 0;
   let adminAutomationMonitorHydrationEpoch = 0;
+  // Security & Access posture is a distinct, Web-local aggregate. It must
+  // never inherit a Bot bridge module, raw audit data or an earlier admin
+  // account's view after navigation, sign-out or a newer protected read.
+  let adminSecurityAccessPostureSessionEpoch = 0;
+  let adminSecurityAccessPostureHydrationEpoch = 0;
   // Operations Desk is a separate, read-only staff projection.  It gets its
   // own session/request fence so a delayed aggregate cannot cross a logout,
   // account switch, feature disablement, route change or newer filter read.
@@ -383,7 +388,7 @@
   const ADMIN_CANONICAL_READ_MODULES = new Set([
     "overview", "summary", "users", "user", "wallet", "payments", "topups", "revenue", "refunds",
     "jobs", "failed-jobs", "workers", "runtime", "providers", "provider-cost", "features", "freezes",
-    "pricing", "packages", "promos", "tickets", "support", "audit", "security", "access", "reports", "system", "backups", "leads"
+    "pricing", "packages", "promos", "tickets", "support", "audit", "reports", "system", "backups", "leads"
   ]);
   const ADMIN_MODULE_NAME_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/;
   const PWA_BUILD_ID_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,95}$/;
@@ -1418,6 +1423,15 @@
   // replace a guarded monitor with canonical Bot data.
   function isNativeAdminAutomationMonitorPath(path) {
     return String(path || "").split("?")[0] === "/admin/automation";
+  }
+
+  // Security and Access Posture intentionally have one local aggregate API.
+  // Keep both views out of generic Admin/Core Bridge routing so a linked
+  // Telegram account cannot replace a guarded security response with a raw
+  // reason/action field or any other canonical bridge projection.
+  function isNativeAdminSecurityAccessPosturePath(path) {
+    const normalized = String(path || "").split("?")[0];
+    return normalized === "/admin/security" || normalized === "/admin/access";
   }
 
   // Governance is a Web-native staff control plane, not a compatibility view
@@ -9537,6 +9551,10 @@
     // signed local-admin check and return a guarded, empty projection when
     // the server-side ERP gate is off.
     const adminAutomationMonitorEnabled = Boolean(status.flags && status.flags.admin_erp_enabled === true);
+    // The security/access summary is a separate, redacted Web-native
+    // aggregate. The browser only uses this flag to decide whether to begin
+    // a read; its own route and API repeat signed admin checks server-side.
+    const adminSecurityAccessPostureEnabled = Boolean(status.flags && status.flags.admin_erp_enabled === true);
     // Inbox Automation is a different, more constrained scheduler boundary.
     // A true center flag grants only signed read/write of in-app records; the
     // automation flag may remain false while the customer safely sees policy.
@@ -10027,6 +10045,7 @@
       "admin-automation-monitor-view": Boolean(account && adminAutomationMonitorEnabled),
       "admin-automation-monitor-refresh": Boolean(account && adminAutomationMonitorEnabled),
       "admin-automation-monitor-page": Boolean(account && adminAutomationMonitorEnabled),
+      "admin-security-access-posture-view": Boolean(account && adminSecurityAccessPostureEnabled),
       "inbox-view": Boolean(account && notificationCenterEnabled),
       "inbox-refresh": Boolean(account && notificationCenterEnabled),
       "inbox-page": Boolean(account && notificationCenterEnabled),
@@ -10134,6 +10153,8 @@
     ++reliabilityHydrationEpoch;
     ++adminAutomationMonitorSessionEpoch;
     ++adminAutomationMonitorHydrationEpoch;
+    ++adminSecurityAccessPostureSessionEpoch;
+    ++adminSecurityAccessPostureHydrationEpoch;
     ++operationsDeskSessionEpoch;
     ++operationsDeskHydrationEpoch;
     ++notificationSessionEpoch;
@@ -10703,6 +10724,13 @@
       adminAutomationMonitorListing: adminAutomationMonitorListingProjection(0, {}, 0),
       adminAutomationMonitorStatus: "guarded",
       adminAutomationMonitorReadState: account && adminAutomationMonitorEnabled ? "loading" : "guarded",
+      // This is a strict aggregate-only projection. Clear it before every
+      // bootstrap: an old administrator's posture must never stay rendered
+      // while a session, role, feature gate or current read is rechecked.
+      adminSecurityAccessPostureEnabled,
+      adminSecurityAccessPosture: {},
+      adminSecurityAccessPostureStatus: "guarded",
+      adminSecurityAccessPostureReadState: account && adminSecurityAccessPostureEnabled ? "loading" : "guarded",
       // Reliability follow-ups are staff-private. Clear them separately
       // before every signed hydration so a stale runtime bucket, follow-up
       // state or prior staff session can never remain visible in the browser.
@@ -11269,6 +11297,19 @@
         pageStates: { ...(base().pageStates || {}), "/admin/automation": "guarded" }
       });
     }
+    if (account && adminSecurityAccessPostureEnabled && isNativeAdminSecurityAccessPosturePath(currentPath)) {
+      await hydrateAdminSecurityAccessPosture();
+    } else if (isNativeAdminSecurityAccessPosturePath(currentPath)) {
+      // Security/Access never use Bot compatibility metadata, a generic admin
+      // bridge response, raw audit history, a browser-provided role or a
+      // prior local-admin aggregate as a fallback.
+      merge({
+        adminSecurityAccessPosture: {},
+        adminSecurityAccessPostureStatus: "guarded",
+        adminSecurityAccessPostureReadState: "guarded",
+        pageStates: { ...(base().pageStates || {}), [currentPath]: "guarded" }
+      });
+    }
     if (account && autopilotEnabled) {
       if (currentPath === "/operations") await hydrateOperations();
       else if (["/admin/operations", "/admin/autopilot"].includes(currentPath)) await hydrateOperationsAdmin();
@@ -11368,7 +11409,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -14766,6 +14807,189 @@
     // privileged reads while the old projection is intentionally hidden.
     setActionBusy("admin-automation-monitor-refresh", route, busy);
     setActionBusy("admin-automation-monitor-page", route, busy);
+  }
+
+  // Security & Access Posture accepts exactly one aggregate-only DTO.  The
+  // browser refuses a whole response if a field is added, a known aggregate
+  // is malformed, or a fixed boundary string changes.  This is intentional:
+  // a partial or expanded security response is less safe than an empty
+  // guarded screen.
+  const ADMIN_SECURITY_ACCESS_POSTURE_POLICY = "web_security_access_posture_v1";
+  const ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES = Object.freeze([
+    "Chỉ hiển thị aggregate Web-native; không có account, email, session, token, secret, IP hoặc audit detail.",
+    "Trang chỉ đọc; không cấp role, thu hồi session, reset MFA hoặc thay đổi credential.",
+    "Không gọi Bot/Core Bridge, provider, PayOS, ví Xu, job, webhook hoặc deploy."
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_ACCESS_KEYS = Object.freeze([
+    "active_accounts", "inactive_accounts", "privileged_accounts", "admin_accounts",
+    "support_manager_accounts", "support_operator_accounts", "unknown_role_accounts"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_SESSION_KEYS = Object.freeze([
+    "active", "revoked_recent", "expired_unrevoked"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_MFA_KEYS = Object.freeze([
+    "active_factors", "pending_enrollments", "locked_login_challenges",
+    "pending_login_challenges", "active_recovery_codes"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_THROTTLE_KEYS = Object.freeze([
+    "login_active_buckets", "register_active_buckets", "password_change_active_buckets"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_ACTIVITY_KEYS = Object.freeze([
+    "window_hours", "sign_in_completed", "sign_in_guarded", "mfa_completed", "mfa_guarded",
+    "credential_change_completed", "credential_change_guarded", "session_control_completed", "session_control_guarded"
+  ]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_MFA_RUNTIME = new Set(["enabled", "disabled", "misconfigured"]);
+  const ADMIN_SECURITY_ACCESS_POSTURE_EMAIL_DELIVERY = new Set(["available", "disabled_or_unavailable"]);
+
+  function adminSecurityAccessPostureObjectHasOnly(value, keys) {
+    return value && typeof value === "object" && !Array.isArray(value)
+      && Object.keys(value).length === keys.length
+      && Object.keys(value).every((key) => keys.includes(key));
+  }
+
+  function adminSecurityAccessPostureCountGroup(value, keys, integrityGuarded) {
+    if (!adminSecurityAccessPostureObjectHasOnly(value, keys)) return null;
+    const result = {};
+    for (const key of keys) {
+      const count = value[key];
+      if (integrityGuarded) {
+        if (count !== null) return null;
+        result[key] = null;
+      } else {
+        if (!Number.isInteger(count) || count < 0 || count > 1000000000) return null;
+        result[key] = count;
+      }
+    }
+    return result;
+  }
+
+  function adminSecurityAccessPostureActivityProjection(value, integrityGuarded) {
+    if (!adminSecurityAccessPostureObjectHasOnly(value, ADMIN_SECURITY_ACCESS_POSTURE_ACTIVITY_KEYS)) return null;
+    const windowHours = value.window_hours;
+    // The reviewed window is policy metadata, not a database aggregate. It
+    // remains a fixed 24h label even when all DB-derived counters are hidden.
+    if (windowHours !== 24) return null;
+    const result = { window_hours: 24 };
+    for (const key of ADMIN_SECURITY_ACCESS_POSTURE_ACTIVITY_KEYS.slice(1)) {
+      const count = value[key];
+      if (integrityGuarded) {
+        if (count !== null) return null;
+        result[key] = null;
+      } else {
+        if (!Number.isInteger(count) || count < 0 || count > 1000000000) return null;
+        result[key] = count;
+      }
+    }
+    return result;
+  }
+
+  function adminSecurityAccessPostureEnforcementProjection(value) {
+    const allowed = ["mfa_runtime", "email_verification_delivery", "oauth_feature_flags"];
+    if (!adminSecurityAccessPostureObjectHasOnly(value, allowed)) return null;
+    const runtime = String(value.mfa_runtime || "").trim();
+    const email = String(value.email_verification_delivery || "").trim();
+    const oauth = value.oauth_feature_flags;
+    const oauthKeys = ["google", "github", "apple"];
+    if (!ADMIN_SECURITY_ACCESS_POSTURE_MFA_RUNTIME.has(runtime)
+      || !ADMIN_SECURITY_ACCESS_POSTURE_EMAIL_DELIVERY.has(email)
+      || !adminSecurityAccessPostureObjectHasOnly(oauth, oauthKeys)
+      || oauthKeys.some((key) => typeof oauth[key] !== "boolean")) return null;
+    return {
+      mfa_runtime: runtime,
+      email_verification_delivery: email,
+      oauth_feature_flags: { google: oauth.google, github: oauth.github, apple: oauth.apple }
+    };
+  }
+
+  function adminSecurityAccessPostureProjection(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const allowed = [
+      "source", "policy_version", "read_only", "integrity_guarded", "enforcement", "access",
+      "sessions", "mfa", "throttle", "security_activity", "boundaries"
+    ];
+    if (!adminSecurityAccessPostureObjectHasOnly(source, allowed)
+      || source.source !== ADMIN_SECURITY_ACCESS_POSTURE_POLICY
+      || source.policy_version !== ADMIN_SECURITY_ACCESS_POSTURE_POLICY
+      || source.read_only !== true
+      || typeof source.integrity_guarded !== "boolean"
+      || !Array.isArray(source.boundaries)
+      || source.boundaries.length !== ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES.length
+      || source.boundaries.some((item, index) => item !== ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES[index])) return null;
+    const integrityGuarded = source.integrity_guarded;
+    const enforcement = adminSecurityAccessPostureEnforcementProjection(source.enforcement);
+    const access = adminSecurityAccessPostureCountGroup(source.access, ADMIN_SECURITY_ACCESS_POSTURE_ACCESS_KEYS, integrityGuarded);
+    const sessions = adminSecurityAccessPostureCountGroup(source.sessions, ADMIN_SECURITY_ACCESS_POSTURE_SESSION_KEYS, integrityGuarded);
+    const mfa = adminSecurityAccessPostureCountGroup(source.mfa, ADMIN_SECURITY_ACCESS_POSTURE_MFA_KEYS, integrityGuarded);
+    const throttle = adminSecurityAccessPostureCountGroup(source.throttle, ADMIN_SECURITY_ACCESS_POSTURE_THROTTLE_KEYS, integrityGuarded);
+    const securityActivity = adminSecurityAccessPostureActivityProjection(source.security_activity, integrityGuarded);
+    if (!enforcement || !access || !sessions || !mfa || !throttle || !securityActivity) return null;
+    if (!integrityGuarded && access.privileged_accounts !== (access.admin_accounts + access.support_manager_accounts + access.support_operator_accounts)) return null;
+    return {
+      source: ADMIN_SECURITY_ACCESS_POSTURE_POLICY,
+      policy_version: ADMIN_SECURITY_ACCESS_POSTURE_POLICY,
+      read_only: true,
+      integrity_guarded: integrityGuarded,
+      enforcement,
+      access,
+      sessions,
+      mfa,
+      throttle,
+      security_activity: securityActivity,
+      boundaries: [...ADMIN_SECURITY_ACCESS_POSTURE_BOUNDARIES]
+    };
+  }
+
+  function adminSecurityAccessPostureRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === adminSecurityAccessPostureHydrationEpoch
+      && sessionEpoch === adminSecurityAccessPostureSessionEpoch
+      && isNativeAdminSecurityAccessPosturePath(expectedPath)
+      && currentPortalPath() === expectedPath
+      && base().adminSecurityAccessPostureEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateAdminSecurityAccessPosture() {
+    const requestEpoch = ++adminSecurityAccessPostureHydrationEpoch;
+    const sessionEpoch = adminSecurityAccessPostureSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!isNativeAdminSecurityAccessPosturePath(expectedPath)) return { stale: true };
+    if (!adminSecurityAccessPostureRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+    // Never retain a prior administrator's counters while this exact signed
+    // request is in flight. Only a current, complete, closed projection can
+    // repopulate the screen.
+    merge({
+      adminSecurityAccessPosture: {},
+      adminSecurityAccessPostureStatus: "guarded",
+      adminSecurityAccessPostureReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+    });
+    try {
+      const result = await api("/admin/security-posture/summary", { cache: "no-store" });
+      const summary = adminSecurityAccessPostureProjection(result && result.data);
+      const status = String(result && result.status || "");
+      if (!summary || !["read_only", "guarded"].includes(status)
+        || (summary.integrity_guarded === true && status !== "guarded")
+        || (summary.integrity_guarded === false && status !== "read_only")) {
+        throw new Error("Máy chủ chưa trả Security & Access Posture redacted projection hợp lệ.");
+      }
+      if (!adminSecurityAccessPostureRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        adminSecurityAccessPosture: summary,
+        adminSecurityAccessPostureStatus: status,
+        adminSecurityAccessPostureReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: status }
+      });
+      return { summary, status };
+    } catch (_) {
+      if (!adminSecurityAccessPostureRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        adminSecurityAccessPosture: {},
+        adminSecurityAccessPostureStatus: "guarded",
+        adminSecurityAccessPostureReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), [expectedPath]: "guarded" }
+      });
+      return null;
+    }
   }
 
   async function hydrateOperations(incidentOffsetValue) {
@@ -18284,13 +18508,14 @@
       && currentPortalPath() === expectedPath
       && expectedPath.startsWith("/admin")
       && expectedPath !== "/admin/audit"
+      && !isNativeAdminSecurityAccessPosturePath(expectedPath)
       && Boolean(base().bridge && base().bridge.available === true)
       && Boolean(base().session && base().session.authenticated === true);
   }
 
   async function hydrateCanonicalAdminData(path) {
     const expectedPath = String(path || "").split("?")[0];
-    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit") return null;
+    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
     const requestEpoch = ++canonicalAdminDataHydrationEpoch;
     const sessionEpoch = canonicalSessionEpoch;
     try {
@@ -18441,6 +18666,10 @@
         // asking the generic Bot bridge to expose a raw audit payload.
         await hydrateAdminAudit();
         if (!isCurrent()) return null;
+      } else if (isNativeAdminSecurityAccessPosturePath(path)) {
+        // The security/admin access routes are hydrated only by their narrow
+        // Web-native aggregate. Never attempt a generic bridge fallback here.
+        return null;
       } else if (path.startsWith("/admin")) {
         await hydrateCanonicalAdminData(path);
         if (!isCurrent()) return null;
@@ -26732,6 +26961,9 @@
           await hydrateAdminAudit();
           toast("Đã làm mới Audit Explorer Web-native đã redaction.");
           return;
+        }
+        if (isNativeAdminSecurityAccessPosturePath(path)) {
+          throw new Error("Security & Access Posture không có control action trong browser.");
         }
         const result = await hydrateCanonicalAdminData(path);
         if (!result) return;
