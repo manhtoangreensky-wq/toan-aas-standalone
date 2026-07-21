@@ -699,6 +699,12 @@
 
   function adminBridgeTargetForPath(path) {
     const normalized = String(path || "/admin").split("?")[0];
+    // Tax Readiness is a literal Web guidance page. Keep the exact path out
+    // of the generic finance module parser so it can never become a bridge
+    // request or hydrate a canonical finance record.
+    if (isNativeAdminTaxReadinessPath(normalized)) {
+      return { endpoint: "", module: "tax-readiness", requestedModule: "tax-readiness", recordId: "", supported: false };
+    }
     if (ADMIN_DIRECT_ENDPOINTS[normalized]) {
       return { endpoint: ADMIN_DIRECT_ENDPOINTS[normalized], module: normalized === "/admin" ? "overview" : normalized.split("/").filter(Boolean).slice(-1)[0], supported: true };
     }
@@ -1513,6 +1519,13 @@
 
   function isNativeAdminSystemStewardshipPath(path) {
     return String(path || "").split("?")[0] === "/admin/system-stewardship";
+  }
+
+  // Tax readiness is a static, canonical-admin-gated Web guidance surface.
+  // It deliberately has no Bot/Core Bridge finance read model, calculator,
+  // export, profile or write adapter.
+  function isNativeAdminTaxReadinessPath(path) {
+    return String(path || "").split("?")[0] === "/admin/finance/tax-readiness";
   }
 
   // Security and Access Posture intentionally have one local aggregate API.
@@ -11116,6 +11129,7 @@
         // until its independent signed-server projection has been verified.
         "/admin/automation": "guarded",
         "/admin/system-stewardship": account ? "read_only" : "guarded",
+        "/admin/finance/tax-readiness": account ? "read_only" : "guarded",
         "/calendar": account ? "read_only" : "guarded",
         "/prompt-library": account && promptLibraryEnabled ? "processing" : "guarded",
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
@@ -11749,7 +11763,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -20185,6 +20199,7 @@
       && expectedPath.startsWith("/admin")
       && expectedPath !== "/admin/audit"
       && !isNativeAdminSystemStewardshipPath(expectedPath)
+      && !isNativeAdminTaxReadinessPath(expectedPath)
       && !isNativeAdminSecurityAccessPosturePath(expectedPath)
       && Boolean(base().bridge && base().bridge.available === true)
       && Boolean(base().session && base().session.authenticated === true);
@@ -20192,7 +20207,7 @@
 
   async function hydrateCanonicalAdminData(path) {
     const expectedPath = String(path || "").split("?")[0];
-    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
+    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminTaxReadinessPath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
     const requestEpoch = ++canonicalAdminDataHydrationEpoch;
     const sessionEpoch = canonicalSessionEpoch;
     try {
@@ -20343,7 +20358,7 @@
         // asking the generic Bot bridge to expose a raw audit payload.
         await hydrateAdminAudit();
         if (!isCurrent()) return null;
-      } else if (isNativeAdminSystemStewardshipPath(path) || isNativeAdminSecurityAccessPosturePath(path)) {
+      } else if (isNativeAdminSystemStewardshipPath(path) || isNativeAdminTaxReadinessPath(path) || isNativeAdminSecurityAccessPosturePath(path)) {
         // The security/admin access routes are hydrated only by their narrow
         // Web-native aggregate or navigation manifest. Never attempt a
         // generic bridge fallback here.
@@ -29270,8 +29285,10 @@
           toast("Đã làm mới Audit Explorer Web-native đã redaction.");
           return;
         }
-        if (isNativeAdminSecurityAccessPosturePath(path)) {
-          throw new Error("Security & Access Posture không có control action trong browser.");
+        if (isNativeAdminSecurityAccessPosturePath(path) || isNativeAdminTaxReadinessPath(path)) {
+          throw new Error(isNativeAdminTaxReadinessPath(path)
+            ? "Tax Readiness chỉ là hướng dẫn read-only; không có làm mới, tính thuế, export hay control action trong browser."
+            : "Security & Access Posture không có control action trong browser.");
         }
         const result = await hydrateCanonicalAdminData(path);
         if (!result) return;

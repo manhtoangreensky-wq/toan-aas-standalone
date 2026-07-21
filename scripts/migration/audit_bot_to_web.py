@@ -81,6 +81,11 @@ ADMIN_TERMS = (
     "smoke",
     "pricing",
     "finance",
+    # The frozen Bot's menu dispatcher treats the complete ``tax_`` family
+    # as admin-only before it reaches any estimate, profile or export branch.
+    # This is an audit classification signal only; it must never grant a Web
+    # route or turn an unknown tax action into a resolved feature.
+    "tax_",
     "revenue",
     "refund",
 )
@@ -1208,6 +1213,152 @@ SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] 
         ),
     },
 }
+
+# The frozen Bot's reviewed tax menu branches render administrative guidance,
+# choices and Telegram delivery paths. Only these three explanatory buttons may
+# open a fresh, independently authorized Web guidance route. They never
+# transfer a callback token, Telegram identity, finance row, profile, period,
+# estimate, report, export, file, payment reference, ledger, provider, archive
+# or delivery state. Keep this finite registry separate from the generic menu
+# map: a ``menu|tax_*`` prefix is not an authority grant.
+TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|finance_tax": {
+        "target": "/admin/finance/tax-readiness",
+        "classification": "admin",
+        "feature_key": "admin_tax_readiness",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action opens its admin tax guidance menu. The Web opens a separately authorized, "
+            "literal readiness checklist and receives no Telegram identity, finance data, tax profile, "
+            "period, estimate, report, export, file, payment, ledger, provider or mutation authority."
+        ),
+    },
+    "menu|tax_checklist": {
+        "target": "/admin/finance/tax-readiness",
+        "classification": "admin",
+        "feature_key": "admin_tax_readiness",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot checklist is Telegram explanatory text. The Web starts fresh static accounting guidance "
+            "only and does not receive its message, source selections, financial records or compliance state."
+        ),
+    },
+    "menu|tax_custom_help": {
+        "target": "/admin/finance/tax-readiness",
+        "classification": "admin",
+        "feature_key": "admin_tax_readiness",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+            "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot custom-period help is explanatory only. The Web does not receive a requested date range, "
+            "tax period, report parameter, ledger row or calculation request."
+        ),
+    },
+}
+
+# These exact Bot actions inspect canonical finance data, calculate a period,
+# expose historical tax configuration or begin six-file CSV delivery. They are
+# intentionally visible in the static parity report as admin work still needing
+# a dedicated canonical-finance contract; they are not evidence of a Web export
+# or a substitute for Bot-owned data and delivery.
+TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_BASE_DISPOSITIONS = (
+    "BOT_ADMIN_ONLY",
+    "CANONICAL_BOT_FINANCE_TAX_STATE",
+    "SOURCE_STATE_MACHINE_REQUIRED",
+    "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+    "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+    "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+    "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+    "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+    "NO_RUNTIME_CLAIM",
+)
+TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS: dict[str, dict[str, str]] = {
+    "menu|tax_estimate": {
+        "operation_disposition": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "source_evidence": "The frozen Bot calculates a tax estimate from canonical finance summary and historical tax-profile state.",
+    },
+    "menu|tax_estimate_month": {
+        "operation_disposition": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "source_evidence": "The frozen Bot calculates a current-month tax estimate from canonical finance and tax-profile state.",
+    },
+    "menu|tax_estimate_previous": {
+        "operation_disposition": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "source_evidence": "The frozen Bot calculates a previous-month tax estimate from canonical finance and tax-profile state.",
+    },
+    "menu|tax_estimate_quarter": {
+        "operation_disposition": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "source_evidence": "The frozen Bot calculates a quarterly tax estimate from canonical finance and tax-profile state.",
+    },
+    "menu|tax_export": {
+        "operation_disposition": "CANONICAL_BOT_CSV_EXPORT_MENU",
+        "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
+    },
+    "menu|tax_export_month": {
+        "operation_disposition": "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "source_evidence": "The frozen Bot resolves the current period and sends six canonical CSV accounting files.",
+    },
+    "menu|tax_export_previous": {
+        "operation_disposition": "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "source_evidence": "The frozen Bot resolves the previous period and sends six canonical CSV accounting files.",
+    },
+    "menu|tax_export_quarter": {
+        "operation_disposition": "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "source_evidence": "The frozen Bot resolves the quarterly period and sends six canonical CSV accounting files.",
+    },
+    "menu|tax_export_custom_help": {
+        "operation_disposition": "CANONICAL_BOT_EXPORT_PERIOD_INPUT_GUIDANCE",
+        "source_evidence": "The frozen Bot emits custom-period instructions for the export flow and returns its export keyboard; the Web must not accept or replay that date input.",
+    },
+    "menu|tax_config": {
+        "operation_disposition": "CANONICAL_BOT_TAX_PROFILE_STATE",
+        "source_evidence": "The frozen Bot reads its historical tax-profile/configuration state.",
+    },
+}
+
+
+def _tax_accounting_source_review_dispositions(action: dict[str, str]) -> tuple[str, ...]:
+    """Preserve the action-specific Bot finance boundary in static audit output."""
+
+    return (
+        TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_BASE_DISPOSITIONS[:2]
+        + (str(action["operation_disposition"]),)
+        + TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_BASE_DISPOSITIONS[2:]
+    )
 
 # These main-guide entries lead to video/trend child menus with Bot-local
 # pending state, output/provider guards and canonical purchase branches. The
@@ -4438,6 +4589,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     marketing_navigation_entry = MARKETING_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     guided_start_navigation_entry = GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     system_data_stewardship_entry = SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
+    tax_accounting_guidance_entry = TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
+    tax_accounting_source_review_entry = TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.get(token)
     memory_storage_telegram_only = MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.get(token)
     memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
@@ -4461,6 +4614,41 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "system_data_stewardship_feature_key": str(system_data_stewardship_entry["feature_key"]),
             "system_data_stewardship_authority": str(system_data_stewardship_entry["authority"]),
             "system_data_stewardship_launch_mode": str(system_data_stewardship_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if tax_accounting_guidance_entry is not None:
+        # This finite source-review allow-list can only start an independently
+        # authorized guidance route. It intentionally wins over any generic
+        # finance/tax heuristic without replaying a Bot period, ledger, export
+        # path, tax profile, calculation, payment or file delivery effect.
+        target = str(tax_accounting_guidance_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(tax_accounting_guidance_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
+            "source_dispositions": tuple(tax_accounting_guidance_entry["source_dispositions"]),
+            "source_evidence": str(tax_accounting_guidance_entry["source_evidence"]),
+            "tax_accounting_guidance_feature_key": str(tax_accounting_guidance_entry["feature_key"]),
+            "tax_accounting_guidance_authority": str(tax_accounting_guidance_entry["authority"]),
+            "tax_accounting_guidance_launch_mode": str(tax_accounting_guidance_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if tax_accounting_source_review_entry is not None:
+        # This is deliberately a finite source-review record, not an admin
+        # route. A browser may not reuse Bot calculation/export controls,
+        # canonical finance rows, tax profile values or file delivery state.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+            "source_dispositions": _tax_accounting_source_review_dispositions(tax_accounting_source_review_entry),
+            "source_evidence": str(tax_accounting_source_review_entry["source_evidence"]),
             "evidence": evidence,
         }
     if memory_navigation_entry is not None:
@@ -6619,6 +6807,30 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, contract in SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS.items()
     ]
+    tax_accounting_guidance_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_tax_accounting_guidance_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
+    ]
+    tax_accounting_source_review_contract_rows = [
+        [
+            source,
+            "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED",
+            "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "admin",
+            "Canonical Bot finance/tax operation",
+            ", ".join(_tax_accounting_source_review_dispositions(action)),
+        ]
+        for source, action in sorted(TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.items())
+    ]
     quick_image_planner_contract_rows = [
         [
             "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
@@ -6692,6 +6904,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
         + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
+        + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot tax-menu dispositions: fresh canonical-admin guidance navigation with no finance data, calculation, export, file, ledger, payment or profile action replay.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -6856,6 +7069,22 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\nEvery row above is navigation only. `/admin/system`, `/admin/runtime` and `/admin/backups` repeat canonical signed-admin authorization; `/admin/internal-documents` repeats its distinct signed Web-local-admin guard; `/account/workspace-care` is a signed customer guidance hub only. A Browser cannot use this contract to run health checks, inspect a runtime, change system data, create/delete/restore/download a backup, clean storage, change quota, operate a provider, write a ledger, create a PayOS checkout, mutate a job or claim delivery.\n\n"
         "`menu|billing`, `menu|tax_*`, `menu|clear_stale_jobs_help` and every Video/menu production action remain outside this finite registry. They require their own source, canonical-finance, job or final Video-menu contracts; no namespace fallback grants a Web route.\n",
+    )
+    write(
+        "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md",
+        "# Tax readiness & accounting guidance callback contract\n\n"
+        "The frozen Bot tax menu branches are Telegram administrative guidance and can continue into Bot-local tax profile, period, calculation, report or CSV-delivery flows. The standalone Web never receives a callback token, Telegram identity, finance row, tax profile, date range, period, estimate, calculation, report, export request, CSV/file, payment reference, wallet/Xu ledger, PayOS state, provider state, archive row, attachment or output-delivery claim.\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            tax_accounting_guidance_contract_rows,
+        )
+        + "\n\nEvery guidance row above opens only the exact `/admin/finance/tax-readiness` page after it repeats canonical signed-admin authorization. It is not tax or legal advice, a tax calculator, a canonical finance read model, a report/export API, a file-delivery route, a tax-profile/config/compliance mutation, a payment/ledger/PayOS/provider action or a runtime claim.\n\n"
+        + "The following exact Bot callbacks remain canonical-finance source-review records, not fresh Web navigation or an implied export implementation:\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            tax_accounting_source_review_contract_rows,
+        )
+        + "\n\n`finance_compliance*`, `archive|dept|tax_invoice` and every unknown `menu|tax_*` value remain outside both finite registries. They require separately reviewed canonical finance/read/write or private delivery contracts; no prefix or label creates a Web route.\n",
     )
     write(
         "inventory.md",

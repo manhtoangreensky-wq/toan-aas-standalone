@@ -1610,6 +1610,10 @@
   adminPage("/admin/analytics", "Analytics", "Campaign/performance analytics là dữ liệu vận hành đã redaction; không có export hay tính doanh thu ở client.", ICONS.reports, {}, ["/admin/campaign_stats", "/admin/campaign_report", "/admin/creative_report"]);
   adminPage("/admin/growth", "Growth & Affiliate", "Điều phối lead, referral, affiliate, promo và growth review trong một lớp quản trị rõ authority; không tự payout, gửi campaign hoặc sửa attribution từ browser.", ICONS.users, { layout: "admin-domain" }, ["/admin/affiliates", "/admin/affiliate", "/admin/referral"]);
   adminPage("/admin/finance", "Finance & Revenue", "Không gian điều phối tài chính chỉ đọc cho payment, topup, revenue, refund, giá và package; Bot/PayOS vẫn là writer canonical.", ICONS.payments, { layout: "admin-domain" }, ["/admin/financials", "/admin/accounting"]);
+  adminPage("/admin/finance/tax-readiness", "Tax Readiness & Accounting Guidance", "Checklist chuẩn bị hồ sơ và handoff accounting dành cho canonical admin; trang không tính thuế, không đọc ledger, không xuất file hay thay đổi dữ liệu tài chính.", ICONS.document, {
+    layout: "admin-tax-readiness", action: "none", status: "read_only",
+    notes: ["Đây là hướng dẫn vận hành nội bộ, không phải tư vấn thuế/pháp lý và không thay thế người có chuyên môn được ủy quyền.", "Trang không đọc transaction, hồ sơ thuế, kỳ kê khai, số tiền, payment reference hay dữ liệu tài chính khác từ Bot/Core Bridge."]
+  });
   adminPage("/admin/trends", "Trends & Reference", "Tổ chức research, reference và trend brief cho đội vận hành; Web không scrape, không gọi provider hay tự publish nội dung.", ICONS.prompt, { layout: "admin-domain" }, ["/admin/references", "/admin/research", "/admin/trend"]);
   adminPage("/admin/audit", "Audit logs", "Dấu vết hành động write và quyết định automation phải đến từ audit canonical.", ICONS.security);
   adminPage("/admin/reports", "Báo cáo", "Tạo báo cáo trên server; không export dữ liệu từ shell khi chưa kiểm tra quyền.", ICONS.reports);
@@ -20139,7 +20143,7 @@
 
   function adminDirectoryGroup(path) {
     if (["/admin", "/admin/users", "/admin/wallet", "/admin/leads", "/admin/tickets", "/admin/support", "/admin/access", "/admin/security"].includes(path)) return "identity";
-    if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance"].includes(path)) return "finance";
+    if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance", "/admin/finance/tax-readiness"].includes(path)) return "finance";
     if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
     if (["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics"].includes(path)) return "content-ops";
     if (["/admin/jobs", "/admin/jobs/failed", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/automation", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
@@ -20247,6 +20251,34 @@
       <section class="portal-stewardship-section" aria-labelledby="stewardship-local-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Web-owned surfaces</span><h2 id="stewardship-local-title">Observability và hồ sơ nội bộ</h2><p>Các màn hình local vẫn cần signed Web admin và kiểm tra server-side tại từng route.</p></div>${badge("read_only")}</div><div class="portal-stewardship-grid">${localContent}</div></section>
       <section class="portal-stewardship-section" aria-labelledby="stewardship-canonical-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Separately guarded</span><h2 id="stewardship-canonical-title">System, runtime và backup canonical</h2><p>Chỉ mở khi authority canonical còn hợp lệ; hub không proxy, cache hoặc thay thế read model này.</p></div>${badge(canonicalAdmin ? "read_only" : "guarded")}</div><div class="portal-stewardship-grid">${canonicalContent}</div></section>
       <section class="portal-card portal-card-pad portal-stewardship-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">No hidden controls</span><h2 class="portal-card-title">Ranh giới vận hành</h2><p class="portal-card-subtitle">Đây là directory có chủ ý, không phải control plane, trình tự xử lý lỗi hay cơ chế tự sửa.</p></div>${badge("read_only")}</div><ul><li><span aria-hidden="true">${portalIcon(ICONS.system)}</span><span><strong>Không deploy hoặc repair</strong><small>Không có runbook executor, healthcheck, restart, restore hay hành động hạ tầng trong browser.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.providers)}</span><span><strong>Không gọi provider hoặc bridge</strong><small>Không tạo request provider, không đọc payload, credential, raw log hoặc trạng thái runtime.</small></span></li><li><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><span><strong>Không có payment hoặc ledger action</strong><small>Không tác động Xu, PayOS, entitlement, refund, job charge hoặc canonical record.</small></span></li></ul></section>
+    </article>`;
+  }
+
+  function renderAdminTaxReadiness(page, context) {
+    // Guidance is intentionally literal and data-free. The server already
+    // applies canonical-admin authorization to this exact route; this
+    // renderer must never turn a checklist into a finance read model, tax
+    // calculator, record exporter, or accounting mutation surface.
+    const checkpoints = [
+      { icon: ICONS.document, title: "Xác định nguồn hồ sơ", text: "Ghi nhận nơi lưu hồ sơ được phê duyệt và chủ sở hữu phụ trách trước khi bắt đầu review." },
+      { icon: ICONS.reports, title: "Chuẩn bị đối chiếu", text: "Sắp xếp câu hỏi, kỳ cần rà soát và các điểm cần làm rõ để người có thẩm quyền xử lý." },
+      { icon: ICONS.security, title: "Chuyển đúng người phụ trách", text: "Handoff theo quy trình nội bộ tới kế toán hoặc tư vấn được ủy quyền; không gửi dữ liệu nhạy cảm qua màn hình này." }
+    ];
+    const boundaries = [
+      { icon: ICONS.reports, title: "Không tính hoặc ước tính thuế", text: "Không có biểu mẫu, công thức, số tiền, kỳ kê khai, hồ sơ tài chính hoặc kết luận nghiệp vụ trong browser." },
+      { icon: ICONS.document, title: "Không tạo hoặc xuất chứng từ", text: "Không tạo CSV/PDF, báo cáo, file bàn giao hay tải dữ liệu từ Bot, Core Bridge hoặc kho lưu trữ." },
+      { icon: ICONS.payments, title: "Không thay đổi financial authority", text: "Không đọc hoặc ghi Xu, payment, PayOS, refund, revenue, pricing, ledger hay cấu hình tài chính." }
+    ];
+    const financeLink = serverAuthorizesAdminRoute(context, "/admin/finance")
+      ? '<a class="portal-button portal-button--quiet" href="/admin/finance">Về Finance &amp; Revenue</a>'
+      : "";
+    const checkpointCards = checkpoints.map((item) => `<article class="portal-tax-readiness-card"><span class="portal-tax-readiness-card-icon" aria-hidden="true">${portalIcon(item.icon)}</span><div><h3>${safeText(item.title)}</h3><p>${safeText(item.text)}</p></div></article>`).join("");
+    const boundaryCards = boundaries.map((item) => `<li><span aria-hidden="true">${portalIcon(item.icon)}</span><span><strong>${safeText(item.title)}</strong><small>${safeText(item.text)}</small></span></li>`).join("");
+    return `<article class="portal-page portal-admin-tax-readiness">${renderHero(page, context)}
+      <section class="portal-tax-readiness-intro"><div><span class="portal-section-kicker">Canonical admin guidance · read-only</span><h2>Chuẩn bị review accounting có cấu trúc, không biến Web thành công cụ tính thuế</h2><p>Trang này giúp đội vận hành chuẩn bị checklist và handoff rõ ràng. Mọi xác minh dữ liệu, phân loại nghiệp vụ và kết luận vẫn thuộc quy trình nội bộ cùng người có thẩm quyền.</p></div><div class="portal-tax-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Route được bảo vệ riêng</strong><small>Chỉ signed canonical admin được mở hướng dẫn này</small></span></div></section>
+      <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="tax-readiness-checklist-title">Ba điểm kiểm tra trước khi handoff</h2><p>Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính.</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
+      <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Chuẩn bị phạm vi review</strong><span>Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ.</span></li><li><strong>Xác thực ở hệ thống được phê duyệt</strong><span>Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép.</span></li><li><strong>Ghi nhận handoff có kiểm soát</strong><span>Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm.</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
+      <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -20413,7 +20445,8 @@
         { title: "Topups", text: "Review nạp Xu và đối soát qua server, không cấp credit trực tiếp.", route: "/admin/topups", icon: ICONS.payments },
         { title: "Revenue", text: "Mở revenue projection đã redaction và không tính toán thay backend.", route: "/admin/revenue", icon: ICONS.reports },
         { title: "Refunds", text: "Review refund canonical; write chỉ mở khi có approval/idempotency/audit adapter.", route: "/admin/refunds", icon: ICONS.payments },
-        { title: "Giá & packages", text: "Đi tới catalog pricing/package để review chứ không thay rate ở client.", route: "/admin/pricing", icon: ICONS.pricing }
+        { title: "Giá & packages", text: "Đi tới catalog pricing/package để review chứ không thay rate ở client.", route: "/admin/pricing", icon: ICONS.pricing },
+        { title: "Tax readiness", text: "Mở checklist và handoff accounting chỉ đọc; không tính thuế, xuất file hay đọc ledger.", route: "/admin/finance/tax-readiness", icon: ICONS.document }
       ],
       boundaries: ["Không cộng/trừ Xu, finalize PayOS hoặc đối soát thanh toán từ browser.", "Không nhận bill, TXID, QR, số tài khoản hoặc chứng từ thủ công ở shell này.", "Mọi write tài chính cần canonical role, CSRF, confirmation, idempotency và audit."]
     },
@@ -21826,6 +21859,7 @@
       case "operations-admin": return renderOperationsAdmin(page, context);
       case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
       case "admin-system-stewardship": return renderAdminSystemStewardship(page, context);
+      case "admin-tax-readiness": return renderAdminTaxReadiness(page, context);
       case "admin-security-access-posture": return renderAdminSecurityAccessPosture(page, context);
       case "reliability-admin": return renderReliabilityAdmin(page, context);
       case "operations-desk": return renderOperationsDesk(page, context);

@@ -209,6 +209,7 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_analytics", "Analytics", "admin", "/admin/analytics", "admin"),
     WebFeature("admin_growth", "Growth & Affiliate", "admin", "/admin/growth", "admin"),
     WebFeature("admin_finance", "Finance & Revenue", "admin", "/admin/finance", "admin"),
+    WebFeature("admin_tax_readiness", "Tax Readiness & Accounting Guidance", "admin", "/admin/finance/tax-readiness", "admin", description="Hướng dẫn chuẩn bị hồ sơ tài chính/tax chỉ đọc cho canonical admin; không tính thuế, không đọc ledger, không xuất file hay thay đổi cấu hình tài chính."),
     WebFeature("admin_trends", "Trends & Reference", "admin", "/admin/trends", "admin"),
     WebFeature("admin_audit", "Nhật ký audit", "admin", "/admin/audit", "admin"),
     WebFeature("admin_internal_documents", "Kho hồ sơ nội bộ", "admin", "/admin/internal-documents", "admin", description="Kho hồ sơ Web-native riêng cho local admin: blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents."),
