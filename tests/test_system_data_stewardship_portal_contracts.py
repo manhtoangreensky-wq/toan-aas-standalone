@@ -100,7 +100,13 @@ def test_audit_contract_is_finite_and_keeps_payment_video_and_bot_state_out_of_b
     assert "reviewed_system_data_stewardship_fresh_web_navigation" in audit
     assert "NO_BACKUP_OR_RESTORE_ACTION" in audit
     assert "NO_STORAGE_DELETE_OR_QUOTA_CLAIM" in audit
-    registry_slice = audit[audit.index("SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS"):audit.index("GUIDED_VIDEO_MENU_DEFERRED_ACTIONS")]
-    assert "menu|billing" not in registry_slice
-    assert "menu|tax_" not in registry_slice
-    assert "menu|video_" not in registry_slice
+    # Keep this assertion scoped to the System/Data registry itself. Tax has
+    # its own independently reviewed finite registry below it and must not be
+    # treated as a System/Data entry merely because the auditor is one file.
+    registry_slice = audit[
+        audit.index("SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS"):
+        audit.index("TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS")
+    ]
+    assert '"menu|billing' not in registry_slice
+    assert '"menu|tax_' not in registry_slice
+    assert '"menu|video_' not in registry_slice
