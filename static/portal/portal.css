@@ -4646,11 +4646,11 @@ button, a, input, select, textarea { touch-action: manipulation; }
 .portal-tax-readiness-intro-status strong,
 .portal-tax-readiness-intro-status small { display: block; }
 .portal-tax-readiness-intro-status strong { color: #dffaf7; font-size: 12px; line-height: 1.35; }
-.portal-tax-readiness-intro-status small { margin-top: 3px; color: #8eabb7; font-size: 10px; line-height: 1.4; }
+.portal-tax-readiness-intro-status small { margin-top: 3px; color: #8eabb7; font-size: 12px; line-height: 1.45; }
 .portal-tax-readiness-section { display: grid; gap: 11px; }
 .portal-tax-readiness-section .portal-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
 .portal-tax-readiness-section .portal-section-heading h2 { margin: 4px 0 0; color: #eaf6f8; font-size: 18px; letter-spacing: -.025em; }
-.portal-tax-readiness-section .portal-section-heading p { max-width: 700px; margin: 6px 0 0; color: #9fb7c3; font-size: 11px; line-height: 1.55; }
+.portal-tax-readiness-section .portal-section-heading p { max-width: 700px; margin: 6px 0 0; color: #9fb7c3; font-size: 12px; line-height: 1.55; }
 .portal-tax-readiness-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
 .portal-tax-readiness-card {
   display: grid;
@@ -4664,7 +4664,7 @@ button, a, input, select, textarea { touch-action: manipulation; }
   background: linear-gradient(145deg, rgba(20, 39, 53, .94), rgba(13, 27, 40, .98));
 }
 .portal-tax-readiness-card h3 { margin: 0; color: #edf9fb; font-size: 14px; letter-spacing: -.018em; line-height: 1.35; }
-.portal-tax-readiness-card p { margin: 7px 0 0; color: #a6bdc8; font-size: 11px; line-height: 1.55; }
+.portal-tax-readiness-card p { margin: 7px 0 0; color: #a6bdc8; font-size: 12px; line-height: 1.55; }
 .portal-tax-readiness-process ol {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -4700,16 +4700,16 @@ button, a, input, select, textarea { touch-action: manipulation; }
 }
 .portal-tax-readiness-process li strong,
 .portal-tax-readiness-process li span { display: block; }
-.portal-tax-readiness-process li strong { color: #dcecef; font-size: 11px; line-height: 1.42; }
-.portal-tax-readiness-process li span { margin-top: 4px; color: #94adba; font-size: 10px; line-height: 1.5; }
+.portal-tax-readiness-process li strong { color: #dcecef; font-size: 12px; line-height: 1.42; }
+.portal-tax-readiness-process li span { margin-top: 4px; color: #94adba; font-size: 12px; line-height: 1.5; }
 .portal-tax-readiness-boundary ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
 .portal-tax-readiness-boundary li { display: grid; grid-template-columns: 29px minmax(0, 1fr); gap: 10px; align-items: start; min-width: 0; padding: 12px; border: 1px solid #263d4d; border-radius: 13px; background: rgba(7, 20, 31, .34); }
 .portal-tax-readiness-boundary li > span:first-child { display: grid; place-items: center; width: 29px; height: 29px; color: #76ddd0; }
 .portal-tax-readiness-boundary li > span:first-child .portal-icon { width: 16px; height: 16px; }
 .portal-tax-readiness-boundary strong,
 .portal-tax-readiness-boundary small { display: block; }
-.portal-tax-readiness-boundary strong { color: #dcecef; font-size: 11px; line-height: 1.42; }
-.portal-tax-readiness-boundary small { margin-top: 4px; color: #94adba; font-size: 10px; line-height: 1.5; }
+.portal-tax-readiness-boundary strong { color: #dcecef; font-size: 12px; line-height: 1.42; }
+.portal-tax-readiness-boundary small { margin-top: 4px; color: #94adba; font-size: 12px; line-height: 1.5; }
 
 @media (max-width: 980px) {
   .portal-tax-readiness-grid,

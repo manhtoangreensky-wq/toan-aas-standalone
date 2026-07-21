@@ -66,6 +66,8 @@ def test_tax_readiness_renderer_is_static_guidance_and_finance_directory_card_is
     assert "Không tính hoặc ước tính thuế" in renderer
     assert "Không tạo hoặc xuất chứng từ" in renderer
     assert "Không thay đổi financial authority" in renderer
+    assert '${badge("guarded")}' not in renderer
+    assert renderer.count('${badge("read_only")}') >= 3
 
     for selector in (
         ".portal-admin-tax-readiness",
@@ -74,6 +76,7 @@ def test_tax_readiness_renderer_is_static_guidance_and_finance_directory_card_is
         ".portal-tax-readiness-card",
         ".portal-tax-readiness-process",
         ".portal-tax-readiness-boundary",
+        "font-size: 12px",
         "@media (max-width: 980px)",
         "@media (max-width: 700px)",
     ):
