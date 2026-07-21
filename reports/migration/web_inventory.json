@@ -173,12 +173,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3544,
+      "line": 3574,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3552,
+      "line": 3582,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -280,7 +280,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4933,
+      "line": 4979,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6775,7 +6775,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 871,
+      "occurrences": 873,
       "provider": "PayOS"
     },
     {
@@ -7003,7 +7003,7 @@
         "copyfast_subtitle_workspace.py",
         "copyfast_support.py"
       ],
-      "occurrences": 2141,
+      "occurrences": 2149,
       "provider": "Telegram"
     }
   ],
@@ -12725,9 +12725,9 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 283,
-  "source_files_scanned": 283,
-  "source_fingerprint_sha256": "4c5f85680f6f7340643aa5f6bf8a8d54cf7e21e3aeadedf78b75dfe20eb7efc9",
+  "source_files_discovered": 284,
+  "source_files_scanned": 284,
+  "source_fingerprint_sha256": "41a28da0238ea4ba943afed06188a2f4973a5225d9b1890ca8c33bba318cf456",
   "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast83-tax-readiness-accounting-guidance",
   "ui_path_references": [
     {

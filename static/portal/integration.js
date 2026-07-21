@@ -700,8 +700,8 @@
   function adminBridgeTargetForPath(path) {
     const normalized = String(path || "/admin").split("?")[0];
     // Tax Readiness is a literal Web guidance page. Keep the exact path out
-    // of the generic finance module parser so it can never become a
-    // `/admin/modules/finance?record_id=tax-readiness` bridge request.
+    // of the generic finance module parser so it can never become a bridge
+    // request or hydrate a canonical finance record.
     if (isNativeAdminTaxReadinessPath(normalized)) {
       return { endpoint: "", module: "tax-readiness", requestedModule: "tax-readiness", recordId: "", supported: false };
     }

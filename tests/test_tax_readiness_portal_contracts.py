@@ -91,7 +91,9 @@ def test_tax_readiness_is_isolated_from_generic_finance_bridge_hydration_and_ref
     assert '=== "/admin/finance/tax-readiness"' in predicate
     bridge_target = _function_source(integration, "adminBridgeTargetForPath")
     assert "if (isNativeAdminTaxReadinessPath(normalized))" in bridge_target
-    assert "/admin/modules/finance?record_id=tax-readiness" in bridge_target
+    assert 'return { endpoint: "", module: "tax-readiness", requestedModule: "tax-readiness", recordId: "", supported: false };' in bridge_target
+    assert "record_id=tax-readiness" not in bridge_target
+    assert "return target.supported ? api(target.endpoint) : localAdminCompatibilityGuard(target);" in integration
 
     current_guard = _function_source(integration, "canonicalAdminDataRequestIsCurrent")
     admin_hydrator = _function_source(integration, "hydrateCanonicalAdminData")
@@ -128,18 +130,25 @@ def test_tax_readiness_audit_contract_is_finite_and_documents_the_no_transfer_bo
 
     registry = audit[
         audit.index("TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS"):
-        audit.index("GUIDED_VIDEO_MENU_DEFERRED_ACTIONS")
+        audit.index("TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_BASE_DISPOSITIONS")
     ]
     for callback in (
         "menu|finance_tax",
         "menu|tax_checklist",
-        "menu|tax_export",
         "menu|tax_custom_help",
-        "menu|tax_export_custom_help",
     ):
         assert callback in registry
-    for excluded in ("menu|tax_estimate", "menu|tax_config", "menu|tax_export_month", "menu|tax_*"):
+    for excluded in ("menu|tax_estimate", "menu|tax_config", "menu|tax_export", "menu|tax_export_custom_help", "menu|tax_export_month", "menu|tax_*"):
         assert f'"{excluded}":' not in registry
+
+    assert "TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS" in audit
+    assert "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED" in audit
+    source_review_registry = audit[
+        audit.index("TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS"):
+        audit.index("GUIDED_VIDEO_MENU_DEFERRED_ACTIONS")
+    ]
+    for callback in ("menu|tax_export", "menu|tax_export_month", "menu|tax_export_custom_help"):
+        assert callback in source_review_registry
 
     assert "Separately guarded Tax Readiness & Accounting Guidance" in catalog
     assert "fresh checklist/handoff guidance only" in catalog

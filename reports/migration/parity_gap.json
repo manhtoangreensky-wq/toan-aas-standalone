@@ -23485,17 +23485,30 @@
       "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121788
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_config",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_TAX_PROFILE_STATE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot reads its historical tax-profile/configuration state.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -23525,69 +23538,19 @@
       "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
     },
     {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 121786
-      },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
-      "source": "menu|tax_estimate",
-      "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 121794
-      },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
-      "source": "menu|tax_estimate_month",
-      "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 121794
-      },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
-      "source": "menu|tax_estimate_previous",
-      "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 121795
-      },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
-      "source": "menu|tax_estimate_quarter",
-      "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
-    },
-    {
       "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121786
       },
-      "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
-      "source": "menu|tax_export",
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "source": "menu|tax_estimate",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
-        "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_CANONICAL_FINANCE_DATA_TRANSFER",
         "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
         "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
@@ -23595,13 +23558,114 @@
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot export menu can continue to a period-specific Telegram file flow. The Web route is guidance only: it creates no report, CSV, file, delivery URL, finance read or export request.",
+      "source_evidence": "The frozen Bot calculates a tax estimate from canonical finance summary and historical tax-profile state.",
       "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/admin/finance/tax-readiness",
-      "tax_accounting_guidance_authority": "SIGNED_CANONICAL_ADMIN_READ",
-      "tax_accounting_guidance_feature_key": "admin_tax_readiness",
-      "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 121794
+      },
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "source": "menu|tax_estimate_month",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot calculates a current-month tax estimate from canonical finance and tax-profile state.",
+      "source_kind": "callback_data",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 121794
+      },
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "source": "menu|tax_estimate_previous",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot calculates a previous-month tax estimate from canonical finance and tax-profile state.",
+      "source_kind": "callback_data",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 121795
+      },
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "source": "menu|tax_estimate_quarter",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot calculates a quarterly tax estimate from canonical finance and tax-profile state.",
+      "source_kind": "callback_data",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 121786
+      },
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
+      "source": "menu|tax_export",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_MENU",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
+      "source_kind": "callback_data",
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -23609,12 +23673,14 @@
         "file": "bot.py",
         "line": 121796
       },
-      "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
-        "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_MENU",
+        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_CANONICAL_FINANCE_DATA_TRANSFER",
         "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
         "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
@@ -23622,13 +23688,10 @@
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot export menu can continue to a period-specific Telegram file flow. The Web route is guidance only: it creates no report, CSV, file, delivery URL, finance read or export request.",
+      "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/admin/finance/tax-readiness",
-      "tax_accounting_guidance_authority": "SIGNED_CANONICAL_ADMIN_READ",
-      "tax_accounting_guidance_feature_key": "admin_tax_readiness",
-      "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -23636,12 +23699,14 @@
         "file": "bot.py",
         "line": 121835
       },
-      "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
-        "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_MENU",
+        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_CANONICAL_FINANCE_DATA_TRANSFER",
         "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
         "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
@@ -23649,13 +23714,10 @@
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot export menu can continue to a period-specific Telegram file flow. The Web route is guidance only: it creates no report, CSV, file, delivery URL, finance read or export request.",
+      "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/admin/finance/tax-readiness",
-      "tax_accounting_guidance_authority": "SIGNED_CANONICAL_ADMIN_READ",
-      "tax_accounting_guidance_feature_key": "admin_tax_readiness",
-      "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -23663,12 +23725,14 @@
         "file": "bot.py",
         "line": 121843
       },
-      "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
-        "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_MENU",
+        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_CANONICAL_FINANCE_DATA_TRANSFER",
         "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
         "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
@@ -23676,13 +23740,10 @@
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot export menu can continue to a period-specific Telegram file flow. The Web route is guidance only: it creates no report, CSV, file, delivery URL, finance read or export request.",
+      "source_evidence": "The frozen Bot opens the period selector for its canonical six-file CSV delivery flow.",
       "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/admin/finance/tax-readiness",
-      "tax_accounting_guidance_authority": "SIGNED_CANONICAL_ADMIN_READ",
-      "tax_accounting_guidance_feature_key": "admin_tax_readiness",
-      "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -23690,12 +23751,14 @@
         "file": "bot.py",
         "line": 121804
       },
-      "resolution": "reviewed_tax_accounting_guidance_fresh_web_navigation",
+      "fallback_family": "menu",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export_custom_help",
       "source_dispositions": [
         "BOT_ADMIN_ONLY",
-        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
-        "BOT_TAX_GUIDANCE_NOT_REPLAYED",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_EXPORT_PERIOD_INPUT_GUIDANCE",
+        "SOURCE_STATE_MACHINE_REQUIRED",
         "NO_CANONICAL_FINANCE_DATA_TRANSFER",
         "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
         "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
@@ -23703,52 +23766,88 @@
         "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot custom-export help is a Telegram instruction branch. The Web opens only a fresh checklist; it cannot create a custom export, process a file, inspect finance data or mutate a tax profile.",
+      "source_evidence": "The frozen Bot emits custom-period instructions for the export flow and returns its export keyboard; the Web must not accept or replay that date input.",
       "source_kind": "callback_data",
-      "status": "NAVIGATION_ONLY",
-      "target": "/admin/finance/tax-readiness",
-      "tax_accounting_guidance_authority": "SIGNED_CANONICAL_ADMIN_READ",
-      "tax_accounting_guidance_feature_key": "admin_tax_readiness",
-      "tax_accounting_guidance_launch_mode": "WEB_NAVIGATION"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121803
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export_month",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the current period and sends six canonical CSV accounting files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121803
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export_previous",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the previous period and sends six canonical CSV accounting files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121804
       },
       "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
       "source": "menu|tax_export_quarter",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_FINANCE_TAX_STATE",
+        "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+        "NO_TAX_ESTIMATE_OR_FINANCIAL_CALCULATION",
+        "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+        "NO_TAX_PROFILE_OR_COMPLIANCE_MUTATION",
+        "NO_PAYOS_WALLET_LEDGER_OR_PROVIDER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot resolves the quarterly period and sends six canonical CSV accounting files.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "customer",
@@ -57327,7 +57426,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 52,
+      "count": 57,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -57620,11 +57719,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 355,
+      "count": 360,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 52,
+          "count": 57,
           "family": "menu",
           "priority": "P0"
         },
@@ -57862,12 +57961,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 90.71,
+  "mapping_coverage_percent": 90.58,
   "mapping_status_counts": {
     "COPIED_GUARDED": 2236,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 714,
-    "NEEDS_FEATURE_DISPOSITION": 355,
+    "NAVIGATION_ONLY": 709,
+    "NEEDS_FEATURE_DISPOSITION": 360,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -57889,7 +57988,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 90.71,
+  "safe_disposition_coverage_percent": 90.58,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -57899,13 +57998,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3468,
+    "resolved_static_source_count": 3463,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 38,
-    "unresolved_source_count": 355
+    "unresolved_source_count": 360
   },
   "static_web_surface_coverage_percent": 58.49,
   "telegram_link_callback_contract": {

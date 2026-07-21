@@ -2484,9 +2484,7 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
     expected = {
         "menu|finance_tax",
         "menu|tax_checklist",
-        "menu|tax_export",
         "menu|tax_custom_help",
-        "menu|tax_export_custom_help",
     }
     assert set(audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == expected
 
@@ -2512,21 +2510,52 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
         ):
             assert disposition in mapped["source_dispositions"]
 
-    # A finite review is never a `menu|tax_*` authorization. Calculations,
-    # tax profile/configuration, period exports, compliance and archive state
-    # remain distinct canonical/source-review boundaries.
+    # The frozen Bot classifies its entire tax_ family as admin-only. The
+    # finite guidance list cannot turn calculation, profile or CSV branches
+    # into a Web adapter; exact sensitive actions remain canonical-finance
+    # source-review records and even an unknown tax_ callback stays admin.
+    canonical_finance_actions = {
+        "menu|tax_estimate": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "menu|tax_estimate_month": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "menu|tax_estimate_previous": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "menu|tax_estimate_quarter": "CANONICAL_BOT_TAX_ESTIMATE_CALCULATION",
+        "menu|tax_config": "CANONICAL_BOT_TAX_PROFILE_STATE",
+        "menu|tax_export": "CANONICAL_BOT_CSV_EXPORT_MENU",
+        "menu|tax_export_month": "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "menu|tax_export_previous": "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "menu|tax_export_quarter": "CANONICAL_BOT_CSV_EXPORT_DELIVERY",
+        "menu|tax_export_custom_help": "CANONICAL_BOT_EXPORT_PERIOD_INPUT_GUIDANCE",
+    }
+    assert set(audit.TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS) == set(canonical_finance_actions)
+    for token, operation_disposition in canonical_finance_actions.items():
+        descriptor = audit.TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS[token]
+        assert descriptor["operation_disposition"] == operation_disposition
+        assert token not in audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
+        mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["classification"] == "admin"
+        assert mapped["target"] == "CANONICAL_TAX_ACCOUNTING_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "reviewed_tax_accounting_callback_requires_canonical_finance_contract"
+        for disposition in (
+            "BOT_ADMIN_ONLY",
+            "CANONICAL_BOT_FINANCE_TAX_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_CANONICAL_FINANCE_DATA_TRANSFER",
+            "NO_REPORT_EXPORT_OR_FILE_DELIVERY",
+            "NO_RUNTIME_CLAIM",
+        ):
+            assert disposition in mapped["source_dispositions"]
+        assert operation_disposition in mapped["source_dispositions"]
+
     for token in (
-        "menu|tax_estimate",
-        "menu|tax_config",
-        "menu|tax_export_month",
-        "menu|tax_export_previous",
-        "menu|tax_export_quarter",
         "menu|finance_compliance",
         "archive|dept|tax_invoice",
         "menu|tax_future",
     ):
         assert token not in audit.TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
         mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        if token.startswith("menu|tax_"):
+            assert mapped["classification"] == "admin"
         assert mapped["target"] != "/admin/finance/tax-readiness"
         assert mapped["resolution"] != "reviewed_tax_accounting_guidance_fresh_web_navigation"
 
