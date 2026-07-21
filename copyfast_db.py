@@ -76,6 +76,23 @@ def asset_vault_enabled() -> bool:
     return os.environ.get("WEBAPP_ASSET_VAULT_ENABLED", "false").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def asset_vault_video_preview_enabled() -> bool:
+    """Whether the bounded private Asset Vault video inspector is enabled.
+
+    This is a read-only, same-origin Blob preview of an owner's already stored
+    video.  It deliberately does not enable Video Studio, Bot/Core Bridge,
+    FFmpeg, providers, jobs, wallet/Xu, PayOS, publishing or a public media
+    delivery surface.  Requiring the Asset Vault flag as well keeps the
+    effective capability fail-closed when the private storage boundary is off.
+    """
+
+    return (
+        asset_vault_enabled()
+        and os.environ.get("WEBAPP_VIDEO_PREVIEW_ENABLED", "false").strip().lower()
+        in {"1", "true", "yes", "on"}
+    )
+
+
 def project_package_enabled() -> bool:
     """Whether immutable, Web-owned Project Package exports are enabled.
 

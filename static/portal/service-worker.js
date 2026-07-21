@@ -74,6 +74,13 @@ const PUBLIC_NAVIGATION_PATHS = Object.freeze([
 // if the public shell grows later: document brief/plan metadata must never be
 // returned from Cache Storage after a user signs out or switches accounts.
 const PRIVATE_PATH_PREFIXES = Object.freeze([
+  // Asset Vault metadata, private downloads and same-origin Blob previews are
+  // owner-scoped. Keep both the API and inspector page explicit even though
+  // SHELL is already an allow-list, so a future cache expansion cannot retain
+  // a video Blob response after sign-out or an account switch.
+  "/" + "api/v1/asset-vault",
+  "/asset-vault",
+  "/video/preview",
   "/" + "api/v1/document-operations",
   "/documents/ocr",
   "/documents/pdf-ocr",

@@ -189,6 +189,7 @@ ACCOUNT_ACTIVITY_LABELS = {
     "web.studio_document.restore": ("Khôi phục Studio Document", "Project Center"),
     "web.asset_vault.upload": ("Lưu tệp vào Asset Vault", "Web Workspace"),
     "web.asset_vault.archive": ("Lưu trữ tệp Asset Vault", "Web Workspace"),
+    "web.asset_vault.video_preview": ("Xem trước video private", "Web Workspace"),
     "web.project_package.export": ("Xuất Project Package", "Web Workspace"),
     "web.project_package.export_failed": ("Project Package chưa hoàn tất", "Web Workspace"),
     "web.document_operation.pdf_split": ("Tách PDF riêng tư", "Web Workspace"),
@@ -459,6 +460,13 @@ def _flags() -> dict[str, bool]:
         # Asset Vault is a Web-owned private file surface. It is disabled by
         # default until a dedicated persistent volume is configured.
         "asset_vault_enabled": enabled("WEBAPP_ASSET_VAULT_ENABLED", False),
+        # Video Preview is a read-only, owner-scoped Asset Vault inspection
+        # surface.  Its effective flag does not unlock Video Studio, Bot
+        # execution, providers, FFmpeg, jobs, wallet/Xu, PayOS or payments.
+        "video_preview_enabled": (
+            enabled("WEBAPP_ASSET_VAULT_ENABLED", False)
+            and enabled("WEBAPP_VIDEO_PREVIEW_ENABLED", False)
+        ),
         # Project Package creates a separate, immutable ZIP artifact from
         # Web-owned Project data. It has its own persistent storage boundary
         # and is never a Bot job, provider request, wallet or PayOS action.

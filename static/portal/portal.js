@@ -1330,7 +1330,16 @@
   featurePage("/video/quick", "Quick Video", "Khởi tạo bản nháp video nhanh; không có kết quả giả lập trong UI.", ICONS.video, FIELD_SETS.videoContextual);
   featurePage("/video/multiscene", "Video nhiều cảnh", "Chuẩn bị nhiều cảnh và các thành phần media trước bước estimate.", ICONS.video, FIELD_SETS.videoStoryboard);
   readOnlyPage("/video/progress", "Tiến độ video", "Theo dõi các job video được bridge trả về cho phiên sở hữu.", ICONS.video, "jobs");
-  readOnlyPage("/video/preview", "Xem trước video", "Chỉ mở preview có URL ký tạm thời và output đã qua validation.", ICONS.video, "assets");
+  // Preview is a direct Web-native Asset Vault inspector, deliberately kept
+  // outside the broad Video catalogue. It creates no job/output or public URL
+  // and only plays a verified Blob in the current signed browser session.
+  customerPage("/video/preview", "Video Preview & Inspector", "Mở MP4/WebM private từ Asset Vault trong Blob tạm của phiên hiện tại.", ICONS.video, {
+    layout: "video-preview", type: "video-preview", fields: [], action: "none", status: "processing",
+    notes: [
+      "Chỉ MP4 hoặc WebM active, tối đa 20 MiB, thuộc Asset Vault của signed Web account hiện tại mới xuất hiện. Browser không nhận path, hash, storage key, URL ký hoặc URL công khai.",
+      "Preview chỉ là Blob cùng origin trong tab hiện tại. Không có Bot, provider, FFmpeg, job, Xu, PayOS, PWA cache hay kết quả thành công giả; codec không giải mã được sẽ được báo rõ."
+    ]
+  });
   readOnlyPage("/video/export", "Xuất video", "Xuất file chỉ khi output hoàn tất, thuộc sở hữu người dùng và được ký tạm thời.", ICONS.video, "assets");
   guidedFeaturePage("/video/add-ons", "Video finalization", "Chọn các thành phần hoàn thiện video theo cùng cấu trúc voice, music, subtitle và logo của Bot.", ICONS.video, "video-finalization", [], [
     "Video finalization chỉ điều hướng tới workflow đã đăng ký. Mux/attachment vẫn cần job adapter canonical của Bot.",
@@ -14137,6 +14146,74 @@
     return `<section class="portal-card portal-card-pad portal-video-poster-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Chi tiết Video Poster</h2><p class="portal-card-subtitle">${safeText(`${VIDEO_POSTER_PORTAL_POSITIONS[operation.poster_position]} · ${sourceFacts}`)}</p></div>${badge(displayState)}</div><div class="portal-video-poster-detail-summary"><div><span>Trạng thái</span><strong>${safeText(videoPosterStateLabel(displayState))}</strong></div><div><span>Output</span><strong>${safeText(outputFacts)}</strong></div><div><span>Cập nhật</span><strong>${safeText(operation.updated_at)}</strong></div></div><ol class="portal-video-poster-timeline" aria-label="Timeline Video Poster">${events.map((event) => `<li><span aria-hidden="true"></span><div><strong>${safeText(videoPosterStateLabel(event.state))}</strong><small>${safeText(event.created_at)}</small></div></li>`).join("")}</ol></section>`;
   }
 
+  function renderVideoPreview(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["video-preview-view"] === true);
+    const canLoad = Boolean(context.capabilities && context.capabilities["video-preview-load"] === true);
+    const canClear = Boolean(context.capabilities && context.capabilities["video-preview-clear"] === true);
+    const references = context.videoPreviewReferences && typeof context.videoPreviewReferences === "object" && !Array.isArray(context.videoPreviewReferences)
+      ? context.videoPreviewReferences : {};
+    const pagination = references.pagination && typeof references.pagination === "object" && !Array.isArray(references.pagination)
+      ? references.pagination : {};
+    const items = Array.isArray(references.items) ? references.items.filter((item) => item && typeof item === "object").slice(0, 50) : [];
+    const selected = references.selected && typeof references.selected === "object" ? references.selected : null;
+    const selectedId = String(selected && selected.id || "").trim();
+    const readState = String(context.videoPreviewReadState || "guarded");
+    const readyForInteraction = readState === "ready";
+    const sourceOptions = items.map((item) => {
+      const id = String(item.id || "").trim();
+      const name = String(item.display_name || "").trim();
+      const extension = String(item.extension || "").trim().toLowerCase();
+      const bytes = Number(item.byte_size);
+      if (!id || !name || ![".mp4", ".webm"].includes(extension) || !Number.isInteger(bytes) || bytes < 1 || bytes > 20 * 1024 * 1024) return "";
+      return `<option value="${safeText(id)}"${id === selectedId ? " selected" : ""}>${safeText(`${name} · ${extension.replace(".", "").toUpperCase()} · ${vaultBytes(bytes)}`)}</option>`;
+    }).filter(Boolean).join("");
+    const returned = Number.isInteger(Number(pagination.returned)) && Number(pagination.returned) >= 0 ? Number(pagination.returned) : 0;
+    const offset = Number.isInteger(Number(pagination.offset)) && Number(pagination.offset) >= 0 ? Number(pagination.offset) : 0;
+    const previous = Number(pagination.previous_offset);
+    const next = Number(pagination.next_offset);
+    const canPrevious = Number.isInteger(previous) && previous >= 0;
+    const canNext = Number.isInteger(next) && next >= 0;
+    const range = returned ? `Đang xem ${offset + 1}–${offset + returned}` : `Trang từ vị trí ${offset + 1}`;
+    const pager = canPrevious || canNext ? `<div class="portal-video-preview-pager" role="group" aria-label="Trang video nguồn private"><span>${safeText(range)}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-preview-reference-page" data-portal-route="/video/preview" data-video-preview-reference-offset="${canPrevious ? safeText(String(previous)) : ""}"${canView && readyForInteraction && canPrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-preview-reference-page" data-portal-route="/video/preview" data-video-preview-reference-offset="${canNext ? safeText(String(next)) : ""}"${canView && readyForInteraction && canNext ? "" : " disabled"}>Sau</button></div></div>` : "";
+    const player = context.videoPreviewPlayer && typeof context.videoPreviewPlayer === "object" && !Array.isArray(context.videoPreviewPlayer)
+      ? context.videoPreviewPlayer : {};
+    const playerState = String(player.state || "");
+    const objectUrl = String(player.object_url || "");
+    const playerReady = playerState === "loaded" && objectUrl.startsWith("blob:");
+    const metadata = player.browser_metadata && typeof player.browser_metadata === "object" && !Array.isArray(player.browser_metadata)
+      ? player.browser_metadata : {};
+    const browserFacts = metadata.state === "ready" && Number.isFinite(Number(metadata.duration_seconds))
+      && Number.isInteger(Number(metadata.width)) && Number.isInteger(Number(metadata.height))
+      ? `${Number(metadata.duration_seconds).toFixed(1)} giây · ${Number(metadata.width)} × ${Number(metadata.height)}`
+      : metadata.state === "loading" ? "Đang chờ browser đọc metadata thực tế" : "Chưa có metadata giải mã hợp lệ";
+    const sourceFacts = selected && selected.display_name
+      ? `${String(selected.extension || "").replace(".", "").toUpperCase()} · ${vaultBytes(Number(selected.byte_size || 0))}`
+      : "Chọn MP4 hoặc WebM từ Asset Vault";
+    const sourceHint = readState === "loading"
+      ? "Đang tải metadata owner-scoped; Portal không dùng cache hoặc fallback từ Bot."
+      : readState === "failed"
+        ? "Chưa thể tải metadata private. Dữ liệu cũ đã được xóa; hãy thử lại."
+        : sourceOptions
+          ? "Chỉ nguồn đúng MP4/WebM, active và tối đa 20 MiB có thể được tải vào phiên."
+          : "Chưa có MP4/WebM active, tối đa 20 MiB, trong Asset Vault của bạn.";
+    const playerMarkup = playerReady
+      ? `<div class="portal-video-preview-player-wrap"><video class="portal-video-preview-player" data-video-preview-player data-video-preview-asset-id="${safeText(String(player.source_asset_id || ""))}" controls controlslist="nodownload" playsinline preload="metadata" src="${safeText(objectUrl)}" aria-label="Xem trước video private trong phiên hiện tại"></video><div class="portal-video-preview-player-meta" role="status" aria-live="polite"><span><strong>Metadata từ browser</strong>${safeText(browserFacts)}</span><span><strong>Delivery</strong>Blob tạm · không hỗ trợ URL/range công khai</span></div><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-preview-clear" data-portal-route="/video/preview"${canClear ? "" : " disabled"}>Xóa khỏi phiên</button></div></div>`
+      : playerState === "loading"
+        ? `<div class="portal-video-preview-placeholder" role="status" aria-live="polite"><strong>Đang xác minh và tải Blob private</strong><span>Browser chưa có player, duration hoặc resolution cho đến khi response và media metadata đều qua kiểm tra.</span></div>`
+        : playerState === "unsupported"
+          ? `<div class="portal-video-preview-placeholder is-guarded" role="status" aria-live="polite"><strong>Browser không giải mã được video này</strong><span>Portal không thay thế bằng preview giả. Bạn có thể chọn một MP4/WebM khác hoặc kiểm tra codec nguồn.</span></div>`
+          : playerState === "guarded"
+            ? `<div class="portal-video-preview-placeholder is-guarded" role="status" aria-live="polite"><strong>Video chưa qua kiểm tra delivery</strong><span>Không có Blob hoặc player nào được giữ lại. Làm mới metadata rồi thử lại một nguồn private hợp lệ.</span></div>`
+            : `<div class="portal-video-preview-placeholder" role="status" aria-live="polite"><strong>Chưa tải video vào phiên</strong><span>Chọn nguồn rồi nhấn “Tải preview vào phiên”. Video không tự phát và không có URL công khai.</span></div>`;
+    if (!canView) return `<article class="portal-page portal-video-preview">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Video Preview & Inspector đang được bảo vệ", "Đăng nhập bằng signed session và chờ server bật Asset Vault cùng cờ Preview riêng trước khi mở video private.", ICONS.video)}</section></article>`;
+    return `<article class="portal-page portal-video-preview">${renderHero(page, context)}
+      <section class="portal-video-preview-intro"><div><span class="portal-section-kicker">Private session inspector</span><h2>Xem video private mà không tạo URL công khai hoặc job mới.</h2><p>Chọn một nguồn đã có trong Asset Vault. Server kiểm tra owner, loại, giới hạn kích thước và integrity; chỉ sau đó browser mới nhận một Blob tạm trong tab này.</p></div><dl><div><dt>20 MiB</dt><dd>Giới hạn một Blob</dd></div><div><dt>MP4 · WebM</dt><dd>Loại nguồn đóng</dd></div><div><dt>0 URL</dt><dd>Không public/signed URL</dd></div></dl></section>
+      <div class="portal-video-preview-layout"><section class="portal-card portal-card-pad portal-video-preview-source"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault source</span><h2 class="portal-card-title">Chọn video để kiểm tra</h2><p class="portal-card-subtitle">Danh sách chỉ chứa metadata owner-scoped. Browser không gửi bytes, path, URL, hash hoặc storage key.</p></div>${badge(readState === "ready" ? "ready" : readState === "loading" ? "read_only" : readState)}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="video-preview-load" data-portal-route="/video/preview"><div class="portal-fields"><label class="portal-field portal-field--wide"><span>Video nguồn <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="source_asset_id" required aria-describedby="video-preview-source-hint"${canLoad && readyForInteraction ? "" : " disabled"}><option value=""${selectedId ? "" : " selected"} disabled>Chọn video từ Asset Vault</option>${sourceOptions}</select><small id="video-preview-source-hint" role="status" aria-live="polite">${safeText(sourceHint)}</small>${pager}</label></div><div class="portal-form-footer"><span class="portal-form-note">${safeText(sourceFacts)}. Không autoplay, không Range, không cache PWA; mỗi lần tải thay thế Blob cũ của phiên.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><button class="portal-button portal-button--primary" type="submit"${canLoad && readyForInteraction && sourceOptions ? "" : " disabled"}>Tải preview vào phiên</button></div></div></form></section><aside class="portal-card portal-card-pad portal-video-preview-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Boundary rõ ràng</span><h2 class="portal-card-title">Không có nguồn ngoài phạm vi</h2><p class="portal-card-subtitle">Đây là xem lại file có sẵn, không phải render engine hay output của Bot.</p></div>${badge("guarded")}</div><div class="portal-video-preview-boundary-list"><span><strong>Owner</strong><em>signed account</em></span><span><strong>Delivery</strong><em>sealed Blob</em></span><span><strong>Metadata</strong><em>browser thực tế</em></span><span><strong>Automation</strong><em>không có</em></span></div></aside></div>
+      <section class="portal-card portal-card-pad portal-video-preview-stage"><div class="portal-card-header"><div><span class="portal-section-kicker">Current tab only</span><h2 class="portal-card-title">Preview & Inspector</h2><p class="portal-card-subtitle">Player chỉ xuất hiện sau khi response private qua kiểm tra header, byte size và MIME trong browser.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-preview-refresh" data-portal-route="/video/preview"${canView ? "" : " disabled"}>${readState === "failed" ? "Thử lại" : "Làm mới"}</button></div>${playerMarkup}</section>
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Một công cụ inspection, không phải pipeline video</h2><p class="portal-card-subtitle">Không có Bot, provider, FFmpeg, job, Xu, PayOS hoặc wallet; Portal cũng không gọi Core Bridge. Nếu decode/delivery không đạt, Portal giữ trạng thái guarded thay vì mô phỏng kết quả.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderVideoPosterOperations(page, context) {
     const canView = Boolean(context.capabilities && context.capabilities["video-poster-operation-view"] === true);
     const canCreate = Boolean(context.capabilities && context.capabilities["video-poster-operation-create"] === true);
@@ -21398,6 +21475,7 @@
       case "video-transform-operations": return renderVideoTransformOperations(page, context);
       case "frame-video-operations": return renderFrameVideoOperations(page, context);
       case "video-poster-operations": return renderVideoPosterOperations(page, context);
+      case "video-preview": return renderVideoPreview(page, context);
       case "subtitle-format-lab": return renderSubtitleFormatLab(page, context);
       case "voice-direction-composer": return renderVoiceDirectionComposer(page, context);
       case "voice-studio": return renderVoiceStudio(page, context);
@@ -21808,10 +21886,11 @@
     const videoTransformNoNativeValidity = ["video-transform-operation-refresh", "video-transform-reference-page", "video-transform-history-page", "video-transform-operation-detail", "video-transform-operation-download"].includes(action);
     const frameVideoNoNativeValidity = ["frame-video-operation-refresh", "frame-video-reference-page", "frame-video-history-page", "frame-video-operation-detail", "frame-video-operation-download"].includes(action);
     const videoPosterNoNativeValidity = ["video-poster-operation-refresh", "video-poster-reference-page", "video-poster-operation-detail", "video-poster-operation-download"].includes(action);
+    const videoPreviewNoNativeValidity = ["video-preview-refresh", "video-preview-reference-page", "video-preview-clear"].includes(action);
     // Picker controls belong to the operation form so the existing in-memory
     // draft map retains selected slots while paging.  They must not trigger
     // the main form's required-field validation before a source is chosen.
-    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || frameVideoNoNativeValidity || videoPosterNoNativeValidity || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
+    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || frameVideoNoNativeValidity || videoPosterNoNativeValidity || videoPreviewNoNativeValidity || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
@@ -21917,6 +21996,16 @@
         __videoPosterReferenceOffset: source.getAttribute("data-video-poster-reference-offset") || "",
         __videoPosterReferenceSelectedId: posterSource ? String(posterSource.value || "").trim() : "",
         __videoPosterOperationId: source.getAttribute("data-video-poster-operation-id") || ""
+      });
+    }
+    // The Video Preview picker passes only the currently selected opaque Asset
+    // Vault UUID and requested page within this immediate event. It never
+    // persists a Blob URL, raw path, URL, provider field or media bytes.
+    if (String(action || "").startsWith("video-preview-")) {
+      const previewSource = form && form.querySelector('select[name="source_asset_id"]');
+      Object.assign(fields, {
+        __videoPreviewReferenceOffset: source.getAttribute("data-video-preview-reference-offset") || "",
+        __videoPreviewSelectedId: previewSource ? String(previewSource.value || "").trim() : ""
       });
     }
     if (String(action || "").startsWith("document-operation-")) {
@@ -22623,6 +22712,36 @@
     window.addEventListener("resize", closeSidebarAboveMobileBreakpoint);
   }
 
+  function bindVideoPreviewPlayer(main) {
+    const player = main && typeof main.querySelector === "function"
+      ? main.querySelector("video[data-video-preview-player]") : null;
+    if (!player || player.dataset.videoPreviewBound === "true") return;
+    player.dataset.videoPreviewBound = "true";
+    const sourceAssetId = String(player.getAttribute("data-video-preview-asset-id") || "").trim();
+    const dispatch = (action, fields) => {
+      window.dispatchEvent(new CustomEvent(ACTION_EVENT, {
+        detail: Object.freeze({
+          action,
+          route: "/video/preview",
+          fields: Object.freeze({ source_asset_id: sourceAssetId, ...fields })
+        })
+      }));
+    };
+    player.addEventListener("loadedmetadata", () => {
+      const duration = Number(player.duration);
+      const width = Number(player.videoWidth);
+      const height = Number(player.videoHeight);
+      if (Number.isFinite(duration) && duration >= 0 && duration <= 14400
+        && Number.isInteger(width) && width >= 1 && width <= 7680
+        && Number.isInteger(height) && height >= 1 && height <= 4320 && width * height <= 33177600) {
+        dispatch("video-preview-player-metadata", { duration_seconds: duration, width, height });
+      } else {
+        dispatch("video-preview-player-error", {});
+      }
+    }, { once: true });
+    player.addEventListener("error", () => dispatch("video-preview-player-error", {}), { once: true });
+  }
+
   function mountPortal(override) {
     if (override && typeof override === "object") window.__TOAN_AAS_PORTAL__ = override;
     const focus = focusSnapshot();
@@ -22670,6 +22789,7 @@
     sidebar.innerHTML = renderSidebar(page, context);
     header.innerHTML = renderHeader(page, context);
     main.innerHTML = renderPage(page, context);
+    bindVideoPreviewPlayer(main);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));

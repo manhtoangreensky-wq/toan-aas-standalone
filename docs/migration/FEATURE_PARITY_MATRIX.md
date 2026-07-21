@@ -2,6 +2,13 @@
 
 Observed-runtime static Web-surface coverage: **59.05%**. Observed-runtime typed source-disposition coverage: **87.47%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3814`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
 
+## Web-native extensions outside Bot equivalence
+
+`/video/preview` is an owner-scoped Asset Vault inspector for existing private
+MP4/WebM files. It is intentionally separate from Telegram dynamic media-preview
+callbacks and does not alter their `TELEGRAM_ONLY` disposition, Bot cache,
+delivery state or this matrix's runtime-equivalence percentage.
+
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
 | command | /add | /admin/add | COPIED_GUARDED |

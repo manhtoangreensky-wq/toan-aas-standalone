@@ -885,7 +885,7 @@ class PromptLibraryBodyLimitMiddleware:
                 "Cache-Control": "no-store, private",
                 "Referrer-Policy": "same-origin",
                 "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-                "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
+                "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
             },
         )
         if is_mailbox_confirmation:
@@ -1281,6 +1281,15 @@ async def security_headers(request: Request, call_next):
         and request.url.path.startswith("/api/v1/assets/")
         and request.url.path.endswith("/download")
     )
+    # Video Preview & Inspector fetches a sealed private source once, then the
+    # Portal plays only a temporary same-origin Blob.  Its fixed bucket stays
+    # distinct from downloads because each request rehashes up to 20 MiB and
+    # cannot rely on HTTP byte ranges.
+    asset_vault_video_preview = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/asset-vault/")
+        and request.url.path.endswith("/preview")
+    )
     # Memory writes are tiny text/state mutations, but remain intentionally
     # rate limited before SQLite work.  GET views stay unthrottled here while
     # signed-session/ownership checks remain mandatory in the router.
@@ -1509,6 +1518,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 20
     if native_asset_download:
         rate_limit = 20
+    if asset_vault_video_preview:
+        rate_limit = 12
     if video_operation_read:
         rate_limit = 120
     if frame_video_operation_read:
@@ -1691,6 +1702,7 @@ async def security_headers(request: Request, call_next):
             else "video-transform-operation-run" if video_transform_operation_run
             else "video-transform-operation-estimate" if video_transform_operation_estimate
             else "video-transform-operation-download" if video_transform_operation_download
+            else "asset-vault-video-preview" if asset_vault_video_preview
             else "native-asset-download" if native_asset_download
             else "video-operation-read" if video_operation_read
             else "frame-video-operation-read" if frame_video_operation_read
@@ -1772,7 +1784,7 @@ async def security_headers(request: Request, call_next):
                     "X-Content-Type-Options": "nosniff",
                     "Referrer-Policy": "same-origin",
                     "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
-                    "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
+                    "Content-Security-Policy": "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'",
                 },
             )
             if (
@@ -1784,6 +1796,7 @@ async def security_headers(request: Request, call_next):
                 or video_operation_download
                 or frame_video_operation_download
                 or video_transform_operation_download
+                or asset_vault_video_preview
                 or native_asset_download
             ):
                 # This early return bypasses the normal post-route header
@@ -1823,6 +1836,11 @@ async def security_headers(request: Request, call_next):
     # than the portal shell.  Do not overwrite it after the endpoint chose
     # no-referrer / sandbox delivery headers.
     private_asset_download = request.url.path.startswith("/api/v1/asset-vault/") and request.url.path.endswith("/download")
+    private_asset_vault_video_preview = (
+        request.method == "GET"
+        and request.url.path.startswith("/api/v1/asset-vault/")
+        and request.url.path.endswith("/preview")
+    )
     private_native_asset_download = request.url.path.startswith("/api/v1/assets/") and request.url.path.endswith("/download")
     private_package_download = request.url.path.startswith("/api/v1/project-packages/") and request.url.path.endswith("/download")
     private_document_download = request.url.path.startswith("/api/v1/document-operations/") and request.url.path.endswith("/download")
@@ -1894,7 +1912,7 @@ async def security_headers(request: Request, call_next):
     # no-store rule below keeps them out of browser/PWA caches.
     private_governance = request.url.path.startswith("/api/v1/admin/governance/")
     private_download = (
-        private_asset_download or private_native_asset_download or private_package_download or private_document_download
+        private_asset_download or private_asset_vault_video_preview or private_native_asset_download or private_package_download or private_document_download
         or private_image_download or private_subtitle_asset_download or private_audio_asset_download or private_video_download or private_frame_video_download or private_video_transform_download or private_storyboard_grid_download
         or private_support_evidence_download or private_media_workspace_preview or private_prompt_export
         or private_manual_analytics_csv_export or private_data_controls_export or private_admin_document_archive_download
@@ -1906,7 +1924,7 @@ async def security_headers(request: Request, call_next):
         if private_download
         else "default-src 'none'; style-src 'unsafe-inline'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
         if mailbox_confirmation
-        else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
+        else "default-src 'self'; connect-src 'self'; img-src 'self' data: https:; media-src 'self' blob:; style-src 'self' 'unsafe-inline'; script-src 'self'; base-uri 'self'; form-action 'self'; object-src 'none'; frame-ancestors 'none'"
     )
     if private_download or private_video_operation or private_frame_video_operation or private_video_transform_operation or private_governance or private_admin_document_archive or mailbox_confirmation:
         # Cover successful attachments and every normal post-route rejection

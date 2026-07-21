@@ -33,6 +33,7 @@ from copyfast_auth import _record_audit, _request_id, envelope, require_account,
 from copyfast_db import (
     asset_vault_directory,
     asset_vault_enabled,
+    asset_vault_video_preview_enabled,
     ensure_copyfast_schema,
     transaction,
     utc_now,
@@ -49,7 +50,7 @@ ALL_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE, UNAVAILABLE_STATE})
 # Typed operation pickers must stay exact and server-side.  Audio is a
 # separate allowlisted family for Audio Asset Operations; it is deliberately
 # not implemented as a loose ``audio/*`` query.
-REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle", "audio", "video_transform", "video_poster"})
+REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle", "audio", "video_transform", "video_poster", "video_preview"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 ASSET_ID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -57,6 +58,11 @@ PENDING_MARKER_KEY = "_web_asset_vault_pending"
 PENDING_SECONDS = 5 * 60
 ORPHAN_RETENTION_SECONDS = 60 * 60
 CHUNK_BYTES = 1024 * 1024
+VIDEO_PREVIEW_MAX_BYTES = 20 * 1024 * 1024
+VIDEO_PREVIEW_MEDIA_PAIRS = frozenset({
+    (".mp4", "video/mp4"),
+    (".webm", "video/webm"),
+})
 MAX_DOCX_ARCHIVE_MEMBERS = 2_000
 MAX_DOCX_UNCOMPRESSED_BYTES = 100 * 1024 * 1024
 
@@ -319,6 +325,25 @@ def _row_for_account(conn, asset_id: str, account_id: str) -> tuple[Any, ...] | 
            FROM web_asset_files WHERE id=? AND account_id=?""",
         (asset_id, account_id),
     ).fetchone()
+
+
+def _video_preview_source_allowed(row: tuple[Any, ...]) -> bool:
+    """Return whether one private row is safe for the Blob video inspector.
+
+    Keep the source allowlist on the server and pair extension/MIME exactly.
+    Browser codec support is intentionally not inferred here: a source that
+    passes this storage contract can still be guarded by the browser decoder.
+    """
+
+    try:
+        byte_size = int(row[6])
+    except (IndexError, TypeError, ValueError):
+        return False
+    try:
+        media_pair = (str(row[4] or "").lower(), str(row[5] or "").lower())
+    except IndexError:
+        return False
+    return 0 < byte_size <= VIDEO_PREVIEW_MAX_BYTES and media_pair in VIDEO_PREVIEW_MEDIA_PAIRS
 
 
 def _visible_asset(row: tuple[Any, ...]) -> dict[str, Any]:
@@ -1027,7 +1052,7 @@ def private_asset_inline_response(
     media_type: str,
     filename: str,
 ) -> StreamingResponse:
-    """Serve an already-pinned private audio reference for same-origin preview.
+    """Serve an already-pinned private media reference for same-origin preview.
 
     Callers must have already performed account ownership, object reference,
     media-type and integrity checks.  The response intentionally has no
@@ -1252,6 +1277,22 @@ async def list_assets(
             ".mov", "video/quicktime",
             ".webm", "video/webm",
         ])
+    elif selected_reference_kind == "video_preview":
+        # The browser inspector deliberately accepts only the two canonical
+        # pairs with broad current browser support.  MOV stays excluded even
+        # though Asset Vault can retain it, and the explicit byte ceiling
+        # bounds each same-origin Blob allocation and integrity rehash.
+        where.append(
+            "("
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?)"
+            ") AND byte_size > 0 AND byte_size <= ?"
+        )
+        params.extend([
+            ".mp4", "video/mp4",
+            ".webm", "video/webm",
+            VIDEO_PREVIEW_MAX_BYTES,
+        ])
     if needle:
         escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         where.append("(display_name LIKE ? ESCAPE '\\' OR original_filename LIKE ? ESCAPE '\\')")
@@ -1313,6 +1354,81 @@ async def get_asset_lifecycle(asset_id: str, account: dict = Depends(require_acc
             ),
         )
     return envelope(True, "Đã tải vòng đời Asset Vault.", data={"lifecycle": lifecycle})
+
+
+@router.get("/{asset_id}/preview")
+async def preview_asset_video(
+    asset_id: str,
+    request: Request,
+    account: dict = Depends(require_account),
+):
+    """Return one sealed private MP4/WebM for the current browser session.
+
+    The endpoint is intentionally not a generic media proxy: it accepts no
+    remote URL, has no signed/public URL, rejects byte ranges, does no codec
+    probing or transcoding and never changes an asset, job, provider, wallet
+    or payment state.  The Portal converts the verified same-origin response
+    to an in-memory Blob and revokes that Blob URL when the session view ends.
+    """
+
+    _require_enabled()
+    if not asset_vault_video_preview_enabled():
+        raise HTTPException(status_code=503, detail="Xem trước video private chưa được bật cho môi trường này")
+    if request.headers.get("range"):
+        # A future seeking/range implementation needs its own verified media
+        # delivery review.  Reject early so neither a database lookup nor a
+        # private blob hash becomes an oracle/amplification path.
+        raise HTTPException(status_code=416, detail="Xem trước video private không hỗ trợ byte range")
+
+    asset_id = _validate_id(asset_id, label="Asset Vault ID")
+    account_id = str(account["id"])
+    ensure_copyfast_schema()
+    with transaction() as conn:
+        row = _row_for_account(conn, asset_id, account_id)
+    if not row or str(row[7]) != ACTIVE_STATE or not _video_preview_source_allowed(row):
+        # Keep inactive, foreign and non-previewable sources indistinguishable
+        # from a missing asset.  The browser receives no path/hash/provider or
+        # codec detail that could turn private storage into an enumeration API.
+        return _asset_not_found()
+
+    byte_size = int(row[6])
+    stream = open_verified_private_asset_stream(
+        storage_key=str(row[12]),
+        expected_bytes=byte_size,
+        expected_digest=str(row[11]),
+    )
+    if stream is None:
+        _mark_unavailable(asset_id, account_id)
+        return _asset_unavailable()
+    sealed_stream = seal_verified_private_file(
+        stream,
+        expected_bytes=byte_size,
+        expected_digest=str(row[11]),
+    )
+    if sealed_stream is None:
+        _mark_unavailable(asset_id, account_id)
+        return _asset_unavailable()
+
+    try:
+        with transaction() as conn:
+            _record_audit(
+                conn,
+                account_id=account_id,
+                canonical_user_id=None,
+                action="web.asset_vault.video_preview",
+                request_id=_request_id(request),
+                target=asset_id,
+                detail=f"format={str(row[4]).lstrip('.').lower()};bytes={byte_size};delivery=inline_no_range",
+            )
+    except Exception:
+        sealed_stream.close()
+        raise
+    return private_asset_inline_response(
+        sealed_stream,
+        byte_size=byte_size,
+        media_type=str(row[5]),
+        filename=str(row[3]),
+    )
 
 
 @router.get("/{asset_id}")
