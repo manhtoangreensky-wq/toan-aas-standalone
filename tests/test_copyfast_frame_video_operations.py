@@ -148,6 +148,48 @@ def test_frame_video_is_false_by_default_and_body_is_bounded(tmp_path, monkeypat
         assert oversized.headers["cross-origin-resource-policy"] == "same-origin"
 
 
+def test_frame_video_estimate_is_read_only_and_create_requires_csrf(tmp_path, monkeypatch):
+    """A plan check must neither reserve output nor bypass the write guard."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "frame-estimate@example.com")
+        first = upload_image(client, csrf, key="frame-estimate-source-0001", color=(45, 110, 175))
+        second = upload_image(client, csrf, key="frame-estimate-source-0002", color=(175, 110, 45))
+        activate_frame_runtime(monkeypatch)
+        request = {
+            "source_asset_ids": [first["id"], second["id"]],
+            "aspect_ratio": "9:16",
+            "seconds_per_image": 1.5,
+            "effect": "fade",
+        }
+
+        estimated = client.post("/api/v1/frame-video-operations/estimate", json=request)
+        assert estimated.status_code == 200
+        estimate_payload = estimated.json()
+        assert estimate_payload["ok"] is True and estimate_payload["status"] == "draft"
+        estimate = estimate_payload["data"]["estimate"]
+        assert estimate == {
+            "source_count": 2,
+            "source_total_bytes": first["byte_size"] + second["byte_size"],
+            "aspect_ratio": "9:16",
+            "width": 720,
+            "height": 1280,
+            "seconds_per_image": 1.5,
+            "duration_seconds": 3.0,
+            "effect": "fade",
+            "effective_effect": "fade",
+            "output": {"content_type": "video/mp4", "codec": "h264", "audio": False},
+        }
+        assert client.get("/api/v1/frame-video-operations").json()["data"]["items"] == []
+
+        missing_csrf = client.post(
+            "/api/v1/frame-video-operations",
+            json={**request, "idempotency_key": "frame-estimate-create-0001"},
+        )
+        assert missing_csrf.status_code == 403
+        assert client.get("/api/v1/frame-video-operations").json()["data"]["items"] == []
+
+
 def test_frame_video_requires_attested_single_replica_topology(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         csrf = register_and_login(client, "frame-topology@example.com")

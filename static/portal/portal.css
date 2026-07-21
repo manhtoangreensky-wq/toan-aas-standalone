@@ -1960,6 +1960,90 @@ a { color: inherit; text-decoration: none; }
   .portal-video-transform-operation-actions .portal-inline-actions { justify-content: flex-start; }
 }
 
+/* Frame Video Lab is a bounded image-sequence utility. The app-first surface
+   keeps selection order, server verification and private delivery readable
+   without becoming a Video catalogue, editor or preview player. */
+.portal-frame-video-operations { display: grid; gap: 18px; min-width: 0; }
+.portal-frame-video-intro { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(270px, .8fr); gap: 18px; align-items: center; padding: clamp(22px, 3vw, 34px); border: 1px solid rgba(45, 212, 191, .28); border-radius: 22px; background: linear-gradient(145deg, #121a26, #0a0f17); box-shadow: 0 19px 47px rgba(0, 0, 0, .17); }
+.portal-frame-video-intro h2 { max-width: 790px; margin: 7px 0 8px; color: #f8fafc; font-size: clamp(26px, 3vw, 39px); letter-spacing: -.047em; }
+.portal-frame-video-intro p { max-width: 780px; margin: 0; color: #aab8c7; line-height: 1.72; }
+.portal-frame-video-intro dl { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 0; }
+.portal-frame-video-intro dl > div { min-width: 0; min-height: 106px; padding: 15px; border: 1px solid rgba(45, 212, 191, .17); border-radius: 15px; background: rgba(10, 15, 23, .68); }
+.portal-frame-video-intro dt { color: #8ff5e7; font-size: 19px; font-weight: 820; letter-spacing: -.035em; }
+.portal-frame-video-intro dd { margin: 7px 0 0; color: #aab8c7; font-size: 12px; line-height: 1.5; }
+.portal-frame-video-layout { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
+.portal-frame-video-form { background: linear-gradient(150deg, rgba(18, 35, 40, .97), rgba(10, 15, 23, .99)); }
+.portal-frame-video-boundary, .portal-frame-video-history, .portal-frame-video-detail, .portal-frame-video-estimate { background: linear-gradient(150deg, rgba(18, 26, 38, .97), rgba(10, 15, 23, .99)); }
+.portal-frame-video-source-field { display: grid; grid-column: 1 / -1; gap: 10px; min-width: 0; margin: 0; padding: 14px; border: 1px solid rgba(42, 57, 75, .92); border-radius: 14px; background: rgba(10, 15, 23, .48); }
+.portal-frame-video-source-field legend { padding: 0 5px; color: #e8f7f5; font-size: 13px; font-weight: 760; }
+.portal-frame-video-selection-status { margin: 0; color: #8ff5e7; font-size: 12px; line-height: 1.5; }
+.portal-frame-video-source-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; min-width: 0; }
+.portal-frame-video-source-row { display: grid; grid-template-columns: 20px 26px minmax(0, 1fr); align-items: center; min-width: 0; min-height: 56px; gap: 9px; padding: 10px 11px; border: 1px solid rgba(42, 57, 75, .92); border-radius: 12px; background: rgba(10, 15, 23, .58); cursor: pointer; transition: border-color 180ms ease, background-color 180ms ease, box-shadow 180ms ease; }
+.portal-frame-video-source-row:hover { border-color: rgba(45, 212, 191, .48); background: rgba(18, 35, 40, .78); }
+.portal-frame-video-source-row:focus-within { border-color: rgba(45, 212, 191, .74); box-shadow: 0 0 0 3px rgba(45, 212, 191, .12); }
+.portal-frame-video-source-row.is-selected { border-color: rgba(45, 212, 191, .58); background: rgba(45, 212, 191, .08); }
+.portal-frame-video-source-row input { width: 18px; height: 18px; margin: 0; accent-color: #2dd4bf; }
+.portal-frame-video-source-row > span:last-child { display: grid; min-width: 0; gap: 3px; }
+.portal-frame-video-source-row strong { overflow: hidden; color: #e8f7f5; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.portal-frame-video-source-row small { overflow: hidden; color: #aab8c7; font-size: 12px; line-height: 1.35; text-overflow: ellipsis; white-space: nowrap; }
+.portal-frame-video-source-order { display: grid; width: 24px; height: 24px; place-items: center; border: 1px solid rgba(45, 212, 191, .27); border-radius: 50%; color: #8ff5e7; font-size: 12px; font-weight: 800; }
+.portal-frame-video-source-order:empty { border-color: transparent; }
+.portal-frame-video-source-pager, .portal-frame-video-history-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 2px; padding-top: 12px; border-top: 1px solid rgba(45, 212, 191, .18); color: #aab8c7; font-size: 12px; font-weight: 700; }
+.portal-frame-video-source-pager .portal-button, .portal-frame-video-history-pager .portal-button, .portal-frame-video-operation-actions .portal-button { min-height: 44px; padding-inline: 12px; }
+.portal-frame-video-selected { display: grid; grid-column: 1 / -1; gap: 8px; min-width: 0; padding: 14px; border: 1px solid rgba(45, 212, 191, .2); border-radius: 14px; background: rgba(45, 212, 191, .045); }
+.portal-frame-video-selected > div { display: grid; gap: 3px; }
+.portal-frame-video-selected h3 { margin: 0; color: #e8f7f5; font-size: 14px; }
+.portal-frame-video-selected p { margin: 0; color: #aab8c7; font-size: 12px; line-height: 1.55; }
+.portal-frame-video-sequence { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
+.portal-frame-video-sequence li { display: grid; grid-template-columns: 24px minmax(0, 1fr); align-items: center; min-width: 0; gap: 8px; padding: 10px; border: 1px solid rgba(42, 57, 75, .88); border-radius: 11px; background: rgba(10, 15, 23, .48); }
+.portal-frame-video-sequence li > span { display: grid; width: 24px; height: 24px; place-items: center; border-radius: 50%; background: #052e2b; color: #8ff5e7; font-size: 12px; font-weight: 800; }
+.portal-frame-video-sequence div { display: grid; min-width: 0; gap: 3px; }
+.portal-frame-video-sequence strong, .portal-frame-video-sequence small { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.portal-frame-video-sequence strong { color: #e8f7f5; font-size: 12px; }
+.portal-frame-video-sequence small { color: #aab8c7; font-size: 12px; }
+.portal-frame-video-guard-list { display: grid; gap: 9px; margin-top: 14px; }
+.portal-frame-video-guard-list > span { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px; border: 1px solid rgba(42, 57, 75, .92); border-radius: 12px; background: rgba(10, 15, 23, .6); }
+.portal-frame-video-guard-list strong { color: #dce6ef; font-size: 12px; }
+.portal-frame-video-guard-list em { color: #aab8c7; font-size: 12px; font-style: normal; letter-spacing: .07em; text-transform: uppercase; }
+.portal-frame-video-estimate-grid, .portal-frame-video-detail-summary { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 15px 0; }
+.portal-frame-video-estimate-grid > div, .portal-frame-video-detail-summary > div { display: grid; min-width: 0; gap: 5px; padding: 12px; border: 1px solid rgba(42, 57, 75, .8); border-radius: 12px; background: rgba(10, 15, 23, .5); }
+.portal-frame-video-estimate-grid span, .portal-frame-video-detail-summary span { color: #9eb0bf; font-size: 12px; font-weight: 760; letter-spacing: .05em; text-transform: uppercase; }
+.portal-frame-video-estimate-grid strong, .portal-frame-video-detail-summary strong { overflow-wrap: anywhere; color: #e7f7f4; font-size: 12px; line-height: 1.45; }
+.portal-frame-video-confirmation { display: grid; gap: 14px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(45, 212, 191, .18); }
+.portal-frame-video-confirm-check { display: flex; align-items: flex-start; gap: 10px; min-width: 0; padding: 12px; border: 1px solid rgba(45, 212, 191, .25); border-radius: 13px; background: rgba(45, 212, 191, .06); cursor: pointer; }
+.portal-frame-video-confirm-check:focus-within { border-color: rgba(45, 212, 191, .64); box-shadow: 0 0 0 3px rgba(45, 212, 191, .12); }
+.portal-frame-video-confirm-check input { width: 18px; height: 18px; flex: 0 0 auto; margin: 1px 0 0; accent-color: #2dd4bf; }
+.portal-frame-video-confirm-check span { color: #aab8c7; font-size: 12px; line-height: 1.52; }
+.portal-frame-video-confirmation.is-stale { border-color: rgba(248, 113, 113, .38); }
+.portal-frame-video-confirmation.is-stale [data-frame-video-confirmation-status] { color: #f9b4b4; }
+.portal-frame-video-operation-list { display: grid; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.portal-frame-video-operation-list > li { display: grid; min-width: 0; gap: 10px; padding: 14px; border: 1px solid rgba(42, 57, 75, .92); border-radius: 14px; background: rgba(10, 15, 23, .59); }
+.portal-frame-video-operation-meta { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.portal-frame-video-operation-meta > div { display: grid; min-width: 0; gap: 4px; }
+.portal-frame-video-operation-meta strong { color: #f8fafc; font-size: 13px; }
+.portal-frame-video-operation-meta span { color: #aab8c7; font-size: 12px; line-height: 1.5; }
+.portal-frame-video-operation-meta small { overflow-wrap: anywhere; color: #74e3d4; font-size: 12px; line-height: 1.45; }
+.portal-frame-video-operation-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; color: #aab8c7; font-size: 12px; }
+.portal-frame-video-operation-actions .portal-inline-actions { justify-content: flex-end; }
+.portal-frame-video-empty { display: grid; min-height: 118px; gap: 6px; padding: 18px; border: 1px dashed rgba(45, 212, 191, .31); border-radius: 14px; background: rgba(10, 15, 23, .46); }
+.portal-frame-video-empty strong { color: #dffdf8; font-size: 13px; }
+.portal-frame-video-empty span { color: #aab8c7; font-size: 12px; line-height: 1.6; }
+.portal-frame-video-timeline { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.portal-frame-video-timeline > li { display: grid; grid-template-columns: 17px minmax(0, 1fr); gap: 10px; padding: 11px 0; border-top: 1px solid rgba(42, 57, 75, .7); }
+.portal-frame-video-timeline > li:first-child { border-top: 0; }
+.portal-frame-video-timeline > li > span { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: #2dd4bf; box-shadow: 0 0 0 4px rgba(45, 212, 191, .1); }
+.portal-frame-video-timeline div { display: grid; min-width: 0; gap: 3px; }
+.portal-frame-video-timeline strong, .portal-frame-video-timeline small { font-size: 12px; }
+.portal-frame-video-timeline strong { color: #e8f7f5; }
+.portal-frame-video-timeline small { overflow-wrap: anywhere; color: #aab8c7; }
+@media (max-width: 900px) {
+  .portal-frame-video-intro, .portal-frame-video-layout { grid-template-columns: 1fr; }
+  .portal-frame-video-intro { padding: 20px; border-radius: 18px; }
+  .portal-frame-video-intro dl, .portal-frame-video-estimate-grid, .portal-frame-video-detail-summary, .portal-frame-video-source-list, .portal-frame-video-sequence { grid-template-columns: 1fr; }
+  .portal-frame-video-operation-meta, .portal-frame-video-operation-actions, .portal-frame-video-source-pager, .portal-frame-video-history-pager { align-items: flex-start; flex-direction: column; }
+  .portal-frame-video-operation-actions .portal-inline-actions { justify-content: flex-start; }
+}
+
 /* Content Prompt Pack is a deliberately local text-planning tool.  Its visual
    treatment keeps the editable draft and the execution boundary equally
    legible without suggesting a provider call, generated media or publishing. */

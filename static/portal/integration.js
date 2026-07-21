@@ -32,6 +32,27 @@
   const VIDEO_TRANSFORM_OPERATION_FIT_MODES = new Set(["crop", "blur_pad"]);
   const VIDEO_TRANSFORM_OPERATION_PRESETS = new Set(["none", "clear", "tiktok_pop", "cinematic", "soft_clean"]);
   const VIDEO_TRANSFORM_OPERATION_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+  // Frame Video is a distinct private image-sequence boundary. It is not the
+  // broad Video Studio, a Bot flow, a provider call, browser renderer or a
+  // generic Asset/Job projection.
+  const FRAME_VIDEO_OPERATIONS_ROUTE = "/video/frame-sequence";
+  const FRAME_VIDEO_OPERATIONS_LIST_LIMIT = 30;
+  const FRAME_VIDEO_MAX_SOURCE_BYTES = 10 * 1024 * 1024;
+  const FRAME_VIDEO_MAX_SOURCE_TOTAL_BYTES = 30 * 1024 * 1024;
+  // The native runtime may be configured up to 100 MiB.  Keep the Portal
+  // acceptance ceiling aligned with that verified server boundary so a valid
+  // 26–100 MiB private MP4 is not incorrectly hidden from its owner.
+  const FRAME_VIDEO_MAX_OUTPUT_BYTES = 100 * 1024 * 1024;
+  const FRAME_VIDEO_RATIOS = Object.freeze({
+    "9:16": Object.freeze({ width: 720, height: 1280 }),
+    "16:9": Object.freeze({ width: 1280, height: 720 }),
+    "1:1": Object.freeze({ width: 1080, height: 1080 }),
+    "4:5": Object.freeze({ width: 864, height: 1080 })
+  });
+  const FRAME_VIDEO_SECONDS_PER_IMAGE = new Set([1.5, 3, 4]);
+  const FRAME_VIDEO_EFFECTS = new Set(["none", "fade", "zoom", "pan", "slide", "random"]);
+  const FRAME_VIDEO_CONCRETE_EFFECTS = new Set(["none", "fade", "zoom", "pan", "slide"]);
+  const FRAME_VIDEO_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -145,6 +166,8 @@
   let audioAssetOperationsHydrationEpoch = 0;
   let videoTransformOperationsHydrationEpoch = 0;
   let videoTransformOperationDetailHydrationEpoch = 0;
+  let frameVideoOperationsHydrationEpoch = 0;
+  let frameVideoOperationDetailHydrationEpoch = 0;
   // Campaign plans, Project Center records and Studio Documents are private
   // Web-owned planning data.  Keep their list/detail reads independently
   // ordered so a delayed response cannot cross a signed account, route or
@@ -9246,6 +9269,8 @@
     ++audioAssetOperationsHydrationEpoch;
     ++videoTransformOperationsHydrationEpoch;
     ++videoTransformOperationDetailHydrationEpoch;
+    ++frameVideoOperationsHydrationEpoch;
+    ++frameVideoOperationDetailHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignCalendarHydrationEpoch;
     ++projectCenterSessionEpoch;
@@ -9509,6 +9534,11 @@
     // gate never grants generic Video Studio, provider, Bot, worker, wallet,
     // PayOS, browser FFmpeg, upload URL or public-preview authority.
     const videoTransformOperationsEnabled = Boolean(status.flags && status.flags.video_transform_operations_enabled === true);
+    // Frame Video is independently gated by its own server runtime and
+    // topology checks. A ready presentation flag never grants Bot/provider,
+    // generic Video Studio, browser decoding, public preview, wallet/Xu or
+    // PayOS authority.
+    const frameVideoOperationsEnabled = Boolean(status.flags && status.flags.frame_video_operations_enabled === true);
     // Image Creative Studio is deliberately fail-closed by its own feature
     // flag.  A true flag permits private art-direction records only; it never
     // indicates an image provider, generator, preview, job, wallet or payment
@@ -9949,6 +9979,12 @@
       "video-transform-operation-create": Boolean(account && me.csrf_token && assetVaultEnabled && videoTransformOperationsEnabled),
       "video-transform-operation-detail": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
       "video-transform-operation-download": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
+      "frame-video-operation-view": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
+      "frame-video-operation-refresh": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
+      "frame-video-operation-estimate": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
+      "frame-video-operation-create": Boolean(account && me.csrf_token && assetVaultEnabled && frameVideoOperationsEnabled),
+      "frame-video-operation-detail": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
+      "frame-video-operation-download": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
       "image-studio-view": Boolean(account && imageStudioEnabled),
       "image-studio-refresh": Boolean(account && imageStudioEnabled),
       "image-studio-filter": Boolean(account && imageStudioEnabled),
@@ -10105,6 +10141,8 @@
     ++audioAssetOperationsHydrationEpoch;
     ++videoTransformOperationsHydrationEpoch;
     ++videoTransformOperationDetailHydrationEpoch;
+    ++frameVideoOperationsHydrationEpoch;
+    ++frameVideoOperationDetailHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignListHydrationEpoch;
     ++campaignDetailHydrationEpoch;
@@ -10362,6 +10400,7 @@
       subtitleAssetOperationsEnabled,
       audioAssetOperationsEnabled,
       videoTransformOperationsEnabled,
+      frameVideoOperationsEnabled,
       imageStudioEnabled,
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
@@ -10643,6 +10682,17 @@
       videoTransformDetail: {},
       videoTransformDetailReadState: "guarded",
       videoTransformOperationsReadState: account && assetVaultEnabled && videoTransformOperationsEnabled ? "loading" : "guarded",
+      // Frame Video keeps its ordered image metadata, plan, receipt and
+      // timeline only in signed tab state. Reset before every bootstrap so no
+      // source order, filename or output readiness crosses accounts/sessions.
+      frameVideoReferences: { items: [], selected_ids: [], selected_items: [], pagination: { limit: FRAME_VIDEO_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      frameVideoOperations: [],
+      frameVideoOperationsListing: { pagination: { limit: FRAME_VIDEO_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      frameVideoDraft: {},
+      frameVideoEstimate: {},
+      frameVideoDetail: {},
+      frameVideoDetailReadState: "guarded",
+      frameVideoOperationsReadState: account && assetVaultEnabled && frameVideoOperationsEnabled ? "loading" : "guarded",
       // Explicitly clear owner-scoped creative metadata during every session
       // refresh. A disabled flag or failed request must not leave a prior
       // artboard, asset reference, prompt or history visible in the browser.
@@ -10898,6 +10948,7 @@
         "/subtitle/assets": account && assetVaultEnabled && subtitleAssetOperationsEnabled ? "processing" : "guarded",
         "/audio/assets": account && assetVaultEnabled && audioAssetOperationsEnabled ? "processing" : "guarded",
         "/video/finishing": account && assetVaultEnabled && videoTransformOperationsEnabled ? "processing" : "guarded",
+        "/video/frame-sequence": account && assetVaultEnabled && frameVideoOperationsEnabled ? "processing" : "guarded",
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
@@ -11262,6 +11313,13 @@
       // Bot or a prior account's selection when the native gate is unavailable.
       if (account && assetVaultEnabled && videoTransformOperationsEnabled) await hydrateVideoTransformOperations();
       else clearVideoTransformOperationsProjection("guarded");
+    }
+    if (currentPath === FRAME_VIDEO_OPERATIONS_ROUTE) {
+      // Frame Video owns its image picker, ordered selection, estimate and
+      // receipt list. Never substitute generic Video, Asset/Job, Bot or a
+      // prior session's selection when the native runtime is unavailable.
+      if (account && assetVaultEnabled && frameVideoOperationsEnabled) await hydrateFrameVideoOperations();
+      else clearFrameVideoOperationsProjection("guarded");
     }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
@@ -16448,6 +16506,387 @@
     const blob = await response.blob();
     if (blob.size !== expectedSize || blob.size > VIDEO_TRANSFORM_OPERATIONS_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== "video/mp4") {
       throw new Error("Private video attachment không qua kiểm tra kích thước hoặc định dạng.");
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
+  }
+
+  // Frame Video has an independent typed image picker and private receipt
+  // boundary. Its ordered source IDs, settings and metadata remain in this
+  // signed tab only; no generic Video, Bot, provider, Job/Asset, browser
+  // renderer, wallet/Xu, PayOS or public delivery state is reused here.
+  function frameVideoOperationsPathIsCurrent(path) {
+    return String(path || "").split("?")[0] === FRAME_VIDEO_OPERATIONS_ROUTE;
+  }
+
+  function frameVideoTimestamp(value, required) {
+    const normalized = String(value || "").trim();
+    if (!normalized) return required ? null : "";
+    return normalized.length <= 80 && !/[\u0000-\u001f\u007f]/.test(normalized) ? normalized : null;
+  }
+
+  function frameVideoInteger(value, minimum, maximum) {
+    if (value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isInteger(number) && number >= minimum && number <= maximum ? number : null;
+  }
+
+  function frameVideoReferenceItem(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = frameVideoTimestamp(source.created_at, false);
+    const expectedMime = extension === ".jpg" || extension === ".jpeg" ? "image/jpeg"
+      : extension === ".png" ? "image/png" : extension === ".webp" ? "image/webp" : "";
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || !expectedMime || contentType !== expectedMime || !Number.isInteger(byteSize) || byteSize < 1 || byteSize > FRAME_VIDEO_MAX_SOURCE_BYTES
+      || createdAt === null) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: createdAt };
+  }
+
+  function frameVideoSelectionIds(value) {
+    const raw = Array.isArray(value) ? value : [];
+    const seen = new Set();
+    const ids = raw.map((item) => String(item || "").trim())
+      .filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true));
+    return ids.length <= 8 ? ids : [];
+  }
+
+  function frameVideoSelectionIdsFromPayload(value) {
+    if (Array.isArray(value)) return frameVideoSelectionIds(value);
+    return frameVideoSelectionIds(String(value || "").split(","));
+  }
+
+  function frameVideoReferenceOffset(value) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+  }
+
+  function frameVideoReferencesProjection(data, offset, selectedIds, previous) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const currentOffset = frameVideoReferenceOffset(offset);
+    const items = Array.isArray(source.items)
+      ? source.items.map(frameVideoReferenceItem).filter(Boolean).slice(0, FRAME_VIDEO_OPERATIONS_LIST_LIMIT)
+      : [];
+    const selected = frameVideoSelectionIds(selectedIds);
+    const old = previous && typeof previous === "object" && !Array.isArray(previous) ? previous : {};
+    const previousSelected = Array.isArray(old.selected_items) ? old.selected_items.map(frameVideoReferenceItem).filter(Boolean) : [];
+    const metadata = new Map();
+    previousSelected.concat(items).forEach((item) => { metadata.set(item.id, item); });
+    const selectedItems = selected.map((id) => metadata.get(id)).filter(Boolean);
+    const rawNext = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items, selected_ids: selected, selected_items: selectedItems,
+      pagination: {
+        limit: FRAME_VIDEO_OPERATIONS_LIST_LIMIT, offset: currentOffset, returned: items.length,
+        has_more: hasMore, next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= FRAME_VIDEO_OPERATIONS_LIST_LIMIT ? currentOffset - FRAME_VIDEO_OPERATIONS_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function frameVideoOperationItem(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(source.id || "").trim();
+    const kind = String(source.kind || "").trim();
+    const state = String(source.state || source.status || "").trim();
+    const aspectRatio = String(source.aspect_ratio || "").trim();
+    const secondsPerImage = Number(source.seconds_per_image);
+    const effect = String(source.effect || "").trim().toLowerCase();
+    const effectiveEffect = source.effective_effect === null || source.effective_effect === undefined ? null : String(source.effective_effect || "").trim().toLowerCase();
+    const sourceCount = frameVideoInteger(source.source_count, 2, 8);
+    const sourceTotalBytes = frameVideoInteger(source.source_total_bytes, 1, FRAME_VIDEO_MAX_SOURCE_TOTAL_BYTES);
+    const createdAt = frameVideoTimestamp(source.created_at, true);
+    const queuedAt = frameVideoTimestamp(source.queued_at, true);
+    const updatedAt = frameVideoTimestamp(source.updated_at, true);
+    const startedAt = source.started_at === null || source.started_at === undefined ? null : frameVideoTimestamp(source.started_at, true);
+    const completedAt = source.completed_at === null || source.completed_at === undefined ? null : frameVideoTimestamp(source.completed_at, true);
+    if (!validVaultAssetId(id) || kind !== "frame_video" || !FRAME_VIDEO_STATES.has(state) || !FRAME_VIDEO_RATIOS[aspectRatio]
+      || !FRAME_VIDEO_SECONDS_PER_IMAGE.has(secondsPerImage) || !FRAME_VIDEO_EFFECTS.has(effect)
+      || (effectiveEffect !== null && !FRAME_VIDEO_CONCRETE_EFFECTS.has(effectiveEffect))
+      || sourceCount === null || sourceTotalBytes === null || !createdAt || !queuedAt || !updatedAt
+      || (source.started_at !== null && source.started_at !== undefined && startedAt === null)
+      || (source.completed_at !== null && source.completed_at !== undefined && completedAt === null)) return null;
+    const output = source.output && typeof source.output === "object" && !Array.isArray(source.output) ? source.output : {};
+    const outputAvailable = output.available === true;
+    const outputFilename = String(output.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const outputContentType = String(output.content_type || "").trim().toLowerCase();
+    const outputSize = frameVideoInteger(output.byte_size, 128, FRAME_VIDEO_MAX_OUTPUT_BYTES);
+    const outputDuration = frameVideoInteger(output.duration_ms, 200, 24500);
+    const target = FRAME_VIDEO_RATIOS[aspectRatio];
+    const safeOutput = outputAvailable && state === "completed" && outputContentType === "video/mp4"
+      && outputFilename.length > 0 && outputFilename.length <= 180 && outputSize !== null && outputDuration !== null
+      && Number(output.width) === target.width && Number(output.height) === target.height;
+    return {
+      id, kind, state, status: state, aspect_ratio: aspectRatio, seconds_per_image: secondsPerImage, effect, effective_effect: effectiveEffect,
+      source_count: sourceCount, source_total_bytes: sourceTotalBytes,
+      output: safeOutput ? { available: true, filename: outputFilename, content_type: "video/mp4", byte_size: outputSize, duration_ms: outputDuration, width: target.width, height: target.height } : { available: false, filename: null, content_type: null, byte_size: null, duration_ms: null, width: null, height: null },
+      created_at: createdAt, queued_at: queuedAt, started_at: startedAt, completed_at: completedAt, updated_at: updatedAt
+    };
+  }
+
+  function frameVideoOperationsProjection(data, offset) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const currentOffset = frameVideoReferenceOffset(offset);
+    const items = Array.isArray(source.items)
+      ? source.items.map(frameVideoOperationItem).filter(Boolean).slice(0, FRAME_VIDEO_OPERATIONS_LIST_LIMIT)
+      : [];
+    const pagination = source.pagination && typeof source.pagination === "object" && !Array.isArray(source.pagination) ? source.pagination : {};
+    const rawNext = Number(pagination.next_offset);
+    const hasMore = pagination.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items,
+      pagination: {
+        limit: FRAME_VIDEO_OPERATIONS_LIST_LIMIT, offset: currentOffset, returned: items.length,
+        has_more: hasMore, next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= FRAME_VIDEO_OPERATIONS_LIST_LIMIT ? currentOffset - FRAME_VIDEO_OPERATIONS_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function frameVideoSelectedSourcesFromState() {
+    const references = base().frameVideoReferences && typeof base().frameVideoReferences === "object" ? base().frameVideoReferences : {};
+    const ids = frameVideoSelectionIds(references.selected_ids);
+    const all = new Map();
+    const candidates = (Array.isArray(references.selected_items) ? references.selected_items : []).concat(Array.isArray(references.items) ? references.items : []);
+    candidates.map(frameVideoReferenceItem).filter(Boolean).forEach((item) => { all.set(item.id, item); });
+    return ids.map((id) => all.get(id)).filter(Boolean);
+  }
+
+  function frameVideoOperationFromState(operationId) {
+    const id = String(operationId || "").trim();
+    return (Array.isArray(base().frameVideoOperations) ? base().frameVideoOperations : [])
+      .map(frameVideoOperationItem).find((item) => item && item.id === id) || null;
+  }
+
+  function frameVideoSpecIsSafe(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const ids = frameVideoSelectionIds(source.source_asset_ids);
+    return ids.length >= 2 && ids.length <= 8 && Boolean(FRAME_VIDEO_RATIOS[String(source.aspect_ratio || "")])
+      && FRAME_VIDEO_SECONDS_PER_IMAGE.has(Number(source.seconds_per_image)) && FRAME_VIDEO_EFFECTS.has(String(source.effect || "").toLowerCase());
+  }
+
+  function frameVideoPayload(fields) {
+    const source = fields && typeof fields === "object" ? fields : {};
+    const ids = Array.isArray(source.__frameVideoSelectedIds)
+      ? frameVideoSelectionIds(source.__frameVideoSelectedIds)
+      : frameVideoSelectionIdsFromPayload(source.frame_video_selection_order);
+    const payload = {
+      source_asset_ids: ids,
+      aspect_ratio: String(source.aspect_ratio || "").trim(),
+      seconds_per_image: Number(source.seconds_per_image),
+      effect: String(source.effect || "").trim().toLowerCase()
+    };
+    if (!frameVideoSpecIsSafe(payload)) throw new Error("Kế hoạch Frame Video không hợp lệ. Cần 2–8 ảnh, tỷ lệ, nhịp và hiệu ứng trong danh sách được phép.");
+    const selectedSources = frameVideoSelectedSourcesFromState();
+    if (selectedSources.length !== payload.source_asset_ids.length || selectedSources.some((item, index) => item.id !== payload.source_asset_ids[index])) {
+      throw new Error("Một hoặc nhiều ảnh nguồn không còn trong metadata Asset Vault owner-scoped của phiên hiện tại. Hãy làm mới rồi chọn lại.");
+    }
+    const totalBytes = selectedSources.reduce((total, item) => total + Number(item.byte_size), 0);
+    if (!Number.isInteger(totalBytes) || totalBytes < 1 || totalBytes > FRAME_VIDEO_MAX_SOURCE_TOTAL_BYTES) {
+      throw new Error("Tổng dung lượng ảnh Frame Video vượt giới hạn an toàn. Hãy chọn lại tối đa 30 MiB.");
+    }
+    return payload;
+  }
+
+  function frameVideoSpecMatches(first, second) {
+    if (!frameVideoSpecIsSafe(first) || !frameVideoSpecIsSafe(second)) return false;
+    const firstIds = frameVideoSelectionIds(first.source_asset_ids);
+    const secondIds = frameVideoSelectionIds(second.source_asset_ids);
+    return firstIds.length === secondIds.length && firstIds.every((id, index) => id === secondIds[index])
+      && String(first.aspect_ratio) === String(second.aspect_ratio)
+      && Number(first.seconds_per_image) === Number(second.seconds_per_image)
+      && String(first.effect).toLowerCase() === String(second.effect).toLowerCase();
+  }
+
+  function frameVideoEstimateProjection(data, payload) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const estimate = source.estimate && typeof source.estimate === "object" && !Array.isArray(source.estimate) ? source.estimate : {};
+    const output = estimate.output && typeof estimate.output === "object" && !Array.isArray(estimate.output) ? estimate.output : {};
+    const target = FRAME_VIDEO_RATIOS[String(payload && payload.aspect_ratio || "")];
+    const sourceCount = frameVideoInteger(estimate.source_count, 2, 8);
+    const sourceTotalBytes = frameVideoInteger(estimate.source_total_bytes, 1, FRAME_VIDEO_MAX_SOURCE_TOTAL_BYTES);
+    const durationSeconds = Number(estimate.duration_seconds);
+    const effectiveEffect = String(estimate.effective_effect || "").toLowerCase();
+    if (!target || sourceCount !== payload.source_asset_ids.length || sourceTotalBytes === null || String(estimate.aspect_ratio || "") !== payload.aspect_ratio
+      || Number(estimate.seconds_per_image) !== payload.seconds_per_image || String(estimate.effect || "").toLowerCase() !== payload.effect
+      || !FRAME_VIDEO_CONCRETE_EFFECTS.has(effectiveEffect) || !Number.isFinite(durationSeconds) || durationSeconds <= 0 || durationSeconds > 24
+      || String(output.content_type || "").toLowerCase() !== "video/mp4" || String(output.codec || "").toLowerCase() !== "h264" || output.audio !== false
+      || Number(estimate.width) !== target.width || Number(estimate.height) !== target.height) return null;
+    return {
+      source_count: sourceCount, source_total_bytes: sourceTotalBytes, aspect_ratio: payload.aspect_ratio, seconds_per_image: payload.seconds_per_image,
+      duration_seconds: durationSeconds, effect: payload.effect, effective_effect: effectiveEffect,
+      output: { content_type: "video/mp4", codec: "h264", audio: false, width: target.width, height: target.height }
+    };
+  }
+
+  function frameVideoStoredEstimate() {
+    const stored = base().frameVideoEstimate && typeof base().frameVideoEstimate === "object" ? base().frameVideoEstimate : {};
+    const payload = frameVideoSpecIsSafe(stored.payload) ? stored.payload : null;
+    const estimate = payload ? frameVideoEstimateProjection({ estimate: stored.estimate }, payload) : null;
+    return payload && estimate ? { payload, estimate } : null;
+  }
+
+  function frameVideoOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === frameVideoOperationsHydrationEpoch && sessionEpoch === assetVaultSessionEpoch
+      && currentPortalPath() === expectedPath && frameVideoOperationsPathIsCurrent(expectedPath)
+      && base().assetVaultEnabled === true && base().frameVideoOperationsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function frameVideoRouteSessionIsCurrent(sessionEpoch, expectedPath) {
+    return sessionEpoch === assetVaultSessionEpoch && currentPortalPath() === expectedPath && frameVideoOperationsPathIsCurrent(expectedPath)
+      && base().assetVaultEnabled === true && base().frameVideoOperationsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function clearFrameVideoOperationsProjection(readState) {
+    const normalized = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    merge({
+      frameVideoReferences: { items: [], selected_ids: [], selected_items: [], pagination: { limit: FRAME_VIDEO_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      frameVideoOperations: [],
+      frameVideoOperationsListing: { pagination: { limit: FRAME_VIDEO_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      frameVideoDraft: {}, frameVideoEstimate: {}, frameVideoDetail: {}, frameVideoDetailReadState: "guarded",
+      frameVideoOperationsReadState: normalized,
+      pageStates: { ...(base().pageStates || {}), [FRAME_VIDEO_OPERATIONS_ROUTE]: normalized === "loading" ? "read_only" : normalized }
+    });
+  }
+
+  async function hydrateFrameVideoOperations(options) {
+    const request = options && typeof options === "object" ? options : {};
+    const requestEpoch = ++frameVideoOperationsHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!frameVideoOperationsPathIsCurrent(expectedPath) || base().assetVaultEnabled !== true || base().frameVideoOperationsEnabled !== true) {
+      if (frameVideoOperationsPathIsCurrent(expectedPath)) clearFrameVideoOperationsProjection("guarded");
+      return null;
+    }
+    const previousReferences = base().frameVideoReferences && typeof base().frameVideoReferences === "object" ? base().frameVideoReferences : {};
+    const previousSourcePagination = previousReferences.pagination && typeof previousReferences.pagination === "object" ? previousReferences.pagination : {};
+    const previousListing = base().frameVideoOperationsListing && typeof base().frameVideoOperationsListing === "object" ? base().frameVideoOperationsListing : {};
+    const previousOperationPagination = previousListing.pagination && typeof previousListing.pagination === "object" ? previousListing.pagination : {};
+    const sourceOffset = frameVideoReferenceOffset(request.sourceOffset === undefined ? previousSourcePagination.offset : request.sourceOffset);
+    const operationOffset = frameVideoReferenceOffset(request.operationOffset === undefined ? previousOperationPagination.offset : request.operationOffset);
+    const selectedIds = request.selectedIds === undefined || request.selectedIds === null
+      ? frameVideoSelectionIds(previousReferences.selected_ids) : frameVideoSelectionIds(request.selectedIds);
+    merge({
+      frameVideoOperationsReadState: "loading", frameVideoEstimate: {}, frameVideoDetail: {}, frameVideoDetailReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [FRAME_VIDEO_OPERATIONS_ROUTE]: "read_only" }
+    });
+    try {
+      const [referencesResult, operationsResult] = await Promise.all([
+        api(`/asset-vault?state=active&reference_kind=image&limit=${FRAME_VIDEO_OPERATIONS_LIST_LIMIT}&offset=${sourceOffset}`, { cache: "no-store" }),
+        api(`/frame-video-operations?limit=${FRAME_VIDEO_OPERATIONS_LIST_LIMIT}&offset=${operationOffset}`, { cache: "no-store" })
+      ]);
+      if (!frameVideoOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const references = frameVideoReferencesProjection(referencesResult.data, sourceOffset, selectedIds, previousReferences);
+      const history = frameVideoOperationsProjection(operationsResult.data, operationOffset);
+      if (!frameVideoOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        frameVideoReferences: references, frameVideoOperations: history.items, frameVideoOperationsListing: { pagination: history.pagination },
+        frameVideoOperationsReadState: "ready", pageStates: { ...(base().pageStates || {}), [FRAME_VIDEO_OPERATIONS_ROUTE]: "ready" }
+      });
+      return { references, operations: history.items, listing: history };
+    } catch (_) {
+      if (!frameVideoOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearFrameVideoOperationsProjection("failed");
+      return null;
+    }
+  }
+
+  function frameVideoDetailProjection(data, expectedId) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const operation = frameVideoOperationItem(source.operation);
+    const events = Array.isArray(source.events) ? source.events : null;
+    if (!operation || operation.id !== expectedId || !events || events.length > 60) return null;
+    const projectedEvents = events.map((event) => {
+      const value = event && typeof event === "object" && !Array.isArray(event) ? event : {};
+      const state = String(value.state || "").trim();
+      const createdAt = frameVideoTimestamp(value.created_at, true);
+      return FRAME_VIDEO_STATES.has(state) && createdAt ? { state, created_at: createdAt } : null;
+    });
+    return projectedEvents.some((event) => !event) ? null : { operation, events: projectedEvents };
+  }
+
+  async function hydrateFrameVideoOperationDetail(operationId) {
+    const id = String(operationId || "").trim();
+    if (!validVaultAssetId(id) || !frameVideoOperationFromState(id)) throw new Error("Mã Frame Video không nằm trong lịch sử private đang hiển thị.");
+    const requestEpoch = ++frameVideoOperationDetailHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!frameVideoRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+    merge({ frameVideoDetail: {}, frameVideoDetailReadState: "loading" });
+    try {
+      const result = await api(`/frame-video-operations/${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (requestEpoch !== frameVideoOperationDetailHydrationEpoch || !frameVideoRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+      const detail = frameVideoDetailProjection(result.data, id);
+      if (!detail) throw new Error("Máy chủ chưa trả detail Frame Video owner-scoped hợp lệ.");
+      merge({ frameVideoDetail: detail, frameVideoDetailReadState: "ready" });
+      return detail;
+    } catch (_) {
+      if (requestEpoch !== frameVideoOperationDetailHydrationEpoch || !frameVideoRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+      merge({ frameVideoDetail: {}, frameVideoDetailReadState: "guarded" });
+      return null;
+    }
+  }
+
+  function frameVideoOperationReceipt(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : {};
+    const operation = frameVideoOperationItem(data.operation);
+    if (!operation || operation.state !== "completed" || operation.output.available !== true) {
+      throw new Error("Máy chủ chưa trả output Frame Video private đã được kiểm chứng.");
+    }
+    return operation;
+  }
+
+  async function downloadFrameVideoOperation(operationId) {
+    const operation = frameVideoOperationFromState(operationId);
+    const output = operation && operation.output && typeof operation.output === "object" ? operation.output : {};
+    const expectedSize = Number(output.byte_size);
+    const filename = String(output.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    if (!operation || operation.kind !== "frame_video" || operation.state !== "completed" || output.available !== true
+      || String(output.content_type || "").toLowerCase() !== "video/mp4" || !filename || filename.length > 180
+      || !Number.isInteger(expectedSize) || expectedSize < 128 || expectedSize > FRAME_VIDEO_MAX_OUTPUT_BYTES) {
+      throw new Error("Output Frame Video private chưa được server xác nhận sẵn sàng để tải.");
+    }
+    const headers = new Headers({ Accept: "video/mp4, application/json", "X-Request-ID": randomKey("web") });
+    const response = await fetch(`${API}/frame-video-operations/${encodeURIComponent(operation.id)}/download`, {
+      credentials: "same-origin", headers, cache: "no-store"
+    });
+    const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* guarded envelope remains generic */ }
+      throw new Error(payload && payload.message ? payload.message : "Máy chủ chưa xác nhận output Frame Video private có thể tải.");
+    }
+    const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+    const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+    const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+    const referrerPolicy = String(response.headers.get("Referrer-Policy") || "").toLowerCase();
+    const contentPolicy = String(response.headers.get("Content-Security-Policy") || "").toLowerCase();
+    const corp = String(response.headers.get("Cross-Origin-Resource-Policy") || "").toLowerCase();
+    const byteSize = Number(response.headers.get("Content-Length"));
+    const actualMime = contentType.split(";", 1)[0].trim();
+    if (!response.ok || !disposition.includes("attachment") || !cacheControl.includes("no-store") || nosniff !== "nosniff"
+      || !referrerPolicy.includes("no-referrer") || !contentPolicy.includes("sandbox") || corp !== "same-origin"
+      || actualMime !== "video/mp4" || !Number.isInteger(byteSize) || byteSize !== expectedSize) {
+      throw new Error("Private Frame Video attachment không qua kiểm tra delivery của browser.");
+    }
+    const blob = await response.blob();
+    if (blob.size !== expectedSize || blob.size > FRAME_VIDEO_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== "video/mp4") {
+      throw new Error("Private Frame Video attachment không qua kiểm tra kích thước hoặc định dạng.");
     }
     const objectUrl = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -23949,6 +24388,192 @@
         try {
           await downloadVideoTransformOperation(operationId);
           toast("Đã bắt đầu tải attachment MP4 private đã được xác minh.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-operation-refresh") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể làm mới Frame Video Lab từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và Frame Video runtime để xem dữ liệu private.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateFrameVideoOperations();
+          if (!refreshed && base().frameVideoOperationsReadState !== "ready") {
+            throw new Error("Không thể tải Frame Video owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã làm mới ảnh nguồn và lịch sử Frame Video private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-reference-page") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi trang ảnh private từ Frame Video Lab đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem ảnh Asset Vault private.");
+        }
+        const sourceOffset = Number(fields.__frameVideoReferenceOffset);
+        const selectedIds = Array.isArray(fields.__frameVideoSelectedIds) ? frameVideoSelectionIds(fields.__frameVideoSelectedIds) : null;
+        if (!Number.isInteger(sourceOffset) || sourceOffset < 0 || sourceOffset > 10000 || selectedIds === null) {
+          throw new Error("Trang hoặc chuỗi ảnh Frame Video private không hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateFrameVideoOperations({ sourceOffset, selectedIds });
+          if (!refreshed && base().frameVideoOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang ảnh owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang ảnh Asset Vault private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-history-page") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi lịch sử Frame Video từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem lịch sử Frame Video private.");
+        }
+        const operationOffset = Number(fields.__frameVideoOperationOffset);
+        if (!Number.isInteger(operationOffset) || operationOffset < 0 || operationOffset > 10000) {
+          throw new Error("Trang lịch sử Frame Video không hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateFrameVideoOperations({ operationOffset });
+          if (!refreshed && base().frameVideoOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang lịch sử Frame Video private an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang lịch sử Frame Video private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-operation-estimate") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể kiểm tra kế hoạch Frame Video từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-estimate"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để kiểm tra Frame Video private.");
+        }
+        const payload = frameVideoPayload(fields);
+        const sessionEpoch = assetVaultSessionEpoch;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/frame-video-operations/estimate", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), cache: "no-store"
+          });
+          if (!frameVideoRouteSessionIsCurrent(sessionEpoch, route)) return;
+          const estimate = frameVideoEstimateProjection(result.data, payload);
+          if (!estimate) throw new Error("Máy chủ chưa trả kế hoạch Frame Video có cấu trúc an toàn.");
+          const references = base().frameVideoReferences && typeof base().frameVideoReferences === "object" ? base().frameVideoReferences : {};
+          const selected = frameVideoSelectedSourcesFromState();
+          if (selected.length !== payload.source_asset_ids.length) {
+            throw new Error("Một ảnh nguồn đã rời Asset Vault owner-scoped trong lúc kiểm tra. Hãy làm mới rồi chọn lại.");
+          }
+          merge({
+            frameVideoDraft: payload,
+            frameVideoReferences: { ...references, selected_ids: payload.source_asset_ids, selected_items: selected },
+            frameVideoEstimate: { payload, estimate },
+            pageStates: { ...(base().pageStates || {}), [FRAME_VIDEO_OPERATIONS_ROUTE]: "awaiting_confirm" }
+          });
+          toast(result.message || "Đã kiểm tra kế hoạch Frame Video; chưa tạo file.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-operation-confirm") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể xác nhận Frame Video từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-create"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để tạo Frame Video private.");
+        }
+        if (fields.frame_video_confirmation !== true) {
+          throw new Error("Hãy xác nhận bạn hiểu output chỉ sẵn sàng sau khi máy chủ kiểm chứng.");
+        }
+        const payload = frameVideoPayload(fields);
+        const storedEstimate = frameVideoStoredEstimate();
+        if (!storedEstimate || !frameVideoSpecMatches(storedEstimate.payload, payload)) {
+          throw new Error("Kế hoạch đã hết hiệu lực hoặc không khớp ảnh, thứ tự hay cấu hình hiện tại. Hãy kiểm tra kế hoạch lại trước khi tạo MP4.");
+        }
+        const scope = `frame-video-operation:${payload.source_asset_ids.join(":")}:${payload.aspect_ratio}:${payload.seconds_per_image}:${payload.effect}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Frame Video private đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "warning");
+          return;
+        }
+        let receiptAndRefreshConfirmed = false;
+        setActionBusy(action, route, true);
+        try {
+          // Invalidate pending private reads before the write.  The browser
+          // does not synthesize a history row, state or media file.
+          ++frameVideoOperationsHydrationEpoch;
+          ++frameVideoOperationDetailHydrationEpoch;
+          const result = await api("/frame-video-operations", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key }), cache: "no-store"
+          });
+          frameVideoOperationReceipt(result);
+          const refreshed = await hydrateFrameVideoOperations({ selectedIds: payload.source_asset_ids });
+          // Keep the key whenever the immutable server acknowledgement cannot
+          // be followed by a fresh owner-scoped receipt. Retrying the same
+          // request replays that result instead of creating a second MP4.
+          if (!refreshed) throw new Error("Máy chủ đã xác nhận Frame Video nhưng chưa thể tải lại lịch sử private an toàn. Hãy làm mới hoặc xác nhận lại; cùng idempotency key sẽ được tái sử dụng.");
+          receiptAndRefreshConfirmed = true;
+          toast(result.message || "Đã tạo MP4 private sau khi máy chủ kiểm chứng output.");
+        } finally {
+          releaseSubmission(submission);
+          if (receiptAndRefreshConfirmed) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-operation-detail") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể xem detail Frame Video từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-detail"] === true)) {
+          throw new Error("Cần signed Web session để xem detail Frame Video private.");
+        }
+        const operationId = String(fields.__frameVideoOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã Frame Video private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const detail = await hydrateFrameVideoOperationDetail(operationId);
+          if (!detail && base().frameVideoDetailReadState !== "ready") {
+            throw new Error("Không thể tải detail Frame Video owner-scoped an toàn.");
+          }
+          if (detail) toast("Đã tải trạng thái và timeline Frame Video private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "frame-video-operation-download") {
+        if (route !== FRAME_VIDEO_OPERATIONS_ROUTE || currentPortalPath() !== FRAME_VIDEO_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể tải output Frame Video private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["frame-video-operation-download"] === true)) {
+          throw new Error("Cần signed Web session để tải output Frame Video private.");
+        }
+        const operationId = String(fields.__frameVideoOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã output Frame Video private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await downloadFrameVideoOperation(operationId);
+          toast("Đã bắt đầu tải attachment MP4 Frame Video private đã được xác minh.");
         } finally {
           setActionBusy(action, route, false);
         }
