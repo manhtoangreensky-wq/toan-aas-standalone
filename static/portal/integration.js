@@ -4516,6 +4516,109 @@
     );
   }
 
+  // Quick Image Planner has its own request/result contract. It maps only the
+  // Bot's non-executing draft steps and never lets a generic feature response,
+  // callback, tier, payment or job shape reach the Portal renderer.
+  const QUICK_IMAGE_PLANNER_SOURCES = new Set(["curated", "custom"]);
+  const QUICK_IMAGE_PLANNER_SUGGESTION_KEYS = new Set([
+    "desk_organizer", "daily_bottle", "small_shop", "skincare_ritual", "coffee_moment", "travel_essential",
+    "learning_tool", "home_comfort", "local_food", "quiet_reading", "eco_routine", "pet_care",
+    "fitness_reset", "weekend_market", "creative_stationery", "family_meal", "morning_cycle", "plant_corner",
+    "craft_process", "remote_meeting", "gift_wrap", "night_skincare", "makers_table", "community_class"
+  ]);
+  const QUICK_IMAGE_PLANNER_RATIOS = new Set(["9:16", "16:9", "1:1", "4:5", "3:4", "3:2", "4:3"]);
+  const QUICK_IMAGE_PLANNER_POSITIONS = new Set([
+    "none", "top_left", "top_center", "top_right", "center_left", "center", "center_right",
+    "bottom_left", "bottom_center", "bottom_right"
+  ]);
+  const QUICK_IMAGE_PLANNER_BOUNDARY_FIELDS = MEDIA_FACTORY_BOUNDARY_FIELDS;
+  const QUICK_IMAGE_PLANNER_PLAN_KEYS = Object.freeze([
+    "title", "language", "idea_source", "suggestion_key", "topic", "variation", "variation_label", "aspect_ratio",
+    "brand_direction", "brand_position", "brand_position_label", "short_prompt", "detailed_prompt", "negative_prompt",
+    "composition", "output_status", "summary", "review_checklist", "unavailable_capabilities", "next_workflows"
+  ]);
+  const QUICK_IMAGE_PLANNER_WORKFLOWS = Object.freeze([
+    ["Image Prompt Composer", "/image/prompt-composer"], ["Image Creative Studio", "/image-studio"],
+    ["Content Prompt Pack", "/content/prompt-pack"]
+  ]);
+
+  function quickImagePlannerPayload(fields) {
+    const ideaSource = contentStudioLine(fields.idea_source || "curated", "Điểm bắt đầu", 4, 16, false).toLowerCase();
+    if (!QUICK_IMAGE_PLANNER_SOURCES.has(ideaSource)) throw new Error("Điểm bắt đầu Quick Image Planner không hợp lệ.");
+    const language = contentStudioLine(fields.language || "vi", "Ngôn ngữ", 2, 8, false).toLowerCase();
+    if (!MEDIA_FACTORY_LANGUAGES.has(language)) throw new Error("Ngôn ngữ Quick Image Planner chỉ hỗ trợ vi hoặc en.");
+    const aspectRatio = contentStudioLine(fields.aspect_ratio || "1:1", "Tỷ lệ", 3, 8, false);
+    if (!QUICK_IMAGE_PLANNER_RATIOS.has(aspectRatio)) throw new Error("Tỷ lệ ảnh Quick Image Planner không hợp lệ.");
+    const variationRaw = contentStudioLine(String(fields.variation || "0"), "Biến thể", 1, 1, false);
+    const variation = Number(variationRaw);
+    if (!Number.isInteger(variation) || variation < 0 || variation > 2) throw new Error("Biến thể prompt không hợp lệ.");
+    const rawBrand = String(fields.brand_direction || "");
+    if (/\r|\n/.test(rawBrand)) throw new Error("Hướng thương hiệu phải nằm trên một dòng.");
+    const brandDirection = rawBrand.trim() ? contentStudioLine(rawBrand, "Hướng thương hiệu", 2, 300, false) : "";
+    const brandPosition = contentStudioLine(fields.brand_position || "none", "Vị trí Logo / Watermark", 4, 20, false).toLowerCase();
+    if (!QUICK_IMAGE_PLANNER_POSITIONS.has(brandPosition)) throw new Error("Vị trí Logo / Watermark không hợp lệ.");
+    if (!brandDirection && brandPosition !== "none") throw new Error("Cần nhập hướng thương hiệu trước khi chọn vị trí Logo / Watermark.");
+    if (brandDirection && brandPosition === "none") throw new Error("Hãy chọn vị trí Logo / Watermark hoặc bỏ hướng thương hiệu.");
+    const brandSafety = mediaFactorySafetyError(brandDirection);
+    if (brandSafety) throw new Error(brandSafety.replace("Media Factory", "Quick Image Planner"));
+    if (ideaSource === "curated") {
+      const suggestionKey = contentStudioLine(fields.suggestion_key || "", "Ý tưởng gợi ý", 3, 80, false).toLowerCase();
+      if (!QUICK_IMAGE_PLANNER_SUGGESTION_KEYS.has(suggestionKey)) throw new Error("Ý tưởng gợi ý không hợp lệ.");
+      return { idea_source: ideaSource, suggestion_key: suggestionKey, custom_prompt: "", aspect_ratio: aspectRatio, variation, brand_direction: brandDirection, brand_position: brandPosition, language };
+    }
+    const rawCustom = String(fields.custom_prompt || "");
+    if (/\r|\n/.test(rawCustom)) throw new Error("Mô tả ảnh riêng phải nằm trên một dòng.");
+    const customPrompt = contentStudioLine(rawCustom, "Mô tả ảnh riêng", 4, 1400, false);
+    const safety = mediaFactorySafetyError(customPrompt);
+    if (safety) throw new Error(safety.replace("Media Factory", "Quick Image Planner"));
+    return { idea_source: ideaSource, suggestion_key: "", custom_prompt: customPrompt, aspect_ratio: aspectRatio, variation, brand_direction: brandDirection, brand_position: brandPosition, language };
+  }
+
+  function quickImagePlannerText(value, minimum, maximum) {
+    return typeof value === "string" && !/\r|\n/.test(value) && value.length >= minimum && value.length <= maximum && !mediaFactorySafetyError(value);
+  }
+
+  function quickImagePlannerBoundaryIsSafe(value) {
+    const data = value && typeof value === "object" ? value : {};
+    return data.execution === "web_native_deterministic_quick_image_planner_only"
+      && QUICK_IMAGE_PLANNER_BOUNDARY_FIELDS.every((field) => data[field] === false);
+  }
+
+  function quickImagePlannerResultIsSafe(value) {
+    const data = value && typeof value === "object" ? value : {};
+    const plan = data.plan && typeof data.plan === "object" ? data.plan : {};
+    const ideaSource = String(plan.idea_source || "").trim().toLowerCase();
+    const suggestionKey = String(plan.suggestion_key || "").trim().toLowerCase();
+    const ratio = String(plan.aspect_ratio || "").trim();
+    const variation = Number(plan.variation);
+    const brandDirection = plan.brand_direction === "" ? "" : plan.brand_direction;
+    const brandPosition = String(plan.brand_position || "").trim();
+    const review = Array.isArray(plan.review_checklist) ? plan.review_checklist : [];
+    const unavailable = Array.isArray(plan.unavailable_capabilities) ? plan.unavailable_capabilities : [];
+    const workflows = Array.isArray(plan.next_workflows) ? plan.next_workflows : [];
+    const validSource = (ideaSource === "curated" && QUICK_IMAGE_PLANNER_SUGGESTION_KEYS.has(suggestionKey))
+      || (ideaSource === "custom" && suggestionKey === "");
+    const validBrand = (brandDirection === "" && brandPosition === "none")
+      || (quickImagePlannerText(brandDirection, 2, 300) && QUICK_IMAGE_PLANNER_POSITIONS.has(brandPosition) && brandPosition !== "none");
+    const validLists = review.length === 4 && unavailable.length === 4
+      && [...review, ...unavailable].every((item) => quickImagePlannerText(item, 2, 620));
+    const validWorkflows = workflows.length === 3 && workflows.every((item, index) => item && typeof item === "object"
+      && item.label === QUICK_IMAGE_PLANNER_WORKFLOWS[index][0] && item.route === QUICK_IMAGE_PLANNER_WORKFLOWS[index][1]
+      && quickImagePlannerText(item.purpose, 2, 320));
+    return Boolean(
+      Object.keys(plan).sort().join("|") === QUICK_IMAGE_PLANNER_PLAN_KEYS.slice().sort().join("|")
+      && quickImagePlannerBoundaryIsSafe(data) && quickImagePlannerText(plan.title, 2, 320)
+      && ["vi", "en"].includes(String(plan.language || "").trim().toLowerCase()) && validSource
+      && quickImagePlannerText(plan.topic, 4, 1400) && Number.isInteger(variation) && variation >= 0 && variation <= 2
+      && quickImagePlannerText(plan.variation_label, 2, 180) && QUICK_IMAGE_PLANNER_RATIOS.has(ratio)
+      && validBrand && quickImagePlannerText(plan.brand_position_label, 2, 80)
+      && quickImagePlannerText(plan.short_prompt, 2, 2200) && quickImagePlannerText(plan.detailed_prompt, 2, 3200)
+      && quickImagePlannerText(plan.negative_prompt, 2, 900) && quickImagePlannerText(plan.composition, 2, 620)
+      && plan.output_status === "prompt_plan_only_no_real_image" && quickImagePlannerText(plan.summary, 2, 420)
+      && validLists && validWorkflows
+    );
+  }
+
   // Creative Flow is a companion request-only template from the frozen Bot.
   // It shares input safety with Media Factory but has its own exact output so
   // a generic feature/bridge result cannot be rendered as a creative receipt.
@@ -9598,6 +9701,11 @@
     // indicates an image provider, generator, preview, job, wallet or payment
     // capability is available.
     const imageStudioEnabled = Boolean(status.flags && status.flags.image_studio_enabled === true);
+    // Quick Image Planner has an independent Web-native gate. A ready flag
+    // permits only its transient deterministic plan; it never releases the
+    // Bot's pending state, ShopAI tier/confirm token, provider/runtime, image
+    // output, job, Xu/wallet, PayOS, asset, publish or delivery authority.
+    const quickImagePlannerEnabled = Boolean(status.flags && status.flags.quick_image_planner_enabled === true);
     // Image Motion Planner depends on both private authoring stores. It only
     // selects metadata from Image Studio and creates an editable Video Plan;
     // the flag never grants source-media, renderer, provider, job or billing
@@ -9949,6 +10057,7 @@
       "trend-research-plan": Boolean(account && me.csrf_token && trendResearchEnabled),
       "growth-review-evaluate": Boolean(account && me.csrf_token && growthReviewEnabled),
       "media-factory-blueprint": Boolean(account && me.csrf_token && mediaFactoryEnabled),
+      "quick-image-planner-plan": Boolean(account && me.csrf_token && quickImagePlannerEnabled),
       "creative-flow-compose": Boolean(account && me.csrf_token && creativeFlowEnabled),
       "story-video-plan": Boolean(account && me.csrf_token && storyVideoPlanEnabled),
       "voice-studio-view": Boolean(account && voiceStudioEnabled),
@@ -10612,6 +10721,10 @@
       // Media Factory Blueprint is likewise a request-only receipt. It is
       // cleared on every signed bootstrap and never restored from storage.
       mediaFactoryResult: {},
+      // Quick Image Planner contains an account-private brief/prompt plan.
+      // Clear it on every signed bootstrap, logout and failed hydration so no
+      // custom prompt or watermark direction leaks into another session.
+      quickImagePlannerResult: {},
       // Creative Flow is a second ephemeral plan. Always clear it across
       // account/session transitions instead of rehydrating browser data.
       creativeFlowResult: {},
@@ -11037,6 +11150,7 @@
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
+        "/image/quick-planner": account && quickImagePlannerEnabled ? "ready" : "guarded",
         "/image/prompt-composer": account && imagePromptComposerEnabled ? "ready" : "guarded",
         "/document-workspace": account && documentWorkspaceEnabled ? "processing" : "guarded",
         "/document-workspace/new": account && documentWorkspaceEnabled ? "processing" : "guarded",
@@ -21919,6 +22033,59 @@
             pageStates: { ...(current.pageStates || {}), "/growth/ai": disabledBoundary ? "guarded" : "ready" }
           });
           throw error;
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "quick-image-planner-plan") {
+        // The plan can contain a private custom brief or brand direction.
+        // Clear a previous receipt *before* client validation so an invalid,
+        // expired-CSRF, rate-limited or disabled follow-up cannot leave it
+        // rendered for this account/session.
+        merge({ quickImagePlannerResult: {} });
+        const payload = quickImagePlannerPayload(fields);
+        // This separate planner never enters generic bridge/feature dispatch,
+        // idempotency or durable storage. It only returns a signed, transient
+        // prompt plan with the full no-execution boundary below.
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/quick-image-planner/plan", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = result.data && typeof result.data === "object" ? result.data : {};
+          if (result.status === "guarded") {
+            if (!quickImagePlannerBoundaryIsSafe(data)) throw new Error("Máy chủ chưa trả ranh giới Quick Image Planner an toàn.");
+            merge({
+              quickImagePlannerResult: {},
+              pageStates: { ...(base().pageStates || {}), "/image/quick-planner": "guarded" }
+            });
+            toast(result.message || "Ý tưởng cần được điều chỉnh trước khi lập prompt plan.");
+            return;
+          }
+          if (!quickImagePlannerResultIsSafe(data)) throw new Error("Máy chủ chưa trả Quick Image Plan Web-native an toàn.");
+          merge({
+            quickImagePlannerResult: data,
+            pageStates: { ...(base().pageStates || {}), "/image/quick-planner": "ready" }
+          });
+          toast(result.message || "Đã tạo Quick Image Plan để review.");
+        } catch (error) {
+          const guarded = error && error.payload && error.payload.status === "guarded" ? error.payload : null;
+          const guardedData = guarded && guarded.data && typeof guarded.data === "object" ? guarded.data : null;
+          const disabledBoundary = error && error.status === 503 && error.payload
+            && error.payload.data && quickImagePlannerBoundaryIsSafe(error.payload.data);
+          const current = base();
+          merge({
+            quickImagePlannerResult: {},
+            capabilities: disabledBoundary
+              ? { ...(current.capabilities || {}), "quick-image-planner-plan": false }
+              : current.capabilities,
+            pageStates: { ...(current.pageStates || {}), "/image/quick-planner": (guarded && quickImagePlannerBoundaryIsSafe(guardedData)) || disabledBoundary ? "guarded" : "ready" }
+          });
+          if (!guarded || !quickImagePlannerBoundaryIsSafe(guardedData)) throw error;
+          toast(guarded.message || "Ý tưởng cần được điều chỉnh trước khi lập prompt plan.");
         } finally {
           setActionBusy(action, route, false);
         }

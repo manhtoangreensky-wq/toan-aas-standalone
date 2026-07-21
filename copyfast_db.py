@@ -475,6 +475,20 @@ def media_factory_enabled() -> bool:
     return os.environ.get("WEBAPP_MEDIA_FACTORY_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
 
 
+def quick_image_planner_enabled() -> bool:
+    """Whether the signed, deterministic Quick Image Planner is available.
+
+    This flag exposes only a transient text plan derived from the frozen Bot's
+    Quick Image selection flow: a finite Web-owned seed/custom brief, optional
+    brand-placement direction, prompt variation and aspect ratio.  It never
+    enables a source image, provider/model, Bot/Core Bridge, ShopAI tier,
+    confirmation token, image/preview/output, job, Xu/wallet, PayOS, asset,
+    publish, delivery or webhook capability.
+    """
+
+    return os.environ.get("WEBAPP_QUICK_IMAGE_PLANNER_ENABLED", "true").strip().lower() in {"1", "true", "yes", "on"}
+
+
 def voice_studio_enabled() -> bool:
     """Whether the Web-native Voice Studio & Consent Vault is available.
 

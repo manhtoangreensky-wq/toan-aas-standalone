@@ -21,6 +21,8 @@
 | /admin/jobs/{job_id}/refund | POST | admin_refund_job |
 | /admin/jobs/{job_id}/retry | POST | admin_retry_job |
 | /admin/manual-orders | GET | get_manual_orders |
+| /admin/modules/access | GET | retired_generic_admin_security_module |
+| /admin/modules/security | GET | retired_generic_admin_security_module |
 | /admin/modules/{module} | GET | admin_module |
 | /admin/payments | GET | admin_payments |
 | /admin/providers | GET | admin_providers |
@@ -147,6 +149,7 @@
 | /collections/{collection_id}/restore | POST | restore_collection |
 | /collections/{collection_id}/restore-version | POST | restore_collection_version |
 | /compose | POST | compose_prompt_blueprint |
+| /convert | POST | convert_audio_asset |
 | /convert | POST | convert_subtitle_asset |
 | /core/me | GET | core_me |
 | /core/status | GET | core_status |
@@ -159,8 +162,5 @@
 | /dashboard | GET | get_dashboard_summary |
 | /dashboard-stats | GET | get_dashboard_stats |
 | /dashboard-stats | GET | get_erp_stats |
-| /documents | GET | list_documents |
-| /documents | GET | list_documents |
-| /documents | POST | create_document |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

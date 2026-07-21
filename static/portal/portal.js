@@ -1068,6 +1068,13 @@
     layout: "image-studio", type: "image-studio", fields: [], action: "none", status: "ready",
     notes: ["Chỉ chọn reference thuộc Asset Vault của signed account; không nhập URL, provider/job/file handle, secret, OTP/CVV hoặc chứng từ thanh toán.", "Mỗi lần ghi cần signed session, CSRF, owner check, idempotency và optimistic revision do server xác minh."]
   });
+  customerPage("/image/quick-planner", "Quick Image Planner", "Chuyển gợi ý/tự nhập, biến thể prompt, Logo/Watermark text direction và tỷ lệ từ Bot thành kế hoạch ảnh có cấu trúc để review.", ICONS.image, {
+    layout: "quick-image-planner", type: "quick-image-planner", fields: [], action: "none", status: "ready",
+    notes: [
+      "Planner chỉ tạo prompt plan trong phiên đã xác thực. Không tạo ảnh, preview, Asset Vault record, Bot pending state, provider request, ShopAI tier, job, Xu, PayOS hoặc delivery.",
+      "Logo/Watermark ở đây chỉ là hướng dẫn text và vị trí cho lần tạo được cấp riêng sau này; không phải ảnh đã được đóng dấu. Chọn tier/xác nhận tạo vẫn giữ đúng trạng thái guarded/canonical của Bot."
+    ]
+  });
   // Image Prompt Composer keeps the deterministic prompt-planning logic from
   // the Bot separate from image generation. It accepts text only: no source
   // image, upload, analysis, provider execution or delivery is implied.
@@ -4949,6 +4956,26 @@
     ["Video Prompt Planner", "/video-studio/prompt-planner"],
     ["Voice Direction Composer", "/voice-studio/direction-composer"]
   ]);
+  // Quick Image Planner has a separate deterministic receipt because the
+  // frozen Bot conversation includes prompt variation, text watermark intent
+  // and a ratio before it reaches its canonical tier/confirm branch. The
+  // browser receives only Web semantic keys, never Telegram callbacks/tokens.
+  const QUICK_IMAGE_PLANNER_RECEIPT_WORKFLOWS = Object.freeze([
+    ["Image Prompt Composer", "/image/prompt-composer"],
+    ["Image Creative Studio", "/image-studio"],
+    ["Content Prompt Pack", "/content/prompt-pack"]
+  ]);
+  const QUICK_IMAGE_PLANNER_SUGGESTION_KEYS = Object.freeze([
+    "desk_organizer", "daily_bottle", "small_shop", "skincare_ritual", "coffee_moment", "travel_essential",
+    "learning_tool", "home_comfort", "local_food", "quiet_reading", "eco_routine", "pet_care",
+    "fitness_reset", "weekend_market", "creative_stationery", "family_meal", "morning_cycle", "plant_corner",
+    "craft_process", "remote_meeting", "gift_wrap", "night_skincare", "makers_table", "community_class"
+  ]);
+  const QUICK_IMAGE_PLANNER_ASPECT_RATIOS = Object.freeze(["9:16", "16:9", "1:1", "4:5", "3:4", "3:2", "4:3"]);
+  const QUICK_IMAGE_PLANNER_BRAND_POSITIONS = Object.freeze([
+    "none", "top_left", "top_center", "top_right", "center_left", "center", "center_right",
+    "bottom_left", "bottom_center", "bottom_right"
+  ]);
   const CREATIVE_FLOW_RECEIPT_WORKFLOWS = Object.freeze([
     ["Image Prompt Composer", "/image/prompt-composer"],
     ["Storyboard Composer", "/video-studio/storyboard-composer"],
@@ -5098,6 +5125,55 @@
         review_checklist: review,
         unavailable_capabilities: unavailable,
         next_workflows: workflows
+      }
+    };
+  }
+
+  function normalizeQuickImagePlannerResult(raw) {
+    const source = raw && typeof raw === "object" ? raw : {};
+    if (!deterministicPlannerBoundaryIsSafe(source, "web_native_deterministic_quick_image_planner_only")) return {};
+    const plan = source.plan && typeof source.plan === "object" ? source.plan : {};
+    const expectedKeys = [
+      "title", "language", "idea_source", "suggestion_key", "topic", "variation", "variation_label", "aspect_ratio",
+      "brand_direction", "brand_position", "brand_position_label", "short_prompt", "detailed_prompt", "negative_prompt",
+      "composition", "output_status", "summary", "review_checklist", "unavailable_capabilities", "next_workflows"
+    ];
+    if (Object.keys(plan).sort().join("|") !== expectedKeys.slice().sort().join("|")) return {};
+    const title = videoStudioBootstrapLine(plan.title, 2, 320, false);
+    const topic = videoStudioBootstrapLine(plan.topic, 4, 1400, false);
+    const language = String(plan.language || "").trim().toLowerCase();
+    const ideaSource = String(plan.idea_source || "").trim().toLowerCase();
+    const suggestionKey = String(plan.suggestion_key || "").trim().toLowerCase();
+    const variation = Number(plan.variation);
+    const variationLabel = deterministicPlannerText(plan.variation_label, 2, 180);
+    const ratio = String(plan.aspect_ratio || "").trim();
+    const brandDirection = plan.brand_direction === "" ? "" : videoStudioBootstrapLine(plan.brand_direction, 2, 300, false);
+    const brandPosition = String(plan.brand_position || "").trim();
+    const brandPositionLabel = deterministicPlannerText(plan.brand_position_label, 2, 80);
+    const shortPrompt = deterministicPlannerText(plan.short_prompt, 2, 2200);
+    const detailedPrompt = deterministicPlannerText(plan.detailed_prompt, 2, 3200);
+    const negativePrompt = deterministicPlannerText(plan.negative_prompt, 2, 900);
+    const composition = deterministicPlannerText(plan.composition, 2, 620);
+    const summary = deterministicPlannerText(plan.summary, 2, 420);
+    const review = deterministicPlannerList(plan.review_checklist, 4, 2, 620);
+    const unavailable = deterministicPlannerList(plan.unavailable_capabilities, 4, 2, 620);
+    const workflows = normalizeDeterministicPlannerWorkflows(plan.next_workflows, QUICK_IMAGE_PLANNER_RECEIPT_WORKFLOWS);
+    const validSource = (ideaSource === "curated" && QUICK_IMAGE_PLANNER_SUGGESTION_KEYS.includes(suggestionKey))
+      || (ideaSource === "custom" && suggestionKey === "");
+    const validBrand = (brandDirection === "" && brandPosition === "none")
+      || (brandDirection !== "" && QUICK_IMAGE_PLANNER_BRAND_POSITIONS.includes(brandPosition) && brandPosition !== "none");
+    if (!title || !topic || !["vi", "en"].includes(language) || !validSource || !Number.isInteger(variation)
+      || variation < 0 || variation > 2 || !variationLabel || !QUICK_IMAGE_PLANNER_ASPECT_RATIOS.includes(ratio)
+      || !validBrand || !brandPositionLabel || !shortPrompt || !detailedPrompt || !negativePrompt || !composition
+      || plan.output_status !== "prompt_plan_only_no_real_image" || !summary || !review || !unavailable || !workflows) return {};
+    return {
+      plan: {
+        title, language, idea_source: ideaSource, suggestion_key: suggestionKey, topic, variation,
+        variation_label: variationLabel, aspect_ratio: ratio, brand_direction: brandDirection,
+        brand_position: brandPosition, brand_position_label: brandPositionLabel, short_prompt: shortPrompt,
+        detailed_prompt: detailedPrompt, negative_prompt: negativePrompt, composition,
+        output_status: "prompt_plan_only_no_real_image", summary, review_checklist: review,
+        unavailable_capabilities: unavailable, next_workflows: workflows
       }
     };
   }
@@ -6186,6 +6262,7 @@
     // their strict no-execution projections across a Portal remount.
     const trendResearchResult = normalizeTrendResearchResult(source.trendResearchResult);
     const mediaFactoryResult = normalizeMediaFactoryResult(source.mediaFactoryResult);
+    const quickImagePlannerResult = normalizeQuickImagePlannerResult(source.quickImagePlannerResult);
     const creativeFlowResult = normalizeCreativeFlowResult(source.creativeFlowResult);
     const storyVideoPlanResult = normalizeStoryVideoPlanResult(source.storyVideoPlanResult);
     // Customer Support keeps its own owner-scoped pager. The renderer already
@@ -6468,6 +6545,7 @@
       contextualAdPromptResult: normalizeContextualAdPromptResult(source.contextualAdPromptResult),
       trendResearchResult,
       mediaFactoryResult,
+      quickImagePlannerResult,
       creativeFlowResult,
       storyVideoPlanResult,
       contentStudioSummary: source.contentStudioSummary && typeof source.contentStudioSummary === "object" ? source.contentStudioSummary : {},
@@ -7895,10 +7973,19 @@
     if (!fields || !fields.length) return "";
     const values = fieldValues && typeof fieldValues === "object" ? fieldValues : {};
     const namespace = String(idNamespace || "").replace(/[^a-zA-Z0-9_-]/g, "-").replace(/^-+|-+$/g, "");
+    const dataAttributes = (value) => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return "";
+      return Object.entries(value)
+        .filter(([key]) => /^[a-z][a-z0-9_-]*$/i.test(String(key)))
+        .map(([key, attributeValue]) => ` data-${safeText(String(key))}="${safeText(String(attributeValue ?? ""))}"`)
+        .join("");
+    };
     return `<div class="portal-fields">${fields.map((field) => {
       const wide = field.control === "textarea" || field.type === "file" || field.wide;
       const id = `portal-field-${namespace ? `${namespace}-` : ""}${safeText(field.name || "input").replace(/[^a-zA-Z0-9_-]/g, "-")}`;
       const disabled = enabled && field.disabled !== true ? "" : " disabled";
+      const controlData = dataAttributes(field.controlData);
+      const wrapperData = dataAttributes(field.wrapperData);
       const rawValue = Object.prototype.hasOwnProperty.call(values, field.name) ? values[field.name] : "";
       const value = rawValue === undefined || rawValue === null ? "" : String(rawValue);
       const stagedUploadCount = field.type === "file" && Array.isArray(values.upload_ids) ? values.upload_ids.filter((item) => typeof item === "string" && item).length : 0;
@@ -7920,7 +8007,7 @@
       const inputMode = field.inputMode ? ` inputmode="${safeText(field.inputMode)}"` : "";
       let control;
       if (field.control === "textarea") {
-        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${required}${ariaRequired}${minLength}${maxLength}${describedBy}${disabled}>${safeText(value)}</textarea>`;
+        control = `<textarea class="portal-textarea" id="${id}" name="${safeText(field.name)}" placeholder="${safeText(field.placeholder)}"${required}${ariaRequired}${minLength}${maxLength}${describedBy}${controlData}${disabled}>${safeText(value)}</textarea>`;
       } else if (field.control === "select") {
         let options = Array.isArray(field.options) ? field.options : [];
         if (field.optionsFrom === "voiceProfiles") {
@@ -7996,7 +8083,7 @@
           const selected = String(value) === String(rawValue) ? " selected" : "";
           return `<option value="${safeText(value)}"${selected}>${safeText(label)}</option>`;
         }).join("");
-        control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${required}${ariaRequired}${describedBy}${disabled}>${empty}${optionMarkup}</select>`;
+        control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${required}${ariaRequired}${describedBy}${controlData}${disabled}>${empty}${optionMarkup}</select>`;
       } else if (field.type === "checkbox") {
         const checked = rawValue === true || rawValue === "true" || rawValue === 1 || rawValue === "1" ? " checked" : "";
         control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${required}${ariaRequired}${describedBy}${disabled}><span>Tôi xác nhận</span></label>`;
@@ -8006,7 +8093,7 @@
         const multiple = type === "file" && field.multiple ? " multiple" : "";
         const accept = type === "file" && field.accept ? ` accept="${safeText(field.accept)}"` : "";
         const valueAttribute = type === "file" || type === "password" ? "" : ` value="${safeText(value)}"`;
-        const input = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${disabled}>`;
+        const input = `<input class="portal-input" id="${id}" name="${safeText(field.name)}" type="${type}" placeholder="${safeText(field.placeholder)}"${valueAttribute}${autocomplete}${multiple}${accept}${required}${ariaRequired}${min}${max}${step}${minLength}${maxLength}${pattern}${inputMode}${describedBy}${controlData}${disabled}>`;
         // Password visibility is a local, tab-only affordance.  It never
         // persists, emits an action, or changes the signed form contract.
         control = type === "password"
@@ -8017,7 +8104,7 @@
         ? `<span class="portal-required-mark" data-portal-required-mark aria-hidden="true"${field.required === true || field.requiredUpload === true ? "" : " hidden"}>*</span><span class="portal-sr-only" data-portal-required-message${field.required === true || field.requiredUpload === true ? "" : " hidden"}> bắt buộc</span>`
         : "";
       const referencePicker = field.referencePicker ? renderOperationAssetReferencePicker(context, field.referencePicker) : "";
-      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"><label for="${id}">${safeText(fieldLabel)}${requiredMark}</label>${control}${help}${staged}${referencePicker}</div>`;
+      return `<div class="portal-field${wide ? " portal-field--wide" : ""}"${wrapperData}><label for="${id}">${safeText(fieldLabel)}${requiredMark}</label>${control}${help}${staged}${referencePicker}</div>`;
     }).join("")}</div>`;
   }
 
@@ -8041,7 +8128,7 @@
     if (status === "read_only") return { icon: "i", title: "Dữ liệu canonical chỉ đọc", text: "Portal đang hiển thị dữ liệu bot đã được role-check; mọi thay đổi vẫn cần adapter, confirmation, CSRF và audit riêng." };
     if (status === "disabled") return { icon: "—", title: "Tính năng đang tạm khóa", text: "Trạng thái maintenance/freeze phải được bridge quản lý; browser không thể tự bật lại." };
     const isAdmin = page.access === "admin" && !serverAuthorizesAdminRoute(context, page.routePath || page.path);
-    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
+    const webWorkspaceReady = ["dashboard", "project-center", "project-detail", "project-packages", "campaign-planner", "campaign-detail", "workspace-drafts", "asset-vault", "memory-notes", "memory-reminders", "prompt-library", "prompt-library-detail", "free-prompt-gallery", "content-studio", "content-studio-detail", "channel-strategy", "channel-strategy-detail", "content-handoff", "content-handoff-detail", "content-handoff-admin", "partner-crm", "partner-crm-detail", "partner-crm-manager", "content-prompt-pack", "publish-review-pack", "contextual-ad-prompt", "trend-research", "quick-image-planner", "image-prompt-composer", "video-prompt-planner", "cinematic-concept", "image-motion-planner", "reference-format-planner", "storyboard-composer", "voice-direction-composer", "voice-studio", "voice-studio-detail", "media-workspace", "media-workspace-detail", "music-prompt-composer", "chat-workspace", "chat-workspace-detail", "pdf-split", "pdf-merge", "pdf-optimize", "image-to-pdf", "pdf-to-word", "image-ocr", "pdf-ocr", "pdf-ocr-to-word", "image-resize", "image-enhance", "image-brand-overlay"].includes(page.layout)
       && context.session && context.session.authenticated === true;
     if (webWorkspaceReady) return { icon: "✓", title: "Web Workspace độc lập đã sẵn sàng", text: "Project, Studio Document, bản nháp và planning Web-owned không cần Telegram hoặc Bot bridge. Các integration bên ngoài vẫn được cấp riêng theo capability." };
     const feature = page.type === "feature" ? featureKeyForPage(page, context) : "";
@@ -10295,6 +10382,50 @@
       ${renderMediaFactoryResult(context.mediaFactoryResult)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Kế hoạch tổng thể trước, workflow chuyên biệt sau</h2><p class="portal-card-subtitle">Blueprint giúp bạn bắt đầu nhanh nhưng không thay thế phê duyệt, kiểm tra quyền hoặc runtime đã được cấp riêng. Mỗi workspace tiếp theo giữ input và ranh giới bảo mật của chính nó.</p></div></div>${renderNotes(page)}</section>
     </article>`;
+  }
+
+  // This is an explicit Web surface for the frozen Bot's Quick Image draft
+  // grammar. The finite keys below are Web semantic keys, never callbacks.
+  const QUICK_IMAGE_PLANNER_SUGGESTION_OPTIONS = Object.freeze([
+    ["desk_organizer", "Góc bàn làm việc gọn gàng"], ["daily_bottle", "Bình nước trong nhịp sống hằng ngày"], ["small_shop", "Sản phẩm thủ công của cửa hàng nhỏ"], ["skincare_ritual", "Nghi thức chăm sóc da nhẹ nhàng"], ["coffee_moment", "Khoảnh khắc cà phê sáng"], ["travel_essential", "Vật dụng du lịch thiết yếu"],
+    ["learning_tool", "Công cụ học tập thực tế"], ["home_comfort", "Chi tiết trang trí nhà ấm áp"], ["local_food", "Món ăn địa phương chân thực"], ["quiet_reading", "Khoảnh khắc đọc sách yên tĩnh"], ["eco_routine", "Thói quen sống xanh trong bếp"], ["pet_care", "Chăm sóc thú cưng tại nhà"],
+    ["fitness_reset", "Góc chuẩn bị tập luyện"], ["weekend_market", "Quầy hàng cuối tuần"], ["creative_stationery", "Văn phòng phẩm sáng tạo"], ["family_meal", "Bữa ăn gia đình ấm cúng"], ["morning_cycle", "Chuẩn bị đạp xe buổi sáng"], ["plant_corner", "Góc cây xanh thư giãn"],
+    ["craft_process", "Quy trình làm thủ công"], ["remote_meeting", "Không gian họp từ xa"], ["gift_wrap", "Gói quà tối giản"], ["night_skincare", "Chăm sóc da buổi tối"], ["makers_table", "Bàn làm việc của người sáng tạo"], ["community_class", "Buổi học cộng đồng nhỏ"]
+  ]);
+  const QUICK_IMAGE_PLANNER_WORKFLOW_ROUTES = Object.freeze(["/image/prompt-composer", "/image-studio", "/content/prompt-pack"]);
+
+  function quickImagePlannerFields() {
+    return [
+      { name: "idea_source", label: "Điểm bắt đầu", control: "select", required: true, controlData: { "quick-image-planner-source": "true" }, options: [["curated", "Chọn từ catalog ý tưởng"], ["custom", "Tự nhập mô tả riêng"]], help: "Chọn một cách bắt đầu. Form chỉ mở trường tương ứng; không có callback Telegram hoặc nguồn bên ngoài." },
+      { name: "suggestion_key", label: "Ý tưởng gợi ý", control: "select", required: true, controlData: { "quick-image-planner-catalog": "true" }, wrapperData: { "quick-image-planner-source-field": "curated" }, options: QUICK_IMAGE_PLANNER_SUGGESTION_OPTIONS, help: "Chỉ dùng khi chọn catalog. Chọn ý tưởng thay thao tác ‘gợi ý khác’ của Bot bằng lựa chọn rõ ràng, không lưu Telegram state." },
+      { name: "custom_prompt", label: "Mô tả ảnh riêng", control: "textarea", dynamicRequired: true, controlData: { "quick-image-planner-custom": "true" }, wrapperData: { "quick-image-planner-source-field": "custom" }, placeholder: "Ví dụ: sản phẩm, bối cảnh, đối tượng, ánh sáng và cảm giác cần truyền tải", maxLength: 1400, wide: true, help: "Chỉ bắt buộc khi chọn Tự nhập. Không nhập URL, tệp, handle, secret, OTP, dữ liệu thanh toán, reup/copy/né watermark/DRM hoặc mạo danh." },
+      { name: "variation", label: "Biến thể tối ưu", control: "select", required: true, options: [["0", "Hướng sản phẩm sạch"], ["1", "Hướng lifestyle đời thường"], ["2", "Hướng editorial kể chuyện"]], help: "Ba biến thể deterministic; không phải model inference hoặc render." },
+      { name: "aspect_ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: [["9:16", "9:16 · dọc"], ["16:9", "16:9 · ngang"], ["1:1", "1:1 · vuông"], ["4:5", "4:5 · feed dọc"], ["3:4", "3:4 · dọc"], ["3:2", "3:2 · ảnh ngang"], ["4:3", "4:3 · ảnh ngang"]], help: "Bảy tỷ lệ từ flow Bot. Chọn tỷ lệ không tạo giá tier hoặc lệnh tạo ảnh." },
+      { name: "brand_direction", label: "Logo / Watermark dạng text (tùy chọn)", control: "input", placeholder: "Ví dụ: TOAN AAS · phong cách tinh tế", maxLength: 300, help: "Chỉ là text direction. Không upload logo, không đóng dấu lên ảnh và không xác minh quyền thương hiệu." },
+      { name: "brand_position", label: "Vị trí Logo / Watermark", control: "select", required: true, options: [["none", "Không dùng Logo / Watermark"], ["top_left", "Trên trái"], ["top_center", "Trên giữa"], ["top_right", "Trên phải"], ["center_left", "Giữa trái"], ["center", "Chính giữa"], ["center_right", "Giữa phải"], ["bottom_left", "Dưới trái"], ["bottom_center", "Dưới giữa"], ["bottom_right", "Dưới phải"]], help: "Nếu có hướng thương hiệu, chọn một trong 9 vị trí; nếu không có, giữ ‘Không dùng’." },
+      { name: "language", label: "Ngôn ngữ prompt plan", control: "select", required: true, options: [["vi", "Tiếng Việt"], ["en", "English"]], help: "Chỉ đổi cách diễn đạt plan; không mở provider hay khả năng tạo ảnh." }
+    ];
+  }
+
+  function quickImagePlannerList(items, fallback) {
+    const list = Array.isArray(items) ? items.filter((item) => typeof item === "string" && item.trim()).slice(0, 6) : [];
+    return list.length ? `<ul>${list.map((item) => `<li>${safeText(item)}</li>`).join("")}</ul>` : `<p>${safeText(fallback)}</p>`;
+  }
+
+  function renderQuickImagePlannerResult(raw) {
+    const plan = raw && raw.plan && typeof raw.plan === "object" ? raw.plan : null;
+    if (!plan) return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><p class="portal-sr-only" role="status">Chưa có Quick Image Plan.</p><div class="portal-card-header"><div><span class="portal-section-kicker">Prompt plan draft</span><h2 class="portal-card-title">Chưa có Quick Image Plan</h2><p class="portal-card-subtitle">Chọn một ý tưởng hoặc nhập mô tả riêng. Server sẽ trả plan deterministic; browser không tự viết prompt, tạo ảnh hoặc hiển thị preview.</p></div>${badge("empty")}</div></section>`;
+    const promptCards = [["Prompt ngắn", plan.short_prompt], ["Prompt chi tiết", plan.detailed_prompt], ["Negative prompt", plan.negative_prompt]].map(([label, value]) => `<article class="portal-image-prompt-composer-prompt"><span>${safeText(label)}</span><pre>${safeText(String(value || ""))}</pre></article>`).join("");
+    const workflows = Array.isArray(plan.next_workflows) ? plan.next_workflows.filter((item) => item && QUICK_IMAGE_PLANNER_WORKFLOW_ROUTES.includes(String(item.route || ""))).slice(0, 3) : [];
+    const workflowLinks = workflows.map((item) => `<a class="portal-button portal-button--quiet" href="${safeText(String(item.route || ""))}">${safeText(String(item.label || "Workflow"))}</a>`).join("");
+    const brand = plan.brand_direction ? `${safeText(String(plan.brand_direction))} · ${safeText(String(plan.brand_position_label || ""))}` : "Không yêu cầu";
+    return `<section class="portal-card portal-card-pad portal-image-prompt-composer-result"><p class="portal-sr-only" role="status">Quick Image Plan đã sẵn sàng để review thủ công.</p><div class="portal-card-header"><div><span class="portal-section-kicker">Deterministic prompt plan · manual review</span><h2 class="portal-card-title">${safeText(String(plan.title || "Quick Image Plan"))}</h2><p class="portal-card-subtitle">${safeText(String(plan.summary || ""))} ${safeText(String(plan.output_status || ""))}.</p></div>${badge("read_only")}</div><div class="portal-image-prompt-composer-meta"><span>Nguồn: ${safeText(String(plan.idea_source || ""))}</span><span>${safeText(String(plan.variation_label || ""))}</span><span>Tỷ lệ: ${safeText(String(plan.aspect_ratio || ""))}</span><span>Logo / Watermark: ${brand}</span></div><section class="portal-content-prompt-pack-checks"><strong>Chủ đề đã dùng cho plan</strong><p>${safeText(String(plan.topic || ""))}</p><strong>Bố cục</strong><p>${safeText(String(plan.composition || ""))}</p></section><div class="portal-image-prompt-composer-prompts">${promptCards}</div><div class="portal-content-prompt-pack-layout"><section class="portal-content-prompt-pack-checks"><strong>Rà soát trước khi dùng bên ngoài</strong>${quickImagePlannerList(plan.review_checklist, "Cần review thủ công.")}</section><section class="portal-content-prompt-pack-checks"><strong>Không có trong planner này</strong>${quickImagePlannerList(plan.unavailable_capabilities, "Không suy diễn capability ngoài contract.")}</section></div><div class="portal-form-footer"><span class="portal-form-note">Đây là prompt kế hoạch do server dựng từ input xác nhận; nó không phải preview, watermark render, output ảnh, quote, job hoặc lệnh tạo.</span><div class="portal-inline-actions">${workflowLinks}</div></div></section>`;
+  }
+
+  function renderQuickImagePlanner(page, context) {
+    const canPlan = Boolean(context.capabilities && context.capabilities["quick-image-planner-plan"] === true);
+    const values = { idea_source: "curated", suggestion_key: "desk_organizer", custom_prompt: "", variation: "0", aspect_ratio: "1:1", brand_direction: "", brand_position: "none", language: "vi" };
+    return `<article class="portal-page portal-image-prompt-composer portal-quick-image-planner">${renderHero(page, context)}<section class="portal-image-prompt-composer-intro"><div><span class="portal-section-kicker">Bot-derived · Web-native planning</span><h2>Từ ý tưởng đến prompt ảnh rõ ràng — không hề tạo ảnh.</h2><p>Quick Image Planner đưa phần draft hữu ích của Bot vào một workspace dễ dùng: catalog 24 ý tưởng, mô tả riêng, ba biến thể prompt, bảy tỷ lệ và hướng Logo/Watermark text. Tier, Xu và xác nhận tạo vẫn được chặn đúng ranh giới.</p></div><dl><div><dt>24</dt><dd>Ý tưởng chọn lọc</dd></div><div><dt>7</dt><dd>Tỷ lệ khung hình</dd></div><div><dt>0</dt><dd>Ảnh / job / payment</dd></div></dl></section><div class="portal-image-prompt-composer-layout"><section class="portal-card portal-card-pad portal-image-prompt-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Plan composer</span><h2 class="portal-card-title">Lập Quick Image Plan</h2><p class="portal-card-subtitle">Server chỉ nhận semantic Web input trong request signed + CSRF và trả plan transient. Không có Telegram callback, pending token, provider, tier, project, asset hoặc browser draft.</p></div>${badge(canPlan ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="quick-image-planner-plan" data-portal-route="/image/quick-planner" novalidate>${renderFields(quickImagePlannerFields(), canPlan, context, values, "quick-image-planner")}<p class="portal-form-note portal-quick-image-planner-source-status" data-quick-image-planner-source-status role="status"></p><div class="portal-form-footer"><span class="portal-form-note">Chỉ trường đang hiển thị được dùng cho request. Đọc lại quyền, claim và thương hiệu trước khi dùng prompt ở workflow khác.</span><button class="portal-button portal-button--primary" type="submit"${canPlan ? "" : " disabled"}>Tạo prompt plan</button></div></form></section><aside class="portal-card portal-card-pad portal-image-prompt-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập prompt, không chạy image runtime</h2><p class="portal-card-subtitle">Logo/Watermark chỉ là text direction. Không có source image, upload, overlay render, Bot/Core Bridge, ShopAI, provider, tier, quote, Xu, PayOS, job, asset hoặc delivery.</p></div>${badge("guarded")}</div><div class="portal-image-prompt-composer-guard-list"><span><strong>Image / preview / overlay</strong><em>off</em></span><span><strong>Provider / Bot / ShopAI</strong><em>off</em></span><span><strong>Tier / Xu / PayOS</strong><em>off</em></span><span><strong>Job / asset / delivery</strong><em>off</em></span></div></aside></div>${renderQuickImagePlannerResult(context.quickImagePlannerResult)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Ranh giới minh bạch</span><h2 class="portal-card-title">Prompt plan trước, runtime được cấp riêng sau</h2><p class="portal-card-subtitle">Planner nâng cấp trải nghiệm draft của Bot nhưng không gộp state Telegram hay mạo nhận ảnh đã tạo. Runtime Web sau này phải có contract estimate, confirmation và delivery độc lập.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   // Creative Flow keeps the eight-section Bot template as a transient,
@@ -21445,6 +21576,7 @@
       case "video-factory-workflow": return renderVideoFactoryWorkflow(page, context);
       case "story-video-plan": return renderStoryVideoPlan(page, context);
       case "source-rights-guide": return renderSourceRightsGuide(page, context);
+      case "quick-image-planner": return renderQuickImagePlanner(page, context);
       case "image-prompt-composer": return renderImagePromptComposer(page, context);
       case "video-prompt-planner": return renderVideoPromptPlanner(page, context);
       case "video-idea-planner": return renderVideoIdeaPlanner(page, context);
@@ -21605,6 +21737,39 @@
       if (requiredMessage) requiredMessage.hidden = !isCustom || name === "tone";
       if (!isCustom) input.value = name === "tone" ? "neutral" : "";
     });
+  }
+
+  function synchronizeQuickImagePlannerForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "quick-image-planner-plan") return;
+    const source = form.querySelector('[data-quick-image-planner-source]');
+    const catalog = form.querySelector('[data-quick-image-planner-catalog]');
+    const custom = form.querySelector('[data-quick-image-planner-custom]');
+    if (!source || !catalog || !custom) return;
+    const customMode = String(source.value || "curated") === "custom";
+    const sourceDisabled = Boolean(source.disabled);
+    const configure = (control, active) => {
+      const disabled = sourceDisabled || !active;
+      control.disabled = disabled;
+      control.required = active;
+      control.setAttribute("aria-disabled", String(disabled));
+      control.setAttribute("aria-required", String(active));
+      const field = control.closest("[data-quick-image-planner-source-field]");
+      if (!field) return;
+      field.hidden = !active;
+      field.classList.toggle("is-muted", !active);
+      const requiredMark = field.querySelector("[data-portal-required-mark]");
+      const requiredMessage = field.querySelector("[data-portal-required-message]");
+      if (requiredMark) requiredMark.hidden = !active;
+      if (requiredMessage) requiredMessage.hidden = !active;
+    };
+    configure(catalog, !customMode);
+    configure(custom, customMode);
+    const status = form.querySelector("[data-quick-image-planner-source-status]");
+    if (status) {
+      status.textContent = customMode
+        ? "Đang dùng mô tả riêng. Catalog ý tưởng được ẩn và sẽ không đi vào request này."
+        : "Đang dùng catalog ý tưởng. Mô tả riêng được ẩn và sẽ không đi vào request này.";
+    }
   }
 
   function synchronizeSubtitleAssetOperationForm(form) {
@@ -22645,6 +22810,10 @@
           synchronizeImageResizePreset(form);
           synchronizeImageEnhancePreset(form);
         }
+        if (form.getAttribute("data-portal-action") === "quick-image-planner-plan"
+          && event.target && event.target.name === "idea_source") {
+          synchronizeQuickImagePlannerForm(form);
+        }
         if (form.getAttribute("data-portal-action") === "subtitle-asset-operation-submit"
           && event.target && ["source_asset_id", "operation"].includes(event.target.name)) {
           synchronizeSubtitleAssetOperationForm(form);
@@ -22792,6 +22961,7 @@
     bindVideoPreviewPlayer(main);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
+    main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
     main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
     main.querySelectorAll('[data-portal-action="frame-video-operation-estimate"]').forEach((form) => synchronizeFrameVideoEstimateForm(form));
     main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));

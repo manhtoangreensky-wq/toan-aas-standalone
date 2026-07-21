@@ -1,6 +1,12 @@
 {
   "audit_mode": "static-only",
   "bot": {
+    "audit_source": {
+      "files_materialized": 242,
+      "mode": "git_baseline_snapshot",
+      "reason": "requested_baseline_materialized_static_only",
+      "revision": "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
+    },
     "baseline_bridge_source": {
       "path": "webapp_core_bridge.py",
       "present": false,
@@ -10,21 +16,22 @@
     "entrypoint_present": true,
     "revision": {
       "ahead_commits": 0,
-      "baseline_relation": "exact",
-      "behind_commits": 0,
-      "checkout_sha": "b29d0d474974075f4cba963d2c510f49d2d1b3e4"
+      "baseline_relation": "behind_requested_baseline",
+      "behind_commits": 96,
+      "checkout_sha": "25c368642d558372c52e7c24751c117afafd7de6"
     },
-    "root": "D:\\TOANAAS\\bot telegram"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-05-31\\files-mentioned-by-the-user-bot\\toanaas-hotfix-28ff87f"
   },
-  "generated_at_utc": "2026-07-20T06:25:59+00:00",
+  "generated_at_utc": "2026-07-21T10:01:54+00:00",
   "guarantees": [
     "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
     "Only source text, Python AST, and local read-only Git revision metadata are read.",
+    "A verified requested Git baseline is materialized as a temporary source-only snapshot; the Bot worktree is not used as source evidence.",
     "Report/document text is sanitized for secret-shaped literals."
   ],
   "schema_version": "1.7",
   "webapp": {
     "entrypoint_present": true,
-    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast65-translation-navigation"
+    "root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast80-quick-image-planner"
   }
 }

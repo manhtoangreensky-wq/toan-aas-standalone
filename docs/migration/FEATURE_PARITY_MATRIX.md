@@ -1,13 +1,6 @@
 # Feature parity matrix
 
-Observed-runtime static Web-surface coverage: **59.05%**. Observed-runtime typed source-disposition coverage: **87.47%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3814`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
-
-## Web-native extensions outside Bot equivalence
-
-`/video/preview` is an owner-scoped Asset Vault inspector for existing private
-MP4/WebM files. It is intentionally separate from Telegram dynamic media-preview
-callbacks and does not alter their `TELEGRAM_ONLY` disposition, Bot cache,
-delivery state or this matrix's runtime-equivalence percentage.
+Observed-runtime static Web-surface coverage: **58.65%**. Observed-runtime typed source-disposition coverage: **90.11%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3823`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -126,7 +119,7 @@ delivery state or this matrix's runtime-equivalence percentage.
 | command | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
 | command | /community | /community | COPIED_GUARDED |
 | command | /compose_video | /admin/compose_video | COPIED_GUARDED |
-| command | /compress_pdf | /features/documents | COPIED_GUARDED |
+| command | /compress_pdf | /documents/compress | NAVIGATION_ONLY |
 | command | /content_policy | /legal | COPIED_GUARDED |
 | command | /costs | /admin/costs | COPIED_GUARDED |
 | command | /create_media | /studio | COPIED_GUARDED |
@@ -143,7 +136,7 @@ delivery state or this matrix's runtime-equivalence percentage.
 | command | /dieukhoan | /legal | COPIED_GUARDED |
 | command | /dieukhoan_xu | /legal | COPIED_GUARDED |
 | command | /distribution_pack | /admin/distribution_pack | COPIED_GUARDED |
-| command | /doc_tools | /tools | COPIED_GUARDED |
+| command | /doc_tools | /documents | NAVIGATION_ONLY |
 | command | /dub_public_close | /admin/dub_public_close | COPIED_GUARDED |
 | command | /dub_public_open | /admin/dub_public_open | COPIED_GUARDED |
 | command | /dub_quote_test | /admin/dub_quote_test | COPIED_GUARDED |

@@ -183,6 +183,11 @@ ENGINE_SPECS.update(_many(("audio_asset_operations",), mode=ENGINE_MODE_WEB_NATI
 # wallet/Xu, PayOS, public URL or publishing behavior.
 ENGINE_SPECS.update(_many(("video_preview",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "video_preview_enabled"), handler="asset_vault_video_preview", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("image_studio_enabled",), handler="image_studio"))
+# Quick Image Planner ports only the frozen Bot's selection/prompt planning
+# steps. Its independent flag never means a Bot pending state, ShopAI tier,
+# provider/model, image output, job, wallet/Xu, PayOS, asset or delivery is
+# available in the browser.
+ENGINE_SPECS.update(_many(("quick_image_planner",), mode=ENGINE_MODE_WEB_NATIVE, flags=("quick_image_planner_enabled",), handler="quick_image_planner"))
 # Prompt Composer adapts only the Bot's deterministic prompt templates.  It
 # never inspects an image or calls a model/provider, creates media/output,
 # saves an asset, creates a job, mutates a wallet/payment or publishes.

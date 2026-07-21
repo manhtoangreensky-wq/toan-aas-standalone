@@ -62,6 +62,7 @@ import copyfast_prompt_library
 import copyfast_prompt_studio
 import copyfast_project_packages
 import copyfast_projects
+import copyfast_quick_image_planner
 import copyfast_reliability
 import copyfast_support
 import copyfast_subtitle_asset_operations
@@ -342,6 +343,11 @@ GROWTH_REVIEW_BODY_MAX_BYTES = 16 * 1024
 # The early cap applies before Pydantic parsing and does not enable a media
 # upload, source fetch, provider request, Bot call or execution engine.
 MEDIA_FACTORY_BODY_MAX_BYTES = 16 * 1024
+# Quick Image Planner accepts a bounded text-only draft (the frozen Bot allows
+# a longer custom prompt plus compact watermark direction). Count it before
+# Pydantic parsing; this never permits an image upload, provider request,
+# Bot state, ShopAI tier/token, job, wallet or payment input.
+QUICK_IMAGE_PLANNER_BODY_MAX_BYTES = 16 * 1024
 # Conversation Workspace accepts plain-text authoring data only.  Keep its
 # raw JSON cap deliberately small before Pydantic or SQLite sees a request;
 # it does not permit model streaming, file upload or provider input.
@@ -435,6 +441,7 @@ class PromptLibraryBodyLimitMiddleware:
         trend_research_max_bytes: int = TREND_RESEARCH_BODY_MAX_BYTES,
         growth_review_max_bytes: int = GROWTH_REVIEW_BODY_MAX_BYTES,
         media_factory_max_bytes: int = MEDIA_FACTORY_BODY_MAX_BYTES,
+        quick_image_planner_max_bytes: int = QUICK_IMAGE_PLANNER_BODY_MAX_BYTES,
         chat_workspace_max_bytes: int = CHAT_WORKSPACE_BODY_MAX_BYTES,
         analytics_workspace_max_bytes: int = ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
         workboard_max_bytes: int = WORKBOARD_BODY_MAX_BYTES,
@@ -471,6 +478,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.trend_research_max_bytes = int(trend_research_max_bytes)
         self.growth_review_max_bytes = int(growth_review_max_bytes)
         self.media_factory_max_bytes = int(media_factory_max_bytes)
+        self.quick_image_planner_max_bytes = int(quick_image_planner_max_bytes)
         self.chat_workspace_max_bytes = int(chat_workspace_max_bytes)
         self.analytics_workspace_max_bytes = int(analytics_workspace_max_bytes)
         self.workboard_max_bytes = int(workboard_max_bytes)
@@ -525,6 +533,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/trend-research/")
                 or path.startswith("/api/v1/growth-review/")
                 or path.startswith("/api/v1/media-factory/")
+                or path.startswith("/api/v1/quick-image-planner/")
                 or path.startswith("/api/v1/chat-workspace/")
                 or path.startswith("/api/v1/analytics-workspace/")
                 or path.startswith("/api/v1/workboard/")
@@ -592,6 +601,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.growth_review_max_bytes
         if path.startswith("/api/v1/media-factory/"):
             return self.media_factory_max_bytes
+        if path.startswith("/api/v1/quick-image-planner/"):
+            return self.quick_image_planner_max_bytes
         if path.startswith("/api/v1/document-workspace/"):
             return self.document_workspace_max_bytes
         if path.startswith("/api/v1/chat-workspace/"):
@@ -659,6 +670,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_trend_research = path.startswith("/api/v1/trend-research/")
         is_growth_review = path.startswith("/api/v1/growth-review/")
         is_media_factory = path.startswith("/api/v1/media-factory/")
+        is_quick_image_planner = path.startswith("/api/v1/quick-image-planner/")
         is_document_workspace = path.startswith("/api/v1/document-workspace/")
         is_chat_workspace = path.startswith("/api/v1/chat-workspace/")
         is_analytics_workspace = path.startswith("/api/v1/analytics-workspace/")
@@ -728,6 +740,8 @@ class PromptLibraryBodyLimitMiddleware:
             if is_governance
             else copyfast_media_factory._boundary()
             if is_media_factory
+            else copyfast_quick_image_planner._boundary()
+            if is_quick_image_planner
             else copyfast_document_workspace._boundary() if is_document_workspace else None
         )
         response = JSONResponse(
@@ -776,6 +790,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_growth_review
                     else "Dữ liệu Media Factory Blueprint vượt giới hạn kích thước an toàn."
                     if is_media_factory
+                    else "Dữ liệu Quick Image Planner vượt giới hạn kích thước an toàn."
+                    if is_quick_image_planner
                     else "Dữ liệu Document & PDF Workspace vượt giới hạn kích thước an toàn."
                     if is_document_workspace
                     else "Dữ liệu AI Chat Workspace vượt giới hạn kích thước an toàn."
@@ -849,6 +865,8 @@ class PromptLibraryBodyLimitMiddleware:
                     if is_growth_review
                     else "WEB_MEDIA_FACTORY_BODY_TOO_LARGE"
                     if is_media_factory
+                    else "WEB_QUICK_IMAGE_PLANNER_BODY_TOO_LARGE"
+                    if is_quick_image_planner
                     else "WEB_DOCUMENT_WORKSPACE_BODY_TOO_LARGE"
                     if is_document_workspace
                     else "WEB_CHAT_WORKSPACE_BODY_TOO_LARGE"
@@ -991,6 +1009,7 @@ app.add_middleware(
     trend_research_max_bytes=TREND_RESEARCH_BODY_MAX_BYTES,
     growth_review_max_bytes=GROWTH_REVIEW_BODY_MAX_BYTES,
     media_factory_max_bytes=MEDIA_FACTORY_BODY_MAX_BYTES,
+    quick_image_planner_max_bytes=QUICK_IMAGE_PLANNER_BODY_MAX_BYTES,
     chat_workspace_max_bytes=CHAT_WORKSPACE_BODY_MAX_BYTES,
     analytics_workspace_max_bytes=ANALYTICS_WORKSPACE_BODY_MAX_BYTES,
     workboard_max_bytes=WORKBOARD_BODY_MAX_BYTES,
@@ -1343,6 +1362,12 @@ async def security_headers(request: Request, call_next):
     # own bucket prevents repeat template work before session/CSRF handling;
     # it does not open an engine, source fetch, Bot bridge, job or payment.
     media_factory_write = request.method == "POST" and request.url.path.startswith("/api/v1/media-factory/")
+    # Quick Image Planner is a separate, text-only planning surface from the
+    # frozen Bot's UI flow. Keep a fixed pre-CSRF bucket so repeated prompt
+    # composition cannot fall through to a broad anonymous route; it still
+    # cannot create Bot state, a ShopAI tier/token, image, provider job, Xu or
+    # payment action.
+    quick_image_planner_write = request.method == "POST" and request.url.path.startswith("/api/v1/quick-image-planner/")
     # Voice Studio persists only owner-scoped text/metadata and immutable
     # versions.  These fixed route-family buckets do not imply TTS, clone,
     # preview, provider, Bot, wallet or payment execution.
@@ -1550,6 +1575,8 @@ async def security_headers(request: Request, call_next):
         rate_limit = 40
     if media_factory_write:
         rate_limit = 40
+    if quick_image_planner_write:
+        rate_limit = 40
     if voice_studio_write:
         rate_limit = 40
     if voice_studio_read:
@@ -1655,6 +1682,7 @@ async def security_headers(request: Request, call_next):
             else "trend-research-write" if trend_research_write
             else "growth-review-write" if growth_review_write
             else "media-factory-write" if media_factory_write
+            else "quick-image-planner-write" if quick_image_planner_write
             else "voice-studio-write" if voice_studio_write
             else "voice-studio-read" if voice_studio_read
             else "video-studio-write" if video_studio_write
@@ -1721,6 +1749,7 @@ async def security_headers(request: Request, call_next):
             is_trend_research_request = trend_research_write
             is_growth_review_request = growth_review_write
             is_media_factory_request = media_factory_write
+            is_quick_image_planner_request = quick_image_planner_write
             is_chat_workspace_request = chat_workspace_write or chat_workspace_read
             is_analytics_workspace_request = analytics_workspace_write or analytics_workspace_read
             is_data_controls_request = data_controls_write or data_controls_read
@@ -1773,6 +1802,8 @@ async def security_headers(request: Request, call_next):
                         if is_growth_review_request
                         else copyfast_media_factory._boundary()
                         if is_media_factory_request
+                        else copyfast_quick_image_planner._boundary()
+                        if is_quick_image_planner_request
                         else copyfast_document_workspace._boundary() if is_document_workspace_request else None
                     ),
                     status_name="guarded",
@@ -1974,6 +2005,7 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
         error = "REQUEST_DENIED" if exc.status_code in {401, 403} else "REQUEST_INVALID"
         is_document_workspace = request.url.path.startswith("/api/v1/document-workspace/")
         is_media_factory = request.url.path.startswith("/api/v1/media-factory/")
+        is_quick_image_planner = request.url.path.startswith("/api/v1/quick-image-planner/")
         is_chat_workspace = request.url.path.startswith("/api/v1/chat-workspace/")
         is_analytics_workspace = request.url.path.startswith("/api/v1/analytics-workspace/")
         is_growth_review = request.url.path.startswith("/api/v1/growth-review/")
@@ -2014,6 +2046,8 @@ async def copyfast_http_exception(request: Request, exc: HTTPException):
                     if is_notification_center
                     else copyfast_media_factory._boundary()
                     if is_media_factory
+                    else copyfast_quick_image_planner._boundary()
+                    if is_quick_image_planner
                     else copyfast_document_workspace._boundary() if is_document_workspace else None
                 ),
                 status_name="failed",
@@ -2064,6 +2098,8 @@ async def copyfast_validation_exception(request: Request, _exc: RequestValidatio
                     if is_notification_center
                     else copyfast_media_factory._boundary()
                     if request.url.path.startswith("/api/v1/media-factory/")
+                    else copyfast_quick_image_planner._boundary()
+                    if request.url.path.startswith("/api/v1/quick-image-planner/")
                     else copyfast_document_workspace._boundary() if request.url.path.startswith("/api/v1/document-workspace/") else None
                 ),
                 status_name="failed",
@@ -2203,6 +2239,7 @@ app.include_router(copyfast_storyboard_grid.router)
 app.include_router(copyfast_memory.router)
 app.include_router(copyfast_prompt_library.router)
 app.include_router(copyfast_prompt_studio.router)
+app.include_router(copyfast_quick_image_planner.router)
 app.include_router(copyfast_music_media.router)
 app.include_router(copyfast_content_studio.router)
 app.include_router(copyfast_channel_strategy.router)
