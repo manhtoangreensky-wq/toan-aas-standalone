@@ -579,7 +579,7 @@ def test_static_audit_maps_only_reviewed_document_commands_to_fresh_web_navigati
 
 
 def test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs() -> None:
-    """Bot language menus open a fresh signed preference page, never a locale write."""
+    """Bot language menus open a fresh signed navigator, never a locale write."""
 
     audit = _load_audit_module()
     routes = {"/{page_path:path}"}
@@ -591,31 +591,48 @@ def test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_c
             routes,
         )
         assert mapped["classification"] == "customer"
-        assert mapped["target"] == "/account"
+        assert mapped["target"] == audit.INTERFACE_LOCALE_NAVIGATOR_ROUTE
         assert mapped["status"] == "NAVIGATION_ONLY"
         assert mapped["resolution"] == "reviewed_interface_locale_fresh_web_navigation"
         assert mapped["source_dispositions"] == audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS
         assert mapped["interface_locale_authority"] == "SIGNED_CUSTOMER_WEB_PROFILE"
         assert mapped["interface_locale_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["interface_locale_route"] == audit.INTERFACE_LOCALE_NAVIGATOR_ROUTE
+        assert mapped["interface_locale_feature_key"] == "interface_locale_navigator"
         assert mapped["interface_locale_supported_values"] == ("vi", "en", "zh")
 
-    for token in sorted(audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_ACTIONS):
+    for token in sorted(audit.INTERFACE_LOCALE_WEB_SUPPORTED_ACTIONS):
         mapped = audit._map_callback(token, "callback_data", evidence, routes)
         assert mapped["classification"] == "customer"
-        assert mapped["target"] == "/account"
+        assert mapped["target"] == audit.INTERFACE_LOCALE_NAVIGATOR_ROUTE
         assert mapped["status"] == "NAVIGATION_ONLY"
         assert mapped["resolution"] == "reviewed_interface_locale_fresh_web_navigation"
         assert mapped["source_dispositions"] == audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS
         assert mapped["interface_locale_authority"] == "SIGNED_CUSTOMER_WEB_PROFILE"
         assert mapped["interface_locale_launch_mode"] == "WEB_NAVIGATION"
+        assert mapped["interface_locale_route"] == audit.INTERFACE_LOCALE_NAVIGATOR_ROUTE
+        assert mapped["interface_locale_feature_key"] == "interface_locale_navigator"
+        assert mapped["interface_locale_action_kind"] == "SUPPORTED_WEB_SELECTOR"
+        assert mapped["interface_locale_selection_allowed"] is True
+        assert mapped["interface_locale_supported_values"] == ("vi", "en", "zh")
+        assert mapped["interface_locale_display_only_values"] == ("ja", "ko", "th", "ar")
+
+    for token in sorted(audit.INTERFACE_LOCALE_WEB_DISPLAY_ONLY_ACTIONS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == audit.INTERFACE_LOCALE_NAVIGATOR_ROUTE
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["interface_locale_action_kind"] == "UNSUPPORTED_WEB_DISPLAY_ONLY"
+        assert mapped["interface_locale_selection_allowed"] is False
+        assert "UNSUPPORTED_WEB_INTERFACE_LOCALE_DISPLAY_ONLY" in mapped["source_dispositions"]
         assert mapped["interface_locale_supported_values"] == ("vi", "en", "zh")
 
-    for token in sorted(audit.INTERFACE_LOCALE_SOURCE_REVIEW_ACTIONS):
+    for token in sorted(audit.INTERFACE_LOCALE_WEB_MENU_NAVIGATION_ACTIONS):
         mapped = audit._map_callback(token, "callback_data", evidence, routes)
-        assert mapped["target"] == "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
-        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
-        assert mapped["resolution"] == "reviewed_interface_locale_callback_requires_source_review"
-        assert "BOT_INTERFACE_LOCALE_OR_MENU_STATE" in mapped["source_dispositions"]
+        assert mapped["target"] == audit.INTERFACE_LOCALE_NAVIGATOR_ROUTE
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["interface_locale_action_kind"] == "BOT_MENU_NAVIGATION_ONLY"
+        assert mapped["interface_locale_selection_allowed"] is False
+        assert mapped["source_dispositions"] == audit.INTERFACE_LOCALE_FRESH_WEB_NAVIGATION_DISPOSITIONS
 
     for template in ("lang|{*}", "lang|future_locale|{*}"):
         mapped = audit._map_callback_template(template, evidence, routes)

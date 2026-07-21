@@ -4048,18 +4048,36 @@
         "file": "bot.py",
         "line": 47018
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "BOT_MENU_NAVIGATION_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "back_lang",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal only redraws a Telegram language-menu level. It may open the fresh signed Web Interface Locale Navigator, but the Web never recreates the Bot menu, consumes a callback, selects a locale or transfers Telegram state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -4067,18 +4085,36 @@
         "file": "bot.py",
         "line": 56790
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "BOT_MENU_NAVIGATION_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "back_lang",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal only redraws a Telegram language-menu level. It may open the fresh signed Web Interface Locale Navigator, but the Web never recreates the Bot menu, consumes a callback, selects a locale or transfers Telegram state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -4086,18 +4122,36 @@
         "file": "bot.py",
         "line": 56799
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "BOT_MENU_NAVIGATION_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "back_lang",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal only redraws a Telegram language-menu level. It may open the fresh signed Web Interface Locale Navigator, but the Web never recreates the Bot menu, consumes a callback, selects a locale or transfers Telegram state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11260,18 +11314,36 @@
         "file": "bot.py",
         "line": 47004
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "BOT_MENU_NAVIGATION_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "lang_more",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal only redraws a Telegram language-menu level. It may open the fresh signed Web Interface Locale Navigator, but the Web never recreates the Bot menu, consumes a callback, selects a locale or transfers Telegram state.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11279,18 +11351,37 @@
         "file": "bot.py",
         "line": 47017
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "UNSUPPORTED_WEB_DISPLAY_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "lang|ar",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM",
+        "UNSUPPORTED_WEB_INTERFACE_LOCALE_DISPLAY_ONLY"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference, but this locale has no reviewed Web catalogue. It may open only the fresh signed Web Interface Locale Navigator disclosure; the value is not selected, persisted, silently replaced or transferred from Bot state into the browser.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11298,8 +11389,18 @@
         "file": "bot.py",
         "line": 47002
       },
+      "interface_locale_action_kind": "SUPPORTED_WEB_SELECTOR",
       "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
       "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": true,
       "interface_locale_supported_values": [
         "vi",
         "en",
@@ -11311,12 +11412,13 @@
         "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
         "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
         "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open a fresh signed Web Account preference page; no Bot locale, Telegram identity, menu, translation mode, workflow language or pending state reaches the browser, and the Web locale is not changed until the customer explicitly saves an allowed profile value through CSRF protection.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open a fresh signed Web Interface Locale Navigator; no Bot locale, Telegram identity, menu, translation mode, workflow language or pending state reaches the browser. The browser does not change locale until the customer explicitly CSRF-saves one reviewed Web profile value.",
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
-      "target": "/account"
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11324,18 +11426,37 @@
         "file": "bot.py",
         "line": 47016
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "UNSUPPORTED_WEB_DISPLAY_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "lang|ja",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM",
+        "UNSUPPORTED_WEB_INTERFACE_LOCALE_DISPLAY_ONLY"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference, but this locale has no reviewed Web catalogue. It may open only the fresh signed Web Interface Locale Navigator disclosure; the value is not selected, persisted, silently replaced or transferred from Bot state into the browser.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11343,18 +11464,37 @@
         "file": "bot.py",
         "line": 47016
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "UNSUPPORTED_WEB_DISPLAY_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "lang|ko",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM",
+        "UNSUPPORTED_WEB_INTERFACE_LOCALE_DISPLAY_ONLY"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference, but this locale has no reviewed Web catalogue. It may open only the fresh signed Web Interface Locale Navigator disclosure; the value is not selected, persisted, silently replaced or transferred from Bot state into the browser.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11362,18 +11502,37 @@
         "file": "bot.py",
         "line": 47017
       },
-      "fallback_family": "locale_navigation",
-      "resolution": "reviewed_interface_locale_callback_requires_source_review",
+      "interface_locale_action_kind": "UNSUPPORTED_WEB_DISPLAY_ONLY",
+      "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
+      "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": false,
+      "interface_locale_supported_values": [
+        "vi",
+        "en",
+        "zh"
+      ],
+      "resolution": "reviewed_interface_locale_fresh_web_navigation",
       "source": "lang|th",
       "source_dispositions": [
-        "BOT_INTERFACE_LOCALE_OR_MENU_STATE",
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
+        "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
+        "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
+        "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM",
+        "UNSUPPORTED_WEB_INTERFACE_LOCALE_DISPLAY_ONLY"
       ],
-      "source_evidence": "This Bot language/menu action can write a Telegram-user locale, redraw localized Bot UI or return to Bot menu state. It has no reviewed Web display catalog or signed-profile navigation contract, so it must not become a browser locale write, translation setting, workflow-language value or route.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference, but this locale has no reviewed Web catalogue. It may open only the fresh signed Web Interface Locale Navigator disclosure; the value is not selected, persisted, silently replaced or transferred from Bot state into the browser.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11381,8 +11540,18 @@
         "file": "bot.py",
         "line": 47001
       },
+      "interface_locale_action_kind": "SUPPORTED_WEB_SELECTOR",
       "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
       "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": true,
       "interface_locale_supported_values": [
         "vi",
         "en",
@@ -11394,12 +11563,13 @@
         "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
         "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
         "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open a fresh signed Web Account preference page; no Bot locale, Telegram identity, menu, translation mode, workflow language or pending state reaches the browser, and the Web locale is not changed until the customer explicitly saves an allowed profile value through CSRF protection.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open a fresh signed Web Interface Locale Navigator; no Bot locale, Telegram identity, menu, translation mode, workflow language or pending state reaches the browser. The browser does not change locale until the customer explicitly CSRF-saves one reviewed Web profile value.",
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
-      "target": "/account"
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -11407,8 +11577,18 @@
         "file": "bot.py",
         "line": 47003
       },
+      "interface_locale_action_kind": "SUPPORTED_WEB_SELECTOR",
       "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_display_only_values": [
+        "ja",
+        "ko",
+        "th",
+        "ar"
+      ],
+      "interface_locale_feature_key": "interface_locale_navigator",
       "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
+      "interface_locale_selection_allowed": true,
       "interface_locale_supported_values": [
         "vi",
         "en",
@@ -11420,12 +11600,13 @@
         "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
         "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
         "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open a fresh signed Web Account preference page; no Bot locale, Telegram identity, menu, translation mode, workflow language or pending state reaches the browser, and the Web locale is not changed until the customer explicitly saves an allowed profile value through CSRF protection.",
+      "source_evidence": "The reviewed Bot literal changes a Telegram-user language/menu preference. It may only open a fresh signed Web Interface Locale Navigator; no Bot locale, Telegram identity, menu, translation mode, workflow language or pending state reaches the browser. The browser does not change locale until the customer explicitly CSRF-saves one reviewed Web profile value.",
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
-      "target": "/account"
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -50387,7 +50568,9 @@
       },
       "handler": "cmd_language",
       "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_feature_key": "interface_locale_navigator",
       "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
       "interface_locale_supported_values": [
         "vi",
         "en",
@@ -50399,12 +50582,13 @@
         "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
         "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
         "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
       "source_evidence": "The Bot command opens a language/menu chooser for a Telegram user. The Web opens a fresh signed Account preference page only; it does not receive a Bot user ID, locale, menu, pending state, translation mode or workflow language. A customer must explicitly choose and CSRF-save one reviewed Web interface locale.",
       "source_kind": "command",
       "status": "NAVIGATION_ONLY",
-      "target": "/account"
+      "target": "/account/interface-language"
     },
     {
       "classification": "customer",
@@ -50414,7 +50598,9 @@
       },
       "handler": "cmd_language",
       "interface_locale_authority": "SIGNED_CUSTOMER_WEB_PROFILE",
+      "interface_locale_feature_key": "interface_locale_navigator",
       "interface_locale_launch_mode": "WEB_NAVIGATION",
+      "interface_locale_route": "/account/interface-language",
       "interface_locale_supported_values": [
         "vi",
         "en",
@@ -50426,12 +50612,13 @@
         "FRESH_SIGNED_WEB_INTERFACE_LOCALE_NAVIGATION",
         "BOT_INTERFACE_LOCALE_STATE_NOT_REPLAYED",
         "EXPLICIT_WEB_PROFILE_SAVE_REQUIRED",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
         "NO_RUNTIME_CLAIM"
       ],
       "source_evidence": "The Bot command opens a language/menu chooser for a Telegram user. The Web opens a fresh signed Account preference page only; it does not receive a Bot user ID, locale, menu, pending state, translation mode or workflow language. A customer must explicitly choose and CSRF-save one reviewed Web interface locale.",
       "source_kind": "command",
       "status": "NAVIGATION_ONLY",
-      "target": "/account"
+      "target": "/account/interface-language"
     },
     {
       "classification": "admin",
@@ -57806,30 +57993,6 @@
       "source_kinds": [
         "callback_data"
       ]
-    },
-    {
-      "authority": "Signed Web profile locale",
-      "candidate_boundary": "/account",
-      "count": 8,
-      "family": "locale_navigation",
-      "next_contract": "Map a locale action only after the signed Web account preference, supported bundle and fallback behavior are explicitly reviewed; do not replay Bot language/menu state.",
-      "priority": "P2",
-      "sample_sources": [
-        "back_lang",
-        "lang_more",
-        "lang|ar",
-        "lang|ja",
-        "lang|ko",
-        "lang|th"
-      ],
-      "source_dispositions": [
-        "SOURCE_STATE_MACHINE_REQUIRED",
-        "NO_RUNTIME_CLAIM"
-      ],
-      "source_evidence": "Bot language callbacks write Bot user preference and redraw a localized Telegram menu. They are not a browser locale mutation contract.",
-      "source_kinds": [
-        "callback_data"
-      ]
     }
   ],
   "gaps": [
@@ -57841,7 +58004,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 364,
+      "count": 356,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -57913,11 +58076,6 @@
           "count": 1,
           "family": "tr_transcribe",
           "priority": "P1"
-        },
-        {
-          "count": 8,
-          "family": "locale_navigation",
-          "priority": "P2"
         }
       ],
       "severity": "high"
@@ -58093,12 +58251,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 90.48,
+  "mapping_coverage_percent": 90.69,
   "mapping_status_counts": {
     "COPIED_GUARDED": 2231,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 710,
-    "NEEDS_FEATURE_DISPOSITION": 364,
+    "NAVIGATION_ONLY": 718,
+    "NEEDS_FEATURE_DISPOSITION": 356,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -58120,7 +58278,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 90.48,
+  "safe_disposition_coverage_percent": 90.69,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -58130,13 +58288,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3459,
+    "resolved_static_source_count": 3467,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 38,
-    "unresolved_source_count": 364
+    "unresolved_source_count": 356
   },
   "static_web_surface_coverage_percent": 58.36,
   "telegram_link_callback_contract": {

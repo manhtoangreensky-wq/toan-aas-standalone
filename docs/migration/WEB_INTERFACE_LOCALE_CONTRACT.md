@@ -38,19 +38,20 @@ reviewed Web interface translation for those languages.
 ## Bot-to-Web navigation boundary
 
 The migration audit treats the Bot's language menu as a separate state machine,
-not a browser preference API. Its only reviewed Web counterpart is a fresh
-signed Account page; it does **not** carry a Telegram identity, current Bot
-locale/menu, translation mode, workflow language, pending state or callback
-value into the browser.
+not a browser preference API. Its only reviewed Web counterpart is the fresh,
+signed [`/account/interface-language`](/account/interface-language) navigator;
+it does **not** carry a Telegram identity, current Bot locale/menu, translation
+mode, workflow language, pending state or callback value into the browser.
 
 | Frozen Bot source | Web disposition | Why |
 | --- | --- | --- |
-| `/lang`, `/language` | `NAVIGATION_ONLY` to `/account` | Opens the Web account preference surface only. The customer must explicitly select and CSRF-save `vi`, `en` or `zh`. |
-| `lang|vi`, `lang|en`, `lang|zh` | `NAVIGATION_ONLY` to `/account` | The Bot literal is reviewed solely as a fresh Web navigation entry; it never auto-applies a browser locale. |
-| `lang|ar`, `lang|ja`, `lang|ko`, `lang|th`, `lang_more`, `back_lang` | `INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED` | No reviewed Web interface catalog or signed-profile navigation behavior is inferred from the Bot menu action. |
-| `lang|{*}` or any later `lang|…` value | `INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED` | Opaque or new Bot language values fail closed and cannot inherit `/account`, a translation setting or a workflow field. |
+| `/lang`, `/language` | `NAVIGATION_ONLY` to `/account/interface-language` | Opens the dedicated Web preference navigator only. The customer must explicitly select and CSRF-save `vi`, `en` or `zh`. |
+| `lang|vi`, `lang|en`, `lang|zh` | `NAVIGATION_ONLY` to `/account/interface-language` | The Bot literal is reviewed solely as a fresh Web navigation entry; it never auto-applies a browser locale. |
+| `lang|ja`, `lang|ko`, `lang|th`, `lang|ar` | `NAVIGATION_ONLY` to `/account/interface-language` with `UNSUPPORTED_WEB_INTERFACE_LOCALE_DISPLAY_ONLY` | The frozen Bot recognizes these values, but its source currently uses an English UI fallback. The Web shows their support boundary only: no option, persistence, silent fallback or Bot-state transfer. |
+| `lang_more`, `back_lang` | `NAVIGATION_ONLY` to `/account/interface-language` | These redraw Bot menu levels only. The Web navigator never recreates the menu, consumes the callback or selects a locale. |
+| `lang|{*}` or any later `lang|…` value | `INTERFACE_LOCALE_SOURCE_REVIEW_REQUIRED` | Opaque or new Bot language values fail closed and cannot inherit the navigator, a translation setting or a workflow field. |
 
-The account page may change presentation only after the signed Web profile
+The navigator may change presentation only after the signed Web profile
 endpoint accepts an allowed value with CSRF protection and returns the allowed
 profile projection. A Bot callback and a raw browser-supplied language code
 never bypass that confirmation. Translation-pair commands such as `/en_vi` and
