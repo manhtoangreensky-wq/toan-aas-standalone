@@ -1523,6 +1523,14 @@
     return String(path || "").split("?")[0] === "/account/workspace-care";
   }
 
+  // Workspace Menu is a catalog-only Web navigation directory. It must not
+  // acquire a generic canonical projection merely because the account also
+  // links Telegram; every destination repeats its own signed/session and
+  // feature guard after the user chooses it.
+  function isNativeWorkspaceMenuPath(path) {
+    return String(path || "").split("?")[0] === "/workspace-menu";
+  }
+
   // Interface Locale Navigator owns only the signed Web presentation
   // preference. It must never inherit readiness, account, job, wallet or
   // another canonical projection merely because the same person linked
@@ -9530,6 +9538,12 @@
     // callbacks, pending conversation state, provider/payment controls or a
     // route-derived permission from this response.
     const menuCapabilities = Array.isArray(catalogData.menu_capabilities) ? catalogData.menu_capabilities : [];
+    // `/workspace-menu` projects only this finite catalog. Preserve a failed
+    // or malformed response as guarded instead of rendering an empty menu
+    // that could be mistaken for a valid signed navigation directory.
+    const catalogReadState = catalogResponse && catalogResponse.ok === true && Array.isArray(catalogData.menu_capabilities)
+      ? "read_only"
+      : "guarded";
     // This is only aggregate static migration metadata.  It contains no raw
     // Bot command/callback, admin action, source location, secret or runtime
     // provider state, and it never grants a feature capability on its own.
@@ -10457,6 +10471,7 @@
       ...context,
       catalog,
       menuCapabilities,
+      catalogReadState,
       capabilityHub,
       oauthProviders,
       telegramConnection,
@@ -11143,6 +11158,7 @@
         "/reminders": account && memoryCenterEnabled ? "processing" : "guarded",
         "/account/data-controls": account && dataControlsEnabled ? "processing" : "guarded",
         "/account/workspace-care": account ? "read_only" : "guarded",
+        "/workspace-menu": account ? "read_only" : "guarded",
         "/admin/governance": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/governance/documents": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/internal-documents": account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint ? "processing" : "guarded",
@@ -11785,7 +11801,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -20263,7 +20279,14 @@
     // feature/bridge projection. Return before any canonical endpoint can
     // overwrite their owner-scoped state, including `/account/interface-language`
     // and the similarly-prefixed `/voice-studio` route.
-    if (isNativeInterfaceLocaleNavigatorPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
+    // Keep this literal early return separate: the locale contract is a
+    // presentation-only preference and must remain visibly fenced from every
+    // canonical reader even as sibling Web-native workspaces are added.
+    if (isNativeInterfaceLocaleNavigatorPath(path)) return;
+    // Workspace Menu has the same no-projection property, but it is a
+    // navigation directory rather than a preference form. Keeping the fence
+    // explicit prevents either route from inheriting a future generic read.
+    if (isNativeWorkspaceMenuPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.

@@ -753,6 +753,10 @@
     layout: "workspace-setup", fields: [], action: "none", status: "ready",
     notes: ["Thiết lập này chỉ cá nhân hóa điều hướng Web; không kích hoạt Bot, bridge, provider, job, ví Xu, PayOS hay xuất bản.", "Lựa chọn được lưu theo signed Web account, có CSRF, revision và audit; không nhận Telegram ID từ browser."]
   });
+  customerPage("/workspace-menu", "Chuyển workspace", "Directory điều hướng gọn theo mục tiêu làm việc; mọi route đích vẫn kiểm tra signed session, ownership và trạng thái riêng.", ICONS.dashboard, {
+    type: "workspace-menu", layout: "workspace-menu", fields: [], action: "none", status: "read_only",
+    notes: ["Directory chỉ dùng catalogue điều hướng Web đã review. Nó không nhận callback, Telegram ID, message, pending state hoặc dữ liệu Bot.", "Không có action, bridge/read-model riêng, job, Xu, PayOS, payment, provider hay output được tạo từ trang này."]
+  });
   customerPage("/starter-kits", "Starter Kits", "Tạo một Project Web-native có brief, Studio Documents và Workboard checklist từ một bộ khởi đầu đã được review.", ICONS.package, {
     type: "starter-kits", layout: "starter-kits", fields: [], action: "none", status: "ready",
     notes: ["Mỗi Starter Kit chỉ tạo record planning thuộc signed Web account sau xác nhận rõ ràng.", "Starter Kits không gọi Bot/Core Bridge, provider, job, ví Xu, PayOS, xuất bản, thông báo hay tạo media output."]
@@ -1723,6 +1727,73 @@
       if (key && !byKey.has(key)) byKey.set(key, item);
     });
     return GUIDED_START_CAPABILITY_SPECS.reduce((items, spec) => {
+      const item = byKey.get(spec.key);
+      if (!item) return items;
+      const matches = safeHubText(item.feature_key, 80) === spec.featureKey
+        && safeHubRoute(item.route) === spec.route
+        && safeHubText(item.authority, 80) === spec.authority
+        && safeHubText(item.launch_mode, 80) === spec.launchMode
+        && safeHubText(item.availability, 80) === spec.availability
+        && safeHubText(item.execution, 80) === "NO_EXECUTION_CLAIM";
+      if (matches) items.push({ ...spec });
+      return items;
+    }, []);
+  }
+
+  // The Workspace Menu is a compact, non-video directory. It projects a
+  // second fixed subset of the same browser-safe catalog used by Guided Start;
+  // it never consumes a Telegram callback, command, message state or arbitrary
+  // server route. Payment writes, admin surfaces and every video capability
+  // remain outside this directory by design.
+  const WORKSPACE_MENU_CAPABILITY_SPECS = Object.freeze([
+    Object.freeze({ key: "workspace_home", featureKey: "dashboard", route: "/dashboard", authority: "SIGNED_CUSTOMER", launchMode: "NAVIGATION_SHELL", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Workspace", title: "Tổng quan", description: "Quay về bức tranh công việc và các điểm vào đã được server xác thực." }),
+    Object.freeze({ key: "memory_center", featureKey: "notes", route: "/notes", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Web-owned", title: "Memory Center", description: "Ghi chú, tag, ưu tiên và lịch sử phiên bản trong không gian Web riêng." }),
+    Object.freeze({ key: "reminder_center", featureKey: "reminders", route: "/reminders", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Web-owned", title: "Nhắc việc", description: "Lập kế hoạch, pause, resume và complete theo account Web hiện tại." }),
+    Object.freeze({ key: "campaign_planner", featureKey: "campaign_planner", route: "/campaigns", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "organize", eyebrow: "Planning", title: "Kế hoạch nội dung", description: "Bắt đầu brief, calendar marker và self-review trong Campaign Planner." }),
+    Object.freeze({ key: "chat_workspace", featureKey: "chat", route: "/chat", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Authoring", title: "Content & Chat", description: "Mở workspace hội thoại và context Web-owned, tách khỏi Telegram." }),
+    Object.freeze({ key: "prompt_studio", featureKey: "prompt_studio", route: "/prompt-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Authoring", title: "Prompt Studio", description: "Soạn brief rõ ràng trước khi tiếp tục sang các studio chuyên biệt." }),
+    Object.freeze({ key: "image_studio", featureKey: "image_studio", route: "/image-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Visual direction", title: "Image Studio", description: "Tổ chức art direction, reference và self-review trong một workspace riêng." }),
+    Object.freeze({ key: "image_prompt_composer", featureKey: "image_prompt_composer", route: "/image/prompt-composer", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "create", eyebrow: "Visual direction", title: "Image Prompt Composer", description: "Chuyển ý tưởng thành direction hình ảnh có cấu trúc để tự review." }),
+    Object.freeze({ key: "documents", featureKey: "documents", route: "/documents", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Documents", title: "Document Workspace", description: "Mở không gian tài liệu/PDF; từng thao tác vẫn có ownership và capability riêng." }),
+    Object.freeze({ key: "subtitle_studio", featureKey: "subtitle_studio", route: "/subtitle-studio", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Language", title: "Subtitle Studio", description: "Soạn transcript, cue và bản dịch thủ công trong phạm vi Web-native." }),
+    Object.freeze({ key: "asset_vault", featureKey: "asset_vault", route: "/asset-vault", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Private library", title: "Asset Vault", description: "Quản lý tài sản thuộc account Web hiện tại bằng owner check riêng." }),
+    Object.freeze({ key: "media_workspace", featureKey: "media_workspace", route: "/media-workspace", authority: "SIGNED_CUSTOMER_WEB_NATIVE", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "library", eyebrow: "Audio library", title: "Audio Library", description: "Tổ chức audio brief, music và SFX metadata mà không gọi provider." }),
+    Object.freeze({ key: "account", featureKey: "account", route: "/account", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Account", title: "Tài khoản & bảo mật", description: "Quản lý hồ sơ, phương thức đăng nhập và liên kết theo signed session." }),
+    Object.freeze({ key: "wallet", featureKey: "wallet", route: "/wallet", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Canonical read", title: "Ví Xu", description: "Chỉ đọc số dư và lịch sử canonical sau khi authority hợp lệ được xác nhận." }),
+    Object.freeze({ key: "membership", featureKey: "membership", route: "/membership", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Canonical read", title: "Gói thành viên", description: "Xem tier và quyền lợi do nguồn canonical công bố, không tự cấp quyền." }),
+    Object.freeze({ key: "packages", featureKey: "packages", route: "/packages", authority: "CORE_CANONICAL_READ", launchMode: "READ_ONLY_CANONICAL", availability: "GUARDED", group: "account", eyebrow: "Canonical read", title: "Gói dịch vụ", description: "Duyệt catalog gói canonical; directory này không tạo purchase hoặc checkout." }),
+    Object.freeze({ key: "pricing", featureKey: "pricing", route: "/pricing", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Reference", title: "Bảng giá", description: "Xem thông tin giá để tham khảo, không thay đổi rate hoặc Xu." }),
+    Object.freeze({ key: "support", featureKey: "support", route: "/support", authority: "SIGNED_CUSTOMER", launchMode: "WEB_NAVIGATION", availability: "NAVIGATION_ONLY", group: "account", eyebrow: "Support", title: "Support Desk", description: "Mở hỗ trợ owner-scoped mà không dùng Telegram ID hoặc chat state thô." })
+  ]);
+
+  const WORKSPACE_MENU_GROUP_SPECS = Object.freeze([
+    Object.freeze({ key: "organize", title: "Tổ chức công việc", description: "Bắt đầu từ không gian tổng quan, planning và các record Web-owned." }),
+    Object.freeze({ key: "create", title: "Soạn & phát triển", description: "Chuyển brief thành direction rõ ràng trước khi đi vào workflow chuyên biệt." }),
+    Object.freeze({ key: "library", title: "Tài liệu & thư viện", description: "Mở các không gian có owner check riêng cho tài liệu, ngôn ngữ và tài sản." }),
+    Object.freeze({ key: "account", title: "Tài khoản & hỗ trợ", description: "Đọc dữ liệu canonical đúng boundary hoặc mở đúng nơi cần hỗ trợ." })
+  ]);
+
+  function workspaceMenuGroupCopy(group, field) {
+    const fallback = group && typeof group[field] === "string" ? group[field] : "";
+    const key = group && typeof group.key === "string" ? group.key : "";
+    return uiText(`workspaceMenu.group.${key}.${field}`, fallback);
+  }
+
+  function workspaceMenuEntryCopy(entry, field) {
+    const fallback = entry && typeof entry[field] === "string" ? entry[field] : "";
+    const key = entry && typeof entry.key === "string" ? entry.key : "";
+    return uiText(`workspaceMenu.card.${key}.${field}`, fallback);
+  }
+
+  function normalizeWorkspaceMenuCapabilities(raw) {
+    const source = Array.isArray(raw) ? raw : [];
+    const byKey = new Map();
+    source.forEach((item) => {
+      if (!item || typeof item !== "object") return;
+      const key = safeHubText(item.key, 64);
+      if (key && !byKey.has(key)) byKey.set(key, item);
+    });
+    return WORKSPACE_MENU_CAPABILITY_SPECS.reduce((items, spec) => {
       const item = byKey.get(spec.key);
       if (!item) return items;
       const matches = safeHubText(item.feature_key, 80) === spec.featureKey
@@ -6095,7 +6166,7 @@
     return {
       profile,
       preferences: {
-        locale: ["vi", "en"].includes(locale) ? locale : "vi",
+      locale: ["vi", "en", "zh"].includes(locale) ? locale : "vi",
         timezone: /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+)$/.test(timezone) && timezone.length <= 64
           ? timezone
           : "Asia/Ho_Chi_Minh"
@@ -6370,6 +6441,15 @@
       // It cannot add an arbitrary destination, execute a workflow or bypass
       // the destination's own signed-session and feature authorization.
       menuCapabilities: normalizeMenuCapabilities(source.menuCapabilities),
+      workspaceMenuCapabilities: normalizeWorkspaceMenuCapabilities(source.menuCapabilities),
+      // The initial server shell deliberately has no catalog projection. Keep
+      // that distinct from a malformed/failed catalog so a navigation page can
+      // show a bounded loading state instead of a misleading empty directory.
+      catalogReadState: source.catalogReadState === "read_only"
+        ? "read_only"
+        : source.catalogReadState === "guarded"
+          ? "guarded"
+          : "loading",
       capabilityHub: normalizeCapabilityHub(source.capabilityHub),
       workspaceDraftFeatures,
       apiBase: typeof source.apiBase === "string" ? source.apiBase : "",
@@ -7592,6 +7672,7 @@
   const NAVIGATION_I18N_KEYS = Object.freeze({
     "Workspace": "nav.workspace",
     "Tổng quan": "nav.dashboard",
+    "Chuyển workspace": "nav.workspaceMenu",
     "Starter Kits": "nav.starterKits",
     "Project Center": "nav.projects",
     "Workboard": "nav.workboard",
@@ -7621,6 +7702,7 @@
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/account") return uiText("account.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
+    if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
     if (path === "/workspace/setup") return uiText("setup.title", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("starter.title", fallback);
     return localizedNavigationLabel(fallback);
@@ -7632,6 +7714,7 @@
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
+    if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
     if (path === "/workspace/setup") return uiText("page.workspaceSetup.description", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("page.starterKits.description", fallback);
     return fallback;
@@ -7726,7 +7809,7 @@
       {
         label: "Workspace", defaultOpen: true,
         links: [
-          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/starter-kits", "Starter Kits", ICONS.package], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets]
+          ["/dashboard", "Tổng quan", ICONS.dashboard], ["/workspace-menu", "Chuyển workspace", ICONS.dashboard], ["/starter-kits", "Starter Kits", ICONS.package], ["/projects", "Project Center", ICONS.dashboard], ["/workboard", "Workboard", ICONS.workboard], ["/project-packages", "Project Packages", ICONS.package], ["/asset-vault", "Asset Vault", ICONS.assets]
         ]
       },
       {
@@ -8661,7 +8744,64 @@
     const body = groups || renderEmpty("Danh mục đang chờ registry", "Core Bridge chưa cấp metadata route. Portal không tự tạo danh sách hay trạng thái giả.", "⌁");
     const search = entries.length ? `<div class="portal-catalog-search"><label for="portal-catalog-search">Tìm công cụ</label><div class="portal-catalog-search-control"><span aria-hidden="true">${portalIcon(ICONS.search)}</span><input id="portal-catalog-search" class="portal-input" type="search" data-portal-catalog-search placeholder="Ví dụ: OCR, TTS, video sản phẩm, dịch…" autocomplete="off"><button class="portal-catalog-clear" type="button" data-portal-catalog-clear hidden>Xóa</button></div><p class="portal-catalog-search-result" data-portal-catalog-result aria-live="polite">${safeText(String(entries.length))} workflow đang hiển thị.</p><div class="portal-empty" data-portal-catalog-empty hidden><span class="portal-empty-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><h3>Không tìm thấy workflow</h3><p>Thử từ khoá khác hoặc chọn một nhóm công cụ phía trên.</p></div></div>` : "";
     const catalogContext = `<section class="portal-catalog-context"><span class="portal-module-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><div><strong>Chọn theo mục tiêu, không theo lệnh chat</strong><p>Tìm theo từ khóa hoặc mở một nhóm bên dưới. Trạng thái của từng workflow phản ánh capability mà phiên hiện tại được phép dùng.</p></div>${badge("read_only")}</section>`;
-    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+    return `<article class="portal-page">${renderHero(page, context)}${catalogContext}<section id="feature-catalog-list" class="portal-feature-catalog"><div class="portal-section-heading"><div><span class="portal-section-kicker">Workspace catalogue</span><h2>Tìm workflow phù hợp</h2><p>Chọn theo mục tiêu, tìm theo từ khóa, rồi bắt đầu bằng một workspace rõ ràng. Mỗi workflow tự công bố trạng thái sẵn sàng thực tế.</p></div><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/workspace-menu">Chuyển workspace</a><a class="portal-button portal-button--quiet" href="/dashboard">Về Dashboard →</a></div></div>${renderFeatureGuidedStart(context)}${renderCapabilityHub(context)}${search}${jumps}${body}</section></article>`;
+  }
+
+  function workspaceMenuText(key, fallback, params) {
+    return uiText(`workspaceMenu.${key}`, fallback, params);
+  }
+
+  function workspaceMenuEntryState(entry) {
+    if (entry && entry.availability === "GUARDED") {
+      return {
+        badgeState: "guarded",
+        label: entry.authority === "CORE_CANONICAL_READ"
+          ? workspaceMenuText("state.canonicalReadGuarded", "Canonical read · guarded")
+          : workspaceMenuText("state.guarded", "Guarded")
+      };
+    }
+    return { badgeState: "read_only", label: workspaceMenuText("state.webNativeNavigation", "Web-native navigation") };
+  }
+
+  function workspaceMenuCard(entry) {
+    const route = safeHubRoute(entry && entry.route);
+    const page = route ? manifest[normalizePath(route)] : null;
+    if (!route || !page || page.access === "admin") return "";
+    const state = workspaceMenuEntryState(entry);
+    const icon = {
+      organize: ICONS.dashboard,
+      create: ICONS.prompt,
+      library: ICONS.assets,
+      account: ICONS.account
+    }[entry.group] || ICONS.dashboard;
+    const group = WORKSPACE_MENU_GROUP_SPECS.find((item) => item.key === entry.group);
+    const groupTitle = workspaceMenuGroupCopy(group, "title");
+    const title = workspaceMenuEntryCopy(entry, "title");
+    const description = workspaceMenuEntryCopy(entry, "description");
+    return `<a class="portal-workspace-menu-card" href="${safeText(route)}"><span class="portal-workspace-menu-card-top"><span class="portal-module-icon" aria-hidden="true">${portalIcon(icon)}</span><span class="portal-workspace-menu-card-state">${badge(state.badgeState)}<small>${safeText(state.label)}</small></span></span><span class="portal-workspace-menu-card-copy"><small>${safeText(groupTitle || entry.eyebrow)}</small><strong>${safeText(title)}</strong><span>${safeText(description)}</span></span><span class="portal-workspace-menu-card-footer">${safeText(workspaceMenuText("open", "Mở workspace"))} <b aria-hidden="true">→</b></span></a>`;
+  }
+
+  function renderWorkspaceMenu(page, context) {
+    const entries = Array.isArray(context && context.workspaceMenuCapabilities) ? context.workspaceMenuCapabilities : [];
+    const catalogReadState = context && context.catalogReadState === "read_only"
+      ? "read_only"
+      : context && context.catalogReadState === "loading"
+        ? "loading"
+        : "guarded";
+    if (catalogReadState === "loading") {
+      return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-busy="true">${renderEmpty(workspaceMenuText("loadingTitle", "Đang tải Workspace Menu"), workspaceMenuText("loadingBody", "Portal đang kiểm tra catalogue điều hướng đã review. Không dùng cache cũ, Bot state hay route tự suy đoán để thay thế."), ICONS.dashboard)}</section></article>`;
+    }
+    if (catalogReadState !== "read_only" || entries.length !== WORKSPACE_MENU_CAPABILITY_SPECS.length) {
+      return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(workspaceMenuText("guardedTitle", "Workspace Menu chưa thể xác minh"), workspaceMenuText("guardedBody", "Catalogue điều hướng đang được bảo vệ hoặc không khớp contract đã review. Portal không dựng route hoặc trạng thái thay thế."), ICONS.security)}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/features">${safeText(workspaceMenuText("openCatalog", "Mở catalog đầy đủ"))}</a></div></section></article>`;
+    }
+    const grouped = WORKSPACE_MENU_GROUP_SPECS.map((group) => ({
+      ...group,
+      entries: entries.filter((entry) => entry && entry.group === group.key)
+    })).filter((group) => group.entries.length);
+    const directory = grouped.length
+      ? grouped.map((group) => `<section class="portal-workspace-menu-group" aria-labelledby="workspace-menu-${safeText(group.key)}"><div class="portal-workspace-menu-group-head"><div><span class="portal-section-kicker">${safeText(workspaceMenuGroupCopy(group, "title"))}</span><h2 id="workspace-menu-${safeText(group.key)}">${safeText(workspaceMenuGroupCopy(group, "title"))}</h2><p>${safeText(workspaceMenuGroupCopy(group, "description"))}</p></div><span>${safeText(workspaceMenuText("groupCount", "{count} workspace", { count: String(group.entries.length) }))}</span></div><nav class="portal-workspace-menu-grid" aria-label="${safeText(workspaceMenuGroupCopy(group, "title"))}">${group.entries.map(workspaceMenuCard).join("")}</nav></section>`).join("")
+      : renderEmpty(workspaceMenuText("guardedTitle", "Workspace Menu chưa thể xác minh"), workspaceMenuText("guardedBody", "Catalogue điều hướng đang được bảo vệ hoặc không khớp contract đã review. Portal không dựng route hoặc trạng thái thay thế."), ICONS.security);
+    return `<article class="portal-page portal-workspace-menu">${renderHero(page, context)}<section class="portal-workspace-menu-intro"><div><span class="portal-section-kicker">${safeText(workspaceMenuText("kicker", "Workspace directory"))}</span><h2>${safeText(workspaceMenuText("introTitle", "Chọn đúng không gian, rồi bắt đầu rõ ràng"))}</h2><p>${safeText(workspaceMenuText("introBody", "Danh sách này tổ chức các điểm vào Web đã review theo cách bạn làm việc. Mỗi card chỉ chuyển trang; quyền và trạng thái luôn được kiểm tra lại ở route đích."))}</p></div><aside class="portal-workspace-menu-intro-status" aria-label="${safeText(workspaceMenuText("navigationOnly", "Navigation only"))}"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>${safeText(workspaceMenuText("navigationOnly", "Navigation only"))}</strong><small>${safeText(workspaceMenuText("noAutomaticAction", "Không có hành động tự động"))}</small></span></aside></section><section class="portal-workspace-menu-directory" aria-label="${safeText(workspaceMenuText("directoryLabel", "Danh sách workspace đã review"))}">${directory}</section><section class="portal-card portal-card-pad portal-workspace-menu-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(workspaceMenuText("boundaryKicker", "Ranh giới rõ ràng"))}</span><h2 class="portal-card-title">${safeText(workspaceMenuText("boundaryTitle", "Directory không thay thế workflow"))}</h2><p class="portal-card-subtitle">${safeText(workspaceMenuText("boundaryBody", "Nếu một route đang guarded, trạng thái đó vẫn được giữ nguyên. Không có shortcut nào bỏ qua signed session, CSRF, ownership hoặc feature guard riêng."))}</p></div>${badge("read_only")}</div><ul class="portal-workspace-menu-boundary-list"><li><strong>${safeText(workspaceMenuText("noBotState", "Không sao chép Bot state"))}</strong><small>${safeText(workspaceMenuText("noBotStateBody", "Không có callback, message, Telegram ID hoặc pending value."))}</small></li><li><strong>${safeText(workspaceMenuText("noDirectoryWrite", "Không có write từ directory"))}</strong><small>${safeText(workspaceMenuText("noDirectoryWriteBody", "Card chỉ là link; mỗi write cần flow và confirmation tại nơi phù hợp."))}</small></li><li><strong>${safeText(workspaceMenuText("videoDeferred", "Video để phase riêng"))}</strong><small>${safeText(workspaceMenuText("videoDeferredBody", "Directory này cố ý không mở rộng menu Video."))}</small></li></ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/features">${safeText(workspaceMenuText("openCatalog", "Mở catalog đầy đủ"))}</a><a class="portal-button portal-button--quiet" href="/dashboard">${safeText(workspaceMenuText("backDashboard", "Về Dashboard"))}</a></div></section></article>`;
   }
 
   function validWorkspaceDraftId(value) {
@@ -21848,6 +21988,7 @@
       case "campaign-calendar": return renderCampaignCalendar(page, context);
       case "campaign-approvals": return renderCampaignApprovals(page, context);
       case "feature-catalog": return renderFeatureCatalog(page, context);
+      case "workspace-menu": return renderWorkspaceMenu(page, context);
       case "workspace-drafts": return renderWorkspaceDrafts(page, context);
       case "project-center": return renderProjectCenter(page, context);
       case "memory-notes": return renderMemoryNotes(page, context);

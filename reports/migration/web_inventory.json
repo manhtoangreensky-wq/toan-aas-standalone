@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1461,
+      "line": 1493,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,12 +179,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3672,
+      "line": 3725,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3680,
+      "line": 3733,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -226,7 +226,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7313,
+      "line": 7414,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -292,7 +292,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5163,
+      "line": 5241,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6788,7 +6788,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 888,
+      "occurrences": 905,
       "provider": "PayOS"
     },
     {
@@ -7016,7 +7016,7 @@
         "copyfast_subtitle_workspace.py",
         "copyfast_support.py"
       ],
-      "occurrences": 2190,
+      "occurrences": 2215,
       "provider": "Telegram"
     }
   ],
@@ -12738,10 +12738,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 285,
-  "source_files_scanned": 285,
-  "source_fingerprint_sha256": "3f8f78a80a2c0d3877dbd2e3b1678dac0c8ccf3f043ef7c304b15e41ea268d44",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast85-interface-locale-navigator",
+  "source_files_discovered": 286,
+  "source_files_scanned": 286,
+  "source_fingerprint_sha256": "a06f401b3834a10368dd05c4d469d955ed747c8d84a846815a9a9aff056bc709",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast86-menu-capability-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

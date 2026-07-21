@@ -50,6 +50,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("projects", "Project Center", "content", "/projects", description="Project và Studio Document có version do Web Workspace sở hữu, không phụ thuộc Telegram."),
     WebFeature("project_packages", "Project Packages", "content", "/project-packages", description="Snapshot ZIP bất biến của Project do Web App tạo và xác minh riêng tư; không phải Job Bot hay gói dịch vụ."),
     WebFeature("workspace_drafts", "Bản nháp của tôi", "content", "/workspace", description="Lưu và tiếp tục brief Web an toàn, không lưu file, quote hoặc trạng thái Bot."),
+    WebFeature("workspace_menu", "Chuyển workspace", "content", "/workspace-menu", description="Directory điều hướng Web-native đã review theo mục tiêu; không phát lại menu/callback Bot hoặc gọi bridge, provider, job, Xu hay PayOS."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
     WebFeature("interface_locale_navigator", "Ngôn ngữ giao diện", "account", "/account/interface-language", description="Chọn catalogue giao diện Web đã được review bằng signed session và CSRF; không chuyển state ngôn ngữ/menu Telegram, workflow language, job, Xu hay PayOS."),
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),

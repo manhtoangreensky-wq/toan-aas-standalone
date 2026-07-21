@@ -109,6 +109,7 @@ async def dashboard():
         "CALLBACK_HANDLER_DISPATCH_MAP.md",
         "UNREFERENCED_STATIC_MODULES.md",
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
+        "BILLING_MENU_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
@@ -121,6 +122,7 @@ async def dashboard():
     readme = (docs_dir / "README.md").read_text(encoding="utf-8")
     assert "BOT_COMPANION_HANDOFF.md" in readme
     assert "UNREFERENCED_STATIC_MODULES.md" in readme
+    assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
     # keep their discoverability on every audit run instead of silently
@@ -1389,6 +1391,57 @@ async def page(page_path):
     assert "PAYOS_ALERT_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
 
 
+def test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only() -> None:
+    """Billing is an exact Bot-admin menu hint, never a customer payment action."""
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    assert set(audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == {"menu|billing"}
+    descriptor = audit.BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS["menu|billing"]
+    assert descriptor["target"] == "/admin/payments"
+    assert descriptor["classification"] == "admin"
+    assert descriptor["feature_key"] == "admin_payments"
+    assert descriptor["authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+    assert descriptor["launch_mode"] == "WEB_NAVIGATION"
+    assert descriptor["source_dispositions"] == (
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_MENU_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "NO_CUSTOMER_OR_MANUAL_TOPUP_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    )
+
+    mapped = audit._map_callback("menu|billing", "callback_data", evidence, routes)
+    assert mapped["target"] == "/admin/payments"
+    assert mapped["classification"] == "admin"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_billing_menu_admin_navigation"
+    assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+    assert mapped["billing_menu_feature_key"] == "admin_payments"
+    assert mapped["billing_menu_authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+    assert mapped["billing_menu_launch_mode"] == "WEB_NAVIGATION"
+
+    # An adjacent or future Bot callback cannot inherit an administrator route
+    # or any financial control through the menu namespace.
+    unknown = audit._map_callback("menu|billing_future", "callback_data", evidence, routes)
+    assert unknown["target"] != "/admin/payments"
+    assert unknown["resolution"] != "reviewed_billing_menu_admin_navigation"
+    wrong_case = audit._map_callback("MENU|BILLING", "callback_data", evidence, routes)
+    assert wrong_case["target"] != "/admin/payments"
+    assert wrong_case["resolution"] != "reviewed_billing_menu_admin_navigation"
+
+    # The raw Bot identifier and the administrator-only target are both
+    # absent from the browser-safe customer catalog.
+    from copyfast_registry import menu_capability_catalog
+
+    public_catalog = menu_capability_catalog()
+    assert all("menu|billing" not in str(item) for item in public_catalog)
+    assert all(item["route"] != "/admin/payments" for item in public_catalog)
+    assert "menu|billing" not in audit.MENU_ACTION_REGISTRY
+
+
 def test_static_audit_keeps_package_purchase_callbacks_in_catalog_or_bot_payment_boundary(tmp_path: Path) -> None:
     """A service package selection is not a Xu top-up or browser checkout."""
 
@@ -2077,6 +2130,7 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|hint_ai_prompt": ("/prompt-studio", "prompt_studio", "prompt_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_campaign_preset": ("/campaigns", "campaign_planner", "campaign_planner", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|hint_profile": ("/account", "account", "account", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|main_memory": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_note": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|hint_search_note": ("/notes", "memory_center", "notes", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
@@ -2090,6 +2144,7 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|translation_document": ("/documents", "documents", "documents", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|profile_packages": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
         "menu|main_topup": ("/wallet/topup", "wallet_topup", "wallet_topup", "CORE_CANONICAL_PAYMENT", "BRIDGE_GUARDED_PROXY"),
+        "menu|hint_naptien": ("/wallet/topup", "wallet_topup", "wallet_topup", "CORE_CANONICAL_PAYMENT", "BRIDGE_GUARDED_PROXY"),
         "menu|guide_credits": ("/wallet", "wallet", "wallet", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
         "menu|hint_pricing": ("/pricing", "pricing", "pricing", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|main_docs": ("/documents", "documents", "documents", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),

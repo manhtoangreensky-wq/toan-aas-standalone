@@ -2,7 +2,7 @@
 
 | Area | Bot | Web App |
 | --- | --- | --- |
-| Source files scanned | 172 | 285 |
+| Source files scanned | 172 | 286 |
 | Noncanonical Bot drafts excluded | 4 | n/a |
 | Commands | 773 | n/a |
 | Callback handler registrations | 54 | Dispatcher evidence only; not a user-action parity claim |
