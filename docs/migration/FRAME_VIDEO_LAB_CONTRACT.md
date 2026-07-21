@@ -103,3 +103,30 @@ raw-body cap, topology guard, owner/CSRF isolation, duplicate/extra-field
 rejection, fixed non-shell FFmpeg argv, deterministic idempotency, H.264/no-
 audio receipt verification, sealed private download, tamper refusal, generic
 opaque Jobs/Assets delivery and the shared Poster/Frame Video gate.
+
+## Signed Portal handoff
+
+`/video/frame-sequence` is a dedicated signed customer workspace. It is
+deliberately not a new item in the broad Video menu/catalog: the direct URL
+keeps the workflow available without pre-empting the later Video navigation
+redesign.
+
+- The source picker calls only the Asset Vault metadata endpoint with
+  `state=active&reference_kind=image`. It accepts exactly 2–8 ordered,
+  owner-scoped JPEG/JPG, PNG or WebP records that pass the existing client and
+  server size/type rules. The browser does not read or upload source bytes,
+  paths, URLs, hashes, storage keys or FFmpeg settings.
+- The Portal holds the ordered selection, closed settings, estimate and
+  receipt state only in its current signed tab. It uses `no-store`,
+  session/route fences and clears projections on failure, account change or
+  route exit. No source ID, file metadata, receipt or setting is written to
+  browser storage or the PWA cache.
+- Changing source order, sources, ratio, duration or effect invalidates a
+  prior estimate. Creation requires a visible confirmation, CSRF and one body
+  idempotency key. An ambiguous result retries the same key rather than
+  creating another render receipt.
+- The Portal never fabricates a fake completed output. It only shows a
+  download control after the owner-scoped receipt is `completed` and exposes
+  a verified `video/mp4` attachment. Failed, guarded or unavailable states
+  never substitute a preview, public link, generic Job/Asset URL or browser
+  render.

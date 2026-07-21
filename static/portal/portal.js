@@ -1371,6 +1371,16 @@
       "Mỗi lần xác nhận tạo một receipt owner-scoped. Nút tải chỉ xuất hiện khi máy chủ đã hoàn tất kiểm tra output MP4 private; giao diện không tự báo thành công hoặc dựng file thay thế."
     ]
   });
+  // Frame Video Lab is deliberately a direct app workspace, not another
+  // item in the broad Video catalogue. It accepts only an ordered, bounded
+  // image selection from the signed owner's Asset Vault.
+  customerPage("/video/frame-sequence", "Frame Video Lab", "Ghép 2–8 ảnh private thành MP4 có kiểm chứng, với thứ tự khung hình rõ ràng.", ICONS.video, {
+    layout: "frame-video-operations", type: "frame-video-operations", fields: [], action: "none", status: "processing",
+    notes: [
+      "Chỉ metadata ảnh JPG/JPEG/PNG/WebP active thuộc Asset Vault của signed Web account hiện tại được chọn. Browser không gửi bytes, path, URL, hash, storage key hoặc FFmpeg argument.",
+      "Thứ tự ảnh được hiển thị rõ trong tab hiện tại. Mỗi lần xác nhận tạo một receipt owner-scoped; nút tải chỉ xuất hiện sau khi server hoàn tất kiểm chứng MP4 private."
+    ]
+  });
 
   featurePage("/subtitle", "Phụ đề", "Chuẩn bị phụ đề từ media nguồn với export SRT/VTT do job engine trả về.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
   featurePage("/subtitle/create", "Tạo phụ đề", "Tạo bản nháp phụ đề, không giả lập transcript hay file SRT/VTT.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
@@ -13779,6 +13789,249 @@
     </article>`;
   }
 
+  const FRAME_VIDEO_PORTAL_RATIOS = Object.freeze({
+    "9:16": Object.freeze({ label: "Dọc 9:16", width: 720, height: 1280 }),
+    "16:9": Object.freeze({ label: "Ngang 16:9", width: 1280, height: 720 }),
+    "1:1": Object.freeze({ label: "Vuông 1:1", width: 1080, height: 1080 }),
+    "4:5": Object.freeze({ label: "Dọc 4:5", width: 864, height: 1080 })
+  });
+  const FRAME_VIDEO_PORTAL_EFFECTS = Object.freeze({
+    none: "Không hiệu ứng", fade: "Chuyển cảnh mờ", zoom: "Zoom nhẹ", pan: "Pan nhẹ", slide: "Trượt nhẹ", random: "Tự chọn an toàn"
+  });
+  const FRAME_VIDEO_PORTAL_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+  const FRAME_VIDEO_PORTAL_IMAGE_TYPES = Object.freeze({
+    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp"
+  });
+
+  function frameVideoPortalTimestamp(value) {
+    const timestamp = String(value || "").trim();
+    return timestamp && timestamp.length <= 80 && !/[\u0000-\u001f\u007f]/.test(timestamp) ? timestamp : "";
+  }
+
+  function frameVideoPortalStateLabel(value) {
+    return ({
+      queued: "Đang xếp hàng", processing: "Đang chuẩn bị khung hình", completed: "Đã kiểm chứng",
+      failed: "Không thể tạo video", guarded: "Được bảo vệ", unavailable: "Output không còn sẵn sàng"
+    })[String(value || "")] || "Được bảo vệ";
+  }
+
+  function frameVideoPortalDuration(value) {
+    const seconds = Number(value);
+    if (!Number.isFinite(seconds) || seconds <= 0 || seconds > 24) return "—";
+    return Number.isInteger(seconds) ? `${seconds}s` : `${seconds.toFixed(1)}s`;
+  }
+
+  function frameVideoPortalReferenceItem(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(item.id || "").trim();
+    const displayName = String(item.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(item.extension || "").trim().toLowerCase();
+    const contentType = String(item.content_type || "").trim().toLowerCase();
+    const byteSize = Number(item.byte_size);
+    if (!validVaultAssetId(id) || String(item.state || "") !== "active" || !displayName || displayName.length > 120
+      || FRAME_VIDEO_PORTAL_IMAGE_TYPES[extension] !== contentType || !Number.isInteger(byteSize)
+      || byteSize < 1 || byteSize > 10 * 1024 * 1024) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: frameVideoPortalTimestamp(item.created_at) };
+  }
+
+  function frameVideoPortalSelectionIds(value) {
+    const raw = Array.isArray(value) ? value : [];
+    const seen = new Set();
+    const ids = raw.map((item) => String(item || "").trim())
+      .filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true));
+    return ids.length <= 8 ? ids : [];
+  }
+
+  function frameVideoPortalReferenceItems(context) {
+    const references = context.frameVideoReferences && typeof context.frameVideoReferences === "object" ? context.frameVideoReferences : {};
+    const items = Array.isArray(references.items) ? references.items : [];
+    const seen = new Set();
+    return items.map(frameVideoPortalReferenceItem).filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true)).slice(0, 31);
+  }
+
+  function frameVideoPortalSelectedSources(context) {
+    const references = context.frameVideoReferences && typeof context.frameVideoReferences === "object" ? context.frameVideoReferences : {};
+    const ids = frameVideoPortalSelectionIds(references.selected_ids);
+    const selectedItems = Array.isArray(references.selected_items) ? references.selected_items : [];
+    const all = new Map();
+    selectedItems.concat(frameVideoPortalReferenceItems(context)).map(frameVideoPortalReferenceItem).forEach((item) => {
+      if (item) all.set(item.id, item);
+    });
+    return ids.map((id) => all.get(id)).filter(Boolean);
+  }
+
+  function frameVideoPortalSpec(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const sourceAssetIds = frameVideoPortalSelectionIds(source.source_asset_ids);
+    const aspectRatio = String(source.aspect_ratio || "").trim();
+    const secondsPerImage = Number(source.seconds_per_image);
+    const effect = String(source.effect || "").trim().toLowerCase();
+    if (sourceAssetIds.length < 2 || sourceAssetIds.length > 8 || !FRAME_VIDEO_PORTAL_RATIOS[aspectRatio]
+      || ![1.5, 3, 4].includes(secondsPerImage) || !Object.prototype.hasOwnProperty.call(FRAME_VIDEO_PORTAL_EFFECTS, effect)) return null;
+    return { source_asset_ids: sourceAssetIds, aspect_ratio: aspectRatio, seconds_per_image: secondsPerImage, effect };
+  }
+
+  function frameVideoPortalEstimate(context) {
+    const stored = context.frameVideoEstimate && typeof context.frameVideoEstimate === "object" ? context.frameVideoEstimate : {};
+    const payload = frameVideoPortalSpec(stored.payload);
+    const estimate = stored.estimate && typeof stored.estimate === "object" ? stored.estimate : {};
+    const output = estimate.output && typeof estimate.output === "object" ? estimate.output : {};
+    const target = payload ? FRAME_VIDEO_PORTAL_RATIOS[payload.aspect_ratio] : null;
+    const sourceCount = Number(estimate.source_count);
+    const sourceTotalBytes = Number(estimate.source_total_bytes);
+    const durationSeconds = Number(estimate.duration_seconds);
+    if (!payload || !target || sourceCount !== payload.source_asset_ids.length || !Number.isInteger(sourceTotalBytes) || sourceTotalBytes < 1 || sourceTotalBytes > 30 * 1024 * 1024
+      || String(estimate.aspect_ratio || "") !== payload.aspect_ratio || Number(estimate.seconds_per_image) !== payload.seconds_per_image
+      || String(estimate.effect || "").toLowerCase() !== payload.effect || !Object.prototype.hasOwnProperty.call(FRAME_VIDEO_PORTAL_EFFECTS, String(estimate.effective_effect || "").toLowerCase())
+      || !Number.isFinite(durationSeconds) || durationSeconds <= 0 || durationSeconds > 24 || String(output.content_type || "").toLowerCase() !== "video/mp4"
+      || String(output.codec || "").toLowerCase() !== "h264" || output.audio !== false || Number(estimate.width) !== target.width || Number(estimate.height) !== target.height) return null;
+    return {
+      payload,
+      estimate: {
+        source_count: sourceCount, source_total_bytes: sourceTotalBytes, duration_seconds: durationSeconds,
+        effective_effect: String(estimate.effective_effect).toLowerCase(), width: target.width, height: target.height
+      }
+    };
+  }
+
+  function frameVideoPortalOperation(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(item.id || "").trim();
+    const state = String(item.state || item.status || "").trim();
+    const aspectRatio = String(item.aspect_ratio || "").trim();
+    const secondsPerImage = Number(item.seconds_per_image);
+    const effect = String(item.effect || "").trim().toLowerCase();
+    const effectiveEffect = item.effective_effect === null || item.effective_effect === undefined ? null : String(item.effective_effect || "").trim().toLowerCase();
+    const sourceCount = Number(item.source_count);
+    const sourceTotalBytes = Number(item.source_total_bytes);
+    const createdAt = frameVideoPortalTimestamp(item.created_at);
+    const queuedAt = frameVideoPortalTimestamp(item.queued_at);
+    const updatedAt = frameVideoPortalTimestamp(item.updated_at);
+    if (!validVaultAssetId(id) || String(item.kind || "") !== "frame_video" || !FRAME_VIDEO_PORTAL_STATES.has(state)
+      || !FRAME_VIDEO_PORTAL_RATIOS[aspectRatio] || ![1.5, 3, 4].includes(secondsPerImage)
+      || !Object.prototype.hasOwnProperty.call(FRAME_VIDEO_PORTAL_EFFECTS, effect)
+      || (effectiveEffect !== null && !Object.prototype.hasOwnProperty.call(FRAME_VIDEO_PORTAL_EFFECTS, effectiveEffect))
+      || !Number.isInteger(sourceCount) || sourceCount < 2 || sourceCount > 8 || !Number.isInteger(sourceTotalBytes) || sourceTotalBytes < 1 || sourceTotalBytes > 30 * 1024 * 1024
+      || !createdAt || !queuedAt || !updatedAt) return null;
+    const output = item.output && typeof item.output === "object" && !Array.isArray(item.output) ? item.output : {};
+    const filename = String(output.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const byteSize = Number(output.byte_size);
+    const durationMs = Number(output.duration_ms);
+    const target = FRAME_VIDEO_PORTAL_RATIOS[aspectRatio];
+    const outputSafe = output.available === true && state === "completed" && String(output.content_type || "").toLowerCase() === "video/mp4"
+      && filename.length > 0 && filename.length <= 180 && Number.isInteger(byteSize) && byteSize >= 128 && byteSize <= 25 * 1024 * 1024
+      && Number.isInteger(durationMs) && durationMs >= 200 && durationMs <= 24500 && Number(output.width) === target.width && Number(output.height) === target.height;
+    return {
+      id, kind: "frame_video", state, aspect_ratio: aspectRatio, seconds_per_image: secondsPerImage, effect, effective_effect: effectiveEffect,
+      source_count: sourceCount, source_total_bytes: sourceTotalBytes,
+      output: outputSafe ? { available: true, filename, content_type: "video/mp4", byte_size: byteSize, duration_ms: durationMs, width: target.width, height: target.height } : { available: false },
+      created_at: createdAt, queued_at: queuedAt, started_at: frameVideoPortalTimestamp(item.started_at), completed_at: frameVideoPortalTimestamp(item.completed_at), updated_at: updatedAt
+    };
+  }
+
+  function frameVideoOperationCanDownload(value) {
+    const operation = frameVideoPortalOperation(value);
+    return Boolean(operation && operation.state === "completed" && operation.output && operation.output.available === true);
+  }
+
+  function renderFrameVideoOperationDetail(context) {
+    const readState = String(context.frameVideoDetailReadState || "guarded");
+    const detail = context.frameVideoDetail && typeof context.frameVideoDetail === "object" ? context.frameVideoDetail : {};
+    const operation = frameVideoPortalOperation(detail.operation);
+    const events = Array.isArray(detail.events) ? detail.events.map((event) => {
+      const source = event && typeof event === "object" ? event : {};
+      const state = String(source.state || "").trim();
+      const createdAt = frameVideoPortalTimestamp(source.created_at);
+      return FRAME_VIDEO_PORTAL_STATES.has(state) && createdAt ? { state, created_at: createdAt } : null;
+    }).filter(Boolean).slice(0, 60) : [];
+    if (readState === "loading") return `<section class="portal-card portal-card-pad portal-frame-video-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Đang tải timeline private</h2><p class="portal-card-subtitle">Browser chỉ yêu cầu lại metadata receipt của video đang hiển thị; không suy đoán tiến độ hoặc output.</p></div>${badge("read_only")}</div></section>`;
+    if (!operation || !events.length) return `<section class="portal-card portal-card-pad portal-frame-video-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Chọn một receipt để xem timeline</h2><p class="portal-card-subtitle">Timeline chỉ hiển thị sau một lần đọc owner-scoped. Đường dẫn, URL, cấu hình runtime và dữ liệu nội bộ không đi vào portal.</p></div>${badge("guarded")}</div></section>`;
+    const target = FRAME_VIDEO_PORTAL_RATIOS[operation.aspect_ratio];
+    const outputReady = frameVideoOperationCanDownload(operation);
+    const displayState = operation.state === "completed" && !outputReady ? "unavailable" : operation.state;
+    const output = outputReady ? `${String(operation.output.filename)} · ${vaultBytes(Number(operation.output.byte_size))}` : "Output chưa sẵn sàng để tải";
+    return `<section class="portal-card portal-card-pad portal-frame-video-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Chi tiết Frame Video</h2><p class="portal-card-subtitle">${safeText(`${target.label} · ${operation.source_count} ảnh · ${frameVideoPortalDuration(operation.seconds_per_image)} mỗi ảnh · ${FRAME_VIDEO_PORTAL_EFFECTS[operation.effective_effect || operation.effect]}`)}</p></div>${badge(displayState)}</div><div class="portal-frame-video-detail-summary"><div><span>Trạng thái</span><strong>${safeText(frameVideoPortalStateLabel(displayState))}</strong></div><div><span>Output</span><strong>${safeText(output)}</strong></div><div><span>Cập nhật</span><strong>${safeText(operation.updated_at)}</strong></div></div><ol class="portal-frame-video-timeline" aria-label="Timeline Frame Video">${events.map((event) => `<li><span aria-hidden="true"></span><div><strong>${safeText(frameVideoPortalStateLabel(event.state))}</strong><small>${safeText(event.created_at)}</small></div></li>`).join("")}</ol></section>`;
+  }
+
+  function renderFrameVideoOperations(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["frame-video-operation-view"] === true);
+    const canEstimate = Boolean(context.capabilities && context.capabilities["frame-video-operation-estimate"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["frame-video-operation-create"] === true);
+    const canDetail = Boolean(context.capabilities && context.capabilities["frame-video-operation-detail"] === true);
+    const canDownload = Boolean(context.capabilities && context.capabilities["frame-video-operation-download"] === true);
+    const references = context.frameVideoReferences && typeof context.frameVideoReferences === "object" ? context.frameVideoReferences : {};
+    const referencePagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
+    const listing = context.frameVideoOperationsListing && typeof context.frameVideoOperationsListing === "object" ? context.frameVideoOperationsListing : {};
+    const historyPagination = listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.frameVideoOperationsReadState || "")) ? String(context.frameVideoOperationsReadState) : "guarded";
+    const referenceItems = frameVideoPortalReferenceItems(context);
+    const selectedIds = frameVideoPortalSelectionIds(references.selected_ids);
+    const selectedSources = frameVideoPortalSelectedSources(context);
+    const selectedMetadataComplete = selectedSources.length === selectedIds.length;
+    const draft = frameVideoPortalSpec(context.frameVideoDraft);
+    const draftRatio = draft ? draft.aspect_ratio : "9:16";
+    const draftSeconds = draft ? draft.seconds_per_image : 3;
+    const draftEffect = draft ? draft.effect : "fade";
+    const operations = (Array.isArray(context.frameVideoOperations) ? context.frameVideoOperations : []).map(frameVideoPortalOperation).filter(Boolean).slice(0, 30);
+    const readyForInteraction = readState === "ready";
+    const formEnabled = canEstimate && referenceItems.length > 0 && readyForInteraction;
+    const formDisabled = formEnabled ? "" : " disabled";
+    const sourceHint = !canView
+      ? "Module đang được bảo vệ. Cần signed Web session, Asset Vault và runtime Frame Video đã được server bật."
+      : readState === "loading"
+        ? "Đang tải metadata ảnh owner-scoped. Browser không đọc file gốc hoặc danh sách Asset Vault chung."
+        : readState === "failed"
+          ? "Không thể tải metadata private an toàn. Danh sách cũ đã được xóa; hãy làm mới để yêu cầu lại."
+          : !referenceItems.length
+            ? "Chưa có ảnh JPG/JPEG/PNG/WebP active, tối đa 10 MiB mỗi ảnh, trong Asset Vault của bạn."
+            : "Chọn 2–8 ảnh theo đúng thứ tự kể chuyện. Source gốc không bị đổi hoặc tải lại.";
+    const referencePrevious = Number(referencePagination.previous_offset);
+    const referenceNext = Number(referencePagination.next_offset);
+    const canReferencePrevious = Number.isInteger(referencePrevious) && referencePrevious >= 0;
+    const canReferenceNext = Number.isInteger(referenceNext) && referenceNext >= 0;
+    const referenceOffset = Number.isInteger(Number(referencePagination.offset)) && Number(referencePagination.offset) >= 0 ? Number(referencePagination.offset) : 0;
+    const referenceReturned = Number.isInteger(Number(referencePagination.returned)) && Number(referencePagination.returned) >= 0 ? Number(referencePagination.returned) : 0;
+    const referenceRange = referenceReturned ? `Đang xem ${referenceOffset + 1}–${referenceOffset + referenceReturned}` : `Trang từ vị trí ${referenceOffset + 1}`;
+    const sourcePager = canReferencePrevious || canReferenceNext ? `<div class="portal-frame-video-source-pager" role="group" aria-label="Trang ảnh nguồn private"><span>${safeText(referenceRange)}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="frame-video-reference-page" data-portal-route="/video/frame-sequence" data-frame-video-reference-offset="${canReferencePrevious ? safeText(String(referencePrevious)) : ""}"${canView && readyForInteraction && canReferencePrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="frame-video-reference-page" data-portal-route="/video/frame-sequence" data-frame-video-reference-offset="${canReferenceNext ? safeText(String(referenceNext)) : ""}"${canView && readyForInteraction && canReferenceNext ? "" : " disabled"}>Sau</button></div></div>` : "";
+    const sourceRows = referenceItems.map((item) => {
+      const selected = selectedIds.includes(item.id);
+      const order = selected ? selectedIds.indexOf(item.id) + 1 : 0;
+      const disabled = !formEnabled || (!selected && selectedIds.length >= 8);
+      return `<label class="portal-frame-video-source-row${selected ? " is-selected" : ""}"><input type="checkbox" data-frame-video-source-id="${safeText(item.id)}"${selected ? " checked" : ""}${disabled ? " disabled" : ""}><span class="portal-frame-video-source-order" data-frame-video-source-order="${safeText(item.id)}" aria-hidden="true">${order || ""}</span><span><strong>${safeText(item.display_name)}</strong><small>${safeText(`${item.extension.replace(".", "").toUpperCase()} · ${vaultBytes(Number(item.byte_size))}`)}</small></span></label>`;
+    }).join("");
+    const selectedStrip = selectedSources.length ? `<ol class="portal-frame-video-sequence" aria-label="Thứ tự ảnh đã chọn">${selectedSources.map((item, index) => `<li><span>${safeText(String(index + 1))}</span><div><strong>${safeText(item.display_name)}</strong><small>${safeText(`${item.extension.replace(".", "").toUpperCase()} · ${vaultBytes(Number(item.byte_size))}`)}</small></div></li>`).join("")}</ol>` : "";
+    const estimate = frameVideoPortalEstimate(context);
+    const estimateMarkup = estimate ? (() => {
+      const target = FRAME_VIDEO_PORTAL_RATIOS[estimate.payload.aspect_ratio];
+      const canConfirm = canCreate && readyForInteraction;
+      return `<section class="portal-card portal-card-pad portal-frame-video-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Estimate verified</span><h2 class="portal-card-title">Kế hoạch đang chờ xác nhận</h2><p class="portal-card-subtitle">Máy chủ đã trả cấu trúc output MP4 cố định. Chưa có file cho tới khi bạn xác nhận rõ ràng bên dưới.</p></div>${badge("awaiting_confirm")}</div><div class="portal-frame-video-estimate-grid"><div><span>Chuỗi ảnh</span><strong>${safeText(`${estimate.estimate.source_count} ảnh · ${vaultBytes(estimate.estimate.source_total_bytes)}`)}</strong></div><div><span>Khung hình</span><strong>${safeText(`${target.label} · ${target.width} × ${target.height}`)}</strong></div><div><span>Thời lượng</span><strong>${safeText(`${frameVideoPortalDuration(estimate.payload.seconds_per_image)} mỗi ảnh · ${frameVideoPortalDuration(estimate.estimate.duration_seconds)}`)}</strong></div><div><span>Hiệu ứng</span><strong>${safeText(FRAME_VIDEO_PORTAL_EFFECTS[estimate.estimate.effective_effect])}</strong></div><div><span>Output</span><strong>MP4 H.264 · không audio</strong></div></div><form class="portal-frame-video-confirmation" data-portal-form data-portal-no-transient data-portal-action="frame-video-operation-confirm" data-portal-route="/video/frame-sequence" data-portal-confirm="Tạo một MP4 private theo thứ tự khung hình và kế hoạch này? Ảnh nguồn luôn được giữ nguyên; output chỉ có thể tải sau khi máy chủ kiểm chứng."><input type="hidden" name="frame_video_selection_order" value="${safeText(estimate.payload.source_asset_ids.join(","))}"><input type="hidden" name="aspect_ratio" value="${safeText(estimate.payload.aspect_ratio)}"><input type="hidden" name="seconds_per_image" value="${safeText(String(estimate.payload.seconds_per_image))}"><input type="hidden" name="effect" value="${safeText(estimate.payload.effect)}"><label class="portal-frame-video-confirm-check"><input type="checkbox" name="frame_video_confirmation" value="true" required${canConfirm ? "" : " disabled"}><span>Tôi hiểu thứ tự khung hình được giữ nguyên; output chỉ hiển thị và tải khi server kiểm chứng MP4 private.</span></label><p class="portal-form-note" data-frame-video-confirmation-status role="status" aria-live="polite">Kế hoạch này áp dụng đúng ảnh, thứ tự và cấu hình đang hiển thị.</p><div class="portal-form-footer"><span class="portal-form-note">Write request dùng signed session, CSRF và idempotency. Browser không tự tạo trạng thái thành công hoặc file thay thế.</span><button class="portal-button portal-button--primary" type="submit"${canConfirm ? "" : " disabled"}>Xác nhận tạo MP4 private</button></div></form></section>`;
+    })() : `<section class="portal-card portal-card-pad portal-frame-video-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Estimate before execution</span><h2 class="portal-card-title">Kiểm tra kế hoạch trước</h2><p class="portal-card-subtitle">Chọn 2–8 ảnh theo thứ tự, sau đó kiểm tra output MP4 cố định trước khi quyết định tạo file private.</p></div>${badge("read_only")}</div></section>`;
+    const historyPrevious = Number(historyPagination.previous_offset);
+    const historyNext = Number(historyPagination.next_offset);
+    const canHistoryPrevious = Number.isInteger(historyPrevious) && historyPrevious >= 0;
+    const canHistoryNext = Number.isInteger(historyNext) && historyNext >= 0;
+    const historyPager = canHistoryPrevious || canHistoryNext ? `<div class="portal-frame-video-history-pager" role="group" aria-label="Trang lịch sử Frame Video"><button class="portal-button portal-button--quiet" type="button" data-portal-action="frame-video-history-page" data-portal-route="/video/frame-sequence" data-frame-video-operation-offset="${canHistoryPrevious ? safeText(String(historyPrevious)) : ""}"${canView && readyForInteraction && canHistoryPrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="frame-video-history-page" data-portal-route="/video/frame-sequence" data-frame-video-operation-offset="${canHistoryNext ? safeText(String(historyNext)) : ""}"${canView && readyForInteraction && canHistoryNext ? "" : " disabled"}>Sau</button></div>` : "";
+    const historyMarkup = operations.length ? `<ul class="portal-frame-video-operation-list">${operations.map((operation) => {
+      const target = FRAME_VIDEO_PORTAL_RATIOS[operation.aspect_ratio];
+      const outputReady = frameVideoOperationCanDownload(operation);
+      const displayState = operation.state === "completed" && !outputReady ? "unavailable" : operation.state;
+      const detailButton = canDetail ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="frame-video-operation-detail" data-portal-route="/video/frame-sequence" data-frame-video-operation-id="${safeText(operation.id)}">Xem timeline</button>` : "";
+      const downloadButton = outputReady && canDownload ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="frame-video-operation-download" data-portal-route="/video/frame-sequence" data-frame-video-operation-id="${safeText(operation.id)}">Tải MP4 private</button>` : "";
+      const outputFacts = outputReady ? `${String(operation.output.filename)} · ${vaultBytes(Number(operation.output.byte_size))}` : "Chưa có MP4 đã kiểm chứng để tải";
+      return `<li><div class="portal-frame-video-operation-meta"><div><strong>${safeText(`${target.label} · ${operation.source_count} ảnh`)}</strong><span>${safeText(`${frameVideoPortalDuration(operation.seconds_per_image)} mỗi ảnh · ${FRAME_VIDEO_PORTAL_EFFECTS[operation.effective_effect || operation.effect]}`)}</span><small>${safeText(`${vaultBytes(operation.source_total_bytes)} nguồn · ${outputFacts}`)}</small></div>${badge(displayState)}</div><div class="portal-frame-video-operation-actions"><span>${safeText(frameVideoPortalStateLabel(displayState))}</span><div class="portal-inline-actions">${detailButton}${downloadButton}</div></div></li>`;
+    }).join("")}</ul>` : `<div class="portal-frame-video-empty"><strong>${readState === "loading" ? "Đang tải lịch sử Frame Video" : readState === "failed" ? "Chưa thể tải lịch sử private" : "Chưa có Frame Video receipt"}</strong><span>${readState === "loading" ? "Browser đang yêu cầu lại metadata owner-scoped và không suy đoán trạng thái hoặc output." : readState === "failed" ? "Hãy làm mới để yêu cầu lại API private. Dữ liệu cũ đã được xóa thay vì dùng cache hoặc account khác." : "Chọn 2–8 ảnh, kiểm tra kế hoạch rồi xác nhận để tạo một receipt. Ảnh nguồn luôn giữ nguyên."}</span></div>`;
+    const stateBadge = badge(readState === "ready" ? "ready" : readState === "loading" ? "read_only" : readState);
+    if (!canView) return `<article class="portal-page portal-frame-video-operations">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Frame Video Lab đang được bảo vệ", "Đăng nhập bằng signed session và chờ server xác nhận Asset Vault cùng runtime Frame Video riêng trước khi chọn ảnh private.", ICONS.video)}</section></article>`;
+    return `<article class="portal-page portal-frame-video-operations">${renderHero(page, context)}
+      <section class="portal-frame-video-intro"><div><span class="portal-section-kicker">Private frame sequence</span><h2>Biến một chuỗi ảnh thành video ngắn, giữ đúng thứ tự và có kiểm chứng trước khi tải.</h2><p>Chọn tối đa tám ảnh đã có trong Asset Vault, đặt khung hình, nhịp và hiệu ứng cố định. Không upload lại ảnh, không nhập URL hay thông số media tự do.</p></div><dl><div><dt>2–8</dt><dd>Ảnh theo thứ tự</dd></div><div><dt>24 giây</dt><dd>Video tối đa</dd></div><div><dt>H.264</dt><dd>MP4 đã kiểm chứng</dd></div></dl></section>
+      <div class="portal-frame-video-layout"><section class="portal-card portal-card-pad portal-frame-video-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault sequence</span><h2 class="portal-card-title">Lập kế hoạch Frame Video</h2><p class="portal-card-subtitle">Chọn ảnh theo đúng trình tự. Browser chỉ gửi mã asset và cấu hình closed set; server kiểm tra source, ownership, thứ tự và output.</p></div>${stateBadge}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="frame-video-operation-estimate" data-portal-route="/video/frame-sequence" novalidate><input type="hidden" name="frame_video_selection_order" value="${safeText(selectedIds.join(","))}"><div class="portal-fields"><fieldset class="portal-frame-video-source-field portal-field portal-field--wide"><legend>Ảnh nguồn <span class="portal-required-mark" aria-hidden="true">*</span></legend><p id="frame-video-source-hint" class="portal-form-note" role="status" aria-live="polite">${safeText(sourceHint)}</p><p class="portal-frame-video-selection-status" data-frame-video-selection-status role="status" aria-live="polite">${safeText(selectedMetadataComplete ? `Đã chọn ${selectedIds.length}/8 ảnh. Cần ít nhất 2 ảnh.` : "Có ảnh đã chọn không còn trong metadata owner-scoped. Hãy làm mới rồi chọn lại.")}</p><div class="portal-frame-video-source-list" aria-describedby="frame-video-source-hint">${sourceRows || `<p class="portal-form-note">Không có ảnh phù hợp trên trang Asset Vault hiện tại.</p>`}</div>${sourcePager}</fieldset><label class="portal-field"><span>Tỷ lệ khung hình <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="aspect_ratio" required${formDisabled}><option value="9:16"${draftRatio === "9:16" ? " selected" : ""}>Dọc 9:16 · 720 × 1280</option><option value="16:9"${draftRatio === "16:9" ? " selected" : ""}>Ngang 16:9 · 1280 × 720</option><option value="1:1"${draftRatio === "1:1" ? " selected" : ""}>Vuông 1:1 · 1080 × 1080</option><option value="4:5"${draftRatio === "4:5" ? " selected" : ""}>Dọc 4:5 · 864 × 1080</option></select><small>Server dùng kích thước fixed, không nhận width/height tự nhập.</small></label><label class="portal-field"><span>Nhịp mỗi ảnh <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="seconds_per_image" required${formDisabled}><option value="1.5"${draftSeconds === 1.5 ? " selected" : ""}>1,5 giây</option><option value="3"${draftSeconds === 3 ? " selected" : ""}>3 giây</option><option value="4"${draftSeconds === 4 ? " selected" : ""}>4 giây</option></select><small>Thời lượng tối đa 24 giây được server kiểm tra lại.</small></label><label class="portal-field"><span>Hiệu ứng <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="effect" required${formDisabled}>${Object.entries(FRAME_VIDEO_PORTAL_EFFECTS).map(([value, label]) => `<option value="${safeText(value)}"${draftEffect === value ? " selected" : ""}>${safeText(label)}</option>`).join("")}</select><small>Không có trường nhập filter graph, prompt hoặc tham số FFmpeg.</small></label></div><section class="portal-frame-video-selected"><div><span class="portal-section-kicker">Render order</span><h3>Thứ tự ảnh đã chọn</h3><p>Thứ tự này là một phần của receipt và không được browser tự sắp lại sau khi server tạo output.</p></div>${selectedStrip || `<p class="portal-form-note">Chọn ít nhất 2 ảnh để bắt đầu chuỗi.</p>`}</section><div class="portal-form-footer"><span class="portal-form-note">Không upload, không nhập secret, path hay URL. Bước này chỉ kiểm tra kế hoạch; chưa tạo output.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><button class="portal-button portal-button--primary" type="submit"${formEnabled ? "" : " disabled"}>Kiểm tra kế hoạch</button></div></div></form></section><aside class="portal-card portal-card-pad portal-frame-video-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Một MP4 private, không có kết quả giả</h2><p class="portal-card-subtitle">Hệ thống chỉ phát MP4 sau khi kiểm tra lại output. Nếu không hoàn tất, không có preview, download hoặc trạng thái thành công thay thế.</p></div>${badge("guarded")}</div><div class="portal-frame-video-guard-list"><span><strong>Ảnh nguồn</strong><em>giữ nguyên</em></span><span><strong>Thứ tự render</strong><em>cố định</em></span><span><strong>Output</strong><em>private</em></span><span><strong>Xử lý trong browser</strong><em>tắt</em></span></div></aside></div>
+      ${estimateMarkup}
+      <section class="portal-card portal-card-pad portal-frame-video-history"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped history</span><h2 class="portal-card-title">Frame Video của bạn</h2><p class="portal-card-subtitle">Chỉ receipt thuộc phiên hiện tại được liệt kê. Nút tải chỉ có trên output MP4 đã qua kiểm chứng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="frame-video-operation-refresh" data-portal-route="/video/frame-sequence"${canView ? "" : " disabled"}>${readState === "failed" ? "Thử lại" : "Làm mới"}</button></div>${historyMarkup}${historyPager}</section>
+      ${renderFrameVideoOperationDetail(context)}
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Ảnh và video vẫn thuộc không gian riêng của bạn</h2><p class="portal-card-subtitle">Source và output luôn được kiểm tra ownership. Tải xuống dùng attachment private có kiểm tra integrity; không có public URL, cache client hoặc media player.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderSubtitleProjectCards(items, context, listingValue) {
     const canView = Boolean(context.capabilities && context.capabilities["subtitle-studio-view"] === true);
     const canFilter = Boolean(context.capabilities && context.capabilities["subtitle-studio-filter"] === true);
@@ -20976,6 +21229,7 @@
       case "subtitle-asset-operations": return renderSubtitleAssetOperations(page, context);
       case "audio-asset-operations": return renderAudioAssetOperations(page, context);
       case "video-transform-operations": return renderVideoTransformOperations(page, context);
+      case "frame-video-operations": return renderFrameVideoOperations(page, context);
       case "subtitle-format-lab": return renderSubtitleFormatLab(page, context);
       case "voice-direction-composer": return renderVoiceDirectionComposer(page, context);
       case "voice-studio": return renderVoiceStudio(page, context);
@@ -21170,6 +21424,81 @@
     confirmation.classList.add("is-stale");
   }
 
+  function frameVideoSelectionIdsFromForm(form) {
+    if (!form) return [];
+    const field = form.querySelector('input[name="frame_video_selection_order"]');
+    const raw = String(field && field.value || "").split(",");
+    const seen = new Set();
+    const ids = raw.map((value) => String(value || "").trim())
+      .filter((id) => validVaultAssetId(id) && !seen.has(id) && (seen.add(id), true));
+    return ids.length <= 8 ? ids : [];
+  }
+
+  function synchronizeFrameVideoEstimateForm(form, changedInput) {
+    if (!form || form.getAttribute("data-portal-action") !== "frame-video-operation-estimate") return;
+    const selectionField = form.querySelector('input[name="frame_video_selection_order"]');
+    if (!selectionField) return;
+    let selectedIds = frameVideoSelectionIdsFromForm(form);
+    if (changedInput && changedInput.matches && changedInput.matches("[data-frame-video-source-id]")) {
+      const id = String(changedInput.getAttribute("data-frame-video-source-id") || "").trim();
+      if (validVaultAssetId(id)) {
+        selectedIds = selectedIds.filter((value) => value !== id);
+        if (changedInput.checked && selectedIds.length < 8) selectedIds.push(id);
+        else if (changedInput.checked) changedInput.checked = false;
+      }
+    }
+    selectionField.value = selectedIds.join(",");
+    const selectedSet = new Set(selectedIds);
+    form.querySelectorAll("[data-frame-video-source-id]").forEach((input) => {
+      const id = String(input.getAttribute("data-frame-video-source-id") || "").trim();
+      const selected = selectedSet.has(id);
+      const order = selected ? selectedIds.indexOf(id) + 1 : 0;
+      input.checked = selected;
+      input.disabled = Boolean(input.closest("form").querySelector('button[type="submit"]')?.disabled) || (!selected && selectedIds.length >= 8);
+      const row = input.closest(".portal-frame-video-source-row");
+      if (row) row.classList.toggle("is-selected", selected);
+      const marker = form.querySelector(`[data-frame-video-source-order="${id}"]`);
+      if (marker) marker.textContent = order ? String(order) : "";
+    });
+    const status = form.querySelector("[data-frame-video-selection-status]");
+    if (status) status.textContent = selectedIds.length < 2
+      ? `Đã chọn ${selectedIds.length}/8 ảnh. Chọn ít nhất ${2 - selectedIds.length} ảnh nữa để kiểm tra kế hoạch.`
+      : `Đã chọn ${selectedIds.length}/8 ảnh theo thứ tự render. Bỏ chọn để đổi thứ tự, rồi chọn lại ảnh đó.`;
+
+    const confirmation = document.querySelector('[data-portal-action="frame-video-operation-confirm"]');
+    if (!confirmation) return;
+    const stored = getBootstrap().frameVideoEstimate && typeof getBootstrap().frameVideoEstimate === "object"
+      ? getBootstrap().frameVideoEstimate : {};
+    const expected = stored.payload && typeof stored.payload === "object" ? stored.payload : null;
+    if (!expected) return;
+    const fields = collectFormFields(form);
+    const current = {
+      source_asset_ids: selectedIds,
+      aspect_ratio: String(fields.aspect_ratio || "").trim(),
+      seconds_per_image: Number(fields.seconds_per_image),
+      effect: String(fields.effect || "").trim().toLowerCase()
+    };
+    const expectedIds = Array.isArray(expected.source_asset_ids) ? expected.source_asset_ids.map((id) => String(id || "").trim()) : [];
+    const matches = selectedIds.length === expectedIds.length && selectedIds.every((id, index) => id === expectedIds[index])
+      && current.aspect_ratio === String(expected.aspect_ratio || "")
+      && current.seconds_per_image === Number(expected.seconds_per_image)
+      && current.effect === String(expected.effect || "").trim().toLowerCase();
+    if (matches) return;
+    const confirmSelection = confirmation.querySelector('input[name="frame_video_selection_order"]');
+    if (confirmSelection) confirmSelection.value = selectedIds.join(",");
+    ["aspect_ratio", "seconds_per_image", "effect"].forEach((name) => {
+      const input = confirmation.querySelector(`input[name="${name}"]`);
+      if (input) input.value = String(current[name]);
+    });
+    const check = confirmation.querySelector('input[name="frame_video_confirmation"]');
+    const submit = confirmation.querySelector('button[type="submit"]');
+    const confirmationStatus = confirmation.querySelector("[data-frame-video-confirmation-status]");
+    if (check) { check.checked = false; check.disabled = true; }
+    if (submit) submit.disabled = true;
+    if (confirmationStatus) confirmationStatus.textContent = "Thứ tự ảnh hoặc cấu hình đã thay đổi. Hãy kiểm tra lại kế hoạch trước khi xác nhận tạo MP4 private.";
+    confirmation.classList.add("is-stale");
+  }
+
   function collectFormFields(form) {
     const fields = {};
     if (!form) return fields;
@@ -21309,10 +21638,11 @@
     const operationAssetReferenceAction = ["document-asset-reference-filter", "document-asset-reference-filter-clear", "document-asset-reference-page", "image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page", "subtitle-asset-reference-page"].includes(action);
     const documentWorkspaceLibraryAction = ["document-workspace-filter", "document-workspace-filter-clear", "document-workspace-page"].includes(action);
     const videoTransformNoNativeValidity = ["video-transform-operation-refresh", "video-transform-reference-page", "video-transform-history-page", "video-transform-operation-detail", "video-transform-operation-download"].includes(action);
+    const frameVideoNoNativeValidity = ["frame-video-operation-refresh", "frame-video-reference-page", "frame-video-history-page", "frame-video-operation-detail", "frame-video-operation-download"].includes(action);
     // Picker controls belong to the operation form so the existing in-memory
     // draft map retains selected slots while paging.  They must not trigger
     // the main form's required-field validation before a source is chosen.
-    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
+    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || frameVideoNoNativeValidity || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
@@ -21393,6 +21723,19 @@
         __videoTransformReferenceSelectedId: videoSource ? String(videoSource.value || "").trim() : "",
         __videoTransformOperationOffset: source.getAttribute("data-video-transform-operation-offset") || "",
         __videoTransformOperationId: source.getAttribute("data-video-transform-operation-id") || ""
+      });
+    }
+    // Frame Video owns a bounded ordered image sequence. The opaque IDs and
+    // pagination values exist only in this dispatched interaction and tab DOM;
+    // they never enter generic transient drafts, storage, URLs or Video menu
+    // state. The native API rechecks ownership and the immutable order.
+    if (String(action || "").startsWith("frame-video-")) {
+      const frameForm = form && form.getAttribute("data-portal-route") === "/video/frame-sequence" ? form : null;
+      Object.assign(fields, {
+        __frameVideoReferenceOffset: source.getAttribute("data-frame-video-reference-offset") || "",
+        __frameVideoSelectedIds: frameForm ? frameVideoSelectionIdsFromForm(frameForm) : null,
+        __frameVideoOperationOffset: source.getAttribute("data-frame-video-operation-offset") || "",
+        __frameVideoOperationId: source.getAttribute("data-frame-video-operation-id") || ""
       });
     }
     if (String(action || "").startsWith("document-operation-")) {
@@ -22040,6 +22383,10 @@
           && event.target && ["source_asset_id", "target_ratio", "fit_mode", "preset", "sharpen", "preserve_audio"].includes(event.target.name)) {
           synchronizeVideoTransformEstimateForm(form);
         }
+        if (form.getAttribute("data-portal-action") === "frame-video-operation-estimate"
+          && event.target && (event.target.matches("[data-frame-video-source-id]") || ["aspect_ratio", "seconds_per_image", "effect"].includes(event.target.name))) {
+          synchronizeFrameVideoEstimateForm(form, event.target);
+        }
         rememberTransientFormDraft(form);
       }
     });
@@ -22145,6 +22492,7 @@
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
+    main.querySelectorAll('[data-portal-action="frame-video-operation-estimate"]').forEach((form) => synchronizeFrameVideoEstimateForm(form));
     main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
     syncDesktopFocusNavigation();
     bindInteractions();
