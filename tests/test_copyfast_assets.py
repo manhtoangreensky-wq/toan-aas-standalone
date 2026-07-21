@@ -100,9 +100,10 @@ def seed_typed_reference_assets(db_path: Path, email: str, *, kind: str, count: 
             (".m4a", "audio/mp4"),
             (".ogg", "audio/ogg"),
         ),
+        "video_transform": ((".mp4", "video/mp4"),),
     }
     assert kind in media_by_kind
-    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle", "audio": "Audio"}[kind]
+    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle", "audio": "Audio", "video_transform": "Video"}[kind]
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
         account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (account_email,)).fetchone()
@@ -149,6 +150,8 @@ def seed_malformed_reference_assets(db_path: Path, email: str) -> list[str]:
         (".wav", "audio/mpeg"),
         (".m4a", "audio/ogg"),
         (".ogg", "application/ogg"),
+        (".mp4", "video/webm"),
+        (".mov", "video/quicktime"),
     )
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
@@ -379,11 +382,13 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         owner_image_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="image")
         owner_subtitle_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="subtitle")
         owner_audio_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="audio")
+        owner_video_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="video_transform")
         malformed_ids = seed_malformed_reference_assets(db_path, "typed-reference-owner@example.com")
         foreign_pdf_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="pdf")
         foreign_image_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="image")
         foreign_subtitle_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="subtitle")
         foreign_audio_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="audio")
+        foreign_video_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="video_transform")
 
         allowed_pairs = {
             "pdf": {(".pdf", "application/pdf")},
@@ -403,12 +408,14 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
                 (".m4a", "audio/mp4"),
                 (".ogg", "audio/ogg"),
             },
+            "video_transform": {(".mp4", "video/mp4")},
         }
         for kind, expected_ids in (
             ("pdf", owner_pdf_ids),
             ("image", owner_image_ids),
             ("subtitle", owner_subtitle_ids),
             ("audio", owner_audio_ids),
+            ("video_transform", owner_video_ids),
         ):
             pages = []
             raw_pages = []
@@ -450,7 +457,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
             assert set().union(*pages) == set(expected_ids)
             assert not set().union(*pages).intersection(malformed_ids)
             assert not set().union(*pages).intersection(
-                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids) | set(foreign_audio_ids)
+                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids) | set(foreign_audio_ids) | set(foreign_video_ids)
             )
             assert all("private-reference-blobs" not in body for body in raw_pages)
 
@@ -460,6 +467,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         )
         assert default_kind.status_code == 200
         assert default_kind.json()["data"]["filters"]["reference_kind"] == "all"
+        assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video_transform"}).status_code == 200
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video"}).status_code == 422
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "subtitles"}).status_code == 422
 

@@ -159,6 +159,43 @@ def test_video_finishing_is_disabled_by_default_and_body_is_bounded(tmp_path, mo
         assert oversized.headers["cross-origin-resource-policy"] == "same-origin"
 
 
+def test_video_finishing_estimate_is_read_only_and_create_requires_csrf(tmp_path, monkeypatch):
+    """A draft check must not become a hidden render receipt or write."""
+
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = register_and_login(client, "transform-estimate@example.com")
+        source = upload_video(client, csrf, key="transform-estimate-source-0001")
+        activate_transform_runtime(monkeypatch)
+        spec = {
+            "source_asset_id": source["id"],
+            "target_ratio": "9:16",
+            "fit_mode": "blur_pad",
+            "preset": "cinematic",
+            "sharpen": True,
+            "preserve_audio": True,
+        }
+
+        estimate = client.post("/api/v1/video-transform-operations/estimate", json=spec)
+        assert estimate.status_code == 200
+        payload = estimate.json()
+        assert payload["ok"] is True and payload["status"] == "draft"
+        assert payload["data"]["estimate"]["output"] == {
+            "content_type": "video/mp4",
+            "video_codec": "h264",
+            "audio": "aac_if_source_has_supported_audio",
+            "width": 720,
+            "height": 1280,
+        }
+        assert client.get("/api/v1/video-transform-operations").json()["data"]["items"] == []
+
+        missing_csrf = client.post(
+            "/api/v1/video-transform-operations",
+            json={**spec, "idempotency_key": "transform-estimate-create-0001"},
+        )
+        assert missing_csrf.status_code == 403
+        assert client.get("/api/v1/video-transform-operations").json()["data"]["items"] == []
+
+
 def test_video_finishing_requires_attested_single_replica_topology(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
         csrf = register_and_login(client, "transform-topology@example.com")

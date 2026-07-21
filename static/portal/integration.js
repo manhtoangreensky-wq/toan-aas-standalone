@@ -17,6 +17,21 @@
   const AUDIO_ASSET_OPERATIONS_LIST_LIMIT = 50;
   const AUDIO_ASSET_OPERATIONS_MAX_INPUT_BYTES = 25 * 1024 * 1024;
   const AUDIO_ASSET_OPERATIONS_MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
+  // Video Finishing is a separate private FFmpeg boundary.  It is not a
+  // generic Video Studio, Bot, provider or browser-side media workflow.
+  const VIDEO_TRANSFORM_OPERATIONS_ROUTE = "/video/finishing";
+  const VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT = 30;
+  const VIDEO_TRANSFORM_OPERATIONS_MAX_INPUT_BYTES = 25 * 1024 * 1024;
+  const VIDEO_TRANSFORM_OPERATIONS_MAX_OUTPUT_BYTES = 100 * 1024 * 1024;
+  const VIDEO_TRANSFORM_OPERATION_RATIOS = Object.freeze({
+    "9:16": Object.freeze({ width: 720, height: 1280 }),
+    "16:9": Object.freeze({ width: 1280, height: 720 }),
+    "1:1": Object.freeze({ width: 1080, height: 1080 }),
+    "4:5": Object.freeze({ width: 864, height: 1080 })
+  });
+  const VIDEO_TRANSFORM_OPERATION_FIT_MODES = new Set(["crop", "blur_pad"]);
+  const VIDEO_TRANSFORM_OPERATION_PRESETS = new Set(["none", "clear", "tiktok_pop", "cinematic", "soft_clean"]);
+  const VIDEO_TRANSFORM_OPERATION_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -128,6 +143,8 @@
   let assetVaultLifecycleHydrationEpoch = 0;
   let subtitleAssetOperationsHydrationEpoch = 0;
   let audioAssetOperationsHydrationEpoch = 0;
+  let videoTransformOperationsHydrationEpoch = 0;
+  let videoTransformOperationDetailHydrationEpoch = 0;
   // Campaign plans, Project Center records and Studio Documents are private
   // Web-owned planning data.  Keep their list/detail reads independently
   // ordered so a delayed response cannot cross a signed account, route or
@@ -9227,6 +9244,8 @@
     ++assetVaultLifecycleHydrationEpoch;
     ++subtitleAssetOperationsHydrationEpoch;
     ++audioAssetOperationsHydrationEpoch;
+    ++videoTransformOperationsHydrationEpoch;
+    ++videoTransformOperationDetailHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignCalendarHydrationEpoch;
     ++projectCenterSessionEpoch;
@@ -9486,6 +9505,10 @@
     // wallet/Xu, PayOS, canonical jobs, a public media URL or a browser-owned
     // audio processor. Asset Vault, topology and runtime checks stay server-side.
     const audioAssetOperationsEnabled = Boolean(status.flags && status.flags.audio_asset_operations_enabled === true);
+    // Video Finishing is a dedicated bounded MP4 transform.  The presentation
+    // gate never grants generic Video Studio, provider, Bot, worker, wallet,
+    // PayOS, browser FFmpeg, upload URL or public-preview authority.
+    const videoTransformOperationsEnabled = Boolean(status.flags && status.flags.video_transform_operations_enabled === true);
     // Image Creative Studio is deliberately fail-closed by its own feature
     // flag.  A true flag permits private art-direction records only; it never
     // indicates an image provider, generator, preview, job, wallet or payment
@@ -9920,6 +9943,12 @@
       "audio-asset-operation-refresh": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
       "audio-asset-operation-submit": Boolean(account && me.csrf_token && assetVaultEnabled && audioAssetOperationsEnabled),
       "audio-asset-operation-download": Boolean(account && assetVaultEnabled && audioAssetOperationsEnabled),
+      "video-transform-operation-view": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
+      "video-transform-operation-refresh": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
+      "video-transform-operation-estimate": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
+      "video-transform-operation-create": Boolean(account && me.csrf_token && assetVaultEnabled && videoTransformOperationsEnabled),
+      "video-transform-operation-detail": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
+      "video-transform-operation-download": Boolean(account && assetVaultEnabled && videoTransformOperationsEnabled),
       "image-studio-view": Boolean(account && imageStudioEnabled),
       "image-studio-refresh": Boolean(account && imageStudioEnabled),
       "image-studio-filter": Boolean(account && imageStudioEnabled),
@@ -10074,6 +10103,8 @@
     ++assetVaultLifecycleHydrationEpoch;
     ++subtitleAssetOperationsHydrationEpoch;
     ++audioAssetOperationsHydrationEpoch;
+    ++videoTransformOperationsHydrationEpoch;
+    ++videoTransformOperationDetailHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignListHydrationEpoch;
     ++campaignDetailHydrationEpoch;
@@ -10330,6 +10361,7 @@
       subtitleFormatToolsEnabled,
       subtitleAssetOperationsEnabled,
       audioAssetOperationsEnabled,
+      videoTransformOperationsEnabled,
       imageStudioEnabled,
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
@@ -10600,6 +10632,17 @@
       audioAssetReferences: { items: [], selected: null, pagination: { limit: AUDIO_ASSET_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
       audioAssetOperations: [],
       audioAssetOperationsReadState: account && assetVaultEnabled && audioAssetOperationsEnabled ? "loading" : "guarded",
+      // Video Finishing keeps every account-owned source, plan, receipt and
+      // detail strictly in this signed tab state.  A session refresh always
+      // clears it before the next owner-scoped, no-store read.
+      videoTransformReferences: { items: [], selected: null, pagination: { limit: VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoTransformOperations: [],
+      videoTransformOperationsListing: { pagination: { limit: VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoTransformDraft: {},
+      videoTransformEstimate: {},
+      videoTransformDetail: {},
+      videoTransformDetailReadState: "guarded",
+      videoTransformOperationsReadState: account && assetVaultEnabled && videoTransformOperationsEnabled ? "loading" : "guarded",
       // Explicitly clear owner-scoped creative metadata during every session
       // refresh. A disabled flag or failed request must not leave a prior
       // artboard, asset reference, prompt or history visible in the browser.
@@ -10854,6 +10897,7 @@
         "/subtitle-studio/new": account && subtitleStudioEnabled ? "processing" : "guarded",
         "/subtitle/assets": account && assetVaultEnabled && subtitleAssetOperationsEnabled ? "processing" : "guarded",
         "/audio/assets": account && assetVaultEnabled && audioAssetOperationsEnabled ? "processing" : "guarded",
+        "/video/finishing": account && assetVaultEnabled && videoTransformOperationsEnabled ? "processing" : "guarded",
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
@@ -11211,6 +11255,13 @@
       // legacy Audio Library metadata or a prior session's private selection.
       if (account && assetVaultEnabled && audioAssetOperationsEnabled) await hydrateAudioAssetOperations();
       else clearAudioAssetOperationsProjection("guarded");
+    }
+    if (currentPath === VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+      // Video Finishing owns one bounded MP4 picker, a fresh estimate and
+      // private transform receipts.  Never reuse generic Video, Job, Asset,
+      // Bot or a prior account's selection when the native gate is unavailable.
+      if (account && assetVaultEnabled && videoTransformOperationsEnabled) await hydrateVideoTransformOperations();
+      else clearVideoTransformOperationsProjection("guarded");
     }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
@@ -16028,6 +16079,375 @@
     const blob = await response.blob();
     if (blob.size !== expectedSize || blob.size > AUDIO_ASSET_OPERATIONS_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== expectedMime) {
       throw new Error("Private attachment không qua kiểm tra kích thước hoặc định dạng.");
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
+  }
+
+  // Video Finishing Lab stays intentionally separate from the broad Video
+  // catalog.  It reads only the native MP4 picker and its own transform
+  // receipts; no Bot/bridge state, provider response, generic Job/Asset list,
+  // browser FFmpeg setting, public URL or prior-account projection is reused.
+  function videoTransformOperationsPathIsCurrent(path) {
+    return String(path || "").split("?")[0] === VIDEO_TRANSFORM_OPERATIONS_ROUTE;
+  }
+
+  function videoTransformTimestamp(value, required) {
+    const normalized = String(value || "").trim();
+    if (!normalized) return required ? null : "";
+    return normalized.length <= 80 && !/[\u0000-\u001f\u007f]/.test(normalized) ? normalized : null;
+  }
+
+  function videoTransformInteger(value, minimum, maximum) {
+    if (value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isInteger(number) && number >= minimum && number <= maximum ? number : null;
+  }
+
+  function videoTransformReferenceItem(value) {
+    const source = value && typeof value === "object" ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = videoTransformTimestamp(source.created_at, false);
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || extension !== ".mp4" || contentType !== "video/mp4" || !Number.isInteger(byteSize)
+      || byteSize < 128 || byteSize > VIDEO_TRANSFORM_OPERATIONS_MAX_INPUT_BYTES || createdAt === null) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: createdAt };
+  }
+
+  function videoTransformOperationItem(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(source.id || "").trim();
+    const kind = String(source.kind || "").trim();
+    const state = String(source.state || source.status || "").trim();
+    const targetRatio = String(source.target_ratio || "").trim();
+    const fitMode = String(source.fit_mode || "").trim().toLowerCase();
+    const preset = String(source.preset || "").trim().toLowerCase();
+    const createdAt = videoTransformTimestamp(source.created_at, true);
+    const updatedAt = videoTransformTimestamp(source.updated_at, true);
+    const queuedAt = videoTransformTimestamp(source.queued_at, true);
+    const startedAt = source.started_at === null || source.started_at === undefined ? null : videoTransformTimestamp(source.started_at, true);
+    const completedAt = source.completed_at === null || source.completed_at === undefined ? null : videoTransformTimestamp(source.completed_at, true);
+    const startedAtValid = source.started_at === null || source.started_at === undefined || startedAt !== null;
+    const completedAtValid = source.completed_at === null || source.completed_at === undefined || completedAt !== null;
+    const target = VIDEO_TRANSFORM_OPERATION_RATIOS[targetRatio];
+    const rawSource = source.source && typeof source.source === "object" && !Array.isArray(source.source) ? source.source : {};
+    const rawOutput = source.output && typeof source.output === "object" && !Array.isArray(source.output) ? source.output : {};
+    const sourceDuration = videoTransformInteger(rawSource.duration_ms, 200, 60000);
+    const sourceWidth = videoTransformInteger(rawSource.width, 1, 4096);
+    const sourceHeight = videoTransformInteger(rawSource.height, 1, 4096);
+    const outputDuration = videoTransformInteger(rawOutput.duration_ms, 200, 60500);
+    const outputWidth = videoTransformInteger(rawOutput.width, 1, 1600000);
+    const outputHeight = videoTransformInteger(rawOutput.height, 1, 1600000);
+    const outputSize = videoTransformInteger(rawOutput.byte_size, 128, VIDEO_TRANSFORM_OPERATIONS_MAX_OUTPUT_BYTES);
+    const outputFilename = String(rawOutput.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const outputContentType = String(rawOutput.content_type || "").trim().toLowerCase();
+    const outputAvailable = rawOutput.available === true;
+    const sourceMeasurementsValid = (rawSource.duration_ms === null || rawSource.duration_ms === undefined || sourceDuration !== null)
+      && (rawSource.width === null || rawSource.width === undefined || sourceWidth !== null)
+      && (rawSource.height === null || rawSource.height === undefined || sourceHeight !== null);
+    if (!validVaultAssetId(id) || kind !== "video_transform" || !VIDEO_TRANSFORM_OPERATION_STATES.has(state)
+      || !target || !VIDEO_TRANSFORM_OPERATION_FIT_MODES.has(fitMode) || !VIDEO_TRANSFORM_OPERATION_PRESETS.has(preset)
+      || typeof source.sharpen !== "boolean" || typeof source.preserve_audio !== "boolean" || !createdAt || !updatedAt || !queuedAt
+      || !startedAtValid || !completedAtValid || !sourceMeasurementsValid) return null;
+    const safeOutput = outputAvailable && state === "completed" && outputContentType === "video/mp4"
+      && outputFilename.length > 0 && outputFilename.length <= 180 && outputSize !== null && outputDuration !== null
+      && outputWidth === target.width && outputHeight === target.height && typeof rawOutput.has_audio === "boolean";
+    return {
+      id, kind, state, status: state, target_ratio: targetRatio, fit_mode: fitMode, preset,
+      sharpen: source.sharpen, preserve_audio: source.preserve_audio,
+      source: { duration_ms: sourceDuration, width: sourceWidth, height: sourceHeight },
+      output: safeOutput ? {
+        available: true, filename: outputFilename, content_type: outputContentType, byte_size: outputSize,
+        duration_ms: outputDuration, width: outputWidth, height: outputHeight, has_audio: rawOutput.has_audio
+      } : { available: false, filename: null, content_type: null, byte_size: null, duration_ms: null, width: null, height: null, has_audio: null },
+      created_at: createdAt, queued_at: queuedAt, started_at: startedAt, completed_at: completedAt, updated_at: updatedAt
+    };
+  }
+
+  function videoTransformOffset(value) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+  }
+
+  function videoTransformReferencesProjection(data, offset, selectedId, previous) {
+    const source = data && typeof data === "object" ? data : {};
+    const currentOffset = videoTransformOffset(offset);
+    const items = Array.isArray(source.items)
+      ? source.items.map(videoTransformReferenceItem).filter(Boolean).slice(0, VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT)
+      : [];
+    const selected = validVaultAssetId(selectedId) ? String(selectedId).trim() : "";
+    const previousSelected = previous && typeof previous === "object" ? videoTransformReferenceItem(previous.selected) : null;
+    const selectedItem = items.find((item) => item.id === selected) || (previousSelected && previousSelected.id === selected ? previousSelected : null);
+    const rawNext = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items, selected: selectedItem,
+      pagination: {
+        limit: VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT, offset: currentOffset, returned: items.length,
+        has_more: hasMore, next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT ? currentOffset - VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function videoTransformOperationsProjection(data, offset) {
+    const source = data && typeof data === "object" ? data : {};
+    const currentOffset = videoTransformOffset(offset);
+    const items = Array.isArray(source.items)
+      ? source.items.map(videoTransformOperationItem).filter(Boolean).slice(0, VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT)
+      : [];
+    const pagination = source.pagination && typeof source.pagination === "object" ? source.pagination : {};
+    const rawNext = Number(pagination.next_offset);
+    const hasMore = pagination.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items,
+      pagination: {
+        limit: VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT, offset: currentOffset, returned: items.length,
+        has_more: hasMore, next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT ? currentOffset - VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function videoTransformOperationSourcesFromState() {
+    const references = base().videoTransformReferences && typeof base().videoTransformReferences === "object" ? base().videoTransformReferences : {};
+    const items = Array.isArray(references.items) ? references.items : [];
+    const selected = videoTransformReferenceItem(references.selected);
+    const seen = new Set();
+    return (selected ? [selected, ...items] : items)
+      .map(videoTransformReferenceItem)
+      .filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true));
+  }
+
+  function videoTransformOperationFromState(operationId) {
+    const id = String(operationId || "").trim();
+    return (Array.isArray(base().videoTransformOperations) ? base().videoTransformOperations : [])
+      .map(videoTransformOperationItem).find((item) => item && item.id === id) || null;
+  }
+
+  function videoTransformSpecIsSafe(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    return validVaultAssetId(source.source_asset_id)
+      && Boolean(VIDEO_TRANSFORM_OPERATION_RATIOS[String(source.target_ratio || "")])
+      && VIDEO_TRANSFORM_OPERATION_FIT_MODES.has(String(source.fit_mode || "").toLowerCase())
+      && VIDEO_TRANSFORM_OPERATION_PRESETS.has(String(source.preset || "").toLowerCase())
+      && typeof source.sharpen === "boolean" && typeof source.preserve_audio === "boolean";
+  }
+
+  function videoTransformPayload(fields) {
+    const source = fields && typeof fields === "object" ? fields : {};
+    const booleanField = (value, fallback) => value === undefined || value === null || value === ""
+      ? fallback : (value === true || value === "true");
+    const payload = {
+      source_asset_id: String(source.source_asset_id || "").trim(),
+      target_ratio: String(source.target_ratio || "").trim(),
+      fit_mode: String(source.fit_mode || "").trim().toLowerCase(),
+      preset: String(source.preset || "").trim().toLowerCase(),
+      sharpen: booleanField(source.sharpen, false),
+      preserve_audio: booleanField(source.preserve_audio, true)
+    };
+    if (!videoTransformSpecIsSafe(payload)) throw new Error("Kế hoạch Video Finishing không hợp lệ.");
+    if (!videoTransformOperationSourcesFromState().some((item) => item.id === payload.source_asset_id)) {
+      throw new Error("Video MP4 nguồn không còn trong metadata Asset Vault của phiên hiện tại. Hãy làm mới rồi chọn lại.");
+    }
+    return payload;
+  }
+
+  function videoTransformSpecMatches(first, second) {
+    return videoTransformSpecIsSafe(first) && videoTransformSpecIsSafe(second)
+      && String(first.source_asset_id) === String(second.source_asset_id)
+      && String(first.target_ratio) === String(second.target_ratio)
+      && String(first.fit_mode) === String(second.fit_mode)
+      && String(first.preset) === String(second.preset)
+      && first.sharpen === second.sharpen && first.preserve_audio === second.preserve_audio;
+  }
+
+  function videoTransformEstimateProjection(data, payload) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const estimate = source.estimate && typeof source.estimate === "object" && !Array.isArray(source.estimate) ? source.estimate : {};
+    const output = estimate.output && typeof estimate.output === "object" && !Array.isArray(estimate.output) ? estimate.output : {};
+    const target = VIDEO_TRANSFORM_OPERATION_RATIOS[String(payload && payload.target_ratio || "")];
+    if (!target || String(estimate.target_ratio || "") !== String(payload.target_ratio)
+      || String(estimate.fit_mode || "").toLowerCase() !== String(payload.fit_mode)
+      || String(estimate.preset || "").toLowerCase() !== String(payload.preset)
+      || estimate.sharpen !== payload.sharpen || estimate.preserve_audio !== payload.preserve_audio
+      || String(output.content_type || "").toLowerCase() !== "video/mp4" || String(output.video_codec || "").toLowerCase() !== "h264"
+      || !["aac_if_source_has_supported_audio", "none"].includes(String(output.audio || ""))
+      || Number(output.width) !== target.width || Number(output.height) !== target.height) return null;
+    return {
+      target_ratio: String(payload.target_ratio), fit_mode: String(payload.fit_mode), preset: String(payload.preset),
+      sharpen: payload.sharpen, preserve_audio: payload.preserve_audio,
+      output: { content_type: "video/mp4", video_codec: "h264", audio: String(output.audio), width: target.width, height: target.height }
+    };
+  }
+
+  function videoTransformStoredEstimate() {
+    const stored = base().videoTransformEstimate && typeof base().videoTransformEstimate === "object" ? base().videoTransformEstimate : {};
+    const payload = stored.payload && typeof stored.payload === "object" ? stored.payload : null;
+    const estimate = payload ? videoTransformEstimateProjection({ estimate: stored.estimate }, payload) : null;
+    return payload && estimate ? { payload, estimate } : null;
+  }
+
+  function videoTransformOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === videoTransformOperationsHydrationEpoch && sessionEpoch === assetVaultSessionEpoch
+      && currentPortalPath() === expectedPath && videoTransformOperationsPathIsCurrent(expectedPath)
+      && base().assetVaultEnabled === true && base().videoTransformOperationsEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function videoTransformRouteSessionIsCurrent(sessionEpoch, expectedPath) {
+    return sessionEpoch === assetVaultSessionEpoch && currentPortalPath() === expectedPath
+      && videoTransformOperationsPathIsCurrent(expectedPath) && base().assetVaultEnabled === true
+      && base().videoTransformOperationsEnabled === true && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function clearVideoTransformOperationsProjection(readState) {
+    const normalized = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    merge({
+      videoTransformReferences: { items: [], selected: null, pagination: { limit: VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoTransformOperations: [],
+      videoTransformOperationsListing: { pagination: { limit: VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoTransformDraft: {}, videoTransformEstimate: {}, videoTransformDetail: {}, videoTransformDetailReadState: "guarded",
+      videoTransformOperationsReadState: normalized,
+      pageStates: { ...(base().pageStates || {}), [VIDEO_TRANSFORM_OPERATIONS_ROUTE]: normalized === "loading" ? "read_only" : normalized }
+    });
+  }
+
+  async function hydrateVideoTransformOperations(options) {
+    const request = options && typeof options === "object" ? options : {};
+    const requestEpoch = ++videoTransformOperationsHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!videoTransformOperationsPathIsCurrent(expectedPath) || base().assetVaultEnabled !== true || base().videoTransformOperationsEnabled !== true) {
+      if (videoTransformOperationsPathIsCurrent(expectedPath)) clearVideoTransformOperationsProjection("guarded");
+      return null;
+    }
+    const previousReferences = base().videoTransformReferences && typeof base().videoTransformReferences === "object" ? base().videoTransformReferences : {};
+    const previousSourcePagination = previousReferences.pagination && typeof previousReferences.pagination === "object" ? previousReferences.pagination : {};
+    const previousListing = base().videoTransformOperationsListing && typeof base().videoTransformOperationsListing === "object" ? base().videoTransformOperationsListing : {};
+    const previousOperationPagination = previousListing.pagination && typeof previousListing.pagination === "object" ? previousListing.pagination : {};
+    const sourceOffset = videoTransformOffset(request.sourceOffset === undefined ? previousSourcePagination.offset : request.sourceOffset);
+    const operationOffset = videoTransformOffset(request.operationOffset === undefined ? previousOperationPagination.offset : request.operationOffset);
+    const selectedId = validVaultAssetId(request.selectedId) ? String(request.selectedId).trim() : (videoTransformReferenceItem(previousReferences.selected) || {}).id || "";
+    merge({
+      videoTransformOperationsReadState: "loading", videoTransformEstimate: {}, videoTransformDetail: {}, videoTransformDetailReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [VIDEO_TRANSFORM_OPERATIONS_ROUTE]: "read_only" }
+    });
+    try {
+      const [referencesResult, operationsResult] = await Promise.all([
+        api(`/asset-vault?state=active&reference_kind=video_transform&limit=${VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT}&offset=${sourceOffset}`, { cache: "no-store" }),
+        api(`/video-transform-operations?limit=${VIDEO_TRANSFORM_OPERATIONS_LIST_LIMIT}&offset=${operationOffset}`, { cache: "no-store" })
+      ]);
+      if (!videoTransformOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const references = videoTransformReferencesProjection(referencesResult.data, sourceOffset, selectedId, previousReferences);
+      const history = videoTransformOperationsProjection(operationsResult.data, operationOffset);
+      if (!videoTransformOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        videoTransformReferences: references, videoTransformOperations: history.items, videoTransformOperationsListing: { pagination: history.pagination },
+        videoTransformOperationsReadState: "ready", pageStates: { ...(base().pageStates || {}), [VIDEO_TRANSFORM_OPERATIONS_ROUTE]: "ready" }
+      });
+      return { references, operations: history.items, listing: history };
+    } catch (_) {
+      if (!videoTransformOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearVideoTransformOperationsProjection("failed");
+      return null;
+    }
+  }
+
+  function videoTransformDetailProjection(data, expectedId) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const operation = videoTransformOperationItem(source.operation);
+    const events = Array.isArray(source.events) ? source.events : null;
+    if (!operation || operation.id !== expectedId || !events || events.length > 60) return null;
+    const projectedEvents = events.map((event) => {
+      const value = event && typeof event === "object" ? event : {};
+      const state = String(value.state || "").trim();
+      const createdAt = videoTransformTimestamp(value.created_at, true);
+      return VIDEO_TRANSFORM_OPERATION_STATES.has(state) && createdAt ? { state, created_at: createdAt } : null;
+    });
+    if (projectedEvents.some((event) => !event)) return null;
+    return { operation, events: projectedEvents };
+  }
+
+  async function hydrateVideoTransformOperationDetail(operationId) {
+    const id = String(operationId || "").trim();
+    if (!validVaultAssetId(id) || !videoTransformOperationFromState(id)) throw new Error("Mã Video Finishing không nằm trong lịch sử private đang hiển thị.");
+    const requestEpoch = ++videoTransformOperationDetailHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!videoTransformRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+    merge({ videoTransformDetail: {}, videoTransformDetailReadState: "loading" });
+    try {
+      const result = await api(`/video-transform-operations/${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (requestEpoch !== videoTransformOperationDetailHydrationEpoch || !videoTransformRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+      const detail = videoTransformDetailProjection(result.data, id);
+      if (!detail) throw new Error("Máy chủ chưa trả detail Video Finishing owner-scoped hợp lệ.");
+      merge({ videoTransformDetail: detail, videoTransformDetailReadState: "ready" });
+      return detail;
+    } catch (_) {
+      if (requestEpoch !== videoTransformOperationDetailHydrationEpoch || !videoTransformRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+      merge({ videoTransformDetail: {}, videoTransformDetailReadState: "guarded" });
+      return null;
+    }
+  }
+
+  function videoTransformOperationReceipt(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : {};
+    const operation = videoTransformOperationItem(data.operation);
+    if (!operation || operation.state !== "completed" || operation.output.available !== true) {
+      throw new Error("Máy chủ chưa trả output Video Finishing private đã được xác minh.");
+    }
+    return operation;
+  }
+
+  async function downloadVideoTransformOperation(operationId) {
+    const operation = videoTransformOperationFromState(operationId);
+    const output = operation && operation.output && typeof operation.output === "object" ? operation.output : {};
+    const expectedSize = Number(output.byte_size);
+    const filename = String(output.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    if (!operation || operation.kind !== "video_transform" || operation.state !== "completed" || output.available !== true
+      || String(output.content_type || "").toLowerCase() !== "video/mp4" || !filename || filename.length > 180
+      || !Number.isInteger(expectedSize) || expectedSize < 128 || expectedSize > VIDEO_TRANSFORM_OPERATIONS_MAX_OUTPUT_BYTES) {
+      throw new Error("Output Video Finishing private chưa được server xác nhận sẵn sàng để tải.");
+    }
+    const headers = new Headers({ Accept: "video/mp4, application/json", "X-Request-ID": randomKey("web") });
+    const response = await fetch(`${API}/video-transform-operations/${encodeURIComponent(operation.id)}/download`, {
+      credentials: "same-origin", headers, cache: "no-store"
+    });
+    const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* guarded envelope remains generic */ }
+      throw new Error(payload && payload.message ? payload.message : "Máy chủ chưa xác nhận output Video Finishing private có thể tải.");
+    }
+    const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+    const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+    const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+    const referrerPolicy = String(response.headers.get("Referrer-Policy") || "").toLowerCase();
+    const contentPolicy = String(response.headers.get("Content-Security-Policy") || "").toLowerCase();
+    const corp = String(response.headers.get("Cross-Origin-Resource-Policy") || "").toLowerCase();
+    const byteSize = Number(response.headers.get("Content-Length"));
+    const actualMime = contentType.split(";", 1)[0].trim();
+    if (!response.ok || !disposition.includes("attachment") || !cacheControl.includes("no-store") || nosniff !== "nosniff"
+      || !referrerPolicy.includes("no-referrer") || !contentPolicy.includes("sandbox") || corp !== "same-origin"
+      || actualMime !== "video/mp4" || !Number.isInteger(byteSize) || byteSize !== expectedSize) {
+      throw new Error("Private video attachment không qua kiểm tra delivery của browser.");
+    }
+    const blob = await response.blob();
+    if (blob.size !== expectedSize || blob.size > VIDEO_TRANSFORM_OPERATIONS_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== "video/mp4") {
+      throw new Error("Private video attachment không qua kiểm tra kích thước hoặc định dạng.");
     }
     const objectUrl = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -23345,6 +23765,190 @@
         try {
           await downloadAudioAssetOperation(operationId);
           toast("Đã bắt đầu tải attachment audio private đã được xác minh.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-operation-refresh") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể làm mới Video Finishing Lab từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và Video Finishing runtime để xem dữ liệu private.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoTransformOperations();
+          if (!refreshed && base().videoTransformOperationsReadState !== "ready") {
+            throw new Error("Không thể tải Video Finishing owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã làm mới nguồn MP4 và lịch sử Video Finishing private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-reference-page") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi trang MP4 private từ Video Finishing Lab đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem MP4 private.");
+        }
+        const sourceOffset = Number(fields.__videoTransformReferenceOffset);
+        const selectedId = String(fields.__videoTransformReferenceSelectedId || "").trim();
+        if (!Number.isInteger(sourceOffset) || sourceOffset < 0 || sourceOffset > 10000 || (selectedId && !validVaultAssetId(selectedId))) {
+          throw new Error("Trang hoặc nguồn MP4 private không hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoTransformOperations({ sourceOffset, selectedId });
+          if (!refreshed && base().videoTransformOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang nguồn MP4 owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang nguồn MP4 private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-history-page") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi lịch sử Video Finishing từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem lịch sử Video Finishing private.");
+        }
+        const operationOffset = Number(fields.__videoTransformOperationOffset);
+        if (!Number.isInteger(operationOffset) || operationOffset < 0 || operationOffset > 10000) {
+          throw new Error("Trang lịch sử Video Finishing không hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoTransformOperations({ operationOffset });
+          if (!refreshed && base().videoTransformOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang lịch sử Video Finishing private an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang lịch sử Video Finishing private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-operation-estimate") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể kiểm tra kế hoạch Video Finishing từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-estimate"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để kiểm tra Video Finishing private.");
+        }
+        const payload = videoTransformPayload(fields);
+        const sessionEpoch = assetVaultSessionEpoch;
+        setActionBusy(action, route, true);
+        try {
+          const result = await api("/video-transform-operations/estimate", {
+            method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload), cache: "no-store"
+          });
+          if (!videoTransformRouteSessionIsCurrent(sessionEpoch, route)) return;
+          const estimate = videoTransformEstimateProjection(result.data, payload);
+          if (!estimate) throw new Error("Máy chủ chưa trả kế hoạch Video Finishing có cấu trúc an toàn.");
+          const references = base().videoTransformReferences && typeof base().videoTransformReferences === "object" ? base().videoTransformReferences : {};
+          const selected = videoTransformOperationSourcesFromState().find((item) => item.id === payload.source_asset_id) || null;
+          merge({
+            videoTransformDraft: payload,
+            videoTransformReferences: selected ? { ...references, selected } : references,
+            videoTransformEstimate: { payload, estimate },
+            pageStates: { ...(base().pageStates || {}), [VIDEO_TRANSFORM_OPERATIONS_ROUTE]: "awaiting_confirm" }
+          });
+          toast(result.message || "Đã kiểm tra kế hoạch Video Finishing; chưa tạo file.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-operation-confirm") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể xác nhận Video Finishing từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-create"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để tạo Video Finishing private.");
+        }
+        if (fields.video_transform_confirmation !== true) {
+          throw new Error("Hãy xác nhận bạn hiểu output chỉ sẵn sàng sau khi máy chủ kiểm chứng.");
+        }
+        const payload = videoTransformPayload(fields);
+        const storedEstimate = videoTransformStoredEstimate();
+        if (!storedEstimate || !videoTransformSpecMatches(storedEstimate.payload, payload)) {
+          throw new Error("Kế hoạch đã hết hiệu lực hoặc không khớp lựa chọn hiện tại. Hãy kiểm tra kế hoạch lại trước khi tạo MP4.");
+        }
+        const scope = `video-transform-operation:${payload.source_asset_id}:${payload.target_ratio}:${payload.fit_mode}:${payload.preset}:${payload.sharpen ? "sharpen" : "soft"}:${payload.preserve_audio ? "audio" : "mute"}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Video Finishing private đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "warning");
+          return;
+        }
+        let receiptAndRefreshConfirmed = false;
+        setActionBusy(action, route, true);
+        try {
+          // Invalidate a pending list response before the write.  The browser
+          // always reloads owner-scoped receipts and never inserts a completed
+          // row itself.
+          ++videoTransformOperationsHydrationEpoch;
+          ++videoTransformOperationDetailHydrationEpoch;
+          const result = await api("/video-transform-operations", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key }), cache: "no-store"
+          });
+          videoTransformOperationReceipt(result);
+          const refreshed = await hydrateVideoTransformOperations({ selectedId: payload.source_asset_id });
+          // Preserve the idempotency key if server acknowledgement cannot be
+          // followed by a fresh owner-scoped receipt.  A retry of this exact
+          // confirmation will replay its immutable result, not make a second file.
+          if (!refreshed) throw new Error("Máy chủ đã xác nhận Video Finishing nhưng chưa thể tải lại lịch sử private an toàn. Hãy làm mới hoặc xác nhận lại; cùng idempotency key sẽ được tái sử dụng.");
+          receiptAndRefreshConfirmed = true;
+          toast(result.message || "Đã tạo MP4 private sau khi máy chủ xác minh output.");
+        } finally {
+          releaseSubmission(submission);
+          if (receiptAndRefreshConfirmed) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-operation-detail") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể xem detail Video Finishing từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-detail"] === true)) {
+          throw new Error("Cần signed Web session để xem detail Video Finishing private.");
+        }
+        const operationId = String(fields.__videoTransformOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã Video Finishing private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const detail = await hydrateVideoTransformOperationDetail(operationId);
+          if (!detail && base().videoTransformDetailReadState !== "ready") {
+            throw new Error("Không thể tải detail Video Finishing owner-scoped an toàn.");
+          }
+          if (detail) toast("Đã tải trạng thái và timeline Video Finishing private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-transform-operation-download") {
+        if (route !== VIDEO_TRANSFORM_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_TRANSFORM_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể tải output Video Finishing private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-transform-operation-download"] === true)) {
+          throw new Error("Cần signed Web session để tải output Video Finishing private.");
+        }
+        const operationId = String(fields.__videoTransformOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã output Video Finishing private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await downloadVideoTransformOperation(operationId);
+          toast("Đã bắt đầu tải attachment MP4 private đã được xác minh.");
         } finally {
           setActionBusy(action, route, false);
         }

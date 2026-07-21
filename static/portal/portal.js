@@ -1361,6 +1361,16 @@
       "Kiểm định không tạo file. Chuyển đổi và chuẩn hóa chỉ phát attachment private sau khi server rehash, probe và xác minh output cuối cùng."
     ]
   });
+  // This is intentionally a direct, app-native workspace rather than another
+  // item in the broad Video catalogue.  It has its own owner-scoped contract
+  // and only becomes useful when the private MP4 runtime is explicitly ready.
+  customerPage("/video/finishing", "Video Finishing Lab", "Đổi tỷ lệ và hoàn thiện MP4 private qua workflow có kiểm chứng trước khi tải.", ICONS.video, {
+    layout: "video-transform-operations", type: "video-transform-operations", fields: [], action: "none", status: "processing",
+    notes: [
+      "Chỉ metadata MP4 active thuộc Asset Vault của signed Web account hiện tại được chọn. Browser không gửi bytes, path, URL, hash, storage key hoặc tham số xử lý media.",
+      "Mỗi lần xác nhận tạo một receipt owner-scoped. Nút tải chỉ xuất hiện khi máy chủ đã hoàn tất kiểm tra output MP4 private; giao diện không tự báo thành công hoặc dựng file thay thế."
+    ]
+  });
 
   featurePage("/subtitle", "Phụ đề", "Chuẩn bị phụ đề từ media nguồn với export SRT/VTT do job engine trả về.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
   featurePage("/subtitle/create", "Tạo phụ đề", "Tạo bản nháp phụ đề, không giả lập transcript hay file SRT/VTT.", ICONS.subtitle, FIELD_SETS.subtitleCreate);
@@ -13515,6 +13525,260 @@
     </article>`;
   }
 
+  const VIDEO_TRANSFORM_PORTAL_RATIOS = Object.freeze({
+    "9:16": Object.freeze({ label: "Dọc 9:16", width: 720, height: 1280 }),
+    "16:9": Object.freeze({ label: "Ngang 16:9", width: 1280, height: 720 }),
+    "1:1": Object.freeze({ label: "Vuông 1:1", width: 1080, height: 1080 }),
+    "4:5": Object.freeze({ label: "Dọc 4:5", width: 864, height: 1080 })
+  });
+  const VIDEO_TRANSFORM_PORTAL_FIT_LABELS = Object.freeze({
+    crop: "Cắt khung để phủ đầy tỷ lệ",
+    blur_pad: "Giữ khung, thêm nền mờ"
+  });
+  const VIDEO_TRANSFORM_PORTAL_PRESET_LABELS = Object.freeze({
+    none: "Giữ nguyên màu",
+    clear: "Rõ và cân bằng",
+    tiktok_pop: "Tương phản sáng rõ",
+    cinematic: "Tông điện ảnh nhẹ",
+    soft_clean: "Mềm và sạch"
+  });
+  const VIDEO_TRANSFORM_PORTAL_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+
+  function videoTransformOperationStateLabel(value) {
+    return ({
+      queued: "Đang xếp hàng", processing: "Đang hoàn thiện", completed: "Đã kiểm chứng",
+      failed: "Không thể hoàn thiện", guarded: "Được bảo vệ", unavailable: "Output không còn sẵn sàng"
+    })[String(value || "")] || "Được bảo vệ";
+  }
+
+  function videoTransformOperationPresetLabel(value) {
+    return VIDEO_TRANSFORM_PORTAL_PRESET_LABELS[String(value || "")] || "Preset được bảo vệ";
+  }
+
+  function videoTransformOperationDuration(value) {
+    const milliseconds = Number(value);
+    if (!Number.isInteger(milliseconds) || milliseconds < 0 || milliseconds > 86400000) return "—";
+    const seconds = Math.floor(milliseconds / 1000);
+    const minutes = Math.floor(seconds / 60);
+    return minutes ? `${minutes}m ${String(seconds % 60).padStart(2, "0")}s` : `${seconds}s`;
+  }
+
+  function videoTransformPortalTimestamp(value) {
+    const timestamp = String(value || "").trim();
+    return timestamp && timestamp.length <= 80 && !/[\u0000-\u001f\u007f]/.test(timestamp) ? timestamp : "";
+  }
+
+  function videoTransformOperationSources(context) {
+    const references = context.videoTransformReferences && typeof context.videoTransformReferences === "object" ? context.videoTransformReferences : {};
+    const selected = references.selected && typeof references.selected === "object" ? references.selected : null;
+    const items = Array.isArray(references.items) ? references.items : [];
+    const seen = new Set();
+    return (selected ? [selected, ...items] : items).filter((item) => {
+      const source = item && typeof item === "object" ? item : {};
+      const id = String(source.id || "").trim();
+      const name = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      const extension = String(source.extension || "").trim().toLowerCase();
+      const contentType = String(source.content_type || "").trim().toLowerCase();
+      const byteSize = Number(source.byte_size);
+      const valid = validVaultAssetId(id) && String(source.state || "") === "active" && name.length > 0 && name.length <= 120
+        && extension === ".mp4" && contentType === "video/mp4" && Number.isInteger(byteSize)
+        && byteSize >= 128 && byteSize <= 25 * 1024 * 1024;
+      return valid && !seen.has(id) && (seen.add(id), true);
+    }).slice(0, 31);
+  }
+
+  function videoTransformPortalSpec(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const sourceAssetId = String(source.source_asset_id || "").trim();
+    const targetRatio = String(source.target_ratio || "").trim();
+    const fitMode = String(source.fit_mode || "").trim().toLowerCase();
+    const preset = String(source.preset || "").trim().toLowerCase();
+    if (!validVaultAssetId(sourceAssetId) || !VIDEO_TRANSFORM_PORTAL_RATIOS[targetRatio]
+      || !Object.prototype.hasOwnProperty.call(VIDEO_TRANSFORM_PORTAL_FIT_LABELS, fitMode)
+      || !Object.prototype.hasOwnProperty.call(VIDEO_TRANSFORM_PORTAL_PRESET_LABELS, preset)
+      || typeof source.sharpen !== "boolean" || typeof source.preserve_audio !== "boolean") return null;
+    return { source_asset_id: sourceAssetId, target_ratio: targetRatio, fit_mode: fitMode, preset, sharpen: source.sharpen, preserve_audio: source.preserve_audio };
+  }
+
+  function videoTransformPortalEstimate(context) {
+    const stored = context.videoTransformEstimate && typeof context.videoTransformEstimate === "object" ? context.videoTransformEstimate : {};
+    const payload = videoTransformPortalSpec(stored.payload);
+    const estimate = stored.estimate && typeof stored.estimate === "object" ? stored.estimate : {};
+    const output = estimate.output && typeof estimate.output === "object" ? estimate.output : {};
+    const target = payload ? VIDEO_TRANSFORM_PORTAL_RATIOS[payload.target_ratio] : null;
+    if (!payload || !target || String(estimate.target_ratio || "") !== payload.target_ratio
+      || String(estimate.fit_mode || "").toLowerCase() !== payload.fit_mode
+      || String(estimate.preset || "").toLowerCase() !== payload.preset
+      || estimate.sharpen !== payload.sharpen || estimate.preserve_audio !== payload.preserve_audio
+      || String(output.content_type || "").toLowerCase() !== "video/mp4"
+      || String(output.video_codec || "").toLowerCase() !== "h264"
+      || !["aac_if_source_has_supported_audio", "none"].includes(String(output.audio || ""))
+      || Number(output.width) !== target.width || Number(output.height) !== target.height) return null;
+    return { payload, output: { width: target.width, height: target.height, audio: String(output.audio) } };
+  }
+
+  function videoTransformOperationCanDownload(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const output = item.output && typeof item.output === "object" && !Array.isArray(item.output) ? item.output : {};
+    const target = VIDEO_TRANSFORM_PORTAL_RATIOS[String(item.target_ratio || "")];
+    const filename = String(output.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const byteSize = Number(output.byte_size);
+    const duration = Number(output.duration_ms);
+    return validVaultAssetId(item.id) && String(item.kind || "") === "video_transform" && String(item.state || "") === "completed"
+      && Boolean(target) && output.available === true && String(output.content_type || "").toLowerCase() === "video/mp4"
+      && filename.length > 0 && filename.length <= 180 && Number.isInteger(byteSize) && byteSize >= 128 && byteSize <= 100 * 1024 * 1024
+      && Number.isInteger(duration) && duration >= 200 && duration <= 60500 && Number(output.width) === target.width
+      && Number(output.height) === target.height && typeof output.has_audio === "boolean";
+  }
+
+  function videoTransformPortalOperation(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(item.id || "").trim();
+    const state = String(item.state || item.status || "").trim();
+    const targetRatio = String(item.target_ratio || "").trim();
+    const fitMode = String(item.fit_mode || "").trim().toLowerCase();
+    const preset = String(item.preset || "").trim().toLowerCase();
+    const target = VIDEO_TRANSFORM_PORTAL_RATIOS[targetRatio];
+    const createdAt = videoTransformPortalTimestamp(item.created_at);
+    const queuedAt = videoTransformPortalTimestamp(item.queued_at);
+    const updatedAt = videoTransformPortalTimestamp(item.updated_at);
+    if (!validVaultAssetId(id) || String(item.kind || "") !== "video_transform" || !VIDEO_TRANSFORM_PORTAL_STATES.has(state)
+      || !target || !Object.prototype.hasOwnProperty.call(VIDEO_TRANSFORM_PORTAL_FIT_LABELS, fitMode)
+      || !Object.prototype.hasOwnProperty.call(VIDEO_TRANSFORM_PORTAL_PRESET_LABELS, preset)
+      || typeof item.sharpen !== "boolean" || typeof item.preserve_audio !== "boolean" || !createdAt || !queuedAt || !updatedAt) return null;
+    const source = item.source && typeof item.source === "object" ? item.source : {};
+    const sourceDuration = Number(source.duration_ms);
+    const sourceWidth = Number(source.width);
+    const sourceHeight = Number(source.height);
+    const sourceSafe = (source.duration_ms === null || source.duration_ms === undefined || (Number.isInteger(sourceDuration) && sourceDuration >= 200 && sourceDuration <= 60000))
+      && (source.width === null || source.width === undefined || (Number.isInteger(sourceWidth) && sourceWidth >= 1 && sourceWidth <= 4096))
+      && (source.height === null || source.height === undefined || (Number.isInteger(sourceHeight) && sourceHeight >= 1 && sourceHeight <= 4096));
+    if (!sourceSafe) return null;
+    return {
+      id, kind: "video_transform", state, target_ratio: targetRatio, fit_mode: fitMode, preset,
+      sharpen: item.sharpen, preserve_audio: item.preserve_audio,
+      source: { duration_ms: Number.isInteger(sourceDuration) ? sourceDuration : null, width: Number.isInteger(sourceWidth) ? sourceWidth : null, height: Number.isInteger(sourceHeight) ? sourceHeight : null },
+      output: item.output && typeof item.output === "object" ? item.output : {},
+      created_at: createdAt, queued_at: queuedAt, started_at: videoTransformPortalTimestamp(item.started_at),
+      completed_at: videoTransformPortalTimestamp(item.completed_at), updated_at: updatedAt
+    };
+  }
+
+  function renderVideoTransformOperationDetail(context) {
+    const readState = String(context.videoTransformDetailReadState || "guarded");
+    const rawDetail = context.videoTransformDetail && typeof context.videoTransformDetail === "object" ? context.videoTransformDetail : {};
+    const operation = videoTransformPortalOperation(rawDetail.operation);
+    const events = Array.isArray(rawDetail.events) ? rawDetail.events.map((event) => {
+      const source = event && typeof event === "object" ? event : {};
+      const state = String(source.state || "").trim();
+      const createdAt = videoTransformPortalTimestamp(source.created_at);
+      return VIDEO_TRANSFORM_PORTAL_STATES.has(state) && createdAt ? { state, created_at: createdAt } : null;
+    }).filter(Boolean).slice(0, 60) : [];
+    if (readState === "loading") {
+      return `<section class="portal-card portal-card-pad portal-video-transform-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Đang tải timeline private</h2><p class="portal-card-subtitle">Chỉ metadata receipt của video đang hiển thị mới được yêu cầu lại. Browser không suy đoán bước xử lý hoặc output.</p></div>${badge("read_only")}</div></section>`;
+    }
+    if (!operation || !events.length) {
+      return `<section class="portal-card portal-card-pad portal-video-transform-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Chọn một receipt để xem timeline</h2><p class="portal-card-subtitle">Timeline chỉ hiển thị sau một lần đọc owner-scoped. Thông tin lỗi nội bộ, đường dẫn, URL và dữ liệu hệ thống không được đưa vào portal.</p></div>${badge("guarded")}</div></section>`;
+    }
+    const target = VIDEO_TRANSFORM_PORTAL_RATIOS[operation.target_ratio];
+    const outputReady = videoTransformOperationCanDownload(operation);
+    const displayState = operation.state === "completed" && !outputReady ? "unavailable" : operation.state;
+    const facts = [
+      `${target.width} × ${target.height}`,
+      videoTransformOperationPresetLabel(operation.preset),
+      operation.sharpen ? "Tăng độ rõ" : "Giữ độ rõ gốc",
+      operation.preserve_audio ? "Giữ audio khi hợp lệ" : "Không giữ audio"
+    ];
+    const output = outputReady ? `${String(operation.output.filename)} · ${vaultBytes(Number(operation.output.byte_size))}` : "Output chưa sẵn sàng để tải";
+    return `<section class="portal-card portal-card-pad portal-video-transform-detail"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped receipt</span><h2 class="portal-card-title">Chi tiết Video Finishing</h2><p class="portal-card-subtitle">${safeText(facts.join(" · "))}</p></div>${badge(displayState)}</div><div class="portal-video-transform-detail-summary"><div><span>Trạng thái</span><strong>${safeText(videoTransformOperationStateLabel(displayState))}</strong></div><div><span>Output</span><strong>${safeText(output)}</strong></div><div><span>Cập nhật</span><strong>${safeText(operation.updated_at)}</strong></div></div><ol class="portal-video-transform-timeline" aria-label="Timeline Video Finishing">${events.map((event) => `<li><span aria-hidden="true"></span><div><strong>${safeText(videoTransformOperationStateLabel(event.state))}</strong><small>${safeText(event.created_at)}</small></div></li>`).join("")}</ol></section>`;
+  }
+
+  function renderVideoTransformOperations(page, context) {
+    const canView = Boolean(context.capabilities && context.capabilities["video-transform-operation-view"] === true);
+    const canEstimate = Boolean(context.capabilities && context.capabilities["video-transform-operation-estimate"] === true);
+    const canCreate = Boolean(context.capabilities && context.capabilities["video-transform-operation-create"] === true);
+    const canDetail = Boolean(context.capabilities && context.capabilities["video-transform-operation-detail"] === true);
+    const canDownload = Boolean(context.capabilities && context.capabilities["video-transform-operation-download"] === true);
+    const references = context.videoTransformReferences && typeof context.videoTransformReferences === "object" ? context.videoTransformReferences : {};
+    const sourcePagination = references.pagination && typeof references.pagination === "object" ? references.pagination : {};
+    const listing = context.videoTransformOperationsListing && typeof context.videoTransformOperationsListing === "object" ? context.videoTransformOperationsListing : {};
+    const historyPagination = listing.pagination && typeof listing.pagination === "object" ? listing.pagination : {};
+    const readState = ["loading", "ready", "failed", "guarded"].includes(String(context.videoTransformOperationsReadState || ""))
+      ? String(context.videoTransformOperationsReadState) : "guarded";
+    const sources = videoTransformOperationSources(context);
+    const draft = videoTransformPortalSpec(context.videoTransformDraft);
+    const selectedId = draft ? draft.source_asset_id : (references.selected && validVaultAssetId(references.selected.id) ? String(references.selected.id) : "");
+    const draftRatio = draft ? draft.target_ratio : "9:16";
+    const draftFitMode = draft ? draft.fit_mode : "crop";
+    const draftPreset = draft ? draft.preset : "none";
+    const operations = (Array.isArray(context.videoTransformOperations) ? context.videoTransformOperations : [])
+      .map(videoTransformPortalOperation).filter(Boolean).slice(0, 30);
+    const readyForInteraction = readState === "ready";
+    const formEnabled = canEstimate && sources.length > 0 && readyForInteraction;
+    const formDisabled = formEnabled ? "" : " disabled";
+    const sourceOptions = sources.map((item) => {
+      const name = String(item.display_name || "MP4 private").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      return `<option value="${safeText(String(item.id))}"${String(item.id) === selectedId ? " selected" : ""}>${safeText(name)} · MP4 · ${safeText(vaultBytes(Number(item.byte_size)))}</option>`;
+    }).join("");
+    const sourceHint = !canView
+      ? "Module đang được bảo vệ. Cần signed Web session, Asset Vault và runtime Video Finishing đã được server bật."
+      : readState === "loading"
+        ? "Đang tải metadata MP4 owner-scoped. Browser không đọc file gốc hoặc danh sách asset chung."
+        : readState === "failed"
+          ? "Không thể tải metadata private an toàn. Danh sách cũ đã được xóa; hãy làm mới để yêu cầu lại."
+          : !sources.length
+            ? "Chưa có MP4 active hợp lệ, tối đa 25 MiB, trong Asset Vault của bạn."
+            : "Chỉ metadata MP4 đã được server lọc theo ownership xuất hiện ở đây; source gốc không bị ghi đè.";
+    const sourcePrevious = Number(sourcePagination.previous_offset);
+    const sourceNext = Number(sourcePagination.next_offset);
+    const canSourcePrevious = Number.isInteger(sourcePrevious) && sourcePrevious >= 0;
+    const canSourceNext = Number.isInteger(sourceNext) && sourceNext >= 0;
+    const sourceOffset = Number.isInteger(Number(sourcePagination.offset)) && Number(sourcePagination.offset) >= 0 ? Number(sourcePagination.offset) : 0;
+    const sourceReturned = Number.isInteger(Number(sourcePagination.returned)) && Number(sourcePagination.returned) >= 0 ? Number(sourcePagination.returned) : 0;
+    const sourceRange = sourceReturned ? `Đang xem ${sourceOffset + 1}–${sourceOffset + sourceReturned}` : `Trang từ vị trí ${sourceOffset + 1}`;
+    const sourcePager = canSourcePrevious || canSourceNext
+      ? `<div class="portal-video-transform-source-pager" role="group" aria-label="Trang nguồn MP4 private"><span>${safeText(sourceRange)}</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-transform-reference-page" data-portal-route="/video/finishing" data-video-transform-reference-offset="${canSourcePrevious ? safeText(String(sourcePrevious)) : ""}"${canView && readyForInteraction && canSourcePrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-transform-reference-page" data-portal-route="/video/finishing" data-video-transform-reference-offset="${canSourceNext ? safeText(String(sourceNext)) : ""}"${canView && readyForInteraction && canSourceNext ? "" : " disabled"}>Sau</button></div></div>`
+      : "";
+    const estimate = videoTransformPortalEstimate(context);
+    const estimateMarkup = estimate ? (() => {
+      const target = VIDEO_TRANSFORM_PORTAL_RATIOS[estimate.payload.target_ratio];
+      const source = sources.find((item) => String(item.id) === estimate.payload.source_asset_id);
+      const sourceName = source ? String(source.display_name || "MP4 private") : "MP4 private đã chọn";
+      const canConfirm = canCreate && readyForInteraction;
+      const audioText = estimate.payload.preserve_audio ? "Giữ audio nếu source có stream phù hợp" : "Không giữ audio ở bản output";
+      return `<section class="portal-card portal-card-pad portal-video-transform-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Estimate verified</span><h2 class="portal-card-title">Kế hoạch đang chờ xác nhận</h2><p class="portal-card-subtitle">Máy chủ đã trả cấu trúc output MP4 cố định. Chưa có file cho tới khi bạn xác nhận rõ ràng bên dưới.</p></div>${badge("awaiting_confirm")}</div><div class="portal-video-transform-estimate-grid"><div><span>Source</span><strong>${safeText(sourceName)}</strong></div><div><span>Khung hình</span><strong>${safeText(`${target.label} · ${target.width} × ${target.height}`)}</strong></div><div><span>Fit</span><strong>${safeText(VIDEO_TRANSFORM_PORTAL_FIT_LABELS[estimate.payload.fit_mode])}</strong></div><div><span>Màu</span><strong>${safeText(videoTransformOperationPresetLabel(estimate.payload.preset))}</strong></div><div><span>Độ rõ</span><strong>${safeText(estimate.payload.sharpen ? "Tăng độ rõ" : "Giữ độ rõ gốc")}</strong></div><div><span>Audio</span><strong>${safeText(audioText)}</strong></div></div><form class="portal-video-transform-confirmation" data-portal-form data-portal-no-transient data-portal-action="video-transform-operation-confirm" data-portal-route="/video/finishing" data-portal-confirm="Tạo một MP4 private theo kế hoạch này? Source gốc vẫn được giữ nguyên; output chỉ có thể tải sau khi máy chủ kiểm chứng."><input type="hidden" name="source_asset_id" value="${safeText(estimate.payload.source_asset_id)}"><input type="hidden" name="target_ratio" value="${safeText(estimate.payload.target_ratio)}"><input type="hidden" name="fit_mode" value="${safeText(estimate.payload.fit_mode)}"><input type="hidden" name="preset" value="${safeText(estimate.payload.preset)}"><input type="hidden" name="sharpen" value="${estimate.payload.sharpen ? "true" : "false"}"><input type="hidden" name="preserve_audio" value="${estimate.payload.preserve_audio ? "true" : "false"}"><label class="portal-video-transform-confirm-check"><input type="checkbox" name="video_transform_confirmation" value="true" required${canConfirm ? "" : " disabled"}><span>Tôi hiểu output chỉ được hiển thị và tải khi server hoàn tất kiểm chứng MP4 private.</span></label><p class="portal-form-note" data-video-transform-confirmation-status role="status" aria-live="polite">Kế hoạch này áp dụng đúng các lựa chọn đang hiển thị ở trên.</p><div class="portal-form-footer"><span class="portal-form-note">Write request dùng signed session, CSRF và idempotency. Không có trạng thái thành công do browser tự tạo.</span><button class="portal-button portal-button--primary" type="submit"${canConfirm ? "" : " disabled"}>Xác nhận tạo MP4 private</button></div></form></section>`;
+    })() : `<section class="portal-card portal-card-pad portal-video-transform-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Estimate before execution</span><h2 class="portal-card-title">Kiểm tra kế hoạch trước</h2><p class="portal-card-subtitle">Chọn một MP4 và cấu hình khung hình, sau đó kiểm tra cấu trúc output trước khi quyết định tạo file private.</p></div>${badge("read_only")}</div></section>`;
+    const historyPrevious = Number(historyPagination.previous_offset);
+    const historyNext = Number(historyPagination.next_offset);
+    const canHistoryPrevious = Number.isInteger(historyPrevious) && historyPrevious >= 0;
+    const canHistoryNext = Number.isInteger(historyNext) && historyNext >= 0;
+    const historyPager = canHistoryPrevious || canHistoryNext
+      ? `<div class="portal-video-transform-history-pager" role="group" aria-label="Trang lịch sử Video Finishing"><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-transform-history-page" data-portal-route="/video/finishing" data-video-transform-operation-offset="${canHistoryPrevious ? safeText(String(historyPrevious)) : ""}"${canView && readyForInteraction && canHistoryPrevious ? "" : " disabled"}>Trước</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-transform-history-page" data-portal-route="/video/finishing" data-video-transform-operation-offset="${canHistoryNext ? safeText(String(historyNext)) : ""}"${canView && readyForInteraction && canHistoryNext ? "" : " disabled"}>Sau</button></div>`
+      : "";
+    const historyMarkup = operations.length ? `<ul class="portal-video-transform-operation-list">${operations.map((operation) => {
+      const target = VIDEO_TRANSFORM_PORTAL_RATIOS[operation.target_ratio];
+      const outputReady = videoTransformOperationCanDownload(operation);
+      const displayState = operation.state === "completed" && !outputReady ? "unavailable" : operation.state;
+      const sourceFacts = operation.source.width && operation.source.height ? `${operation.source.width} × ${operation.source.height}` : "Khung nguồn đã được bảo vệ";
+      const outputFacts = outputReady ? `${String(operation.output.filename)} · ${vaultBytes(Number(operation.output.byte_size))}` : "Chưa có MP4 đã kiểm chứng để tải";
+      const detailButton = canDetail ? `<button class="portal-button portal-button--quiet" type="button" data-portal-action="video-transform-operation-detail" data-portal-route="/video/finishing" data-video-transform-operation-id="${safeText(operation.id)}">Xem timeline</button>` : "";
+      const downloadButton = outputReady && canDownload ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="video-transform-operation-download" data-portal-route="/video/finishing" data-video-transform-operation-id="${safeText(operation.id)}">Tải MP4 private</button>` : "";
+      return `<li><div class="portal-video-transform-operation-meta"><div><strong>${safeText(`${target.label} · ${target.width} × ${target.height}`)}</strong><span>${safeText(`${VIDEO_TRANSFORM_PORTAL_FIT_LABELS[operation.fit_mode]} · ${videoTransformOperationPresetLabel(operation.preset)} · ${videoTransformOperationDuration(operation.source.duration_ms)}`)}</span><small>${safeText(`${sourceFacts} · ${outputFacts}`)}</small></div>${badge(displayState)}</div><div class="portal-video-transform-operation-actions"><span>${safeText(videoTransformOperationStateLabel(displayState))}</span><div class="portal-inline-actions">${detailButton}${downloadButton}</div></div></li>`;
+    }).join("")}</ul>` : `<div class="portal-video-transform-empty"><strong>${readState === "loading" ? "Đang tải lịch sử Video Finishing" : readState === "failed" ? "Chưa thể tải lịch sử private" : "Chưa có Video Finishing receipt"}</strong><span>${readState === "loading" ? "Browser đang yêu cầu lại metadata owner-scoped và không suy đoán trạng thái hoặc output." : readState === "failed" ? "Hãy làm mới để yêu cầu lại API private. Dữ liệu cũ đã được xóa thay vì dùng cache hoặc account khác." : "Kiểm tra kế hoạch rồi xác nhận để tạo một receipt. Source gốc không bị thay thế."}</span></div>`;
+    const stateBadge = badge(readState === "ready" ? "ready" : readState === "loading" ? "read_only" : readState);
+    if (!canView) {
+      return `<article class="portal-page portal-video-transform-operations">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty("Video Finishing Lab đang được bảo vệ", "Đăng nhập bằng signed session và chờ server xác nhận Asset Vault cùng runtime riêng trước khi chọn MP4 private.", ICONS.video)}</section></article>`;
+    }
+    return `<article class="portal-page portal-video-transform-operations">${renderHero(page, context)}
+      <section class="portal-video-transform-intro"><div><span class="portal-section-kicker">Private video utility</span><h2>Hoàn thiện MP4 cho đúng khung hình, có kiểm chứng trước khi tải.</h2><p>Tạo một bản MP4 private mới từ source đã có trong Asset Vault. Chọn tỷ lệ, cách fit và preset cố định; source gốc luôn được giữ nguyên.</p></div><dl><div><dt>25 MiB</dt><dd>Input MP4 tối đa</dd></div><div><dt>60 giây</dt><dd>Thời lượng source tối đa</dd></div><div><dt>H.264</dt><dd>Output MP4 đã kiểm chứng</dd></div></dl></section>
+      <div class="portal-video-transform-layout"><section class="portal-card portal-card-pad portal-video-transform-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Asset Vault source</span><h2 class="portal-card-title">Lập kế hoạch Video Finishing</h2><p class="portal-card-subtitle">Các lựa chọn này là closed set. Browser chỉ gửi mã asset cùng cấu hình ngắn gọn; server xác minh source, ownership và output.</p></div>${stateBadge}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="video-transform-operation-estimate" data-portal-route="/video/finishing" novalidate><div class="portal-fields"><div class="portal-field portal-field--wide"><label for="video-transform-source">MP4 nguồn <span class="portal-required-mark" aria-hidden="true">*</span></label><select id="video-transform-source" class="portal-select" name="source_asset_id" aria-describedby="video-transform-source-hint" required${formDisabled}><option value="">Chọn MP4 private từ Asset Vault</option>${sourceOptions}</select><small id="video-transform-source-hint" role="status" aria-live="polite">${safeText(sourceHint)}</small>${sourcePager}</div><label class="portal-field"><span>Tỷ lệ đích <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="target_ratio" required${formDisabled}><option value="9:16"${draftRatio === "9:16" ? " selected" : ""}>Dọc 9:16 · 720 × 1280</option><option value="16:9"${draftRatio === "16:9" ? " selected" : ""}>Ngang 16:9 · 1280 × 720</option><option value="1:1"${draftRatio === "1:1" ? " selected" : ""}>Vuông 1:1 · 1080 × 1080</option><option value="4:5"${draftRatio === "4:5" ? " selected" : ""}>Dọc 4:5 · 864 × 1080</option></select><small>Server kiểm tra kích thước fixed trước khi tạo output.</small></label><label class="portal-field"><span>Cách đặt khung <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="fit_mode" required${formDisabled}><option value="crop"${draftFitMode === "crop" ? " selected" : ""}>Cắt khung để phủ đầy tỷ lệ</option><option value="blur_pad"${draftFitMode === "blur_pad" ? " selected" : ""}>Giữ khung, thêm nền mờ</option></select><small>Không có ô nhập filter graph hoặc tham số media tự do.</small></label><label class="portal-field"><span>Preset hình ảnh <span class="portal-required-mark" aria-hidden="true">*</span></span><select class="portal-select" name="preset" required${formDisabled}><option value="none"${draftPreset === "none" ? " selected" : ""}>Giữ nguyên màu</option><option value="clear"${draftPreset === "clear" ? " selected" : ""}>Rõ và cân bằng</option><option value="tiktok_pop"${draftPreset === "tiktok_pop" ? " selected" : ""}>Tương phản sáng rõ</option><option value="cinematic"${draftPreset === "cinematic" ? " selected" : ""}>Tông điện ảnh nhẹ</option><option value="soft_clean"${draftPreset === "soft_clean" ? " selected" : ""}>Mềm và sạch</option></select><small>Preset do server quản lý, không có profile tự nhập.</small></label><fieldset class="portal-video-transform-toggles"><legend>Tùy chọn hoàn thiện</legend><label><input type="checkbox" name="sharpen" value="true"${draft && draft.sharpen ? " checked" : ""}${formDisabled}><span><strong>Tăng độ rõ</strong><small>Dùng tùy chọn fixed khi server xác nhận an toàn.</small></span></label><label><input type="checkbox" name="preserve_audio" value="true"${!draft || draft.preserve_audio ? " checked" : ""}${formDisabled}><span><strong>Giữ audio khi có thể</strong><small>Chỉ giữ stream audio đáp ứng điều kiện output.</small></span></label></fieldset></div><div class="portal-form-footer"><span class="portal-form-note">Không upload lại file, không nhập secret, không đưa URL hay đường dẫn. Bước này chỉ kiểm tra kế hoạch; chưa tạo output.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/asset-vault">Mở Asset Vault</a><button class="portal-button portal-button--primary" type="submit"${formEnabled ? "" : " disabled"}>Kiểm tra kế hoạch</button></div></div></form></section><aside class="portal-card portal-card-pad portal-video-transform-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Một bản sao private, không có kết quả giả</h2><p class="portal-card-subtitle">Hệ thống chỉ phát MP4 sau khi kiểm tra lại output. Nếu không hoàn tất, không có preview, download hoặc trạng thái thành công thay thế.</p></div>${badge("guarded")}</div><div class="portal-video-transform-guard-list"><span><strong>Source gốc</strong><em>giữ nguyên</em></span><span><strong>Output</strong><em>private</em></span><span><strong>Link công khai</strong><em>tắt</em></span><span><strong>Xử lý trong browser</strong><em>tắt</em></span></div></aside></div>
+      ${estimateMarkup}
+      <section class="portal-card portal-card-pad portal-video-transform-history"><div class="portal-card-header"><div><span class="portal-section-kicker">Owner-scoped history</span><h2 class="portal-card-title">Video Finishing của bạn</h2><p class="portal-card-subtitle">Chỉ receipt thuộc phiên hiện tại được liệt kê. Nút tải chỉ có trên output MP4 đã qua kiểm chứng.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="video-transform-operation-refresh" data-portal-route="/video/finishing"${canView ? "" : " disabled"}>${readState === "failed" ? "Thử lại" : "Làm mới"}</button></div>${historyMarkup}${historyPager}</section>
+      ${renderVideoTransformOperationDetail(context)}
+      <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Video vẫn thuộc không gian riêng của bạn</h2><p class="portal-card-subtitle">Source và output luôn được kiểm tra ownership. Tải xuống dùng attachment private có kiểm tra integrity; không có public URL hoặc cache client.</p></div></div>${renderNotes(page)}</section>
+    </article>`;
+  }
+
   function renderSubtitleProjectCards(items, context, listingValue) {
     const canView = Boolean(context.capabilities && context.capabilities["subtitle-studio-view"] === true);
     const canFilter = Boolean(context.capabilities && context.capabilities["subtitle-studio-filter"] === true);
@@ -20711,6 +20975,7 @@
       case "subtitle-studio-detail": return renderSubtitleStudioDetail(page, context);
       case "subtitle-asset-operations": return renderSubtitleAssetOperations(page, context);
       case "audio-asset-operations": return renderAudioAssetOperations(page, context);
+      case "video-transform-operations": return renderVideoTransformOperations(page, context);
       case "subtitle-format-lab": return renderSubtitleFormatLab(page, context);
       case "voice-direction-composer": return renderVoiceDirectionComposer(page, context);
       case "voice-studio": return renderVoiceStudio(page, context);
@@ -20868,6 +21133,43 @@
     }
   }
 
+  function synchronizeVideoTransformEstimateForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "video-transform-operation-estimate") return;
+    const confirmation = document.querySelector('[data-portal-action="video-transform-operation-confirm"]');
+    if (!confirmation) return;
+    const stored = getBootstrap().videoTransformEstimate && typeof getBootstrap().videoTransformEstimate === "object"
+      ? getBootstrap().videoTransformEstimate : {};
+    const expected = stored.payload && typeof stored.payload === "object" ? stored.payload : null;
+    if (!expected) return;
+    const fields = collectFormFields(form);
+    const current = {
+      source_asset_id: String(fields.source_asset_id || "").trim(),
+      target_ratio: String(fields.target_ratio || "").trim(),
+      fit_mode: String(fields.fit_mode || "").trim().toLowerCase(),
+      preset: String(fields.preset || "").trim().toLowerCase(),
+      sharpen: fields.sharpen === true,
+      preserve_audio: fields.preserve_audio === true
+    };
+    const matches = current.source_asset_id === String(expected.source_asset_id || "")
+      && current.target_ratio === String(expected.target_ratio || "")
+      && current.fit_mode === String(expected.fit_mode || "")
+      && current.preset === String(expected.preset || "")
+      && current.sharpen === expected.sharpen && current.preserve_audio === expected.preserve_audio;
+    if (matches) return;
+    ["source_asset_id", "target_ratio", "fit_mode", "preset", "sharpen", "preserve_audio"].forEach((name) => {
+      const input = confirmation.querySelector(`input[name="${name}"]`);
+      if (!input) return;
+      input.value = typeof current[name] === "boolean" ? String(current[name]) : current[name];
+    });
+    const check = confirmation.querySelector('input[name="video_transform_confirmation"]');
+    const submit = confirmation.querySelector('button[type="submit"]');
+    const status = confirmation.querySelector("[data-video-transform-confirmation-status]");
+    if (check) { check.checked = false; check.disabled = true; }
+    if (submit) submit.disabled = true;
+    if (status) status.textContent = "Lựa chọn đã thay đổi. Hãy kiểm tra lại kế hoạch trước khi xác nhận tạo MP4 private.";
+    confirmation.classList.add("is-stale");
+  }
+
   function collectFormFields(form) {
     const fields = {};
     if (!form) return fields;
@@ -21006,10 +21308,11 @@
     const form = source.matches("form") ? source : (source.closest("form") || (formId ? document.getElementById(formId) : null));
     const operationAssetReferenceAction = ["document-asset-reference-filter", "document-asset-reference-filter-clear", "document-asset-reference-page", "image-operation-asset-reference-filter", "image-operation-asset-reference-filter-clear", "image-operation-asset-reference-page", "subtitle-asset-reference-page"].includes(action);
     const documentWorkspaceLibraryAction = ["document-workspace-filter", "document-workspace-filter-clear", "document-workspace-page"].includes(action);
+    const videoTransformNoNativeValidity = ["video-transform-operation-refresh", "video-transform-reference-page", "video-transform-history-page", "video-transform-operation-detail", "video-transform-operation-download"].includes(action);
     // Picker controls belong to the operation form so the existing in-memory
     // draft map retains selected slots while paging.  They must not trigger
     // the main form's required-field validation before a source is chosen.
-    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
+    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
@@ -21076,6 +21379,20 @@
         __audioAssetReferenceOffset: source.getAttribute("data-audio-asset-reference-offset") || "",
         __audioAssetReferenceSelectedId: audioSource ? String(audioSource.value || "").trim() : "",
         __audioAssetOperationId: source.getAttribute("data-audio-asset-operation-id") || ""
+      });
+    }
+    // Video Finishing keeps one MP4 picker and one owner-scoped receipt list.
+    // IDs and offsets exist only for this dispatched interaction: they are not
+    // copied to generic draft state, route queries, local storage or a broad
+    // Video catalog.  The server still verifies account ownership on every
+    // read, estimate, create and download request.
+    if (String(action || "").startsWith("video-transform-")) {
+      const videoSource = form && form.querySelector('select[name="source_asset_id"]');
+      Object.assign(fields, {
+        __videoTransformReferenceOffset: source.getAttribute("data-video-transform-reference-offset") || "",
+        __videoTransformReferenceSelectedId: videoSource ? String(videoSource.value || "").trim() : "",
+        __videoTransformOperationOffset: source.getAttribute("data-video-transform-operation-offset") || "",
+        __videoTransformOperationId: source.getAttribute("data-video-transform-operation-id") || ""
       });
     }
     if (String(action || "").startsWith("document-operation-")) {
@@ -21719,6 +22036,10 @@
           && event.target && ["source_asset_id", "operation"].includes(event.target.name)) {
           synchronizeSubtitleAssetOperationForm(form);
         }
+        if (form.getAttribute("data-portal-action") === "video-transform-operation-estimate"
+          && event.target && ["source_asset_id", "target_ratio", "fit_mode", "preset", "sharpen", "preserve_audio"].includes(event.target.name)) {
+          synchronizeVideoTransformEstimateForm(form);
+        }
         rememberTransientFormDraft(form);
       }
     });
@@ -21823,6 +22144,7 @@
     main.innerHTML = renderPage(page, context);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
+    main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
     main.querySelectorAll("[data-admin-archive-type-map]").forEach((form) => synchronizeAdminArchiveDocumentType(form));
     syncDesktopFocusNavigation();
     bindInteractions();
