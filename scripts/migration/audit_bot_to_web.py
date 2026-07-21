@@ -1369,6 +1369,94 @@ GUIDED_VIDEO_MENU_DEFERRED_ACTIONS = frozenset({
     "menu|guide_guided_video",
 })
 
+# The frozen Bot's stale-job help is an admin-only explanatory branch. It can
+# lead toward canonical job-lock/refund confirmation state, but only this one
+# literal help action may open a fresh, separately guarded Web safety guide.
+# No Bot user/job identifier, queue row, lock state, confirmation, runtime,
+# billing event, wallet/PayOS state or mutation crosses into the browser.
+# Keep this independent from generic ``menu|*`` and ``admin_confirm_*`` maps:
+# names are never a Web authority grant.
+JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|clear_stale_jobs_help": {
+        "target": "/admin/job-recovery-guide",
+        "classification": "admin",
+        "feature_key": "admin_job_recovery_guide",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_JOB_LOCK_HELP_NOT_REPLAYED",
+            "BOT_JOB_LOCK_STATE_NOT_REPLAYED",
+            "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+            "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+            "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+            "NO_PAYOS_WALLET_LEDGER_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action only renders its admin stale-job recovery help. The Web opens a separately authorized, "
+            "literal safety guide and receives no Telegram admin identity, job/user identifier, queue/lock state, "
+            "confirmation context, worker/provider/runtime data, refund/billing state or mutation authority."
+        ),
+    },
+}
+
+# These adjacent Bot callbacks and commands are canonical mutation boundaries,
+# not an extension of the help page. They can lead to job status changes,
+# delivery/billing effects or a refund decision. Keep them source-review-only
+# in the parity report so they cannot fall through to `/admin/callbacks` or a
+# convenient-looking Web route.
+JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_BASE_DISPOSITIONS = (
+    "BOT_ADMIN_ONLY",
+    "CANONICAL_BOT_JOB_LOCK_RECOVERY_STATE",
+    "SOURCE_STATE_MACHINE_REQUIRED",
+    "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+    "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+    "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+    "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+    "NO_PAYOS_WALLET_LEDGER_ACTION",
+    "NO_RUNTIME_CLAIM",
+)
+JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_ACTIONS: dict[str, dict[str, str]] = {
+    "menu|admin_confirm_clear_stale_jobs": {
+        "operation_disposition": "CANONICAL_BOT_JOB_LOCK_CLEAR_CONFIRMATION",
+        "source_evidence": "The frozen Bot renders a confirmation boundary for a canonical job-lock-clear operation; it is not a browser confirmation or Web job action.",
+    },
+    "menu|admin_confirm_ack_clear_stale_jobs": {
+        "operation_disposition": "CANONICAL_BOT_JOB_LOCK_CLEAR_ACKNOWLEDGEMENT",
+        "source_evidence": "The frozen Bot acknowledgement remains inside Telegram admin confirmation context and must not become a Web action or command copy surface.",
+    },
+    "menu|admin_confirm_refund_job": {
+        "operation_disposition": "CANONICAL_BOT_JOB_REFUND_CONFIRMATION",
+        "source_evidence": "The frozen Bot confirmation can lead to a canonical job refund decision; the Web must not accept a Bot job identifier or request a refund.",
+    },
+    "menu|admin_confirm_ack_refund_job": {
+        "operation_disposition": "CANONICAL_BOT_JOB_REFUND_ACKNOWLEDGEMENT",
+        "source_evidence": "The frozen Bot acknowledgement remains an admin Telegram state transition and cannot become a browser-side financial action.",
+    },
+}
+JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_COMMANDS: dict[str, dict[str, str]] = {
+    "clear_job_lock": {
+        "operation_disposition": "CANONICAL_BOT_JOB_LOCK_CLEAR_MUTATION",
+        "source_evidence": "The frozen Bot command can change eligible active video-job state and may trigger canonical refund/billing effects; it is not a Web recovery API.",
+    },
+    "refund_job": {
+        "operation_disposition": "CANONICAL_BOT_JOB_REFUND_MUTATION",
+        "source_evidence": "The frozen Bot command is a canonical refund mutation and must not become a Web refund endpoint, job form or browser-side ledger action.",
+    },
+}
+
+
+def _job_lock_recovery_source_review_dispositions(action: dict[str, str]) -> tuple[str, ...]:
+    """Keep the concrete Bot job/recovery mutation boundary visible in audit output."""
+
+    return (
+        JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_BASE_DISPOSITIONS[:2]
+        + (str(action["operation_disposition"]),)
+        + JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_BASE_DISPOSITIONS[2:]
+    )
+
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
 # callback tokens must never be sent to the browser.  The product-facing
@@ -4103,6 +4191,23 @@ def _mapping_status(
 
 def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     name = command["command"].casefold()
+    job_lock_recovery_source_review_entry = JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_COMMANDS.get(name)
+    if job_lock_recovery_source_review_entry is not None:
+        # A literal Bot command can mutate canonical job, refund and billing
+        # state. Never let its convenient admin-looking name imply a Web route
+        # or browser command surface.
+        return {
+            "source_kind": "command",
+            "source": f"/{command['command']}",
+            "handler": command["handler"],
+            "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "reviewed_job_lock_recovery_command_requires_canonical_mutation_contract",
+            "source_dispositions": _job_lock_recovery_source_review_dispositions(job_lock_recovery_source_review_entry),
+            "source_evidence": str(job_lock_recovery_source_review_entry["source_evidence"]),
+            "evidence": {"file": command["file"], "line": command["line"]},
+        }
     admin = _is_admin_command(name, command["handler"], admin_guarded=bool(command.get("admin_guarded")))
     telegram_only = _is_telegram_only(name)
     interface_locale_navigation = (
@@ -4591,6 +4696,8 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     system_data_stewardship_entry = SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     tax_accounting_guidance_entry = TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
     tax_accounting_source_review_entry = TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.get(token)
+    job_lock_recovery_navigation_entry = JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
+    job_lock_recovery_source_review_entry = JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_ACTIONS.get(token)
     memory_storage_telegram_only = MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.get(token)
     memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
@@ -4649,6 +4756,41 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "resolution": "reviewed_tax_accounting_callback_requires_canonical_finance_contract",
             "source_dispositions": _tax_accounting_source_review_dispositions(tax_accounting_source_review_entry),
             "source_evidence": str(tax_accounting_source_review_entry["source_evidence"]),
+            "evidence": evidence,
+        }
+    if job_lock_recovery_navigation_entry is not None:
+        # The finite help entry can only begin a fresh, independently
+        # authorized safety guide. It intentionally does not replay a Bot job
+        # identifier, user, lock/queue state, confirmation, clear/retry/refund
+        # decision, worker/provider/runtime payload or financial side effect.
+        target = str(job_lock_recovery_navigation_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(job_lock_recovery_navigation_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_job_lock_recovery_fresh_web_navigation",
+            "source_dispositions": tuple(job_lock_recovery_navigation_entry["source_dispositions"]),
+            "source_evidence": str(job_lock_recovery_navigation_entry["source_evidence"]),
+            "job_lock_recovery_feature_key": str(job_lock_recovery_navigation_entry["feature_key"]),
+            "job_lock_recovery_authority": str(job_lock_recovery_navigation_entry["authority"]),
+            "job_lock_recovery_launch_mode": str(job_lock_recovery_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+    if job_lock_recovery_source_review_entry is not None:
+        # Confirmation/refund descendants remain canonical Bot mutation
+        # boundaries. A browser cannot reuse a Telegram confirmation context or
+        # its hidden job/user identifiers to clear, retry or refund anything.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
+            "source_dispositions": _job_lock_recovery_source_review_dispositions(job_lock_recovery_source_review_entry),
+            "source_evidence": str(job_lock_recovery_source_review_entry["source_evidence"]),
             "evidence": evidence,
         }
     if memory_navigation_entry is not None:
@@ -6831,6 +6973,42 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, action in sorted(TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.items())
     ]
+    job_lock_recovery_guidance_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_job_lock_recovery_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
+    ]
+    job_lock_recovery_source_review_callback_rows = [
+        [
+            source,
+            "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED",
+            "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "admin",
+            "Canonical Bot job/refund mutation boundary",
+            ", ".join(_job_lock_recovery_source_review_dispositions(action)),
+        ]
+        for source, action in sorted(JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_ACTIONS.items())
+    ]
+    job_lock_recovery_source_review_command_rows = [
+        [
+            f"/{source}",
+            "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED",
+            "reviewed_job_lock_recovery_command_requires_canonical_mutation_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "admin",
+            "Canonical Bot job/refund mutation boundary",
+            ", ".join(_job_lock_recovery_source_review_dispositions(action)),
+        ]
+        for source, action in sorted(JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_COMMANDS.items())
+    ]
     quick_image_planner_contract_rows = [
         [
             "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
@@ -6905,6 +7083,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
         + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
         + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot tax-menu dispositions: fresh canonical-admin guidance navigation with no finance data, calculation, export, file, ledger, payment or profile action replay.\n"
+        + "- [`JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md`](JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md) — finite Bot stale-job help navigation and explicit canonical job/refund mutation boundaries; the Web guide has no queue/job data or recovery control.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -7068,7 +7247,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             system_data_stewardship_contract_rows,
         )
         + "\n\nEvery row above is navigation only. `/admin/system`, `/admin/runtime` and `/admin/backups` repeat canonical signed-admin authorization; `/admin/internal-documents` repeats its distinct signed Web-local-admin guard; `/account/workspace-care` is a signed customer guidance hub only. A Browser cannot use this contract to run health checks, inspect a runtime, change system data, create/delete/restore/download a backup, clean storage, change quota, operate a provider, write a ledger, create a PayOS checkout, mutate a job or claim delivery.\n\n"
-        "`menu|billing`, `menu|tax_*`, `menu|clear_stale_jobs_help` and every Video/menu production action remain outside this finite registry. They require their own source, canonical-finance, job or final Video-menu contracts; no namespace fallback grants a Web route.\n",
+        "`menu|billing`, `menu|tax_*` and every Video/menu production action remain outside this finite registry. `menu|clear_stale_jobs_help` has its own finite Job-Lock Recovery Safety contract and still does not inherit System/Data authority. No namespace fallback grants a Web route.\n",
     )
     write(
         "TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md",
@@ -7085,6 +7264,27 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             tax_accounting_source_review_contract_rows,
         )
         + "\n\n`finance_compliance*`, `archive|dept|tax_invoice` and every unknown `menu|tax_*` value remain outside both finite registries. They require separately reviewed canonical finance/read/write or private delivery contracts; no prefix or label creates a Web route.\n",
+    )
+    write(
+        "JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md",
+        "# Job-lock recovery safety callback contract\n\n"
+        "The frozen Bot stale-job help is an admin Telegram guidance branch. The actual canonical recovery path can enter confirmation state, update active video-job status and, where policy permits, trigger refund/billing effects. The standalone Web never receives a callback token, Telegram identity, user/job identifier, queue/lock state, confirmation context, worker/provider/runtime payload, output/delivery record, Xu ledger, payment/PayOS state, refund decision or mutation authority.\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            job_lock_recovery_guidance_contract_rows,
+        )
+        + "\n\nThe one guidance row opens only the exact `/admin/job-recovery-guide` page after it repeats canonical signed-admin authorization. It is a static triage/escalation guide, not a queue console, job read model, lock inspection tool, command surface, clear/retry/refund action, worker/provider/runtime control, payment/wallet/ledger/PayOS operation or recovery/delivery promise.\n\n"
+        + "The following exact Bot callbacks remain canonical mutation source-review records, not fresh Web navigation or browser confirmations:\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            job_lock_recovery_source_review_callback_rows,
+        )
+        + "\n\nThe following exact Bot commands likewise remain canonical mutation source-review records. The Web must not expose, copy, parse or replay them:\n\n"
+        + _markdown_table(
+            ["Frozen Bot command", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            job_lock_recovery_source_review_command_rows,
+        )
+        + "\n\nAny unlisted `menu|clear_*`, `menu|admin_confirm_*`, job recovery callback or operational command requires new source review. It cannot inherit this guide, `/admin/jobs`, `/admin/callbacks`, a bridge module or a browser-side job/financial control.\n",
     )
     write(
         "inventory.md",

@@ -2566,6 +2566,81 @@ def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_financ
         assert callback not in serialized_catalog
 
 
+def test_job_lock_recovery_guidance_is_finite_and_never_becomes_a_job_or_refund_control() -> None:
+    """Only Bot help becomes static canonical-admin guidance; mutations stay source-review-only."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {"menu|clear_stale_jobs_help"}
+    assert set(audit.JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == expected
+
+    descriptor = audit.JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS["menu|clear_stale_jobs_help"]
+    mapped = audit._map_callback("menu|clear_stale_jobs_help", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert mapped["target"] == "/admin/job-recovery-guide"
+    assert mapped["classification"] == "admin"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_job_lock_recovery_fresh_web_navigation"
+    assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+    assert mapped["job_lock_recovery_feature_key"] == "admin_job_recovery_guide"
+    assert mapped["job_lock_recovery_authority"] == "SIGNED_CANONICAL_ADMIN_READ"
+    assert mapped["job_lock_recovery_launch_mode"] == "WEB_NAVIGATION"
+    for disposition in (
+        "BOT_ADMIN_ONLY",
+        "BOT_JOB_LOCK_HELP_NOT_REPLAYED",
+        "BOT_JOB_LOCK_STATE_NOT_REPLAYED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in mapped["source_dispositions"]
+
+    canonical_callbacks = {
+        "menu|admin_confirm_clear_stale_jobs": "CANONICAL_BOT_JOB_LOCK_CLEAR_CONFIRMATION",
+        "menu|admin_confirm_ack_clear_stale_jobs": "CANONICAL_BOT_JOB_LOCK_CLEAR_ACKNOWLEDGEMENT",
+        "menu|admin_confirm_refund_job": "CANONICAL_BOT_JOB_REFUND_CONFIRMATION",
+        "menu|admin_confirm_ack_refund_job": "CANONICAL_BOT_JOB_REFUND_ACKNOWLEDGEMENT",
+    }
+    assert set(audit.JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_ACTIONS) == set(canonical_callbacks)
+    for token, operation_disposition in canonical_callbacks.items():
+        assert token not in audit.JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS
+        mapped = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract"
+        assert operation_disposition in mapped["source_dispositions"]
+        assert "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION" in mapped["source_dispositions"]
+        assert "NO_PAYOS_WALLET_LEDGER_ACTION" in mapped["source_dispositions"]
+
+    canonical_commands = {
+        "clear_job_lock": "CANONICAL_BOT_JOB_LOCK_CLEAR_MUTATION",
+        "refund_job": "CANONICAL_BOT_JOB_REFUND_MUTATION",
+    }
+    assert set(audit.JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_COMMANDS) == set(canonical_commands)
+    for command, operation_disposition in canonical_commands.items():
+        mapped = audit._map_command(
+            {"command": command, "handler": f"cmd_{command}", "file": "bot.py", "line": 1, "admin_guarded": True},
+            routes,
+        )
+        assert mapped["target"] == "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "reviewed_job_lock_recovery_command_requires_canonical_mutation_contract"
+        assert operation_disposition in mapped["source_dispositions"]
+
+    unknown = audit._map_callback("menu|clear_future", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["target"] != "/admin/job-recovery-guide"
+    assert unknown["resolution"] != "reviewed_job_lock_recovery_fresh_web_navigation"
+
+    from copyfast_registry import menu_capability_catalog
+
+    serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    for callback in (*expected, *canonical_callbacks):
+        assert callback not in serialized_catalog
+
+
 def test_reviewed_menu_navigation_does_not_inflate_static_feature_parity(tmp_path: Path) -> None:
     """Opening a fresh Web workspace is not proof of Bot workflow parity."""
     audit = _load_audit_module()

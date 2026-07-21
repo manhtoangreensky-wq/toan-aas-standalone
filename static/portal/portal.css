@@ -4726,3 +4726,130 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-tax-readiness-boundary ul { grid-template-columns: 1fr; }
   .portal-tax-readiness-card { min-height: 132px; padding: 14px; }
 }
+
+/* Job-Lock Recovery remains a static canonical-admin safety guide. It is not a
+ * queue console, a job/lock read model, or an administrative control plane. */
+.portal-admin-job-recovery-guide { display: grid; gap: 18px; }
+.portal-job-recovery-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(18px, 2.8vw, 28px);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background:
+    radial-gradient(circle at 91% 4%, rgba(210, 146, 68, .12), transparent 33%),
+    var(--portal-surface-strong);
+}
+.portal-job-recovery-intro > div:first-child { min-width: 0; }
+.portal-job-recovery-intro h2 { max-width: 830px; margin: 6px 0 0; color: #f4fbfc; font-size: clamp(20px, 2.2vw, 28px); letter-spacing: -.035em; }
+.portal-job-recovery-intro p { max-width: 800px; margin: 9px 0 0; color: #aac0c9; font-size: 13px; line-height: 1.65; }
+.portal-job-recovery-intro-status {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  flex: 0 1 294px;
+  gap: 10px;
+  align-items: center;
+  min-width: 220px;
+  padding: 11px 12px;
+  border: 1px solid rgba(238, 180, 100, .26);
+  border-radius: 14px;
+  background: rgba(180, 112, 40, .11);
+}
+.portal-job-recovery-intro-status > span:first-child,
+.portal-job-recovery-card-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 1px solid rgba(241, 188, 109, .28);
+  border-radius: 11px;
+  color: #ffd18d;
+  background: rgba(209, 135, 50, .11);
+}
+.portal-job-recovery-intro-status > span:first-child .portal-icon,
+.portal-job-recovery-card-icon .portal-icon { width: 19px; height: 19px; }
+.portal-job-recovery-intro-status strong,
+.portal-job-recovery-intro-status small { display: block; }
+.portal-job-recovery-intro-status strong { color: #fff0d5; font-size: 13px; line-height: 1.35; }
+.portal-job-recovery-intro-status small { margin-top: 3px; color: #cbb794; font-size: 12px; line-height: 1.45; }
+.portal-job-recovery-section { display: grid; gap: 11px; }
+.portal-job-recovery-section .portal-section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; }
+.portal-job-recovery-section .portal-section-heading h2 { margin: 4px 0 0; color: #edf7f8; font-size: 18px; letter-spacing: -.025em; }
+.portal-job-recovery-section .portal-section-heading p { max-width: 720px; margin: 6px 0 0; color: #a4bac4; font-size: 13px; line-height: 1.55; }
+.portal-job-recovery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+.portal-job-recovery-card {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  gap: 13px;
+  min-width: 0;
+  min-height: 154px;
+  padding: 16px;
+  border: 1px solid #394450;
+  border-radius: 16px;
+  background: linear-gradient(145deg, rgba(27, 41, 51, .95), rgba(14, 27, 38, .99));
+}
+.portal-job-recovery-card h3 { margin: 0; color: #f0f8fa; font-size: 14px; letter-spacing: -.018em; line-height: 1.35; }
+.portal-job-recovery-card p { margin: 7px 0 0; color: #adbec6; font-size: 13px; line-height: 1.55; }
+.portal-job-recovery-process ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: job-recovery-step;
+}
+.portal-job-recovery-process li {
+  display: grid;
+  grid-template-columns: 29px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid #35424c;
+  border-radius: 13px;
+  background: rgba(8, 20, 29, .35);
+  counter-increment: job-recovery-step;
+}
+.portal-job-recovery-process li::before {
+  display: grid;
+  place-items: center;
+  width: 29px;
+  height: 29px;
+  border: 1px solid rgba(242, 189, 111, .3);
+  border-radius: 9px;
+  color: #ffd18d;
+  content: counter(job-recovery-step);
+  font-size: 12px;
+  font-weight: 850;
+}
+.portal-job-recovery-process li strong,
+.portal-job-recovery-process li span { display: block; }
+.portal-job-recovery-process li strong { color: #e5eff1; font-size: 13px; line-height: 1.42; }
+.portal-job-recovery-process li span { margin-top: 4px; color: #a1b5be; font-size: 12px; line-height: 1.55; }
+.portal-job-recovery-boundary ul { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.portal-job-recovery-boundary li { display: grid; grid-template-columns: 29px minmax(0, 1fr); gap: 10px; align-items: start; min-width: 0; padding: 12px; border: 1px solid #35424c; border-radius: 13px; background: rgba(8, 20, 29, .35); }
+.portal-job-recovery-boundary li > span:first-child { display: grid; place-items: center; width: 29px; height: 29px; color: #ffd18d; }
+.portal-job-recovery-boundary li > span:first-child .portal-icon { width: 16px; height: 16px; }
+.portal-job-recovery-boundary strong,
+.portal-job-recovery-boundary small { display: block; }
+.portal-job-recovery-boundary strong { color: #e5eff1; font-size: 13px; line-height: 1.42; }
+.portal-job-recovery-boundary small { margin-top: 4px; color: #a1b5be; font-size: 12px; line-height: 1.55; }
+
+@media (max-width: 980px) {
+  .portal-job-recovery-grid,
+  .portal-job-recovery-process ol,
+  .portal-job-recovery-boundary ul { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .portal-job-recovery-intro { flex-direction: column; gap: 14px; padding: 17px; }
+  .portal-job-recovery-intro-status { width: 100%; min-width: 0; }
+  .portal-job-recovery-section .portal-section-heading { flex-direction: column; gap: 8px; }
+  .portal-job-recovery-grid,
+  .portal-job-recovery-process ol,
+  .portal-job-recovery-boundary ul { grid-template-columns: 1fr; }
+  .portal-job-recovery-card { min-height: 132px; padding: 14px; }
+}

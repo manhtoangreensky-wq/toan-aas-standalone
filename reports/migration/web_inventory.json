@@ -14,6 +14,12 @@
       "target": "_deliver_password_recovery_challenge"
     },
     {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "kind": "function",
+      "line": 1451,
+      "target": "_job_lock_recovery_source_review_dispositions"
+    },
+    {
       "file": "copyfast_api.py",
       "kind": "function",
       "line": 2687,
@@ -173,12 +179,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3574,
+      "line": 3662,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3582,
+      "line": 3670,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -187,13 +193,13 @@
   "commands": [],
   "conversations": [],
   "counts": {
-    "background_jobs": 28,
+    "background_jobs": 29,
     "callback_data": 2,
     "callback_handlers": 0,
     "callback_templates": 0,
     "commands": 0,
     "conversations": 0,
-    "database_tables": 205,
+    "database_tables": 206,
     "env_references": 199,
     "providers": 16,
     "routes": 635,
@@ -217,6 +223,12 @@
       "line": 1315,
       "operation": "UPDATE",
       "table": "above"
+    },
+    {
+      "file": "scripts/migration/audit_bot_to_web.py",
+      "line": 7271,
+      "operation": "UPDATE",
+      "table": "active"
     },
     {
       "file": "affiliate_ops.py",
@@ -280,7 +292,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4979,
+      "line": 5121,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -5436,6 +5448,7 @@
   "database_tables": [
     "a",
     "above",
+    "active",
     "affiliate_links",
     "any",
     "b2b_projects",
@@ -6775,7 +6788,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 873,
+      "occurrences": 880,
       "provider": "PayOS"
     },
     {
@@ -7003,7 +7016,7 @@
         "copyfast_subtitle_workspace.py",
         "copyfast_support.py"
       ],
-      "occurrences": 2149,
+      "occurrences": 2155,
       "provider": "Telegram"
     }
   ],
@@ -9486,7 +9499,7 @@
     {
       "endpoint": "navigation",
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 524,
+      "line": 526,
       "methods": [
         "GET"
       ],
@@ -12727,8 +12740,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 284,
   "source_files_scanned": 284,
-  "source_fingerprint_sha256": "41a28da0238ea4ba943afed06188a2f4973a5225d9b1890ca8c33bba318cf456",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast83-tax-readiness-accounting-guidance",
+  "source_fingerprint_sha256": "0038e3b4066bd972586f0a696f06bdb51cc22bfa990715b427ae2589ad2553b4",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast84-job-lock-recovery-safety-guide",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

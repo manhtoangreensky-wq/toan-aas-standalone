@@ -1614,6 +1614,10 @@
     layout: "admin-tax-readiness", action: "none", status: "read_only",
     notes: ["Đây là hướng dẫn vận hành nội bộ, không phải tư vấn thuế/pháp lý và không thay thế người có chuyên môn được ủy quyền.", "Trang không đọc transaction, hồ sơ thuế, kỳ kê khai, số tiền, payment reference hay dữ liệu tài chính khác từ Bot/Core Bridge."]
   });
+  adminPage("/admin/job-recovery-guide", "Job-Lock Recovery Safety Guide", "Hướng dẫn triage job-lock dành cho canonical admin; không đọc queue/job, không clear/retry/refund và không điều khiển runtime từ browser.", ICONS.jobs, {
+    layout: "admin-job-recovery-guide", action: "none", status: "read_only",
+    notes: ["Đây là hướng dẫn an toàn, không phải màn hình xử lý job. Mọi quyết định và thao tác canonical chỉ được thực hiện trong quy trình được phê duyệt.", "Trang không nhận định danh người dùng hay job, không đọc queue/worker/provider và không nhận trạng thái, Xu, payment hay refund từ Bot/Core Bridge."]
+  });
   adminPage("/admin/trends", "Trends & Reference", "Tổ chức research, reference và trend brief cho đội vận hành; Web không scrape, không gọi provider hay tự publish nội dung.", ICONS.prompt, { layout: "admin-domain" }, ["/admin/references", "/admin/research", "/admin/trend"]);
   adminPage("/admin/audit", "Audit logs", "Dấu vết hành động write và quyết định automation phải đến từ audit canonical.", ICONS.security);
   adminPage("/admin/reports", "Báo cáo", "Tạo báo cáo trên server; không export dữ liệu từ shell khi chưa kiểm tra quyền.", ICONS.reports);
@@ -20146,7 +20150,7 @@
     if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance", "/admin/finance/tax-readiness"].includes(path)) return "finance";
     if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
     if (["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics"].includes(path)) return "content-ops";
-    if (["/admin/jobs", "/admin/jobs/failed", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/automation", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
+    if (["/admin/jobs", "/admin/jobs/failed", "/admin/job-recovery-guide", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/automation", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
     return "governance";
   }
 
@@ -20279,6 +20283,34 @@
       <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="tax-readiness-checklist-title">Ba điểm kiểm tra trước khi handoff</h2><p>Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính.</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
       <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Chuẩn bị phạm vi review</strong><span>Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ.</span></li><li><strong>Xác thực ở hệ thống được phê duyệt</strong><span>Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép.</span></li><li><strong>Ghi nhận handoff có kiểm soát</strong><span>Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm.</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
       <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderAdminJobRecoveryGuide(page, context) {
+    // This is a deliberate safety guide, not a job read model or a recovery
+    // console. The generic server route gate has already required canonical
+    // admin authority. Keep this literal so browser UI cannot turn Bot-side
+    // job/refund mutations into a clear, retry, refund or runtime control.
+    const checkpoints = [
+      { icon: ICONS.jobs, title: "Dừng ở triage", text: "Nhận diện triệu chứng theo quy trình nội bộ, nhưng không suy đoán job nào bị kẹt hoặc đã hoàn tất từ màn hình này." },
+      { icon: ICONS.document, title: "Giữ bằng chứng tối thiểu", text: "Ghi nhận bối cảnh sự cố ở kênh vận hành được phê duyệt; không chép dữ liệu Bot, định danh hoặc payload nhạy cảm vào browser." },
+      { icon: ICONS.security, title: "Chuyển đúng authority", text: "Chỉ canonical workflow có quyền mới xác minh queue, charge, delivery và quyết định hành động tiếp theo." }
+    ];
+    const boundaries = [
+      { icon: ICONS.jobs, title: "Không clear, retry hoặc refund", text: "Không có chọn job, xác nhận, bulk operation hay đổi trạng thái; Web không hứa hẹn khôi phục hoặc delivery." },
+      { icon: ICONS.providers, title: "Không điều khiển runtime", text: "Không đọc hoặc thao tác worker, provider, queue, lock, healthcheck, restart hay lịch chạy tự động." },
+      { icon: ICONS.payments, title: "Không có financial side effect", text: "Không thay đổi Xu, charge, refund, payment, PayOS, ledger, entitlement hoặc billing event." }
+    ];
+    const jobsLink = serverAuthorizesAdminRoute(context, "/admin/jobs")
+      ? '<a class="portal-button portal-button--quiet" href="/admin/jobs">Mở Jobs canonical</a>'
+      : "";
+    const checkpointCards = checkpoints.map((item) => `<article class="portal-job-recovery-card"><span class="portal-job-recovery-card-icon" aria-hidden="true">${portalIcon(item.icon)}</span><div><h3>${safeText(item.title)}</h3><p>${safeText(item.text)}</p></div></article>`).join("");
+    const boundaryCards = boundaries.map((item) => `<li><span aria-hidden="true">${portalIcon(item.icon)}</span><span><strong>${safeText(item.title)}</strong><small>${safeText(item.text)}</small></span></li>`).join("");
+    return `<article class="portal-page portal-admin-job-recovery-guide">${renderHero(page, context)}
+      <section class="portal-job-recovery-intro"><div><span class="portal-section-kicker">Canonical admin guidance · read-only</span><h2>Xử lý dấu hiệu job-lock bằng quy trình có kiểm soát, không bằng nút thao tác nhanh</h2><p>Trang này giúp đội vận hành phân biệt bước triage, ghi nhận và escalation. Mọi kiểm tra trạng thái thực, quyết định can thiệp và financial side effect vẫn nằm trong canonical procedure đã được phê duyệt.</p></div><div class="portal-job-recovery-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Authority được tách riêng</strong><small>Chỉ signed canonical admin được mở guidance này</small></span></div></section>
+      <section class="portal-job-recovery-section" aria-labelledby="job-recovery-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Triage checklist</span><h2 id="job-recovery-checklist-title">Ba bước trước khi escalation</h2><p>Không cần nhập dữ liệu tại đây. Checklist không tạo ticket, không đọc job và không kích hoạt bất kỳ workflow nào.</p></div>${badge("read_only")}</div><div class="portal-job-recovery-grid">${checkpointCards}</div></section>
+      <section class="portal-card portal-card-pad portal-job-recovery-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe escalation</span><h2 class="portal-card-title">Trình tự được đề xuất</h2><p class="portal-card-subtitle">Tách triage khỏi quyền mutation để tránh thao tác nhầm trên queue, delivery hoặc billing.</p></div>${badge("read_only")}</div><ol><li><strong>Xác định phạm vi sự cố</strong><span>Ghi nhận thời điểm, ảnh hưởng và dấu hiệu ở kênh vận hành được phê duyệt; không suy luận trạng thái canonical.</span></li><li><strong>Kiểm tra trong hệ thống canonical</strong><span>Chỉ authority được cấp quyền mới xác minh lifecycle, ownership, delivery và financial policy.</span></li><li><strong>Escalate theo runbook</strong><span>Để canonical owner thực hiện hoặc từ chối thao tác có side effect, kèm audit event và kiểm tra hậu quả phù hợp.</span></li></ol>${jobsLink ? `<div class="portal-form-footer">${jobsLink}</div>` : ""}</section>
+      <section class="portal-card portal-card-pad portal-job-recovery-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là queue console, job adapter, runbook executor hay một đường tắt tới financial mutation.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -21860,6 +21892,7 @@
       case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
       case "admin-system-stewardship": return renderAdminSystemStewardship(page, context);
       case "admin-tax-readiness": return renderAdminTaxReadiness(page, context);
+      case "admin-job-recovery-guide": return renderAdminJobRecoveryGuide(page, context);
       case "admin-security-access-posture": return renderAdminSecurityAccessPosture(page, context);
       case "reliability-admin": return renderReliabilityAdmin(page, context);
       case "operations-desk": return renderOperationsDesk(page, context);

@@ -51,6 +51,7 @@ _MODULE_DESCRIPTIONS = {
     "packages": "Package read model có role check riêng.",
     "promos": "Danh mục khuyến mãi có guard và audit riêng.",
     "tax_readiness": "Hướng dẫn chuẩn bị hồ sơ tax/accounting chỉ đọc; không tính thuế, không đọc ledger, không export hay thay đổi cấu hình tài chính.",
+    "job_recovery_guide": "Hướng dẫn triage job-lock chỉ đọc; không mở job ID, không clear/retry/refund, không điều khiển worker/provider/runtime hay Xu/PayOS/ledger.",
     "jobs": "Job read model, status và output vẫn cần ownership/delivery check.",
     "failed_jobs": "Danh sách job lỗi chỉ đọc; retry không được suy đoán.",
     "providers": "Provider health/cost đã redaction, không có credential hoặc control trực tiếp.",
@@ -242,6 +243,7 @@ def canonical_groups() -> list[dict[str, Any]]:
             modules=[
                 _canonical_module("jobs", "Jobs", "/admin/jobs"),
                 _canonical_module("failed_jobs", "Jobs thất bại", "/admin/jobs/failed"),
+                _directory_module("job_recovery_guide", "Job-Lock Recovery Safety Guide", "/admin/job-recovery-guide"),
                 _canonical_module("providers", "Providers & chi phí", "/admin/providers"),
                 _canonical_module("provider_cost", "Chi phí provider", "/admin/provider-cost"),
                 _canonical_module("workers", "Workers", "/admin/workers"),

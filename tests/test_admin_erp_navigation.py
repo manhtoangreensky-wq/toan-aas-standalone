@@ -165,6 +165,17 @@ def test_canonical_groups_require_flag_and_live_authority(monkeypatch) -> None:
         "capability": "navigation_only",
         "description": "Hướng dẫn chuẩn bị hồ sơ tax/accounting chỉ đọc; không tính thuế, không đọc ledger, không export hay thay đổi cấu hình tài chính.",
     }
+    job_recovery_guide = next(candidate for candidate in canonical_modules if candidate["id"] == "job_recovery_guide")
+    assert job_recovery_guide == {
+        "id": "job_recovery_guide",
+        "title": "Job-Lock Recovery Safety Guide",
+        "route": "/admin/job-recovery-guide",
+        "authority": "canonical_admin",
+        "source": "portal_directory",
+        "availability": "guarded_directory",
+        "capability": "navigation_only",
+        "description": "Hướng dẫn triage job-lock chỉ đọc; không mở job ID, không clear/retry/refund, không điều khiển worker/provider/runtime hay Xu/PayOS/ledger.",
+    }
     assert all("write" not in module["capability"] for module in canonical_modules)
 
     # Turning the feature flag off must fail closed before a live bridge call
@@ -249,6 +260,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "access_posture",
     }
     assert "tax_readiness" not in _module_ids(body)
+    assert "job_recovery_guide" not in _module_ids(body)
     assert all(
         module["authority"] == "web_local_admin"
         for group in groups.values()

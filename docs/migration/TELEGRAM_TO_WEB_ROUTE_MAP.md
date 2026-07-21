@@ -111,7 +111,7 @@
 | /checkpayos | /admin/checkpayos | COPIED_GUARDED |
 | /cleanup_temp_files | /admin/cleanup_temp_files | COPIED_GUARDED |
 | /clear_frame_video_error | /admin/clear_frame_video_error | COPIED_GUARDED |
-| /clear_job_lock | /admin/clear_job_lock | COPIED_GUARDED |
+| /clear_job_lock | CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED | NEEDS_FEATURE_DISPOSITION |
 | /clear_vip | /admin/clear_vip | COPIED_GUARDED |
 | /commands | /guides | COPIED_GUARDED |
 | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
