@@ -134,7 +134,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("video_multiscene", "Video nhiều cảnh", "video", "/video/multiscene", input_hint="Brief, cảnh và giọng đọc."),
     WebFeature("video_long", "Video dài", "video", "/video/long", input_hint="Dự án video dài."),
     WebFeature("video_progress", "Tiến độ video", "video", "/video/progress"),
-    WebFeature("video_preview", "Xem trước video", "video", "/video/preview"),
+    WebFeature("video_preview", "Xem trước video", "video", "/video/preview", description="Xem MP4/WebM private đã có trong Asset Vault bằng Blob tạm theo phiên Web sau khi kiểm tra owner và integrity; không phải Bot output, URL ký, provider, job, Xu hoặc PayOS."),
     WebFeature("video_export", "Xuất video", "video", "/video/export"),
     WebFeature("video_addons", "Video add-ons", "video", "/video/add-ons"),
     WebFeature("video_mux", "Mux audio/video", "video", "/video/mux"),

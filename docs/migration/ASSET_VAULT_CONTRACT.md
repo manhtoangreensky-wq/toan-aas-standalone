@@ -53,6 +53,7 @@ local Railway volume.
 GET  /api/v1/asset-vault
 GET  /api/v1/asset-vault/{id}
 GET  /api/v1/asset-vault/{id}/lifecycle
+GET  /api/v1/asset-vault/{id}/preview
 POST /api/v1/asset-vault/upload
 GET  /api/v1/asset-vault/{id}/download
 POST /api/v1/asset-vault/{id}/archive
@@ -65,6 +66,10 @@ POST /api/v1/asset-vault/{id}/restore
   `video_poster` returns only active canonical `.mp4`/`video/mp4`,
   `.mov`/`video/quicktime`, or `.webm`/`video/webm` metadata. It does not
   expose bytes, paths, storage keys, hashes or a loose `video/*` selector.
+  `video_preview` is a separate closed picker: only active
+  `.mp4`/`video/mp4` or `.webm`/`video/webm` records at or below 20 MiB. MOV,
+  generic `video/*`, malformed pairs and oversized records are never returned
+  for the browser inspector.
 - Every write requires signed session, CSRF and an idempotency key. Archive
   also requires JSON `expected_revision`; restore requires JSON
   `expected_revision` plus `idempotency_key`. Both are compare-and-set
@@ -85,6 +90,13 @@ POST /api/v1/asset-vault/{id}/restore
   mutable Vault object is never reopened or streamed by pathname. Responses
   use `no-store, private`, `nosniff`, `no-referrer` and CSP sandbox headers;
   Support evidence uses the same descriptor contract.
+- `GET /api/v1/asset-vault/{id}/preview` is a read-only same-origin media
+  delivery for the signed owner only. It repeats active-state, exact
+  MP4/WebM/20 MiB and integrity checks, seals the descriptor before streaming,
+  returns `Content-Disposition: inline` with no-store/nosniff/no-referrer/CSP
+  sandbox/CORP headers, and rejects every `Range` request with `416`. It
+  creates no signed/public URL, provider call, Bot job, wallet/Xu, PayOS,
+  FFmpeg or browser-generated output.
 - Archive is a reversible-product-state boundary only: it removes the file
   from active listing/download without erasing the private blob, and it does
   **not** free account quota. No browser delete or public share link exists in
@@ -93,7 +105,7 @@ POST /api/v1/asset-vault/{id}/restore
   `unavailable` instead of being revived.
 
 The PWA caches only named public shell resources and never caches
-`/api/v1/asset-vault` requests or downloads.
+`/api/v1/asset-vault` requests, downloads, previews or `/video/preview`.
 
 ## Local verification
 

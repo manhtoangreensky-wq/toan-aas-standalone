@@ -177,6 +177,11 @@ ENGINE_SPECS.update(_many(("subtitle_asset_operations",), mode=ENGINE_MODE_WEB_N
 # TTS/ASR/dubbing, wallet/Xu or PayOS behavior; its typed routes own runtime,
 # CSRF, ownership, topology, idempotency and output-verification enforcement.
 ENGINE_SPECS.update(_many(("audio_asset_operations",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "audio_asset_operations_enabled"), handler="audio_asset_operations", asset_vault=True))
+# Video Preview & Inspector is a read-only owner-scoped Asset Vault view. It
+# only returns a sealed same-origin MP4/WebM Blob after integrity validation;
+# it cannot unlock Video Studio, Bot/Core Bridge, FFmpeg, provider, job,
+# wallet/Xu, PayOS, public URL or publishing behavior.
+ENGINE_SPECS.update(_many(("video_preview",), mode=ENGINE_MODE_WEB_NATIVE, flags=("asset_vault_enabled", "video_preview_enabled"), handler="asset_vault_video_preview", asset_vault=True))
 ENGINE_SPECS.update(_many(("image_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("image_studio_enabled",), handler="image_studio"))
 # Prompt Composer adapts only the Bot's deterministic prompt templates.  It
 # never inspects an image or calls a model/provider, creates media/output,
@@ -221,7 +226,7 @@ ENGINE_SPECS.update(_many(
     (
         "wallet", "wallet_topup", "packages", "membership", "jobs", "assets",
         "referrals", "rewards", "community", "guides",
-        "campaign_report", "video_progress", "video_preview",
+        "campaign_report", "video_progress",
         "video_export", "voice_vault", "voice_preview", "voice_outputs",
         "music_library", "sfx_library", "music_upload", "service_status",
     ),

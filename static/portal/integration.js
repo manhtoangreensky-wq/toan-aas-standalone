@@ -72,6 +72,17 @@
   });
   const VIDEO_POSTER_POSITIONS = new Set(["start", "middle", "end"]);
   const VIDEO_POSTER_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+  // Video Preview & Inspector is a read-only, same-origin Asset Vault view.
+  // It accepts a compact exact source allowlist and turns a verified response
+  // into an in-memory Blob only; it is not Video Studio, a Bot/provider flow,
+  // a public/signed URL, FFmpeg pipeline, job, wallet/Xu or PayOS action.
+  const VIDEO_PREVIEW_ROUTE = "/video/preview";
+  const VIDEO_PREVIEW_REFERENCE_LIST_LIMIT = 50;
+  const VIDEO_PREVIEW_MAX_BYTES = 20 * 1024 * 1024;
+  const VIDEO_PREVIEW_MIME_BY_EXTENSION = Object.freeze({
+    ".mp4": "video/mp4",
+    ".webm": "video/webm"
+  });
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -189,6 +200,13 @@
   let frameVideoOperationDetailHydrationEpoch = 0;
   let videoPosterOperationsHydrationEpoch = 0;
   let videoPosterOperationDetailHydrationEpoch = 0;
+  // Preview sources and the transient Blob must never cross a signed session,
+  // route or newer selection. The object URL remains only in this tab memory.
+  let videoPreviewSessionEpoch = 0;
+  let videoPreviewHydrationEpoch = 0;
+  let videoPreviewContentEpoch = 0;
+  let videoPreviewAbortController = null;
+  let videoPreviewObjectUrl = "";
   // Campaign plans, Project Center records and Studio Documents are private
   // Web-owned planning data.  Keep their list/detail reads independently
   // ordered so a delayed response cannot cross a signed account, route or
@@ -9294,6 +9312,10 @@
     ++frameVideoOperationDetailHydrationEpoch;
     ++videoPosterOperationsHydrationEpoch;
     ++videoPosterOperationDetailHydrationEpoch;
+    ++videoPreviewSessionEpoch;
+    ++videoPreviewHydrationEpoch;
+    ++videoPreviewContentEpoch;
+    revokeVideoPreviewObjectUrl();
     ++campaignSessionEpoch;
     ++campaignCalendarHydrationEpoch;
     ++projectCenterSessionEpoch;
@@ -9566,6 +9588,11 @@
     // Its flag never opens Video Studio, Bot/provider execution, wallet/Xu,
     // PayOS, public preview/link or browser media processing.
     const videoPosterEnabled = Boolean(status.flags && status.flags.video_poster_enabled === true);
+    // Video Preview is a separate, read-only Asset Vault capability. Its true
+    // state merely permits a signed same-origin Blob read; server ownership,
+    // size/type/integrity checks remain authoritative and it never unlocks
+    // Video Studio, Bot/Core Bridge, FFmpeg, providers, jobs or billing.
+    const videoPreviewEnabled = Boolean(status.flags && status.flags.video_preview_enabled === true);
     // Image Creative Studio is deliberately fail-closed by its own feature
     // flag.  A true flag permits private art-direction records only; it never
     // indicates an image provider, generator, preview, job, wallet or payment
@@ -10017,6 +10044,10 @@
       "video-poster-operation-create": Boolean(account && me.csrf_token && assetVaultEnabled && videoPosterEnabled),
       "video-poster-operation-detail": Boolean(account && assetVaultEnabled && videoPosterEnabled),
       "video-poster-operation-download": Boolean(account && assetVaultEnabled && videoPosterEnabled),
+      "video-preview-view": Boolean(account && assetVaultEnabled && videoPreviewEnabled),
+      "video-preview-refresh": Boolean(account && assetVaultEnabled && videoPreviewEnabled),
+      "video-preview-load": Boolean(account && assetVaultEnabled && videoPreviewEnabled),
+      "video-preview-clear": Boolean(account && assetVaultEnabled && videoPreviewEnabled),
       "image-studio-view": Boolean(account && imageStudioEnabled),
       "image-studio-refresh": Boolean(account && imageStudioEnabled),
       "image-studio-filter": Boolean(account && imageStudioEnabled),
@@ -10436,6 +10467,7 @@
       videoTransformOperationsEnabled,
       frameVideoOperationsEnabled,
       videoPosterEnabled,
+      videoPreviewEnabled,
       imageStudioEnabled,
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
@@ -10737,6 +10769,13 @@
       videoPosterDetail: {},
       videoPosterDetailReadState: "guarded",
       videoPosterOperationsReadState: account && assetVaultEnabled && videoPosterEnabled ? "loading" : "guarded",
+      // The video inspector retains typed source metadata plus, after an
+      // explicit user action, one verified Blob URL in current-tab memory.
+      // Reset all of it at bootstrap; no filename, selection or Blob survives
+      // a signed-session change, failed hydration or disabled flag.
+      videoPreviewReferences: { items: [], selected: null, pagination: { limit: VIDEO_PREVIEW_REFERENCE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoPreviewPlayer: {},
+      videoPreviewReadState: account && assetVaultEnabled && videoPreviewEnabled ? "loading" : "guarded",
       // Explicitly clear owner-scoped creative metadata during every session
       // refresh. A disabled flag or failed request must not leave a prior
       // artboard, asset reference, prompt or history visible in the browser.
@@ -10994,6 +11033,7 @@
         "/video/finishing": account && assetVaultEnabled && videoTransformOperationsEnabled ? "processing" : "guarded",
         "/video/frame-sequence": account && assetVaultEnabled && frameVideoOperationsEnabled ? "processing" : "guarded",
         "/video/poster": account && assetVaultEnabled && videoPosterEnabled ? "processing" : "guarded",
+        "/video/preview": account && assetVaultEnabled && videoPreviewEnabled ? "processing" : "guarded",
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
@@ -11372,6 +11412,12 @@
       // prior-session selection while its typed runtime gate is unavailable.
       if (account && assetVaultEnabled && videoPosterEnabled) await hydrateVideoPosterOperations();
       else clearVideoPosterOperationsProjection("guarded");
+    }
+    if (currentPath === VIDEO_PREVIEW_ROUTE) {
+      // The inspector is a direct owner-scoped Asset Vault read. It never
+      // hydrates generic Assets/Jobs, a Bot bridge or a prior session's Blob.
+      if (account && assetVaultEnabled && videoPreviewEnabled) await hydrateVideoPreview();
+      else clearVideoPreviewProjection("guarded");
     }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
@@ -16952,6 +16998,292 @@
     return true;
   }
 
+  // Video Preview & Inspector is a narrow read-only Asset Vault boundary. It
+  // never borrows Bot/bridge Assets or Jobs, opens a provider URL, exposes a
+  // storage path/hash, or creates an output. The browser may play only a
+  // verified Blob retained in this tab and revoked when its view changes.
+  function videoPreviewPathIsCurrent(path) {
+    return String(path || "").split("?")[0] === VIDEO_PREVIEW_ROUTE;
+  }
+
+  function videoPreviewTimestamp(value) {
+    const normalized = String(value || "").trim();
+    return normalized && normalized.length <= 80 && !/[\u0000-\u001f\u007f]/.test(normalized) ? normalized : null;
+  }
+
+  function videoPreviewReferenceItem(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = videoPreviewTimestamp(source.created_at);
+    const expectedMime = VIDEO_PREVIEW_MIME_BY_EXTENSION[extension] || "";
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || !expectedMime || contentType !== expectedMime || !Number.isInteger(byteSize) || byteSize < 1
+      || byteSize > VIDEO_PREVIEW_MAX_BYTES || !createdAt) return null;
+    return {
+      id, display_name: displayName, extension, content_type: contentType,
+      byte_size: byteSize, state: "active", created_at: createdAt
+    };
+  }
+
+  function videoPreviewOffset(value) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+  }
+
+  function videoPreviewReferencesProjection(data, offset, selectedId, previous) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const currentOffset = videoPreviewOffset(offset);
+    const items = Array.isArray(source.items)
+      ? source.items.map(videoPreviewReferenceItem).filter(Boolean).slice(0, VIDEO_PREVIEW_REFERENCE_LIST_LIMIT)
+      : [];
+    const selected = validVaultAssetId(selectedId) ? String(selectedId).trim() : "";
+    const previousSelected = previous && typeof previous === "object" && !Array.isArray(previous)
+      ? videoPreviewReferenceItem(previous.selected) : null;
+    const selectedItem = items.find((item) => item.id === selected)
+      || (previousSelected && previousSelected.id === selected ? previousSelected : null);
+    const rawNext = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items,
+      selected: selectedItem,
+      pagination: {
+        limit: VIDEO_PREVIEW_REFERENCE_LIST_LIMIT,
+        offset: currentOffset,
+        returned: items.length,
+        has_more: hasMore,
+        next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= VIDEO_PREVIEW_REFERENCE_LIST_LIMIT ? currentOffset - VIDEO_PREVIEW_REFERENCE_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function videoPreviewSourcesFromState() {
+    const references = base().videoPreviewReferences && typeof base().videoPreviewReferences === "object" && !Array.isArray(base().videoPreviewReferences)
+      ? base().videoPreviewReferences : {};
+    const selected = videoPreviewReferenceItem(references.selected);
+    const items = Array.isArray(references.items) ? references.items : [];
+    const seen = new Set();
+    return (selected ? [selected, ...items] : items).map(videoPreviewReferenceItem)
+      .filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true));
+  }
+
+  function videoPreviewRouteSessionIsCurrent(sessionEpoch, expectedPath) {
+    return sessionEpoch === videoPreviewSessionEpoch
+      && videoPreviewPathIsCurrent(expectedPath)
+      && currentPortalPath() === expectedPath
+      && base().assetVaultEnabled === true
+      && base().videoPreviewEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function videoPreviewRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === videoPreviewHydrationEpoch && videoPreviewRouteSessionIsCurrent(sessionEpoch, expectedPath);
+  }
+
+  function revokeVideoPreviewObjectUrl() {
+    if (videoPreviewAbortController) {
+      try { videoPreviewAbortController.abort(); } catch (_) { /* best effort */ }
+      videoPreviewAbortController = null;
+    }
+    if (videoPreviewObjectUrl) {
+      try { URL.revokeObjectURL(videoPreviewObjectUrl); } catch (_) { /* best effort */ }
+      videoPreviewObjectUrl = "";
+    }
+  }
+
+  function clearVideoPreviewProjection(readState) {
+    const normalized = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    ++videoPreviewContentEpoch;
+    revokeVideoPreviewObjectUrl();
+    merge({
+      videoPreviewReferences: { items: [], selected: null, pagination: { limit: VIDEO_PREVIEW_REFERENCE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoPreviewPlayer: {},
+      videoPreviewReadState: normalized,
+      pageStates: { ...(base().pageStates || {}), [VIDEO_PREVIEW_ROUTE]: normalized === "loading" ? "read_only" : normalized }
+    });
+  }
+
+  async function hydrateVideoPreview(options) {
+    const request = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+    const requestEpoch = ++videoPreviewHydrationEpoch;
+    const sessionEpoch = videoPreviewSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!videoPreviewPathIsCurrent(expectedPath) || !videoPreviewRouteSessionIsCurrent(sessionEpoch, expectedPath)) {
+      if (videoPreviewPathIsCurrent(expectedPath)) clearVideoPreviewProjection("guarded");
+      return null;
+    }
+    const previousReferences = base().videoPreviewReferences && typeof base().videoPreviewReferences === "object" && !Array.isArray(base().videoPreviewReferences)
+      ? base().videoPreviewReferences : {};
+    const previousPagination = previousReferences.pagination && typeof previousReferences.pagination === "object" && !Array.isArray(previousReferences.pagination)
+      ? previousReferences.pagination : {};
+    const sourceOffset = videoPreviewOffset(request.sourceOffset === undefined ? previousPagination.offset : request.sourceOffset);
+    const selectedId = validVaultAssetId(request.selectedId) ? String(request.selectedId).trim()
+      : (videoPreviewReferenceItem(previousReferences.selected) || {}).id || "";
+    ++videoPreviewContentEpoch;
+    revokeVideoPreviewObjectUrl();
+    merge({
+      videoPreviewPlayer: {},
+      videoPreviewReadState: "loading",
+      pageStates: { ...(base().pageStates || {}), [VIDEO_PREVIEW_ROUTE]: "read_only" }
+    });
+    try {
+      const result = await api(`/asset-vault?state=active&reference_kind=video_preview&limit=${VIDEO_PREVIEW_REFERENCE_LIST_LIMIT}&offset=${sourceOffset}`, { cache: "no-store" });
+      if (!videoPreviewRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const references = videoPreviewReferencesProjection(result.data, sourceOffset, selectedId, previousReferences);
+      if (!videoPreviewRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        videoPreviewReferences: references,
+        videoPreviewReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), [VIDEO_PREVIEW_ROUTE]: "ready" }
+      });
+      return references;
+    } catch (_) {
+      if (!videoPreviewRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearVideoPreviewProjection("failed");
+      return null;
+    }
+  }
+
+  function videoPreviewContentIsCurrent(contentEpoch, sessionEpoch, expectedPath, controller) {
+    return contentEpoch === videoPreviewContentEpoch
+      && controller === videoPreviewAbortController
+      && videoPreviewRouteSessionIsCurrent(sessionEpoch, expectedPath);
+  }
+
+  async function loadVideoPreview(sourceAssetId) {
+    const sourceId = String(sourceAssetId || "").trim();
+    const source = videoPreviewSourcesFromState().find((item) => item.id === sourceId) || null;
+    const expectedPath = currentPortalPath();
+    const sessionEpoch = videoPreviewSessionEpoch;
+    if (!source || !videoPreviewRouteSessionIsCurrent(sessionEpoch, expectedPath)) {
+      throw new Error("Video không còn trong Asset Vault owner-scoped của phiên hiện tại. Hãy làm mới rồi chọn lại.");
+    }
+    const contentEpoch = ++videoPreviewContentEpoch;
+    revokeVideoPreviewObjectUrl();
+    const controller = new AbortController();
+    videoPreviewAbortController = controller;
+    merge({
+      videoPreviewPlayer: {
+        state: "loading", source_asset_id: source.id, display_name: source.display_name,
+        content_type: source.content_type, byte_size: source.byte_size, browser_metadata: { state: "loading" }
+      }
+    });
+    try {
+      const headers = new Headers({
+        Accept: `${source.content_type}, application/json`,
+        "X-Request-ID": randomKey("web")
+      });
+      const response = await fetch(`${API}/asset-vault/${encodeURIComponent(source.id)}/preview`, {
+        credentials: "same-origin", cache: "no-store", headers, signal: controller.signal
+      });
+      if (!videoPreviewContentIsCurrent(contentEpoch, sessionEpoch, expectedPath, controller)) return null;
+      const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+      if (contentType.includes("application/json")) {
+        try { await response.json(); } catch (_) { /* generic guarded response */ }
+        throw new Error("Máy chủ chưa xác nhận video private có thể preview trong phiên này.");
+      }
+      const actualMime = contentType.split(";", 1)[0].trim();
+      const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+      const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+      const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+      const referrerPolicy = String(response.headers.get("Referrer-Policy") || "").toLowerCase();
+      const contentPolicy = String(response.headers.get("Content-Security-Policy") || "").toLowerCase();
+      const crossOriginPolicy = String(response.headers.get("Cross-Origin-Resource-Policy") || "").toLowerCase();
+      const byteSize = Number(response.headers.get("Content-Length"));
+      if (!response.ok || actualMime !== source.content_type || !disposition.includes("inline")
+        || !cacheControl.includes("no-store") || nosniff !== "nosniff" || !referrerPolicy.includes("no-referrer")
+        || !contentPolicy.includes("sandbox") || crossOriginPolicy !== "same-origin" || response.headers.has("Accept-Ranges")
+        || !Number.isInteger(byteSize) || byteSize !== source.byte_size || byteSize < 1 || byteSize > VIDEO_PREVIEW_MAX_BYTES) {
+        throw new Error("Video private không qua kiểm tra delivery an toàn của browser.");
+      }
+      const blob = await response.blob();
+      if (!videoPreviewContentIsCurrent(contentEpoch, sessionEpoch, expectedPath, controller)) return null;
+      const blobMime = String(blob.type || "").split(";", 1)[0].trim().toLowerCase();
+      if (blob.size !== source.byte_size || blob.size !== byteSize || blob.size > VIDEO_PREVIEW_MAX_BYTES || blobMime !== source.content_type) {
+        throw new Error("Video private không qua kiểm tra kích thước hoặc định dạng của browser.");
+      }
+      const objectUrl = URL.createObjectURL(blob);
+      if (!videoPreviewContentIsCurrent(contentEpoch, sessionEpoch, expectedPath, controller)) {
+        URL.revokeObjectURL(objectUrl);
+        return null;
+      }
+      videoPreviewObjectUrl = objectUrl;
+      videoPreviewAbortController = null;
+      merge({
+        videoPreviewPlayer: {
+          state: "loaded", source_asset_id: source.id, display_name: source.display_name,
+          content_type: source.content_type, byte_size: source.byte_size, object_url: objectUrl,
+          browser_metadata: { state: "loading" }
+        }
+      });
+      return true;
+    } catch (error) {
+      if (error && error.name === "AbortError") return null;
+      if (!videoPreviewContentIsCurrent(contentEpoch, sessionEpoch, expectedPath, controller)) return null;
+      videoPreviewAbortController = null;
+      merge({
+        videoPreviewPlayer: {
+          state: "guarded", source_asset_id: source.id, display_name: source.display_name,
+          content_type: source.content_type, byte_size: source.byte_size, browser_metadata: { state: "guarded" }
+        }
+      });
+      throw error;
+    }
+  }
+
+  function updateVideoPreviewBrowserMetadata(fields) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    const player = base().videoPreviewPlayer && typeof base().videoPreviewPlayer === "object" && !Array.isArray(base().videoPreviewPlayer)
+      ? base().videoPreviewPlayer : {};
+    const sessionEpoch = videoPreviewSessionEpoch;
+    const expectedPath = currentPortalPath();
+    const sourceId = String(source.source_asset_id || "").trim();
+    const duration = Number(source.duration_seconds);
+    const width = Number(source.width);
+    const height = Number(source.height);
+    if (!videoPreviewRouteSessionIsCurrent(sessionEpoch, expectedPath) || player.state !== "loaded"
+      || !String(player.object_url || "").startsWith("blob:") || sourceId !== String(player.source_asset_id || "")
+      || !Number.isFinite(duration) || duration < 0 || duration > 14400
+      || !Number.isInteger(width) || width < 1 || width > 7680
+      || !Number.isInteger(height) || height < 1 || height > 4320 || width * height > 33177600) return false;
+    const browserMetadata = { state: "ready", duration_seconds: Number(duration.toFixed(3)), width, height };
+    const previous = player.browser_metadata && typeof player.browser_metadata === "object" ? player.browser_metadata : {};
+    if (previous.state === browserMetadata.state && previous.duration_seconds === browserMetadata.duration_seconds
+      && previous.width === browserMetadata.width && previous.height === browserMetadata.height) return false;
+    merge({ videoPreviewPlayer: { ...player, browser_metadata: browserMetadata } });
+    return true;
+  }
+
+  function markVideoPreviewDecodeUnsupported(sourceAssetId) {
+    const player = base().videoPreviewPlayer && typeof base().videoPreviewPlayer === "object" && !Array.isArray(base().videoPreviewPlayer)
+      ? base().videoPreviewPlayer : {};
+    const expectedPath = currentPortalPath();
+    if (!videoPreviewRouteSessionIsCurrent(videoPreviewSessionEpoch, expectedPath) || player.state !== "loaded"
+      || String(sourceAssetId || "").trim() !== String(player.source_asset_id || "")) return false;
+    ++videoPreviewContentEpoch;
+    revokeVideoPreviewObjectUrl();
+    merge({
+      videoPreviewPlayer: {
+        state: "unsupported", source_asset_id: player.source_asset_id, display_name: player.display_name,
+        content_type: player.content_type, byte_size: player.byte_size, browser_metadata: { state: "unsupported" }
+      }
+    });
+    return true;
+  }
+
+  function clearVideoPreviewPlayer() {
+    const expectedPath = currentPortalPath();
+    if (!videoPreviewRouteSessionIsCurrent(videoPreviewSessionEpoch, expectedPath)) return false;
+    ++videoPreviewContentEpoch;
+    revokeVideoPreviewObjectUrl();
+    merge({ videoPreviewPlayer: {} });
+    return true;
+  }
+
   // Video Poster is intentionally a compact, separate local-media boundary.
   // Its typed picker, receipt history and temporary download stay isolated
   // from the broad Video catalogue, Bot, provider, wallet/Xu, PayOS, generic
@@ -19838,7 +20170,7 @@
           readiness: readiness.data || {},
           pageStates: { ...(base().pageStates || {}), ...featurePageStates(base().catalog || [], readiness.data || {}, base().bridge && base().bridge.featureExecutionFeatures) }
         });
-      } else if (path === "/assets" || ["/image/assets", "/video/preview", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
+      } else if (path === "/assets" || ["/image/assets", "/video/export", "/music/library", "/music-library", "/music/sfx-library", "/subtitle/formats"].includes(path)) {
         const assets = await api("/assets");
         if (!isCurrent()) return null;
         merge({ assets: assets.data && assets.data.items ? assets.data.items : [], pageStates: { ...(base().pageStates || {}), [path]: "read_only" } });
@@ -24929,6 +25261,87 @@
         } finally {
           setActionBusy(action, route, false);
         }
+        return;
+      }
+      if (action === "video-preview-refresh") {
+        if (route !== VIDEO_PREVIEW_ROUTE || currentPortalPath() !== VIDEO_PREVIEW_ROUTE) {
+          throw new Error("Chỉ có thể làm mới Video Preview & Inspector từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-preview-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và Video Preview để xem metadata private.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoPreview();
+          if (!refreshed && base().videoPreviewReadState !== "ready") {
+            throw new Error("Không thể tải video owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã làm mới video private có thể preview trong phiên này.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-preview-reference-page") {
+        if (route !== VIDEO_PREVIEW_ROUTE || currentPortalPath() !== VIDEO_PREVIEW_ROUTE) {
+          throw new Error("Chỉ có thể đổi trang video private từ Video Preview & Inspector đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-preview-view"] === true)) {
+          throw new Error("Cần signed Web session để xem video Asset Vault private.");
+        }
+        const sourceOffset = Number(fields.__videoPreviewReferenceOffset);
+        const selectedId = String(fields.__videoPreviewSelectedId || "").trim();
+        if (!Number.isInteger(sourceOffset) || sourceOffset < 0 || sourceOffset > 10000 || (selectedId && !validVaultAssetId(selectedId))) {
+          throw new Error("Trang hoặc video nguồn private không hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoPreview({ sourceOffset, selectedId });
+          if (!refreshed && base().videoPreviewReadState !== "ready") {
+            throw new Error("Không thể tải trang video owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang video Asset Vault private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-preview-load") {
+        if (route !== VIDEO_PREVIEW_ROUTE || currentPortalPath() !== VIDEO_PREVIEW_ROUTE) {
+          throw new Error("Chỉ có thể tải video vào phiên preview từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-preview-load"] === true)) {
+          throw new Error("Cần signed Web session và Video Preview runtime để tải Blob private.");
+        }
+        const sourceId = String(fields.source_asset_id || "").trim();
+        if (!validVaultAssetId(sourceId)) throw new Error("Video nguồn private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await loadVideoPreview(sourceId);
+          toast("Đã tải video private vào phiên trình duyệt. Không có URL công khai được tạo.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-preview-clear") {
+        if (route !== VIDEO_PREVIEW_ROUTE || currentPortalPath() !== VIDEO_PREVIEW_ROUTE) {
+          throw new Error("Chỉ có thể xóa preview khỏi phiên từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-preview-clear"] === true)) {
+          throw new Error("Cần signed Web session để xóa Blob preview private.");
+        }
+        if (clearVideoPreviewPlayer()) toast("Đã xóa video Blob khỏi phiên trình duyệt.");
+        return;
+      }
+      if (action === "video-preview-player-metadata") {
+        if (route !== VIDEO_PREVIEW_ROUTE || currentPortalPath() !== VIDEO_PREVIEW_ROUTE) return;
+        updateVideoPreviewBrowserMetadata(fields);
+        return;
+      }
+      if (action === "video-preview-player-error") {
+        if (route !== VIDEO_PREVIEW_ROUTE || currentPortalPath() !== VIDEO_PREVIEW_ROUTE) return;
+        markVideoPreviewDecodeUnsupported(fields.source_asset_id);
         return;
       }
       if (action === "video-poster-operation-refresh") {

@@ -69,6 +69,7 @@ The generated parity matrix is an implementation backlog, not a claim that surfa
 - [`PDF_OCR_WORD_CONTRACT.md`](PDF_OCR_WORD_CONTRACT.md) — opt-in bounded local scanned-PDF OCR to verified private DOCX; no browser OCR, provider, Bot, job, wallet or payment execution.
 - [`IMAGE_RESIZE_ASPECT_CONTRACT.md`](IMAGE_RESIZE_ASPECT_CONTRACT.md) and [`IMAGE_ENHANCE_CONTRACT.md`](IMAGE_ENHANCE_CONTRACT.md) — bounded local private image artifacts.
 - [`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md) — disabled-by-default, bounded private JPEG poster extraction with a signed direct Portal handoff; it is not Video Studio rendering, a Bot job, provider call, wallet/Xu, PayOS flow or broad Video-menu claim.
+- [`VIDEO_PREVIEW_PRIVATE_CONTRACT.md`](VIDEO_PREVIEW_PRIVATE_CONTRACT.md) — disabled-by-default, owner-scoped MP4/WebM Asset Vault inspection through an in-memory same-origin Blob; it is not Bot playback, a signed/public URL, provider, FFmpeg, job, wallet/Xu or PayOS flow.
 - [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and explicit reminder lifecycle.
 - [`MEMORY_MENU_CALLBACK_CONTRACT.md`](MEMORY_MENU_CALLBACK_CONTRACT.md) — exact Memory menu/callback boundaries; fresh Web navigation never imports Bot notes, quota, add-ons, IDs or Telegram state.
 - [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.

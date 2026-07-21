@@ -106,9 +106,13 @@ def seed_typed_reference_assets(db_path: Path, email: str, *, kind: str, count: 
             (".mov", "video/quicktime"),
             (".webm", "video/webm"),
         ),
+        "video_preview": (
+            (".mp4", "video/mp4"),
+            (".webm", "video/webm"),
+        ),
     }
     assert kind in media_by_kind
-    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle", "audio": "Audio", "video_transform": "Video", "video_poster": "Poster video"}[kind]
+    label = {"pdf": "PDF", "image": "Image", "subtitle": "Subtitle", "audio": "Audio", "video_transform": "Video", "video_poster": "Poster video", "video_preview": "Preview video"}[kind]
     ids: list[str] = []
     with sqlite3.connect(db_path) as conn:
         account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (account_email,)).fetchone()
@@ -394,6 +398,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         # poster rows prove MOV/WebM coverage while `video_poster` must also
         # include existing canonical MP4 sources used by Video Finishing.
         owner_poster_video_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="video_poster", count=3)
+        owner_preview_video_ids = seed_typed_reference_assets(db_path, "typed-reference-owner@example.com", kind="video_preview", count=2)
         malformed_ids = seed_malformed_reference_assets(db_path, "typed-reference-owner@example.com")
         foreign_pdf_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="pdf")
         foreign_image_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="image")
@@ -401,6 +406,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         foreign_audio_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="audio")
         foreign_video_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="video_transform")
         foreign_poster_video_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="video_poster", count=3)
+        foreign_preview_video_ids = seed_typed_reference_assets(db_path, "typed-reference-other@example.com", kind="video_preview", count=2)
 
         allowed_pairs = {
             "pdf": {(".pdf", "application/pdf")},
@@ -426,6 +432,10 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
                 (".mov", "video/quicktime"),
                 (".webm", "video/webm"),
             },
+            "video_preview": {
+                (".mp4", "video/mp4"),
+                (".webm", "video/webm"),
+            },
         }
         for kind, expected_ids in (
             ("pdf", owner_pdf_ids),
@@ -436,8 +446,13 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
             # client-supplied provenance flag: the poster fixture's MP4 is a
             # valid Finishing input too, while Poster additionally accepts its
             # MOV/WebM siblings.
-            ("video_transform", owner_video_ids + owner_poster_video_ids[:1]),
-            ("video_poster", owner_video_ids + owner_poster_video_ids),
+            # A typed picker classifies the exact stored extension/MIME pair,
+            # never a provenance label from the client.  The preview fixture
+            # contributes one canonical MP4 to Finishing and both MP4/WebM
+            # rows to Poster as well.
+            ("video_transform", owner_video_ids + owner_poster_video_ids[:1] + owner_preview_video_ids[:1]),
+            ("video_poster", owner_video_ids + owner_poster_video_ids + owner_preview_video_ids),
+            ("video_preview", owner_video_ids + [owner_poster_video_ids[0], owner_poster_video_ids[2]] + owner_preview_video_ids),
         ):
             pages = []
             raw_pages = []
@@ -478,7 +493,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
             assert set().union(*pages) == set(expected_ids)
             assert not set().union(*pages).intersection(malformed_ids)
             assert not set().union(*pages).intersection(
-                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids) | set(foreign_audio_ids) | set(foreign_video_ids) | set(foreign_poster_video_ids)
+                set(foreign_pdf_ids) | set(foreign_image_ids) | set(foreign_subtitle_ids) | set(foreign_audio_ids) | set(foreign_video_ids) | set(foreign_poster_video_ids) | set(foreign_preview_video_ids)
             )
             assert all("private-reference-blobs" not in body for body in raw_pages)
 
@@ -490,6 +505,7 @@ def test_asset_vault_typed_reference_picker_filters_pages_and_redacts_private_st
         assert default_kind.json()["data"]["filters"]["reference_kind"] == "all"
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video_transform"}).status_code == 200
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video_poster"}).status_code == 200
+        assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video_preview"}).status_code == 200
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "video"}).status_code == 422
         assert owner.get("/api/v1/asset-vault", params={"reference_kind": "subtitles"}).status_code == 422
 

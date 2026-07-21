@@ -109,6 +109,25 @@ def test_audio_asset_operations_catalog_is_fail_closed_and_private(monkeypatch) 
     assert engine_spec("audio_asset_operations").requires_asset_vault is True
 
 
+def test_video_preview_is_a_fail_closed_web_native_asset_vault_read(monkeypatch) -> None:
+    monkeypatch.delenv("WEBAPP_ASSET_VAULT_ENABLED", raising=False)
+    monkeypatch.delenv("WEBAPP_VIDEO_PREVIEW_ENABLED", raising=False)
+    assert _flags()["video_preview_enabled"] is False
+
+    monkeypatch.setenv("WEBAPP_ASSET_VAULT_ENABLED", "true")
+    monkeypatch.setenv("WEBAPP_VIDEO_PREVIEW_ENABLED", "true")
+    assert _flags()["video_preview_enabled"] is True
+    assert FEATURE_BY_KEY["video_preview"].route == "/video/preview"
+
+    missing_vault = engine_descriptor("video_preview", {"video_preview_enabled": True, "provider_calls_enabled": True})
+    ready = engine_descriptor("video_preview", {"asset_vault_enabled": True, "video_preview_enabled": True})
+
+    assert missing_vault == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "guarded"}
+    assert ready == {"mode": ENGINE_MODE_WEB_NATIVE, "execution_state": "ready"}
+    assert engine_spec("video_preview").required_flags == ("asset_vault_enabled", "video_preview_enabled")
+    assert engine_spec("video_preview").requires_asset_vault is True
+
+
 def test_bot_companion_and_future_adapters_never_claim_public_execution() -> None:
     companion = engine_descriptor("wallet", {"copyfast_enabled": True})
     future_adapter = engine_descriptor("music_song", {"provider_calls_enabled": True, "copyfast_enabled": True})

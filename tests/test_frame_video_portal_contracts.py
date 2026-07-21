@@ -31,7 +31,10 @@ def test_frame_video_is_a_direct_private_portal_route() -> None:
     assert "broad Video catalogue" in PORTAL
     assert "Asset Vault" in route
 
-    surface = _between(PORTAL, "function renderFrameVideoOperations(page, context)", "function renderSubtitleProjectCards")
+    # Keep this renderer contract bounded to its own surface.  New adjacent
+    # video workspaces may legitimately contain a private `<video>` element
+    # without turning Frame Video itself into a browser media player.
+    surface = _between(PORTAL, "function renderFrameVideoOperations(page, context)", "function renderVideoPreview(page, context)")
     for phrase in (
         "2–8 ảnh",
         "Không upload lại ảnh",

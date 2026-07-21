@@ -33,7 +33,9 @@ def test_video_finishing_is_a_distinct_direct_private_portal_route() -> None:
     assert "direct, app-native workspace" in PORTAL
     assert "broad Video catalogue" in PORTAL
 
-    surface = _between(PORTAL, "function renderVideoTransformOperations(page, context)", "function renderSubtitleProjectCards")
+    # Keep the Finishing contract bounded to its own renderer.  Frame Video
+    # and Preview are separate direct workspaces with different media rules.
+    surface = _between(PORTAL, "function renderVideoTransformOperations(page, context)", "function renderFrameVideoOperations(page, context)")
     for phrase in (
             "Asset Vault",
             "Không upload lại file",
