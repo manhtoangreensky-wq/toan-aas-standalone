@@ -51,6 +51,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("project_packages", "Project Packages", "content", "/project-packages", description="Snapshot ZIP bất biến của Project do Web App tạo và xác minh riêng tư; không phải Job Bot hay gói dịch vụ."),
     WebFeature("workspace_drafts", "Bản nháp của tôi", "content", "/workspace", description="Lưu và tiếp tục brief Web an toàn, không lưu file, quote hoặc trạng thái Bot."),
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
+    WebFeature("interface_locale_navigator", "Ngôn ngữ giao diện", "account", "/account/interface-language", description="Chọn catalogue giao diện Web đã được review bằng signed session và CSRF; không chuyển state ngôn ngữ/menu Telegram, workflow language, job, Xu hay PayOS."),
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
     WebFeature("account_security", "Bảo mật tài khoản", "account", "/account/security", description="Quản lý signed session, mật khẩu Web và phương thức OAuth theo signed account; không lộ credential hoặc state Bot."),
     WebFeature("workspace_care", "Chăm sóc dữ liệu Web", "account", "/account/workspace-care", description="Điểm bắt đầu an toàn để rà soát ghi chú, nhắc việc và Data Controls thuộc Web account; không dọn Bot storage, quota, add-on, job, Xu hoặc PayOS."),

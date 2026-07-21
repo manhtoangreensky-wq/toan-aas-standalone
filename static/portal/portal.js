@@ -761,6 +761,10 @@
     layout: "account", fields: [], action: "none", status: "ready",
     notes: ["Tên hiển thị, ngôn ngữ và múi giờ là metadata Web có thể cập nhật bằng signed session, CSRF và audit event.", "Telegram identity, role, Xu, PayOS, job và provider vẫn là dữ liệu canonical chỉ đọc từ bot/Core Bridge.", "Đăng xuất thu hồi signed session ở server, không chỉ xóa state tại browser."]
   });
+  customerPage("/account/interface-language", "Ngôn ngữ giao diện", "Chọn catalogue giao diện Web đã được review; lựa chọn này độc lập với ngôn ngữ/menu Telegram và workflow content.", ICONS.account, {
+    layout: "interface-locale-navigator", fields: [], action: "none", status: "ready",
+    notes: ["Chỉ Tiếng Việt, English và 中文 là catalogue Web đã được review. Lưu lựa chọn cần signed session, CSRF và phản hồi xác nhận của máy chủ.", "Không nhận callback, Telegram ID, Bot locale/menu, workflow language, job, Xu, PayOS, provider hay trạng thái bridge vào trang này."]
+  });
   customerPage("/account/activity", "Hoạt động tài khoản", "Xem nhật ký đã sanitize của hoạt động Web thuộc signed account hiện tại.", ICONS.account, {
     layout: "account-activity", fields: [], action: "none", status: "read_only",
     notes: ["Chỉ hiển thị hoạt động Web của signed account; không phải Bot audit, wallet ledger, lịch sử PayOS hay provider.", "Response không chứa Telegram ID, request ID, target, detail audit, password, token hoặc dữ liệu của tài khoản khác."]
@@ -7616,6 +7620,7 @@
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/dashboard") return uiText("nav.dashboard", fallback);
     if (path === "/account") return uiText("account.title", fallback);
+    if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace/setup") return uiText("setup.title", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("starter.title", fallback);
     return localizedNavigationLabel(fallback);
@@ -7626,6 +7631,7 @@
     const path = normalizePath(page && (page.routePath || page.path));
     if (path === "/dashboard") return uiText("page.dashboard.description", fallback);
     if (path === "/account") return uiText("page.account.description", fallback);
+    if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace/setup") return uiText("page.workspaceSetup.description", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("page.starterKits.description", fallback);
     return fallback;
@@ -7756,7 +7762,7 @@
       {
         label: "Tài khoản & hỗ trợ",
         links: [
-          ["/account", "Tài khoản", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/account/workspace-care", "Chăm sóc dữ liệu Web", ICONS.security], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
+          ["/account", "Tài khoản", ICONS.account], ["/account/interface-language", "Ngôn ngữ giao diện", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/account/workspace-care", "Chăm sóc dữ liệu Web", ICONS.security], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
         ]
       },
       {
@@ -7885,6 +7891,7 @@
     if (linkPath === "/wallet") return path === "/wallet";
     if (linkPath === "/wallet/topup") return matchesRouteFamily(path, "/wallet/topup");
     if (linkPath === "/membership") return path === "/membership";
+    if (linkPath === "/account/interface-language") return path === "/account/interface-language";
     if (linkPath === "/account/activity") return matchesRouteFamily(path, "/account/activity");
     if (linkPath === "/account/data-controls") return matchesRouteFamily(path, "/account/data-controls");
     if (linkPath === "/account/workspace-care") return matchesRouteFamily(path, "/account/workspace-care");
@@ -7924,7 +7931,7 @@
     if (key === "jobs") return matchesRouteFamily(path, "/jobs");
     if (key === "assets") return matchesRouteFamily(path, "/assets") || matchesRouteFamily(path, "/asset-vault");
     if (key === "account") {
-      return isNavCurrent("/account", page) || ["/account/activity", "/account/data-controls", "/account/workspace-care", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/inbox", "/automation", "/tickets", "/support", "/operations", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
+      return isNavCurrent("/account", page) || ["/account/interface-language", "/account/activity", "/account/data-controls", "/account/workspace-care", "/wallet", "/wallet/topup", "/membership", "/packages", "/pricing", "/inbox", "/automation", "/tickets", "/support", "/operations", "/rewards", "/guides", "/status"].some((route) => matchesRouteFamily(path, route));
     }
     return false;
   }
@@ -18534,6 +18541,18 @@
       : baseMarkup;
   }
 
+  function renderAccountSettingsNav(currentPath) {
+    const activePath = normalizePath(currentPath || "/account");
+    const items = [
+      { path: "/account", label: uiText("account.profile", "Hồ sơ") },
+      { path: "/account/interface-language", label: uiText("interfaceLocale.nav", "Ngôn ngữ") },
+      { path: "/account/security", label: uiText("account.security", "Bảo mật") },
+      { path: "/account/activity", label: uiText("interfaceLocale.activityNav", "Hoạt động") },
+      { path: "/account/data-controls", label: uiText("interfaceLocale.dataNav", "Dữ liệu") }
+    ];
+    return `<nav class="portal-settings-nav" aria-label="${safeText(uiText("interfaceLocale.settingsNav", "Thiết lập tài khoản"))}">${items.map((item) => `<a href="${safeText(item.path)}"${activePath === item.path ? ' aria-current="page"' : ""}>${safeText(item.label)}</a>`).join("")}</nav>`;
+  }
+
   function renderAccount(page, context) {
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
     const session = context.session && typeof context.session === "object" ? context.session : {};
@@ -18592,9 +18611,49 @@
     const telegramAccountUpgrade = telegramFirstAccount
       ? `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><h2 class="portal-card-title">Thêm Email + mật khẩu</h2><p class="portal-card-subtitle">Tài khoản này được tạo sau khi Telegram được xác minh trên server. Bạn có thể thêm một phương thức Email + mật khẩu vào chính tài khoản đó để đăng nhập linh hoạt hơn.</p></div>${badge(upgradeEnabled ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="upgrade-telegram-account" data-portal-route="/account" novalidate>${renderFields(FIELD_SETS.telegramAccountUpgrade, upgradeEnabled, context, upgradeValues)}<div class="portal-form-footer"><span class="portal-form-note">Không tự ghép với tài khoản email/OAuth đã tồn tại. Email phải chưa được dùng và thao tác được audit.</span><button class="portal-button portal-button--primary" type="submit"${upgradeEnabled ? "" : " disabled title=\"Cần signed session Telegram và CSRF hợp lệ.\""}>Thêm phương thức Email</button></div></form></section>`
       : "";
-    const settingsNav = `<nav class="portal-settings-nav" aria-label="Thiết lập tài khoản"><a href="/account" aria-current="page">Hồ sơ</a><a href="/account/security">Bảo mật</a><a href="/account/activity">Hoạt động</a><a href="/account/data-controls">Dữ liệu</a></nav>`;
+    const settingsNav = renderAccountSettingsNav("/account");
     const accountAssurance = `<details class="portal-account-assurance"><summary>Trạng thái tích hợp và bảo mật</summary><div class="portal-status-grid">${renderStatusCard(page, context)}${renderSummary(page, context)}</div></details>`;
     return `<article class="portal-page portal-account-page">${renderHero(page, context)}${settingsNav}<div class="portal-account-overview"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Account health</span><h2 class="portal-card-title">Hồ sơ & liên kết</h2><p class="portal-card-subtitle">Phương thức truy cập lấy từ signed session; browser không lưu Telegram ID, password hay token.</p></div>${badge("read_only")}</div>${accountRows}<div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/activity">Nhật ký hoạt động →</a><a class="portal-button portal-button--quiet" href="/account/security">Bảo mật tài khoản →</a><a class="portal-button portal-button--quiet" href="/account/data-controls">Kiểm soát dữ liệu Web →</a><span class="portal-form-note">${linked ? "Liên kết Telegram đã được xác minh qua bot." : "Workspace Web vẫn dùng được độc lập. Liên kết Telegram là tùy chọn để mở dữ liệu wallet, jobs và assets canonical của Bot."}</span>${linked ? "" : `<a class="portal-button portal-button--primary" href="/onboarding">Liên kết Telegram</a>`}</div></section><aside class="portal-card portal-card-pad portal-account-session"><div class="portal-card-header"><div><span class="portal-section-kicker">Session</span><h2 class="portal-card-title">Bảo mật phiên</h2><p class="portal-card-subtitle">Logout luôn đi qua server để thu hồi session hiện tại.</p></div>${badge(session.authenticated ? "read_only" : "guarded")}</div><p class="portal-form-note">Mở Security Center để xem, thu hồi phiên khác, thay đổi mật khẩu hoặc quản lý MFA theo quyền mà máy chủ đã cấp.</p><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account/security">Mở Security Center</a><button class="portal-button portal-button--quiet" type="button" data-portal-action="auth-logout" data-portal-confirm="Bạn có chắc muốn đăng xuất khỏi phiên này?"${logoutEnabled ? "" : " disabled"}>Đăng xuất</button></div></aside></div>${accountAssurance}<div class="portal-account-settings-grid">${profileEditor}${telegramAccountUpgrade}${oauthMethods}${botPreferenceHandoff}</div></article>`;
+  }
+
+  function renderInterfaceLocaleNavigator(page, context) {
+    const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
+    const session = context.session && typeof context.session === "object" ? context.session : {};
+    const canUpdate = Boolean(context.capabilities && context.capabilities["update-profile"] === true);
+    const knownLocale = (value) => INTERFACE_LOCALE_OPTIONS.some((item) => item.value === value);
+    const currentLocale = knownLocale(String(profile.locale || "").trim().toLowerCase())
+      ? String(profile.locale).trim().toLowerCase()
+      : "vi";
+    const displayName = String(profile.displayName || profile.name || session.displayName || "");
+    const timezone = String(profile.timezone || "") === "UTC" ? "UTC" : "Asia/Ho_Chi_Minh";
+    const localeMetadata = Object.freeze({
+      vi: { name: uiText("locale.vi", "Tiếng Việt"), subtitle: "Việt Nam", lang: "vi" },
+      en: { name: uiText("locale.en", "English"), subtitle: "English", lang: "en" },
+      zh: { name: uiText("locale.zh", "中文"), subtitle: "简体中文", lang: "zh-CN" }
+    });
+    const unsupportedLocales = Object.freeze([
+      { code: "ja", name: "日本語", lang: "ja" },
+      { code: "ko", name: "한국어", lang: "ko" },
+      { code: "th", name: "ไทย", lang: "th" },
+      { code: "ar", name: "العربية", lang: "ar" }
+    ]);
+    const localeOptions = INTERFACE_LOCALE_OPTIONS.map((entry) => {
+      const meta = localeMetadata[entry.value];
+      const current = entry.value === currentLocale;
+      const id = `portal-interface-locale-${entry.value}`;
+      return `<label class="portal-interface-locale-choice" for="${safeText(id)}">
+        <input class="portal-interface-locale-input" id="${safeText(id)}" type="radio" name="locale" value="${safeText(entry.value)}"${current ? " checked" : ""}${canUpdate ? "" : " disabled"}${entry.value === "vi" ? " required" : ""}>
+        <span class="portal-interface-locale-choice-body"><span class="portal-interface-locale-choice-head"><span class="portal-interface-locale-choice-mark" aria-hidden="true">${portalIcon(ICONS.check)}</span><span class="portal-interface-locale-choice-state">${safeText(current ? uiText("interfaceLocale.current", "Đang dùng") : uiText("interfaceLocale.selectable", "Có thể chọn"))}</span></span><strong lang="${safeText(meta.lang)}">${safeText(meta.name)}</strong><small lang="${safeText(meta.lang)}">${safeText(meta.subtitle)}</small><em>${safeText(uiText("interfaceLocale.reviewed", "Catalogue Web đã được review"))}</em></span>
+      </label>`;
+    }).join("");
+    const unsupported = unsupportedLocales.map((entry) => `<li><span class="portal-interface-locale-unsupported-code" lang="${safeText(entry.lang)}">${safeText(entry.name)}</span><span><strong>${safeText(entry.code.toUpperCase())} · ${safeText(uiText("interfaceLocale.unavailable", "Chưa có catalogue Web"))}</strong><small>${safeText(uiText("interfaceLocale.unsupportedHelp", "Hiển thị minh bạch theo phạm vi hiện tại; không thể chọn hoặc tự fallback thành một preference khác."))}</small></span></li>`).join("");
+    const settingsNav = renderAccountSettingsNav("/account/interface-language");
+    return `<article class="portal-page portal-interface-locale-navigator">${renderHero(page, context)}${settingsNav}
+      <section class="portal-interface-locale-intro"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.kicker", "Web profile preference"))}</span><h2>${safeText(uiText("interfaceLocale.title", "Chọn ngôn ngữ giao diện"))}</h2><p>${safeText(uiText("interfaceLocale.description", "Lựa chọn này chỉ thay đổi catalogue UI cố định của Web App. Nó không sao chép lựa chọn ngôn ngữ, menu hay identity từ Telegram Bot."))}</p></div><div class="portal-interface-locale-current" role="status"><span aria-hidden="true">${portalIcon(ICONS.account)}</span><span><strong>${safeText(uiText("interfaceLocale.current", "Đang dùng"))}</strong><small>${safeText(localeMetadata[currentLocale].name)} · ${safeText(timezone)}</small></span></div></section>
+      <form class="portal-interface-locale-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account/interface-language" novalidate><input type="hidden" name="display_name" value="${safeText(displayName)}"><input type="hidden" name="timezone" value="${safeText(timezone)}"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.supportedHeading", "Supported Web catalogues"))}</span><h2 class="portal-card-title">${safeText(uiText("interfaceLocale.formLegend", "Chọn một catalogue đã được review"))}</h2><p class="portal-card-subtitle">${safeText(uiText("interfaceLocale.formHelp", "Lưu bằng signed session và CSRF. Thay đổi chỉ xuất hiện sau khi máy chủ xác nhận preference của chính account này."))}</p></div>${badge(canUpdate ? "ready" : "guarded")}</div><fieldset class="portal-interface-locale-fieldset" aria-describedby="portal-interface-locale-save-help"><legend class="portal-sr-only">${safeText(uiText("interfaceLocale.formLegend", "Chọn một catalogue đã được review"))}</legend><div class="portal-interface-locale-grid">${localeOptions}</div></fieldset><div class="portal-form-footer"><span id="portal-interface-locale-save-help" class="portal-form-note">${safeText(uiText("interfaceLocale.saveHelp", "Không lưu Telegram ID hoặc Bot locale. Nếu phiên/CSRF chưa sẵn sàng, lựa chọn giữ ở trạng thái được bảo vệ."))}</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled title=\"Cần signed session và CSRF hợp lệ.\""}>${safeText(uiText("interfaceLocale.save", "Lưu ngôn ngữ giao diện"))}</button></div></section></form>
+      <section class="portal-interface-locale-boundary" aria-label="${safeText(uiText("interfaceLocale.boundaryHeading", "Ranh giới preference Web"))}"><article><span aria-hidden="true">${portalIcon(ICONS.check)}</span><div><strong>${safeText(uiText("interfaceLocale.changesHeading", "Điều sẽ thay đổi"))}</strong><p>${safeText(uiText("interfaceLocale.changesBody", "Chrome, label cố định, metadata ngôn ngữ tài liệu và các renderer đã opt-in cho catalog này."))}</p></div></article><article><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>${safeText(uiText("interfaceLocale.noBotState", "Không chuyển state Telegram"))}</strong><p>${safeText(uiText("interfaceLocale.noBotStateBody", "Không có Telegram ID, Bot locale, menu callback, translation mode hoặc pending state đi vào browser."))}</p></div></article><article><span aria-hidden="true">${portalIcon(ICONS.document)}</span><div><strong>${safeText(uiText("interfaceLocale.noWorkflow", "Không đổi workflow content"))}</strong><p>${safeText(uiText("interfaceLocale.noWorkflowBody", "Prompt, brief, file, source/target language và provider input giữ nguyên contract hiện có."))}</p></div></article><article><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><div><strong>${safeText(uiText("interfaceLocale.noPayments", "Không có workflow tài chính hoặc job"))}</strong><p>${safeText(uiText("interfaceLocale.noPaymentsBody", "Trang không gọi bridge, provider, job, wallet, Xu, PayOS, payment hoặc delivery action."))}</p></div></article></section>
+      <section class="portal-card portal-card-pad portal-interface-locale-support"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.supportMatrix", "Coverage disclosure"))}</span><h2 class="portal-card-title">${safeText(uiText("interfaceLocale.supportHeading", "Ngôn ngữ đang có trong Bot nhưng chưa là catalogue Web"))}</h2><p class="portal-card-subtitle">${safeText(uiText("interfaceLocale.supportDescription", "Các locale này được hiển thị để phạm vi sản phẩm rõ ràng. Không có option chọn, không có fallback ngầm và không có hành động Telegram được phát lại từ Web."))}</p></div>${badge("read_only")}</div><ul>${unsupported}</ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account">${safeText(uiText("interfaceLocale.backAccount", "Về Tài khoản"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(uiText("interfaceLocale.openSecurity", "Mở Bảo mật tài khoản"))}</a></div></section>
+    </article>`;
   }
 
   function renderAccountSecurity(page, context) {
@@ -21898,6 +21957,7 @@
       case "operations-desk": return renderOperationsDesk(page, context);
       case "tickets": return renderTickets(page, context);
       case "account": return renderAccount(page, context);
+      case "interface-locale-navigator": return renderInterfaceLocaleNavigator(page, context);
       case "account-security": return renderAccountSecurity(page, context);
       case "account-activity": return renderAccountActivity(page, context);
       case "account-data-controls": return renderAccountDataControls(page, context);

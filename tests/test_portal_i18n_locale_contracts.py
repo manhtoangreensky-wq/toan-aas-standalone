@@ -123,21 +123,35 @@ def test_interface_locale_accepts_vi_en_zh_persists_and_stays_web_owned(tmp_path
         assert persisted.status_code == 200
         assert persisted.json()["data"]["account"]["profile"]["locale"] == "zh"
 
-        unsupported = client.post(
-            "/api/v1/auth/profile",
-            headers={"X-CSRF-Token": csrf},
-            json={"display_name": "Portal locale owner", "locale": "zh-CN", "timezone": "Asia/Ho_Chi_Minh"},
-        )
-        assert unsupported.status_code == 200
-        assert unsupported.json()["ok"] is False
-        assert unsupported.json()["error_code"] == "PROFILE_LOCALE_INVALID"
-        assert client.get("/api/v1/auth/me").json()["data"]["account"]["profile"]["locale"] == "zh"
+        for locale in ("zh-CN", "ja", "ko", "th", "ar"):
+            unsupported = client.post(
+                "/api/v1/auth/profile",
+                headers={"X-CSRF-Token": csrf},
+                json={"display_name": "Portal locale owner", "locale": locale, "timezone": "Asia/Ho_Chi_Minh"},
+            )
+            assert unsupported.status_code == 200
+            assert unsupported.json()["ok"] is False
+            assert unsupported.json()["error_code"] == "PROFILE_LOCALE_INVALID"
+            assert client.get("/api/v1/auth/me").json()["data"]["account"]["profile"]["locale"] == "zh"
 
         csrf_denied = client.post(
             "/api/v1/auth/profile",
             json={"display_name": "No CSRF", "locale": "zh", "timezone": "Asia/Ho_Chi_Minh"},
         )
         assert csrf_denied.status_code == 403
+
+
+def test_interface_locale_navigator_is_signed_and_uses_the_existing_profile_boundary(tmp_path, monkeypatch) -> None:
+    with make_client(tmp_path, monkeypatch) as client:
+        unsigned = client.get("/account/interface-language", follow_redirects=False)
+        assert unsigned.status_code == 307
+        assert unsigned.headers["location"] == "/login?next=/account/interface-language"
+
+        register_and_login(client)
+        page = client.get("/account/interface-language", follow_redirects=False)
+        assert page.status_code == 200
+        assert page.headers["cache-control"] == "no-store, private"
+        assert '"path": "/account/interface-language"' in page.text
 
 
 def test_workspace_setup_locale_projection_is_closed_and_never_a_workflow_language() -> None:

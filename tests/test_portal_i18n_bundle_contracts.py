@@ -88,7 +88,7 @@ for (const locale of expected) {
   if (JSON.stringify(keys) !== JSON.stringify(referenceKeys)) {
     throw new Error(`Locale keyset diverged for ${locale}`);
   }
-  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "account.interfaceLocale", "setup.title", "starter.install"]) {
+  for (const key of ["chrome.newWorkflow", "chrome.installApp", "mobile.workspace", "account.interfaceLocale", "interfaceLocale.formLegend", "interfaceLocale.supportHeading", "page.interfaceLocale.title", "setup.title", "starter.install"]) {
     if (!api.t(key, locale)) throw new Error(`Missing ${key} translation for ${locale}`);
   }
 }
@@ -195,6 +195,8 @@ def test_shell_build_and_pwa_load_i18n_before_portal_runtime_without_private_cac
     assert '"/api/' not in shell_cache
     assert '"/starter-kits"' not in shell_cache
     assert '"/account"' not in shell_cache
+    assert '"/account/interface-language"' not in shell_cache
+    assert '"/account/interface-language"' not in public_navigation
 
 
 def test_interface_locale_is_closed_and_separate_from_workflow_language_contracts() -> None:
@@ -211,7 +213,7 @@ def test_interface_locale_is_closed_and_separate_from_workflow_language_contract
     assert interface_options.count('value: "') == 3
     for locale in ("vi", "en", "zh"):
         assert f'value: "{locale}"' in interface_options
-    for disallowed_interface_value in ('value: "zh_cn"', 'value: "ja"', 'value: "auto"'):
+    for disallowed_interface_value in ('value: "zh_cn"', 'value: "ja"', 'value: "ko"', 'value: "th"', 'value: "ar"', 'value: "auto"'):
         assert disallowed_interface_value not in interface_options
 
     assert 'name: "locale"' in profile_fields
