@@ -117,7 +117,7 @@
 | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
 | /community | /community | COPIED_GUARDED |
 | /compose_video | /admin/compose_video | COPIED_GUARDED |
-| /compress_pdf | /features/documents | COPIED_GUARDED |
+| /compress_pdf | /documents/compress | NAVIGATION_ONLY |
 | /content_policy | /legal | COPIED_GUARDED |
 | /costs | /admin/costs | COPIED_GUARDED |
 | /create_media | /studio | COPIED_GUARDED |
@@ -134,7 +134,7 @@
 | /dieukhoan | /legal | COPIED_GUARDED |
 | /dieukhoan_xu | /legal | COPIED_GUARDED |
 | /distribution_pack | /admin/distribution_pack | COPIED_GUARDED |
-| /doc_tools | /tools | COPIED_GUARDED |
+| /doc_tools | /documents | NAVIGATION_ONLY |
 | /dub_public_close | /admin/dub_public_close | COPIED_GUARDED |
 | /dub_public_open | /admin/dub_public_open | COPIED_GUARDED |
 | /dub_quote_test | /admin/dub_quote_test | COPIED_GUARDED |

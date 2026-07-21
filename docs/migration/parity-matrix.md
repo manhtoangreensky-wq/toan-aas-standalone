@@ -1,6 +1,6 @@
 # Parity matrix
 
-Observed-runtime static Web-surface coverage: **59.05%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Observed-runtime typed source-disposition coverage: **87.47%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3814`; excluded Telegram transport registrations: `54`; excluded unreferenced `handlers/` package records: `57`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.
+Observed-runtime static Web-surface coverage: **58.65%** (`MAPPED_TO_EXISTING_ROUTE` + `COPIED_GUARDED`). Observed-runtime typed source-disposition coverage: **90.11%**; unresolved callback templates and dashboard fallbacks lower this value until they have a typed disposition. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3823`; excluded Telegram transport registrations: `54`; excluded unreferenced `handlers/` package records: `57`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — this percentage is not feature progress and must not be compared with earlier audit percentages after the denominator correction.** All source items remain represented in JSON evidence; this page shows the first 200 reachable product records.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -119,7 +119,7 @@ Observed-runtime static Web-surface coverage: **59.05%** (`MAPPED_TO_EXISTING_RO
 | command | /comment_pack | /admin/comment_pack | COPIED_GUARDED |
 | command | /community | /community | COPIED_GUARDED |
 | command | /compose_video | /admin/compose_video | COPIED_GUARDED |
-| command | /compress_pdf | /features/documents | COPIED_GUARDED |
+| command | /compress_pdf | /documents/compress | NAVIGATION_ONLY |
 | command | /content_policy | /legal | COPIED_GUARDED |
 | command | /costs | /admin/costs | COPIED_GUARDED |
 | command | /create_media | /studio | COPIED_GUARDED |
@@ -136,7 +136,7 @@ Observed-runtime static Web-surface coverage: **59.05%** (`MAPPED_TO_EXISTING_RO
 | command | /dieukhoan | /legal | COPIED_GUARDED |
 | command | /dieukhoan_xu | /legal | COPIED_GUARDED |
 | command | /distribution_pack | /admin/distribution_pack | COPIED_GUARDED |
-| command | /doc_tools | /tools | COPIED_GUARDED |
+| command | /doc_tools | /documents | NAVIGATION_ONLY |
 | command | /dub_public_close | /admin/dub_public_close | COPIED_GUARDED |
 | command | /dub_public_open | /admin/dub_public_open | COPIED_GUARDED |
 | command | /dub_quote_test | /admin/dub_quote_test | COPIED_GUARDED |

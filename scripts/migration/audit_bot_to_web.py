@@ -18,15 +18,19 @@ from __future__ import annotations
 import argparse
 import ast
 from bisect import bisect_right
+from contextlib import contextmanager
 import hashlib
+import io
 import json
 import os
 import re
 import subprocess
 import sys
+import tarfile
+import tempfile
 from collections import Counter, defaultdict
 from datetime import datetime, timezone
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Iterable
 
 
@@ -54,6 +58,10 @@ NON_CANONICAL_BOT_SOURCE_MARKERS = (
     "code cao nhất",
 )
 MAX_AST_PARSE_BYTES = 1_000_000
+# The locked Bot baseline is materialized only into a temporary static source
+# snapshot. Keep its archive bounded so a malformed local Git object cannot
+# turn a read-only audit into unbounded disk/memory work.
+MAX_BASELINE_ARCHIVE_BYTES = 64 * 1024 * 1024
 HTTP_VERBS = {"get", "post", "put", "patch", "delete", "options", "head"}
 ADMIN_TERMS = (
     "admin",
@@ -443,6 +451,48 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("shopai_video_job|", "/wallet/topup", "customer"),
     ("opmenu|", "/admin", "admin"),
 )
+
+# Frozen baseline b29d0d4: the Bot Quick Image conversation has a useful
+# non-executing draft grammar (catalog/custom brief, deterministic rewrite,
+# text-only logo direction and ratio) followed by a canonical tier/ShopAI/Xu
+# confirmation branch.  Only the finite draft literals below can point at a
+# fresh signed Web-native Planner.  No Telegram state, selected topic, raw
+# callback, watermark text, provider choice, tier, token, quote, job or wallet
+# state crosses that boundary.
+QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACKS = frozenset({
+    "create_media|quick_image",
+    "create_media|qi_entry",
+    "create_media|qi_suggest",
+    "create_media|qi_refresh",
+    "create_media|qi_pick_1",
+    "create_media|qi_pick_2",
+    "create_media|qi_pick_3",
+    "create_media|qi_custom",
+    "create_media|qi_rewrite",
+    "create_media|qi_topics",
+    "create_media|qi_back_suggestions",
+    "create_media|qi_choose_ratio",
+    "create_media|qi_logo_choice",
+    "create_media|qi_logo_add",
+    "create_media|qi_logo_skip",
+    "create_media|qi_logo_confirm",
+    "create_media|qi_back_prompt",
+    "create_media|qi_back_ratio",
+})
+QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES = frozenset({
+    "create_media|qi_ratio_{*}",
+    # This source-only template is derived from a literal ``qi_logo_pos``
+    # helper call; it is retained here for direct unit-level review as well.
+    "create_media|qi_logo_pos|{*}",
+})
+QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACKS = frozenset({"create_media|qi_back_tier"})
+QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
+    "create_media|qi_tier_{*}",
+    # These opaque confirmation/package tokens are shared canonical Bot
+    # checkout transitions.  They must never inherit the generic top-up route.
+    "shopai|confirm|{*}",
+    "shopai|package|{*}",
+})
 
 # The Bot emits only this reviewed Free Hub library category template.  Its
 # formatted suffix chooses a Bot-side suggestion set and short-lived Telegram
@@ -2207,6 +2257,24 @@ GUIDED_VIDEO_BACK_TEMPLATE_EXPANSIONS = {
         "imagevideo": "imagevideo|back_style",
     },
 }
+# The frozen Quick Image flow delegates its nine Logo/Watermark positions to a
+# generic helper.  A raw ``create_media|{*}|top_left`` template would be too
+# broad to map safely because the helper also serves other image/video flows.
+# These deliberately narrow patterns derive only the finite ``qi_logo_pos``
+# literals when the direct Quick Image call site is present.  This remains a
+# source-only transformation: no helper is imported or executed.
+QUICK_IMAGE_LOGO_POSITION_HELPER_RE = re.compile(
+    r"(?ms)^\s*def\s+(?P<helper>media_logo_watermark_position_keyboard)\s*\(\s*kind\b"
+    r"(?P<body>.*?)(?=^\s*(?:async\s+)?def\s|\Z)"
+)
+QUICK_IMAGE_LOGO_POSITION_LITERAL_CALL_RE = re.compile(
+    r"\b(?P<helper>media_logo_watermark_position_keyboard)\s*\(\s*['\"]image['\"]\s*,\s*[^,\r\n]+\s*,\s*"
+    r"['\"](?P<prefix>qi_logo_pos)['\"]\s*,\s*['\"]create_media\|qi_logo_add['\"]"
+)
+QUICK_IMAGE_LOGO_POSITION_VALUES = frozenset({
+    "top_left", "top_center", "top_right", "center_left", "center", "center_right",
+    "bottom_left", "bottom_center", "bottom_right",
+})
 CONVERSATION_RE = re.compile(r"\bConversationHandler\s*\(")
 DECORATOR_ROUTE_RE = re.compile(
     r"@(?P<app>[A-Za-z_]\w*(?:\.[A-Za-z_]\w*)*)\.(?P<verb>get|post|put|patch|delete|options|head)\s*\(\s*(['\"])(?P<path>/[^'\"\r\n]*)\3",
@@ -2935,6 +3003,80 @@ def _resolve_reviewed_guided_video_helper_callbacks(
                     _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
 
 
+def _resolve_reviewed_quick_image_logo_position_callbacks(
+    *,
+    text: str,
+    root: Path,
+    path: Path,
+    callback_templates: list[dict[str, Any]],
+    callback_data: list[dict[str, Any]],
+    seen: dict[str, set[tuple[Any, ...]]],
+) -> None:
+    """Derive only frozen Quick Image logo-position literals from one helper.
+
+    The helper's generic formatted prefix is shared by regular image and video
+    flows.  It becomes Quick Image evidence only when its direct call supplies
+    the literal ``qi_logo_pos`` prefix and Quick Image back callback.  The
+    resulting nine values stay audit evidence; the browser receives semantic
+    position enums through its signed Web-native Planner, never these values.
+    """
+
+    relative_path = _relative(path, root)
+    records = [record for record in callback_templates if record.get("file") == relative_path]
+    if not records:
+        return
+
+    for helper_match in QUICK_IMAGE_LOGO_POSITION_HELPER_RE.finditer(text):
+        helper = str(helper_match.group("helper") or "")
+        start_line = _line_for_offset(text, helper_match.start())
+        end_line = _line_for_offset(text, helper_match.end())
+        calls = [
+            {
+                "prefix": str(call.group("prefix")),
+                "file": relative_path,
+                "line": _line_for_offset(text, call.start()),
+            }
+            for call in QUICK_IMAGE_LOGO_POSITION_LITERAL_CALL_RE.finditer(text)
+            if call.group("helper") == helper
+        ]
+        if not calls:
+            continue
+
+        for template_record in records:
+            template_line = int(template_record.get("line") or 0)
+            if template_line < start_line or template_line > end_line:
+                continue
+            template = str(template_record.get("template") or "")
+            if not template.startswith("create_media|{*}|") or template.count("{*}") != 1:
+                continue
+            suffix = template.rsplit("|", 1)[-1]
+            if suffix not in QUICK_IMAGE_LOGO_POSITION_VALUES:
+                continue
+
+            derived_tokens = sorted({template.replace("{*}", call["prefix"], 1) for call in calls})
+            template_record.update(
+                {
+                    "resolution": "reviewed_quick_image_logo_position_helper_calls",
+                    "helper": helper,
+                    "derived_callback_tokens": derived_tokens,
+                    "literal_prefix_call_evidence": calls,
+                }
+            )
+            for call in calls:
+                token = template.replace("{*}", call["prefix"], 1)
+                record = {
+                    "token": token,
+                    "resolution": "reviewed_quick_image_logo_position_helper_call",
+                    "template": template,
+                    "template_file": relative_path,
+                    "template_line": template_line,
+                    "helper": helper,
+                    "file": relative_path,
+                    "line": int(call["line"]),
+                }
+                _append_unique(callback_data, seen["callback_data"], record, ("token", "file", "line"))
+
+
 def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
     commands: list[dict[str, Any]] = []
     callback_handlers: list[dict[str, Any]] = []
@@ -3078,6 +3220,14 @@ def _extract_python_inventory(root: Path, files: list[Path]) -> dict[str, Any]:
         if path.suffix.lower() != ".py":
             continue
         _resolve_reviewed_guided_video_helper_callbacks(
+            text=_read_source(path),
+            root=root,
+            path=path,
+            callback_templates=callback_templates,
+            callback_data=callback_data,
+            seen=seen,
+        )
+        _resolve_reviewed_quick_image_logo_position_callbacks(
             text=_read_source(path),
             root=root,
             path=path,
@@ -3983,8 +4133,94 @@ def _partition_unreferenced_module_records(
     return active, unreferenced
 
 
+def _quick_image_planner_fresh_web_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Return the fresh Web-native plan boundary for reviewed draft inputs."""
+
+    target = "/image/quick-planner"
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": target,
+        "classification": "customer",
+        "status": _mapping_status(target, existing_routes, telegram_only=False),
+        "resolution": "reviewed_quick_image_planner_fresh_web_draft",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_NATIVE_DRAFT",
+            "BOT_QUICK_IMAGE_CONVERSATION_STATE_NOT_REPLAYED",
+            "NO_IMAGE_PROVIDER_JOB_OR_PAYMENT",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The reviewed Quick Image draft callback only advances the Bot's temporary prompt/logo/ratio "
+            "conversation. The standalone Web starts an independent signed deterministic Planner and receives "
+            "no Telegram callback, selected topic, custom text, watermark, aspect, provider, tier, quote, "
+            "confirm token, Bot state, job, Xu, PayOS, asset or delivery context."
+        ),
+        "quick_image_planner_authority": "SIGNED_CUSTOMER_WEB_NATIVE_DRAFT_ONLY",
+        "quick_image_planner_launch_mode": "WEB_FRESH_DRAFT",
+        "evidence": evidence,
+    }
+
+
+def _quick_image_planner_telegram_only_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep tier and opaque confirmation transitions with the canonical Bot."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "TELEGRAM_ONLY",
+        "classification": "customer",
+        "status": "TELEGRAM_ONLY",
+        "resolution": "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_QUICK_IMAGE_TIER_OR_CONFIRM_STATE",
+            "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The reviewed Quick Image tier/back/confirm/package branch cancels or consumes a Bot-owned "
+            "one-time confirmation and can inspect tier/provider/package/Xu state, create a canonical job, "
+            "or begin canonical payment/delivery. The Web Planner has no adapter for those effects."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_quick_image_planner_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map only finite Quick Image draft tokens; reject execution boundaries."""
+
+    token = str(identifier or "").casefold()
+    if token in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACKS:
+        return _quick_image_planner_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
+    if token.startswith("create_media|qi_logo_pos|"):
+        position = token.rsplit("|", 1)[-1]
+        if position in QUICK_IMAGE_LOGO_POSITION_VALUES:
+            return _quick_image_planner_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
+    if token in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACKS:
+        return _quick_image_planner_telegram_only_mapping(identifier, source_kind, evidence)
+    return None
+
+
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
+    quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
+    if quick_image_mapping is not None:
+        return quick_image_mapping
     if token.startswith("docflow|"):
         return _map_docflow_callback(identifier, source_kind, evidence)
     if token.startswith("archive|"):
@@ -4894,7 +5130,10 @@ def _map_reviewed_guided_video_helper_template(
     pretending that one broad ``{*}|`` namespace has a single Web endpoint.
     """
 
-    if record.get("resolution") != "reviewed_literal_prefix_helper_calls":
+    if record.get("resolution") not in {
+        "reviewed_literal_prefix_helper_calls",
+        "reviewed_quick_image_logo_position_helper_calls",
+    }:
         return None
     template = str(record.get("template") or "")
     tokens = [str(token) for token in record.get("derived_callback_tokens", []) if str(token)]
@@ -4926,7 +5165,7 @@ def _map_reviewed_guided_video_helper_template(
         ],
         "classification": "customer",
         "status": status,
-        "resolution": "reviewed_literal_prefix_helper_calls",
+        "resolution": str(record.get("resolution") or "reviewed_literal_prefix_helper_calls"),
         "helper": str(record.get("helper") or ""),
         "literal_prefix_call_evidence": list(record.get("literal_prefix_call_evidence") or []),
         "evidence": evidence,
@@ -4956,6 +5195,10 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # reviewed literals are handled above by _map_callback; a template
         # must remain an explicit source-review boundary.
         return _map_interface_locale_callback(template, "callback_template", evidence, existing_routes)
+    if token in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
+        return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
+    if token in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+        return _quick_image_planner_telegram_only_mapping(template, "callback_template", evidence)
     if token in MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         # These callbacks embed a Bot note identifier. `delete_yes` is a
         # canonical Bot write, while view/delete resolve the same Bot row for
@@ -5817,7 +6060,18 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
     bridge_status = str(bridge_contract.get("status") or "NOT_AUDITED")
     bridge_matched = int(bridge_contract.get("matched_request_count") or 0)
     bridge_requests = int(bridge_contract.get("web_request_count") or 0)
-    revision_summary = f"- Bot checkout audited: `{checkout_sha}` (`{relation}`)\n"
+    audit_source = preflight.get("bot", {}).get("audit_source", {})
+    audit_source_mode = str(audit_source.get("mode") or "working_tree_fallback")
+    audit_source_revision = str(audit_source.get("revision") or "unavailable")
+    audit_source_files = int(audit_source.get("files_materialized") or 0)
+    if audit_source_mode == "git_baseline_snapshot":
+        revision_summary = (
+            f"- Bot source audited: static Git baseline snapshot `{audit_source_revision}` "
+            f"(`{audit_source_files}` source files; working tree not used as source evidence)\n"
+            f"- Bot checkout observed for drift only: `{checkout_sha}` (`{relation}`)\n"
+        )
+    else:
+        revision_summary = f"- Bot source audited: working-tree fallback `{checkout_sha}` (`{relation}`)\n"
     if ahead is not None or behind is not None:
         revision_summary += f"- Bot drift versus requested baseline: ahead `{ahead if ahead is not None else 'unknown'}`, behind `{behind if behind is not None else 'unknown'}` commits\n"
 
@@ -6038,6 +6292,38 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_MEMORY_STATE_OR_IDENTIFIER_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    quick_image_planner_contract_rows = [
+        [
+            "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
+            "/image/quick-planner",
+            "reviewed_quick_image_planner_fresh_web_draft",
+            "fresh signed draft only; no Telegram state/callback is transferred",
+        ],
+        [
+            "create_media|qi_logo_choice, qi_logo_add, qi_logo_skip, qi_logo_confirm, qi_logo_pos|{top_left…bottom_right}",
+            "/image/quick-planner",
+            "reviewed_quick_image_planner_fresh_web_draft",
+            "text-only direction and nine semantic placements; no logo upload/overlay/image output",
+        ],
+        [
+            "create_media|qi_choose_ratio, qi_ratio_{*}, qi_back_prompt, qi_back_ratio",
+            "/image/quick-planner",
+            "reviewed_quick_image_planner_fresh_web_draft",
+            "finite prompt/ratio plan; no tier, quote or execution",
+        ],
+        [
+            "create_media|qi_back_tier, qi_tier_{*}",
+            "TELEGRAM_ONLY",
+            "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+            "Bot tier/one-time confirmation state and canonical Xu/provider/job boundary",
+        ],
+        [
+            "shopai|confirm|{*}, shopai|package|{*}",
+            "TELEGRAM_ONLY",
+            "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
+            "opaque canonical checkout/confirmation; no browser payment, ledger, job or delivery action",
+        ],
+    ]
 
     write(
         "README.md",
@@ -6077,6 +6363,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md`](CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md) — signed, stateless contextual ad-prompt wizard adapted from Bot goal/platform/ratio/style choices, with no Meta/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`TREND_RESEARCH_CONTRACT.md`](TREND_RESEARCH_CONTRACT.md) — signed, stateless manual trend-research checklist adapted from Bot keyword/selection/originality guidance, with no live search/scraping/provider/Bot/job/payment claim.\n"
         + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
+        + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`STORY_VIDEO_PLANNER_CONTRACT.md`](STORY_VIDEO_PLANNER_CONTRACT.md) — signed, stateless story workflow/motion-direction plan adapted from Bot prompt-only commands, with no provider/Bot/job/payment/video-output/publish claim.\n"
@@ -6130,6 +6417,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             media_preview_contract_rows,
         )
         + "\n\nA future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference. It must not accept a Bot cache index, replay the Telegram callback, read Bot selected-media state, claim license clearance, or trigger a Bot/video/provider action.\n",
+    )
+    write(
+        "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
+        "# Quick Image Planner callback contract\n\n"
+        "The frozen Bot Quick Image conversation contains a non-executing draft grammar followed by a canonical tier/ShopAI confirmation path. The standalone Web Planner is a fresh signed, CSRF-protected deterministic prompt-plan surface at `/image/quick-planner`; it does not import Bot state, expose raw callbacks, or execute an image workflow.\n\n"
+        + _markdown_table(
+            ["Frozen Bot source", "Web target/boundary", "Audit resolution", "Required boundary"],
+            quick_image_planner_contract_rows,
+        )
+        + "\n\nThe static auditor derives the nine `qi_logo_pos` values only from the direct frozen helper call that supplies the literal Quick Image prefix. It does not map the helper's shared dynamic `create_media|{*}|…` template globally because regular image/video flows also use it.\n\n"
+        "The Web request accepts only a finite catalog key or an original bounded custom brief, deterministic variation, ratio, optional text brand direction and placement, and locale. It has no image upload, preview, source analysis, provider/Bot/Core Bridge call, tier, quote, confirmation token, job, asset, Xu/wallet mutation, PayOS payment, webhook, publish action or delivery. `prompt_plan_only_no_real_image` is a manual-review plan, not evidence that an image or watermark exists.\n",
     )
     write(
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
@@ -6669,6 +6967,80 @@ def _git_read(root: Path, *args: str) -> tuple[int, str]:
     return completed.returncode, completed.stdout.strip()
 
 
+@contextmanager
+def _locked_bot_source_snapshot(root: Path, baseline_sha: str):
+    """Yield a static source tree for the requested Bot baseline.
+
+    A SHA in a report is not enough when the supplied Bot worktree has moved.
+    For a real Git worktree this helper reads the verified local commit through
+    ``git archive`` and writes only source-suffix regular files into a temporary
+    directory.  It never checks out, resets, fetches, imports or executes Bot
+    code.  Non-Git roots are kept as-is so hermetic parser unit tests remain
+    possible; a Git root with an unavailable requested baseline fails closed.
+    """
+
+    requested = str(baseline_sha or "").strip()
+    if not (root / ".git").exists():
+        yield root, {
+            "mode": "working_tree_fallback",
+            "reason": "not_a_git_worktree",
+            "revision": "",
+            "files_materialized": 0,
+        }
+        return
+    if not re.fullmatch(r"[0-9a-f]{7,64}", requested):
+        raise ValueError("Requested Bot baseline SHA is invalid; refusing to audit a Git worktree fallback")
+    revision_status, revision = _git_read(root, "rev-parse", "--verify", f"{requested}^{{commit}}")
+    if revision_status != 0 or not re.fullmatch(r"[0-9a-f]{40}", revision):
+        raise ValueError("Requested Bot baseline is unavailable; refusing to audit a Git worktree fallback")
+    try:
+        archive = subprocess.run(
+            ["git", "-C", str(root), "archive", "--format=tar", revision],
+            check=False,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            timeout=30,
+        )
+    except (FileNotFoundError, OSError, subprocess.TimeoutExpired) as exc:
+        raise ValueError("Unable to materialize requested Bot baseline for static audit") from exc
+    if archive.returncode != 0 or not archive.stdout:
+        raise ValueError("Requested Bot baseline archive is unavailable; refusing to audit a Git worktree fallback")
+    if len(archive.stdout) > MAX_BASELINE_ARCHIVE_BYTES:
+        raise ValueError("Requested Bot baseline archive exceeds the static audit safety limit")
+
+    with tempfile.TemporaryDirectory(prefix="toan-aas-bot-baseline-") as temporary:
+        snapshot = Path(temporary)
+        materialized = 0
+        try:
+            with tarfile.open(fileobj=io.BytesIO(archive.stdout), mode="r:") as source_archive:
+                for member in source_archive.getmembers():
+                    if not member.isfile():
+                        continue
+                    relative = PurePosixPath(member.name)
+                    if relative.is_absolute() or ".." in relative.parts or not relative.parts:
+                        raise ValueError("Requested Bot baseline archive contains an unsafe source path")
+                    destination = snapshot.joinpath(*relative.parts)
+                    if destination.suffix.lower() not in SOURCE_SUFFIXES:
+                        continue
+                    payload = source_archive.extractfile(member)
+                    if payload is None:
+                        continue
+                    destination.parent.mkdir(parents=True, exist_ok=True)
+                    destination.write_bytes(payload.read())
+                    materialized += 1
+        except (tarfile.TarError, OSError) as exc:
+            raise ValueError("Unable to materialize requested Bot baseline source files") from exc
+        if not (snapshot / "bot.py").is_file():
+            raise ValueError("Requested Bot baseline has no bot.py entrypoint")
+        yield snapshot, {
+            "mode": "git_baseline_snapshot",
+            "reason": "requested_baseline_materialized_static_only",
+            "revision": revision,
+            "files_materialized": materialized,
+        }
+
+
 def _git_revision_context(root: Path, baseline_sha: str) -> dict[str, Any]:
     """Return a small, secret-free local revision comparison for preflight."""
     requested = str(baseline_sha or "").strip()
@@ -6738,28 +7110,31 @@ def run_audit(bot_root: Path, web_root: Path, bot_baseline_sha: str, report_dir:
         raise ValueError(f"Bot root does not exist: {bot_root}")
     if not web_root.is_dir():
         raise ValueError(f"Web root does not exist: {web_root}")
-    bot_entrypoint = bot_root / "bot.py"
-    preflight = {
-        "schema_version": SCHEMA_VERSION,
-        "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-        "audit_mode": "static-only",
-        "guarantees": [
-            "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
-            "Only source text, Python AST, and local read-only Git revision metadata are read.",
-            "Report/document text is sanitized for secret-shaped literals.",
-        ],
-        "bot": {
-            "root": str(bot_root),
-            "entrypoint_present": bot_entrypoint.is_file(),
-            "baseline_sha_requested": bot_baseline_sha,
-            "revision": _git_revision_context(bot_root, bot_baseline_sha),
-            "baseline_bridge_source": _baseline_bridge_source_context(bot_root, bot_baseline_sha),
-        },
-        "webapp": {"root": str(web_root), "entrypoint_present": (web_root / "app.py").is_file()},
-    }
-    bot = _summarize_inventory("telegram_bot", bot_root)
-    web = _summarize_inventory("webapp", web_root)
-    gap = _build_parity_gap(bot, web, bot_root, web_root)
+    with _locked_bot_source_snapshot(bot_root, bot_baseline_sha) as (audit_bot_root, audit_source):
+        bot_entrypoint = audit_bot_root / "bot.py"
+        preflight = {
+            "schema_version": SCHEMA_VERSION,
+            "generated_at_utc": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+            "audit_mode": "static-only",
+            "guarantees": [
+                "No bot, web app, provider, database, payment service, environment file, or webhook is imported or executed.",
+                "Only source text, Python AST, and local read-only Git revision metadata are read.",
+                "A verified requested Git baseline is materialized as a temporary source-only snapshot; the Bot worktree is not used as source evidence.",
+                "Report/document text is sanitized for secret-shaped literals.",
+            ],
+            "bot": {
+                "root": str(bot_root),
+                "entrypoint_present": bot_entrypoint.is_file(),
+                "baseline_sha_requested": bot_baseline_sha,
+                "revision": _git_revision_context(bot_root, bot_baseline_sha),
+                "audit_source": audit_source,
+                "baseline_bridge_source": _baseline_bridge_source_context(bot_root, bot_baseline_sha),
+            },
+            "webapp": {"root": str(web_root), "entrypoint_present": (web_root / "app.py").is_file()},
+        }
+        bot = _summarize_inventory("telegram_bot", audit_bot_root)
+        web = _summarize_inventory("webapp", web_root)
+        gap = _build_parity_gap(bot, web, audit_bot_root, web_root)
     report_dir = report_dir.resolve()
     docs_dir = docs_dir.resolve()
     _write_json(report_dir / "preflight.json", preflight)

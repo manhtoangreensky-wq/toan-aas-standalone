@@ -2299,6 +2299,96 @@
     },
     {
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|bottom_center",
+      "template_file": "bot.py",
+      "template_line": 91791,
+      "token": "create_media|qi_logo_pos|bottom_center"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|bottom_left",
+      "template_file": "bot.py",
+      "template_line": 91790,
+      "token": "create_media|qi_logo_pos|bottom_left"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|bottom_right",
+      "template_file": "bot.py",
+      "template_line": 91793,
+      "token": "create_media|qi_logo_pos|bottom_right"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|center",
+      "template_file": "bot.py",
+      "template_line": 91786,
+      "token": "create_media|qi_logo_pos|center"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|center_left",
+      "template_file": "bot.py",
+      "template_line": 91783,
+      "token": "create_media|qi_logo_pos|center_left"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|center_right",
+      "template_file": "bot.py",
+      "template_line": 91787,
+      "token": "create_media|qi_logo_pos|center_right"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|top_center",
+      "template_file": "bot.py",
+      "template_line": 91779,
+      "token": "create_media|qi_logo_pos|top_center"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|top_left",
+      "template_file": "bot.py",
+      "template_line": 91778,
+      "token": "create_media|qi_logo_pos|top_left"
+    },
+    {
+      "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
+      "line": 91695,
+      "resolution": "reviewed_quick_image_logo_position_helper_call",
+      "template": "create_media|{*}|top_right",
+      "template_file": "bot.py",
+      "template_line": 91782,
+      "token": "create_media|qi_logo_pos|top_right"
+    },
+    {
+      "file": "bot.py",
       "line": 91674,
       "token": "create_media|qi_logo_skip"
     },
@@ -16359,57 +16449,156 @@
       "template": "create_media|{*}_skip"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|bottom_center"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91791,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|bottom_center"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|bottom_left"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91790,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|bottom_left"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|bottom_right"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91793,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|bottom_right"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|center"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91786,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|center"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|center_left"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91783,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|center_left"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|center_right"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91787,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|center_right"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|top_center"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91779,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|top_center"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|top_left"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91778,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|top_left"
     },
     {
+      "derived_callback_tokens": [
+        "create_media|qi_logo_pos|top_right"
+      ],
       "file": "bot.py",
+      "helper": "media_logo_watermark_position_keyboard",
       "line": 91782,
-      "resolution": "unresolved_dynamic_template",
+      "literal_prefix_call_evidence": [
+        {
+          "file": "bot.py",
+          "line": 91695,
+          "prefix": "qi_logo_pos"
+        }
+      ],
+      "resolution": "reviewed_quick_image_logo_position_helper_calls",
       "template": "create_media|{*}|top_right"
     },
     {
@@ -24199,7 +24388,7 @@
   "conversations": [],
   "counts": {
     "background_jobs": 194,
-    "callback_data": 2815,
+    "callback_data": 2824,
     "callback_handlers": 54,
     "callback_templates": 283,
     "commands": 773,
@@ -30025,6 +30214,6 @@
   "schema_version": "1.7",
   "source_files_discovered": 176,
   "source_files_scanned": 172,
-  "source_fingerprint_sha256": "3390924d75276b84156b46e0d074ef1cf9c807df2fbb307809a08d5c567d7208",
-  "source_root": "D:\\TOANAAS\\bot telegram"
+  "source_fingerprint_sha256": "f3d494338eb19d729916151048d3f5d3ee03f0f895c3bfe7089e1e2a967f1b25",
+  "source_root": "C:\\Users\\toann\\AppData\\Local\\Temp\\toan-aas-bot-baseline-spgrhjox"
 }

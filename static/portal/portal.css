@@ -2218,6 +2218,18 @@ a { color: inherit; text-decoration: none; }
 .portal-image-prompt-composer-review li::before { position: absolute; left: 0; color: #f5c36d; content: "•"; }
 .portal-image-prompt-composer-result .portal-form-footer { align-items: flex-start; }
 
+/* Quick Image Planner is a task form, not decorative media. Keep its compact
+   controls and result metadata readable on a phone without restyling the
+   shared Image Prompt Composer workspace. */
+.portal-quick-image-planner .portal-image-prompt-composer-intro dd { font-size: 12px; }
+.portal-quick-image-planner .portal-image-prompt-composer-guard-list strong { font-size: 12px; }
+.portal-quick-image-planner .portal-image-prompt-composer-guard-list em { font-size: 11px; }
+.portal-quick-image-planner .portal-image-prompt-composer-meta span { font-size: 12px; }
+.portal-quick-image-planner .portal-image-prompt-composer-prompt > span { font-size: 12px; }
+.portal-quick-image-planner .portal-image-prompt-composer-prompt pre { font-size: 13px; line-height: 1.62; }
+.portal-quick-image-planner .portal-content-prompt-pack-checks strong { font-size: 13px; }
+.portal-quick-image-planner .portal-content-prompt-pack-checks li { font-size: 13px; line-height: 1.6; }
+
 @media (max-width: 980px) {
   .portal-image-prompt-composer-intro, .portal-image-prompt-composer-layout { grid-template-columns: 1fr; }
 }

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import subprocess
 from pathlib import Path
 
 
@@ -109,6 +110,7 @@ async def dashboard():
         "UNREFERENCED_STATIC_MODULES.md",
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
+        "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
         "STORAGE_ADDON_CALLBACK_CONTRACT.md",
@@ -134,7 +136,7 @@ async def dashboard():
     assert "Web-native Video Poster environment names" in (docs_dir / "env-provider-map.md").read_text(encoding="utf-8")
     assert "Additive Web-native guard: Video Poster Lab" in (docs_dir / "known-gaps.md").read_text(encoding="utf-8")
     assert "Additive Web-native guard: Video Poster Lab" in (docs_dir / "KNOWN_GAPS_AND_GUARDS.md").read_text(encoding="utf-8")
-    assert "Bot checkout audited: `unavailable` (`not_a_git_worktree`)" in (docs_dir / "README.md").read_text(encoding="utf-8")
+    assert "Bot source audited: working-tree fallback `unavailable` (`not_a_git_worktree`)" in (docs_dir / "README.md").read_text(encoding="utf-8")
     # The generated compatibility map must preserve the three Web authority
     # domains.  A later static audit must not silently reduce it to a generic
     # "admin" list and thereby suggest that browser navigation grants Bot
@@ -149,6 +151,90 @@ async def dashboard():
         "Compatibility target",
     ):
         assert marker in erp_map
+
+
+def test_static_audit_uses_requested_git_baseline_snapshot_not_dirty_worktree(tmp_path: Path) -> None:
+    """A requested Git SHA must be the only Bot source evidence for the audit."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    web_root = tmp_path / "web"
+    bot_root.mkdir()
+    web_root.mkdir()
+
+    def git(*args: str) -> subprocess.CompletedProcess[str]:
+        return subprocess.run(
+            ["git", "-C", str(bot_root), *args],
+            check=True,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            encoding="utf-8",
+        )
+
+    (bot_root / "bot.py").write_text(
+        """
+def baseline_handler():
+    return None
+
+application.add_handler(CommandHandler('baseline_only', baseline_handler))
+""",
+        encoding="utf-8",
+    )
+    git("init")
+    git("add", "bot.py")
+    git("-c", "user.name=Static audit fixture", "-c", "user.email=audit@example.invalid", "commit", "-m", "baseline")
+    baseline_sha = git("rev-parse", "HEAD").stdout.strip()
+
+    # This source exists only in the dirty checkout.  If the audit ever walks
+    # the supplied worktree instead of the committed snapshot, it will leak
+    # into the command inventory below.
+    (bot_root / "bot.py").write_text(
+        """
+def baseline_handler():
+    return None
+
+application.add_handler(CommandHandler('baseline_only', baseline_handler))
+application.add_handler(CommandHandler('dirty_worktree_only', baseline_handler))
+""",
+        encoding="utf-8",
+    )
+    (web_root / "app.py").write_text(
+        """
+app = FastAPI()
+@app.get('/dashboard')
+async def dashboard():
+    return {'ok': True}
+""",
+        encoding="utf-8",
+    )
+
+    result = audit.run_audit(
+        bot_root,
+        web_root,
+        baseline_sha,
+        tmp_path / "reports",
+        tmp_path / "docs",
+    )
+
+    assert {item["command"] for item in result["bot_inventory"]["commands"]} == {"baseline_only"}
+    assert "dirty_worktree_only" not in json.dumps(result["bot_inventory"], ensure_ascii=False)
+    assert result["preflight"]["bot"]["audit_source"] == {
+        "mode": "git_baseline_snapshot",
+        "reason": "requested_baseline_materialized_static_only",
+        "revision": baseline_sha,
+        "files_materialized": 1,
+    }
+    assert result["preflight"]["bot"]["revision"] == {
+        "checkout_sha": baseline_sha,
+        "baseline_relation": "exact",
+        "ahead_commits": 0,
+        "behind_commits": 0,
+    }
+    readme = (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+    assert f"Bot source audited: static Git baseline snapshot `{baseline_sha}`" in readme
+    assert "working tree not used as source evidence" in readme
 
 
 def test_static_audit_records_api_routes_db_env_and_background_signals(tmp_path: Path) -> None:
@@ -1710,7 +1796,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         "vproduct|camera|{*}": "/video/product",
         "videoaddon|export|{*}": "/video/add-ons",
         "manual|history|{*}": "/wallet/topup",
-        "shopai|confirm|{*}": "/wallet/topup",
     }
     for template, target in expected.items():
         mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
@@ -1720,6 +1805,14 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         assert mapped["target"] == target
         assert mapped["status"] == "COPIED_GUARDED"
         assert mapped["resolution"] == "reviewed_namespace_compatibility_route"
+
+    for template in ("shopai|confirm|{*}", "shopai|package|{*}"):
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert mapped["resolution"] == "bot_quick_image_tier_or_confirm_requires_canonical_bot_state"
+        assert "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY" in mapped["source_dispositions"]
 
     for template in sorted(audit.MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
         mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
@@ -1752,6 +1845,91 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
     # A variable prefix has no fixed namespace. The audit must not guess that
     # it is a save/action from any one Bot workflow.
     assert audit._map_callback_template("{*}|save", {"file": "bot.py", "line": 1}, routes) is None
+
+
+def test_static_audit_maps_frozen_quick_image_draft_but_keeps_tier_and_checkout_telegram_only(tmp_path: Path) -> None:
+    """Quick Image draft grammar is Web-native; canonical execution never is."""
+
+    audit = _load_audit_module()
+    routes = {"/image/quick-planner", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+
+    for token in sorted(audit.QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "/image/quick-planner"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "MAPPED_TO_EXISTING_ROUTE"
+        assert mapped["resolution"] == "reviewed_quick_image_planner_fresh_web_draft"
+        assert mapped["quick_image_planner_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE_DRAFT_ONLY"
+        assert "BOT_QUICK_IMAGE_CONVERSATION_STATE_NOT_REPLAYED" in mapped["source_dispositions"]
+
+    for position in sorted(audit.QUICK_IMAGE_LOGO_POSITION_VALUES):
+        mapped = audit._map_callback(f"create_media|qi_logo_pos|{position}", "callback_data", evidence, routes)
+        assert mapped["target"] == "/image/quick-planner"
+        assert mapped["status"] == "MAPPED_TO_EXISTING_ROUTE"
+
+    for template in sorted(audit.QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "/image/quick-planner"
+        assert mapped["status"] == "MAPPED_TO_EXISTING_ROUTE"
+
+    for token in sorted(audit.QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert "CANONICAL_SHOPAI_XU_JOB_OR_PAYMENT_BOUNDARY" in mapped["source_dispositions"]
+    for template in sorted(audit.QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    bot_source = bot_root / "bot.py"
+    bot_source.write_text(
+        '''
+def media_logo_watermark_position_keyboard(kind, lang, action_prefix, back_callback):
+    InlineKeyboardButton("top left", callback_data=f"create_media|{action_prefix}|top_left")
+    InlineKeyboardButton("center", callback_data=f"create_media|{action_prefix}|center")
+    InlineKeyboardButton("bottom right", callback_data=f"create_media|{action_prefix}|bottom_right")
+
+def quick_image_logo_position_keyboard(lang="vi"):
+    return media_logo_watermark_position_keyboard("image", lang, "qi_logo_pos", "create_media|qi_logo_add")
+''',
+        encoding="utf-8",
+    )
+    inventory = audit._extract_python_inventory(bot_root, [bot_source])
+    derived = {item["token"] for item in inventory["callback_data"]}
+    assert {
+        "create_media|qi_logo_pos|top_left",
+        "create_media|qi_logo_pos|center",
+        "create_media|qi_logo_pos|bottom_right",
+    } <= derived
+    raw_templates = {item["template"]: item for item in inventory["callback_templates"]}
+    assert raw_templates["create_media|{*}|top_left"]["resolution"] == "reviewed_quick_image_logo_position_helper_calls"
+
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text(
+        '''
+app = FastAPI()
+@app.get("/image/quick-planner")
+async def quick_image_planner():
+    return {}
+''',
+        encoding="utf-8",
+    )
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    template_mappings = {
+        item["source"]: item for item in result["parity_gap"]["callback_template_mappings"]
+    }
+    assert template_mappings["create_media|{*}|top_left"]["target"] == "/image/quick-planner"
+    contract = (tmp_path / "docs" / "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "qi_logo_pos" in contract
+    assert "TELEGRAM_ONLY" in contract
+    assert "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
 
 
 def test_static_audit_maps_only_reviewed_archive_literals_to_fresh_admin_navigation() -> None:

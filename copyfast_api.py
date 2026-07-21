@@ -601,6 +601,12 @@ def _flags() -> dict[str, bool]:
         # live search, provider/Bot execution, jobs, Xu/PayOS, output or
         # publishing.
         "media_factory_enabled": enabled("WEBAPP_MEDIA_FACTORY_ENABLED", True),
+        # Quick Image Planner ports only the Bot's prompt-selection grammar:
+        # finite Web-owned seeds or a custom brief, optional brand placement,
+        # variation and ratio. It remains a transient plan and never exposes
+        # a Bot pending state, ShopAI tier/token, provider/image/job, Xu,
+        # PayOS, asset, publish or delivery capability.
+        "quick_image_planner_enabled": enabled("WEBAPP_QUICK_IMAGE_PLANNER_ENABLED", True),
         # Voice Studio stores Web-owned profile/script metadata and local cue
         # sheets only.  This switch never enables bridge TTS/clone/preview,
         # provider calls, Bot jobs, Xu, PayOS or output delivery.
