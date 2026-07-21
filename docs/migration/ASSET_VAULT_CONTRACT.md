@@ -60,6 +60,11 @@ POST /api/v1/asset-vault/{id}/restore
 ```
 
 - Every read requires a signed server session and is owner scoped.
+- Typed operation pickers use a closed, server-side `reference_kind` filter
+  rather than browser filtering of the general Vault list. In particular,
+  `video_poster` returns only active canonical `.mp4`/`video/mp4`,
+  `.mov`/`video/quicktime`, or `.webm`/`video/webm` metadata. It does not
+  expose bytes, paths, storage keys, hashes or a loose `video/*` selector.
 - Every write requires signed session, CSRF and an idempotency key. Archive
   also requires JSON `expected_revision`; restore requires JSON
   `expected_revision` plus `idempotency_key`. Both are compare-and-set

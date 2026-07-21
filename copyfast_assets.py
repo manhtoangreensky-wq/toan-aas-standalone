@@ -49,7 +49,7 @@ ALL_STATES = frozenset({ACTIVE_STATE, ARCHIVED_STATE, UNAVAILABLE_STATE})
 # Typed operation pickers must stay exact and server-side.  Audio is a
 # separate allowlisted family for Audio Asset Operations; it is deliberately
 # not implemented as a loose ``audio/*`` query.
-REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle", "audio", "video_transform"})
+REFERENCE_KINDS = frozenset({"all", "pdf", "image", "subtitle", "audio", "video_transform", "video_poster"})
 IDEMPOTENCY_PATTERN = re.compile(r"^[A-Za-z0-9._:-]{12,160}$")
 ASSET_ID_PATTERN = re.compile(r"^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$", re.IGNORECASE)
 STORAGE_KEY_PATTERN = re.compile(r"^objects/[0-9a-f]{32}\.blob$")
@@ -1236,6 +1236,22 @@ async def list_assets(
         # contract and must not ask the browser to infer codec compatibility.
         where.append("lower(extension)=? AND lower(content_type)=?")
         params.extend([".mp4", "video/mp4"])
+    elif selected_reference_kind == "video_poster":
+        # Video Poster has its own bounded FFmpeg contract.  It accepts the
+        # three canonical Asset Vault video pairs supported by that contract;
+        # never use a loose `video/*` browser filter or an all-assets list.
+        where.append(
+            "("
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?) OR "
+            "(lower(extension)=? AND lower(content_type)=?)"
+            ")"
+        )
+        params.extend([
+            ".mp4", "video/mp4",
+            ".mov", "video/quicktime",
+            ".webm", "video/webm",
+        ])
     if needle:
         escaped = needle.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
         where.append("(display_name LIKE ? ESCAPE '\\' OR original_filename LIKE ? ESCAPE '\\')")

@@ -143,6 +143,23 @@ def test_video_poster_is_false_by_default_and_raw_body_is_bounded(tmp_path, monk
         assert disabled.status_code == 503
         assert "video" in str(disabled.json()).lower()
 
+        # Unknown client-controlled fields must fail validation rather than
+        # silently widening the deliberately fixed FFmpeg contract.
+        unexpected_field = client.post(
+            "/api/v1/video-operations/poster",
+            headers={"X-CSRF-Token": csrf},
+            json={
+                "source_asset_id": source["id"],
+                "poster_position": "middle",
+                "idempotency_key": "video-disabled-extra-field-0001",
+                "ffmpeg_arguments": ["-unsafe-client-option"],
+            },
+        )
+        assert unexpected_field.status_code == 422
+        # The public validation envelope intentionally stays sanitized and
+        # does not reflect arbitrary caller-controlled field names.
+        assert unexpected_field.json()["error_code"] == "REQUEST_INVALID"
+
         oversized = client.post(
             "/api/v1/video-operations/poster",
             headers={"Content-Type": "application/json"},
