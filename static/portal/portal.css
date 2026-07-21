@@ -4603,6 +4603,96 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-stewardship-card { transition: none; }
 }
 
+/* Workspace Menu is a compact, navigation-only directory. It deliberately
+ * reuses the app shell's semantic surfaces rather than introducing a second
+ * dashboard, provider state or execution control plane. */
+.portal-workspace-menu { display: grid; gap: 18px; }
+.portal-workspace-menu-intro {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding: clamp(20px, 2.6vw, 30px);
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius-lg);
+  background: var(--portal-surface-strong);
+}
+.portal-workspace-menu-intro > div:first-child { min-width: 0; }
+.portal-workspace-menu-intro h2 { max-width: 760px; margin: 6px 0 0; color: var(--portal-text); font-size: clamp(21px, 2.35vw, 30px); letter-spacing: -.035em; }
+.portal-workspace-menu-intro p { max-width: 750px; margin: 9px 0 0; color: var(--portal-muted-strong); font-size: 14px; line-height: 1.65; }
+.portal-workspace-menu-intro-status {
+  display: grid;
+  grid-template-columns: 36px minmax(0, 1fr);
+  flex: 0 1 252px;
+  gap: 10px;
+  min-width: 212px;
+  padding: 11px;
+  border: 1px solid var(--portal-border-strong);
+  border-radius: 14px;
+  background: rgba(35, 131, 132, .1);
+}
+.portal-workspace-menu-intro-status > span:first-child { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 11px; color: var(--portal-accent); background: rgba(50, 190, 174, .1); }
+.portal-workspace-menu-intro-status > span:first-child .portal-icon { width: 19px; height: 19px; }
+.portal-workspace-menu-intro-status strong,
+.portal-workspace-menu-intro-status small { display: block; }
+.portal-workspace-menu-intro-status strong { color: var(--portal-text); font-size: 14px; line-height: 1.35; }
+.portal-workspace-menu-intro-status small { margin-top: 3px; color: var(--portal-muted); font-size: 12px; line-height: 1.45; }
+.portal-workspace-menu-directory { display: grid; gap: 24px; }
+.portal-workspace-menu-group { display: grid; gap: 12px; }
+.portal-workspace-menu-group-head { display: flex; align-items: end; justify-content: space-between; gap: 16px; padding: 0 2px; }
+.portal-workspace-menu-group-head h2 { margin: 4px 0 0; color: var(--portal-text); font-size: 18px; letter-spacing: -.025em; }
+.portal-workspace-menu-group-head p { max-width: 720px; margin: 6px 0 0; color: var(--portal-muted); font-size: 13px; line-height: 1.55; }
+.portal-workspace-menu-group-head > span { flex: 0 0 auto; padding: 5px 9px; border: 1px solid var(--portal-border); border-radius: 999px; color: var(--portal-muted-strong); background: rgba(125, 205, 235, .05); font-size: 12px; font-weight: 800; white-space: nowrap; }
+.portal-workspace-menu-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.portal-workspace-menu-card {
+  display: grid;
+  gap: 13px;
+  min-height: 184px;
+  padding: 17px;
+  border: 1px solid var(--portal-border);
+  border-radius: var(--portal-radius);
+  background: var(--portal-surface);
+  color: inherit;
+  text-decoration: none;
+  touch-action: manipulation;
+  transition: border-color var(--portal-transition), background var(--portal-transition), transform var(--portal-transition), box-shadow var(--portal-transition);
+}
+.portal-workspace-menu-card:hover { border-color: var(--portal-border-strong); background: var(--portal-surface-strong); transform: translateY(-1px); }
+.portal-workspace-menu-card:active { border-color: var(--portal-accent); background: rgba(50, 190, 174, .1); transform: translateY(0); }
+.portal-workspace-menu-card:focus-visible { border-color: var(--portal-accent); outline: 0; box-shadow: 0 0 0 3px rgba(81, 213, 188, .25); }
+.portal-workspace-menu-card-top { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
+.portal-workspace-menu-card-state { display: inline-flex; min-width: 0; align-items: flex-end; flex-direction: column; gap: 5px; text-align: right; }
+.portal-workspace-menu-card-state small { max-width: 150px; color: var(--portal-muted); font-size: 12px; font-weight: 760; line-height: 1.35; }
+.portal-workspace-menu-card-copy { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; }
+.portal-workspace-menu-card-copy > small { color: var(--portal-accent); font-size: 11px; font-weight: 850; letter-spacing: .08em; line-height: 1.3; text-transform: uppercase; }
+.portal-workspace-menu-card-copy > strong { margin-top: 7px; color: var(--portal-text); font-size: 15px; letter-spacing: -.018em; line-height: 1.38; }
+.portal-workspace-menu-card-copy > span { margin-top: 6px; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.55; }
+.portal-workspace-menu-card-footer { display: flex; align-items: center; justify-content: space-between; gap: 9px; margin-top: auto; min-height: 24px; color: var(--portal-accent); font-size: 12px; font-weight: 800; }
+.portal-workspace-menu-card-footer b { font-size: 15px; line-height: 1; }
+.portal-workspace-menu-boundary-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 0; margin: 0; list-style: none; }
+.portal-workspace-menu-boundary-list > li { display: grid; gap: 4px; min-width: 0; padding: 13px; border: 1px solid var(--portal-border); border-radius: 13px; background: rgba(7, 20, 31, .34); }
+.portal-workspace-menu-boundary-list strong { color: var(--portal-text); font-size: 12px; line-height: 1.45; }
+.portal-workspace-menu-boundary-list small { color: var(--portal-muted); font-size: 12px; line-height: 1.52; }
+
+@media (max-width: 980px) {
+  .portal-workspace-menu-grid,
+  .portal-workspace-menu-boundary-list { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 700px) {
+  .portal-workspace-menu-intro { flex-direction: column; gap: 14px; padding: 17px; }
+  .portal-workspace-menu-intro-status { width: 100%; min-width: 0; }
+  .portal-workspace-menu-group-head { align-items: flex-start; flex-direction: column; gap: 8px; }
+  .portal-workspace-menu-grid,
+  .portal-workspace-menu-boundary-list { grid-template-columns: 1fr; }
+  .portal-workspace-menu-card { min-height: 164px; padding: 15px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-workspace-menu-card { transition: none; }
+  .portal-workspace-menu-card:hover { transform: none; }
+}
+
 /* Tax Readiness is a static canonical-admin guide, not a financial read
  * model. Keep the layout dense, calm and responsive without adding KPI cards,
  * calculators, upload surfaces or a browser-side control plane. */

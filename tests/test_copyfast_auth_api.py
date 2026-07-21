@@ -1832,6 +1832,43 @@ def test_bot_companion_routes_need_a_signed_session_but_telegram_link_is_optiona
         assert '"path": "/notes"' in linked.text
 
 
+def test_workspace_menu_is_signed_and_cache_private(tmp_path, monkeypatch):
+    """The catalog-only directory is private but does not require Telegram linking."""
+    with make_client(tmp_path, monkeypatch) as client:
+        anonymous = client.get("/workspace-menu", follow_redirects=False)
+        assert anonymous.status_code == 307
+        assert anonymous.headers["location"] == "/login?next=/workspace-menu"
+        assert anonymous.headers["cache-control"] == "no-store, private"
+
+        registered = client.post(
+            "/api/v1/auth/register",
+            json={"email": "workspace-menu@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert registered.status_code == 200
+        signed_in = client.post(
+            "/api/v1/auth/login",
+            json={"email": "workspace-menu@example.com", "password": "correct-horse-battery-staple"},
+        )
+        assert signed_in.status_code == 200
+
+        catalog = client.get("/api/v1/catalog")
+        assert catalog.status_code == 200
+        assert catalog.json()["ok"] is True
+        menu_keys = {item["key"] for item in catalog.json()["data"]["menu_capabilities"]}
+        assert {
+            "workspace_home", "memory_center", "reminder_center", "campaign_planner",
+            "chat_workspace", "prompt_studio", "image_studio", "image_prompt_composer",
+            "documents", "subtitle_studio", "asset_vault", "media_workspace", "account",
+            "wallet", "membership", "packages", "pricing", "support",
+        } <= menu_keys
+
+        unlinked = client.get("/workspace-menu", follow_redirects=False)
+        assert unlinked.status_code == 200
+        assert unlinked.headers["cache-control"] == "no-store, private"
+        assert 'id="portal-bootstrap" type="application/json"' in unlinked.text
+        assert '"path": "/workspace-menu"' in unlinked.text
+
+
 def test_telegram_passwordless_login_is_browser_bound_and_never_accepts_a_raw_id(tmp_path, monkeypatch):
     monkeypatch.setenv("BOT_USERNAME", "ToanAasSupportBot")
     with make_client(tmp_path, monkeypatch) as client:

@@ -13498,43 +13498,76 @@
       "target": "/admin/callbacks"
     },
     {
-      "classification": "customer",
+      "billing_menu_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "billing_menu_feature_key": "admin_payments",
+      "billing_menu_launch_mode": "WEB_NAVIGATION",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 30806
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_billing_menu_admin_navigation",
       "source": "menu|billing",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_MENU_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "NO_CUSTOMER_OR_MANUAL_TOPUP_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot callback handler treats the exact billing action as admin-only, even where a top-up keyboard may render a billing button. Its protected branch contains Bot-local billing/manual-payment guidance. The Web opens a fresh canonical-admin payments read route; it receives no Telegram identity, billing menu, pending deposit, payment reference, wallet/Xu ledger, PayOS/webhook state, provider state or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/payments"
     },
     {
-      "classification": "customer",
+      "billing_menu_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "billing_menu_feature_key": "admin_payments",
+      "billing_menu_launch_mode": "WEB_NAVIGATION",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49759
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_billing_menu_admin_navigation",
       "source": "menu|billing",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_MENU_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "NO_CUSTOMER_OR_MANUAL_TOPUP_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot callback handler treats the exact billing action as admin-only, even where a top-up keyboard may render a billing button. Its protected branch contains Bot-local billing/manual-payment guidance. The Web opens a fresh canonical-admin payments read route; it receives no Telegram identity, billing menu, pending deposit, payment reference, wallet/Xu ledger, PayOS/webhook state, provider state or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/payments"
     },
     {
-      "classification": "customer",
+      "billing_menu_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "billing_menu_feature_key": "admin_payments",
+      "billing_menu_launch_mode": "WEB_NAVIGATION",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49767
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_billing_menu_admin_navigation",
       "source": "menu|billing",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_BILLING_MENU_STATE_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_CANONICAL_ADMIN_NAVIGATION",
+        "NO_CUSTOMER_OR_MANUAL_TOPUP_ACTION",
+        "NO_PAYOS_WALLET_OR_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot callback handler treats the exact billing action as admin-only, even where a top-up keyboard may render a billing button. Its protected branch contains Bot-local billing/manual-payment guidance. The Web opens a fresh canonical-admin payments read route; it receives no Telegram identity, billing menu, pending deposit, payment reference, wallet/Xu ledger, PayOS/webhook state, provider state or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/payments"
     },
     {
       "classification": "admin",
@@ -15060,12 +15093,15 @@
         "file": "bot.py",
         "line": 49756
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "CORE_CANONICAL_PAYMENT",
+      "menu_capability_key": "wallet_topup",
+      "menu_feature_key": "wallet_topup",
+      "menu_launch_mode": "BRIDGE_GUARDED_PROXY",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_naptien",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/wallet/topup"
     },
     {
       "classification": "customer",
@@ -15086,12 +15122,15 @@
         "file": "bot.py",
         "line": 49756
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_capability_key": "account",
+      "menu_feature_key": "account",
+      "menu_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|hint_profile",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/account"
     },
     {
       "classification": "customer",
@@ -57697,7 +57736,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 59,
+      "count": 54,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -57705,15 +57744,15 @@
         "menu|admin_confirm_ack_{*}",
         "menu|admin_confirm_clear_stale_jobs",
         "menu|admin_confirm_refund_job",
-        "menu|billing",
         "menu|guide_guided_video",
         "menu|guide_video_ai",
         "menu|hint_film_blueprint",
         "menu|hint_growth_loop",
-        "menu|hint_naptien",
         "menu|hint_postback_setup",
-        "menu|hint_profile",
-        "menu|hint_scene_pack"
+        "menu|hint_scene_pack",
+        "menu|hint_video_status",
+        "menu|tax_config",
+        "menu|tax_estimate"
       ],
       "source_kinds": [
         "callback_data",
@@ -58004,11 +58043,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 356,
+      "count": 351,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 59,
+          "count": 54,
           "family": "menu",
           "priority": "P0"
         },
@@ -58251,12 +58290,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 90.69,
+  "mapping_coverage_percent": 90.82,
   "mapping_status_counts": {
     "COPIED_GUARDED": 2231,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 718,
-    "NEEDS_FEATURE_DISPOSITION": 356,
+    "NAVIGATION_ONLY": 723,
+    "NEEDS_FEATURE_DISPOSITION": 351,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -58278,7 +58317,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 90.69,
+  "safe_disposition_coverage_percent": 90.82,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -58288,13 +58327,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3467,
+    "resolved_static_source_count": 3472,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 38,
-    "unresolved_source_count": 356
+    "unresolved_source_count": 351
   },
   "static_web_surface_coverage_percent": 58.36,
   "telegram_link_callback_contract": {

@@ -71,6 +71,7 @@ jobs:
           # visibly instead of keeping a PR in "pending" indefinitely.
           timeout --signal=TERM --kill-after=30s 12m python -m pytest -q --maxfail=1 \
             tests/test_copyfast_auth_api.py::test_signed_session_csrf_and_telegram_link \
+            tests/test_copyfast_auth_api.py::test_workspace_menu_is_signed_and_cache_private \
             tests/test_copyfast_auth_api.py::test_web_owned_profile_defaults_are_csrf_protected_and_cannot_change_canonical_authority \
             tests/test_copyfast_auth_api.py::test_telegram_link_callback_requires_hmac_timestamp_and_one_time_nonce \
             tests/test_copyfast_auth_api.py::test_upload_rejects_path_traversal_and_never_falls_back_to_web_storage \
@@ -82,8 +83,11 @@ jobs:
             tests/test_portal_i18n_bundle_contracts.py \
             tests/test_portal_i18n_locale_contracts.py \
             tests/test_interface_locale_navigator_portal_contracts.py \
+            tests/test_workspace_menu_portal_contracts.py \
             tests/test_portal_navigation_ux_contracts.py \
             tests/test_migration_audit.py::test_static_audit_never_imports_source_and_redacts_secret_literals \
+            tests/test_migration_audit.py::test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog \
+            tests/test_migration_audit.py::test_static_audit_keeps_billing_menu_private_canonical_admin_navigation_only \
             tests/test_migration_audit.py::test_static_audit_keeps_interface_locale_navigation_closed_to_reviewed_web_catalogs
 
       - name: Check diff whitespace

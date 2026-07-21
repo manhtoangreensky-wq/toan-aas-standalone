@@ -14,11 +14,13 @@ output has been copied into the browser.
 | --- | --- | --- | --- |
 | `menu|guide_quick_start` | `/features` | signed Web-native customer | opens the intent-led Guided Start/catalog; no Bot guide prose, child callback, conversation or execution state |
 | `menu|main_ai` | `/chat` | signed Web-native customer | starts an empty Web chat workspace; no Telegram conversation/context |
+| `menu|main_profile`, `menu|hint_profile` | `/account` | signed customer | opens the independently signed Web account; no Telegram profile, referral identity, reward record or Bot context |
 | `menu|hint_ai_prompt` | `/prompt-studio` | signed Web-native customer | starts a fresh prompt brief; no model/provider call from navigation |
 | `menu|main_memory`, `freehub|docs`, `freehub|notes` | `/notes` | signed Web-native customer | opens a fresh Memory Center; no Bot notes, quota, add-on, Free Hub or Telegram context |
 | `menu|hint_note`, `menu|hint_search_note`, `memory|create`, `memory|list`, `memory|search`, `memory|delete_start` | `/notes` | signed Web-native customer | starts independent Web create/search/archive flows; no Bot pending text, query, note ID or mutation is replayed |
 | `menu|hint_remind` | `/reminders` | signed Web-native customer | opens independent Web reminders; no Bot reminder, Telegram identity or notification delivery is transferred |
 | `menu|guide_credits` | `/wallet` | canonical read | no checkout, Xu write, pricing change or webhook |
+| `menu|main_topup`, `menu|hint_naptien` | `/wallet/topup` | canonical payment bridge guard | customer navigation only; no Bot amount/order, manual top-up, Xu credit, PayOS settlement or webhook replay |
 | `menu|hint_pricing` | `/pricing` | signed customer | reference-only navigation; no order or payment action |
 | `menu|hint_doc_pdf_to_word` | `/documents/pdf-to-word` | signed Web-native customer | Web Asset Vault source; no Telegram file or pending confirmation |
 | `menu|hint_doc_image_to_pdf` | `/documents/image-to-pdf` | signed Web-native customer | Web Asset Vault source/order; no Telegram upload queue |
@@ -62,6 +64,16 @@ browser.
 | --- | --- | --- | --- |
 | `menu|finance_tax`, `menu|tax_checklist`, `menu|tax_export`, `menu|tax_custom_help`, `menu|tax_export_custom_help` | `/admin/finance/tax-readiness` | signed canonical admin read | fresh checklist/handoff guidance only; no calculation, finance read, export/file, tax profile/compliance mutation, payment/ledger/provider action or runtime claim |
 
+## Separately guarded Billing navigation
+
+`menu|billing` is deliberately outside the customer catalog and only appears
+in the static auditor's private finite registry. It may open a fresh
+`/admin/payments` read route only after canonical signed-admin authorization;
+it does not transfer a Telegram admin identity, Bot billing/manual-payment
+menu, pending deposit, payment reference, wallet/Xu ledger, PayOS/webhook
+state, provider state or write authority to the browser. The detailed record
+is generated in `BILLING_MENU_CALLBACK_CONTRACT.md`.
+
 ## Explicitly deferred
 
 - `menu|guide_video_ai` and `menu|guide_guided_video` remain explicit
@@ -79,9 +91,9 @@ browser.
   directory. It remains guidance: the Bot action gives no delete capability,
   and the Web route does not clean Bot storage, inspect quota or map to archive
   or Asset Vault retention.
-- `menu|billing`, `menu|tax_estimate`, `menu|tax_config`, period-specific tax
-  estimate/export actions, `finance_compliance*`, `archive|dept|tax_invoice`,
-  every other `menu|tax_*` value and `menu|clear_stale_jobs_help` remain
+- `menu|tax_estimate`, `menu|tax_config`, period-specific tax estimate/export
+  actions, `finance_compliance*`, `archive|dept|tax_invoice`, every other
+  `menu|tax_*` value and `menu|clear_stale_jobs_help` remain
   outside this catalog. They need separate canonical finance/job/private-file
   contracts and never inherit a browser route from a namespace or label.
 - Translation, payment/admin writes, provider controls and any other dynamic
