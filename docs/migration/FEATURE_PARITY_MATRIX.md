@@ -1,6 +1,6 @@
 # Feature parity matrix
 
-Observed-runtime static Web-surface coverage: **58.49%**. Observed-runtime typed source-disposition coverage: **90.58%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3823`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
+Observed-runtime static Web-surface coverage: **58.36%**. Observed-runtime typed source-disposition coverage: **90.48%**. Runtime workflow-equivalence verification: **0.0%** (`NOT_STATICALLY_VERIFIABLE`). Product-action denominator: `3823`. **Comparability: `NOT_COMPARABLE_TO_PREVIOUS_AUDIT_PERCENTAGES` — the denominator correction is not feature progress.** This is an actionable migration baseline, not a LIVE or engine-success claim.
 
 | Source type | Bot entry | Web target | Status |
 | --- | --- | --- | --- |
@@ -113,7 +113,7 @@ Observed-runtime static Web-surface coverage: **58.49%**. Observed-runtime typed
 | command | /checkpayos | /admin/checkpayos | COPIED_GUARDED |
 | command | /cleanup_temp_files | /admin/cleanup_temp_files | COPIED_GUARDED |
 | command | /clear_frame_video_error | /admin/clear_frame_video_error | COPIED_GUARDED |
-| command | /clear_job_lock | /admin/clear_job_lock | COPIED_GUARDED |
+| command | /clear_job_lock | CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED | NEEDS_FEATURE_DISPOSITION |
 | command | /clear_vip | /admin/clear_vip | COPIED_GUARDED |
 | command | /commands | /guides | COPIED_GUARDED |
 | command | /comment_pack | /admin/comment_pack | COPIED_GUARDED |

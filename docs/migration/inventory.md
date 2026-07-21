@@ -11,8 +11,8 @@
 | Unresolved callback templates | 283 | n/a |
 | Conversation handlers | 0 | n/a |
 | FastAPI routes | 139 | 635 |
-| Background/job signals | 194 | 28 |
-| Database tables | 97 | 205 |
+| Background/job signals | 194 | 29 |
+| Database tables | 97 | 206 |
 | Environment names | 364 | 199 |
 | Provider names | 15 | 16 |
 

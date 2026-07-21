@@ -14,4 +14,4 @@ The frozen Bot System and storage-cleanup buttons are Telegram guidance/menu bra
 
 Every row above is navigation only. `/admin/system`, `/admin/runtime` and `/admin/backups` repeat canonical signed-admin authorization; `/admin/internal-documents` repeats its distinct signed Web-local-admin guard; `/account/workspace-care` is a signed customer guidance hub only. A Browser cannot use this contract to run health checks, inspect a runtime, change system data, create/delete/restore/download a backup, clean storage, change quota, operate a provider, write a ledger, create a PayOS checkout, mutate a job or claim delivery.
 
-`menu|billing`, `menu|tax_*`, `menu|clear_stale_jobs_help` and every Video/menu production action remain outside this finite registry. They require their own source, canonical-finance, job or final Video-menu contracts; no namespace fallback grants a Web route.
+`menu|billing`, `menu|tax_*` and every Video/menu production action remain outside this finite registry. `menu|clear_stale_jobs_help` has its own finite Job-Lock Recovery Safety contract and still does not inherit System/Data authority. No namespace fallback grants a Web route.

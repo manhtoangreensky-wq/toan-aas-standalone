@@ -12920,11 +12920,25 @@
         "file": "bot.py",
         "line": 121940
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
       "source": "menu|admin_confirm_clear_stale_jobs",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_LOCK_RECOVERY_STATE",
+        "CANONICAL_BOT_JOB_LOCK_CLEAR_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot renders a confirmation boundary for a canonical job-lock-clear operation; it is not a browser confirmation or Web job action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -12932,11 +12946,25 @@
         "file": "bot.py",
         "line": 122213
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
       "source": "menu|admin_confirm_clear_stale_jobs",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_LOCK_RECOVERY_STATE",
+        "CANONICAL_BOT_JOB_LOCK_CLEAR_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot renders a confirmation boundary for a canonical job-lock-clear operation; it is not a browser confirmation or Web job action.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -13076,11 +13104,25 @@
         "file": "bot.py",
         "line": 122213
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "menu",
+      "resolution": "reviewed_job_lock_recovery_callback_requires_canonical_mutation_contract",
       "source": "menu|admin_confirm_refund_job",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_LOCK_RECOVERY_STATE",
+        "CANONICAL_BOT_JOB_REFUND_CONFIRMATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot confirmation can lead to a canonical job refund decision; the Web must not accept a Bot job identifier or request a refund.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -13314,17 +13356,31 @@
       "target": "/dashboard"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 121921
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "job_lock_recovery_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "job_lock_recovery_feature_key": "admin_job_recovery_guide",
+      "job_lock_recovery_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_job_lock_recovery_fresh_web_navigation",
       "source": "menu|clear_stale_jobs_help",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_JOB_LOCK_HELP_NOT_REPLAYED",
+        "BOT_JOB_LOCK_STATE_NOT_REPLAYED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot action only renders its admin stale-job recovery help. The Web opens a separately authorized, literal safety guide and receives no Telegram admin identity, job/user identifier, queue/lock state, confirmation context, worker/provider/runtime data, refund/billing state or mutation authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/job-recovery-guide"
     },
     {
       "classification": "customer",
@@ -48667,12 +48723,26 @@
         "file": "bot.py",
         "line": 128493
       },
+      "fallback_family": "command:clear_job_lock",
       "handler": "cmd_clear_job_lock",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_job_lock_recovery_command_requires_canonical_mutation_contract",
       "source": "/clear_job_lock",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_LOCK_RECOVERY_STATE",
+        "CANONICAL_BOT_JOB_LOCK_CLEAR_MUTATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot command can change eligible active video-job state and may trigger canonical refund/billing effects; it is not a Web recovery API.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/clear_job_lock"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -53187,12 +53257,26 @@
         "file": "bot.py",
         "line": 128492
       },
+      "fallback_family": "command:refund_job",
       "handler": "cmd_refund_job",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_job_lock_recovery_command_requires_canonical_mutation_contract",
       "source": "/refund_job",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_JOB_LOCK_RECOVERY_STATE",
+        "CANONICAL_BOT_JOB_REFUND_MUTATION",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "TELEGRAM_CONFIRMATION_CONTEXT_REQUIRED",
+        "NO_BOT_JOB_OR_USER_IDENTIFIER_TRANSFER",
+        "NO_JOB_CLEAR_RETRY_REFUND_OR_CHARGE_ACTION",
+        "NO_PROVIDER_WORKER_RUNTIME_CONTROL",
+        "NO_PAYOS_WALLET_LEDGER_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot command is a canonical refund mutation and must not become a Web refund endpoint, job form or browser-side ledger action.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/refund_job"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_JOB_LOCK_RECOVERY_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -57426,14 +57510,15 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 57,
+      "count": 59,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
       "sample_sources": [
         "menu|admin_confirm_ack_{*}",
+        "menu|admin_confirm_clear_stale_jobs",
+        "menu|admin_confirm_refund_job",
         "menu|billing",
-        "menu|clear_stale_jobs_help",
         "menu|guide_guided_video",
         "menu|guide_video_ai",
         "menu|hint_film_blueprint",
@@ -57441,8 +57526,7 @@
         "menu|hint_naptien",
         "menu|hint_postback_setup",
         "menu|hint_profile",
-        "menu|hint_scene_pack",
-        "menu|hint_video_status"
+        "menu|hint_scene_pack"
       ],
       "source_kinds": [
         "callback_data",
@@ -57653,6 +57737,44 @@
       ]
     },
     {
+      "authority": "Source review required",
+      "candidate_boundary": "source_review_required",
+      "count": 1,
+      "family": "command:clear_job_lock",
+      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+      "priority": "P1",
+      "sample_sources": [
+        "/clear_job_lock"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
+        "command"
+      ]
+    },
+    {
+      "authority": "Source review required",
+      "candidate_boundary": "source_review_required",
+      "count": 1,
+      "family": "command:refund_job",
+      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+      "priority": "P1",
+      "sample_sources": [
+        "/refund_job"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
+        "command"
+      ]
+    },
+    {
       "authority": "Web-native subtitle/dubbing boundary",
       "candidate_boundary": "/dubbing",
       "count": 1,
@@ -57719,11 +57841,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 360,
+      "count": 364,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 57,
+          "count": 59,
           "family": "menu",
           "priority": "P0"
         },
@@ -57770,6 +57892,16 @@
         {
           "count": 2,
           "family": "create_media",
+          "priority": "P1"
+        },
+        {
+          "count": 1,
+          "family": "command:clear_job_lock",
+          "priority": "P1"
+        },
+        {
+          "count": 1,
+          "family": "command:refund_job",
           "priority": "P1"
         },
         {
@@ -57961,12 +58093,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 90.58,
+  "mapping_coverage_percent": 90.48,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2236,
+    "COPIED_GUARDED": 2231,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 709,
-    "NEEDS_FEATURE_DISPOSITION": 360,
+    "NAVIGATION_ONLY": 710,
+    "NEEDS_FEATURE_DISPOSITION": 364,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -57988,7 +58120,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 90.58,
+  "safe_disposition_coverage_percent": 90.48,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -57998,15 +58130,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3463,
+    "resolved_static_source_count": 3459,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 38,
-    "unresolved_source_count": 360
+    "unresolved_source_count": 364
   },
-  "static_web_surface_coverage_percent": 58.49,
+  "static_web_surface_coverage_percent": 58.36,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
