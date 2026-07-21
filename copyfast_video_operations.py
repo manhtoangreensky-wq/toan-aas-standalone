@@ -33,7 +33,7 @@ import uuid
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from starlette.background import BackgroundTask
 from starlette.concurrency import run_in_threadpool
 
@@ -104,6 +104,12 @@ class VideoOperationError(Exception):
 
 class VideoPosterRequest(BaseModel):
     """One immutable private video becomes one private JPEG poster."""
+
+    # Keep this small capability closed: a browser must not be able to smuggle
+    # future FFmpeg/provider/path options through a request that the server
+    # silently accepts.  Adding an input is therefore an explicit reviewed
+    # contract change, not an accidental client-side expansion.
+    model_config = ConfigDict(extra="forbid")
 
     source_asset_id: str = Field(min_length=36, max_length=36)
     poster_position: str = Field(default="middle", min_length=3, max_length=12)

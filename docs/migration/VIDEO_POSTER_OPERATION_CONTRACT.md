@@ -26,6 +26,36 @@ failure ends as `failed` or `guarded`; an interrupted request is reconciled to
 browser must never show a result/download for any state other than a sealed
 `completed` artifact.
 
+## Signed Portal handoff
+
+The signed Portal exposes this bounded operation at the direct
+`/video/poster` workspace. It deliberately does **not** add another broad
+Video-menu/catalog entry; that wider menu is handled as a separate UI task.
+
+- Its source picker makes an owner-scoped, `no-store` request to Asset Vault
+  with the closed `reference_kind=video_poster` filter. That filter returns
+  only active canonical `.mp4`/`video/mp4`, `.mov`/`video/quicktime`, or
+  `.webm`/`video/webm` metadata, at most 25 MiB. The browser never filters an
+  all-assets feed, reads bytes, sends URLs/paths/hashes/storage keys, or keeps
+  source metadata in browser storage.
+- The customer chooses one source and one closed position (`start`, `middle`,
+  `end`), acknowledges the private-output boundary, and submits through the
+  signed-session CSRF/idempotency path. There is no estimate or preview API;
+  the Portal must not present a browser-derived frame as a server result.
+- Source paging, refresh, detail and history are session/route fenced and
+  owner-scoped. Changing account, route or a failed private read clears the
+  projection rather than leaving a stale source, receipt or filename visible.
+- After a successful synchronous receipt, the Portal reloads server-owned
+  history instead of inserting a completed row. Download requires the exact
+  owner-scoped receipt and a sealed `image/jpeg` attachment with matching
+  byte count, `attachment`, `no-store`, `nosniff`, `no-referrer` and CSP
+  sandbox headers. The temporary object URL is revoked immediately after the
+  download trigger.
+
+This route remains outside PWA private caching and has no Bot, Core Bridge,
+provider, PayOS, Xu/wallet, payment, public preview/link or browser media
+execution fallback.
+
 The direct operation response is owner-scoped and may identify the selected
 source Asset Vault item so that the same customer can understand the request.
 The generic `/jobs` and `/assets` read models expose only opaque

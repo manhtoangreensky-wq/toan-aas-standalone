@@ -53,6 +53,25 @@
   const FRAME_VIDEO_EFFECTS = new Set(["none", "fade", "zoom", "pan", "slide", "random"]);
   const FRAME_VIDEO_CONCRETE_EFFECTS = new Set(["none", "fade", "zoom", "pan", "slide"]);
   const FRAME_VIDEO_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
+  // Video Poster is a separate, bounded JPEG extraction boundary.  It is not
+  // Video Studio, a Bot/provider flow, a browser renderer or a generic asset
+  // history projection.
+  const VIDEO_POSTER_OPERATIONS_ROUTE = "/video/poster";
+  const VIDEO_POSTER_REFERENCE_LIST_LIMIT = 50;
+  // The native history endpoint is capped at 100 and has no cursor. Request
+  // its complete bounded window rather than silently hiding half of it.
+  const VIDEO_POSTER_HISTORY_LIST_LIMIT = 100;
+  const VIDEO_POSTER_MAX_SOURCE_BYTES = 25 * 1024 * 1024;
+  // The server clamps this setting to four MiB. Keep the Portal strict so an
+  // unexpected response can never be represented as a verified attachment.
+  const VIDEO_POSTER_MAX_OUTPUT_BYTES = 4 * 1024 * 1024;
+  const VIDEO_POSTER_MIME_BY_EXTENSION = Object.freeze({
+    ".mp4": "video/mp4",
+    ".mov": "video/quicktime",
+    ".webm": "video/webm"
+  });
+  const VIDEO_POSTER_POSITIONS = new Set(["start", "middle", "end"]);
+  const VIDEO_POSTER_STATES = new Set(["queued", "processing", "completed", "failed", "guarded", "unavailable"]);
   const JOB_POLL_INTERVAL_MS = 15000;
   const JOB_POLL_MAX_BACKOFF_MS = 60000;
   const PAYMENT_POLL_INTERVAL_MS = 10000;
@@ -168,6 +187,8 @@
   let videoTransformOperationDetailHydrationEpoch = 0;
   let frameVideoOperationsHydrationEpoch = 0;
   let frameVideoOperationDetailHydrationEpoch = 0;
+  let videoPosterOperationsHydrationEpoch = 0;
+  let videoPosterOperationDetailHydrationEpoch = 0;
   // Campaign plans, Project Center records and Studio Documents are private
   // Web-owned planning data.  Keep their list/detail reads independently
   // ordered so a delayed response cannot cross a signed account, route or
@@ -9271,6 +9292,8 @@
     ++videoTransformOperationDetailHydrationEpoch;
     ++frameVideoOperationsHydrationEpoch;
     ++frameVideoOperationDetailHydrationEpoch;
+    ++videoPosterOperationsHydrationEpoch;
+    ++videoPosterOperationDetailHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignCalendarHydrationEpoch;
     ++projectCenterSessionEpoch;
@@ -9539,6 +9562,10 @@
     // generic Video Studio, browser decoding, public preview, wallet/Xu or
     // PayOS authority.
     const frameVideoOperationsEnabled = Boolean(status.flags && status.flags.frame_video_operations_enabled === true);
+    // Video Poster is a separately gated, bounded JPEG extraction surface.
+    // Its flag never opens Video Studio, Bot/provider execution, wallet/Xu,
+    // PayOS, public preview/link or browser media processing.
+    const videoPosterEnabled = Boolean(status.flags && status.flags.video_poster_enabled === true);
     // Image Creative Studio is deliberately fail-closed by its own feature
     // flag.  A true flag permits private art-direction records only; it never
     // indicates an image provider, generator, preview, job, wallet or payment
@@ -9985,6 +10012,11 @@
       "frame-video-operation-create": Boolean(account && me.csrf_token && assetVaultEnabled && frameVideoOperationsEnabled),
       "frame-video-operation-detail": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
       "frame-video-operation-download": Boolean(account && assetVaultEnabled && frameVideoOperationsEnabled),
+      "video-poster-operation-view": Boolean(account && assetVaultEnabled && videoPosterEnabled),
+      "video-poster-operation-refresh": Boolean(account && assetVaultEnabled && videoPosterEnabled),
+      "video-poster-operation-create": Boolean(account && me.csrf_token && assetVaultEnabled && videoPosterEnabled),
+      "video-poster-operation-detail": Boolean(account && assetVaultEnabled && videoPosterEnabled),
+      "video-poster-operation-download": Boolean(account && assetVaultEnabled && videoPosterEnabled),
       "image-studio-view": Boolean(account && imageStudioEnabled),
       "image-studio-refresh": Boolean(account && imageStudioEnabled),
       "image-studio-filter": Boolean(account && imageStudioEnabled),
@@ -10143,6 +10175,8 @@
     ++videoTransformOperationDetailHydrationEpoch;
     ++frameVideoOperationsHydrationEpoch;
     ++frameVideoOperationDetailHydrationEpoch;
+    ++videoPosterOperationsHydrationEpoch;
+    ++videoPosterOperationDetailHydrationEpoch;
     ++campaignSessionEpoch;
     ++campaignListHydrationEpoch;
     ++campaignDetailHydrationEpoch;
@@ -10401,6 +10435,7 @@
       audioAssetOperationsEnabled,
       videoTransformOperationsEnabled,
       frameVideoOperationsEnabled,
+      videoPosterEnabled,
       imageStudioEnabled,
       imagePromptComposerEnabled,
       documentWorkspaceEnabled,
@@ -10693,6 +10728,15 @@
       frameVideoDetail: {},
       frameVideoDetailReadState: "guarded",
       frameVideoOperationsReadState: account && assetVaultEnabled && frameVideoOperationsEnabled ? "loading" : "guarded",
+      // Video Poster keeps its typed source metadata, private receipt list
+      // and selected detail in this signed tab only. Resetting it on every
+      // bootstrap prevents source/file metadata crossing accounts or routes.
+      videoPosterReferences: { items: [], selected: null, pagination: { limit: VIDEO_POSTER_REFERENCE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoPosterOperations: [],
+      videoPosterDraft: {},
+      videoPosterDetail: {},
+      videoPosterDetailReadState: "guarded",
+      videoPosterOperationsReadState: account && assetVaultEnabled && videoPosterEnabled ? "loading" : "guarded",
       // Explicitly clear owner-scoped creative metadata during every session
       // refresh. A disabled flag or failed request must not leave a prior
       // artboard, asset reference, prompt or history visible in the browser.
@@ -10949,6 +10993,7 @@
         "/audio/assets": account && assetVaultEnabled && audioAssetOperationsEnabled ? "processing" : "guarded",
         "/video/finishing": account && assetVaultEnabled && videoTransformOperationsEnabled ? "processing" : "guarded",
         "/video/frame-sequence": account && assetVaultEnabled && frameVideoOperationsEnabled ? "processing" : "guarded",
+        "/video/poster": account && assetVaultEnabled && videoPosterEnabled ? "processing" : "guarded",
         "/subtitle/formats": account && subtitleFormatToolsEnabled ? "ready" : "guarded",
         "/image-studio": account && imageStudioEnabled ? "processing" : "guarded",
         "/image-studio/new": account && imageStudioEnabled ? "processing" : "guarded",
@@ -11320,6 +11365,13 @@
       // prior session's selection when the native runtime is unavailable.
       if (account && assetVaultEnabled && frameVideoOperationsEnabled) await hydrateFrameVideoOperations();
       else clearFrameVideoOperationsProjection("guarded");
+    }
+    if (currentPath === VIDEO_POSTER_OPERATIONS_ROUTE) {
+      // Video Poster is an independent private JPEG receipt boundary. Never
+      // substitute Video Studio, generic Asset/Job metadata, Bot state or a
+      // prior-session selection while its typed runtime gate is unavailable.
+      if (account && assetVaultEnabled && videoPosterEnabled) await hydrateVideoPosterOperations();
+      else clearVideoPosterOperationsProjection("guarded");
     }
     if (account && supportDeskEnabled) {
       if (["/support", "/tickets"].includes(currentPath)) await hydrateSupportDesk();
@@ -16887,6 +16939,306 @@
     const blob = await response.blob();
     if (blob.size !== expectedSize || blob.size > FRAME_VIDEO_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== "video/mp4") {
       throw new Error("Private Frame Video attachment không qua kiểm tra kích thước hoặc định dạng.");
+    }
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = filename;
+    anchor.style.display = "none";
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1500);
+    return true;
+  }
+
+  // Video Poster is intentionally a compact, separate local-media boundary.
+  // Its typed picker, receipt history and temporary download stay isolated
+  // from the broad Video catalogue, Bot, provider, wallet/Xu, PayOS, generic
+  // Jobs/Assets, browser decoder or a prior signed account.
+  function videoPosterOperationsPathIsCurrent(path) {
+    return String(path || "").split("?")[0] === VIDEO_POSTER_OPERATIONS_ROUTE;
+  }
+
+  function videoPosterTimestamp(value, required) {
+    const normalized = String(value || "").trim();
+    if (!normalized) return required ? null : "";
+    return normalized.length <= 80 && !/[\u0000-\u001f\u007f]/.test(normalized) ? normalized : null;
+  }
+
+  function videoPosterInteger(value, minimum, maximum) {
+    if (value === null || value === undefined) return null;
+    const number = Number(value);
+    return Number.isInteger(number) && number >= minimum && number <= maximum ? number : null;
+  }
+
+  function videoPosterReferenceItem(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(source.id || "").trim();
+    const displayName = String(source.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(source.extension || "").trim().toLowerCase();
+    const contentType = String(source.content_type || "").trim().toLowerCase();
+    const byteSize = Number(source.byte_size);
+    const createdAt = videoPosterTimestamp(source.created_at, false);
+    const expectedMime = VIDEO_POSTER_MIME_BY_EXTENSION[extension] || "";
+    if (!validVaultAssetId(id) || String(source.state || "") !== "active" || !displayName || displayName.length > 120
+      || !expectedMime || contentType !== expectedMime || !Number.isInteger(byteSize) || byteSize < 1
+      || byteSize > VIDEO_POSTER_MAX_SOURCE_BYTES || createdAt === null) return null;
+    return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize, state: "active", created_at: createdAt };
+  }
+
+  function videoPosterOffset(value) {
+    const offset = Number(value);
+    return Number.isInteger(offset) && offset >= 0 && offset <= 10000 ? offset : 0;
+  }
+
+  function videoPosterReferencesProjection(data, offset, selectedId, previous) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const currentOffset = videoPosterOffset(offset);
+    const items = Array.isArray(source.items)
+      ? source.items.map(videoPosterReferenceItem).filter(Boolean).slice(0, VIDEO_POSTER_REFERENCE_LIST_LIMIT)
+      : [];
+    const selected = validVaultAssetId(selectedId) ? String(selectedId).trim() : "";
+    const previousSelected = previous && typeof previous === "object" && !Array.isArray(previous)
+      ? videoPosterReferenceItem(previous.selected) : null;
+    const selectedItem = items.find((item) => item.id === selected)
+      || (previousSelected && previousSelected.id === selected ? previousSelected : null);
+    const rawNext = Number(source.next_offset);
+    const hasMore = source.has_more === true && Number.isInteger(rawNext) && rawNext > currentOffset && rawNext <= 10000;
+    return {
+      items, selected: selectedItem,
+      pagination: {
+        limit: VIDEO_POSTER_REFERENCE_LIST_LIMIT, offset: currentOffset, returned: items.length,
+        has_more: hasMore, next_offset: hasMore ? rawNext : null,
+        previous_offset: currentOffset >= VIDEO_POSTER_REFERENCE_LIST_LIMIT ? currentOffset - VIDEO_POSTER_REFERENCE_LIST_LIMIT : null
+      }
+    };
+  }
+
+  function videoPosterOperationItem(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(source.id || "").trim();
+    const sourceAssetId = String(source.source_asset_id || "").trim();
+    const kind = String(source.kind || "").trim();
+    const state = String(source.state || source.status || "").trim();
+    const position = String(source.poster_position || "").trim().toLowerCase();
+    const createdAt = videoPosterTimestamp(source.created_at, true);
+    const queuedAt = videoPosterTimestamp(source.queued_at, true);
+    const updatedAt = videoPosterTimestamp(source.updated_at, true);
+    const startedAt = source.started_at === null || source.started_at === undefined ? null : videoPosterTimestamp(source.started_at, true);
+    const completedAt = source.completed_at === null || source.completed_at === undefined ? null : videoPosterTimestamp(source.completed_at, true);
+    const sourceDuration = source.source_duration_ms === null || source.source_duration_ms === undefined ? null : videoPosterInteger(source.source_duration_ms, 0, 120000);
+    const sourceWidth = source.source_width === null || source.source_width === undefined ? null : videoPosterInteger(source.source_width, 1, 4096);
+    const sourceHeight = source.source_height === null || source.source_height === undefined ? null : videoPosterInteger(source.source_height, 1, 4096);
+    const frameTimestamp = source.frame_timestamp_ms === null || source.frame_timestamp_ms === undefined ? null : videoPosterInteger(source.frame_timestamp_ms, 0, 120000);
+    const outputWidth = source.output_width === null || source.output_width === undefined ? null : videoPosterInteger(source.output_width, 1, 1280);
+    const outputHeight = source.output_height === null || source.output_height === undefined ? null : videoPosterInteger(source.output_height, 1, 1280);
+    const outputAvailable = source.output_available === true;
+    const outputFilename = String(source.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const outputContentType = String(source.content_type || "").trim().toLowerCase();
+    const outputSize = videoPosterInteger(source.byte_size, 1, VIDEO_POSTER_MAX_OUTPUT_BYTES);
+    const optionalFieldsValid = (source.started_at === null || source.started_at === undefined || startedAt !== null)
+      && (source.completed_at === null || source.completed_at === undefined || completedAt !== null)
+      && (source.source_duration_ms === null || source.source_duration_ms === undefined || sourceDuration !== null)
+      && (source.source_width === null || source.source_width === undefined || sourceWidth !== null)
+      && (source.source_height === null || source.source_height === undefined || sourceHeight !== null)
+      && (source.frame_timestamp_ms === null || source.frame_timestamp_ms === undefined || frameTimestamp !== null)
+      && (source.output_width === null || source.output_width === undefined || outputWidth !== null)
+      && (source.output_height === null || source.output_height === undefined || outputHeight !== null);
+    if (!validVaultAssetId(id) || !validVaultAssetId(sourceAssetId) || kind !== "video_poster" || !VIDEO_POSTER_STATES.has(state)
+      || !VIDEO_POSTER_POSITIONS.has(position) || !createdAt || !queuedAt || !updatedAt || !optionalFieldsValid) return null;
+    const safeOutput = outputAvailable && state === "completed" && outputContentType === "image/jpeg"
+      && outputFilename.length > 0 && outputFilename.length <= 180 && outputSize !== null
+      && outputWidth !== null && outputHeight !== null && outputWidth * outputHeight <= 2000000;
+    return {
+      id, source_asset_id: sourceAssetId, kind, state, status: state, poster_position: position,
+      source: { duration_ms: sourceDuration, width: sourceWidth, height: sourceHeight, frame_timestamp_ms: frameTimestamp },
+      output: safeOutput ? { available: true, filename: outputFilename, content_type: "image/jpeg", byte_size: outputSize, width: outputWidth, height: outputHeight }
+        : { available: false, filename: null, content_type: null, byte_size: null, width: null, height: null },
+      created_at: createdAt, queued_at: queuedAt, started_at: startedAt, completed_at: completedAt, updated_at: updatedAt
+    };
+  }
+
+  function videoPosterOperationsProjection(data) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const operations = Array.isArray(source.operations)
+      ? source.operations.map(videoPosterOperationItem).filter(Boolean).slice(0, VIDEO_POSTER_HISTORY_LIST_LIMIT)
+      : [];
+    return { items: operations };
+  }
+
+  function videoPosterOperationSourcesFromState() {
+    const references = base().videoPosterReferences && typeof base().videoPosterReferences === "object" && !Array.isArray(base().videoPosterReferences)
+      ? base().videoPosterReferences : {};
+    const selected = videoPosterReferenceItem(references.selected);
+    const items = Array.isArray(references.items) ? references.items : [];
+    const seen = new Set();
+    return (selected ? [selected, ...items] : items).map(videoPosterReferenceItem)
+      .filter((item) => item && !seen.has(item.id) && (seen.add(item.id), true));
+  }
+
+  function videoPosterOperationFromState(operationId) {
+    const id = String(operationId || "").trim();
+    return (Array.isArray(base().videoPosterOperations) ? base().videoPosterOperations : [])
+      .map(videoPosterOperationItem).find((item) => item && item.id === id) || null;
+  }
+
+  function videoPosterPayload(fields) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    const payload = {
+      source_asset_id: String(source.source_asset_id || "").trim(),
+      poster_position: String(source.poster_position || "").trim().toLowerCase()
+    };
+    if (!validVaultAssetId(payload.source_asset_id) || !VIDEO_POSTER_POSITIONS.has(payload.poster_position)) {
+      throw new Error("Kế hoạch Video Poster không hợp lệ. Hãy chọn một video private và vị trí khung hình được phép.");
+    }
+    if (!videoPosterOperationSourcesFromState().some((item) => item.id === payload.source_asset_id)) {
+      throw new Error("Video nguồn không còn trong metadata Asset Vault owner-scoped của phiên hiện tại. Hãy làm mới rồi chọn lại.");
+    }
+    return payload;
+  }
+
+  function videoPosterRouteSessionIsCurrent(sessionEpoch, expectedPath) {
+    return sessionEpoch === assetVaultSessionEpoch && currentPortalPath() === expectedPath
+      && videoPosterOperationsPathIsCurrent(expectedPath) && base().assetVaultEnabled === true
+      && base().videoPosterEnabled === true && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function videoPosterOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === videoPosterOperationsHydrationEpoch && videoPosterRouteSessionIsCurrent(sessionEpoch, expectedPath);
+  }
+
+  function clearVideoPosterOperationsProjection(readState) {
+    const normalized = ["loading", "failed", "guarded"].includes(String(readState || "")) ? String(readState) : "guarded";
+    merge({
+      videoPosterReferences: { items: [], selected: null, pagination: { limit: VIDEO_POSTER_REFERENCE_LIST_LIMIT, offset: 0, returned: 0, has_more: false, next_offset: null, previous_offset: null } },
+      videoPosterOperations: [], videoPosterDraft: {}, videoPosterDetail: {}, videoPosterDetailReadState: "guarded",
+      videoPosterOperationsReadState: normalized,
+      pageStates: { ...(base().pageStates || {}), [VIDEO_POSTER_OPERATIONS_ROUTE]: normalized === "loading" ? "read_only" : normalized }
+    });
+  }
+
+  async function hydrateVideoPosterOperations(options) {
+    const request = options && typeof options === "object" && !Array.isArray(options) ? options : {};
+    const requestEpoch = ++videoPosterOperationsHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!videoPosterOperationsPathIsCurrent(expectedPath) || base().assetVaultEnabled !== true || base().videoPosterEnabled !== true) {
+      if (videoPosterOperationsPathIsCurrent(expectedPath)) clearVideoPosterOperationsProjection("guarded");
+      return null;
+    }
+    const previousReferences = base().videoPosterReferences && typeof base().videoPosterReferences === "object" && !Array.isArray(base().videoPosterReferences)
+      ? base().videoPosterReferences : {};
+    const previousPagination = previousReferences.pagination && typeof previousReferences.pagination === "object" && !Array.isArray(previousReferences.pagination)
+      ? previousReferences.pagination : {};
+    const sourceOffset = videoPosterOffset(request.sourceOffset === undefined ? previousPagination.offset : request.sourceOffset);
+    const selectedId = validVaultAssetId(request.selectedId) ? String(request.selectedId).trim()
+      : (videoPosterReferenceItem(previousReferences.selected) || {}).id || "";
+    merge({
+      videoPosterOperationsReadState: "loading", videoPosterDetail: {}, videoPosterDetailReadState: "guarded",
+      pageStates: { ...(base().pageStates || {}), [VIDEO_POSTER_OPERATIONS_ROUTE]: "read_only" }
+    });
+    try {
+      const [referencesResult, operationsResult] = await Promise.all([
+        api(`/asset-vault?state=active&reference_kind=video_poster&limit=${VIDEO_POSTER_REFERENCE_LIST_LIMIT}&offset=${sourceOffset}`, { cache: "no-store" }),
+        api(`/video-operations?limit=${VIDEO_POSTER_HISTORY_LIST_LIMIT}`, { cache: "no-store" })
+      ]);
+      if (!videoPosterOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      const references = videoPosterReferencesProjection(referencesResult.data, sourceOffset, selectedId, previousReferences);
+      const history = videoPosterOperationsProjection(operationsResult.data);
+      if (!videoPosterOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      merge({
+        videoPosterReferences: references, videoPosterOperations: history.items,
+        videoPosterOperationsReadState: "ready", pageStates: { ...(base().pageStates || {}), [VIDEO_POSTER_OPERATIONS_ROUTE]: "ready" }
+      });
+      return { references, operations: history.items };
+    } catch (_) {
+      if (!videoPosterOperationsRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return null;
+      clearVideoPosterOperationsProjection("failed");
+      return null;
+    }
+  }
+
+  function videoPosterDetailProjection(data, expectedId) {
+    const source = data && typeof data === "object" && !Array.isArray(data) ? data : {};
+    const operation = videoPosterOperationItem(source.operation);
+    const events = Array.isArray(source.events) ? source.events : null;
+    if (!operation || operation.id !== expectedId || !events || events.length > 20) return null;
+    const projectedEvents = events.map((event) => {
+      const item = event && typeof event === "object" && !Array.isArray(event) ? event : {};
+      const state = String(item.state || "").trim();
+      const createdAt = videoPosterTimestamp(item.created_at, true);
+      return VIDEO_POSTER_STATES.has(state) && createdAt ? { state, created_at: createdAt } : null;
+    });
+    return projectedEvents.some((event) => !event) ? null : { operation, events: projectedEvents };
+  }
+
+  async function hydrateVideoPosterOperationDetail(operationId) {
+    const id = String(operationId || "").trim();
+    if (!validVaultAssetId(id) || !videoPosterOperationFromState(id)) throw new Error("Mã Video Poster không nằm trong lịch sử private đang hiển thị.");
+    const requestEpoch = ++videoPosterOperationDetailHydrationEpoch;
+    const sessionEpoch = assetVaultSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!videoPosterRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+    merge({ videoPosterDetail: {}, videoPosterDetailReadState: "loading" });
+    try {
+      const result = await api(`/video-operations/${encodeURIComponent(id)}`, { cache: "no-store" });
+      if (requestEpoch !== videoPosterOperationDetailHydrationEpoch || !videoPosterRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+      const detail = videoPosterDetailProjection(result.data, id);
+      if (!detail) throw new Error("Máy chủ chưa trả detail Video Poster owner-scoped hợp lệ.");
+      merge({ videoPosterDetail: detail, videoPosterDetailReadState: "ready" });
+      return detail;
+    } catch (_) {
+      if (requestEpoch !== videoPosterOperationDetailHydrationEpoch || !videoPosterRouteSessionIsCurrent(sessionEpoch, expectedPath)) return null;
+      merge({ videoPosterDetail: {}, videoPosterDetailReadState: "guarded" });
+      return null;
+    }
+  }
+
+  function videoPosterOperationReceipt(result) {
+    const data = result && result.data && typeof result.data === "object" && !Array.isArray(result.data) ? result.data : {};
+    const operation = videoPosterOperationItem(data.operation);
+    if (!operation || operation.state !== "completed" || operation.output.available !== true) {
+      throw new Error("Máy chủ chưa trả JPEG Video Poster private đã được kiểm chứng.");
+    }
+    return operation;
+  }
+
+  async function downloadVideoPosterOperation(operationId) {
+    const operation = videoPosterOperationFromState(operationId);
+    const output = operation && operation.output && typeof operation.output === "object" && !Array.isArray(operation.output) ? operation.output : {};
+    const expectedSize = Number(output.byte_size);
+    const filename = String(output.filename || "").replace(/[\u0000-\u001f\u007f]/g, " ").trim();
+    if (!operation || operation.kind !== "video_poster" || operation.state !== "completed" || output.available !== true
+      || String(output.content_type || "").toLowerCase() !== "image/jpeg" || !filename || filename.length > 180
+      || !Number.isInteger(expectedSize) || expectedSize < 1 || expectedSize > VIDEO_POSTER_MAX_OUTPUT_BYTES) {
+      throw new Error("Output Video Poster private chưa được server xác nhận sẵn sàng để tải.");
+    }
+    const headers = new Headers({ Accept: "image/jpeg, application/json", "X-Request-ID": randomKey("web") });
+    const response = await fetch(`${API}/video-operations/${encodeURIComponent(operation.id)}/download`, {
+      credentials: "same-origin", headers, cache: "no-store"
+    });
+    const contentType = String(response.headers.get("Content-Type") || "").toLowerCase();
+    if (contentType.includes("application/json")) {
+      let payload = {};
+      try { payload = await response.json(); } catch (_) { /* guarded envelope remains generic */ }
+      throw new Error(payload && payload.message ? payload.message : "Máy chủ chưa xác nhận output Video Poster private có thể tải.");
+    }
+    const disposition = String(response.headers.get("Content-Disposition") || "").toLowerCase();
+    const cacheControl = String(response.headers.get("Cache-Control") || "").toLowerCase();
+    const nosniff = String(response.headers.get("X-Content-Type-Options") || "").toLowerCase();
+    const referrerPolicy = String(response.headers.get("Referrer-Policy") || "").toLowerCase();
+    const contentPolicy = String(response.headers.get("Content-Security-Policy") || "").toLowerCase();
+    const byteSize = Number(response.headers.get("Content-Length"));
+    const actualMime = contentType.split(";", 1)[0].trim();
+    if (!response.ok || !disposition.includes("attachment") || !cacheControl.includes("no-store") || nosniff !== "nosniff"
+      || !referrerPolicy.includes("no-referrer") || !contentPolicy.includes("sandbox") || actualMime !== "image/jpeg"
+      || !Number.isInteger(byteSize) || byteSize !== expectedSize) {
+      throw new Error("Private JPEG attachment không qua kiểm tra delivery của browser.");
+    }
+    const blob = await response.blob();
+    if (blob.size !== expectedSize || blob.size > VIDEO_POSTER_MAX_OUTPUT_BYTES || blob.type.split(";", 1)[0].toLowerCase() !== "image/jpeg") {
+      throw new Error("Private JPEG attachment không qua kiểm tra kích thước hoặc định dạng.");
     }
     const objectUrl = URL.createObjectURL(blob);
     const anchor = document.createElement("a");
@@ -24574,6 +24926,132 @@
         try {
           await downloadFrameVideoOperation(operationId);
           toast("Đã bắt đầu tải attachment MP4 Frame Video private đã được xác minh.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-poster-operation-refresh") {
+        if (route !== VIDEO_POSTER_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_POSTER_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể làm mới Video Poster Lab từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-poster-operation-refresh"] === true)) {
+          throw new Error("Cần signed Web session, Asset Vault và Video Poster runtime để xem dữ liệu private.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoPosterOperations();
+          if (!refreshed && base().videoPosterOperationsReadState !== "ready") {
+            throw new Error("Không thể tải Video Poster owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã làm mới video nguồn và lịch sử Video Poster private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-poster-reference-page") {
+        if (route !== VIDEO_POSTER_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_POSTER_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể đổi trang video private từ Video Poster Lab đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-poster-operation-view"] === true)) {
+          throw new Error("Cần signed Web session để xem video Asset Vault private.");
+        }
+        const sourceOffset = Number(fields.__videoPosterReferenceOffset);
+        const selectedId = String(fields.__videoPosterReferenceSelectedId || "").trim();
+        if (!Number.isInteger(sourceOffset) || sourceOffset < 0 || sourceOffset > 10000 || (selectedId && !validVaultAssetId(selectedId))) {
+          throw new Error("Trang hoặc video nguồn Video Poster private không hợp lệ.");
+        }
+        setActionBusy(action, route, true);
+        try {
+          const refreshed = await hydrateVideoPosterOperations({ sourceOffset, selectedId });
+          if (!refreshed && base().videoPosterOperationsReadState !== "ready") {
+            throw new Error("Không thể tải trang video owner-scoped an toàn. Hãy thử lại.");
+          }
+          if (refreshed) toast("Đã tải trang video Asset Vault private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-poster-operation-confirm") {
+        if (route !== VIDEO_POSTER_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_POSTER_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể tạo Video Poster từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-poster-operation-create"] === true)) {
+          throw new Error("Phiên signed Web chưa sẵn sàng để tạo Video Poster private.");
+        }
+        if (fields.video_poster_confirmation !== true) {
+          throw new Error("Hãy xác nhận bạn hiểu JPEG chỉ sẵn sàng sau khi máy chủ kiểm chứng.");
+        }
+        const payload = videoPosterPayload(fields);
+        const scope = `video-poster-operation:${payload.source_asset_id}:${payload.poster_position}`;
+        const submission = acquireSubmission(scope, JSON.stringify(payload));
+        if (!submission) {
+          toast("Video Poster private đang chờ máy chủ xác nhận. Vui lòng không gửi lại.", "warning");
+          return;
+        }
+        let receiptAndRefreshConfirmed = false;
+        setActionBusy(action, route, true);
+        try {
+          // Invalidate delayed private reads before the write. The browser
+          // never inserts a completed row, JPEG or success state by itself.
+          ++videoPosterOperationsHydrationEpoch;
+          ++videoPosterOperationDetailHydrationEpoch;
+          const result = await api("/video-operations/poster", {
+            method: "POST", headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ ...payload, idempotency_key: submission.key }), cache: "no-store"
+          });
+          videoPosterOperationReceipt(result);
+          const refreshed = await hydrateVideoPosterOperations({ selectedId: payload.source_asset_id });
+          // Preserve the idempotency key if acknowledgement cannot be
+          // followed by a fresh owner-scoped receipt. A retry replays the
+          // immutable result rather than generating another poster.
+          if (!refreshed) throw new Error("Máy chủ đã xác nhận Video Poster nhưng chưa thể tải lại lịch sử private an toàn. Hãy làm mới hoặc xác nhận lại; cùng idempotency key sẽ được tái sử dụng.");
+          receiptAndRefreshConfirmed = true;
+          merge({ videoPosterDraft: payload });
+          toast(result.message || "Đã tạo JPEG Video Poster private sau khi máy chủ kiểm chứng output.");
+        } finally {
+          releaseSubmission(submission);
+          if (receiptAndRefreshConfirmed) discardSubmission(scope, submission);
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-poster-operation-detail") {
+        if (route !== VIDEO_POSTER_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_POSTER_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể xem detail Video Poster từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-poster-operation-detail"] === true)) {
+          throw new Error("Cần signed Web session để xem detail Video Poster private.");
+        }
+        const operationId = String(fields.__videoPosterOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã Video Poster private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          const detail = await hydrateVideoPosterOperationDetail(operationId);
+          if (!detail && base().videoPosterDetailReadState !== "ready") {
+            throw new Error("Không thể tải detail Video Poster owner-scoped an toàn.");
+          }
+          if (detail) toast("Đã tải trạng thái và timeline Video Poster private.");
+        } finally {
+          setActionBusy(action, route, false);
+        }
+        return;
+      }
+      if (action === "video-poster-operation-download") {
+        if (route !== VIDEO_POSTER_OPERATIONS_ROUTE || currentPortalPath() !== VIDEO_POSTER_OPERATIONS_ROUTE) {
+          throw new Error("Chỉ có thể tải JPEG Video Poster private từ trang đang mở.");
+        }
+        if (!(base().capabilities && base().capabilities["video-poster-operation-download"] === true)) {
+          throw new Error("Cần signed Web session để tải output Video Poster private.");
+        }
+        const operationId = String(fields.__videoPosterOperationId || "").trim();
+        if (!validVaultAssetId(operationId)) throw new Error("Mã output Video Poster private không hợp lệ.");
+        setActionBusy(action, route, true);
+        try {
+          await downloadVideoPosterOperation(operationId);
+          toast("Đã bắt đầu tải attachment JPEG private đã được xác minh.");
         } finally {
           setActionBusy(action, route, false);
         }
