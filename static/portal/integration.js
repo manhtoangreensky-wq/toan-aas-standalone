@@ -20279,7 +20279,14 @@
     // feature/bridge projection. Return before any canonical endpoint can
     // overwrite their owner-scoped state, including `/account/interface-language`
     // and the similarly-prefixed `/voice-studio` route.
-    if (isNativeWorkspaceMenuPath(path) || isNativeInterfaceLocaleNavigatorPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
+    // Keep this literal early return separate: the locale contract is a
+    // presentation-only preference and must remain visibly fenced from every
+    // canonical reader even as sibling Web-native workspaces are added.
+    if (isNativeInterfaceLocaleNavigatorPath(path)) return;
+    // Workspace Menu has the same no-projection property, but it is a
+    // navigation directory rather than a preference form. Keeping the fence
+    // explicit prevents either route from inheriting a future generic read.
+    if (isNativeWorkspaceMenuPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.
