@@ -2093,8 +2093,10 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|main_audio": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|guide_quick_start": ("/features", "guided_start", "feature_catalog", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|guide_image_ai": ("/image-studio", "image_studio", "image_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|guide_music_add": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|guide_faq": ("/support", "support", "support", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|support": ("/support", "support", "support", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|create_media": ("/media-factory", "media_factory", "media_factory", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|video_workflow": ("/video-studio/workflow", "video_factory_workflow", "video_factory_workflow", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
@@ -2107,7 +2109,13 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert mapped["classification"] == "customer"
         assert mapped["target"] == target
         assert mapped["status"] == "NAVIGATION_ONLY"
-        expected_resolution = "reviewed_memory_fresh_web_navigation" if callback in audit.MEMORY_FRESH_WEB_NAVIGATION_ACTIONS else "reviewed_exact_menu_navigation"
+        expected_resolution = (
+            "reviewed_memory_fresh_web_navigation"
+            if callback in audit.MEMORY_FRESH_WEB_NAVIGATION_ACTIONS
+            else "reviewed_guided_start_fresh_web_navigation"
+            if callback in audit.GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS
+            else "reviewed_exact_menu_navigation"
+        )
         assert mapped["resolution"] == expected_resolution
         assert mapped["menu_capability_key"] == capability
         assert mapped["menu_feature_key"] == feature
@@ -2138,6 +2146,21 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert mapped["resolution"] == "reviewed_memory_fresh_web_navigation"
         assert mapped["source_dispositions"] == descriptor["source_dispositions"]
         assert mapped["memory_capability_key"] == descriptor["capability_key"]
+
+    # The Main Guide may only start a fresh catalog or Support Desk. It never
+    # transfers a Telegram guide section, FAQ/refund context, child callback,
+    # raw Telegram identifier or Bot state into a Web route.
+    for callback in sorted(audit.GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        descriptor = audit.GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS[callback]
+        assert mapped["target"] == descriptor["target"]
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_guided_start_fresh_web_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["guided_start_capability_key"] == descriptor["capability_key"]
+        assert mapped["guided_start_feature_key"] == descriptor["feature_key"]
+        assert mapped["guided_start_authority"] == descriptor["authority"]
+        assert mapped["guided_start_launch_mode"] == descriptor["launch_mode"]
 
     # Marketing literals can only launch a fresh account-owned Campaign
     # Planner.  No suggestion index, custom brief, selection, campaign ID,
@@ -2176,6 +2199,22 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
     assert dynamic["target"] == "UNRESOLVED_DYNAMIC_MENU_ACTION"
     assert dynamic["status"] == "NEEDS_FEATURE_DISPOSITION"
     assert dynamic["resolution"] == "dynamic_menu_action_requires_finite_catalog"
+
+    # The two Bot Main Guide video/trend choices remain explicit backlog
+    # records until the requested final Video-menu phase. They must never
+    # inherit the generic menu Dashboard fallback or a Web Video route.
+    for callback in sorted(audit.GUIDED_VIDEO_MENU_DEFERRED_ACTIONS):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "GUIDED_VIDEO_MENU_DEFERRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "guided_video_menu_deferred_until_video_menu_phase"
+        assert mapped["source_dispositions"] == (
+            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+            "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+            "VIDEO_MENU_LAST",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        )
 
 
 def test_profile_benefits_and_pricing_read_navigation_preserve_the_referral_boundary() -> None:

@@ -1031,6 +1031,60 @@ MARKETING_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
     },
 }
 
+# The frozen Bot's Main Guide is an informational, parent-level menu.  Its
+# child buttons may enter Bot conversations, pending-media flows or canonical
+# billing routes, so only the two finite entries below may start *fresh* Web
+# navigation.  This source-only evidence never reaches the browser: the
+# product shell receives only the closed capability catalog from
+# ``copyfast_registry.py``.
+GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|guide_quick_start": {
+        "capability_key": "guided_start",
+        "feature_key": "feature_catalog",
+        "target": "/features",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_GUIDED_START",
+            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+            "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot guide renders explanatory text and a second Telegram keyboard. "
+            "The Web opens its own signed feature catalog; it receives no guide section, "
+            "Telegram identity, child callback, conversation, provider, job, wallet or payment state."
+        ),
+    },
+    "menu|guide_faq": {
+        "capability_key": "support",
+        "feature_key": "support",
+        "target": "/support",
+        "authority": "SIGNED_CUSTOMER",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_SUPPORT_NAVIGATION",
+            "BOT_FAQ_REFUND_OR_SUPPORT_CONTEXT_NOT_REPLAYED",
+            "NO_RAW_TELEGRAM_ID_BROWSER_INPUT",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot FAQ directs a Telegram user to support with Telegram-specific context. "
+            "The Web opens owner-scoped Support Desk from its signed account and cannot replay a "
+            "Telegram ID, chat transcript, screenshot, refund request or Bot support state."
+        ),
+    },
+}
+
+# These main-guide entries lead to video/trend child menus with Bot-local
+# pending state, output/provider guards and canonical purchase branches. The
+# user requested that the Video menu be handled last, so they remain explicit
+# source-review backlog records rather than silently falling back to Dashboard.
+GUIDED_VIDEO_MENU_DEFERRED_ACTIONS = frozenset({
+    "menu|guide_video_ai",
+    "menu|guide_guided_video",
+})
+
 # Exact, source-reviewed menu entries that can safely become a fresh signed Web
 # navigation.  The keys stay in this *static auditor* only: raw Telegram
 # callback tokens must never be sent to the browser.  The product-facing
@@ -1324,6 +1378,13 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "authority": "SIGNED_CUSTOMER",
         "launch_mode": "WEB_NAVIGATION",
     },
+    "menu|guide_quick_start": {
+        "capability_key": "guided_start",
+        "target": "/features",
+        "feature_key": "feature_catalog",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
     "menu|guide_image_ai": {
         "capability_key": "image_studio",
         "target": "/image-studio",
@@ -1336,6 +1397,13 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "target": "/media-workspace",
         "feature_key": "media_workspace",
         "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+    },
+    "menu|guide_faq": {
+        "capability_key": "support",
+        "target": "/support",
+        "feature_key": "support",
+        "authority": "SIGNED_CUSTOMER",
         "launch_mode": "WEB_NAVIGATION",
     },
     "menu|support": {
@@ -4235,6 +4303,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     menu_entry = MENU_ACTION_REGISTRY.get(token)
     memory_navigation_entry = MEMORY_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     marketing_navigation_entry = MARKETING_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
+    guided_start_navigation_entry = GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     memory_storage_telegram_only = MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.get(token)
     memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
@@ -4288,6 +4357,33 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "marketing_launch_mode": "WEB_NAVIGATION",
             "evidence": evidence,
         }
+    if guided_start_navigation_entry is not None:
+        # The Bot Main Guide owns a second Telegram keyboard and explanatory
+        # context. A reviewed Web launch is a new signed route only; it must
+        # not turn the guide's child callback graph or support/refund context
+        # into browser input or a runtime action.
+        target = str(guided_start_navigation_entry["target"])
+        result = {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "customer",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_guided_start_fresh_web_navigation",
+            "source_dispositions": tuple(guided_start_navigation_entry["source_dispositions"]),
+            "source_evidence": str(guided_start_navigation_entry["source_evidence"]),
+            "guided_start_capability_key": str(guided_start_navigation_entry["capability_key"]),
+            "guided_start_feature_key": str(guided_start_navigation_entry["feature_key"]),
+            "guided_start_authority": str(guided_start_navigation_entry["authority"]),
+            "guided_start_launch_mode": str(guided_start_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
+        if menu_entry is not None:
+            result["menu_capability_key"] = menu_entry["capability_key"]
+            result["menu_feature_key"] = menu_entry["feature_key"]
+            result["menu_authority"] = menu_entry["authority"]
+            result["menu_launch_mode"] = menu_entry["launch_mode"]
+        return result
     if memory_storage_telegram_only is not None:
         # Bot quota and add-on purchase are canonical storage/payment state.
         # Do not make a convenient-looking Web Notes, Asset Vault or wallet
@@ -4705,6 +4801,33 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
                 "The production category contains video creation, film, worker, output, review and "
                 "render-related command snippets. It remains explicitly deferred until the final "
                 "finite Video menu catalog, rather than inheriting an Admin or Job route."
+            ),
+            "evidence": evidence,
+        }
+    if token in GUIDED_VIDEO_MENU_DEFERRED_ACTIONS:
+        # These look like simple guide links in Telegram, but each opens a
+        # Bot-owned video/trend branch with pending state and later provider,
+        # output and canonical billing boundaries. Keep them visible in the
+        # migration report while the final Video menu is intentionally last.
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "GUIDED_VIDEO_MENU_DEFERRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "guided_video_menu_deferred_until_video_menu_phase",
+            "source_dispositions": (
+                "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+                "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+                "VIDEO_MENU_LAST",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The frozen Bot Main Guide opens a video or trend guide section whose child buttons enter "
+                "Bot-owned pending-media, provider, output and canonical payment/job paths. It must not "
+                "fall back to Dashboard or become a generic browser video route before the finite Video "
+                "menu phase establishes a separate owner-scoped Web contract."
             ),
             "evidence": evidence,
         }
@@ -6292,6 +6415,44 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "BOT_MEMORY_STATE_OR_IDENTIFIER_SOURCE_REVIEW, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
         ],
     ]
+    # The frozen Main Guide is deliberately documented as a finite top-level
+    # surface. The Web receives no callback token; this table makes it clear
+    # which choices open a fresh signed destination and which two video/trend
+    # sections remain explicitly deferred until the final Video menu phase.
+    guided_start_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_guided_start_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS.items()
+    ] + [
+        [
+            source,
+            str(MENU_ACTION_REGISTRY[source]["target"]),
+            "reviewed_exact_menu_navigation",
+            "NAVIGATION_ONLY",
+            "FRESH_SIGNED_WEB_NAVIGATION, BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED, NO_RUNTIME_CLAIM",
+        ]
+        for source in (
+            "menu|guide_image_ai",
+            "menu|guide_music_add",
+            "menu|guide_credits",
+            "menu|support",
+            "menu|main",
+        )
+    ] + [
+        [
+            source,
+            "GUIDED_VIDEO_MENU_DEFERRED",
+            "guided_video_menu_deferred_until_video_menu_phase",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED, BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED, VIDEO_MENU_LAST, SOURCE_STATE_MACHINE_REQUIRED, NO_RUNTIME_CLAIM",
+        ]
+        for source in sorted(GUIDED_VIDEO_MENU_DEFERRED_ACTIONS)
+    ]
     quick_image_planner_contract_rows = [
         [
             "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
@@ -6363,6 +6524,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md`](CONTEXTUAL_AD_PROMPT_WIZARD_CONTRACT.md) — signed, stateless contextual ad-prompt wizard adapted from Bot goal/platform/ratio/style choices, with no Meta/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`TREND_RESEARCH_CONTRACT.md`](TREND_RESEARCH_CONTRACT.md) — signed, stateless manual trend-research checklist adapted from Bot keyword/selection/originality guidance, with no live search/scraping/provider/Bot/job/payment claim.\n"
         + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
+        + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -6505,6 +6667,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "A dynamic `memory|view|{*}`, `memory|delete|{*}` or `memory|delete_yes|{*}` value carries a Bot "
         "record identifier and remains Telegram-only. Any other dynamic `memory|{*}` value requires source "
         "review before it can gain a Web contract.\n",
+    )
+    write(
+        "GUIDED_START_CALLBACK_CONTRACT.md",
+        "# Main Guide callback contract\n\n"
+        "The frozen Bot Main Guide is a Telegram information menu. Its child buttons can enter Bot-local conversations, pending media, provider/output guards, canonical Xu/package/PayOS paths, or support context. The standalone Web never receives the callback token, Telegram identity, guide prose, child button, message, pending value, Bot job/asset, provider state, wallet mutation, payment state or output claim.\n\n"
+        + _markdown_table(
+            ["Frozen Bot guide action", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            guided_start_contract_rows,
+        )
+        + "\n\n`menu|guide_quick_start` starts the signed Web catalog at `/features`; it is navigation only, not a wizard execution. `menu|guide_faq` starts the signed Support Desk, which uses the Web account and owner-scoped ticket contract rather than a raw Telegram-ID field, Bot chat transcript, screenshot, refund request or status. The pre-existing image, music and canonical wallet navigation entries also begin fresh Web pages and carry no Telegram context.\n\n"
+        "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They remain visible migration backlog records until the final finite Video menu phase can define an independently signed, owner-scoped Web contract without replaying the Bot state machine.\n",
     )
     write(
         "inventory.md",

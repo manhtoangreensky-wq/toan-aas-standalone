@@ -234,6 +234,19 @@ MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
         "NAVIGATION_ONLY",
         "Mở workspace chính đã xác thực; không khôi phục menu hoặc state Telegram.",
     ),
+    # This is a Web-native entrypoint for the frozen Bot's informational
+    # quick-start guide. It intentionally reuses the existing feature catalog
+    # route instead of creating a duplicate `/features` WebFeature. The
+    # browser receives only this closed product capability, never the Bot
+    # callback, child-button grammar, conversation context or execution state.
+    MenuCapability(
+        "guided_start",
+        "feature_catalog",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
+        "WEB_NAVIGATION",
+        "NAVIGATION_ONLY",
+        "Mở catalog Web theo mục tiêu để bắt đầu workflow mới; không phát lại guide, callback, state hoặc child action của Telegram.",
+    ),
     MenuCapability(
         "account",
         "account",

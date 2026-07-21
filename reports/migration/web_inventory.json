@@ -173,12 +173,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3222,
+      "line": 3290,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3230,
+      "line": 3298,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -280,7 +280,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4541,
+      "line": 4637,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6775,7 +6775,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 857,
+      "occurrences": 858,
       "provider": "PayOS"
     },
     {
@@ -7003,7 +7003,7 @@
         "copyfast_subtitle_workspace.py",
         "copyfast_support.py"
       ],
-      "occurrences": 2080,
+      "occurrences": 2094,
       "provider": "Telegram"
     }
   ],
@@ -12727,8 +12727,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 281,
   "source_files_scanned": 281,
-  "source_fingerprint_sha256": "91a3e5987f1bcdff3b818d1f79aabf9568398bb92e52d1d6f8234256c5185404",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast80-quick-image-planner",
+  "source_fingerprint_sha256": "ae89a8d0590ed8a81a7db7bd189a955345bc87f57dd2538fd70cfa17f9ff0d1c",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast81-guided-start-capability-navigator",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
