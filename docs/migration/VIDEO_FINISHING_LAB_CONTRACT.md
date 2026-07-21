@@ -91,6 +91,38 @@ copy/re-hash it into an anonymous temporary file, and stream that sealed copy
 with `no-store`, `no-referrer`, `nosniff`, `sandbox` and same-origin resource
 headers. Ownership is checked before every direct or generic download.
 
+## Signed Portal handoff
+
+`/video/finishing` is a dedicated signed customer workspace. It is deliberately
+not a new item in the broad Video menu/catalog: its direct URL gives existing
+Asset Vault customers a narrow, reviewable utility while the wider Video
+navigation remains a separate migration task.
+
+- The only source picker query is the server-owned
+  `GET /api/v1/asset-vault?state=active&reference_kind=video_transform`.
+  This exact reference kind returns only canonical active `.mp4` /
+  `video/mp4` metadata belonging to the signed account; the Portal never
+  downloads a general Asset Vault page and infers a usable video in the
+  browser.
+- The Portal holds source selection, closed settings, estimate and receipt
+  state only in its current signed tab. It uses `no-store`, session/route
+  fences and clears projections on failure, account change or route exit. No
+  source ID, file metadata, receipt or setting is written to browser storage
+  or the PWA cache.
+- Changing the selected source or any closed setting invalidates a prior
+  estimate. Creation requires a visible confirmation, CSRF and one body
+  idempotency key. Ambiguous browser/network handling keeps that same key
+  until a validated receipt and owner-scoped refresh settle; it must never
+  silently create a second render.
+- A download control appears only for a strict `completed` receipt with a
+  verified MP4 output descriptor. The browser rejects a JSON envelope or an
+  attachment missing `no-store`, `nosniff`, `no-referrer`, same-origin
+  resource policy, attachment disposition or the expected byte size.
+- Flag/runtime/topology/capacity errors stay visibly `guarded` or `failed`.
+  The Portal does not claim a progress percentage, output, preview or retry
+  before the server's receipt proves it. It does not change flags, runtime,
+  topology, provider configuration or deployment.
+
 ## Explicitly deferred
 
 Text/watermark overlays, custom crop/focal points, subtitle burn-in, music or
