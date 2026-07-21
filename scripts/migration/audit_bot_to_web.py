@@ -827,20 +827,12 @@ MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS: dict[str, dict[str, Any]] = {
     },
 }
 
-MEMORY_STORAGE_GUIDANCE_ACTIONS: dict[str, dict[str, Any]] = {
-    "menu|memory_storage_cleanup": {
-        "source_dispositions": (
-            "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
-            "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
-            "NO_WEB_STORAGE_CLEANUP_EQUIVALENCE",
-            "NO_RUNTIME_CLAIM",
-        ),
-        "source_evidence": (
-            "The Bot cleanup text explicitly performs no deletion and refers to Bot notes, temporary files and "
-            "their TTL. Web note archive and Asset Vault retention are independent contracts."
-        ),
-    },
-}
+# ``menu|memory_storage_cleanup`` used to remain in this generic gap list. It
+# now has the finite, navigation-only Workspace Care disposition below in
+# ``SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS``. Keep this map for
+# any future guidance-only source that needs a dedicated Web contract rather
+# than a name-based fallback.
+MEMORY_STORAGE_GUIDANCE_ACTIONS: dict[str, dict[str, Any]] = {}
 
 MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "memory|view|{*}",
@@ -1072,6 +1064,147 @@ GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
             "The Bot FAQ directs a Telegram user to support with Telegram-specific context. "
             "The Web opens owner-scoped Support Desk from its signed account and cannot replay a "
             "Telegram ID, chat transcript, screenshot, refund request or Bot support state."
+        ),
+    },
+}
+
+# The frozen Bot's System menu only renders administrative guidance and a
+# second Telegram keyboard.  These finite entries may start a **fresh** Web
+# route that repeats its own signed authority check, but no Bot runtime/data
+# state, command, health check, backup operation, path, secret, ledger or
+# provider/payment action crosses into the browser.  The separate Workspace
+# Care entry is likewise guidance only: it never claims to clean Bot storage.
+#
+# Keep this registry outside ``MENU_ACTION_REGISTRY``. It contains no public
+# customer catalog capability, grants no role and must never be emitted to a
+# browser as raw Telegram callback data.
+SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|system": {
+        "target": "/admin/system",
+        "classification": "admin",
+        "feature_key": "admin_system",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_SYSTEM_MENU_CONTEXT_NOT_REPLAYED",
+            "BOT_SYSTEM_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot action redraws its administrative System menu. The Web opens the independently "
+            "authorized canonical System read route and never receives a Telegram admin identity, menu, "
+            "command, settings record, secret, infrastructure state or write authority."
+        ),
+    },
+    "menu|system_runtime_help": {
+        "target": "/admin/runtime",
+        "classification": "admin",
+        "feature_key": "admin_runtime",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+            "BOT_RUNTIME_STATE_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot help text is a Telegram guidance branch. The Web starts a separately guarded Runtime "
+            "read surface; it does not run a health check, inspect a worker, restart a process or expose Bot state."
+        ),
+    },
+    "menu|system_data_status_help": {
+        "target": "/admin/system",
+        "classification": "admin",
+        "feature_key": "admin_system",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+            "BOT_DATA_STATUS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot guidance describes data status without a Web adapter. The Web opens its canonical System "
+            "read route only and does not import Bot database, filesystem, ledger or Telegram state."
+        ),
+    },
+    "menu|system_backup_help": {
+        "target": "/admin/backups",
+        "classification": "admin",
+        "feature_key": "admin_backups",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+            "BOT_BACKUP_STATE_NOT_REPLAYED",
+            "NO_BACKUP_OR_RESTORE_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot backup help is informational and does not transfer a backup artifact or restore command. "
+            "The Web opens the canonical backup metadata view only; it cannot create, delete, restore or download a Bot backup."
+        ),
+    },
+    "menu|system_health_help": {
+        "target": "/admin/runtime",
+        "classification": "admin",
+        "feature_key": "admin_runtime",
+        "authority": "SIGNED_CANONICAL_ADMIN_READ",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+            "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+            "BOT_HEALTHCHECK_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot health help is not an executable health check. The Web opens a separately authorized Runtime "
+            "read route and never claims provider, worker, service or deployment health from navigation alone."
+        ),
+    },
+    "menu|internal_archive": {
+        "target": "/admin/internal-documents",
+        "classification": "admin",
+        "feature_key": "admin_internal_documents",
+        "authority": "SIGNED_WEB_LOCAL_ADMIN",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "FRESH_SIGNED_WEB_LOCAL_ADMIN_NAVIGATION",
+            "BOT_ARCHIVE_RECORDS_NOT_REPLAYED",
+            "BOT_FILE_IDENTIFIERS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot archive callback is an admin Telegram branch. The Web opens its independently owned local-admin "
+            "archive, with no Bot archive row, file identifier, Telegram attachment, retention state or download claim."
+        ),
+    },
+    "menu|memory_storage_cleanup": {
+        "target": "/account/workspace-care",
+        "classification": "customer",
+        "feature_key": "workspace_care",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+            "FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION",
+            "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
+            "NO_STORAGE_DELETE_OR_QUOTA_CLAIM",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The Bot cleanup action is guidance only and explicitly performs no deletion. The Web opens Workspace Care, "
+            "a navigation-only hub for independently owned notes, reminders and Data Controls; it does not clean Bot storage, quota or add-ons."
         ),
     },
 }
@@ -4304,11 +4437,32 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     memory_navigation_entry = MEMORY_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     marketing_navigation_entry = MARKETING_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     guided_start_navigation_entry = GUIDED_START_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
+    system_data_stewardship_entry = SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS.get(token)
     memory_storage_telegram_only = MEMORY_STORAGE_TELEGRAM_ONLY_ACTIONS.get(token)
     memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
     operator_category = OPERATOR_MENU_CATEGORY_REGISTRY.get(token)
     pricing_read_entry = PRICING_READ_NAVIGATION_REGISTRY.get(token)
+    if system_data_stewardship_entry is not None:
+        # This finite audit-only allow-list begins a fresh, independently
+        # authorized Web navigation. In particular it wins over a generic
+        # storage/help Telegram-only heuristic without replaying any Bot
+        # record, command, health check, backup or cleanup effect.
+        target = str(system_data_stewardship_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(system_data_stewardship_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
+            "source_dispositions": tuple(system_data_stewardship_entry["source_dispositions"]),
+            "source_evidence": str(system_data_stewardship_entry["source_evidence"]),
+            "system_data_stewardship_feature_key": str(system_data_stewardship_entry["feature_key"]),
+            "system_data_stewardship_authority": str(system_data_stewardship_entry["authority"]),
+            "system_data_stewardship_launch_mode": str(system_data_stewardship_entry["launch_mode"]),
+            "evidence": evidence,
+        }
     if memory_navigation_entry is not None:
         # This is a fresh Web workspace launch, not a translation of the
         # Telegram button. The detailed boundary is kept here rather than in
@@ -6453,6 +6607,18 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source in sorted(GUIDED_VIDEO_MENU_DEFERRED_ACTIONS)
     ]
+    system_data_stewardship_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_system_data_stewardship_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS.items()
+    ]
     quick_image_planner_contract_rows = [
         [
             "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
@@ -6525,6 +6691,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`TREND_RESEARCH_CONTRACT.md`](TREND_RESEARCH_CONTRACT.md) — signed, stateless manual trend-research checklist adapted from Bot keyword/selection/originality guidance, with no live search/scraping/provider/Bot/job/payment claim.\n"
         + "- [`MEDIA_FACTORY_BLUEPRINT_CONTRACT.md`](MEDIA_FACTORY_BLUEPRINT_CONTRACT.md) — signed, stateless Media Factory blueprint adapted from the Bot's content/video-pack plan, with no live search/provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
+        + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -6661,9 +6828,9 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "\n\nThe reviewed navigation entries open a **fresh** signed Web form/list only. They do not inspect, copy "
         "or mutate Bot `memory_*` tables, and reminder navigation does not claim Telegram, email, push or any "
         "other delivery. `menu|memory_storage_status` and `menu|memory_storage_addon` remain Telegram-only "
-        "until a separate owner-scoped canonical storage adapter is designed. `menu|memory_storage_cleanup` "
-        "is intentionally not mapped to archive or Asset Vault retention: the Bot action only gives cleanup "
-        "guidance and does not delete data.\n\n"
+        "until a separate owner-scoped canonical storage adapter is designed. `menu|memory_storage_cleanup` is "
+        "documented separately as navigation-only Workspace Care guidance; it does not map to archive/retention, "
+        "delete data, inspect quota or call a storage adapter.\n\n"
         "A dynamic `memory|view|{*}`, `memory|delete|{*}` or `memory|delete_yes|{*}` value carries a Bot "
         "record identifier and remains Telegram-only. Any other dynamic `memory|{*}` value requires source "
         "review before it can gain a Web contract.\n",
@@ -6678,6 +6845,17 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\n`menu|guide_quick_start` starts the signed Web catalog at `/features`; it is navigation only, not a wizard execution. `menu|guide_faq` starts the signed Support Desk, which uses the Web account and owner-scoped ticket contract rather than a raw Telegram-ID field, Bot chat transcript, screenshot, refund request or status. The pre-existing image, music and canonical wallet navigation entries also begin fresh Web pages and carry no Telegram context.\n\n"
         "`menu|guide_video_ai` and `menu|guide_guided_video` are intentionally **not** routed to Dashboard or a generic Video page. They remain visible migration backlog records until the final finite Video menu phase can define an independently signed, owner-scoped Web contract without replaying the Bot state machine.\n",
+    )
+    write(
+        "SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md",
+        "# System & Data Stewardship callback contract\n\n"
+        "The frozen Bot System and storage-cleanup buttons are Telegram guidance/menu branches. The standalone Web never receives a callback token, Telegram identity, Bot admin/session state, command, database path, storage quota, add-on, temporary-file TTL, archive row, attachment, runtime payload, health check, backup artifact, secret, provider payload, Xu ledger, PayOS state, job or output claim.\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            system_data_stewardship_contract_rows,
+        )
+        + "\n\nEvery row above is navigation only. `/admin/system`, `/admin/runtime` and `/admin/backups` repeat canonical signed-admin authorization; `/admin/internal-documents` repeats its distinct signed Web-local-admin guard; `/account/workspace-care` is a signed customer guidance hub only. A Browser cannot use this contract to run health checks, inspect a runtime, change system data, create/delete/restore/download a backup, clean storage, change quota, operate a provider, write a ledger, create a PayOS checkout, mutate a job or claim delivery.\n\n"
+        "`menu|billing`, `menu|tax_*`, `menu|clear_stale_jobs_help` and every Video/menu production action remain outside this finite registry. They require their own source, canonical-finance, job or final Video-menu contracts; no namespace fallback grants a Web route.\n",
     )
     write(
         "inventory.md",

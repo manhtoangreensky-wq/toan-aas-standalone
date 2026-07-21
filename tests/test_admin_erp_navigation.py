@@ -143,6 +143,17 @@ def test_canonical_groups_require_flag_and_live_authority(monkeypatch) -> None:
     audit_module = next(module for module in canonical_modules if module["id"] == "audit")
     assert audit_module["source"] == "web_native"
     assert audit_module["capability"] == "redacted_web_audit_read"
+    for module_id, route in {
+        "system": "/admin/system",
+        "runtime": "/admin/runtime",
+        "backups": "/admin/backups",
+    }.items():
+        module = next(candidate for candidate in canonical_modules if candidate["id"] == module_id)
+        assert module["route"] == route
+        assert module["authority"] == "canonical_admin"
+        assert module["source"] == "core_bridge"
+        assert module["availability"] == "canonical_read"
+        assert module["capability"] == "canonical_read"
     assert all("write" not in module["capability"] for module in canonical_modules)
 
     # Turning the feature flag off must fail closed before a live bridge call
@@ -214,6 +225,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "web_governance_documents",
         "web_internal_document_archive",
         "web_automation_monitor",
+        "web_system_stewardship",
         "web_security_access_posture",
     }
     assert _module_ids(body) == {
@@ -221,6 +233,7 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
         "governance_documents",
         "internal_document_archive",
         "automation_monitor",
+        "system_stewardship",
         "security_posture",
         "access_posture",
     }
@@ -244,6 +257,17 @@ def test_local_web_admin_crm_directory_stays_distinct_from_canonical_admin(monke
     assert automation["authority"] == "web_local_admin"
     assert automation["availability"] == "web_native"
     assert automation["capability"] == "redacted_scheduler_receipt_read_only"
+    stewardship = groups["web_system_stewardship"]["modules"][0]
+    assert stewardship == {
+        "id": "system_stewardship",
+        "title": "System & Data Stewardship",
+        "route": "/admin/system-stewardship",
+        "authority": "web_local_admin",
+        "source": "web_native",
+        "availability": "web_native",
+        "capability": "local_admin_navigation_to_separately_guarded_read_surfaces",
+        "description": "Hub điều hướng read-only cho System & Data Web-native; không đọc runtime Bot, không có deploy, repair, provider, payment hay ledger control.",
+    }
     security = next(module for module in groups["web_security_access_posture"]["modules"] if module["id"] == "security_posture")
     access = next(module for module in groups["web_security_access_posture"]["modules"] if module["id"] == "access_posture")
     assert security == {

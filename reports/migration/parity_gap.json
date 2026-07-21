@@ -14919,17 +14919,27 @@
       "target": "/image/prompt-composer"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49520
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|internal_archive",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_LOCAL_ADMIN_NAVIGATION",
+        "BOT_ARCHIVE_RECORDS_NOT_REPLAYED",
+        "BOT_FILE_IDENTIFIERS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot archive callback is an admin Telegram branch. The Web opens its independently owned local-admin archive, with no Bot archive row, file identifier, Telegram attachment, retention state or download claim.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_WEB_LOCAL_ADMIN",
+      "system_data_stewardship_feature_key": "admin_internal_documents",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/internal-documents"
     },
     {
       "classification": "customer",
@@ -22200,19 +22210,22 @@
         "file": "bot.py",
         "line": 49516
       },
-      "fallback_family": "menu",
-      "resolution": "bot_storage_cleanup_guidance_requires_web_storage_contract",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|memory_storage_cleanup",
       "source_dispositions": [
         "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+        "FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION",
         "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
-        "NO_WEB_STORAGE_CLEANUP_EQUIVALENCE",
+        "NO_STORAGE_DELETE_OR_QUOTA_CLAIM",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot cleanup text explicitly performs no deletion and refers to Bot notes, temporary files and their TTL. Web note archive and Asset Vault retention are independent contracts.",
+      "source_evidence": "The Bot cleanup action is guidance only and explicitly performs no deletion. The Web opens Workspace Care, a navigation-only hub for independently owned notes, reminders and Data Controls; it does not clean Bot storage, quota or add-ons.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "system_data_stewardship_feature_key": "workspace_care",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/account/workspace-care"
     },
     {
       "classification": "customer",
@@ -22220,19 +22233,22 @@
         "file": "bot.py",
         "line": 85245
       },
-      "fallback_family": "menu",
-      "resolution": "bot_storage_cleanup_guidance_requires_web_storage_contract",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|memory_storage_cleanup",
       "source_dispositions": [
         "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+        "FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION",
         "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
-        "NO_WEB_STORAGE_CLEANUP_EQUIVALENCE",
+        "NO_STORAGE_DELETE_OR_QUOTA_CLAIM",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot cleanup text explicitly performs no deletion and refers to Bot notes, temporary files and their TTL. Web note archive and Asset Vault retention are independent contracts.",
+      "source_evidence": "The Bot cleanup action is guidance only and explicitly performs no deletion. The Web opens Workspace Care, a navigation-only hub for independently owned notes, reminders and Data Controls; it does not clean Bot storage, quota or add-ons.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "system_data_stewardship_feature_key": "workspace_care",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/account/workspace-care"
     },
     {
       "classification": "customer",
@@ -22240,19 +22256,22 @@
         "file": "bot.py",
         "line": 86645
       },
-      "fallback_family": "menu",
-      "resolution": "bot_storage_cleanup_guidance_requires_web_storage_contract",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|memory_storage_cleanup",
       "source_dispositions": [
         "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+        "FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION",
         "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
-        "NO_WEB_STORAGE_CLEANUP_EQUIVALENCE",
+        "NO_STORAGE_DELETE_OR_QUOTA_CLAIM",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot cleanup text explicitly performs no deletion and refers to Bot notes, temporary files and their TTL. Web note archive and Asset Vault retention are independent contracts.",
+      "source_evidence": "The Bot cleanup action is guidance only and explicitly performs no deletion. The Web opens Workspace Care, a navigation-only hub for independently owned notes, reminders and Data Controls; it does not clean Bot storage, quota or add-ons.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "system_data_stewardship_feature_key": "workspace_care",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/account/workspace-care"
     },
     {
       "classification": "customer",
@@ -22260,19 +22279,22 @@
         "file": "bot.py",
         "line": 86650
       },
-      "fallback_family": "menu",
-      "resolution": "bot_storage_cleanup_guidance_requires_web_storage_contract",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|memory_storage_cleanup",
       "source_dispositions": [
         "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+        "FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION",
         "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
-        "NO_WEB_STORAGE_CLEANUP_EQUIVALENCE",
+        "NO_STORAGE_DELETE_OR_QUOTA_CLAIM",
         "NO_RUNTIME_CLAIM"
       ],
-      "source_evidence": "The Bot cleanup text explicitly performs no deletion and refers to Bot notes, temporary files and their TTL. Web note archive and Asset Vault retention are independent contracts.",
+      "source_evidence": "The Bot cleanup action is guidance only and explicitly performs no deletion. The Web opens Workspace Care, a navigation-only hub for independently owned notes, reminders and Data Controls; it does not clean Bot storage, quota or add-ons.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
+      "system_data_stewardship_feature_key": "workspace_care",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/account/workspace-care"
     },
     {
       "classification": "customer",
@@ -23145,43 +23167,73 @@
       "target": "/support"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49758
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|system",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_MENU_CONTEXT_NOT_REPLAYED",
+        "BOT_SYSTEM_STATE_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot action redraws its administrative System menu. The Web opens the independently authorized canonical System read route and never receives a Telegram admin identity, menu, command, settings record, secret, infrastructure state or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_system",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/system"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49777
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|system",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_MENU_CONTEXT_NOT_REPLAYED",
+        "BOT_SYSTEM_STATE_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot action redraws its administrative System menu. The Web opens the independently authorized canonical System read route and never receives a Telegram admin identity, menu, command, settings record, secret, infrastructure state or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_system",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/system"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 122371
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|system",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_MENU_CONTEXT_NOT_REPLAYED",
+        "BOT_SYSTEM_STATE_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot action redraws its administrative System menu. The Web opens the independently authorized canonical System read route and never receives a Telegram admin identity, menu, command, settings record, secret, infrastructure state or write authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_system",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/system"
     },
     {
       "classification": "admin",
@@ -23189,37 +23241,23 @@
         "file": "bot.py",
         "line": 49773
       },
-      "resolution": "telegram_only",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
       "source": "menu|system_backup_help",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+        "BOT_BACKUP_STATE_NOT_REPLAYED",
+        "NO_BACKUP_OR_RESTORE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot backup help is informational and does not transfer a backup artifact or restore command. The Web opens the canonical backup metadata view only; it cannot create, delete, restore or download a Bot backup.",
       "source_kind": "callback_data",
-      "status": "TELEGRAM_ONLY",
-      "target": "TELEGRAM_ONLY"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 49772
-      },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
-      "source": "menu|system_data_status_help",
-      "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
-    },
-    {
-      "classification": "customer",
-      "evidence": {
-        "file": "bot.py",
-        "line": 49773
-      },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
-      "source": "menu|system_health_help",
-      "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_backups",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/backups"
     },
     {
       "classification": "admin",
@@ -23227,11 +23265,68 @@
         "file": "bot.py",
         "line": 49772
       },
-      "resolution": "explicit_static_route_mapping",
-      "source": "menu|system_runtime_help",
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
+      "source": "menu|system_data_status_help",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+        "BOT_DATA_STATUS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot guidance describes data status without a Web adapter. The Web opens its canonical System read route only and does not import Bot database, filesystem, ledger or Telegram state.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/callbacks"
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_system",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/system"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 49773
+      },
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
+      "source": "menu|system_health_help",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+        "BOT_HEALTHCHECK_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot health help is not an executable health check. The Web opens a separately authorized Runtime read route and never claims provider, worker, service or deployment health from navigation alone.",
+      "source_kind": "callback_data",
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_runtime",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/runtime"
+    },
+    {
+      "classification": "admin",
+      "evidence": {
+        "file": "bot.py",
+        "line": 49772
+      },
+      "resolution": "reviewed_system_data_stewardship_fresh_web_navigation",
+      "source": "menu|system_runtime_help",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED",
+        "BOT_RUNTIME_STATE_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The Bot help text is a Telegram guidance branch. The Web starts a separately guarded Runtime read surface; it does not run a health check, inspect a worker, restart a process or expose Bot state.",
+      "source_kind": "callback_data",
+      "status": "NAVIGATION_ONLY",
+      "system_data_stewardship_authority": "SIGNED_CANONICAL_ADMIN_READ",
+      "system_data_stewardship_feature_key": "admin_runtime",
+      "system_data_stewardship_launch_mode": "WEB_NAVIGATION",
+      "target": "/admin/runtime"
     },
     {
       "classification": "customer",
@@ -57031,7 +57126,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 71,
+      "count": 61,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -57324,11 +57419,11 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 374,
+      "count": 364,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 71,
+          "count": 61,
           "family": "menu",
           "priority": "P0"
         },
@@ -57566,13 +57661,13 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 90.22,
+  "mapping_coverage_percent": 90.48,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2242,
+    "COPIED_GUARDED": 2241,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 688,
-    "NEEDS_FEATURE_DISPOSITION": 374,
-    "TELEGRAM_ONLY": 517
+    "NAVIGATION_ONLY": 700,
+    "NEEDS_FEATURE_DISPOSITION": 364,
+    "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
     "excluded_telegram_transport_handlers": 54,
@@ -57593,7 +57688,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 90.22,
+  "safe_disposition_coverage_percent": 90.48,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -57603,15 +57698,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3449,
+    "resolved_static_source_count": 3459,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 38,
-    "unresolved_source_count": 374
+    "unresolved_source_count": 364
   },
-  "static_web_surface_coverage_percent": 58.65,
+  "static_web_surface_coverage_percent": 58.62,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {

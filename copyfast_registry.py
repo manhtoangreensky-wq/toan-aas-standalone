@@ -53,6 +53,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("account", "Tài khoản", "account", "/account", description="Hồ sơ, liên kết Telegram và bảo mật."),
     WebFeature("account_activity", "Hoạt động tài khoản", "account", "/account/activity", description="Nhật ký đã sanitize của các hoạt động Web thuộc signed account."),
     WebFeature("account_security", "Bảo mật tài khoản", "account", "/account/security", description="Quản lý signed session, mật khẩu Web và phương thức OAuth theo signed account; không lộ credential hoặc state Bot."),
+    WebFeature("workspace_care", "Chăm sóc dữ liệu Web", "account", "/account/workspace-care", description="Điểm bắt đầu an toàn để rà soát ghi chú, nhắc việc và Data Controls thuộc Web account; không dọn Bot storage, quota, add-on, job, Xu hoặc PayOS."),
     # Memory Center is deliberately Web-owned: it gives the full portal a
     # professional notes/task surface without copying Bot Telegram state,
     # wallet, payment, job or provider data.
@@ -211,6 +212,7 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_trends", "Trends & Reference", "admin", "/admin/trends", "admin"),
     WebFeature("admin_audit", "Nhật ký audit", "admin", "/admin/audit", "admin"),
     WebFeature("admin_internal_documents", "Kho hồ sơ nội bộ", "admin", "/admin/internal-documents", "admin", description="Kho hồ sơ Web-native riêng cho local admin: blob private, phiên bản bất biến, metadata/audit và download kiểm tra integrity; tách khỏi Bot, Asset Vault khách hàng và Governance Documents."),
+    WebFeature("admin_system_stewardship", "System & Data Stewardship", "admin", "/admin/system-stewardship", "admin", description="Hub điều hướng read-only cho các bề mặt system/data đã được bảo vệ độc lập; không đọc runtime Bot, không có deploy, repair, provider, payment hay ledger control."),
     WebFeature("admin_reports", "Báo cáo", "admin", "/admin/reports", "admin"),
     WebFeature("admin_system", "Hệ thống", "admin", "/admin/system", "admin"),
     WebFeature("admin_runtime", "Runtime", "admin", "/admin/runtime", "admin"),

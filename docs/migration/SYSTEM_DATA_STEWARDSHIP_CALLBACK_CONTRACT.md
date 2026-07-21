@@ -1,0 +1,17 @@
+# System & Data Stewardship callback contract
+
+The frozen Bot System and storage-cleanup buttons are Telegram guidance/menu branches. The standalone Web never receives a callback token, Telegram identity, Bot admin/session state, command, database path, storage quota, add-on, temporary-file TTL, archive row, attachment, runtime payload, health check, backup artifact, secret, provider payload, Xu ledger, PayOS state, job or output claim.
+
+| Frozen Bot action | Fresh Web target | Audit resolution | Status | Audience | Authority | Source dispositions |
+| --- | --- | --- | --- | --- | --- | --- |
+| menu\|system | /admin/system | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | admin | SIGNED_CANONICAL_ADMIN_READ | BOT_ADMIN_ONLY, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, BOT_SYSTEM_MENU_CONTEXT_NOT_REPLAYED, BOT_SYSTEM_STATE_NOT_REPLAYED, NO_RUNTIME_CLAIM |
+| menu\|system_runtime_help | /admin/runtime | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | admin | SIGNED_CANONICAL_ADMIN_READ | BOT_ADMIN_ONLY, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED, BOT_RUNTIME_STATE_NOT_REPLAYED, NO_RUNTIME_CLAIM |
+| menu\|system_data_status_help | /admin/system | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | admin | SIGNED_CANONICAL_ADMIN_READ | BOT_ADMIN_ONLY, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED, BOT_DATA_STATUS_NOT_REPLAYED, NO_RUNTIME_CLAIM |
+| menu\|system_backup_help | /admin/backups | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | admin | SIGNED_CANONICAL_ADMIN_READ | BOT_ADMIN_ONLY, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED, BOT_BACKUP_STATE_NOT_REPLAYED, NO_BACKUP_OR_RESTORE_ACTION, NO_RUNTIME_CLAIM |
+| menu\|system_health_help | /admin/runtime | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | admin | SIGNED_CANONICAL_ADMIN_READ | BOT_ADMIN_ONLY, FRESH_SIGNED_WEB_ADMIN_NAVIGATION, BOT_SYSTEM_HELP_TEXT_NOT_REPLAYED, BOT_HEALTHCHECK_NOT_REPLAYED, NO_RUNTIME_CLAIM |
+| menu\|internal_archive | /admin/internal-documents | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | admin | SIGNED_WEB_LOCAL_ADMIN | BOT_ADMIN_ONLY, FRESH_SIGNED_WEB_LOCAL_ADMIN_NAVIGATION, BOT_ARCHIVE_RECORDS_NOT_REPLAYED, BOT_FILE_IDENTIFIERS_NOT_REPLAYED, NO_RUNTIME_CLAIM |
+| menu\|memory_storage_cleanup | /account/workspace-care | reviewed_system_data_stewardship_fresh_web_navigation | NAVIGATION_ONLY | customer | SIGNED_CUSTOMER_WEB_NATIVE | BOT_STORAGE_CLEANUP_GUIDANCE_ONLY, FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION, BOT_TEMP_FILE_TTL_NOT_REPLAYED, NO_STORAGE_DELETE_OR_QUOTA_CLAIM, NO_RUNTIME_CLAIM |
+
+Every row above is navigation only. `/admin/system`, `/admin/runtime` and `/admin/backups` repeat canonical signed-admin authorization; `/admin/internal-documents` repeats its distinct signed Web-local-admin guard; `/account/workspace-care` is a signed customer guidance hub only. A Browser cannot use this contract to run health checks, inspect a runtime, change system data, create/delete/restore/download a backup, clean storage, change quota, operate a provider, write a ledger, create a PayOS checkout, mutate a job or claim delivery.
+
+`menu|billing`, `menu|tax_*`, `menu|clear_stale_jobs_help` and every Video/menu production action remain outside this finite registry. They require their own source, canonical-finance, job or final Video-menu contracts; no namespace fallback grants a Web route.

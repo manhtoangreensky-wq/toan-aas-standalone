@@ -1504,6 +1504,17 @@
     return String(path || "").split("?")[0] === "/admin/automation";
   }
 
+  // These two navigation hubs intentionally have no bridge/read-model API.
+  // Keep a linked Telegram account from turning their explicit boundary copy
+  // into generic canonical feature/admin data.
+  function isNativeWorkspaceCarePath(path) {
+    return String(path || "").split("?")[0] === "/account/workspace-care";
+  }
+
+  function isNativeAdminSystemStewardshipPath(path) {
+    return String(path || "").split("?")[0] === "/admin/system-stewardship";
+  }
+
   // Security and Access Posture intentionally have one local aggregate API.
   // Keep both views out of generic Admin/Core Bridge routing so a linked
   // Telegram account cannot replace a guarded security response with a raw
@@ -11097,12 +11108,14 @@
         "/notes": account && memoryCenterEnabled ? "processing" : "guarded",
         "/reminders": account && memoryCenterEnabled ? "processing" : "guarded",
         "/account/data-controls": account && dataControlsEnabled ? "processing" : "guarded",
+        "/account/workspace-care": account ? "read_only" : "guarded",
         "/admin/governance": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/governance/documents": account && governanceDocumentsEnabled && governanceAdminSessionHint ? "processing" : "guarded",
         "/admin/internal-documents": account && adminDocumentArchiveEnabled && adminDocumentArchiveAdminSessionHint ? "processing" : "guarded",
         // A private read monitor is never a job lifecycle.  Keep this guarded
         // until its independent signed-server projection has been verified.
         "/admin/automation": "guarded",
+        "/admin/system-stewardship": account ? "read_only" : "guarded",
         "/calendar": account ? "read_only" : "guarded",
         "/prompt-library": account && promptLibraryEnabled ? "processing" : "guarded",
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
@@ -11736,7 +11749,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -20171,6 +20184,7 @@
       && currentPortalPath() === expectedPath
       && expectedPath.startsWith("/admin")
       && expectedPath !== "/admin/audit"
+      && !isNativeAdminSystemStewardshipPath(expectedPath)
       && !isNativeAdminSecurityAccessPosturePath(expectedPath)
       && Boolean(base().bridge && base().bridge.available === true)
       && Boolean(base().session && base().session.authenticated === true);
@@ -20178,7 +20192,7 @@
 
   async function hydrateCanonicalAdminData(path) {
     const expectedPath = String(path || "").split("?")[0];
-    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
+    if (!expectedPath.startsWith("/admin") || expectedPath === "/admin/audit" || isNativeAdminSystemStewardshipPath(expectedPath) || isNativeAdminSecurityAccessPosturePath(expectedPath)) return null;
     const requestEpoch = ++canonicalAdminDataHydrationEpoch;
     const sessionEpoch = canonicalSessionEpoch;
     try {
@@ -20329,9 +20343,10 @@
         // asking the generic Bot bridge to expose a raw audit payload.
         await hydrateAdminAudit();
         if (!isCurrent()) return null;
-      } else if (isNativeAdminSecurityAccessPosturePath(path)) {
+      } else if (isNativeAdminSystemStewardshipPath(path) || isNativeAdminSecurityAccessPosturePath(path)) {
         // The security/admin access routes are hydrated only by their narrow
-        // Web-native aggregate. Never attempt a generic bridge fallback here.
+        // Web-native aggregate or navigation manifest. Never attempt a
+        // generic bridge fallback here.
         return null;
       } else if (path.startsWith("/admin")) {
         await hydrateCanonicalAdminData(path);

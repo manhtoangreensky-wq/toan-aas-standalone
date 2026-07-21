@@ -2373,6 +2373,11 @@ async def page(page_path: str, request: Request):
     # inherit canonical Bot admin authority or a broad /admin prefix.
     elif normalized == "/admin/automation":
         copyfast_auth.require_admin(request)
+    # System & Data Stewardship is a local Web-admin navigation hub. It owns
+    # no Bot runtime projection or administrative write action: every linked
+    # destination repeats its own more specific authority check.
+    elif normalized == "/admin/system-stewardship":
+        copyfast_auth.require_admin(request)
     # Security and Access are deliberately exact, signed-Web-admin posture
     # views.  They operate on redacted aggregates owned by this application;
     # they are not a compatibility shell for a Bot/Core Bridge security feed.

@@ -32,6 +32,22 @@ output has been copied into the browser.
 | `menu|image_upscale_start` | `/image/upscale` | signed Web-native customer | retains the Web runtime guard; does not call a provider by navigation |
 | `menu|guide_music_add` | `/media-workspace` | signed Web-native customer | opens Web audio briefing/library; no Bot product context or media cache |
 | `menu|guide_faq` | `/support` | signed customer | starts owner-scoped Web support; no raw Telegram ID, Bot chat/support/refund state or automatic action |
+| `menu|memory_storage_cleanup` | `/account/workspace-care` | signed Web-native customer | opens navigation-only Web guidance; no Bot storage cleanup, quota, add-on, TTL, archive or delete action is replayed |
+
+## Separately guarded System & Data navigation
+
+The following finite administrative buttons remain private to the static
+auditor. They only open a fresh route after its server-side authority check;
+they do not pass a Telegram admin identity, Bot system menu, command, runtime
+payload, database path, backup artifact, archive row, secret, provider state,
+payment, Xu or job state to the browser.
+
+| Bot source action | Web destination | Web authority | Boundary preserved |
+| --- | --- | --- | --- |
+| `menu|system`, `menu|system_data_status_help` | `/admin/system` | signed canonical admin read | system navigation only; no settings/data write or Bot state replay |
+| `menu|system_runtime_help`, `menu|system_health_help` | `/admin/runtime` | signed canonical admin read | runtime read route only; no healthcheck, restart, worker/provider or deploy action |
+| `menu|system_backup_help` | `/admin/backups` | signed canonical admin read | metadata route only; no create/delete/restore/download backup action |
+| `menu|internal_archive` | `/admin/internal-documents` | signed Web-local admin | independent Web private archive; no Bot archive record/file ID/Telegram attachment is replayed |
 
 ## Explicitly deferred
 
@@ -46,9 +62,13 @@ output has been copied into the browser.
   `TELEGRAM_ONLY`: the former reads canonical Bot quota/add-on state and the
   latter enters the Bot storage/PayOS settlement flow. Neither is a Web Notes,
   Asset Vault or wallet route.
-- `menu|memory_storage_cleanup` remains an explicit Web-storage-contract gap.
-  The Bot action gives guidance only and does not delete data; Web note archive
-  and Asset Vault retention are independent contracts, not a parity claim.
+- `menu|memory_storage_cleanup` opens only the signed Web Workspace Care
+  directory. It remains guidance: the Bot action gives no delete capability,
+  and the Web route does not clean Bot storage, inspect quota or map to archive
+  or Asset Vault retention.
+- `menu|billing`, every `menu|tax_*` action and `menu|clear_stale_jobs_help`
+  remain outside this catalog. They need separate canonical finance/job
+  contracts and never inherit a browser route from a namespace or label.
 - Translation, payment/admin writes, provider controls and any other dynamic
   menu template remain source-state/authority reviewed or `TELEGRAM_ONLY`;
   none receive a fallback browser route.

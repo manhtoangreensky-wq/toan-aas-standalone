@@ -2190,9 +2190,16 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert mapped["resolution"] == "bot_canonical_memory_storage_requires_adapter"
 
     cleanup = audit._map_callback("menu|memory_storage_cleanup", "callback_data", {"file": "bot.py", "line": 1}, routes)
-    assert cleanup["target"] == "MEMORY_STORAGE_CLEANUP_CONTRACT_REQUIRED"
-    assert cleanup["status"] == "NEEDS_FEATURE_DISPOSITION"
-    assert cleanup["resolution"] == "bot_storage_cleanup_guidance_requires_web_storage_contract"
+    assert cleanup["target"] == "/account/workspace-care"
+    assert cleanup["status"] == "NAVIGATION_ONLY"
+    assert cleanup["resolution"] == "reviewed_system_data_stewardship_fresh_web_navigation"
+    assert cleanup["source_dispositions"] == (
+        "BOT_STORAGE_CLEANUP_GUIDANCE_ONLY",
+        "FRESH_SIGNED_WEB_WORKSPACE_CARE_NAVIGATION",
+        "BOT_TEMP_FILE_TTL_NOT_REPLAYED",
+        "NO_STORAGE_DELETE_OR_QUOTA_CLAIM",
+        "NO_RUNTIME_CLAIM",
+    )
 
     dynamic = audit._map_callback_template("menu|translation_pair_{*}", {"file": "bot.py", "line": 1}, routes)
     assert dynamic is not None
@@ -2424,6 +2431,49 @@ def test_operator_menu_category_navigation_is_admin_only_and_defers_video_produc
     from copyfast_registry import menu_capability_catalog
 
     assert "opmenu|" not in json.dumps(menu_capability_catalog(), ensure_ascii=False)
+
+
+def test_system_data_stewardship_navigation_is_finite_and_never_leaks_bot_state() -> None:
+    """System/data buttons can only open separately guarded Web read routes."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {
+        "menu|system": ("/admin/system", "admin", "admin_system", "SIGNED_CANONICAL_ADMIN_READ"),
+        "menu|system_runtime_help": ("/admin/runtime", "admin", "admin_runtime", "SIGNED_CANONICAL_ADMIN_READ"),
+        "menu|system_data_status_help": ("/admin/system", "admin", "admin_system", "SIGNED_CANONICAL_ADMIN_READ"),
+        "menu|system_backup_help": ("/admin/backups", "admin", "admin_backups", "SIGNED_CANONICAL_ADMIN_READ"),
+        "menu|system_health_help": ("/admin/runtime", "admin", "admin_runtime", "SIGNED_CANONICAL_ADMIN_READ"),
+        "menu|internal_archive": ("/admin/internal-documents", "admin", "admin_internal_documents", "SIGNED_WEB_LOCAL_ADMIN"),
+        "menu|memory_storage_cleanup": ("/account/workspace-care", "customer", "workspace_care", "SIGNED_CUSTOMER_WEB_NATIVE"),
+    }
+    assert set(audit.SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS) == set(expected)
+
+    for callback, (target, classification, feature_key, authority) in expected.items():
+        descriptor = audit.SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS[callback]
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == target
+        assert mapped["classification"] == classification
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_system_data_stewardship_fresh_web_navigation"
+        assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+        assert mapped["system_data_stewardship_feature_key"] == feature_key
+        assert mapped["system_data_stewardship_authority"] == authority
+        assert mapped["system_data_stewardship_launch_mode"] == "WEB_NAVIGATION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    # A finite source registry is not a prefix authorization. Billing, tax,
+    # job cleanup and Video remain separate canonical/source-review work.
+    for token in ("menu|billing", "menu|tax_daily", "menu|clear_stale_jobs_help", "menu|video_workflow"):
+        assert token not in audit.SYSTEM_DATA_STEWARDSHIP_FRESH_WEB_NAVIGATION_ACTIONS
+    unknown = audit._map_callback("menu|system_future", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert unknown["resolution"] != "reviewed_system_data_stewardship_fresh_web_navigation"
+
+    from copyfast_registry import menu_capability_catalog
+
+    serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    assert "menu|system" not in serialized_catalog
+    assert "menu|memory_storage_cleanup" not in serialized_catalog
 
 
 def test_reviewed_menu_navigation_does_not_inflate_static_feature_parity(tmp_path: Path) -> None:
