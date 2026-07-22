@@ -2140,7 +2140,6 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|translate": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|translation_language_hub": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|translation_text": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
-        "menu|translation_transcript": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|translation_document": ("/documents", "documents", "documents", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
         "menu|profile_packages": ("/membership", "membership", "membership", "CORE_CANONICAL_READ", "READ_ONLY_CANONICAL"),
         "menu|main_topup": ("/wallet/topup", "wallet_topup", "wallet_topup", "CORE_CANONICAL_PAYMENT", "BRIDGE_GUARDED_PROXY"),
@@ -2372,7 +2371,6 @@ def test_translation_menu_opens_only_fresh_authoring_workspaces_and_defers_bot_s
         "menu|translate": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
         "menu|translation_language_hub": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
         "menu|translation_text": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
-        "menu|translation_transcript": ("/subtitle-studio", "subtitle_studio", "subtitle_studio", "SIGNED_CUSTOMER_WEB_NATIVE"),
         "menu|translation_document": ("/documents", "documents", "documents", "SIGNED_CUSTOMER"),
     }
     for callback, (target, capability_key, feature_key, authority) in navigation.items():
@@ -2385,6 +2383,69 @@ def test_translation_menu_opens_only_fresh_authoring_workspaces_and_defers_bot_s
         assert mapped["menu_feature_key"] == feature_key
         assert mapped["menu_authority"] == authority
         assert mapped["menu_launch_mode"] == "WEB_NAVIGATION"
+
+    # The frozen Bot stores a `transcript` pending source but the later
+    # callback accepts only voice/file/text. Keep that known broken branch out
+    # of the browser-safe menu catalog rather than making Subtitle Studio look
+    # like an operational Bot translation adapter.
+    assert audit.TRANSLATION_KNOWN_BROKEN_MENU_ACTIONS == {"menu|translation_transcript"}
+    assert "menu|translation_transcript" not in audit.MENU_ACTION_REGISTRY
+    transcript = audit._map_callback("menu|translation_transcript", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert transcript["target"] == "BOT_TRANSLATION_TRANSCRIPT_KNOWN_BROKEN"
+    assert transcript["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert transcript["resolution"] == "known_broken_bot_translation_transcript"
+    assert transcript["source_dispositions"] == (
+        "BOT_KNOWN_BROKEN_TRANSLATION_TRANSCRIPT",
+        "BOT_PENDING_TEXT_OR_MEDIA_STATE",
+        "NO_RUNTIME_CLAIM",
+    )
+
+    # The legacy `tr_*` handler consumes Telegram-local cached/pending source
+    # state. Only three static picker literals may open a fresh guarded Web
+    # surface; target/transcribe branches do not become browser execution.
+    fresh_source_navigation = {
+        "tr_pick|file": ("/documents/translate", "documents_translate"),
+        "tr_pick|voice": ("/subtitle-studio", "subtitle_studio"),
+        "tr_more|voice": ("/subtitle-studio", "subtitle_studio"),
+    }
+    for callback, (target, capability_key) in fresh_source_navigation.items():
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == target
+        assert mapped["status"] == "COPIED_GUARDED"
+        assert mapped["resolution"] == "reviewed_translation_source_navigation_guarded"
+        assert mapped["translation_source_capability_key"] == capability_key
+        assert "WEB_NAVIGATION_GUARDED" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for callback in ("tr_pick|future", "tr_more|file"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "TRANSLATION_SOURCE_SELECTOR_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "translation_source_selector_requires_finite_source_review"
+        assert "SOURCE_VALUE_REQUIRES_FINITE_REVIEW" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for template in ("tr_pick|{*}", "tr_more|{*}"):
+        mapped = audit._map_callback_template(template, {"file": "bot.py", "line": 1}, routes)
+        assert mapped is not None
+        assert mapped["target"] == "TRANSLATION_SOURCE_SELECTOR_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "translation_source_selector_requires_finite_source_review"
+
+    for callback in ("tr_target|voice|en", "tr_target|file|vi", "tr_target|text|zh"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["target"] == "CORE_CANONICAL_TRANSLATION_GUARDED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "translation_target_requires_canonical_provider_or_core_contract"
+        assert "CANONICAL_TRANSLATION_PROVIDER_OR_CORE_GUARD" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    transcribe = audit._map_callback("tr_transcribe", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert transcribe["target"] == "CORE_CANONICAL_ASR_GUARDED"
+    assert transcribe["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert transcribe["resolution"] == "translation_transcribe_requires_canonical_asr_contract"
+    assert "CANONICAL_ASR_PROVIDER_OR_CORE_GUARD" in transcribe["source_dispositions"]
+    assert "NO_RUNTIME_CLAIM" in transcribe["source_dispositions"]
 
     telegram_only = {
         "menu|translate_more", "menu|translate_off", "menu|translate_set_ar", "menu|translate_set_en",

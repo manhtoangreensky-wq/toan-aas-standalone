@@ -6800,10 +6800,11 @@
       },
       voiceStudioListing: source.voiceStudioListing && typeof source.voiceStudioListing === "object" ? source.voiceStudioListing : {},
       voiceStudioReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.voiceStudioReadState || "")) ? String(source.voiceStudioReadState) : "guarded",
-      // Subtitle Studio and Format Lab are a separate, text-only signed Web
-      // boundary. Preserve only bounded owner-scoped projections and an
-      // explicitly verified transform receipt; never substitute legacy
-      // subtitle/ASR/dubbing state, a Bot payload or browser storage.
+      // Subtitle Studio and Format Lab are a separate signed Web boundary.
+      // Preserve only bounded owner-scoped projections, including the
+      // metadata-only language-source list, and an explicitly verified
+      // transform receipt; never substitute legacy subtitle/ASR/dubbing
+      // state, a Bot payload or browser storage.
       subtitleStudioEnabled: source.subtitleStudioEnabled === true,
       subtitleFormatToolsEnabled: source.subtitleFormatToolsEnabled === true,
       subtitleStudioSummary: source.subtitleStudioSummary && typeof source.subtitleStudioSummary === "object" ? source.subtitleStudioSummary : {},
@@ -6811,6 +6812,7 @@
       subtitleProjectDetail: source.subtitleProjectDetail && typeof source.subtitleProjectDetail === "object" ? source.subtitleProjectDetail : {},
       subtitleProjectEstimate: source.subtitleProjectEstimate && typeof source.subtitleProjectEstimate === "object" ? source.subtitleProjectEstimate : {},
       subtitleStudioReferences: source.subtitleStudioReferences && typeof source.subtitleStudioReferences === "object" ? source.subtitleStudioReferences : {},
+      subtitleLanguageSources: source.subtitleLanguageSources && typeof source.subtitleLanguageSources === "object" && !Array.isArray(source.subtitleLanguageSources) ? source.subtitleLanguageSources : {},
       subtitleStudioFilter: source.subtitleStudioFilter && typeof source.subtitleStudioFilter === "object" ? source.subtitleStudioFilter : { q: "", state: "active" },
       subtitleStudioListing: source.subtitleStudioListing && typeof source.subtitleStudioListing === "object" ? source.subtitleStudioListing : {},
       subtitleStudioEvents: Array.isArray(source.subtitleStudioEvents) ? source.subtitleStudioEvents.slice(0, 50) : [],
@@ -8267,7 +8269,10 @@
         control = `<select class="portal-select" id="${id}" name="${safeText(field.name)}"${required}${ariaRequired}${describedBy}${controlData}${disabled}>${empty}${optionMarkup}</select>`;
       } else if (field.type === "checkbox") {
         const checked = rawValue === true || rawValue === "true" || rawValue === 1 || rawValue === "1" ? " checked" : "";
-        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${required}${ariaRequired}${describedBy}${disabled}><span>Tôi xác nhận</span></label>`;
+        const checkboxLabel = field.checkboxLabelKey
+          ? uiText(field.checkboxLabelKey, field.checkboxLabel || "Tôi xác nhận")
+          : (field.checkboxLabel || "Tôi xác nhận");
+        control = `<label class="portal-checkbox" for="${id}"><input id="${id}" name="${safeText(field.name)}" type="checkbox" value="true"${checked}${required}${ariaRequired}${describedBy}${disabled}><span>${safeText(checkboxLabel)}</span></label>`;
       } else {
         const type = ["email", "password", "file", "number", "text", "datetime-local"].includes(field.type) ? field.type : "text";
         const autocomplete = field.autocomplete ? ` autocomplete="${safeText(field.autocomplete)}"` : "";
@@ -13557,6 +13562,14 @@
   const SUBTITLE_STUDIO_FORMATS = Object.freeze([["srt", "SRT · text preview"], ["vtt", "WebVTT · text preview"]]);
   const SUBTITLE_STUDIO_INTENTS = Object.freeze([["subtitle", "Subtitle biên tập"], ["translation", "Bản nháp ngôn ngữ"], ["asr_review", "ASR review (không chạy ASR)"], ["dubbing_direction", "Dubbing direction (không tạo dubbing)"]]);
   const SUBTITLE_STUDIO_INTENT_KEYS = new Set(SUBTITLE_STUDIO_INTENTS.map(([key]) => key));
+  const SUBTITLE_LANGUAGE_SOURCE_MODE_KEYS = new Set(["manual", "asset_reference"]);
+  const SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS = new Set([
+    ".mp4|video/mp4", ".mov|video/quicktime", ".webm|video/webm",
+    ".mp3|audio/mpeg", ".wav|audio/wav", ".m4a|audio/mp4", ".ogg|audio/ogg",
+    ".txt|text/plain", ".srt|application/x-subrip", ".vtt|text/vtt"
+  ]);
+  const SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT = 30;
+  const SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED = 90;
   const SUBTITLE_STUDIO_PROJECT_STATES = Object.freeze({
     draft: "Bản nháp", review: "Đang self-review", approved: "Self-review hoàn tất", archived: "Đã archive"
   });
@@ -13588,8 +13601,106 @@
     return (Array.isArray(refs.projects) ? refs.projects : []).filter((item) => item && validSubtitleStudioProjectId(item.id)).slice(0, 100)
       .map((item) => ({ value: String(item.id), label: String(item.title || "Project Web riêng tư") }));
   }
-  function subtitleStudioProjectFields(context) {
+  function subtitleLanguageSourceModes() {
     return [
+      ["manual", uiText("subtitleSource.mode.manual", "Tự soạn transcript")],
+      ["asset_reference", uiText("subtitleSource.mode.asset", "Tham chiếu Asset Vault")]
+    ];
+  }
+
+  function subtitleLanguageSourceAttestationIsSafe(value) {
+    if (typeof value !== "string") return false;
+    const text = value.trim();
+    return text.length >= 20 && text.length <= 80 && /^\d{4}-\d{2}-\d{2}T/.test(text) && Number.isFinite(Date.parse(text));
+  }
+
+  function subtitleLanguageSourceAssetIsSafe(value) {
+    const item = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const id = String(item.id || "").trim();
+    const displayName = String(item.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    const extension = String(item.extension || "").trim().toLowerCase();
+    const contentType = String(item.content_type || "").trim().toLowerCase();
+    const byteSize = Number(item.byte_size);
+    const revision = Number(item.lifecycle_revision);
+    return Boolean(
+      validVaultAssetId(id) && displayName && displayName.length <= 120 && item.state === "active"
+      && SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS.has(`${extension}|${contentType}`)
+      && Number.isInteger(byteSize) && byteSize > 0 && byteSize <= 100 * 1024 * 1024
+      && Number.isInteger(revision) && revision >= 1
+    );
+  }
+
+  function subtitleLanguageSourceListingIsSafe(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const boundary = source.boundary && typeof source.boundary === "object" && !Array.isArray(source.boundary) ? source.boundary : {};
+    const pagination = source.pagination && typeof source.pagination === "object" && !Array.isArray(source.pagination) ? source.pagination : {};
+    const items = Array.isArray(source.items) ? source.items : [];
+    const loaded = Number(pagination.returned);
+    const nextOffset = Number(source.next_offset);
+    const hasMore = source.has_more === true;
+    const capped = source.is_render_capped === true;
+    return Boolean(
+      boundary.execution === "asset_reference_metadata_only"
+      && boundary.source_bytes_read === false && boundary.provider_called === false && boundary.bot_called === false && boundary.bridge_called === false
+      && boundary.asr_called === false && boundary.translation_called === false && boundary.tts_called === false && boundary.dubbing_called === false
+      && boundary.job_created === false && boundary.output_created === false && boundary.download_created === false
+      && boundary.payment_started === false && boundary.payment_processed === false && boundary.wallet_mutated === false && boundary.output_delivery === "none"
+      && Number(source.page_limit) === SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT
+      && Number(source.rendered_limit) === SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED
+      && Number.isInteger(loaded) && loaded === items.length && items.length <= SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED
+      && items.every(subtitleLanguageSourceAssetIsSafe)
+      && new Set(items.map((item) => String(item && item.id || "").trim())).size === items.length
+      && (hasMore
+        ? !capped && Number.isInteger(nextOffset) && nextOffset >= 0
+        : source.next_offset === null)
+      && (capped ? !hasMore && items.length === SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED : source.is_render_capped === false)
+    );
+  }
+
+  function subtitleLanguageSourceItems(context) {
+    const source = context && context.subtitleLanguageSources && typeof context.subtitleLanguageSources === "object" && !Array.isArray(context.subtitleLanguageSources)
+      ? context.subtitleLanguageSources : {};
+    if (!subtitleLanguageSourceListingIsSafe(source)) return [];
+    const seen = new Set();
+    return (Array.isArray(source.items) ? source.items : []).map((item) => {
+      const value = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const id = String(value.id || "").trim();
+      const displayName = String(value.display_name || "").replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+      const extension = String(value.extension || "").trim().toLowerCase();
+      const contentType = String(value.content_type || "").trim().toLowerCase();
+      const byteSize = Number(value.byte_size);
+      const revision = Number(value.lifecycle_revision);
+      if (!validVaultAssetId(id) || !displayName || displayName.length > 120 || String(value.state || "") !== "active"
+        || !SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS.has(`${extension}|${contentType}`)
+        || !Number.isInteger(byteSize) || byteSize < 1 || byteSize > 100 * 1024 * 1024
+        || !Number.isInteger(revision) || revision < 1 || seen.has(id)) return null;
+      seen.add(id);
+      return { id, display_name: displayName, extension, content_type: contentType, byte_size: byteSize };
+    }).filter(Boolean).slice(0, SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED);
+  }
+  function subtitleLanguageSourceOptions(context) {
+    return subtitleLanguageSourceItems(context).map((asset) => ({
+      value: asset.id,
+      label: `${asset.display_name} · ${asset.extension.replace(".", "").toUpperCase()} · ${vaultBytes(asset.byte_size)}`
+    }));
+  }
+  function renderSubtitleLanguageSourcePager(context, page) {
+    const source = context && context.subtitleLanguageSources && typeof context.subtitleLanguageSources === "object" && !Array.isArray(context.subtitleLanguageSources)
+      ? context.subtitleLanguageSources : {};
+    if (!subtitleLanguageSourceListingIsSafe(source)) return "";
+    const loaded = Array.isArray(source.items) ? source.items.length : 0;
+    const route = String(page && (page.routePath || page.path) || "/subtitle-studio");
+    if (source.is_render_capped === true) {
+      return `<div class="portal-subtitle-language-source-pager is-capped" data-subtitle-language-source-dependent="asset"><span aria-live="polite">${safeText(uiText("subtitleSource.assetCapped", "Đã hiển thị tối đa 90 nguồn metadata trong form này để giữ trang phản hồi nhanh. Hãy sắp xếp Asset Vault rồi làm mới nếu cần nguồn khác."))}</span></div>`;
+    }
+    const next = Number(source.next_offset);
+    if (source.has_more !== true || !Number.isInteger(next) || next < 0 || loaded >= SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED) return "";
+    const canLoad = Boolean(context && context.capabilities && context.capabilities["subtitle-language-source-more"] === true);
+    const count = Math.min(SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT, SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED - loaded);
+    return `<div class="portal-subtitle-language-source-pager" data-subtitle-language-source-dependent="asset"><span aria-live="polite">${safeText(uiText("subtitleSource.assetPageStatus", `Đã nạp ${loaded} nguồn metadata riêng tư.`))}</span><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-language-source-more" data-portal-route="${safeText(route)}" data-subtitle-language-source-offset="${safeText(String(next))}"${canLoad ? "" : " disabled"}>${safeText(uiText("subtitleSource.assetLoadMore", `Tải thêm ${count} nguồn`))}</button></div>`;
+  }
+  function subtitleStudioProjectFields(context, includeLanguageSource) {
+    const fields = [
       { name: "title", label: "Tên transcript project", placeholder: "Ví dụ: Launch summer — phụ đề Việt/Anh", required: true, minLength: 2, maxLength: 180 },
       { name: "source_language", label: "Ngôn ngữ nguồn", placeholder: "vi", required: true, minLength: 1, maxLength: 100 },
       { name: "target_language", label: "Ngôn ngữ bản nháp", placeholder: "en", required: true, minLength: 1, maxLength: 100, help: "Chỉ là nhãn bản nháp để bạn biên tập; không gọi dịch máy." },
@@ -13599,15 +13710,89 @@
       { name: "tags", label: "Tags", placeholder: "launch, accessibility, review", maxLength: 1000 },
       { name: "project_id", label: "Project (tùy chọn)", control: "select", options: subtitleStudioReferenceOptions(context), emptyLabel: "Không liên kết Project" }
     ];
+    if (!includeLanguageSource) return fields;
+    return [
+      ...fields.slice(0, 3),
+      { name: "source_mode", labelKey: "subtitleSource.field.mode", label: "Nguồn ngôn ngữ", control: "select", required: true, options: subtitleLanguageSourceModes(), helpKey: "subtitleSource.modeHelp", help: "Tự soạn để bắt đầu bằng cue/text của bạn; Asset Vault chỉ lưu một tham chiếu metadata, không mở hoặc xử lý tệp." },
+      { name: "source_asset_id", labelKey: "subtitleSource.field.asset", label: "Asset Vault nguồn", control: "select", dynamicRequired: true, options: subtitleLanguageSourceOptions(context), emptyLabel: uiText("subtitleSource.assetEmpty", "Không chọn Asset Vault"), helpKey: "subtitleSource.assetHelp", help: "Chỉ Audio/Video/Text active thuộc account này xuất hiện. Không có preview, upload, download, ASR hoặc dịch máy.", wrapperData: { "subtitle-language-source-dependent": "asset" } },
+      { name: "source_rights_confirmed", labelKey: "subtitleSource.field.rights", label: "Quyền sử dụng nguồn", type: "checkbox", dynamicRequired: true, checkboxLabelKey: "subtitleSource.rightsLabel", checkboxLabel: "Tôi xác nhận có quyền sử dụng nguồn này", helpKey: "subtitleSource.rightsHelp", help: "Chỉ xác nhận khi bạn có quyền dùng asset đã chọn. Xác nhận này bắt buộc khi chọn Asset Vault; server kiểm tra lại owner và lifecycle.", wrapperData: { "subtitle-language-source-dependent": "asset" } },
+      ...fields.slice(3)
+    ];
   }
-  function subtitleStudioProjectValues(value) {
+  function subtitleStudioProjectValues(value, includeLanguageSource) {
     const source = value && typeof value === "object" ? value : {};
     const format = String(source.caption_format || source.format || "").toLowerCase();
-    return {
+    const result = {
       title: String(source.title || ""), source_language: String(source.source_language || "vi"), target_language: String(source.target_language || "en"), intent: SUBTITLE_STUDIO_INTENTS.some(([key]) => key === String(source.intent || "")) ? String(source.intent) : "subtitle",
       caption_format: SUBTITLE_STUDIO_FORMATS.some(([key]) => key === format) ? format : "srt",
       context: String(source.context || source.review_context || ""), tags: subtitleStudioTags(source.tags).join(", "), project_id: String(source.project_id || "")
     };
+    if (includeLanguageSource) {
+      const languageSource = source.language_source && typeof source.language_source === "object" ? source.language_source : {};
+      const mode = SUBTITLE_LANGUAGE_SOURCE_MODE_KEYS.has(String(source.source_mode || languageSource.mode || ""))
+        ? String(source.source_mode || languageSource.mode) : "manual";
+      const asset = languageSource.asset && typeof languageSource.asset === "object" ? languageSource.asset : {};
+      result.source_mode = mode;
+      result.source_asset_id = mode === "asset_reference" && validVaultAssetId(source.source_asset_id || asset.id) ? String(source.source_asset_id || asset.id) : "";
+      result.source_rights_confirmed = mode === "asset_reference" && (source.source_rights_confirmed === true || languageSource.rights_confirmed === true);
+    }
+    return result;
+  }
+  function subtitleStudioLanguageSource(project) {
+    const source = project && project.language_source && typeof project.language_source === "object" && !Array.isArray(project.language_source)
+      ? project.language_source : null;
+    // Missing metadata is not evidence that a project started manually. Keep
+    // a malformed or partial contract visibly guarded instead of inventing a
+    // manual source and hiding a lifecycle/ownership problem from the user.
+    if (!source) return { mode: "guarded", asset: null, available: false, rights: false };
+    if (source.mode === "manual") {
+      return source.asset === null && source.asset_available === true
+        && source.rights_confirmed === false && source.attested_at === null
+        ? { mode: "manual", asset: null, available: true, rights: false }
+        : { mode: "guarded", asset: null, available: false, rights: false };
+    }
+    if (source.mode !== "asset_reference" || source.rights_confirmed !== true || !subtitleLanguageSourceAttestationIsSafe(source.attested_at)) {
+      return { mode: "guarded", asset: null, available: false, rights: false };
+    }
+    // An explicit unavailable asset is a legitimate server lifecycle state.
+    // It remains guarded and includes no stale record metadata.
+    if (source.asset_available === false && source.asset === null) {
+      return { mode: "asset_reference", asset: null, available: false, rights: true };
+    }
+    if (source.asset_available !== true || !subtitleLanguageSourceAssetIsSafe(source.asset)) {
+      return { mode: "guarded", asset: null, available: false, rights: false };
+    }
+    const asset = source.asset;
+    return {
+      mode: "asset_reference",
+      asset: {
+        name: String(asset.display_name).replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim(),
+        extension: String(asset.extension).trim().toLowerCase(),
+        size: Number(asset.byte_size)
+      },
+      available: true,
+      rights: true
+    };
+  }
+  function subtitleStudioSourceContractWritable(project) {
+    // The backend preserves malformed persisted source records instead of
+    // normalizing them. Match that guarded boundary in the UI so users do not
+    // get a row of enabled controls that the server must reject.
+    return subtitleStudioLanguageSource(project).mode !== "guarded";
+  }
+  function renderSubtitleStudioLanguageSource(project) {
+    const source = subtitleStudioLanguageSource(project);
+    if (source.mode === "manual") {
+      return `<section class="portal-card portal-card-pad portal-subtitle-language-source"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(uiText("subtitleSource.manualTitle", "Transcript tự soạn"))}</h2><p class="portal-card-subtitle">${safeText(uiText("subtitleSource.manualBody", "Project này bắt đầu từ nội dung bạn tự biên tập. Không có file, preview, media read hoặc engine bên ngoài."))}</p></div>${badge("read_only")}</div></section>`;
+    }
+    if (source.mode === "guarded") {
+      return `<section class="portal-card portal-card-pad portal-subtitle-language-source is-guarded"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(uiText("subtitleSource.contractGuardedTitle", "Nguồn ngôn ngữ chưa được xác nhận"))}</h2><p class="portal-card-subtitle">${safeText(uiText("subtitleSource.contractGuardedBody", "Dữ liệu nguồn của project thiếu hoặc không đúng contract an toàn. Studio giữ project ở trạng thái protected và không suy diễn đây là transcript tự soạn."))}</p></div>${badge("guarded")}</div><div class="portal-subtitle-language-source-facts"><span><strong>${safeText(uiText("subtitleSource.fact.source", "Nguồn"))}</strong>${safeText(uiText("subtitleSource.contractGuardedFact", "Không hiển thị metadata hoặc tạo xử lý từ nguồn chưa xác nhận."))}</span><span><strong>${safeText(uiText("subtitleSource.fact.rights", "Quyền sử dụng"))}</strong>${safeText(uiText("subtitleSource.rightsMissing", "Chưa có xác nhận"))}</span></div></section>`;
+    }
+    const facts = source.available && source.asset ? `${source.asset.name} · ${source.asset.extension.replace(".", "").toUpperCase()} · ${vaultBytes(source.asset.size)}` : uiText("subtitleSource.assetUnavailableFact", "Nguồn Asset Vault không còn ở đúng lifecycle đã được xác nhận.");
+    const copy = source.available
+      ? uiText("subtitleSource.assetAvailableBody", "Asset chỉ được giữ dưới dạng metadata reference. Studio không đọc bytes, không preview, không download và không chạy ASR/dịch/TTS/dubbing.")
+      : uiText("subtitleSource.assetUnavailableBody", "Để bảo vệ owner và lifecycle, Studio không dùng lại nguồn này cho xử lý nào. Bạn vẫn có thể biên tập cue thủ công trong project.");
+    return `<section class="portal-card portal-card-pad portal-subtitle-language-source${source.available ? "" : " is-guarded"}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(source.available ? uiText("subtitleSource.assetTitle", "Asset Vault đã tham chiếu") : uiText("subtitleSource.assetUnavailableTitle", "Nguồn Asset Vault cần được kiểm tra lại"))}</h2><p class="portal-card-subtitle">${safeText(copy)}</p></div>${badge(source.available ? "read_only" : "guarded")}</div><div class="portal-subtitle-language-source-facts"><span><strong>${safeText(uiText("subtitleSource.fact.source", "Nguồn"))}</strong>${safeText(facts)}</span><span><strong>${safeText(uiText("subtitleSource.fact.rights", "Quyền sử dụng"))}</strong>${safeText(source.rights ? uiText("subtitleSource.rightsConfirmed", "Đã xác nhận khi tạo project") : uiText("subtitleSource.rightsMissing", "Chưa có xác nhận"))}</span></div></section>`;
   }
   function subtitleStudioNewProjectIntentFromQuery(page) {
     // Legacy routes can only pass one fixed, allowlisted authoring intent to
@@ -14695,10 +14880,18 @@
     const total = Number(stats.total || projects.length);
     const review = Number(stats.review || 0);
     const approved = Number(stats.approved || 0);
-    const values = subtitleStudioProjectValues({ source_language: "vi", target_language: "en", intent: subtitleStudioNewProjectIntentFromQuery(page), caption_format: "srt" });
+    const draft = transientFormValues(page.routePath || page.path);
+    const values = subtitleStudioProjectValues({
+      ...draft,
+      source_language: draft.source_language || "vi",
+      target_language: draft.target_language || "en",
+      intent: draft.intent || subtitleStudioNewProjectIntentFromQuery(page),
+      caption_format: draft.caption_format || "srt",
+      source_mode: draft.source_mode || "manual"
+    }, true);
     return `<article class="portal-page portal-subtitle-studio">${renderHero(page, context)}
       <section class="portal-subtitle-studio-intro"><div><span class="portal-section-kicker">Web-native subtitle authoring</span><h2>Biên tập transcript và caption có cấu trúc, dễ review.</h2><p>Tổ chức cue, timing, bản nháp ngôn ngữ và self-review trong không gian riêng tư. Đây là dữ liệu biên tập, không phải kết quả ASR, dịch, TTS, dubbing hay file xuất.</p></div><dl><div><dt>${safeText(String(total))}</dt><dd>Transcript projects</dd></div><div><dt>${safeText(String(review))}</dt><dd>Đang review</dd></div><div><dt>${safeText(String(approved))}</dt><dd>Self-review xong</dd></div></dl></section>
-      <div class="portal-subtitle-studio-layout"><section class="portal-card portal-card-pad portal-subtitle-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">New transcript project</span><h2 class="portal-card-title">Lập project subtitle</h2><p class="portal-card-subtitle">Đặt ngôn ngữ, chuẩn preview và review context trước khi thêm cue. Mỗi lần ghi được server kiểm tra session, CSRF, ownership, revision và idempotency.</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(subtitleStudioProjectFields(context), canCreate, context, values)}<div class="portal-form-footer"><span class="portal-form-note">Không nhập secret, chứng từ thanh toán, provider/job/file handle hoặc URL vào metadata project.</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>Tạo transcript project</button></div></form></section>${renderSubtitleStudioBoundary()}</div>
+      <div class="portal-subtitle-studio-layout"><section class="portal-card portal-card-pad portal-subtitle-studio-create"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("subtitleSource.kicker", "Nguồn ngôn ngữ"))}</span><h2 class="portal-card-title">${safeText(uiText("subtitleSource.intakeTitle", "Lập project subtitle"))}</h2><p class="portal-card-subtitle">${safeText(uiText("subtitleSource.intakeBody", "Chọn tự soạn transcript hoặc tham chiếu một Asset Vault của chính bạn, rồi đặt ngôn ngữ và review context. Mỗi lần ghi được server kiểm tra session, CSRF, ownership, revision và idempotency."))}</p></div>${badge(canCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-create" data-portal-route="${safeText(page.routePath || page.path)}" novalidate>${renderFields(subtitleStudioProjectFields(context, true), canCreate, context, values)}${renderSubtitleLanguageSourcePager(context, page)}<div class="portal-form-footer"><span class="portal-form-note">${safeText(uiText("subtitleSource.intakeNotice", "Asset Vault chỉ là metadata reference. Không nhập secret, chứng từ thanh toán, provider/job/file handle hoặc URL; không có upload, preview, ASR, dịch máy hay output được tạo."))}</span><button class="portal-button portal-button--primary" type="submit"${canCreate ? "" : " disabled"}>${safeText(uiText("subtitleSource.create", "Tạo transcript project"))}</button></div></form></section>${renderSubtitleStudioBoundary()}</div>
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Transcript library</span><h2 class="portal-card-title">Tiếp tục công việc</h2><p class="portal-card-subtitle">Danh sách chỉ hiển thị metadata/excerpt thuộc signed account. Mở project để nạp cue, preview text và version sau owner check.</p></div><button class="portal-button portal-button--quiet" type="button" data-portal-action="subtitle-studio-refresh" data-portal-route="/subtitle-studio">Làm mới</button></div>${renderSubtitleProjectCards(projects, context, listing)}</section>
     </article>`;
   }
@@ -14707,7 +14900,7 @@
     const cueId = String(cue.id || "");
     const active = String(cue.state || "active") === "active";
     const projectState = subtitleStudioState(project.state);
-    const writable = projectState === "draft";
+    const writable = projectState === "draft" && subtitleStudioSourceContractWritable(project);
     const canUpdate = Boolean(active && writable && context.capabilities && context.capabilities["subtitle-cue-update"] === true);
     const canArchive = Boolean(active && writable && context.capabilities && context.capabilities["subtitle-cue-archive"] === true);
     const canRestore = Boolean(!active && writable && context.capabilities && context.capabilities["subtitle-cue-restore"] === true);
@@ -14732,9 +14925,10 @@
     }
     const route = page.routePath || page.path;
     const state = subtitleStudioState(project.state);
-    const writable = state === "draft";
+    const sourceContractWritable = subtitleStudioSourceContractWritable(project);
+    const writable = state === "draft" && sourceContractWritable;
     const canUpdate = Boolean(writable && context.capabilities && context.capabilities["subtitle-project-update"] === true);
-    const canLifecycle = Boolean(context.capabilities && context.capabilities["subtitle-project-lifecycle"] === true);
+    const canLifecycle = Boolean(sourceContractWritable && context.capabilities && context.capabilities["subtitle-project-lifecycle"] === true);
     const canRestoreVersion = Boolean(writable && context.capabilities && context.capabilities["subtitle-project-restore-version"] === true);
     const canCueCreate = Boolean(writable && context.capabilities && context.capabilities["subtitle-cue-create"] === true);
     const canCueImport = Boolean(writable && context.capabilities && context.capabilities["subtitle-cue-import"] === true);
@@ -14758,6 +14952,7 @@
     const estimateMarkup = state === "archived" ? `<section class="portal-card portal-card-pad portal-subtitle-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Timeline estimate</span><h2 class="portal-card-title">Estimate đã được khóa</h2><p class="portal-card-subtitle">Project đang archive nên cue và estimate không được tính lại. Khôi phục về Draft khi muốn tiếp tục review.</p></div>${badge("archived")}</div></section>` : `<section class="portal-card portal-card-pad portal-subtitle-runtime-estimate"><div class="portal-card-header"><div><span class="portal-section-kicker">Timeline estimate</span><h2 class="portal-card-title">Kiểm tra timing cục bộ</h2><p class="portal-card-subtitle">${safeText(String(estimate.message || "Tổng hợp timing từ cue hiện tại; không đọc media, không chạy ASR hoặc render."))}</p></div>${badge("read_only")}</div><div class="portal-subtitle-estimate-grid"><span><strong>${safeText(String(estimate.cue_count ?? activeCues.length))}</strong> cues active</span><span><strong>${safeText(String(estimate.duration_ms ?? "—"))}</strong> ms metadata</span><span><strong>${safeText(String(estimate.overlap_count ?? 0))}</strong> overlaps cần review</span></div></section>`;
     return `<article class="portal-page portal-subtitle-studio-detail">${renderHero(page, context)}
       <section class="portal-subtitle-studio-detail-summary"><div><span class="portal-section-kicker">${safeText(String(project.caption_format || project.format || "srt").toUpperCase())} · ${safeText(String(project.source_language || "—"))} → ${safeText(String(project.target_language || "—"))}</span><h2>${safeText(String(project.title || "Transcript project"))}</h2><p>${safeText(String(project.context || project.context_excerpt || "Chưa có review context hiển thị."))}</p>${renderSubtitleStudioTags(project.tags)}</div><dl><div><dt>Intent</dt><dd>${safeText((SUBTITLE_STUDIO_INTENTS.find(([key]) => key === String(project.intent || "")) || ["", "Subtitle biên tập"])[1])}</dd></div><div><dt>Revision</dt><dd>v${safeText(String(project.revision || 1))}</dd></div><div><dt>Cues</dt><dd>${safeText(String(activeCues.length))}</dd></div></dl></section>
+      ${renderSubtitleStudioLanguageSource(project)}
       <div class="portal-subtitle-studio-detail-grid"><section class="portal-card portal-card-pad portal-subtitle-studio-editor"><div class="portal-card-header"><div><span class="portal-section-kicker">Project editor</span><h2 class="portal-card-title">Ngôn ngữ & review context</h2><p class="portal-card-subtitle">Lưu bằng optimistic revision; self-review và archive là trạng thái server-side, không do browser tự suy diễn.</p></div>${subtitleStudioStateBadge(state)}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-project-update" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioProjectFields(context), canUpdate, context, subtitleStudioProjectValues(project))}<div class="portal-form-footer"><span class="portal-form-note">Chỉ Draft có thể biên tập. Khi đang self-review, approved hoặc archived, hãy dùng “Trả về Draft” sau khi server xác nhận.</span><div class="portal-inline-actions">${stateActions}<button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled"}>Lưu revision project</button></div></div></form></section>${estimateMarkup}</div>
       <section class="portal-card portal-card-pad portal-subtitle-cue-create"><div class="portal-card-header"><div><span class="portal-section-kicker">Manual cue authoring</span><h2 class="portal-card-title">Thêm cue thủ công</h2><p class="portal-card-subtitle">Cue có timing, caption nguồn, bản nháp ngôn ngữ và history riêng. Server kiểm tra thứ tự/revision trước khi lưu.</p></div>${badge(canCueCreate ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-cue-create" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioCueFields(), canCueCreate, context, { start_ms: "0", end_ms: "1800" })}<div class="portal-form-footer"><span class="portal-form-note">Không upload hoặc tạo ASR/dịch/TTS/dubbing. URL trong caption hợp lệ sẽ chỉ là text để review.</span><button class="portal-button portal-button--primary" type="submit"${canCueCreate ? "" : " disabled"}>Thêm cue</button></div></form></section>
       <section class="portal-card portal-card-pad portal-subtitle-text-import"><div class="portal-card-header"><div><span class="portal-section-kicker">Text-only import</span><h2 class="portal-card-title">Dán & parse SRT/VTT</h2><p class="portal-card-subtitle">Chỉ dán văn bản tác giả để server parse thành cue có revision/owner check. Không chọn file, không upload, không gọi ASR hoặc dịch máy.</p></div>${badge(canCueImport ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-action="subtitle-cue-import" data-portal-route="${safeText(route)}" data-subtitle-project-id="${safeText(String(project.id))}" data-subtitle-project-revision="${safeText(String(project.revision))}" novalidate>${renderFields(subtitleStudioImportFields(), canCueImport, context, { format: String(project.caption_format || project.format || "srt") })}<div class="portal-form-footer"><span class="portal-form-note">Trong Draft, thao tác này sẽ archive toàn bộ cue active rồi thay bằng cue đã parse; history cũ vẫn được giữ. URL trong caption chỉ là text.</span><button class="portal-button portal-button--primary" type="submit" data-portal-confirm="Xác nhận: archive toàn bộ cue active và thay bằng cue parse từ văn bản tác giả này? History cũ vẫn được giữ; không đọc file hoặc tạo output media."${canCueImport ? "" : " disabled"}>Parse & thay cue active</button></div></form></section>
@@ -22188,6 +22383,42 @@
     });
   }
 
+  function synchronizeSubtitleLanguageSourceForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "subtitle-project-create") return;
+    const mode = form.querySelector('[name="source_mode"]');
+    const asset = form.querySelector('[name="source_asset_id"]');
+    const rights = form.querySelector('[name="source_rights_confirmed"]');
+    if (!mode || !asset || !rights) return;
+    const assetMode = String(mode.value || "manual") === "asset_reference";
+    const formDisabled = Boolean(mode.disabled);
+    form.querySelectorAll("[data-subtitle-language-source-dependent=\"asset\"]").forEach((field) => {
+      field.hidden = !assetMode;
+      field.setAttribute("aria-hidden", String(!assetMode));
+      field.classList.toggle("is-muted", !assetMode);
+    });
+    [asset, rights].forEach((control) => {
+      const field = control.closest("[data-subtitle-language-source-dependent]");
+      if (field) {
+        field.hidden = !assetMode;
+        field.setAttribute("aria-hidden", String(!assetMode));
+        field.classList.toggle("is-muted", !assetMode);
+      }
+      control.disabled = formDisabled || !assetMode;
+      control.setAttribute("aria-disabled", String(formDisabled || !assetMode));
+      control.setAttribute("aria-required", String(assetMode));
+      const requiredMark = field && field.querySelector("[data-portal-required-mark]");
+      const requiredMessage = field && field.querySelector("[data-portal-required-message]");
+      if (requiredMark) requiredMark.hidden = !assetMode;
+      if (requiredMessage) requiredMessage.hidden = !assetMode;
+    });
+    asset.required = assetMode;
+    rights.required = assetMode;
+    if (!assetMode) {
+      asset.value = "";
+      rights.checked = false;
+    }
+  }
+
   function synchronizeQuickImagePlannerForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "quick-image-planner-plan") return;
     const source = form.querySelector('[data-quick-image-planner-source]');
@@ -22501,10 +22732,11 @@
     const frameVideoNoNativeValidity = ["frame-video-operation-refresh", "frame-video-reference-page", "frame-video-history-page", "frame-video-operation-detail", "frame-video-operation-download"].includes(action);
     const videoPosterNoNativeValidity = ["video-poster-operation-refresh", "video-poster-reference-page", "video-poster-operation-detail", "video-poster-operation-download"].includes(action);
     const videoPreviewNoNativeValidity = ["video-preview-refresh", "video-preview-reference-page", "video-preview-clear"].includes(action);
+    const subtitleLanguageSourcePickerAction = action === "subtitle-language-source-more";
     // Picker controls belong to the operation form so the existing in-memory
     // draft map retains selected slots while paging.  They must not trigger
     // the main form's required-field validation before a source is chosen.
-    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || frameVideoNoNativeValidity || videoPosterNoNativeValidity || videoPreviewNoNativeValidity || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
+    const analyticsNoNativeValidity = operationAssetReferenceAction || documentWorkspaceLibraryAction || videoTransformNoNativeValidity || frameVideoNoNativeValidity || videoPosterNoNativeValidity || videoPreviewNoNativeValidity || subtitleLanguageSourcePickerAction || ["analytics-workspace-refresh", "analytics-workspace-filter", "analytics-workspace-page", "analytics-report-lifecycle", "analytics-report-restore-version", "analytics-metric-state", "analytics-snapshot-state", "analytics-finding-state"].includes(action);
     // A local Workspace draft may be intentionally incomplete. It is still
     // checked server-side for safe scalar fields, while later feature submit
     // re-runs the form's required/upload/canonical validation.
@@ -22560,6 +22792,14 @@
         __subtitleAssetReferenceOffset: source.getAttribute("data-subtitle-asset-reference-offset") || "",
         __subtitleAssetReferenceSelectedId: subtitleSource ? String(subtitleSource.value || "").trim() : "",
         __subtitleAssetOperationId: source.getAttribute("data-subtitle-asset-operation-id") || ""
+      });
+    }
+    // Language Source pagination carries only an offset emitted by the
+    // metadata-only picker. It never carries an asset path, URL, file, Blob,
+    // provider handle or media bytes into the action payload.
+    if (action === "subtitle-language-source-more") {
+      Object.assign(fields, {
+        __subtitleLanguageSourceOffset: source.getAttribute("data-subtitle-language-source-offset") || ""
       });
     }
     // Audio Asset Operations keeps its UUID selection and pagination in the
@@ -23267,6 +23507,10 @@
           && event.target && ["source_asset_id", "operation"].includes(event.target.name)) {
           synchronizeSubtitleAssetOperationForm(form);
         }
+        if (form.getAttribute("data-portal-action") === "subtitle-project-create"
+          && event.target && event.target.name === "source_mode") {
+          synchronizeSubtitleLanguageSourceForm(form);
+        }
         if (form.getAttribute("data-portal-action") === "video-transform-operation-estimate"
           && event.target && ["source_asset_id", "target_ratio", "fit_mode", "preset", "sharpen", "preserve_audio"].includes(event.target.name)) {
           synchronizeVideoTransformEstimateForm(form);
@@ -23409,6 +23653,7 @@
     main.innerHTML = renderPage(page, context);
     bindVideoPreviewPlayer(main);
     synchronizeWorkspaceSetupFocusLimit(main.querySelector("[data-workspace-setup-form]"));
+    main.querySelectorAll('[data-portal-action="subtitle-project-create"]').forEach((form) => synchronizeSubtitleLanguageSourceForm(form));
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
     main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));

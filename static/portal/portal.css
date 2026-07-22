@@ -1766,6 +1766,15 @@ a { color: inherit; text-decoration: none; }
 .portal-subtitle-studio-layout, .portal-subtitle-studio-detail-grid, .portal-subtitle-studio-history-grid, .portal-subtitle-preview-grid { display: grid; grid-template-columns: minmax(0, 1.13fr) minmax(280px, .87fr); gap: 18px; align-items: start; }
 .portal-subtitle-studio-create, .portal-subtitle-studio-editor, .portal-subtitle-cue-create { background: linear-gradient(150deg, rgba(43, 29, 76, .95), rgba(7, 17, 31, .99)); }
 .portal-subtitle-studio-boundary, .portal-subtitle-runtime-estimate, .portal-subtitle-studio-activity, .portal-subtitle-text-preview { background: linear-gradient(150deg, rgba(35, 27, 66, .91), rgba(7, 17, 31, .99)); }
+.portal-subtitle-language-source { display: grid; gap: 13px; border-color: rgba(81, 210, 192, .25); background: linear-gradient(145deg, rgba(13, 54, 60, .9), rgba(7, 17, 31, .99)); }
+.portal-subtitle-language-source.is-guarded { border-color: rgba(237, 177, 91, .34); background: linear-gradient(145deg, rgba(63, 46, 20, .86), rgba(25, 20, 14, .99)); }
+.portal-subtitle-language-source-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; }
+.portal-subtitle-language-source-facts span { display: grid; gap: 4px; min-width: 0; padding: 11px 12px; border: 1px solid rgba(122, 223, 207, .16); border-radius: 12px; background: rgba(6, 28, 35, .44); color: #b8d9d8; font-size: 11px; line-height: 1.45; overflow-wrap: anywhere; }
+.portal-subtitle-language-source-facts strong { color: #f1fbfa; font-size: 10px; font-weight: 780; letter-spacing: .035em; text-transform: uppercase; }
+.portal-subtitle-language-source-pager { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 12px; border: 1px solid rgba(81, 210, 192, .24); border-radius: 12px; background: rgba(8, 37, 43, .48); color: #c5e6e3; font-size: 12px; line-height: 1.45; }
+.portal-subtitle-language-source-pager > span { min-width: 0; overflow-wrap: anywhere; }
+.portal-subtitle-language-source-pager .portal-button { min-height: 44px; flex: 0 0 auto; }
+.portal-subtitle-language-source-pager.is-capped { border-color: rgba(237, 177, 91, .32); background: rgba(73, 51, 22, .4); color: #f7dfad; }
 .portal-subtitle-studio-boundary { display: grid; gap: 14px; }
 .portal-subtitle-studio-guard-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
 .portal-subtitle-studio-guard-list span { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 8px; padding: 10px 11px; border: 1px solid rgba(207, 170, 255, .16); border-radius: 11px; background: rgba(22, 15, 44, .45); }
@@ -2563,8 +2572,8 @@ a { color: inherit; text-decoration: none; }
   .portal-document-plan-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-document-version-list > article { align-items: flex-start; flex-direction: column; }
   .portal-subtitle-studio-intro, .portal-subtitle-studio-detail-summary, .portal-subtitle-format-lab-intro, .portal-subtitle-assets-intro { padding: 20px; border-radius: 18px; }
-  .portal-subtitle-studio-intro dl, .portal-subtitle-studio-detail-summary dl, .portal-subtitle-format-lab-intro dl, .portal-subtitle-assets-intro dl, .portal-subtitle-estimate-grid, .portal-subtitle-studio-guard-list { grid-template-columns: 1fr; }
-  .portal-subtitle-asset-operation-meta, .portal-subtitle-asset-operation-actions, .portal-subtitle-assets-source-pager { align-items: flex-start; flex-direction: column; }
+  .portal-subtitle-studio-intro dl, .portal-subtitle-studio-detail-summary dl, .portal-subtitle-format-lab-intro dl, .portal-subtitle-assets-intro dl, .portal-subtitle-estimate-grid, .portal-subtitle-studio-guard-list, .portal-subtitle-language-source-facts { grid-template-columns: 1fr; }
+  .portal-subtitle-asset-operation-meta, .portal-subtitle-asset-operation-actions, .portal-subtitle-assets-source-pager, .portal-subtitle-language-source-pager { align-items: flex-start; flex-direction: column; }
   .portal-subtitle-cue-form .portal-fields { grid-template-columns: 1fr; }
   .portal-subtitle-cue-form .portal-field--wide { grid-column: auto; }
   .portal-subtitle-version-list > article { align-items: flex-start; flex-direction: column; }

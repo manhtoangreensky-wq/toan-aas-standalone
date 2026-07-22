@@ -140,6 +140,12 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/video-studio/storyboard-composer",
   "/" + "api/v1/workboard",
   "/workboard",
+  // Subtitle Studio includes owner-scoped transcript drafts and the new
+  // metadata-only language-source picker. Name both paths explicitly, even
+  // though the worker caches only a fixed public shell, so later cache-policy
+  // expansion cannot retain another account's source metadata or drafts.
+  "/" + "api/v1/subtitle-studio",
+  "/subtitle-studio",
   // First-run Workspace Setup contains signed-account choices and revision
   // metadata. Keep both API and page outside Cache Storage even if the public
   // shell allow-list evolves in a future release.

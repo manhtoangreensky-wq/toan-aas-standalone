@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib
 import sqlite3
 import sys
+import uuid
 
 from fastapi.testclient import TestClient
 
@@ -70,6 +71,80 @@ def create_project(client: TestClient, csrf: str, key: str = "subtitle-project-c
     return detail.json()["data"]["project"]
 
 
+def seed_language_source_asset(
+    db_path,
+    email: str,
+    *,
+    asset_id: str | None = None,
+    display_name: str = "Launch demo source",
+    original_filename: str = "private-original-source.mp4",
+    extension: str = ".mp4",
+    content_type: str = "video/mp4",
+    byte_size: int = 4_096,
+    state: str = "active",
+    lifecycle_revision: int = 1,
+) -> tuple[str, dict[str, str]]:
+    """Seed only Asset Vault metadata for the Subtitle Studio boundary tests.
+
+    The fixture intentionally leaves no physical file behind.  The language
+    source API must prove that it never needs to open bytes, expose a storage
+    key, hash or original filename, or create an external job.
+    """
+    asset_id = asset_id or str(uuid.uuid4())
+    private = {
+        "original_filename": original_filename,
+        "storage_key": f"private-test-storage/{asset_id}/source.bin",
+        "sha256": "a" * 64,
+    }
+    now = "2026-07-22T00:00:00+00:00"
+    with sqlite3.connect(db_path) as conn:
+        account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (email,)).fetchone()
+        assert account, "login fixture must create the Web account before seeding an Asset Vault record"
+        conn.execute(
+            """INSERT INTO web_asset_files
+               (id, account_id, project_id, display_name, original_filename, extension, content_type, byte_size,
+                sha256, storage_key, state, lifecycle_revision, created_at, updated_at, archived_at)
+               VALUES (?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                asset_id,
+                str(account[0]),
+                display_name,
+                private["original_filename"],
+                extension,
+                content_type,
+                byte_size,
+                private["sha256"],
+                private["storage_key"],
+                state,
+                lifecycle_revision,
+                now,
+                now,
+                now if state == "archived" else None,
+            ),
+        )
+    return asset_id, private
+
+
+def assert_language_source_boundary(data: dict) -> None:
+    for key in (
+        "source_bytes_read",
+        "provider_called",
+        "bot_called",
+        "bridge_called",
+        "asr_called",
+        "tts_called",
+        "dubbing_called",
+        "translation_called",
+        "job_created",
+        "output_created",
+        "download_created",
+        "payment_started",
+        "payment_processed",
+        "wallet_mutated",
+    ):
+        assert data[key] is False
+
+
 def test_subtitle_requires_session_csrf_and_scrubs_idempotency_receipts(tmp_path, monkeypatch):
     db_path = tmp_path / "subtitle-studio-test.db"
     with make_client(tmp_path, monkeypatch) as client:
@@ -89,6 +164,12 @@ def test_subtitle_requires_session_csrf_and_scrubs_idempotency_receipts(tmp_path
         assert raw["context"] not in created.text
         assert created.json()["data"]["execution"] == "authoring_only"
         assert created.json()["data"]["output_created"] is False
+        # Idempotency deliberately returns a small receipt rather than a full
+        # project document.  The browser must accept this immutable identity
+        # receipt, then hydrate the complete language-source contract before
+        # it renders the detail route.
+        assert set(created.json()["data"]["project"]) == {"id", "revision", "state"}
+        assert created.json()["data"]["project"]["state"] == "draft"
         replay = client.post("/api/v1/subtitle-studio/projects", headers={"X-CSRF-Token": csrf}, json=raw)
         assert replay.status_code == 200 and replay.json() == created.json()
         collision = client.post("/api/v1/subtitle-studio/projects", headers={"X-CSRF-Token": csrf}, json=project_payload("subtitle-project-idempotency-0001", context="Nội dung thay đổi."))
@@ -260,3 +341,382 @@ def test_subtitle_format_lab_normalizes_vtt_and_creates_deterministic_text_srt(t
         assert oversized.status_code == 200 and oversized.json()["ok"] is False
         assert oversized.json()["error_code"] == "WEB_SUBTITLE_FORMAT_OUTPUT_TOO_LARGE"
         assert "text" not in oversized.json()["data"]
+
+
+def test_subtitle_language_source_listing_is_owner_scoped_exact_and_metadata_only(tmp_path, monkeypatch):
+    db_path = tmp_path / "subtitle-studio-test.db"
+    path = "/api/v1/subtitle-studio/references/language-sources?limit=30&offset=0"
+    owner_email = "subtitle-language-owner@example.com"
+    with make_client(tmp_path, monkeypatch) as owner:
+        # This is a private account read; it neither accepts an anonymous
+        # caller nor enables any mutation/upload capability.
+        assert owner.get(path).status_code == 401
+        csrf = login(owner, owner_email)
+        valid_id, private = seed_language_source_asset(db_path, owner_email, display_name="Launch demo source")
+        seed_language_source_asset(
+            db_path,
+            owner_email,
+            display_name="MIME mismatch must stay hidden",
+            original_filename="private-mismatch.mp4",
+            extension=".mp4",
+            content_type="application/octet-stream",
+        )
+        seed_language_source_asset(
+            db_path,
+            owner_email,
+            display_name="Archived source must stay hidden",
+            original_filename="private-archived.mp3",
+            extension=".mp3",
+            content_type="audio/mpeg",
+            state="archived",
+            lifecycle_revision=2,
+        )
+
+        # A source reference is create-only and still needs normal CSRF.
+        csrf_guard = owner.post(
+            "/api/v1/subtitle-studio/projects",
+            json=project_payload(
+                "subtitle-language-list-csrf-0001",
+                source_mode="asset_reference",
+                source_asset_id=valid_id,
+                source_rights_confirmed=True,
+            ),
+        )
+        assert csrf_guard.status_code == 403
+
+        listed = owner.get(path)
+        assert listed.status_code == 200 and listed.json()["ok"] is True
+        assert listed.headers["Cache-Control"] == "no-store, private"
+        data = listed.json()["data"]
+        assert data["execution"] == "asset_reference_metadata_only"
+        assert data["output_delivery"] == "none"
+        assert_language_source_boundary(data)
+        assert data["pagination"] == {"limit": 30, "offset": 0, "returned": 1}
+        assert [item["id"] for item in data["items"]] == [valid_id]
+        item = data["items"][0]
+        assert set(item) == {"id", "display_name", "extension", "content_type", "byte_size", "state", "lifecycle_revision", "updated_at"}
+        assert item["display_name"] == "Launch demo source"
+        assert item["extension"] == ".mp4" and item["content_type"] == "video/mp4"
+        for secret in private.values():
+            assert secret not in listed.text
+        for forbidden in ("original_filename", "storage_key", "sha256", "path", "url", "download", "preview"):
+            assert forbidden not in item
+
+    # A second signed Web account sees neither the first account's reference
+    # nor an existence distinction between a foreign and archived UUID.
+    second_email = "subtitle-language-other@example.com"
+    with make_client(tmp_path, monkeypatch) as other:
+        csrf_other = login(other, second_email)
+        archived_id, _ = seed_language_source_asset(
+            db_path,
+            second_email,
+            display_name="Other archived source",
+            original_filename="other-private-archived.mp3",
+            extension=".mp3",
+            content_type="audio/mpeg",
+            state="archived",
+            lifecycle_revision=2,
+        )
+        hidden = other.get(path)
+        assert hidden.status_code == 200 and hidden.json()["data"]["items"] == []
+        foreign = other.post(
+            "/api/v1/subtitle-studio/projects",
+            headers={"X-CSRF-Token": csrf_other},
+            json=project_payload(
+                "subtitle-language-foreign-0001",
+                source_mode="asset_reference",
+                source_asset_id=valid_id,
+                source_rights_confirmed=True,
+            ),
+        )
+        archived = other.post(
+            "/api/v1/subtitle-studio/projects",
+            headers={"X-CSRF-Token": csrf_other},
+            json=project_payload(
+                "subtitle-language-archived-0001",
+                source_mode="asset_reference",
+                source_asset_id=archived_id,
+                source_rights_confirmed=True,
+            ),
+        )
+        assert foreign.status_code == archived.status_code == 422
+        foreign_body, archived_body = foreign.json(), archived.json()
+        for body in (foreign_body, archived_body):
+            assert body["ok"] is False
+            assert body["status"] == "failed"
+            assert body["error_code"] == "REQUEST_INVALID"
+            assert body["data"] == {}
+        assert foreign_body["message"] == archived_body["message"]
+        assert valid_id not in foreign.text and archived_id not in archived.text
+
+        # Lookup scope is enforced in SQL as well as through the generic
+        # 422 create result: an archived record and a record owned by a
+        # different Web account do not produce a candidate row at all.
+        workspace = importlib.import_module("copyfast_subtitle_workspace")
+        with sqlite3.connect(db_path) as conn:
+            owner_account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (owner_email,)).fetchone()
+            other_account = conn.execute("SELECT id FROM web_accounts WHERE email=?", (second_email,)).fetchone()
+            assert owner_account and other_account
+            assert workspace._language_source_asset_row(
+                conn, asset_id=valid_id, account_id=str(owner_account[0])
+            ) is not None
+            assert workspace._language_source_asset_row(
+                conn, asset_id=valid_id, account_id=str(other_account[0])
+            ) is None
+            assert workspace._language_source_asset_row(
+                conn, asset_id=archived_id, account_id=str(other_account[0])
+            ) is None
+
+
+def test_subtitle_language_source_listing_paginates_only_fully_eligible_assets(tmp_path, monkeypatch):
+    """Ineligible legacy rows cannot consume the picker offset.
+
+    All three malformed rows sort before the eligible records.  A raw SQL
+    page followed by Python filtering would return an empty first page and
+    skip/double results on the next request; the endpoint must page only over
+    rows already meeting the whole source contract.
+    """
+    db_path = tmp_path / "subtitle-studio-test.db"
+    email = "subtitle-language-pagination@example.com"
+    path = "/api/v1/subtitle-studio/references/language-sources?limit=2&offset="
+    with make_client(tmp_path, monkeypatch) as client:
+        login(client, email)
+        first_id, _ = seed_language_source_asset(db_path, email, display_name="Eligible one")
+        second_id, _ = seed_language_source_asset(db_path, email, display_name="Eligible two")
+        third_id, _ = seed_language_source_asset(db_path, email, display_name="Eligible three")
+        blank_id, _ = seed_language_source_asset(db_path, email, display_name="\u2003\u00a0")
+        oversized_id, _ = seed_language_source_asset(
+            db_path,
+            email,
+            display_name="Oversized metadata record",
+            byte_size=100 * 1024 * 1024 + 1,
+        )
+        stale_revision_id, _ = seed_language_source_asset(
+            db_path,
+            email,
+            display_name="Zero revision metadata record",
+            lifecycle_revision=0,
+        )
+        with sqlite3.connect(db_path) as conn:
+            # Invalid rows sort first.  Eligible rows are deterministic and
+            # distinct so the test also proves the stable next offset.
+            for asset_id, updated_at in (
+                (blank_id, "2026-07-22T00:10:00+00:00"),
+                (oversized_id, "2026-07-22T00:09:00+00:00"),
+                (stale_revision_id, "2026-07-22T00:08:00+00:00"),
+                (first_id, "2026-07-22T00:07:00+00:00"),
+                (second_id, "2026-07-22T00:06:00+00:00"),
+                (third_id, "2026-07-22T00:05:00+00:00"),
+            ):
+                conn.execute("UPDATE web_asset_files SET updated_at=? WHERE id=?", (updated_at, asset_id))
+
+        first_page = client.get(path + "0")
+        assert first_page.status_code == 200 and first_page.json()["ok"] is True
+        first_data = first_page.json()["data"]
+        assert [item["id"] for item in first_data["items"]] == [first_id, second_id]
+        assert first_data["pagination"] == {"limit": 2, "offset": 0, "returned": 2}
+        assert first_data["has_more"] is True and first_data["next_offset"] == 2
+
+        second_page = client.get(path + str(first_data["next_offset"]))
+        assert second_page.status_code == 200 and second_page.json()["ok"] is True
+        second_data = second_page.json()["data"]
+        assert [item["id"] for item in second_data["items"]] == [third_id]
+        assert second_data["pagination"] == {"limit": 2, "offset": 2, "returned": 1}
+        assert second_data["has_more"] is False and second_data["next_offset"] is None
+        assert second_data["previous_offset"] == 0
+        returned = [item["id"] for item in first_data["items"] + second_data["items"]]
+        assert returned == [first_id, second_id, third_id]
+        assert not set(returned) & {blank_id, oversized_id, stale_revision_id}
+
+
+def test_subtitle_language_source_create_is_immutable_and_never_reads_asset_bytes(tmp_path, monkeypatch):
+    db_path = tmp_path / "subtitle-studio-test.db"
+    email = "subtitle-language-create@example.com"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, email)
+        asset_id, private = seed_language_source_asset(
+            db_path,
+            email,
+            display_name="Owned audio source",
+            original_filename="private-owned-audio.mp3",
+            extension=".mp3",
+            content_type="audio/mpeg",
+        )
+        alternate_id, _ = seed_language_source_asset(
+            db_path,
+            email,
+            display_name="Alternate audio source",
+            original_filename="private-alternate-audio.mp3",
+            extension=".mp3",
+            content_type="audio/mpeg",
+        )
+        created = client.post(
+            "/api/v1/subtitle-studio/projects",
+            headers={"X-CSRF-Token": csrf},
+            json=project_payload(
+                "subtitle-language-source-create-0001",
+                source_mode="asset_reference",
+                source_asset_id=asset_id,
+                source_rights_confirmed=True,
+            ),
+        )
+        assert created.status_code == 200 and created.json()["ok"] is True
+        assert created.headers["Cache-Control"] == "no-store, private"
+        assert_language_source_boundary(created.json()["data"])
+        project_id = created.json()["data"]["project"]["id"]
+
+        detail_response = client.get(f"/api/v1/subtitle-studio/projects/{project_id}")
+        assert detail_response.status_code == 200 and detail_response.json()["ok"] is True
+        detail = detail_response.json()["data"]
+        assert_language_source_boundary(detail)
+        project = detail["project"]
+        source = project["language_source"]
+        assert source["mode"] == "asset_reference"
+        assert source["asset_available"] is True and source["rights_confirmed"] is True
+        assert source["attested_at"]
+        assert set(source["asset"]) == {"id", "display_name", "extension", "content_type", "byte_size", "state", "lifecycle_revision", "updated_at"}
+        assert source["asset"]["id"] == asset_id
+        assert source["asset"]["display_name"] == "Owned audio source"
+        for secret in private.values():
+            assert secret not in detail_response.text
+
+        with sqlite3.connect(db_path) as conn:
+            source_row = conn.execute(
+                """SELECT source_mode, source_asset_id, source_asset_lifecycle_revision,
+                          source_rights_confirmed, source_attested_at
+                   FROM web_subtitle_projects WHERE id=?""",
+                (project_id,),
+            ).fetchone()
+            snapshots = conn.execute(
+                "SELECT snapshot_json FROM web_subtitle_project_versions WHERE subtitle_project_id=? ORDER BY revision",
+                (project_id,),
+            ).fetchall()
+        assert source_row[0:4] == ("asset_reference", asset_id, 1, 1)
+        assert source_row[4]
+        stored = "\n".join(str(value) for row in snapshots for value in row)
+        assert asset_id in stored
+        for secret in private.values():
+            assert secret not in stored
+
+        # Update DTOs have extra=forbid and cannot retarget a source after
+        # creation, even if the caller owns another otherwise valid asset.
+        retarget = project_payload(
+            "subtitle-language-source-retarget-0001",
+            title="Attempt retarget must fail",
+            source_mode="asset_reference",
+            source_asset_id=alternate_id,
+            source_rights_confirmed=True,
+            expected_revision=project["revision"],
+        )
+        rejected = client.patch(
+            f"/api/v1/subtitle-studio/projects/{project_id}",
+            headers={"X-CSRF-Token": csrf},
+            json=retarget,
+        )
+        assert rejected.status_code == 422
+
+        updated = client.patch(
+            f"/api/v1/subtitle-studio/projects/{project_id}",
+            headers={"X-CSRF-Token": csrf},
+            json=project_payload(
+                "subtitle-language-source-update-0001",
+                title="Metadata-only source stays attached",
+                expected_revision=project["revision"],
+            ),
+        )
+        assert updated.status_code == 200 and updated.json()["ok"] is True
+        current_revision = updated.json()["data"]["project"]["revision"]
+
+        # When an asset lifecycle changes later, the project keeps its opaque
+        # historical UUID but no longer exposes any asset metadata or treats
+        # it as a usable source.  Restoring revision 1 must not revive it.
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                "UPDATE web_asset_files SET state='archived', lifecycle_revision=2, archived_at=? WHERE id=?",
+                ("2026-07-22T00:01:00+00:00", asset_id),
+            )
+        unavailable = client.get(f"/api/v1/subtitle-studio/projects/{project_id}").json()["data"]["project"]["language_source"]
+        assert unavailable == {
+            "mode": "asset_reference",
+            "asset": None,
+            "asset_available": False,
+            "rights_confirmed": True,
+            "attested_at": source["attested_at"],
+        }
+        restored = client.post(
+            f"/api/v1/subtitle-studio/projects/{project_id}/restore-version",
+            headers={"X-CSRF-Token": csrf},
+            json={"expected_revision": current_revision, "target_revision": 1, "idempotency_key": "subtitle-language-source-restore-0001"},
+        )
+        assert restored.status_code == 200 and restored.json()["ok"] is True
+        final_source = client.get(f"/api/v1/subtitle-studio/projects/{project_id}").json()["data"]["project"]["language_source"]
+        assert final_source["mode"] == "asset_reference"
+        assert final_source["asset"] is None and final_source["asset_available"] is False
+        with sqlite3.connect(db_path) as conn:
+            persisted = conn.execute(
+                "SELECT source_asset_id, source_asset_lifecycle_revision, source_rights_confirmed FROM web_subtitle_projects WHERE id=?",
+                (project_id,),
+            ).fetchone()
+        assert persisted == (asset_id, 1, 1)
+
+
+def test_subtitle_language_source_malformed_persisted_shape_is_guarded_and_never_normalized(tmp_path, monkeypatch):
+    """A legacy/direct DB source mismatch must never become a manual source.
+
+    The public response redacts the malformed record as guarded, and all
+    project-row writers reject it so an update/lifecycle action cannot erase
+    provenance by rewriting the source columns to their manual defaults.
+    """
+    db_path = tmp_path / "subtitle-studio-test.db"
+    email = "subtitle-language-legacy-guard@example.com"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, email)
+        project = create_project(client, csrf, "subtitle-language-legacy-create-0001")
+        project_id, revision = project["id"], project["revision"]
+        malformed_asset_id = str(uuid.uuid4())
+        persisted = (
+            # `rights=2` is truthy if coerced with bool(int(...)), but it is
+            # not the one canonical asset-reference attestation value (`1`).
+            "asset_reference", malformed_asset_id, 7, 2,
+            "2026-07-22T00:00:00+00:00",
+        )
+        with sqlite3.connect(db_path) as conn:
+            conn.execute(
+                """UPDATE web_subtitle_projects
+                   SET source_mode=?, source_asset_id=?, source_asset_lifecycle_revision=?,
+                       source_rights_confirmed=?, source_attested_at=? WHERE id=?""",
+                (*persisted, project_id),
+            )
+
+        detail = client.get(f"/api/v1/subtitle-studio/projects/{project_id}")
+        assert detail.status_code == 200 and detail.json()["ok"] is True
+        assert detail.json()["data"]["project"]["language_source"] == {
+            "mode": "guarded", "asset": None, "asset_available": False,
+            "rights_confirmed": False, "attested_at": None,
+        }
+        update = client.patch(
+            f"/api/v1/subtitle-studio/projects/{project_id}",
+            headers={"X-CSRF-Token": csrf},
+            json=project_payload(
+                "subtitle-language-legacy-update-0001",
+                expected_revision=revision,
+                title="Must not normalize source",
+            ),
+        )
+        lifecycle = client.post(
+            f"/api/v1/subtitle-studio/projects/{project_id}/lifecycle",
+            headers={"X-CSRF-Token": csrf},
+            json={"state": "review", "expected_revision": revision, "idempotency_key": "subtitle-language-legacy-state-0001"},
+        )
+        for response in (update, lifecycle):
+            assert response.status_code == 200 and response.json()["ok"] is False
+            assert response.json()["status"] == "guarded"
+            assert response.json()["error_code"] == "WEB_SUBTITLE_LANGUAGE_SOURCE_GUARDED"
+        with sqlite3.connect(db_path) as conn:
+            final = conn.execute(
+                """SELECT source_mode, source_asset_id, source_asset_lifecycle_revision,
+                          source_rights_confirmed, source_attested_at
+                   FROM web_subtitle_projects WHERE id=?""",
+                (project_id,),
+            ).fetchone()
+        assert final == persisted

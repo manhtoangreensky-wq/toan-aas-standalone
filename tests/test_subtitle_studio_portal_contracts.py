@@ -15,6 +15,7 @@ SERVICE_WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(en
 PAGES = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
 CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 CONTRACT = (ROOT / "docs" / "migration" / "SUBTITLE_TRANSCRIPT_WORKSPACE_CONTRACT.md").read_text(encoding="utf-8")
+SERVER = (ROOT / "copyfast_subtitle_workspace.py").read_text(encoding="utf-8")
 
 
 def test_subtitle_studio_is_native_and_does_not_alias_legacy_routes() -> None:
@@ -80,9 +81,12 @@ def test_subtitle_studio_new_project_query_is_allowlisted_and_form_only() -> Non
     assert 'if (route !== "/subtitle-studio/new") return "subtitle";' in new_project
     assert 'new URLSearchParams(window.location.search).get("intent")' in new_project
     assert 'SUBTITLE_STUDIO_INTENT_KEYS.has(candidate) ? candidate : "subtitle"' in new_project
-    assert 'intent: subtitleStudioNewProjectIntentFromQuery(page)' in PORTAL
+    assert 'intent: draft.intent || subtitleStudioNewProjectIntentFromQuery(page)' in PORTAL
+    query_start = PORTAL.index("function subtitleStudioNewProjectIntentFromQuery(page)")
+    query_end = PORTAL.index("function subtitleStudioCueFields", query_start)
+    query_helper = PORTAL[query_start:query_end].lower()
     for forbidden in ("api(", "fetch(", "bridge", "payos", "/payments", "/jobs", "provider"):
-        assert forbidden not in new_project.lower()
+        assert forbidden not in query_helper
     for mapping in (
         "`/subtitle`, `/subtitle/create` | `?intent=subtitle`",
         "`/translate` | `?intent=translation`",
@@ -180,7 +184,7 @@ def test_subtitle_studio_stays_text_only_and_draft_editable() -> None:
     assert "const cueSafety = subtitleStudioSecretSafetyError(sourceText, translatedText);" in INTEGRATION
     assert "const metadataSafety = subtitleStudioMetadataSafetyError(speaker, notes);" in INTEGRATION
     assert '<pre class="portal-subtitle-preview-text">${safeText(preview)}</pre>' in PORTAL
-    assert "const writable = projectState === \"draft\";" in PORTAL
+    assert 'const writable = projectState === "draft" && subtitleStudioSourceContractWritable(project);' in PORTAL
     assert "const writable = state === \"draft\";" in PORTAL
     assert "archive toàn bộ cue active" in PORTAL
     assert "Sao chép SRT text" in PORTAL
@@ -207,3 +211,207 @@ def test_subtitle_studio_stays_text_only_and_draft_editable() -> None:
         ".portal-subtitle-project-grid, .portal-subtitle-cue-grid { grid-template-columns: 1fr; }",
     ):
         assert selector in CSS
+
+
+def test_language_source_intake_is_new_project_only_and_metadata_only() -> None:
+    source_start = PORTAL.index("const SUBTITLE_LANGUAGE_SOURCE_MODE_KEYS")
+    source_end = PORTAL.index("function subtitleStudioNewProjectIntentFromQuery", source_start)
+    source_ui = PORTAL[source_start:source_end]
+    for pair in (
+        ".mp4|video/mp4",
+        ".mov|video/quicktime",
+        ".webm|video/webm",
+        ".mp3|audio/mpeg",
+        ".wav|audio/wav",
+        ".m4a|audio/mp4",
+        ".ogg|audio/ogg",
+        ".txt|text/plain",
+        ".srt|application/x-subrip",
+        ".vtt|text/vtt",
+    ):
+        assert pair in source_ui
+    for field in ("source_mode", "source_asset_id", "source_rights_confirmed"):
+        assert f'name: "{field}"' in source_ui
+    # The source UI passes an opaque Vault UUID only.  It cannot grow a
+    # browser upload, Blob preview/download or a direct provider/bridge call.
+    for forbidden in (
+        'type: "file"',
+        "<input type=\"file\"",
+        "FileReader",
+        "createObjectURL",
+        "new FormData",
+        ".blob(",
+        "fetch(",
+        "api(",
+        "XMLHttpRequest",
+        "data-portal-upload",
+        "original_filename",
+        "storage_key",
+        "sha256",
+    ):
+        assert forbidden not in source_ui
+    assert "safeText(facts)" in source_ui
+    assert "asset_available" in source_ui
+    assert "Không có preview, upload, download, ASR hoặc dịch máy" in source_ui
+
+    create_start = PORTAL.index("function renderSubtitleStudio(")
+    create_end = PORTAL.index("function renderSubtitleStudioDetail(", create_start)
+    create_view = PORTAL[create_start:create_end]
+    detail_end = PORTAL.index("function renderSubtitleStudioCompanionLink", create_end)
+    detail_view = PORTAL[create_end:detail_end]
+    assert "subtitleStudioProjectFields(context, true)" in create_view
+    assert "subtitleStudioProjectFields(context)" in detail_view
+    assert "subtitleStudioProjectFields(context, true)" not in detail_view
+    assert "renderSubtitleStudioLanguageSource(project)" in detail_view
+
+
+def test_language_source_frontend_contract_is_signed_private_and_has_no_execution_path() -> None:
+    payload_start = INTEGRATION.index("function subtitleProjectPayload")
+    payload_end = INTEGRATION.index("function subtitleCuePayload", payload_start)
+    payload = INTEGRATION[payload_start:payload_end]
+    assert "const sourceIntake = Boolean(options && options.sourceIntake === true);" in payload
+    assert 'source_mode: "manual", source_asset_id: null, source_rights_confirmed: false' in payload
+    assert 'source_mode: "asset_reference", source_asset_id: sourceAssetId, source_rights_confirmed: true' in payload
+    for forbidden in ("fetch(", "api(", "FileReader", "createObjectURL", "new FormData", ".blob(", "/jobs", "/payments"):
+        assert forbidden not in payload
+
+    hydration_start = INTEGRATION.index("async function hydrateSubtitleStudio")
+    hydration_end = INTEGRATION.index("async function hydrateSubtitleProject", hydration_start)
+    hydration = INTEGRATION[hydration_start:hydration_end]
+    assert "api(subtitleLanguageSourcePagePath(0), { cache: \"no-store\" })" in hydration
+    assert "subtitleLanguageSourcesStateFromPage({}, languageSources, false)" in hydration
+    assert "rawProjects.every(subtitleStudioProjectIsSafe)" in hydration
+    assert "subtitleLanguageSources: languageSourceState" in hydration
+    assert "subtitleLanguageSources: {}" in hydration
+    for flag in (
+        "boundary.source_bytes_read === false",
+        "boundary.provider_called === false",
+        "boundary.bot_called === false",
+        "boundary.bridge_called === false",
+        "boundary.job_created === false",
+        "boundary.download_created === false",
+        "boundary.payment_started === false",
+        "boundary.wallet_mutated === false",
+    ):
+        assert flag in INTEGRATION
+
+    create_action_start = INTEGRATION.index('if (action === "subtitle-project-create")')
+    create_action_end = INTEGRATION.index('if (action === "subtitle-project-update")', create_action_start)
+    create_action = INTEGRATION[create_action_start:create_action_end]
+    update_action_end = INTEGRATION.index('if (action === "subtitle-project-state")', create_action_end)
+    update_action = INTEGRATION[create_action_end:update_action_end]
+    assert "subtitleProjectPayload(fields, { sourceIntake: true })" in create_action
+    assert "subtitleProjectPayload(fields)" in update_action
+    assert "sourceIntake: true" not in update_action
+
+    # A private workspace route/API may never become a shell or offline page;
+    # the worker only caches its finite public asset allow-list.
+    shell = SERVICE_WORKER.split("const SHELL = Object.freeze([", 1)[1].split("]);", 1)[0]
+    assert "/api/v1/subtitle-studio" not in shell
+    assert '"/subtitle-studio"' not in shell
+    public_paths = SERVICE_WORKER.split("const PUBLIC_NAVIGATION_PATHS = Object.freeze([", 1)[1].split("]);", 1)[0]
+    assert '"/subtitle-studio"' not in public_paths
+
+
+def test_language_source_project_contract_fails_closed_and_paginates_metadata_only() -> None:
+    integration_start = INTEGRATION.index("function subtitleLanguageSourceAssetIsSafe")
+    integration_end = INTEGRATION.index("async function downloadPromptLibraryExport", integration_start)
+    source_contract = INTEGRATION[integration_start:integration_end]
+    for required in (
+        "function subtitleProjectLanguageSourceIsSafe",
+        "function subtitleStudioProjectIsSafe",
+        "function subtitleStudioProjectCreateReceiptIsSafe",
+        "function subtitleLanguageSourceAttestationIsSafe",
+        "source.mode === \"manual\"",
+        "source.mode === \"guarded\"",
+        "source.mode !== \"asset_reference\"",
+        "source.rights_confirmed !== true",
+        "source.asset_available === true && subtitleLanguageSourceAssetIsSafe(source.asset)",
+        "String(item.state || \"\") === \"active\"",
+        "Number.isInteger(revision) && revision >= 1",
+        "SUBTITLE_LANGUAGE_SOURCE_ASSET_PAIRS.has(`${extension}|${contentType}`)",
+        "SUBTITLE_LANGUAGE_SOURCE_PAGE_LIMIT = 30",
+        "SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED = 90",
+        "function subtitleLanguageSourcesStateFromPage",
+        "is_render_capped: isRenderCapped",
+    ):
+        assert required in source_contract
+    # MIME parameters must not be normalized into an allowlisted pair.
+    assert '.split(";", 1)' not in source_contract
+
+    hydration_start = INTEGRATION.index("async function hydrateSubtitleLanguageSources")
+    hydration_end = INTEGRATION.index("async function hydrateSubtitleProject", hydration_start)
+    pager_hydration = INTEGRATION[hydration_start:hydration_end]
+    assert 'api(subtitleLanguageSourcePagePath(requestedOffset), { cache: "no-store" })' in pager_hydration
+    assert "requestedOffset !== expectedOffset" in pager_hydration
+    assert "merge({ subtitleLanguageSources: state })" in pager_hydration
+    for forbidden in ("FileReader", "createObjectURL", "new FormData", ".blob(", "/jobs", "/payments"):
+        assert forbidden not in pager_hydration
+
+    action_start = INTEGRATION.index('if (action === "subtitle-language-source-more")')
+    action_end = INTEGRATION.index('if (action === "subtitle-asset-operation-refresh")', action_start)
+    pager_action = INTEGRATION[action_start:action_end]
+    assert 'base().capabilities["subtitle-language-source-more"] === true' in pager_action
+    assert "fields.__subtitleLanguageSourceOffset" in pager_action
+    assert "hydrateSubtitleLanguageSources(offset)" in pager_action
+
+    studio_hydration_start = INTEGRATION.index("async function hydrateSubtitleStudio(overrides)")
+    studio_hydration_end = INTEGRATION.index("async function hydrateSubtitleLanguageSources", studio_hydration_start)
+    studio_hydration = INTEGRATION[studio_hydration_start:studio_hydration_end]
+    assert "++subtitleLanguageSourceHydrationEpoch;" in studio_hydration
+
+    create_start = INTEGRATION.index('if (action === "subtitle-project-create")')
+    create_end = INTEGRATION.index('if (action === "subtitle-project-update")', create_start)
+    create_action = INTEGRATION[create_start:create_end]
+    assert "subtitleStudioProjectCreateReceiptIsSafe(receipt)" in create_action
+    assert "subtitleStudioProjectIsSafe(receipt)" not in create_action
+
+    portal_start = PORTAL.index("function subtitleLanguageSourceAttestationIsSafe")
+    portal_end = PORTAL.index("function subtitleStudioNewProjectIntentFromQuery", portal_start)
+    portal_source = PORTAL[portal_start:portal_end]
+    assert 'if (!source) return { mode: "guarded", asset: null, available: false, rights: false };' in portal_source
+    assert 'String(source.mode || "manual")' not in portal_source
+    assert "function renderSubtitleLanguageSourcePager" in portal_source
+    assert "function subtitleStudioSourceContractWritable" in portal_source
+    assert 'data-portal-action="subtitle-language-source-more"' in portal_source
+    assert "data-subtitle-language-source-offset" in portal_source
+    assert 'data-subtitle-language-source-dependent="asset"' in portal_source
+    assert "SUBTITLE_LANGUAGE_SOURCE_MAX_RENDERED = 90" in PORTAL
+    assert '.split(";", 1)' not in portal_source
+    for forbidden in ("FileReader", "createObjectURL", "new FormData", ".blob(", "fetch(", "api(", "storage_key", "original_filename"):
+        assert forbidden not in portal_source
+
+    dispatch_start = PORTAL.index("function dispatchAction")
+    dispatch_end = PORTAL.index("function bindInteractions", dispatch_start)
+    dispatch = PORTAL[dispatch_start:dispatch_end]
+    assert "const subtitleLanguageSourcePickerAction" in dispatch
+    assert "__subtitleLanguageSourceOffset" in dispatch
+    assert 'source.getAttribute("data-subtitle-language-source-offset")' in dispatch
+
+    detail_start = PORTAL.index("function renderSubtitleCueCard")
+    detail_end = PORTAL.index("function renderStudioDocumentEditor", detail_start)
+    detail_ui = PORTAL[detail_start:detail_end]
+    assert 'projectState === "draft" && subtitleStudioSourceContractWritable(project)' in detail_ui
+    assert 'state === "draft" && sourceContractWritable' in detail_ui
+    assert 'Boolean(sourceContractWritable && context.capabilities && context.capabilities["subtitle-project-lifecycle"] === true)' in detail_ui
+
+
+def test_language_source_server_has_no_asset_stream_provider_or_bridge_import() -> None:
+    # The only database read is a narrow owner-scoped metadata projection;
+    # this module has no ability to open the referenced file or execute it.
+    assert "@router.get(\"/references/language-sources\")" in SERVER
+    assert "FROM web_asset_files WHERE id=? AND account_id=?" in SERVER
+    assert "SELECT id, display_name, extension, content_type, byte_size, state, lifecycle_revision, updated_at" in SERVER
+    for forbidden in (
+        "from copyfast_assets import",
+        "import copyfast_assets",
+        "from copyfast_bridge import",
+        "import copyfast_bridge",
+        "open_verified_private_asset_stream",
+        "FileResponse",
+        "StreamingResponse",
+        "httpx.",
+        "requests.",
+        "@router.post(\"/uploads\")",
+    ):
+        assert forbidden not in SERVER
