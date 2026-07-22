@@ -2455,6 +2455,19 @@ OPERATOR_MENU_CATEGORY_REGISTRY: dict[str, dict[str, str]] = {
     },
 }
 
+# ``opmenu|root`` is structurally different from a category: the Bot does
+# not execute a snippet or change a pending workflow. It only redraws its
+# top-level Telegram directory after the canonical ADMIN_ID check. Keep this
+# as an exact literal rather than a namespace rule so a future callback cannot
+# inherit fresh Admin ERP navigation merely because it happens to begin with
+# ``opmenu|``.
+OPERATOR_MENU_ROOT_NAVIGATION: dict[str, str] = {
+    "callback": "opmenu|root",
+    "target": "/admin",
+    "admin_feature_key": "admin_overview",
+    "title": "AI Operator",
+}
+
 # Production contains the Bot's ``makevideo``, film, worker, render, output
 # and review snippets.  The user explicitly asked for the Video menu last, so
 # even the category button remains a visible source-review disposition here.
@@ -6245,6 +6258,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     memory_storage_guidance = MEMORY_STORAGE_GUIDANCE_ACTIONS.get(token)
     navigation_only = menu_entry is not None
     operator_category = OPERATOR_MENU_CATEGORY_REGISTRY.get(token)
+    operator_root = identifier == OPERATOR_MENU_ROOT_NAVIGATION["callback"]
     pricing_read_entry = PRICING_READ_NAVIGATION_REGISTRY.get(token)
     if billing_menu_navigation_entry is not None:
         # The exact Bot billing menu is admin-only, but it contains Bot-local
@@ -6799,6 +6813,39 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
             "pricing_feature_key": pricing_read_entry["feature_key"],
             "pricing_authority": pricing_read_entry["authority"],
             "pricing_launch_mode": pricing_read_entry["launch_mode"],
+            "evidence": evidence,
+        }
+    if operator_root:
+        # The Telegram action only redraws the Operator directory. It must not
+        # act like browser history/back navigation, clear a Web form, transfer
+        # a Bot callback/pending state, or make any command snippet executable.
+        # `/admin` independently repeats canonical role checks before the
+        # portal can render its Admin ERP overview.
+        target = OPERATOR_MENU_ROOT_NAVIGATION["target"]
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": "admin",
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_operator_menu_root_navigation",
+            "source_dispositions": (
+                "BOT_ADMIN_ONLY",
+                "BOT_OPERATOR_MENU_RENDER_ONLY",
+                "BOT_CALLBACK_CONTEXT_NOT_REPLAYED",
+                "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "The frozen Bot callback first checks ADMIN_ID and only redraws the top-level "
+                "Operator command directory. The Web starts a fresh signed Admin ERP overview; it "
+                "does not emulate Telegram message editing/back navigation or accept a Bot callback, "
+                "pending state, command, provider, job, wallet, PayOS or publish action."
+            ),
+            "operator_menu_entry": "root",
+            "operator_admin_feature_key": OPERATOR_MENU_ROOT_NAVIGATION["admin_feature_key"],
+            "operator_menu_title": OPERATOR_MENU_ROOT_NAVIGATION["title"],
+            "operator_navigation_mode": "FRESH_ADMIN_ERP_ROOT",
             "evidence": evidence,
         }
     if operator_category is not None:

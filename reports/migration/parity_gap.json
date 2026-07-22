@@ -27603,30 +27603,52 @@
       "target": "/admin"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 114492
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_overview",
+      "operator_menu_entry": "root",
+      "operator_menu_title": "AI Operator",
+      "operator_navigation_mode": "FRESH_ADMIN_ERP_ROOT",
+      "resolution": "reviewed_operator_menu_root_navigation",
       "source": "opmenu|root",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_OPERATOR_MENU_RENDER_ONLY",
+        "BOT_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot callback first checks ADMIN_ID and only redraws the top-level Operator command directory. The Web starts a fresh signed Admin ERP overview; it does not emulate Telegram message editing/back navigation or accept a Bot callback, pending state, command, provider, job, wallet, PayOS or publish action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 115066
       },
-      "fallback_family": "opmenu",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "operator_admin_feature_key": "admin_overview",
+      "operator_menu_entry": "root",
+      "operator_menu_title": "AI Operator",
+      "operator_navigation_mode": "FRESH_ADMIN_ERP_ROOT",
+      "resolution": "reviewed_operator_menu_root_navigation",
       "source": "opmenu|root",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_OPERATOR_MENU_RENDER_ONLY",
+        "BOT_CALLBACK_CONTEXT_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_NAVIGATION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot callback first checks ADMIN_ID and only redraws the top-level Operator command directory. The Web starts a fresh signed Admin ERP overview; it does not emulate Telegram message editing/back navigation or accept a Bot callback, pending state, command, provider, job, wallet, PayOS or publish action.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin"
     },
     {
       "classification": "admin",
@@ -62192,21 +62214,6 @@
       ]
     },
     {
-      "authority": "Server-authorized Admin ERP",
-      "candidate_boundary": "/admin",
-      "count": 3,
-      "family": "opmenu",
-      "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
-      "priority": "P1",
-      "sample_sources": [
-        "opmenu|cat_production",
-        "opmenu|root"
-      ],
-      "source_kinds": [
-        "callback_data"
-      ]
-    },
-    {
       "authority": "Web-native planning",
       "candidate_boundary": "/media-factory",
       "count": 2,
@@ -62256,6 +62263,20 @@
       "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
       "source_kinds": [
         "command"
+      ]
+    },
+    {
+      "authority": "Server-authorized Admin ERP",
+      "candidate_boundary": "/admin",
+      "count": 1,
+      "family": "opmenu",
+      "next_contract": "Map every operations category to a role-checked ERP module; browser navigation must never grant Bot/admin authority.",
+      "priority": "P1",
+      "sample_sources": [
+        "opmenu|cat_production"
+      ],
+      "source_kinds": [
+        "callback_data"
       ]
     },
     {
@@ -62346,7 +62367,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 485,
+      "count": 483,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -62390,11 +62411,6 @@
           "priority": "P1"
         },
         {
-          "count": 3,
-          "family": "opmenu",
-          "priority": "P1"
-        },
-        {
           "count": 2,
           "family": "create_media",
           "priority": "P1"
@@ -62407,6 +62423,11 @@
         {
           "count": 1,
           "family": "command:refund_job",
+          "priority": "P1"
+        },
+        {
+          "count": 1,
+          "family": "opmenu",
           "priority": "P1"
         },
         {
@@ -62603,12 +62624,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 87.37,
+  "mapping_coverage_percent": 87.42,
   "mapping_status_counts": {
     "COPIED_GUARDED": 2081,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 756,
-    "NEEDS_FEATURE_DISPOSITION": 485,
+    "NAVIGATION_ONLY": 758,
+    "NEEDS_FEATURE_DISPOSITION": 483,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -62630,7 +62651,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 87.37,
+  "safe_disposition_coverage_percent": 87.42,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2841,
@@ -62640,13 +62661,13 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3840,
-    "resolved_static_source_count": 3355,
+    "resolved_static_source_count": 3357,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3951,
     "total_mappings": 3840,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 62,
-    "unresolved_source_count": 485
+    "unresolved_source_count": 483
   },
   "static_web_surface_coverage_percent": 54.19,
   "telegram_link_callback_contract": {

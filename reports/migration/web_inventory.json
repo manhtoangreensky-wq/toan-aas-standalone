@@ -179,17 +179,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4213,
+      "line": 4226,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4221,
+      "line": 4234,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4229,
+      "line": 4242,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -231,7 +231,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9041,
+      "line": 9088,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +297,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6684,
+      "line": 6698,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6813,7 +6813,7 @@
         "copyfast_web_engine.py",
         "customer_api.py"
       ],
-      "occurrences": 975,
+      "occurrences": 976,
       "provider": "PayOS"
     },
     {
@@ -7041,7 +7041,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2743,
+      "occurrences": 2748,
       "provider": "Telegram"
     }
   ],
@@ -12810,8 +12810,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 292,
   "source_files_scanned": 292,
-  "source_fingerprint_sha256": "c1dfbf7863442f7e8821cfda19b191a87a35382f8321cc0dce165cd2ee5c1151",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast94-creative-motion-guide-web-native",
+  "source_fingerprint_sha256": "8e70dbe1ec0bbad034d8955459da8f2518112091bd0e2e1316e0943132c0902b",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast95-operator-erp-root-parity",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

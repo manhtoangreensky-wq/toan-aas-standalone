@@ -14,9 +14,12 @@ Every mapped destination still requires a signed server session and the
 current Admin ERP authorization manifest. Navigation is not evidence of an
 Operator API token, provider call, worker command, PayOS lookup, wallet
 mutation, publication action, background execution or successful delivery.
+The Web never reproduces Telegram's in-message back/edit behavior: every
+reviewed entry starts a fresh, independently authorized Admin ERP route.
 
 | Bot category | Fresh Admin ERP destination | Scope retained |
 | --- | --- | --- |
+| `opmenu|root` | `/admin` | fresh Admin ERP root; no Telegram message edit/back, callback, pending state or command replay |
 | `opmenu|cat_control` | `/admin` | role-checked ERP overview; no mission/run command replay |
 | `opmenu|cat_trend` | `/admin/trends` | guarded trend/reference directory; no live trend search |
 | `opmenu|cat_affiliate` | `/admin/growth` | guarded growth/affiliate directory; no import, postback or scale run |
