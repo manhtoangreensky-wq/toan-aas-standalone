@@ -44,9 +44,7 @@ def test_interface_locale_navigator_has_only_three_selectable_web_catalogues() -
 
     assert 'type="radio" name="locale"' in view
     assert "INTERFACE_LOCALE_OPTIONS.map" in view
-    assert '<input type="hidden" name="display_name"' in view
-    assert '<input type="hidden" name="timezone"' in view
-    assert 'data-portal-action="update-profile"' in view
+    assert 'data-portal-action="update-interface-locale"' in view
     assert 'data-portal-route="/account/interface-language"' in view
     assert "lang_more" not in view
     assert "back_lang" not in view
@@ -64,6 +62,8 @@ def test_interface_locale_navigator_has_only_three_selectable_web_catalogues() -
         "sessionStorage",
     ):
         assert forbidden not in view
+    for stale_profile_field in ('name="display_name"', 'name="timezone"'):
+        assert stale_profile_field not in view
 
 
 def test_interface_locale_navigator_fences_generic_canonical_hydration() -> None:

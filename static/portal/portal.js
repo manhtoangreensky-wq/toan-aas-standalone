@@ -70,10 +70,54 @@
     return typeof translated === "string" && translated ? translated : fallback;
   }
 
+  // These helpers apply the active reviewed interface locale only to UI
+  // presentation. They never normalize customer/workflow data or alter a
+  // stored timestamp, amount, currency/Xu value, source/target language or
+  // provider request.
+  function localizedNumber(value) {
+    const i18n = portalI18n();
+    if (i18n && typeof i18n.formatNumber === "function") {
+      const formatted = i18n.formatNumber(value);
+      if (formatted) return formatted;
+    }
+    const number = Number(value);
+    return Number.isFinite(number) ? number.toLocaleString("vi-VN") : "";
+  }
+
+  function localizedDateTime(value, options) {
+    const i18n = portalI18n();
+    if (i18n && typeof i18n.formatDateTime === "function") {
+      const formatted = i18n.formatDateTime(value, options);
+      if (formatted) return formatted;
+    }
+    try {
+      return new Intl.DateTimeFormat("vi-VN", options).format(value instanceof Date ? value : new Date(value));
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function localizedCompareText(left, right) {
+    const i18n = portalI18n();
+    if (i18n && typeof i18n.compareText === "function") return i18n.compareText(left, right);
+    return String(left || "").localeCompare(String(right || ""), "vi");
+  }
+
+  function reviewedInterfaceLocale(value) {
+    const candidate = typeof value === "string" ? value.trim().toLowerCase() : "";
+    return ["vi", "en", "zh"].includes(candidate) ? candidate : "";
+  }
+
   function interfaceLocaleFor(context) {
-    const candidate = context && context.profile && typeof context.profile.locale === "string"
-      ? context.profile.locale
-      : "vi";
+    // `/auth/me` owns the later profile projection, but the first server
+    // shell intentionally exposes only the small signed `interfaceLocale`
+    // field. Preserve that locale through the first mount instead of flashing
+    // Vietnamese until asynchronous account hydration arrives.
+    const profileLocale = reviewedInterfaceLocale(
+      context && context.profile && context.profile.locale
+    );
+    const bootstrapLocale = reviewedInterfaceLocale(context && context.interfaceLocale);
+    const candidate = profileLocale || bootstrapLocale || "vi";
     const i18n = portalI18n();
     return i18n && typeof i18n.normalizeLocale === "function"
       ? i18n.normalizeLocale(candidate, "vi")
@@ -6433,6 +6477,10 @@
     return {
       path: normalizePath(source.path),
       title: typeof source.title === "string" ? source.title : "",
+      // The shell server supplies only this closed presentation value before
+      // `/auth/me` hydration. It cannot carry a profile, identity or workflow
+      // field through the first render.
+      interfaceLocale: reviewedInterfaceLocale(source.interfaceLocale) || "vi",
       isAdmin: source.isAdmin === true,
       // The registry is static, redacted route metadata. Do not truncate it:
       // `/features` must be able to disclose every mapped customer workflow.
@@ -8068,7 +8116,7 @@
     });
     return items.sort((left, right) => {
       if (left.current !== right.current) return left.current ? -1 : 1;
-      return `${left.section} ${left.title}`.localeCompare(`${right.section} ${right.title}`, "vi");
+      return localizedCompareText(`${left.section} ${left.title}`, `${right.section} ${right.title}`);
     });
   }
 
@@ -8084,12 +8132,12 @@
     }).join("");
     return `<div class="portal-command-palette-backdrop" data-portal-command-close></div>
       <section class="portal-command-dialog" role="dialog" aria-modal="true" aria-labelledby="portal-command-title">
-        <header class="portal-command-header"><div><span class="portal-command-kicker">TOAN AAS workspace</span><h2 id="portal-command-title">Chuyển nhanh</h2></div><button class="portal-command-close" type="button" aria-label="Đóng chuyển nhanh" data-portal-command-close>${portalIcon(ICONS.close)}</button></header>
-        <label class="portal-command-search"><span class="portal-sr-only">Tìm workspace</span><span class="portal-command-search-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><input type="search" placeholder="Tìm công cụ, jobs, tài sản, tài khoản…" autocomplete="off" data-portal-command-search></label>
-        <p class="portal-command-hint"><span><kbd>Ctrl</kbd> <kbd>K</kbd> để mở</span><span><kbd>Esc</kbd> để đóng</span></p>
-        <div class="portal-command-results" aria-label="Kết quả chuyển nhanh" data-portal-command-results>${markup}</div>
-        <p class="portal-command-empty" data-portal-command-empty hidden>Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.</p>
-        <p class="portal-command-count" aria-live="polite" data-portal-command-count>${safeText(String(items.length))} workspace có thể mở trong phiên này.</p>
+        <header class="portal-command-header"><div><span class="portal-command-kicker">${safeText(uiText("chrome.commandKicker", "TOAN AAS workspace"))}</span><h2 id="portal-command-title">${safeText(uiText("chrome.commandTitle", "Chuyển nhanh"))}</h2></div><button class="portal-command-close" type="button" aria-label="${safeText(uiText("chrome.closeQuickSwitch", "Đóng chuyển nhanh"))}" data-portal-command-close>${portalIcon(ICONS.close)}</button></header>
+        <label class="portal-command-search"><span class="portal-sr-only">${safeText(uiText("chrome.searchWorkspace", "Tìm workspace"))}</span><span class="portal-command-search-icon" aria-hidden="true">${portalIcon(ICONS.search)}</span><input type="search" placeholder="${safeText(uiText("chrome.searchWorkspacePlaceholder", "Tìm công cụ, jobs, tài sản, tài khoản…"))}" autocomplete="off" data-portal-command-search></label>
+        <p class="portal-command-hint"><span><kbd>Ctrl</kbd> <kbd>K</kbd> ${safeText(uiText("chrome.commandHintOpen", "để mở"))}</span><span><kbd>Esc</kbd> ${safeText(uiText("chrome.commandHintClose", "để đóng"))}</span></p>
+        <div class="portal-command-results" aria-label="${safeText(uiText("chrome.commandResults", "Kết quả chuyển nhanh"))}" data-portal-command-results>${markup}</div>
+        <p class="portal-command-empty" data-portal-command-empty hidden>${safeText(uiText("chrome.commandEmpty", "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác."))}</p>
+        <p class="portal-command-count" aria-live="polite" data-portal-command-count>${safeText(uiText("chrome.commandCount", "{count} workspace có thể mở trong phiên này.", { count: String(items.length) }))}</p>
       </section>`;
   }
 
@@ -8129,7 +8177,7 @@
     <nav class="portal-nav">${groups}</nav>
     <div class="portal-sidebar-foot">
       <div class="portal-bridge-mini"><span class="portal-bridge-dot${bridgeReady ? " is-ready" : ""}" aria-hidden="true"></span>
-        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Kết nối workspace sẵn sàng") : uiText("chrome.safeMode", "Workspace đang ở chế độ an toàn"))}</strong><span>${bridgeReady ? "Tính năng được cấp theo phiên hiện tại" : "Không gọi provider, Xu hoặc payment từ browser"}</span></span>
+        <span><strong>${safeText(bridgeReady ? uiText("chrome.bridgeReady", "Kết nối workspace sẵn sàng") : uiText("chrome.safeMode", "Workspace đang ở chế độ an toàn"))}</strong><span>${safeText(bridgeReady ? uiText("chrome.bridgeReadyDetail", "Tính năng được cấp theo phiên hiện tại") : uiText("chrome.safeModeDetail", "Không gọi provider, Xu hoặc payment từ browser"))}</span></span>
       </div>
       <a class="portal-nav-link" href="/legal"><span class="portal-nav-icon" aria-hidden="true">${portalIcon(ICONS.legal)}</span><span>${safeText(uiText("chrome.legalPrivacy", "Pháp lý & riêng tư"))}</span></a>
     </div>`;
@@ -8675,7 +8723,7 @@
 
   function hubNumber(value) {
     const number = safeHubCount(value);
-    return number.toLocaleString("vi-VN");
+    return localizedNumber(number);
   }
 
   function renderCapabilityHubFamilyMetrics(family) {
@@ -8829,7 +8877,7 @@
       .map((item) => [String(item.key), String(item.title || item.key)]));
     const features = [...new Set((Array.isArray(context && context.workspaceDraftFeatures) ? context.workspaceDraftFeatures : [])
       .filter((item) => /^[a-z][a-z0-9_]{1,120}$/.test(String(item || ""))))]
-      .sort((left, right) => String(labels.get(left) || left).localeCompare(String(labels.get(right) || right), "vi"));
+      .sort((left, right) => localizedCompareText(String(labels.get(left) || left), String(labels.get(right) || right)));
     return [
       { name: "q", label: "Tìm bản nháp", placeholder: "Tên bản nháp hoặc workflow", maxLength: 100, wide: true },
       { name: "state", label: "Trạng thái", control: "select", options: [["all", "Tất cả bản nháp"], ["active", "Đang hoạt động"], ["archived", "Đã lưu trữ"]] },
@@ -18953,13 +19001,11 @@
 
   function renderInterfaceLocaleNavigator(page, context) {
     const profile = context.profile && typeof context.profile === "object" ? context.profile : {};
-    const session = context.session && typeof context.session === "object" ? context.session : {};
     const canUpdate = Boolean(context.capabilities && context.capabilities["update-profile"] === true);
     const knownLocale = (value) => INTERFACE_LOCALE_OPTIONS.some((item) => item.value === value);
     const currentLocale = knownLocale(String(profile.locale || "").trim().toLowerCase())
       ? String(profile.locale).trim().toLowerCase()
       : "vi";
-    const displayName = String(profile.displayName || profile.name || session.displayName || "");
     const timezone = String(profile.timezone || "") === "UTC" ? "UTC" : "Asia/Ho_Chi_Minh";
     const localeMetadata = Object.freeze({
       vi: { name: uiText("locale.vi", "Tiếng Việt"), subtitle: "Việt Nam", lang: "vi" },
@@ -18985,7 +19031,7 @@
     const settingsNav = renderAccountSettingsNav("/account/interface-language");
     return `<article class="portal-page portal-interface-locale-navigator">${renderHero(page, context)}${settingsNav}
       <section class="portal-interface-locale-intro"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.kicker", "Web profile preference"))}</span><h2>${safeText(uiText("interfaceLocale.title", "Chọn ngôn ngữ giao diện"))}</h2><p>${safeText(uiText("interfaceLocale.description", "Lựa chọn này chỉ thay đổi catalogue UI cố định của Web App. Nó không sao chép lựa chọn ngôn ngữ, menu hay identity từ Telegram Bot."))}</p></div><div class="portal-interface-locale-current" role="status"><span aria-hidden="true">${portalIcon(ICONS.account)}</span><span><strong>${safeText(uiText("interfaceLocale.current", "Đang dùng"))}</strong><small>${safeText(localeMetadata[currentLocale].name)} · ${safeText(timezone)}</small></span></div></section>
-      <form class="portal-interface-locale-form" data-portal-form data-portal-action="update-profile" data-portal-route="/account/interface-language" novalidate><input type="hidden" name="display_name" value="${safeText(displayName)}"><input type="hidden" name="timezone" value="${safeText(timezone)}"><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.supportedHeading", "Supported Web catalogues"))}</span><h2 class="portal-card-title">${safeText(uiText("interfaceLocale.formLegend", "Chọn một catalogue đã được review"))}</h2><p class="portal-card-subtitle">${safeText(uiText("interfaceLocale.formHelp", "Lưu bằng signed session và CSRF. Thay đổi chỉ xuất hiện sau khi máy chủ xác nhận preference của chính account này."))}</p></div>${badge(canUpdate ? "ready" : "guarded")}</div><fieldset class="portal-interface-locale-fieldset" aria-describedby="portal-interface-locale-save-help"><legend class="portal-sr-only">${safeText(uiText("interfaceLocale.formLegend", "Chọn một catalogue đã được review"))}</legend><div class="portal-interface-locale-grid">${localeOptions}</div></fieldset><div class="portal-form-footer"><span id="portal-interface-locale-save-help" class="portal-form-note">${safeText(uiText("interfaceLocale.saveHelp", "Không lưu Telegram ID hoặc Bot locale. Nếu phiên/CSRF chưa sẵn sàng, lựa chọn giữ ở trạng thái được bảo vệ."))}</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled title=\"Cần signed session và CSRF hợp lệ.\""}>${safeText(uiText("interfaceLocale.save", "Lưu ngôn ngữ giao diện"))}</button></div></section></form>
+      <form class="portal-interface-locale-form" data-portal-form data-portal-action="update-interface-locale" data-portal-route="/account/interface-language" novalidate><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.supportedHeading", "Supported Web catalogues"))}</span><h2 class="portal-card-title">${safeText(uiText("interfaceLocale.formLegend", "Chọn một catalogue đã được review"))}</h2><p class="portal-card-subtitle">${safeText(uiText("interfaceLocale.formHelp", "Lưu bằng signed session và CSRF. Thay đổi chỉ xuất hiện sau khi máy chủ xác nhận preference của chính account này."))}</p></div>${badge(canUpdate ? "ready" : "guarded")}</div><fieldset class="portal-interface-locale-fieldset" aria-describedby="portal-interface-locale-save-help"><legend class="portal-sr-only">${safeText(uiText("interfaceLocale.formLegend", "Chọn một catalogue đã được review"))}</legend><div class="portal-interface-locale-grid">${localeOptions}</div></fieldset><div class="portal-form-footer"><span id="portal-interface-locale-save-help" class="portal-form-note">${safeText(uiText("interfaceLocale.saveHelp", "Không lưu Telegram ID hoặc Bot locale. Nếu phiên/CSRF chưa sẵn sàng, lựa chọn giữ ở trạng thái được bảo vệ."))}</span><button class="portal-button portal-button--primary" type="submit"${canUpdate ? "" : " disabled title=\"Cần signed session và CSRF hợp lệ.\""}>${safeText(uiText("interfaceLocale.save", "Lưu ngôn ngữ giao diện"))}</button></div></section></form>
       <section class="portal-interface-locale-boundary" aria-label="${safeText(uiText("interfaceLocale.boundaryHeading", "Ranh giới preference Web"))}"><article><span aria-hidden="true">${portalIcon(ICONS.check)}</span><div><strong>${safeText(uiText("interfaceLocale.changesHeading", "Điều sẽ thay đổi"))}</strong><p>${safeText(uiText("interfaceLocale.changesBody", "Chrome, label cố định, metadata ngôn ngữ tài liệu và các renderer đã opt-in cho catalog này."))}</p></div></article><article><span aria-hidden="true">${portalIcon(ICONS.shield)}</span><div><strong>${safeText(uiText("interfaceLocale.noBotState", "Không chuyển state Telegram"))}</strong><p>${safeText(uiText("interfaceLocale.noBotStateBody", "Không có Telegram ID, Bot locale, menu callback, translation mode hoặc pending state đi vào browser."))}</p></div></article><article><span aria-hidden="true">${portalIcon(ICONS.document)}</span><div><strong>${safeText(uiText("interfaceLocale.noWorkflow", "Không đổi workflow content"))}</strong><p>${safeText(uiText("interfaceLocale.noWorkflowBody", "Prompt, brief, file, source/target language và provider input giữ nguyên contract hiện có."))}</p></div></article><article><span aria-hidden="true">${portalIcon(ICONS.payments)}</span><div><strong>${safeText(uiText("interfaceLocale.noPayments", "Không có workflow tài chính hoặc job"))}</strong><p>${safeText(uiText("interfaceLocale.noPaymentsBody", "Trang không gọi bridge, provider, job, wallet, Xu, PayOS, payment hoặc delivery action."))}</p></div></article></section>
       <section class="portal-card portal-card-pad portal-interface-locale-support"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(uiText("interfaceLocale.supportMatrix", "Coverage disclosure"))}</span><h2 class="portal-card-title">${safeText(uiText("interfaceLocale.supportHeading", "Ngôn ngữ đang có trong Bot nhưng chưa là catalogue Web"))}</h2><p class="portal-card-subtitle">${safeText(uiText("interfaceLocale.supportDescription", "Các locale này được hiển thị để phạm vi sản phẩm rõ ràng. Không có option chọn, không có fallback ngầm và không có hành động Telegram được phát lại từ Web."))}</p></div>${badge("read_only")}</div><ul>${unsupported}</ul><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="/account">${safeText(uiText("interfaceLocale.backAccount", "Về Tài khoản"))}</a><a class="portal-button portal-button--quiet" href="/account/security">${safeText(uiText("interfaceLocale.openSecurity", "Mở Bảo mật tài khoản"))}</a></div></section>
     </article>`;
@@ -20715,7 +20761,7 @@
 
   function adminNumber(value, suffix) {
     const parsed = Number(value);
-    const display = Number.isFinite(parsed) ? parsed.toLocaleString("vi-VN") : "—";
+    const display = Number.isFinite(parsed) ? localizedNumber(parsed) : "—";
     return `${display}${suffix || ""}`;
   }
 
@@ -20745,7 +20791,7 @@
     const features = (Array.isArray(context.catalog) ? context.catalog : [])
       .filter((item) => item && /^[a-z][a-z0-9_]{1,120}$/.test(String(item.key || "")))
       .map((item) => ({ key: String(item.key), label: String(item.title || item.key) }))
-      .sort((left, right) => left.label.localeCompare(right.label, "vi"));
+      .sort((left, right) => localizedCompareText(left.label, right.label));
     const enabled = context.capabilities && context.capabilities["admin-freeze"] === true && features.length > 0;
     const disabled = enabled ? "" : " disabled";
     const reason = features.length
@@ -21021,11 +21067,7 @@
     if (!raw) return "Chưa xếp lịch";
     const parsed = new Date(raw);
     if (Number.isNaN(parsed.getTime())) return "Chưa xếp lịch";
-    try {
-      return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short" }).format(parsed);
-    } catch (_) {
-      return raw.replace("T", " · ");
-    }
+    return localizedDateTime(parsed, { dateStyle: "medium", timeStyle: "short" }) || raw.replace("T", " · ");
   }
 
   function campaignDestinationLink(value) {
@@ -21121,11 +21163,7 @@
     const timezone = String(intent && intent.timezone || "UTC").trim();
     const parsed = new Date(utc);
     if (Number.isNaN(parsed.getTime())) return "Thời điểm chưa xác minh";
-    try {
-      return new Intl.DateTimeFormat("vi-VN", { dateStyle: "medium", timeStyle: "short", timeZone: timezone }).format(parsed);
-    } catch (_) {
-      return utc.replace("T", " · ");
-    }
+    return localizedDateTime(parsed, { dateStyle: "medium", timeStyle: "short", timeZone: timezone }) || utc.replace("T", " · ");
   }
 
   function renderCampaignScheduleControls(plan, context, route) {
@@ -21250,22 +21288,24 @@
     const [yearText, monthText] = String(month || "").split("-");
     const date = new Date(Number(yearText), Number(monthText) - 1, 1);
     if (Number.isNaN(date.getTime())) return "Tháng đã chọn";
-    try {
-      return new Intl.DateTimeFormat("vi-VN", { month: "long", year: "numeric" }).format(date);
-    } catch (_) {
-      return String(month || "Tháng đã chọn");
-    }
+    return localizedDateTime(date, { month: "long", year: "numeric" }) || String(month || "Tháng đã chọn");
   }
 
   function campaignCalendarAgendaLabel(plan) {
     const parts = campaignScheduleParts(plan && plan.scheduled_for);
     if (!parts) return "Mốc lịch không hợp lệ";
     const date = new Date(parts.year, parts.month, parts.day, parts.hour, parts.minute);
-    try {
-      return new Intl.DateTimeFormat("vi-VN", { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(date);
-    } catch (_) {
-      return `${String(parts.day).padStart(2, "0")}/${String(parts.month + 1).padStart(2, "0")} · ${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
-    }
+    return localizedDateTime(date, { weekday: "short", day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) || `${String(parts.day).padStart(2, "0")}/${String(parts.month + 1).padStart(2, "0")} · ${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`;
+  }
+
+  function campaignCalendarWeekdayLabels() {
+    // 2024-01-01 is Monday. These are view labels only; the stored calendar
+    // week and the server's schedule timestamps retain their existing logic.
+    const monday = new Date(2024, 0, 1, 12, 0, 0);
+    const fallback = ["Th 2", "Th 3", "Th 4", "Th 5", "Th 6", "Th 7", "CN"];
+    return fallback.map((label, index) => (
+      localizedDateTime(new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + index, 12, 0, 0), { weekday: "short" }) || label
+    ));
   }
 
   function renderCampaignCalendar(page, context) {
@@ -21291,7 +21331,7 @@
       byDay.set(key, entries);
     });
     const localeMonth = campaignCalendarMonthLabel(calendar.month);
-    const weekdayLabels = ["Th 2", "Th 3", "Th 4", "Th 5", "Th 6", "Th 7", "CN"];
+    const weekdayLabels = campaignCalendarWeekdayLabels();
     const cells = [];
     for (let blank = 0; blank < firstWeekday; blank += 1) cells.push(`<div class="portal-calendar-cell is-empty" aria-hidden="true"></div>`);
     for (let day = 1; day <= totalDays; day += 1) {

@@ -20,7 +20,7 @@ from urllib.parse import parse_qs, urlencode, urlparse
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Request, Response, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 import httpx
-from pydantic import BaseModel, Field, ValidationError
+from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
 from copyfast_db import (
     ensure_copyfast_schema,
@@ -1514,6 +1514,19 @@ class ProfileUpdateRequest(BaseModel):
     display_name: str = Field(default="", max_length=120)
     locale: str = Field(default="vi", max_length=16)
     timezone: str = Field(default="Asia/Ho_Chi_Minh", max_length=64)
+
+
+class InterfaceLocaleUpdateRequest(BaseModel):
+    """The narrow, presentation-only write used by the locale navigator.
+
+    This must remain distinct from the broader profile form: a stale language
+    tab may change only its exact reviewed locale and cannot replay hidden
+    display-name/time-zone/identity values into the signed account.
+    """
+
+    model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
+
+    locale: str = Field(min_length=2, max_length=16)
 
 
 class LinkConfirmation(BaseModel):
@@ -3990,6 +4003,53 @@ async def update_profile(payload: ProfileUpdateRequest, request: Request, accoun
         "avatar_style": "gradient",
     }
     return envelope(True, "Đã cập nhật hồ sơ Web.", data={"account": browser_account_payload(updated)}, status_name="completed")
+
+
+@router.post("/profile/interface-locale")
+async def update_interface_locale(
+    payload: InterfaceLocaleUpdateRequest,
+    request: Request,
+    account: dict = Depends(require_csrf),
+):
+    """Persist one reviewed Web UI locale without touching other profile data.
+
+    This is intentionally a local presentation preference. It never accepts
+    a Bot language/callback, workflow language, identity, role, wallet,
+    payment, provider or job field, and returns only the confirmed locale.
+    """
+
+    locale = payload.locale.lower()
+    if locale not in INTERFACE_LOCALES:
+        return envelope(
+            False,
+            "Ngôn ngữ giao diện chưa được hỗ trợ.",
+            status_name="failed",
+            error_code="PROFILE_LOCALE_INVALID",
+        )
+    with transaction() as conn:
+        now = utc_now()
+        # Existing profile values stay untouched. The insert path only covers
+        # a legacy signed account that has no profile row yet.
+        conn.execute(
+            """INSERT INTO web_account_profiles
+            (account_id, locale, timezone, avatar_style, created_at, updated_at)
+            VALUES (?, ?, 'Asia/Ho_Chi_Minh', 'gradient', ?, ?)
+            ON CONFLICT(account_id) DO UPDATE SET locale=excluded.locale, updated_at=excluded.updated_at""",
+            (account["id"], locale, now, now),
+        )
+        _record_audit(
+            conn,
+            account_id=account["id"],
+            canonical_user_id=account["canonical_user_id"],
+            action="auth.interface_locale_update",
+            request_id=_request_id(request),
+        )
+    return envelope(
+        True,
+        "Đã cập nhật ngôn ngữ giao diện.",
+        data={"profile": {"locale": locale}},
+        status_name="completed",
+    )
 
 
 @router.post("/telegram-account/upgrade")

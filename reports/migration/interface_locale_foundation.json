@@ -1,0 +1,59 @@
+{
+  "report": "web-interface-locale-foundation",
+  "scope": "standalone-web-app",
+  "reviewed_at": "2026-07-22",
+  "reviewed_interface_locales": [
+    "vi",
+    "en",
+    "zh"
+  ],
+  "frozen_bot_reference": {
+    "mode": "static-reference-only",
+    "web_mapping": "navigation-only",
+    "bot_state_imported": false
+  },
+  "persistence": {
+    "route": "POST /api/v1/auth/profile/interface-locale",
+    "request_shape": {
+      "locale": "vi|en|zh"
+    },
+    "signed_session_required": true,
+    "csrf_required": true,
+    "extra_fields_rejected": true,
+    "raw_body_max_bytes": 2048,
+    "rate_limited": true,
+    "audit_event": "auth.interface_locale_update",
+    "response_projection": {
+      "profile": {
+        "locale": "vi|en|zh"
+      }
+    }
+  },
+  "first_paint": {
+    "signed_profile_source_only": true,
+    "public_default_locale": "vi",
+    "query_or_accept_language_persistence": false,
+    "browser_storage_persistence": false,
+    "includes": [
+      "html-lang",
+      "localized-shell-title",
+      "localized-shell-copy",
+      "bootstrap-interfaceLocale"
+    ]
+  },
+  "excluded_domains": [
+    "telegram-bot-runtime",
+    "core-bridge",
+    "payos",
+    "wallet-ledger",
+    "provider-calls",
+    "job-state"
+  ],
+  "verification": [
+    "tests/test_interface_locale_narrow_update_and_first_paint.py",
+    "tests/test_interface_locale_navigator_portal_contracts.py",
+    "tests/test_portal_i18n_bundle_contracts.py",
+    "tests/test_portal_i18n_locale_contracts.py",
+    "tests/test_portal_profile_locale_apply_contracts.py"
+  ]
+}

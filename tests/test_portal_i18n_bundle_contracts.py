@@ -17,6 +17,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 BUNDLE = ROOT / "static" / "portal" / "portal-i18n.js"
+PORTAL_BUNDLE = ROOT / "static" / "portal" / "portal.js"
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
@@ -54,7 +55,7 @@ const document = {
   title: "",
   getElementById(id) {
     return id === "portal-bootstrap"
-      ? { textContent: JSON.stringify({ account: { profile: { locale: "vi" } } }) }
+      ? { textContent: JSON.stringify({ interfaceLocale: "zh", account: { profile: { locale: "vi" } } }) }
       : null;
   }
 };
@@ -94,10 +95,17 @@ for (const locale of expected) {
 }
 
 if (api.normalizeLocale("zh-CN") !== "zh") throw new Error("Chinese display alias did not normalize");
+if (api.normalizeLocale("zh-TW") !== "en") throw new Error("Traditional Chinese must not masquerade as Simplified Chinese");
 if (api.normalizeLocale("ja") !== "en") throw new Error("Unreviewed interface locale did not fall back to English");
 if (api.t("starter.install", "zh") !== "安装入门套件") throw new Error("Reviewed Chinese text is unavailable");
 if (api.t("starter.install", "en") !== "Install Starter Kit") throw new Error("Reviewed English text is unavailable");
 if (api.t("missing.translation.key", "vi") !== "") throw new Error("Unknown key must not invent a translation");
+if (api.currentLocale() !== "zh") throw new Error("Server bootstrap interface locale did not win over profile fallback");
+if (api.localeTag("zh") !== "zh-CN") throw new Error("Reviewed Chinese Intl tag is unavailable");
+if (!api.formatNumber(1234567, "en") || !api.formatDateTime("2026-07-22T00:00:00Z", { timeZone: "UTC", year: "numeric", month: "short", day: "2-digit" }, "zh")) {
+  throw new Error("Locale presentation helpers are unavailable");
+}
+if (api.compareText("10", "2", "en") <= 0) throw new Error("Locale collator did not use numeric presentation order");
 
 api.setLocale("zh-CN", { emit: false, titleKey: "page.account.title" });
 if (api.currentLocale() !== "zh") throw new Error("setLocale did not select Chinese");
@@ -135,12 +143,167 @@ process.stdout.write(JSON.stringify({
     return json.loads(result.stdout)
 
 
+def _node_portal_first_mount_snapshot() -> dict:
+    """Mount the real Portal shell with only its signed locale bootstrap.
+
+    This deliberately has no profile projection, matching the first server
+    response before the authenticated integration performs `/auth/me`
+    hydration.  A lightweight DOM shim is enough because the Portal renderer
+    is presentation-only; it lets this contract catch a language flash that a
+    static HTML or i18n-bundle test cannot observe.
+    """
+
+    node = shutil.which("node")
+    if not node:
+        pytest.skip("Node is required for the Portal first-mount locale contract")
+
+    script = r'''
+const fs = require("fs");
+const vm = require("vm");
+const i18nPath = process.argv[1];
+const portalPath = process.argv[2];
+const i18nSource = fs.readFileSync(i18nPath, "utf8");
+const portalSource = fs.readFileSync(portalPath, "utf8");
+
+function createClassList() {
+  const values = new Set();
+  return {
+    add(...names) { names.forEach((name) => values.add(String(name))); },
+    remove(...names) { names.forEach((name) => values.delete(String(name))); },
+    contains(name) { return values.has(String(name)); },
+    toggle(name, force) {
+      const enabled = force === undefined ? !values.has(String(name)) : Boolean(force);
+      if (enabled) values.add(String(name)); else values.delete(String(name));
+      return enabled;
+    }
+  };
+}
+
+function createElement() {
+  const attributes = {};
+  return {
+    hidden: false,
+    innerHTML: "",
+    textContent: "",
+    dataset: {},
+    classList: createClassList(),
+    setAttribute(name, value) { attributes[name] = String(value); },
+    getAttribute(name) { return attributes[name] || ""; },
+    removeAttribute(name) { delete attributes[name]; },
+    hasAttribute(name) { return Object.prototype.hasOwnProperty.call(attributes, name); },
+    querySelector() { return null; },
+    querySelectorAll() { return []; },
+    addEventListener() {},
+    removeEventListener() {},
+    matches() { return false; },
+    closest() { return null; },
+    focus() {}
+  };
+}
+
+const bootstrap = createElement();
+bootstrap.textContent = JSON.stringify({
+  path: "/dashboard",
+  title: "概览 · TOAN AAS",
+  interfaceLocale: "zh",
+  apiBase: "/api/v1",
+  buildId: "local"
+});
+const sidebar = createElement();
+const header = createElement();
+const main = createElement();
+const shell = createElement();
+const mobileNav = createElement();
+const commandPalette = createElement();
+const skipLink = createElement();
+const nodes = {
+  "[data-portal-sidebar]": sidebar,
+  "[data-portal-header]": header,
+  "[data-portal-main]": main,
+  "[data-portal-shell]": shell,
+  "[data-portal-mobile-nav]": mobileNav,
+  "[data-portal-command-palette]": commandPalette,
+  ".skip-link": skipLink
+};
+let domReady = null;
+const documentElement = {
+  lang: "zh-CN",
+  dir: "ltr",
+  attributes: {},
+  setAttribute(name, value) { this.attributes[name] = String(value); }
+};
+const document = {
+  documentElement,
+  body: createElement(),
+  title: "概览 · TOAN AAS",
+  readyState: "loading",
+  activeElement: null,
+  getElementById(id) { return id === "portal-bootstrap" ? bootstrap : null; },
+  querySelector(selector) { return nodes[selector] || null; },
+  querySelectorAll() { return []; },
+  addEventListener(type, handler) { if (type === "DOMContentLoaded") domReady = handler; },
+  createElement() { return createElement(); }
+};
+const context = {
+  console,
+  JSON,
+  URL,
+  URLSearchParams,
+  Intl,
+  document,
+  location: { pathname: "/dashboard", search: "" },
+  CustomEvent: function CustomEvent(type, init) { this.type = type; this.detail = init && init.detail; },
+  HTMLElement: function HTMLElement() {},
+  addEventListener() {},
+  removeEventListener() {},
+  dispatchEvent() { return true; },
+  matchMedia() { return { matches: false }; },
+  requestAnimationFrame(callback) { if (typeof callback === "function") callback(); return 0; }
+};
+context.window = context;
+context.globalThis = context;
+vm.createContext(context);
+vm.runInContext(i18nSource, context, { filename: i18nPath });
+vm.runInContext(portalSource, context, { filename: portalPath });
+if (typeof domReady !== "function") throw new Error("Portal did not register a first mount");
+domReady();
+const firstMount = documentElement.attributes["data-portal-locale"];
+
+context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "en" } });
+const hydratedProfile = documentElement.attributes["data-portal-locale"];
+
+context.TOANAASPortal.mount({ path: "/dashboard", interfaceLocale: "zh", profile: { locale: "zh-TW" } });
+const invalidProfile = documentElement.attributes["data-portal-locale"];
+process.stdout.write(JSON.stringify({ firstMount, hydratedProfile, invalidProfile, documentLang: documentElement.lang }));
+'''
+    try:
+        result = subprocess.run(
+            [node, "-e", script, str(BUNDLE), str(PORTAL_BUNDLE)],
+            check=False,
+            capture_output=True,
+            text=True,
+            timeout=20,
+        )
+    except OSError as exc:
+        pytest.skip(f"Node subprocess is unavailable in this test runner: {exc}")
+    assert result.returncode == 0, result.stderr or result.stdout
+    return json.loads(result.stdout)
+
+
 def test_i18n_bundle_has_equal_reviewed_vi_en_zh_coverage_at_runtime() -> None:
     snapshot = _node_i18n_snapshot()
     assert snapshot["locales"] == ["vi", "en", "zh"]
     assert snapshot["keyCount"] >= 100
     assert snapshot["activeLocale"] == "en"
     assert snapshot["documentLocale"] == "en"
+
+
+def test_portal_first_mount_keeps_signed_server_locale_until_profile_hydration() -> None:
+    snapshot = _node_portal_first_mount_snapshot()
+    assert snapshot["firstMount"] == "zh"
+    assert snapshot["hydratedProfile"] == "en"
+    assert snapshot["invalidProfile"] == "zh"
+    assert snapshot["documentLang"] == "zh-CN"
 
 
 def test_i18n_bundle_is_presentation_only_without_browser_persistence_or_network() -> None:
@@ -181,7 +344,8 @@ def test_shell_build_and_pwa_load_i18n_before_portal_runtime_without_private_cac
         portal = shell.index('/static/portal/portal.js?v=__PORTAL_ASSET_VERSION__')
         integration = shell.index('/static/portal/integration.js?v=__PORTAL_ASSET_VERSION__')
         assert i18n < portal < integration
-        assert 'data-portal-locale="vi"' in shell
+        assert 'lang="__PORTAL_HTML_LANG__"' in shell
+        assert 'data-portal-locale="__PORTAL_LOCALE__"' in shell
 
     build_sources = _between(PAGES, "_PORTAL_BUILD_SOURCE_FILES = (", ")\n\n")
     assert '"portal-i18n.js",' in build_sources

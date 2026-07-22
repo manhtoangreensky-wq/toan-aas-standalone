@@ -1,40 +1,40 @@
 <!doctype html>
-<html lang="vi" data-portal-locale="vi">
+<html lang="__PORTAL_HTML_LANG__" dir="ltr" data-portal-locale="__PORTAL_LOCALE__">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#07131f">
   <link rel="manifest" href="/static/portal/manifest.webmanifest?v=__PORTAL_ASSET_VERSION__">
-  <meta name="description" content="TOAN AAS portal shell — giao diện an toàn chờ Core Bridge.">
+  <meta name="description" content="__PORTAL_DESCRIPTION__">
   <title>__PORTAL_TITLE__</title>
   <link rel="stylesheet" href="/static/portal/portal.css?v=__PORTAL_ASSET_VERSION__">
 </head>
 <body class="portal-body">
-  <a class="skip-link" href="#portal-main">Bỏ qua điều hướng</a>
+  <a class="skip-link" href="#portal-main">__PORTAL_SKIP_NAVIGATION__</a>
 
   <!--
     `__PORTAL_BOOTSTRAP__` is a literal server-replaced JSON placeholder.
     FastAPI must create it from a signed session, never from raw browser input.
   -->
   <div class="portal-shell" id="portal-shell" data-portal-shell>
-    <aside class="portal-sidebar" id="portal-sidebar" aria-label="Điều hướng chính" data-portal-sidebar></aside>
+    <aside class="portal-sidebar" id="portal-sidebar" aria-label="__PORTAL_MAIN_NAVIGATION__" data-portal-sidebar></aside>
     <div class="portal-backdrop" data-portal-backdrop hidden></div>
     <section class="portal-workspace">
       <header class="portal-header" data-portal-header></header>
       <main class="portal-main" id="portal-main" tabindex="-1" data-portal-main>
         <section class="portal-boot" aria-live="polite">
           <span class="portal-loader" aria-hidden="true"></span>
-          <p>Đang khởi tạo giao diện TOAN AAS…</p>
+          <p>__PORTAL_BOOT_MESSAGE__</p>
         </section>
       </main>
     </section>
-    <nav class="portal-mobile-nav" aria-label="Điều hướng nhanh" data-portal-mobile-nav hidden></nav>
+    <nav class="portal-mobile-nav" aria-label="__PORTAL_QUICK_NAVIGATION__" data-portal-mobile-nav hidden></nav>
     <div class="portal-command-palette" id="portal-command-palette" data-portal-command-palette hidden></div>
   </div>
   <div class="portal-toast-region" aria-live="polite" aria-atomic="true" data-portal-toast></div>
 
   <noscript>
-    <div class="portal-noscript">Vui lòng bật JavaScript để dùng cổng TOAN AAS.</div>
+    <div class="portal-noscript">__PORTAL_NOSCRIPT__</div>
   </noscript>
   <script id="portal-bootstrap" type="application/json">__PORTAL_BOOTSTRAP__</script>
   <script src="/static/portal/portal-i18n.js?v=__PORTAL_ASSET_VERSION__" defer></script>

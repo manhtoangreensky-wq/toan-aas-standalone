@@ -50,4 +50,9 @@ def test_profile_locale_applies_only_after_signed_receipt_then_remounts() -> Non
     for forbidden in ("canonical_user_id", "telegram_id", "role", "source_language", "target_language", "workflow_language"):
         assert forbidden not in receipt
     assert "i18n.setLocale(locale, { emit: false })" in apply
-    assert "we never\n    // merge the response account, identity, role or workflow fields locally" in apply
+    # The signed receipt may retain its one exact presentation value in
+    # in-memory bootstrap so a render before `/auth/me` cannot flash back to
+    # the old locale. It must not merge the broader profile/account receipt.
+    assert "const current = base();" in apply
+    assert "window.__TOAN_AAS_PORTAL__ = { ...current, interfaceLocale: locale };" in apply
+    assert "merge(" not in apply
