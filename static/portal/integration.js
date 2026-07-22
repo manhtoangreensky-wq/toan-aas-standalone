@@ -974,6 +974,14 @@
     };
   }
 
+  function interfaceLocaleUpdatePayload(fields) {
+    const source = fields && typeof fields === "object" && !Array.isArray(fields) ? fields : {};
+    // The dedicated navigator submits exactly one reviewed presentation
+    // preference. It cannot replay unrelated profile values from an old tab
+    // or carry identity/workflow data into this narrow endpoint.
+    return { locale: profileUpdateInterfaceLocale(source.locale) };
+  }
+
   function confirmedProfileInterfaceLocale(result) {
     const profile = result && result.data && result.data.account && result.data.account.profile;
     const locale = typeof (profile && profile.locale) === "string"
@@ -983,11 +991,23 @@
     return locale;
   }
 
+  function confirmedInterfaceLocaleReceipt(result) {
+    const profile = result && result.data && result.data.profile;
+    const locale = typeof (profile && profile.locale) === "string"
+      ? profile.locale.trim().toLowerCase()
+      : "";
+    if (!INTERFACE_LOCALES.has(locale)) throw new Error("Máy chủ chưa xác nhận ngôn ngữ giao diện hợp lệ.");
+    return locale;
+  }
+
   function applyConfirmedProfileInterfaceLocale(locale) {
     // This changes document presentation only after the signed profile write
-    // returned an allowed server projection. The following hydrate() remains
-    // the sole state update and remounts the Portal from /auth/me; we never
-    // merge the response account, identity, role or workflow fields locally.
+    // returned an allowed server projection. Retain only that exact
+    // presentation receipt in the in-memory bootstrap so another render made
+    // before `/auth/me` hydration cannot revert to the prior locale. We never
+    // merge an account, identity, role or workflow field from this response.
+    const current = base();
+    window.__TOAN_AAS_PORTAL__ = { ...current, interfaceLocale: locale };
     const i18n = window.TOANAASI18n;
     if (i18n && typeof i18n.setLocale === "function") i18n.setLocale(locale, { emit: false });
   }
@@ -28722,6 +28742,20 @@
         // makes the document language truthful immediately, then hydrate()
         // obtains a fresh server-owned Portal context and remounts all UI.
         applyConfirmedProfileInterfaceLocale(confirmedProfileInterfaceLocale(result));
+        await hydrate();
+        toast(result.message);
+        return;
+      }
+      if (action === "update-interface-locale") {
+        const payload = interfaceLocaleUpdatePayload(fields);
+        const result = await api("/auth/profile/interface-locale", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        // Only the minimal signed locale receipt can change presentation.
+        // Hydration still owns all account/profile state and remounts the UI.
+        applyConfirmedProfileInterfaceLocale(confirmedInterfaceLocaleReceipt(result));
         await hydrate();
         toast(result.message);
         return;

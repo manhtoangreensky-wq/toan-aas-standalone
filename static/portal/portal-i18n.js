@@ -40,15 +40,21 @@
       direction: "ltr"
     })
   });
+  const INTL_LOCALE_TAGS = Object.freeze({
+    vi: "vi-VN",
+    en: "en-US",
+    zh: "zh-CN"
+  });
 
-  // Chinese aliases intentionally resolve to the one reviewed Chinese UI
-  // catalog.  Other language preferences use the documented English fallback
-  // until a reviewed catalog exists for that interface language.
+  // Only Simplified Chinese aliases resolve to the reviewed Chinese catalog.
+  // Traditional Chinese needs its own content review and must not silently
+  // masquerade as the simplified UI. Other interface preferences use the
+  // documented English fallback until a reviewed catalog exists.
   const LOCALE_ALIASES = Object.freeze({
     vi: "vi", "vi-vn": "vi", "vi_vn": "vi",
     en: "en", "en-us": "en", "en_us": "en", "en-gb": "en", "en_gb": "en",
     zh: "zh", "zh-cn": "zh", "zh_cn": "zh", "zh-hans": "zh", "zh_hans": "zh",
-    "zh-sg": "zh", "zh_sg": "zh", "zh-tw": "zh", "zh_tw": "zh", "zh-hant": "zh", "zh_hant": "zh"
+    "zh-sg": "zh", "zh_sg": "zh"
   });
 
   const MESSAGES = {
@@ -641,6 +647,17 @@
       "chrome.installApp": "Cài đặt ứng dụng",
       "chrome.openAccount": "Mở tài khoản",
       "chrome.quickSwitch": "Chuyển nhanh",
+      "chrome.commandKicker": "TOAN AAS workspace",
+      "chrome.commandTitle": "Chuyển nhanh",
+      "chrome.closeQuickSwitch": "Đóng chuyển nhanh",
+      "chrome.searchWorkspacePlaceholder": "Tìm công cụ, jobs, tài sản, tài khoản…",
+      "chrome.commandHintOpen": "để mở",
+      "chrome.commandHintClose": "để đóng",
+      "chrome.commandResults": "Kết quả chuyển nhanh",
+      "chrome.commandEmpty": "Không tìm thấy workspace phù hợp. Hãy thử tên tính năng hoặc đường dẫn khác.",
+      "chrome.commandCount": "{count} workspace có thể mở trong phiên này.",
+      "chrome.bridgeReadyDetail": "Tính năng được cấp theo phiên hiện tại",
+      "chrome.safeModeDetail": "Không gọi provider, Xu hoặc payment từ browser",
 
       "nav.workspace": "Workspace",
       "nav.starterKits": "Starter Kits",
@@ -944,6 +961,17 @@
       "chrome.installApp": "Install app",
       "chrome.openAccount": "Open account",
       "chrome.quickSwitch": "Quick switch",
+      "chrome.commandKicker": "TOAN AAS workspace",
+      "chrome.commandTitle": "Quick switch",
+      "chrome.closeQuickSwitch": "Close quick switch",
+      "chrome.searchWorkspacePlaceholder": "Search tools, jobs, assets, accounts…",
+      "chrome.commandHintOpen": "to open",
+      "chrome.commandHintClose": "to close",
+      "chrome.commandResults": "Quick-switch results",
+      "chrome.commandEmpty": "No matching workspace found. Try a feature name or another path.",
+      "chrome.commandCount": "{count} workspaces are available in this session.",
+      "chrome.bridgeReadyDetail": "Features are granted for the current session",
+      "chrome.safeModeDetail": "No provider, credits or payment calls from the browser",
 
       "nav.workspace": "Workspace",
       "nav.starterKits": "Starter Kits",
@@ -1247,6 +1275,17 @@
       "chrome.installApp": "安装应用",
       "chrome.openAccount": "打开账户",
       "chrome.quickSwitch": "快速切换",
+      "chrome.commandKicker": "TOAN AAS 工作台",
+      "chrome.commandTitle": "快速切换",
+      "chrome.closeQuickSwitch": "关闭快速切换",
+      "chrome.searchWorkspacePlaceholder": "搜索工具、任务、资源或账户…",
+      "chrome.commandHintOpen": "打开",
+      "chrome.commandHintClose": "关闭",
+      "chrome.commandResults": "快速切换结果",
+      "chrome.commandEmpty": "未找到匹配的工作台。请尝试功能名称或其他路径。",
+      "chrome.commandCount": "本次会话可打开 {count} 个工作台。",
+      "chrome.bridgeReadyDetail": "当前会话已获授权使用相应功能",
+      "chrome.safeModeDetail": "浏览器不会调用提供方、Xu 或支付",
 
       "nav.workspace": "工作台",
       "nav.starterKits": "入门套件",
@@ -1627,12 +1666,97 @@
     return LOCALES[normalizeLocale(value)];
   }
 
+  function localeTag(value) {
+    return INTL_LOCALE_TAGS[normalizeLocale(value)] || INTL_LOCALE_TAGS[FALLBACK_LOCALE];
+  }
+
+  function formatNumber(value, locale) {
+    let number;
+    try {
+      number = typeof value === "number" ? value : Number(value);
+    } catch (_) {
+      return "";
+    }
+    if (!Number.isFinite(number)) return "";
+    try {
+      return new Intl.NumberFormat(localeTag(locale || activeLocale)).format(number);
+    } catch (_) {
+      return String(number);
+    }
+  }
+
+  function safeDateTimeOptions(value) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return undefined;
+    const safe = {};
+    const enumFields = {
+      dateStyle: new Set(["full", "long", "medium", "short"]),
+      timeStyle: new Set(["full", "long", "medium", "short"]),
+      weekday: new Set(["long", "short", "narrow"]),
+      era: new Set(["long", "short", "narrow"]),
+      year: new Set(["numeric", "2-digit"]),
+      month: new Set(["numeric", "2-digit", "long", "short", "narrow"]),
+      day: new Set(["numeric", "2-digit"]),
+      hour: new Set(["numeric", "2-digit"]),
+      minute: new Set(["numeric", "2-digit"]),
+      second: new Set(["numeric", "2-digit"]),
+      timeZoneName: new Set(["long", "short", "shortOffset", "longOffset", "shortGeneric", "longGeneric"]),
+      hourCycle: new Set(["h11", "h12", "h23", "h24"])
+    };
+    Object.keys(enumFields).forEach((key) => {
+      const candidate = value[key];
+      if (typeof candidate === "string" && enumFields[key].has(candidate)) safe[key] = candidate;
+    });
+    if (typeof value.hour12 === "boolean") safe.hour12 = value.hour12;
+    // A time zone is used only for display and must remain a bounded IANA-like
+    // token. It never changes stored timestamps or workflow scheduling.
+    if (typeof value.timeZone === "string" && /^(?:UTC|[A-Za-z0-9._+-]+(?:\/[A-Za-z0-9._+-]+)+)$/.test(value.timeZone) && !value.timeZone.includes("..")) {
+      safe.timeZone = value.timeZone;
+    }
+    return safe;
+  }
+
+  function formatDateTime(value, options, locale) {
+    let date;
+    try {
+      date = value instanceof Date ? new Date(value.getTime()) : new Date(value);
+    } catch (_) {
+      return "";
+    }
+    if (Number.isNaN(date.getTime())) return "";
+    try {
+      return new Intl.DateTimeFormat(localeTag(locale || activeLocale), safeDateTimeOptions(options)).format(date);
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function compareText(left, right, locale) {
+    const first = safeParameterValue(left);
+    const second = safeParameterValue(right);
+    try {
+      return new Intl.Collator(localeTag(locale || activeLocale), { numeric: true, sensitivity: "base" }).compare(first, second);
+    } catch (_) {
+      return first < second ? -1 : (first > second ? 1 : 0);
+    }
+  }
+
+  function lowercase(value, locale) {
+    const text = safeParameterValue(value);
+    try {
+      return text.toLocaleLowerCase(localeTag(locale || activeLocale));
+    } catch (_) {
+      return text.toLowerCase();
+    }
+  }
+
   function bootstrapLocale() {
     if (!global.document || typeof global.document.getElementById !== "function") return null;
     const node = global.document.getElementById("portal-bootstrap");
     if (!node || typeof node.textContent !== "string" || !node.textContent.trim()) return null;
     try {
       const bootstrap = JSON.parse(node.textContent);
+      const interfaceLocale = bootstrap && bootstrap.interfaceLocale;
+      if (typeof interfaceLocale === "string") return interfaceLocale;
       const profile = bootstrap && bootstrap.account && bootstrap.account.profile;
       return profile && typeof profile.locale === "string" ? profile.locale : null;
     } catch (_) {
@@ -1702,6 +1826,11 @@
     localeFallbackChain,
     localeMetadata,
     localeMeta: localeMetadata,
+    localeTag,
+    formatNumber,
+    formatDateTime,
+    compareText,
+    lowercase,
     getLocales,
     getLocale,
     currentLocale: getLocale,

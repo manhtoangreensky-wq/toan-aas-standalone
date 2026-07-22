@@ -407,6 +407,11 @@ ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES = 26 * 1024 * 1024
 # Bound it before FastAPI/Pydantic begins parsing so the durable route-level
 # throttle below never has to inspect an arbitrary-size credential payload.
 AUTH_CREDENTIAL_BODY_MAX_BYTES = 8 * 1024
+# The dedicated interface-locale endpoint receives exactly one reviewed
+# presentation code. Keep its body limit materially smaller than credential
+# forms and reject it before JSON/Pydantic/SQLite handling.
+INTERFACE_LOCALE_BODY_MAX_BYTES = 2 * 1024
+INTERFACE_LOCALE_API_PATH = "/api/v1/auth/profile/interface-locale"
 
 
 class PromptLibraryBodyLimitMiddleware:
@@ -457,6 +462,7 @@ class PromptLibraryBodyLimitMiddleware:
         governance_max_bytes: int = GOVERNANCE_BODY_MAX_BYTES,
         admin_document_archive_upload_max_bytes: int = ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
         auth_credential_max_bytes: int = AUTH_CREDENTIAL_BODY_MAX_BYTES,
+        interface_locale_max_bytes: int = INTERFACE_LOCALE_BODY_MAX_BYTES,
     ):
         self.app = app
         self.max_bytes = int(max_bytes)
@@ -494,6 +500,7 @@ class PromptLibraryBodyLimitMiddleware:
         self.governance_max_bytes = int(governance_max_bytes)
         self.admin_document_archive_upload_max_bytes = int(admin_document_archive_upload_max_bytes)
         self.auth_credential_max_bytes = int(auth_credential_max_bytes)
+        self.interface_locale_max_bytes = int(interface_locale_max_bytes)
 
     @staticmethod
     def _is_admin_document_archive_upload_path(path: str) -> bool:
@@ -548,6 +555,7 @@ class PromptLibraryBodyLimitMiddleware:
                 or path.startswith("/api/v1/account/data-controls/")
                 or path.startswith("/api/v1/admin/governance/")
                 or PromptLibraryBodyLimitMiddleware._is_admin_document_archive_upload_path(path)
+                or path == INTERFACE_LOCALE_API_PATH
                 or path in {
                     "/api/v1/auth/login",
                     "/api/v1/auth/register",
@@ -631,6 +639,8 @@ class PromptLibraryBodyLimitMiddleware:
             return self.data_controls_max_bytes
         if path.startswith("/api/v1/admin/governance/"):
             return self.governance_max_bytes
+        if path == INTERFACE_LOCALE_API_PATH:
+            return self.interface_locale_max_bytes
         if path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -686,6 +696,7 @@ class PromptLibraryBodyLimitMiddleware:
         is_data_controls = path.startswith("/api/v1/account/data-controls/")
         is_governance = path.startswith("/api/v1/admin/governance/")
         is_admin_document_archive_upload = self._is_admin_document_archive_upload_path(path)
+        is_interface_locale = path == INTERFACE_LOCALE_API_PATH
         is_auth_credential = path in {
             "/api/v1/auth/login",
             "/api/v1/auth/register",
@@ -748,7 +759,9 @@ class PromptLibraryBodyLimitMiddleware:
             envelope(
                 False,
                 (
-                    "Thông tin đăng nhập vượt giới hạn kích thước an toàn."
+                    "Lựa chọn ngôn ngữ giao diện vượt giới hạn kích thước an toàn."
+                    if is_interface_locale
+                    else "Thông tin đăng nhập vượt giới hạn kích thước an toàn."
                     if is_auth_credential
                     else "Dữ liệu Prompt Studio vượt giới hạn kích thước an toàn."
                     if is_prompt_studio
@@ -823,7 +836,9 @@ class PromptLibraryBodyLimitMiddleware:
                 data=boundary,
                 status_name="guarded",
                 error_code=(
-                    "WEB_AUTH_CREDENTIAL_BODY_TOO_LARGE"
+                    "WEB_INTERFACE_LOCALE_BODY_TOO_LARGE"
+                    if is_interface_locale
+                    else "WEB_AUTH_CREDENTIAL_BODY_TOO_LARGE"
                     if is_auth_credential
                     else "WEB_PROMPT_STUDIO_BODY_TOO_LARGE"
                     if is_prompt_studio
@@ -1025,6 +1040,7 @@ app.add_middleware(
     governance_max_bytes=GOVERNANCE_BODY_MAX_BYTES,
     admin_document_archive_upload_max_bytes=ADMIN_DOCUMENT_ARCHIVE_UPLOAD_BODY_MAX_BYTES,
     auth_credential_max_bytes=AUTH_CREDENTIAL_BODY_MAX_BYTES,
+    interface_locale_max_bytes=INTERFACE_LOCALE_BODY_MAX_BYTES,
 )
 
 
@@ -1099,6 +1115,9 @@ async def security_headers(request: Request, call_next):
         "/api/v1/auth/login": 8,
         "/api/v1/auth/register": 4,
         "/api/v1/auth/security/password": 6,
+        # A signed UI-preference write has no external side effect, but keep
+        # a modest fixed gate before CSRF/session/SQLite work.
+        INTERFACE_LOCALE_API_PATH: 20,
         # SMTP delivery is externally visible but never browser-authoritative.
         # Limit it before the signed-session/CSRF/database work so a stolen
         # cookie cannot become a mailbox-spam primitive.
@@ -2320,6 +2339,10 @@ async def legacy_b2b_redirect():
 async def page(page_path: str, request: Request):
     normalized = ("/" + page_path.lstrip("/")) if page_path else "/"
     normalized = normalized.rstrip("/") or "/"
+    # This value is populated only after the existing signed-session check
+    # below. It is presentation metadata for the server shell, never a
+    # request/header preference, a Bot locale or workflow-language input.
+    portal_interface_locale = "vi"
     # This is the final portal fallback.  It must never turn an unknown API or
     # internal endpoint into a login redirect or an HTML shell, because API
     # callers require the application's normal JSON error contract.
@@ -2427,7 +2450,8 @@ async def page(page_path: str, request: Request):
             # requested internal route so login can return safely after auth.
             return RedirectResponse(f"/login?next={quote(normalized, safe='/')}", status_code=307)
         account = session["account"]
+        portal_interface_locale = copyfast_auth.normalize_interface_locale(account.get("locale"))
         linked = bool(account.get("canonical_user_id"))
         if linked and normalized == "/onboarding":
             return RedirectResponse(_safe_onboarding_next(request.query_params.get("next")) or "/dashboard", status_code=307)
-    return render_portal(page_path)
+    return render_portal(page_path, interface_locale=portal_interface_locale)
