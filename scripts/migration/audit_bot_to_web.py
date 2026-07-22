@@ -1577,6 +1577,73 @@ BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
     },
 }
 
+# The frozen Bot's affiliate menu exposes this exact admin-only hint. The
+# corresponding Bot command derives live connection/configuration material and
+# receives canonical performance events, so this finite callback can start
+# only a fresh static guidance route. It is deliberately keyed by the raw
+# callback identifier below: case or suffix variants must remain unreviewed.
+POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS: dict[str, dict[str, Any]] = {
+    "menu|hint_postback_setup": {
+        "target": "/admin/growth/postback-readiness",
+        "classification": "admin",
+        "feature_key": "admin_postback_readiness",
+        "authority": "SIGNED_CANONICAL_ADMIN_GUIDANCE",
+        "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "BOT_ADMIN_ONLY",
+            "BOT_HINT_CONTEXT_NOT_REPLAYED",
+            "BOT_POSTBACK_CONFIGURATION_NOT_REPLAYED",
+            "FRESH_SIGNED_WEB_ADMIN_READINESS_GUIDANCE",
+            "NO_WEB_POSTBACK_CONFIGURATION_OR_EVENT_ACTION",
+            "NO_AFFILIATE_JOB_OR_ATTRIBUTION_TRANSFER",
+            "NO_REWARD_PAYOUT_OR_FINANCIAL_ACTION",
+            "NO_PROVIDER_OR_RUNTIME_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot exposes this exact menu hint only in its admin affiliate section. The hint points "
+            "to a separate Bot command that derives canonical configuration and event-ingress material. The Web "
+            "opens a fresh signed canonical-admin readiness guide only; it receives no callback context, Telegram "
+            "identity, configuration material, affiliate/job reference, event, attribution, reward, payout or "
+            "financial authority."
+        ),
+    },
+}
+
+# The Bot command behind the hint derives canonical configuration from live
+# state and its receiver records performance/attribution. It is source-review
+# only until a separately approved canonical integration exists; the Web guide
+# above must never be interpreted as a browser command/configuration surface.
+POSTBACK_CONFIGURATION_SOURCE_REVIEW_BASE_DISPOSITIONS = (
+    "BOT_ADMIN_ONLY",
+    "CANONICAL_BOT_POSTBACK_CONFIGURATION_AND_EVENT_INGRESS",
+    "SOURCE_STATE_MACHINE_REQUIRED",
+    "NO_WEB_POSTBACK_CONFIGURATION_OR_EVENT_ACTION",
+    "NO_AFFILIATE_JOB_OR_ATTRIBUTION_TRANSFER",
+    "NO_REWARD_PAYOUT_OR_FINANCIAL_ACTION",
+    "NO_PROVIDER_OR_RUNTIME_ACTION",
+    "NO_RUNTIME_CLAIM",
+)
+POSTBACK_CONFIGURATION_SOURCE_REVIEW_COMMANDS: dict[str, dict[str, str]] = {
+    "postback_setup": {
+        "operation_disposition": "CANONICAL_BOT_POSTBACK_CONFIGURATION_AND_EVENT_INGRESS",
+        "source_evidence": (
+            "The frozen Bot command derives live configuration material from canonical affiliate/job state and its "
+            "separate receiver validates credentials before recording performance/attribution. The command is not a "
+            "Web configuration, event, attribution or financial operation."
+        ),
+    },
+}
+
+
+def _postback_configuration_source_review_dispositions(entry: dict[str, str]) -> tuple[str, ...]:
+    operation_disposition = str(entry.get("operation_disposition") or "").strip()
+    return tuple(
+        dict.fromkeys(
+            (*POSTBACK_CONFIGURATION_SOURCE_REVIEW_BASE_DISPOSITIONS, operation_disposition)
+        )
+    )
+
 # The frozen Bot's reviewed tax menu branches render administrative guidance,
 # choices and Telegram delivery paths. Only these three explanatory buttons may
 # open a fresh, independently authorized Web guidance route. They never
@@ -4762,6 +4829,23 @@ def _mapping_status(
 
 def _map_command(command: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     name = command["command"].casefold()
+    postback_configuration_source_review_entry = POSTBACK_CONFIGURATION_SOURCE_REVIEW_COMMANDS.get(name)
+    if postback_configuration_source_review_entry is not None:
+        # The matching Bot command derives canonical configuration and drives
+        # a protected event-ingress operation. Do not let its admin-shaped
+        # name become a compatibility route or browser control surface.
+        return {
+            "source_kind": "command",
+            "source": f"/{command['command']}",
+            "handler": command["handler"],
+            "target": "CANONICAL_POSTBACK_CONFIGURATION_SOURCE_REVIEW_REQUIRED",
+            "classification": "admin",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "reviewed_postback_configuration_command_requires_canonical_contract",
+            "source_dispositions": _postback_configuration_source_review_dispositions(postback_configuration_source_review_entry),
+            "source_evidence": str(postback_configuration_source_review_entry["source_evidence"]),
+            "evidence": {"file": command["file"], "line": command["line"]},
+        }
     job_lock_recovery_source_review_entry = JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_COMMANDS.get(name)
     if job_lock_recovery_source_review_entry is not None:
         # A literal Bot command can mutate canonical job, refund and billing
@@ -6250,6 +6334,7 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     # exact source token: a future spelling or case variant must be reviewed
     # instead of inheriting the canonical-admin navigation disposition.
     billing_menu_navigation_entry = BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
+    postback_readiness_navigation_entry = POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(identifier)
     tax_accounting_guidance_entry = TAX_ACCOUNTING_GUIDANCE_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
     tax_accounting_source_review_entry = TAX_ACCOUNTING_CANONICAL_FINANCE_SOURCE_REVIEW_ACTIONS.get(token)
     job_lock_recovery_navigation_entry = JOB_LOCK_RECOVERY_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.get(token)
@@ -6260,6 +6345,25 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     operator_category = OPERATOR_MENU_CATEGORY_REGISTRY.get(token)
     operator_root = identifier == OPERATOR_MENU_ROOT_NAVIGATION["callback"]
     pricing_read_entry = PRICING_READ_NAVIGATION_REGISTRY.get(token)
+    if postback_readiness_navigation_entry is not None:
+        # The exact admin-only hint begins only a fresh, role-protected Web
+        # readiness guide. It must not replay the command, connection material,
+        # event ingress, affiliate/job context, attribution or payout effects.
+        target = str(postback_readiness_navigation_entry["target"])
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": target,
+            "classification": str(postback_readiness_navigation_entry["classification"]),
+            "status": _mapping_status(target, existing_routes, telegram_only=False, navigation_only=True),
+            "resolution": "reviewed_postback_readiness_fresh_web_navigation",
+            "source_dispositions": tuple(postback_readiness_navigation_entry["source_dispositions"]),
+            "source_evidence": str(postback_readiness_navigation_entry["source_evidence"]),
+            "postback_readiness_feature_key": str(postback_readiness_navigation_entry["feature_key"]),
+            "postback_readiness_authority": str(postback_readiness_navigation_entry["authority"]),
+            "postback_readiness_launch_mode": str(postback_readiness_navigation_entry["launch_mode"]),
+            "evidence": evidence,
+        }
     if billing_menu_navigation_entry is not None:
         # The exact Bot billing menu is admin-only, but it contains Bot-local
         # manual-payment and settlement context.  The sole Web disposition is
@@ -8389,6 +8493,30 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, contract in BILLING_MENU_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
     ]
+    postback_readiness_contract_rows = [
+        [
+            source,
+            str(contract["target"]),
+            "reviewed_postback_readiness_fresh_web_navigation",
+            "NAVIGATION_ONLY",
+            str(contract["classification"]),
+            str(contract["authority"]),
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS.items()
+    ]
+    postback_configuration_source_review_command_rows = [
+        [
+            f"/{source}",
+            "CANONICAL_POSTBACK_CONFIGURATION_SOURCE_REVIEW_REQUIRED",
+            "reviewed_postback_configuration_command_requires_canonical_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "admin",
+            "Canonical Bot postback configuration/event-ingress operation",
+            ", ".join(_postback_configuration_source_review_dispositions(action)),
+        ]
+        for source, action in sorted(POSTBACK_CONFIGURATION_SOURCE_REVIEW_COMMANDS.items())
+    ]
     package_purchase_selector_sources = ", ".join(
         f"`{source}`" for source in sorted(PACKAGE_PURCHASE_SELECTOR_CALLBACKS)
     )
@@ -8823,6 +8951,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`GUIDED_START_CALLBACK_CONTRACT.md`](GUIDED_START_CALLBACK_CONTRACT.md) — finite Main Guide dispositions: fresh signed Web navigation for Quick Start/FAQ, and explicit video/trend deferral until the final Video menu phase.\n"
         + "- [`SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md`](SYSTEM_DATA_STEWARDSHIP_CALLBACK_CONTRACT.md) — finite System/Data and storage-cleanup dispositions: fresh guarded Web navigation with no Bot state, backup, cleanup, payment or runtime action replay.\n"
         + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot tax-menu dispositions: fresh canonical-admin guidance navigation with no finance data, calculation, export, file, ledger, payment or profile action replay.\n"
+        + "- [`POSTBACK_READINESS_CALLBACK_CONTRACT.md`](POSTBACK_READINESS_CALLBACK_CONTRACT.md) — exact Bot postback-hint disposition: fresh canonical-admin readiness guidance only; configuration, connection material, ingress, attribution and financial effects stay Bot-canonical.\n"
         + "- [`JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md`](JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md) — finite Bot stale-job help navigation and explicit canonical job/refund mutation boundaries; the Web guide has no queue/job data or recovery control.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
@@ -8977,6 +9106,22 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             billing_menu_contract_rows,
         )
         + "\n\nThe sole reviewed disposition starts a **fresh**, independently signed and canonical-role-checked `/admin/payments` read route. It is navigation only: it does not create a payment, accept a manual top-up/bill/TXID, expose a customer route, debit/credit Xu, finalize PayOS, call a provider, register a webhook, write an order/ledger/refund or claim any runtime result. Any other `menu|billing*` value remains source-review-required and cannot inherit this Admin route.\n",
+    )
+    write(
+        "POSTBACK_READINESS_CALLBACK_CONTRACT.md",
+        "# Postback readiness callback contract\n\n"
+        "The frozen Bot exposes the exact `menu|hint_postback_setup` item only in its administrator affiliate menu. Its hint points to a separate Bot command that derives canonical configuration material and participates in protected event-ingress/accounting state. The standalone Web never receives the callback token, Telegram identity, Bot hint text/context, connection material, credential, network value, affiliate/job reference, event payload, attribution, revenue, reward, payout, wallet/Xu, payment/PayOS state, provider state or write authority.\n\n"
+        + _markdown_table(
+            ["Frozen Bot action", "Fresh Web target", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            postback_readiness_contract_rows,
+        )
+        + "\n\nThe one reviewed row opens only the exact `/admin/growth/postback-readiness` page after it repeats canonical signed-admin authorization. It is a static preparation and handoff guide, not a configuration screen, credential display, connection generator, event receiver, event test/replay tool, affiliate/job read model, attribution/reward/payout action, financial action, provider action or runtime claim.\n\n"
+        + "The following exact Bot command remains a canonical source-review record. The Web must not expose, copy, parse or replay it:\n\n"
+        + _markdown_table(
+            ["Frozen Bot command", "Web boundary", "Audit resolution", "Status", "Audience", "Authority", "Source dispositions"],
+            postback_configuration_source_review_command_rows,
+        )
+        + "\n\nAny case variant, suffix or other postback-related Bot callback/command remains outside this finite contract. It requires separate source review and cannot inherit the readiness guide, an Admin Growth route, a bridge module or a browser-side configuration/event control.\n",
     )
     write(
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
@@ -9325,6 +9470,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + ("\n".join(f"- `{table}`" for table in wallet_tables) or "- None detected")
         + "\n\nCompletion must remain conditional on validated output, not a pending/provider acknowledgement.\n",
     )
+    def _admin_map_target(item: dict[str, Any]) -> str:
+        command_name = str(item.get("command") or "").casefold()
+        if command_name in POSTBACK_CONFIGURATION_SOURCE_REVIEW_COMMANDS:
+            return "CANONICAL_POSTBACK_CONFIGURATION_SOURCE_REVIEW_REQUIRED"
+        return f"/admin/{command_name}"
+
     admin_commands = [
         item for item in bot["commands"]
         if _is_admin_command(item["command"], item["handler"], admin_guarded=bool(item.get("admin_guarded")))
@@ -9335,7 +9486,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "Admin entries must resolve authority from a canonical signed session and server-side role, never from a browser-supplied ID. Write actions need CSRF, confirmation, permission checks, idempotency where applicable, and audit logging.\n\n"
         + _markdown_table(
             ["Bot command", "Handler", "Planned Web target"],
-            [[f"/{item['command']}", item["handler"], f"/admin/{item['command']}"] for item in admin_commands[:200]] or [["None discovered", "", ""]],
+            [[f"/{item['command']}", item["handler"], _admin_map_target(item)] for item in admin_commands[:200]] or [["None discovered", "", ""]],
         ),
     )
     provider_rows = [[item["provider"], str(item["occurrences"]), ", ".join(item["files"][:5])] for item in bot["providers"]]
@@ -9483,7 +9634,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "the server still checks the signed role on every request.\n\n"
         + "The following is a Bot command compatibility map. A target is a signed guarded Web surface or a "
         "canonical bridge projection; it is never proof that a browser may execute the Bot command directly.\n\n"
-        + _markdown_table(["Bot command", "Handler", "Compatibility target"], [[f"/{item['command']}", item["handler"], f"/admin/{item['command']}"] for item in admin_commands[:200]] or [["None discovered", "", ""]]),
+        + _markdown_table(["Bot command", "Handler", "Compatibility target"], [[f"/{item['command']}", item["handler"], _admin_map_target(item)] for item in admin_commands[:200]] or [["None discovered", "", ""]]),
     )
     write(
         "ENV_AND_PROVIDER_MAP.md",

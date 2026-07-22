@@ -211,6 +211,7 @@ ADMIN_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("admin_publishing", "Publishing & Channels", "admin", "/admin/publishing", "admin"),
     WebFeature("admin_analytics", "Analytics", "admin", "/admin/analytics", "admin"),
     WebFeature("admin_growth", "Growth & Affiliate", "admin", "/admin/growth", "admin"),
+    WebFeature("admin_postback_readiness", "Postback Readiness Guide", "admin", "/admin/growth/postback-readiness", "admin", description="Hướng dẫn chuẩn bị postback chỉ đọc cho canonical admin; không hiển thị thông tin kết nối nhạy cảm, không gửi sự kiện, không đọc/gắn affiliate hoặc job và không ghi attribution, doanh thu hay payout."),
     WebFeature("admin_finance", "Finance & Revenue", "admin", "/admin/finance", "admin"),
     WebFeature("admin_tax_readiness", "Tax Readiness & Accounting Guidance", "admin", "/admin/finance/tax-readiness", "admin", description="Hướng dẫn chuẩn bị hồ sơ tài chính/tax chỉ đọc cho canonical admin; không tính thuế, không đọc ledger, không xuất file hay thay đổi cấu hình tài chính."),
     WebFeature("admin_job_recovery_guide", "Job-Lock Recovery Safety Guide", "admin", "/admin/job-recovery-guide", "admin", description="Hướng dẫn triage job-lock chỉ đọc cho canonical admin; không đọc danh sách/job ID, không clear/retry/refund, không thao tác worker/provider/runtime hay Xu/PayOS/ledger."),

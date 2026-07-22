@@ -16551,17 +16551,31 @@
       "target": "/wallet/topup"
     },
     {
-      "classification": "customer",
+      "classification": "admin",
       "evidence": {
         "file": "bot.py",
         "line": 49754
       },
-      "fallback_family": "menu",
-      "resolution": "menu_callback_requires_explicit_feature_disposition",
+      "postback_readiness_authority": "SIGNED_CANONICAL_ADMIN_GUIDANCE",
+      "postback_readiness_feature_key": "admin_postback_readiness",
+      "postback_readiness_launch_mode": "WEB_NAVIGATION",
+      "resolution": "reviewed_postback_readiness_fresh_web_navigation",
       "source": "menu|hint_postback_setup",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "BOT_HINT_CONTEXT_NOT_REPLAYED",
+        "BOT_POSTBACK_CONFIGURATION_NOT_REPLAYED",
+        "FRESH_SIGNED_WEB_ADMIN_READINESS_GUIDANCE",
+        "NO_WEB_POSTBACK_CONFIGURATION_OR_EVENT_ACTION",
+        "NO_AFFILIATE_JOB_OR_ATTRIBUTION_TRANSFER",
+        "NO_REWARD_PAYOUT_OR_FINANCIAL_ACTION",
+        "NO_PROVIDER_OR_RUNTIME_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot exposes this exact menu hint only in its admin affiliate section. The hint points to a separate Bot command that derives canonical configuration and event-ingress material. The Web opens a fresh signed canonical-admin readiness guide only; it receives no callback context, Telegram identity, configuration material, affiliate/job reference, event, attribution, reward, payout or financial authority.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "target": "/admin/growth/postback-readiness"
     },
     {
       "classification": "customer",
@@ -56856,12 +56870,24 @@
         "file": "bot.py",
         "line": 129062
       },
+      "fallback_family": "command:postback_setup",
       "handler": "admin_internal_command",
-      "resolution": "explicit_static_route_mapping",
+      "resolution": "reviewed_postback_configuration_command_requires_canonical_contract",
       "source": "/postback_setup",
+      "source_dispositions": [
+        "BOT_ADMIN_ONLY",
+        "CANONICAL_BOT_POSTBACK_CONFIGURATION_AND_EVENT_INGRESS",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_WEB_POSTBACK_CONFIGURATION_OR_EVENT_ACTION",
+        "NO_AFFILIATE_JOB_OR_ATTRIBUTION_TRANSFER",
+        "NO_REWARD_PAYOUT_OR_FINANCIAL_ACTION",
+        "NO_PROVIDER_OR_RUNTIME_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot command derives live configuration material from canonical affiliate/job state and its separate receiver validates credentials before recording performance/attribution. The command is not a Web configuration, event, attribution or financial operation.",
       "source_kind": "command",
-      "status": "COPIED_GUARDED",
-      "target": "/admin/postback_setup"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "CANONICAL_POSTBACK_CONFIGURATION_SOURCE_REVIEW_REQUIRED"
     },
     {
       "classification": "admin",
@@ -61993,7 +62019,7 @@
     {
       "authority": "Web capability catalog",
       "candidate_boundary": "/features",
-      "count": 54,
+      "count": 53,
       "family": "menu",
       "next_contract": "Create an explicit menu-action catalog; never infer a destination from a button label or generic keyword.",
       "priority": "P0",
@@ -62005,11 +62031,11 @@
         "menu|guide_video_ai",
         "menu|hint_film_blueprint",
         "menu|hint_growth_loop",
-        "menu|hint_postback_setup",
         "menu|hint_scene_pack",
         "menu|hint_video_status",
         "menu|tax_config",
-        "menu|tax_estimate"
+        "menu|tax_estimate",
+        "menu|tax_estimate_month"
       ],
       "source_kinds": [
         "callback_data",
@@ -62250,6 +62276,25 @@
       "authority": "Source review required",
       "candidate_boundary": "source_review_required",
       "count": 1,
+      "family": "command:postback_setup",
+      "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
+      "priority": "P1",
+      "sample_sources": [
+        "/postback_setup"
+      ],
+      "source_dispositions": [
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "Static source evidence requires a finite handler/route decision before any Web mapping.",
+      "source_kinds": [
+        "command"
+      ]
+    },
+    {
+      "authority": "Source review required",
+      "candidate_boundary": "source_review_required",
+      "count": 1,
       "family": "command:refund_job",
       "next_contract": "Review the finite Bot handler branch and assign a Web-native workflow, guarded runtime boundary, canonical bridge contract, admin-only surface or TELEGRAM_ONLY.",
       "priority": "P1",
@@ -62371,7 +62416,7 @@
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
-          "count": 54,
+          "count": 53,
           "family": "menu",
           "priority": "P0"
         },
@@ -62418,6 +62463,11 @@
         {
           "count": 1,
           "family": "command:clear_job_lock",
+          "priority": "P1"
+        },
+        {
+          "count": 1,
+          "family": "command:postback_setup",
           "priority": "P1"
         },
         {
@@ -62626,9 +62676,9 @@
   },
   "mapping_coverage_percent": 87.42,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2081,
+    "COPIED_GUARDED": 2080,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 758,
+    "NAVIGATION_ONLY": 759,
     "NEEDS_FEATURE_DISPOSITION": 483,
     "TELEGRAM_ONLY": 516
   },
@@ -62669,7 +62719,7 @@
     "unresolved_callback_templates": 62,
     "unresolved_source_count": 483
   },
-  "static_web_surface_coverage_percent": 54.19,
+  "static_web_surface_coverage_percent": 54.17,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
