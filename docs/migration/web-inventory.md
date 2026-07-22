@@ -131,6 +131,7 @@
 | /cases/{case_id}/reply | POST | reply_case |
 | /catalog | GET | feature_catalog |
 | /catalog | GET | get_catalog |
+| /catalog | GET | get_catalog |
 | /catalog | GET | workflow_catalog |
 | /chat | POST | add_chat |
 | /chat | GET | get_chat |
@@ -161,6 +162,5 @@
 | /customers | GET | get_customers |
 | /dashboard | GET | get_dashboard_summary |
 | /dashboard-stats | GET | get_dashboard_stats |
-| /dashboard-stats | GET | get_erp_stats |
 
 Static route presence is not proof of session protection, ownership checks, or functional feature parity.

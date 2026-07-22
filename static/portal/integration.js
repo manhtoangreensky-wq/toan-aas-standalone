@@ -231,6 +231,11 @@
   let freePromptGallerySessionEpoch = 0;
   let freePromptGalleryListHydrationEpoch = 0;
   let freePromptGalleryDetailHydrationEpoch = 0;
+  // Guide Center is a short-lived signed read. Keep its own invalidation
+  // sequence so a late catalog response cannot repopulate another account,
+  // a different route or an already-guarded session.
+  let guideCenterSessionEpoch = 0;
+  let guideCenterHydrationEpoch = 0;
   // Project Package lists are private immutable export metadata. Keep a
   // separate request sequence for the all-project library and each Project
   // detail so a delayed page can never replace a newer signed view.
@@ -1553,6 +1558,13 @@
   // feature guard after the user chooses it.
   function isNativeWorkspaceMenuPath(path) {
     return String(path || "").split("?")[0] === "/workspace-menu";
+  }
+
+  // Guide Center is a Web-native static catalog, not a generic canonical help
+  // projection. A linked Telegram account must never turn it into a Bot menu,
+  // command list, provider/status feed or bridge-backed route.
+  function isNativeGuideCenterPath(path) {
+    return String(path || "").split("?")[0] === "/guides";
   }
 
   // Interface Locale Navigator owns only the signed Web presentation
@@ -4056,6 +4068,81 @@
       && checklist.length >= 4 && checklist.length <= 6 && checklist.every((item) => publishReviewPackText(item, 2, 280))
       && publishReviewPackText(pack.copy_instruction, 1, 900) && publishReviewPackBoundaryIsSafe(data)
     );
+  }
+
+  // Guide Center is a signed static navigation catalog. Validate its complete
+  // shape before it reaches the presentation shell so a malformed response
+  // cannot smuggle an arbitrary href, bot command, API/internal route or an
+  // execution claim into the browser.
+  const GUIDE_CENTER_GROUP_IDS = new Set(["start", "create", "media", "organize", "safe"]);
+  const GUIDE_CENTER_TOPIC_IDS = new Set([
+    "getting_started", "find_tools", "content_brief", "prompt_library", "image_preparation",
+    "audio_brief", "notes", "reminders", "safe_workspace", "get_support"
+  ]);
+  const GUIDE_CENTER_ROUTE_ALLOWLIST = new Set([
+    "/onboarding", "/workspace-setup", "/features", "/content-studio", "/prompt-library",
+    "/image-studio", "/media-workspace", "/notes", "/reminders", "/guides/source-rights",
+    "/account/security", "/support"
+  ]);
+  const GUIDE_CENTER_UI_KEYS = Object.freeze([
+    "kicker", "heading", "body", "search_label", "search_placeholder", "search_help",
+    "result_count", "all_count", "empty_title", "empty_body", "static_badge",
+    "availability_badge", "steps", "boundary_title", "boundary_body", "topic_count_label",
+    "execution_count"
+  ]);
+  const GUIDE_CENTER_BOUNDARY_FIELDS = Object.freeze([
+    "bot_called", "bridge_called", "provider_called", "job_created", "wallet_mutated",
+    "payment_started", "asset_saved", "content_published", "media_delivered"
+  ]);
+
+  function guideCenterText(value, minimum, maximum) {
+    return typeof value === "string" && value.length >= minimum && value.length <= maximum
+      && !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value);
+  }
+
+  function guideCenterCatalogIsSafe(value) {
+    const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const keys = ["snapshot_version", "locale", "description", "ui", "groups", "boundaries"];
+    const ui = data.ui && typeof data.ui === "object" && !Array.isArray(data.ui) ? data.ui : {};
+    const locale = typeof data.locale === "string" && ["vi", "en", "zh"].includes(data.locale);
+    const uiSafe = Object.keys(ui).length === GUIDE_CENTER_UI_KEYS.length
+      && GUIDE_CENTER_UI_KEYS.every((key) => Object.prototype.hasOwnProperty.call(ui, key) && guideCenterText(ui[key], 1, 360));
+    const seenGroups = new Set();
+    const seenTopics = new Set();
+    const groups = Array.isArray(data.groups) ? data.groups : [];
+    const groupsSafe = groups.length === GUIDE_CENTER_GROUP_IDS.size && groups.every((entry) => {
+      const group = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : {};
+      const groupKeys = ["id", "title", "summary", "topics"];
+      const groupId = typeof group.id === "string" ? group.id : "";
+      const topics = Array.isArray(group.topics) ? group.topics : [];
+      const topicsSafe = topics.length >= 1 && topics.length <= 8 && topics.every((candidate) => {
+        const topic = candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
+        const topicKeys = ["id", "title", "summary", "steps", "route", "route_label", "availability"];
+        const steps = Array.isArray(topic.steps) ? topic.steps : [];
+        const topicId = typeof topic.id === "string" ? topic.id : "";
+        const valid = Object.keys(topic).length === topicKeys.length && topicKeys.every((key) => Object.prototype.hasOwnProperty.call(topic, key))
+          && GUIDE_CENTER_TOPIC_IDS.has(topicId) && !seenTopics.has(topicId)
+          && GUIDE_CENTER_ROUTE_ALLOWLIST.has(topic.route) && ["static", "capability_backed"].includes(topic.availability)
+          && guideCenterText(topic.title, 1, 100) && guideCenterText(topic.summary, 1, 240)
+          && guideCenterText(topic.route_label, 1, 100) && steps.length >= 2 && steps.length <= 4
+          && steps.every((step) => guideCenterText(step, 1, 220));
+        if (valid) seenTopics.add(topicId);
+        return valid;
+      });
+      const valid = Object.keys(group).length === groupKeys.length && groupKeys.every((key) => Object.prototype.hasOwnProperty.call(group, key))
+        && GUIDE_CENTER_GROUP_IDS.has(groupId) && !seenGroups.has(groupId) && guideCenterText(group.title, 1, 80)
+        && guideCenterText(group.summary, 1, 240) && topicsSafe;
+      if (valid) seenGroups.add(groupId);
+      return valid;
+    });
+    const boundaries = data.boundaries && typeof data.boundaries === "object" && !Array.isArray(data.boundaries) ? data.boundaries : {};
+    const boundaryKeys = ["execution", "snapshot_read_only", ...GUIDE_CENTER_BOUNDARY_FIELDS];
+    return Object.keys(data).length === keys.length && keys.every((key) => Object.prototype.hasOwnProperty.call(data, key))
+      && guideCenterText(data.snapshot_version, 1, 80) && locale && guideCenterText(data.description, 1, 360)
+      && uiSafe && groupsSafe && seenGroups.size === GUIDE_CENTER_GROUP_IDS.size && seenTopics.size === GUIDE_CENTER_TOPIC_IDS.size
+      && Object.keys(boundaries).length === boundaryKeys.length && boundaryKeys.every((key) => Object.prototype.hasOwnProperty.call(boundaries, key))
+      && boundaries.execution === "web_native_guide_center" && boundaries.snapshot_read_only === true
+      && GUIDE_CENTER_BOUNDARY_FIELDS.every((field) => boundaries[field] === false);
   }
 
   // Free Prompt Gallery is a signed, read-only static snapshot.  Keep the
@@ -9723,6 +9810,7 @@
     ++projectCenterSessionEpoch;
     ++promptLibrarySessionEpoch;
     ++freePromptGallerySessionEpoch;
+    ++guideCenterSessionEpoch;
     ++projectPackageSessionEpoch;
     ++documentWorkspaceSessionEpoch;
     ++chatWorkspaceSessionEpoch;
@@ -9877,6 +9965,10 @@
     // a Bot/bridge/provider/job/payment capability or a feature flag that
     // could accidentally imply execution.
     const freePromptGalleryEnabled = Boolean(account);
+    // Guide Center is a separate signed read-only catalog. It has no feature
+    // flag because it cannot execute, write or unlock any workflow; a signed
+    // session is the only access boundary for its reviewed Web copy.
+    const guideCenterEnabled = Boolean(account);
     // Audio Library & Briefing is a distinct Web-owned metadata/Asset Vault
     // relation.  Its flag never represents a music provider, AI generation,
     // external preview, Bot job, wallet, Xu or payment capability.
@@ -10306,6 +10398,7 @@
       "prompt-studio-compose": Boolean(account && me.csrf_token && promptStudioEnabled),
       "free-prompt-gallery-view": Boolean(account && freePromptGalleryEnabled),
       "free-prompt-gallery-save": Boolean(account && me.csrf_token && freePromptGalleryEnabled && memoryCenterEnabled),
+      "guide-center-view": Boolean(account && guideCenterEnabled),
       "media-workspace-view": Boolean(account && mediaWorkspaceEnabled),
       "media-workspace-refresh": Boolean(account && mediaWorkspaceEnabled),
       "media-workspace-page": Boolean(account && mediaWorkspaceEnabled),
@@ -10859,6 +10952,7 @@
       promptLibraryEnabled,
       promptStudioEnabled,
       freePromptGalleryEnabled,
+      guideCenterEnabled,
       mediaWorkspaceEnabled,
       musicPromptComposerEnabled,
       contentStudioEnabled,
@@ -10943,6 +11037,11 @@
       freePromptGalleryDetail: {},
       freePromptGallerySaveResult: {},
       freePromptGalleryReadState: account && freePromptGalleryEnabled ? "loading" : "guarded",
+      // The Guide Center has no user data, but clear the last signed response
+      // on every bootstrap so a late response cannot survive an account or
+      // locale/session transition in this in-memory Portal state.
+      guideCenterCatalog: {},
+      guideCenterReadState: account && guideCenterEnabled ? "loading" : "guarded",
       // Always clear every Audio Workspace projection before the signed
       // owner-scoped read starts.  A session change/failure must never leave
       // a prior user's brief, Asset Vault metadata or audit labels visible.
@@ -11423,6 +11522,7 @@
         "/prompt-library/new": account && promptLibraryEnabled ? "processing" : "guarded",
         ...promptStudioRouteStates(Boolean(account && promptStudioEnabled)),
         "/free-prompt-gallery": account && freePromptGalleryEnabled ? "processing" : "guarded",
+        "/guides": account && guideCenterEnabled ? "processing" : "guarded",
         "/media-workspace": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/new": account && mediaWorkspaceEnabled ? "processing" : "guarded",
         "/media-workspace/music-prompt-composer": account && musicPromptComposerEnabled ? "ready" : "guarded",
@@ -11609,6 +11709,19 @@
         merge({
           freePromptGalleryCatalog: {}, freePromptGalleryListing: {}, freePromptGalleryDetail: {}, freePromptGallerySaveResult: {}, freePromptGalleryReadState: "guarded",
           pageStates: { ...(base().pageStates || {}), "/free-prompt-gallery": "guarded" }
+        });
+      }
+    }
+    if (currentPath === "/guides") {
+      // Guide Center is its own signed, static API boundary. It deliberately
+      // does not inherit a Bot/bridge feature projection when the account
+      // happens to have a Telegram link.
+      if (account && guideCenterEnabled) {
+        await hydrateGuideCenter();
+      } else {
+        merge({
+          guideCenterCatalog: {}, guideCenterReadState: "guarded",
+          pageStates: { ...(base().pageStates || {}), "/guides": "guarded" }
         });
       }
     }
@@ -12051,7 +12164,7 @@
     // a Telegram/Core Bridge happens to be available, do not let the generic
     // canonical hydrator overwrite their data with `/support/tickets` or an
     // `/admin/*` bridge projection.
-    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
+    if (bridgeAvailable && currentPath !== "/account/data-controls" && !isNativeWorkspaceCarePath(currentPath) && !isNativeWorkspaceMenuPath(currentPath) && !isNativeGuideCenterPath(currentPath) && !isNativeInterfaceLocaleNavigatorPath(currentPath) && !isNativeSupportPath(currentPath) && !isNativeOperationsPath(currentPath) && !isNativeOperationsDeskPath(currentPath) && !isNativeAdminAutomationMonitorPath(currentPath) && !isNativeAdminSystemStewardshipPath(currentPath) && !isNativeAdminTaxReadinessPath(currentPath) && !isNativeAdminJobRecoveryGuidePath(currentPath) && !isNativeAdminSecurityAccessPosturePath(currentPath) && !isNativeGovernanceDocumentsPath(currentPath) && !isNativeAdminArchivePath(currentPath) && !isNativeNotificationPath(currentPath) && !isNativeMediaWorkspacePath(currentPath) && !isNativePromptStudioPath(currentPath) && !isNativeContentPromptPackPath(currentPath) && !isNativeContentStudioPath(currentPath) && !isNativeChannelStrategyPath(currentPath) && !isNativeVoiceStudioPath(currentPath) && !isNativeVideoStudioPath(currentPath) && !isNativeImageStudioPath(currentPath) && !isNativeImagePromptComposerPath(currentPath) && !isNativeWorkboardPath(currentPath) && !isNativeStarterKitsPath(currentPath)) await hydrateCanonicalData();
   }
 
   function adminErpNavigationRoute(value) {
@@ -12641,6 +12754,54 @@
       && expectedPath === "/free-prompt-gallery"
       && base().freePromptGalleryEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function guideCenterRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath) {
+    return requestEpoch === guideCenterHydrationEpoch
+      && sessionEpoch === guideCenterSessionEpoch
+      && expectedPath === "/guides"
+      && currentPortalPath() === expectedPath
+      && isNativeGuideCenterPath(expectedPath)
+      && base().guideCenterEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  async function hydrateGuideCenter() {
+    // The catalog is static, but its locale and private/no-store delivery are
+    // still tied to the current signed Web session. Keep the response in
+    // memory only and discard it if navigation, logout or account switch wins
+    // the race; there is no generic or Bot fallback for this surface.
+    const requestEpoch = ++guideCenterHydrationEpoch;
+    const sessionEpoch = guideCenterSessionEpoch;
+    const expectedPath = currentPortalPath();
+    if (!isNativeGuideCenterPath(expectedPath)) return { stale: true };
+    try {
+      const result = await api("/guides/catalog");
+      if (!guideCenterRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      const catalog = result.data && typeof result.data === "object" ? result.data : {};
+      if (!guideCenterCatalogIsSafe(catalog)) throw new Error("Máy chủ chưa trả catalog Guide Center an toàn.");
+      if (!guideCenterRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        guideCenterCatalog: catalog,
+        // `guideCenterReadState` controls the renderer lifecycle. Keep it
+        // distinct from the page's capability status: the catalog has loaded
+        // successfully, so the renderer must receive `ready`; the page itself
+        // remains read-only because it exposes navigation only.
+        guideCenterReadState: "ready",
+        pageStates: { ...(base().pageStates || {}), "/guides": "read_only" }
+      });
+      return catalog;
+    } catch (_) {
+      // A failed or malformed static snapshot is guarded rather than repaired
+      // with stale content, a generic help response or a Bot handoff.
+      if (!guideCenterRequestIsCurrent(requestEpoch, sessionEpoch, expectedPath)) return { stale: true };
+      merge({
+        guideCenterCatalog: {},
+        guideCenterReadState: "failed",
+        pageStates: { ...(base().pageStates || {}), "/guides": "guarded" }
+      });
+      return null;
+    }
   }
 
   async function hydratePromptLibrary(filterValue, offsetValue) {
@@ -20566,7 +20727,7 @@
     // Workspace Menu has the same no-projection property, but it is a
     // navigation directory rather than a preference form. Keeping the fence
     // explicit prevents either route from inheriting a future generic read.
-    if (isNativeWorkspaceMenuPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
+    if (isNativeWorkspaceMenuPath(path) || isNativeGuideCenterPath(path) || isNativePromptStudioPath(path) || isNativeContentPromptPackPath(path) || isNativeContentStudioPath(path) || isNativeChannelStrategyPath(path) || isNativeVoiceStudioPath(path) || isNativeVideoStudioPath(path) || isNativeSubtitleStudioPath(path) || isNativeImageStudioPath(path) || isNativeStarterKitsPath(path)) return;
     // Keep the canonical Bot Voice/TTS projection intact, but never let its
     // broad historical `/voice*` matcher absorb the independently owned
     // `/voice-studio` workspace.

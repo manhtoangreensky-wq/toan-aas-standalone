@@ -20,7 +20,7 @@
     /api/v1/workspace/setup, /api/v1/workspace/starter-kits,
     /api/v1/operations, /internal/v1/operations, /api/v1/inbox, /internal/v1/notifications,
     private `/image-studio/*` routes, private `/image/prompt-composer` route, private `/voice-studio/direction-composer`, private `/video-studio/prompt-planner`, `/video-studio/cinematic-concept`, `/video-studio/image-motion-planner`, `/video-studio/reference-format-planner` and `/video-studio/storyboard-composer` routes, private `/media-workspace/music-prompt-composer`, private `/document-workspace/*` routes, private `/documents/ocr`, `/documents/pdf-ocr` and `/documents/pdf-ocr-to-word` routes,
-     private `/chat/*` routes, private `/analytics/*` routes, private `/free-prompt-gallery` and `/api/v1/free-prompt-gallery`, private `/content/channel-strategy`, `/content/prompt-pack`, `/content/publish-review`, `/content/contextual-prompt`, `/trend-research`, `/media-factory`, `/creative-flow`, `/video-studio/workflow`, `/video-studio/story-video-plan` and `/guides/source-rights` routes, private `/workboard/*` routes,
+     private `/chat/*` routes, private `/analytics/*` routes, private `/free-prompt-gallery` and `/api/v1/free-prompt-gallery`, private `/guides` and `/api/v1/guides`, private `/content/channel-strategy`, `/content/prompt-pack`, `/content/publish-review`, `/content/contextual-prompt`, `/trend-research`, `/media-factory`, `/creative-flow`, `/video-studio/workflow`, `/video-studio/story-video-plan` and `/guides/source-rights` routes, private `/workboard/*` routes,
      private `/content/handoffs/*`, private `/crm/*`, private `/operations/*`, private `/admin/operations/*`, private `/admin/reliability/*`, private `/inbox/*`, private `/automation/*` and private `/workspace-menu` routes and private delivery URLs are
     private `/starter-kits/*` routes and private delivery URLs are intentionally
     never cached. */
@@ -99,6 +99,10 @@ const PRIVATE_PATH_PREFIXES = Object.freeze([
   "/analytics",
   "/" + "api/v1/free-prompt-gallery",
   "/free-prompt-gallery",
+  // Guide Center follows signed interface locale and must never retain a
+  // prior account's snapshot in Cache Storage, even though it is read-only.
+  "/" + "api/v1/guides",
+  "/guides",
   "/" + "api/v1/content-studio",
   "/" + "api/v1/channel-strategy",
   "/content/channel-strategy",
