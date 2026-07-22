@@ -1956,6 +1956,40 @@ def test_static_audit_maps_frozen_quick_image_draft_but_keeps_tier_and_checkout_
         assert mapped["target"] == "TELEGRAM_ONLY"
         assert mapped["status"] == "TELEGRAM_ONLY"
 
+    for token in (
+        "CREATE_MEDIA|QUICK_IMAGE",
+        "create_media|quick_image|future",
+        "CREATE_MEDIA|QUICK_IMAGE|future",
+        "create_media|quick_image_extra",
+        "create_media|QI_ENTRY",
+        "create_media|qi_logo_pos|not_frozen",
+        "create_media|qi_future",
+        "shopai|confirm",
+        "SHOPAI|PACKAGE",
+        "SHOPAI|CONFIRM|opaque",
+        "shopai|package|opaque",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "quick_image_planner_callback_requires_exact_source_review"
+        assert "NO_TELEGRAM_STATE_OR_WEB_DRAFT_REPLAY" in mapped["source_dispositions"]
+
+    for template in (
+        "CREATE_MEDIA|QI_RATIO_{*}",
+        "create_media|quick_image|future_{*}",
+        "create_media|QI_TIER_{*}",
+        "create_media|qi_unknown_{*}",
+        "shopai|confirm",
+        "SHOPAI|CONFIRM|{*}",
+        "shopai|package|future_{*}",
+    ):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "quick_image_planner_callback_requires_exact_source_review"
+
     bot_root = tmp_path / "bot"
     bot_root.mkdir()
     bot_source = bot_root / "bot.py"
@@ -2000,6 +2034,8 @@ async def quick_image_planner():
     contract = (tmp_path / "docs" / "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
     assert "qi_logo_pos" in contract
     assert "TELEGRAM_ONLY" in contract
+    assert "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED" in contract
+    assert "exact lowercase frozen literals" in contract
     assert "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
 
 
