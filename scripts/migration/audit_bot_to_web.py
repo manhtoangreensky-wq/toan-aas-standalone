@@ -830,6 +830,35 @@ QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES = frozenset({
     "shopai|package|{*}",
 })
 
+# The frozen Bot's one literal Media Creator cancellation branch clears a
+# broad set of short-lived per-Telegram-user pending buckets and replaces the
+# current Telegram message with a main-menu button. It is not a Web draft
+# cancellation contract: replaying it in a browser could reset unrelated
+# Web-owned state or imitate Telegram message/history behavior.
+MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS: dict[str, dict[str, Any]] = {
+    "create_media|cancel": {
+        "source_dispositions": (
+            "TELEGRAM_CALLBACK_CONTEXT",
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_MEDIA_CREATOR_BROAD_PENDING_STATE_CLEARING",
+            "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+            "BOT_PENDING_CONTEXT_NOT_REPLAYED",
+            "TELEGRAM_MESSAGE_REPLACEMENT",
+            "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+            "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+            "NO_BOT_OR_WEB_JOB_CANCELLATION_REPLAY",
+            "NO_JOB_WALLET_PAYMENT_PROVIDER_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot cancellation handler clears its broad Media Creator pending-state helper, then "
+            "replaces the Telegram message with a Bot main-menu callback. It carries no Web draft identifier "
+            "or browser-owned cancellation scope, so the Web must not reset state, navigate, replay a "
+            "Telegram message transition, or infer a job/payment/provider effect."
+        ),
+    },
+}
+
 # The Bot emits only this reviewed Free Hub library category template.  Its
 # formatted suffix chooses a Bot-side suggestion set and short-lived Telegram
 # pending state; it is not a safe Web query parameter, prompt identifier or
@@ -5360,6 +5389,57 @@ def _map_quick_image_planner_callback(
     return None
 
 
+def _map_media_creator_cancel_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any] | None:
+    """Keep the Bot-wide Media Creator cancellation effect out of Web state.
+
+    This uses the raw callback literal rather than a normalized prefix. Bot
+    callbacks are case-sensitive; a future spelling must remain visible for
+    source review instead of gaining an implicit browser reset or route.
+    """
+
+    raw_identifier = str(identifier or "")
+    contract = MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS.get(raw_identifier)
+    if contract is not None:
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "TELEGRAM_ONLY",
+            "classification": "customer",
+            "status": "TELEGRAM_ONLY",
+            "resolution": "reviewed_media_creator_cancel_requires_bot_local_pending_state",
+            "source_dispositions": tuple(contract["source_dispositions"]),
+            "source_evidence": str(contract["source_evidence"]),
+            "evidence": evidence,
+        }
+    if raw_identifier.casefold().startswith("create_media|cancel"):
+        return {
+            "source_kind": source_kind,
+            "source": identifier,
+            "target": "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED",
+            "classification": "customer",
+            "status": "NEEDS_FEATURE_DISPOSITION",
+            "resolution": "media_creator_cancel_callback_requires_source_review",
+            "source_dispositions": (
+                "BOT_MEDIA_CREATOR_CANCEL_OR_PENDING_STATE",
+                "SOURCE_STATE_MACHINE_REQUIRED",
+                "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+                "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+                "NO_RUNTIME_CLAIM",
+            ),
+            "source_evidence": (
+                "Only the frozen raw `create_media|cancel` literal was reviewed. A case variant or suffix may "
+                "change the Bot state machine, so it cannot inherit the Bot-only cancellation disposition, a "
+                "Web route, a browser reset, browser history action, job cancellation or runtime effect."
+            ),
+            "evidence": evidence,
+        }
+    return None
+
+
 def _map_translation_source_intake_callback(
     identifier: str,
     source_kind: str,
@@ -6310,6 +6390,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     known_broken_translation_menu_mapping = _map_known_broken_translation_menu_action(identifier, source_kind, evidence)
     if known_broken_translation_menu_mapping is not None:
         return known_broken_translation_menu_mapping
+    media_creator_cancel_mapping = _map_media_creator_cancel_callback(identifier, source_kind, evidence)
+    if media_creator_cancel_mapping is not None:
+        return media_creator_cancel_mapping
     quick_image_mapping = _map_quick_image_planner_callback(identifier, source_kind, evidence, existing_routes)
     if quick_image_mapping is not None:
         return quick_image_mapping
@@ -7520,7 +7603,10 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     if translation_source_mapping is not None:
         return translation_source_mapping
     if "{*}" not in token:
-        return _map_callback(token, "callback_template", evidence, existing_routes)
+        # Preserve the raw static literal for finite contracts that are
+        # intentionally case-sensitive. Normalized `token` remains only for
+        # wildcard/prefix classification below.
+        return _map_callback(str(template or ""), "callback_template", evidence, existing_routes)
     if token.startswith("archive|"):
         # Dynamic Archive suffixes can encode Bot department/type/search state
         # or identifiers.  Keep all of them fail-closed instead of inheriting
@@ -8776,6 +8862,24 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         ]
         for source, action in sorted(JOB_LOCK_RECOVERY_CANONICAL_SOURCE_REVIEW_COMMANDS.items())
     ]
+    media_creator_cancel_contract_rows = [
+        [
+            source,
+            "TELEGRAM_ONLY",
+            "reviewed_media_creator_cancel_requires_bot_local_pending_state",
+            "TELEGRAM_ONLY",
+            ", ".join(str(value) for value in contract["source_dispositions"]),
+        ]
+        for source, contract in sorted(MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS.items())
+    ] + [
+        [
+            "other create_media|cancel*",
+            "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED",
+            "media_creator_cancel_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "BOT_MEDIA_CREATOR_CANCEL_OR_PENDING_STATE, SOURCE_STATE_MACHINE_REQUIRED, NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET, NO_WEB_NAVIGATION_OR_BROWSER_ACTION, NO_RUNTIME_CLAIM",
+        ],
+    ]
     quick_image_planner_contract_rows = [
         [
             "create_media|quick_image, qi_entry, qi_suggest, qi_refresh, qi_pick_1..3, qi_custom, qi_rewrite, qi_topics, qi_back_suggestions",
@@ -8953,6 +9057,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md`](TAX_ACCOUNTING_GUIDANCE_CALLBACK_CONTRACT.md) — finite Bot tax-menu dispositions: fresh canonical-admin guidance navigation with no finance data, calculation, export, file, ledger, payment or profile action replay.\n"
         + "- [`POSTBACK_READINESS_CALLBACK_CONTRACT.md`](POSTBACK_READINESS_CALLBACK_CONTRACT.md) — exact Bot postback-hint disposition: fresh canonical-admin readiness guidance only; configuration, connection material, ingress, attribution and financial effects stay Bot-canonical.\n"
         + "- [`JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md`](JOB_LOCK_RECOVERY_CALLBACK_CONTRACT.md) — finite Bot stale-job help navigation and explicit canonical job/refund mutation boundaries; the Web guide has no queue/job data or recovery control.\n"
+        + "- [`MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md`](MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md) — exact Bot Media Creator cancellation stays Telegram-only because it clears broad Bot-local pending state; Web never resets drafts, session, history or navigation from that callback.\n"
         + "- [`QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md`](QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md) — finite Quick Image draft callback mapping to a signed deterministic prompt planner; tier/ShopAI/Xu/confirmation remain canonical Bot-only.\n"
         + "- [`CREATIVE_FLOW_COMPOSER_CONTRACT.md`](CREATIVE_FLOW_COMPOSER_CONTRACT.md) — signed, stateless Creative Flow template adapted from the Bot's hook/script/image/music/SFX/caption guidance, with no provider/Bot/job/payment/media-output/publish claim.\n"
         + "- [`VIDEO_FACTORY_WORKFLOW_CONTRACT.md`](VIDEO_FACTORY_WORKFLOW_CONTRACT.md) — signed, read-only seven-step Video Factory workflow map adapted from the Bot, with no input transfer/provider/Bot/job/payment/media-output/publish claim.\n"
@@ -9010,6 +9115,16 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             media_preview_contract_rows,
         )
         + "\n\nA future Web media experience must begin from independently verified catalog/media data and an owner-scoped reference. It must not accept a Bot cache index, replay the Telegram callback, read Bot selected-media state, claim license clearance, or trigger a Bot/video/provider action.\n",
+    )
+    write(
+        "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md",
+        "# Media Creator cancellation callback contract\n\n"
+        "The frozen Bot accepts exactly `create_media|cancel` inside its Media Creator callback handler. That branch clears a broad set of short-lived per-Telegram-user pending buckets, then replaces the Telegram message with a Bot main-menu callback. It does not identify one Web draft, a browser route, browser history, or a Web session scope.\n\n"
+        + _markdown_table(
+            ["Frozen Bot callback", "Web target/boundary", "Audit resolution", "Status", "Source dispositions"],
+            media_creator_cancel_contract_rows,
+        )
+        + "\n\nThe reviewed literal is **not** a browser cancel, back or reset action. The standalone Web must not navigate to a dashboard, mutate a global draft/session, clear unrelated Web state, replay the Telegram message, invoke a provider/job/payment operation, or claim that any external work was cancelled. A Web-native workflow may define its own scoped cancel control only from its own signed draft contract. Case variants, suffixes and future `create_media|*` values remain source-review-required and cannot inherit this Bot-only disposition.\n",
     )
     write(
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",

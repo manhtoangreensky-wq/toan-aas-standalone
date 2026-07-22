@@ -2003,6 +2003,69 @@ async def quick_image_planner():
     assert "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
 
 
+def test_media_creator_cancel_is_exactly_telegram_only_without_a_web_reset_or_navigation(tmp_path: Path) -> None:
+    """The broad Bot pending-state clear must never become a browser cancel."""
+
+    audit = _load_audit_module()
+    routes = {"/media-factory", "/{page_path:path}"}
+    evidence = {"file": "bot.py", "line": 1}
+    expected = {"create_media|cancel"}
+    assert set(audit.MEDIA_CREATOR_CANCEL_TELEGRAM_ONLY_CALLBACKS) == expected
+
+    mapped = audit._map_callback("create_media|cancel", "callback_data", evidence, routes)
+    assert mapped["target"] == "TELEGRAM_ONLY"
+    assert mapped["classification"] == "customer"
+    assert mapped["status"] == "TELEGRAM_ONLY"
+    assert mapped["resolution"] == "reviewed_media_creator_cancel_requires_bot_local_pending_state"
+    for disposition in (
+        "TELEGRAM_CALLBACK_CONTEXT",
+        "BOT_MEDIA_CREATOR_BROAD_PENDING_STATE_CLEARING",
+        "BOT_SHOPAI_CONFIRMATION_TOKEN_STATE",
+        "BOT_PENDING_CONTEXT_NOT_REPLAYED",
+        "TELEGRAM_MESSAGE_REPLACEMENT",
+        "NO_WEB_GLOBAL_DRAFT_SESSION_OR_HISTORY_RESET",
+        "NO_WEB_NAVIGATION_OR_BROWSER_ACTION",
+        "NO_BOT_OR_WEB_JOB_CANCELLATION_REPLAY",
+        "NO_JOB_WALLET_PAYMENT_PROVIDER_OR_DELIVERY_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in mapped["source_dispositions"]
+
+    # The Bot payload is exact and case-sensitive. Variants cannot inherit the
+    # Bot-only cancel mapping or turn it into a browser reset/navigation action.
+    for token in ("CREATE_MEDIA|CANCEL", "create_media|cancel_future"):
+        unknown = audit._map_callback(token, "callback_data", evidence, routes)
+        assert unknown["target"] == "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED"
+        assert unknown["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert unknown["resolution"] == "media_creator_cancel_callback_requires_source_review"
+        assert "NO_WEB_NAVIGATION_OR_BROWSER_ACTION" in unknown["source_dispositions"]
+    template_variant = audit._map_callback_template("CREATE_MEDIA|CANCEL", evidence, routes)
+    assert template_variant is not None
+    assert template_variant["target"] == "MEDIA_CREATOR_CANCEL_SOURCE_REVIEW_REQUIRED"
+    assert template_variant["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert template_variant["resolution"] == "media_creator_cancel_callback_requires_source_review"
+
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    (bot_root / "bot.py").write_text(
+        'InlineKeyboardButton("Cancel", callback_data="create_media|cancel")\n',
+        encoding="utf-8",
+    )
+    web_root = tmp_path / "web"
+    web_root.mkdir()
+    (web_root / "app.py").write_text('app = FastAPI()\n', encoding="utf-8")
+    result = audit.run_audit(bot_root, web_root, "baseline", tmp_path / "reports", tmp_path / "docs")
+    callbacks = {item["source"]: item for item in result["parity_gap"]["callback_mappings"]}
+    assert callbacks["create_media|cancel"]["target"] == "TELEGRAM_ONLY"
+    assert "create_media" not in {
+        item["family"] for item in result["parity_gap"]["feature_disposition_backlog"]
+    }
+    contract = (tmp_path / "docs" / "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md").read_text(encoding="utf-8")
+    assert "create_media|cancel" in contract
+    assert "not** a browser cancel, back or reset action" in contract
+    assert "MEDIA_CREATOR_CANCEL_CALLBACK_CONTRACT.md" in (tmp_path / "docs" / "README.md").read_text(encoding="utf-8")
+
+
 def test_static_audit_maps_only_reviewed_archive_literals_to_fresh_admin_navigation() -> None:
     """Archive callbacks never forward Bot state or fall through to keyword routes."""
 
