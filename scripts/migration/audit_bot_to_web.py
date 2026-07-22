@@ -545,6 +545,66 @@ CINEMATIC_AD_CONCEPT_OWNER_PLAN_CONFIRMATION_CALLBACKS = frozenset(
     }
 )
 
+# Frozen baseline b29d0d4: Task3D / ``vproduct`` has two useful text-first
+# intents, but every Bot guided choice is stored in ``get_video_session(uid)``
+# and later branches into prompt bundles, Telegram delivery, package/Xu,
+# provider/job and render state.  The Web route is therefore a *fresh* signed
+# planner only. It never receives a Bot callback, product ID, selected idea,
+# panel/style/color/pace/image choice, media or pending state.
+SCRIPT_TO_SCREEN_ROUTE = "/video-studio/script-to-screen-planner"
+VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS = frozenset(
+    {
+        "vproduct|ideas|script_image_video",
+        "vproduct|input_text|script_image_video",
+        "vproduct|ideas|multi_scene_film",
+        "vproduct|input_text|multi_scene_film",
+    }
+)
+VPRODUCT_REVIEWED_PRODUCT_IDS = frozenset({"script_image_video", "multi_scene_film"})
+VPRODUCT_GUIDED_STATE_PREFIXES = (
+    "vproduct|addon_skip",
+    "vproduct|aspect|",
+    "vproduct|camera|",
+    "vproduct|detail|",
+    "vproduct|format|",
+    "vproduct|ideas|",
+    "vproduct|input_detail",
+    "vproduct|input_text|",
+    "vproduct|platform|",
+    "vproduct|panels|",
+    "vproduct|style|",
+    "vproduct|color|",
+    "vproduct|pace|",
+    "vproduct|image_plan|",
+    "vproduct|motion|",
+    "vproduct|sample|",
+    "vproduct|scene_idea|",
+    "vproduct|scene_count|",
+    "vproduct|scene_skip",
+    "vproduct|subject|",
+    "vproduct|target|",
+    "vproduct|ideas_refresh",
+    "vproduct|idea_select|",
+    "vproduct|continue_guided",
+    "vproduct|result",
+    "vproduct|back",
+    "vproduct|restyle",
+    "vproduct|input_media",
+    "vproduct|legacy",
+    "vproduct|trend_",
+)
+VPRODUCT_PROMPT_OR_DELIVERY_PREFIXES = (
+    "vproduct|prompt_image",
+    "vproduct|prompt_video",
+    "vproduct|export",
+)
+VPRODUCT_RUNTIME_OR_PAYMENT_PREFIXES = (
+    "vproduct|render",
+    "vproduct|prompt_image_execute",
+    "vproduct|prompt_image_package",
+    "vproduct|prompt_video_create",
+)
+
 # Dynamic Bot callbacks are intentionally inventory-only by default: the
 # auditor must never evaluate their formatted values.  A small number of
 # namespaces have nevertheless been manually reviewed against real signed Web
@@ -563,7 +623,6 @@ DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES = (
     ("storyboard|", "/video-studio/storyboard-composer", "customer"),
     ("videodub|", "/dubbing", "customer"),
     ("creative|", "/content-studio", "customer"),
-    ("vproduct|", "/video/product", "customer"),
     ("videoaddon|", "/video/add-ons", "customer"),
     ("framevideo|", "/video-studio", "customer"),
     ("videoedit|", "/video-studio", "customer"),
@@ -2323,8 +2382,15 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     "vproduct": {
         "priority": "P1",
         "candidate_boundary": "/video-studio/script-to-screen-planner",
-        "authority": "Web-native planning; runtime separately guarded",
-        "next_contract": "Map finite Script-to-Screen planning choices to a recomputed Web Video Plan; render/export stays a distinct runtime boundary.",
+        "authority": "Fresh signed Web-native planning; Bot vproduct session/runtime remain canonical Bot context",
+        "next_contract": "Only four reviewed text-first Bot literals may open a fresh Script-to-Screen planner. All Bot guided state, prompt/export delivery, package/Xu/provider/job/render and dynamic product callbacks remain non-replayable until a separate signed owner-scoped Web contract exists.",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_SCRIPT_TO_SCREEN_PLANNER_NAVIGATION",
+            "BOT_VPRODUCT_SESSION_NOT_REPLAYED",
+            "CANONICAL_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The frozen Bot vproduct flow stores product, platform, panels, style, color, pace, image plan, extra-scene, selected idea and prompt state in get_video_session(uid), then branches to package/Xu/provider/job/render or Telegram delivery. The Web planner owns only a newly entered brief and a separately confirmed server-recomputed owner plan.",
     },
     "adconcept": {
         "priority": "P1",
@@ -5372,11 +5438,235 @@ def _map_cinematic_ad_concept_callback(
     )
 
 
+def _vproduct_fresh_web_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Map a finite Bot text-start intent to a fresh signed Web planner.
+
+    This is deliberately a navigation boundary.  It does not transport a
+    Bot callback, Telegram identity, selected idea, guided session values,
+    prompt bundle, media reference, quote, package, wallet or job state.
+    """
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": SCRIPT_TO_SCREEN_ROUTE,
+        "classification": "customer",
+        "status": _mapping_status(
+            SCRIPT_TO_SCREEN_ROUTE,
+            existing_routes,
+            telegram_only=False,
+            navigation_only=True,
+        ),
+        "resolution": "reviewed_vproduct_fresh_web_planner_navigation",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_SCRIPT_TO_SCREEN_PLANNER_NAVIGATION",
+            "FINITE_BOT_PLANNER_INTENT_ONLY",
+            "BOT_VPRODUCT_SESSION_NOT_REPLAYED",
+            "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+            "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot literal only starts one of two text-first planner intents. The Web opens a "
+            "fresh signed Script-to-Screen planner and does not accept a Telegram callback, user ID, "
+            "product ID, selected idea, guided choice, prompt bundle, media, package, Xu, quote, job, "
+            "provider, payment or delivery state. The customer enters/reviews a Web brief and separately "
+            "confirms a server-recomputed owner Video Plan save."
+        ),
+        "vproduct_authority": "SIGNED_CUSTOMER_WEB_NATIVE_SCRIPT_TO_SCREEN_PLANNER",
+        "vproduct_launch_mode": "FRESH_WEB_NAVIGATION",
+        "vproduct_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+        "evidence": evidence,
+    }
+
+
+def _vproduct_bot_state_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep Bot-local Script-to-Screen conversation state out of Web routes."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "BOT_VPRODUCT_GUIDED_STATE_NOT_REPLAYED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_vproduct_guided_state_requires_fresh_web_compose",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_VPRODUCT_GUIDED_SESSION_STATE",
+            "BOT_VPRODUCT_SELECTION_OR_PENDING_STATE_NOT_REPLAYED",
+            "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+            "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot transition reads or mutates get_video_session(uid): product, platform, panel "
+            "count, style, color, pace, image-plan, extra-scene, selected idea, pending text/media or "
+            "navigation state. The Web never receives or recreates that Telegram session; it begins with "
+            "a fresh account-owned form and separately verifies the current form before a durable save."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _vproduct_prompt_or_delivery_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Guard Bot prompt bundles and Telegram export/delivery transitions."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "BOT_VPRODUCT_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_vproduct_prompt_or_telegram_delivery_requires_separate_web_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_VPRODUCT_PROMPT_BUNDLE_OR_SELECTED_SHOT_STATE",
+            "BOT_TELEGRAM_DELIVERY_CONTEXT",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot prompt/export branch depends on its selected shot and prompt bundle, and can "
+            "deliver a document or message through Telegram. A Web planner cannot accept that callback or "
+            "claim an equivalent prompt, asset, download, export or delivery without a separate signed "
+            "owner-scoped contract."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _vproduct_runtime_guard_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Guard package, provider, Xu and render branches behind a future runtime contract."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "VPRODUCT_RUNTIME_PACKAGE_PROVIDER_OR_PAYMENT_CONTRACT_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_vproduct_runtime_provider_wallet_or_payment_guard",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_VPRODUCT_SESSION_STATE",
+            "CANONICAL_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot callback can enter prompt package/execute, provider, Xu, job or render paths. "
+            "The standalone Web planner and owner-plan save do not expose a provider, wallet, payment, "
+            "job, render, output or delivery adapter for this Bot transition."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _vproduct_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for every vproduct spelling outside the finite review."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "VPRODUCT_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "vproduct_callback_requires_source_review",
+        "source_dispositions": (
+            "BOT_VPRODUCT_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "No broad `vproduct|` route override is permitted. The callback may encode a Bot product, "
+            "camera, state, identifier, pending input or runtime transition, so it cannot inherit a Web "
+            "planner, provider, wallet, job, payment, render, asset or delivery meaning."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_vproduct_callback_template(
+    template: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Disposition opaque vproduct templates before generic namespace handling."""
+
+    del existing_routes
+    token = str(template or "").casefold()
+    if token.startswith(VPRODUCT_RUNTIME_OR_PAYMENT_PREFIXES):
+        return _vproduct_runtime_guard_mapping(template, "callback_template", evidence)
+    if token.startswith(VPRODUCT_PROMPT_OR_DELIVERY_PREFIXES):
+        return _vproduct_prompt_or_delivery_mapping(template, "callback_template", evidence)
+    if token.startswith(VPRODUCT_GUIDED_STATE_PREFIXES):
+        return _vproduct_bot_state_mapping(template, "callback_template", evidence)
+    return _vproduct_source_review_mapping(template, "callback_template", evidence)
+
+
+def _map_vproduct_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map only four finite vproduct starts; keep all Bot state fail-closed."""
+
+    token = str(identifier or "").casefold()
+    if not token.startswith("vproduct|"):
+        return None
+    # Telegram callback payloads are source-sensitive. A case-variant is not
+    # one of the frozen literals or templates reviewed below, so it must not
+    # inherit even a symbolic guided-state disposition by normalization.
+    if identifier != token:
+        return _vproduct_source_review_mapping(identifier, source_kind, evidence)
+    if "{*}" in token:
+        return _map_vproduct_callback_template(identifier, evidence, existing_routes)
+    # Callback payloads are source-sensitive. The audited literals below are
+    # the only values allowed to open a fresh Web planner.
+    if identifier in VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS:
+        return _vproduct_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
+    if token.startswith(VPRODUCT_RUNTIME_OR_PAYMENT_PREFIXES):
+        return _vproduct_runtime_guard_mapping(identifier, source_kind, evidence)
+    if token.startswith(VPRODUCT_PROMPT_OR_DELIVERY_PREFIXES):
+        return _vproduct_prompt_or_delivery_mapping(identifier, source_kind, evidence)
+    if token.startswith(VPRODUCT_GUIDED_STATE_PREFIXES):
+        return _vproduct_bot_state_mapping(identifier, source_kind, evidence)
+    if token.startswith("vproduct|open|"):
+        product_id = token.removeprefix("vproduct|open|")
+        if product_id in VPRODUCT_REVIEWED_PRODUCT_IDS:
+            return _vproduct_bot_state_mapping(identifier, source_kind, evidence)
+        return _vproduct_source_review_mapping(identifier, source_kind, evidence)
+    return _vproduct_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(identifier, source_kind, evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
+    vproduct_mapping = _map_vproduct_callback(identifier, source_kind, evidence, existing_routes)
+    if vproduct_mapping is not None:
+        return vproduct_mapping
     translation_source_mapping = _map_translation_source_intake_callback(identifier, source_kind, evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
@@ -6529,6 +6819,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(template, "callback_template", evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
+    vproduct_mapping = _map_vproduct_callback(template, "callback_template", evidence, existing_routes)
+    if vproduct_mapping is not None:
+        return vproduct_mapping
     translation_source_mapping = _map_translation_source_intake_callback(template, "callback_template", evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
@@ -7797,6 +8090,43 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "opaque canonical checkout/confirmation; no browser payment, ledger, job or delivery action",
         ],
     ]
+    vproduct_contract_rows = [
+        [
+            ", ".join(sorted(VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS)),
+            SCRIPT_TO_SCREEN_ROUTE,
+            "reviewed_vproduct_fresh_web_planner_navigation",
+            "NAVIGATION_ONLY",
+            "fresh signed planner only; no Telegram callback, Bot session or runtime state is transferred",
+        ],
+        [
+            "vproduct|open|script_image_video, vproduct|open|multi_scene_film and reviewed guided choices",
+            "BOT_VPRODUCT_GUIDED_STATE_NOT_REPLAYED",
+            "bot_vproduct_guided_state_requires_fresh_web_compose",
+            "NEEDS_FEATURE_DISPOSITION",
+            "get_video_session(uid) / selected idea / platform / panels / style / image-plan / pace / media state remains Bot-local",
+        ],
+        [
+            "vproduct|prompt_image*, vproduct|prompt_video* and vproduct|export*",
+            "BOT_VPRODUCT_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED",
+            "bot_vproduct_prompt_or_telegram_delivery_requires_separate_web_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "prompt bundle, selected shot and Telegram document/message delivery are not Web assets or downloads",
+        ],
+        [
+            "vproduct|prompt_image_package*, prompt_image_execute, prompt_video_create, render",
+            "VPRODUCT_RUNTIME_PACKAGE_PROVIDER_OR_PAYMENT_CONTRACT_REQUIRED",
+            "bot_vproduct_runtime_provider_wallet_or_payment_guard",
+            "NEEDS_FEATURE_DISPOSITION",
+            "canonical package/Xu/provider/job/render/payment authority remains outside this planner",
+        ],
+        [
+            "vproduct|open|{*} and every unreviewed vproduct|* spelling",
+            "VPRODUCT_SOURCE_REVIEW_REQUIRED",
+            "vproduct_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "opaque product/state/identifier values never inherit a Web route or action",
+        ],
+    ]
 
     write(
         "README.md",
@@ -7849,6 +8179,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`IMAGE_PROMPT_COMPOSER_CONTRACT.md`](IMAGE_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless image-prompt drafting adapted from Bot templates without image/vision/provider/job/payment/asset/publish claims.\n"
         + "- [`VIDEO_PROMPT_PLANNER_CONTRACT.md`](VIDEO_PROMPT_PLANNER_CONTRACT.md) — signed, stateless deterministic video planning adapted from Bot prompt/shot rules without source-media/provider/preview/job/payment/asset/publish claims.\n"
         + "- [`CINEMATIC_AD_CONCEPT_CONTRACT.md`](CINEMATIC_AD_CONCEPT_CONTRACT.md) — signed, stateless Bot-derived cinematic ad concept, storyboard and prompt direction with no media/provider/job/payment/asset/publish claim.\n"
+        + "- [`SCRIPT_TO_SCREEN_PLANNER_CONTRACT.md`](SCRIPT_TO_SCREEN_PLANNER_CONTRACT.md) and [`VPRODUCT_CALLBACK_CONTRACT.md`](VPRODUCT_CALLBACK_CONTRACT.md) — signed Script-to-Screen planning grammar and finite Task3D callback dispositions; Bot session, prompt/export and runtime branches never become browser actions.\n"
         + "- [`STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md`](STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived storyboard prompt-pack planning with a visual canon and no render/provider/job/payment/asset/publish claim.\n"
         + "- [`VOICE_DIRECTION_COMPOSER_CONTRACT.md`](VOICE_DIRECTION_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived voice delivery directions with no clone/TTS/provider/audio/job/payment/asset/Telegram action.\n"
         + "- [`MUSIC_PROMPT_COMPOSER_CONTRACT.md`](MUSIC_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived music prompt directions with no Suno/provider/audio/job/payment/asset/collection/Telegram action.\n"
@@ -7907,6 +8238,27 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         )
         + "\n\nThe static auditor derives the nine `qi_logo_pos` values only from the direct frozen helper call that supplies the literal Quick Image prefix. It does not map the helper's shared dynamic `create_media|{*}|…` template globally because regular image/video flows also use it.\n\n"
         "The Web request accepts only a finite catalog key or an original bounded custom brief, deterministic variation, ratio, optional text brand direction and placement, and locale. It has no image upload, preview, source analysis, provider/Bot/Core Bridge call, tier, quote, confirmation token, job, asset, Xu/wallet mutation, PayOS payment, webhook, publish action or delivery. `prompt_plan_only_no_real_image` is a manual-review plan, not evidence that an image or watermark exists.\n",
+    )
+    write(
+        "VPRODUCT_CALLBACK_CONTRACT.md",
+        "# Task3D / vproduct callback disposition contract\n\n"
+        "The frozen baseline Task3D `vproduct` flow is a Bot conversation backed by `get_video_session(uid)`. "
+        "Only four reviewed text-first literals may open a **fresh signed** Web Script-to-Screen Planner. "
+        "That navigation transfers no callback, Telegram identity, product ID, selected idea, panel/style/color/pace/image choice, "
+        "media, prompt bundle, package/Xu state, quote, provider/job state, payment state or Telegram delivery state. "
+        "Every other branch below remains a symbolic authority boundary, never a browser callback/action.\n\n"
+        + _markdown_table(
+            ["Frozen Bot source", "Web target/boundary", "Audit resolution", "Status", "Required boundary"],
+            vproduct_contract_rows,
+        )
+        + "\n\nThe Web planner accepts only a new signed form: project kind, original brief, audience, platform, ratio, "
+        "Bot-compatible panel count (6/9/12/16 among the bounded 3–16 range), style, color, pace, image-plan, "
+        "0/1/2 extra scenes (maximum 18 planning scenes), selected episode and locale. Compose is transient; durable "
+        "save sends only the original bounded source and the server recomputes one owner-only Video Plan. The browser "
+        "must compare the currently visible form with the source receipt before it acquires a save idempotency key.\n\n"
+        "No Task3D callback can create an image/video/voice/music output, provider action, quote, package, Xu mutation, "
+        "PayOS action, job, render, asset, publication or delivery claim. Any future Web runtime must start from an "
+        "independent owner-scoped contract and cannot replay a Bot callback or session value.\n",
     )
     write(
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",

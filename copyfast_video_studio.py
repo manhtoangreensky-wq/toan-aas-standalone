@@ -5059,7 +5059,7 @@ def _safe_receipt(response: dict[str, Any]) -> dict[str, Any]:
         except (ValueError, TypeError, AttributeError) as exc:
             raise HTTPException(status_code=500, detail="Receipt lưu Script-to-Screen plan không hợp lệ") from exc
         scene_count = source.get("scene_count")
-        if isinstance(scene_count, bool) or not isinstance(scene_count, int) or not 3 <= scene_count <= 12:
+        if isinstance(scene_count, bool) or not isinstance(scene_count, int) or not 3 <= scene_count <= 18:
             raise HTTPException(status_code=500, detail="Receipt lưu Script-to-Screen plan không hợp lệ")
         return envelope(
             True,
@@ -8915,6 +8915,14 @@ SCRIPT_TO_SCREEN_STYLES: dict[str, dict[str, str]] = {
     "cinematic": {"vi": "Điện ảnh có kiểm soát", "en": "Controlled cinematic"},
     "educational": {"vi": "Giải thích dễ hiểu", "en": "Clear educational"},
     "brand_story": {"vi": "Câu chuyện thương hiệu", "en": "Brand story"},
+    "realistic": {"vi": "Hiện thực, rõ chi tiết", "en": "Realistic and detailed"},
+    "cute_3d": {"vi": "3D thân thiện", "en": "Friendly 3D"},
+    "original_anime": {"vi": "Minh họa nguyên bản", "en": "Original illustration"},
+    "product_ad": {"vi": "Quảng cáo sản phẩm", "en": "Product advertising"},
+    "horror": {"vi": "Bí ẩn, căng thẳng", "en": "Suspenseful"},
+    "action": {"vi": "Năng lượng, hành động", "en": "Energetic action"},
+    "luxury": {"vi": "Cao cấp, tiết chế", "en": "Premium and restrained"},
+    "default": {"vi": "Cân bằng mặc định", "en": "Balanced default"},
 }
 SCRIPT_TO_SCREEN_COLORS: dict[str, dict[str, str]] = {
     "warm": {"vi": "ấm áp", "en": "warm"},
@@ -8933,6 +8941,7 @@ SCRIPT_TO_SCREEN_IMAGE_PLANS: dict[str, dict[str, str]] = {
     "per_scene": {"vi": "mỗi cảnh một keyframe", "en": "one keyframe per scene"},
     "hero_plus_details": {"vi": "hero frame và các cận cảnh", "en": "hero frame plus detail shots"},
     "single_continuity": {"vi": "một visual canon xuyên suốt", "en": "one continuous visual canon"},
+    "skip": {"vi": "không tạo direction ảnh", "en": "no image direction"},
 }
 SCRIPT_TO_SCREEN_OUTPUT_TARGETS: dict[str, dict[str, str]] = {
     "prompt_pack": {"vi": "Prompt pack để review", "en": "Reviewable prompt pack"},
@@ -9042,7 +9051,7 @@ class ScriptToScreenPlannerRequest(BaseModel):
     audience: StrictStr = ""
     platform: StrictStr = "tiktok"
     aspect_ratio: StrictStr = "9:16"
-    scene_count: StrictInt = Field(ge=3, le=12)
+    scene_count: StrictInt = Field(ge=3, le=16)
     # multi_scene_film is now presented as an episodic series. Keep the
     # technical identifier stable for Bot parity, but make the Web-owned
     # planning contract explicit about a bounded season and selected episode.
@@ -9054,7 +9063,10 @@ class ScriptToScreenPlannerRequest(BaseModel):
     color_mood: StrictStr = "bright"
     pace: StrictStr = "balanced"
     image_plan: StrictStr = "per_scene"
+    # ``extra_scene`` is retained only as a legacy boolean alias. New Web
+    # forms carry the finite Bot-compatible count (0/1/2) explicitly.
     extra_scene: StrictBool = False
+    extra_scene_count: StrictInt = Field(default=0, ge=0, le=2)
     output_target: StrictStr = "prompt_pack"
     cta: StrictStr = ""
     language: StrictStr = "vi"
@@ -9147,8 +9159,21 @@ class ScriptToScreenPlannerRequest(BaseModel):
             raise ValueError("Phim dài tập cần từ 2 đến 8 tập để lập roadmap")
         if selected_episode > episode_count:
             raise ValueError("Tập được chọn không thể lớn hơn tổng số tập")
-        if self.extra_scene and self.scene_count >= 12:
-            raise ValueError("Khi thêm cảnh kết, số cảnh cơ bản phải tối đa 11")
+        provided = self.model_fields_set
+        has_legacy_flag = "extra_scene" in provided
+        has_count = "extra_scene_count" in provided
+        # Legacy clients sent only the boolean. New Web clients send the
+        # canonical count and may include the boolean alias for compatibility.
+        # Never reject the valid canonical `{extra_scene: true,
+        # extra_scene_count: 2}` representation, and never silently accept a
+        # contradictory browser payload.
+        if not has_count:
+            self.extra_scene_count = 1 if self.extra_scene else 0
+        elif has_legacy_flag and self.extra_scene != (self.extra_scene_count > 0):
+            raise ValueError("Cờ cảnh kết và số cảnh bổ sung không nhất quán")
+        self.extra_scene = self.extra_scene_count > 0
+        if self.scene_count + self.extra_scene_count > 18:
+            raise ValueError("Script-to-Screen chỉ hỗ trợ tối đa 18 cảnh planning trong một tập")
 
 
 class ScriptToScreenPlannerSaveRequest(ScriptToScreenPlannerRequest):
@@ -9330,7 +9355,7 @@ def _compose_script_to_screen_planner(payload: ScriptToScreenPlannerRequest) -> 
     """Compile only reviewable text direction from fresh Web form values."""
 
     words = _script_to_screen_prompt_language(payload)
-    total = payload.scene_count + (1 if payload.extra_scene else 0)
+    total = payload.scene_count + payload.extra_scene_count
     project_label = _script_to_screen_kind_label(payload.project_kind, payload.language)
     series = _script_to_screen_series_projection(payload, scenes_per_episode=total)
     selected_episode = series["episodes"][int(payload.selected_episode or 1) - 1]
@@ -9382,8 +9407,12 @@ def _compose_script_to_screen_planner(payload: ScriptToScreenPlannerRequest) -> 
             narration = f"Episode {episode_index}/{episode_total}, scene {index}: {phase_direction} Relate it to {payload.brief}."
             screen_text = "One clear phrase, optional and reviewed before use."
             image_prompt = (
-                f"Original {phase_label.lower()} keyframe for {payload.brief}; {words['style']}; {words['color']} palette; "
-                f"{payload.aspect_ratio} composition; coherent subject and environment; no readable brand claim or copied visual identity."
+                "No image direction was requested for this scene. Keep the visual requirements reviewable in the storyboard before any separately approved production workflow."
+                if payload.image_plan == "skip"
+                else (
+                    f"Original {phase_label.lower()} keyframe for {payload.brief}; {words['style']}; {words['color']} palette; "
+                    f"{payload.aspect_ratio} composition; coherent subject and environment; no readable brand claim or copied visual identity."
+                )
             )
             video_prompt = (
                 f"Original episode {episode_index}/{episode_total}, scene {index}/{total} for {payload.brief}: {phase_direction.lower()} "
@@ -9398,9 +9427,13 @@ def _compose_script_to_screen_planner(payload: ScriptToScreenPlannerRequest) -> 
             narration = f"Tập {episode_index}/{episode_total}, cảnh {index}: {phase_direction}. Liên hệ trực tiếp với {payload.brief}."
             screen_text = "Một cụm ý rõ ràng, chỉ dùng sau khi người làm nội dung tự review."
             image_prompt = (
-                f"Keyframe nguyên bản cho cảnh {phase_label.lower()} của {payload.brief}; phong cách {words['style']}; "
-                f"màu {words['color']}; bố cục {payload.aspect_ratio}; chủ thể và bối cảnh nhất quán; "
-                "không chèn claim thương hiệu chưa kiểm chứng hoặc nhận diện hình ảnh sao chép."
+                "Không yêu cầu direction ảnh cho cảnh này. Giữ yêu cầu hình ảnh ở storyboard để review trước khi đi vào workflow sản xuất được phê duyệt riêng."
+                if payload.image_plan == "skip"
+                else (
+                    f"Keyframe nguyên bản cho cảnh {phase_label.lower()} của {payload.brief}; phong cách {words['style']}; "
+                    f"màu {words['color']}; bố cục {payload.aspect_ratio}; chủ thể và bối cảnh nhất quán; "
+                    "không chèn claim thương hiệu chưa kiểm chứng hoặc nhận diện hình ảnh sao chép."
+                )
             )
             video_prompt = (
                 f"Tập nguyên bản {episode_index}/{episode_total}, cảnh {index}/{total} cho {payload.brief}: {phase_direction.lower()}. "
@@ -9475,7 +9508,7 @@ def _script_to_screen_to_video_plan(
     """Translate only the server-built pack into private Web plan records."""
 
     storyboard = planner.get("storyboard") if isinstance(planner.get("storyboard"), list) else []
-    if not 3 <= len(storyboard) <= 12:
+    if not 3 <= len(storyboard) <= 18:
         raise HTTPException(status_code=422, detail="Số cảnh Script-to-Screen không hợp lệ để lưu Video Plan")
     project_label = _script_to_screen_kind_label(payload.project_kind, payload.language)
     series = planner.get("series") if isinstance(planner.get("series"), dict) else {}
@@ -9586,7 +9619,7 @@ async def save_script_to_screen_planner_to_video_plan(
                 status_name="guarded",
                 error_code="WEB_VIDEO_PLAN_LIMIT",
             )
-        if not 3 <= len(scene_payloads) <= 12:
+        if not 3 <= len(scene_payloads) <= 18:
             raise HTTPException(status_code=422, detail="Số scene Script-to-Screen không hợp lệ để lưu Video Plan")
         plan_id = str(uuid.uuid4())
         now = utc_now()

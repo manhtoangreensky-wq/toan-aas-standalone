@@ -71,6 +71,8 @@ def test_episodic_series_is_a_bounded_season_map_and_saves_only_one_selected_epi
     assert "Episode {selected_episode}/{episode_count}" in BACKEND
     assert '"season-{episode_count}"' in BACKEND
     assert '"episode-{selected_episode}"' in BACKEND
+    assert "const series = normalizeScriptToScreenSeries(planner.series" in PORTAL
+    assert "scriptToScreenSeriesMarkup(planner.series)" in PORTAL
 
 
 def test_script_to_screen_uses_only_two_bounded_signed_operations() -> None:
@@ -144,3 +146,60 @@ def test_script_to_screen_validates_the_no_execution_boundary_and_private_save_r
     assert "data.draft_recomputed_on_server !== true" in receipt_validator
     assert "data.web_video_plan_persisted !== true" in receipt_validator
     assert "SCRIPT_TO_SCREEN_SAVE_FALSE_FIELDS.every" in receipt_validator
+
+
+def test_script_to_screen_uses_the_bounded_bot_panel_and_extra_scene_grammar() -> None:
+    """The browser and server must agree on 3–16 plus 0/1/2, never a hidden render batch."""
+
+    assert "scene_count: StrictInt = Field(ge=3, le=16)" in BACKEND
+    assert "extra_scene_count: StrictInt = Field(default=0, ge=0, le=2)" in BACKEND
+    assert "if self.scene_count + self.extra_scene_count > 18:" in BACKEND
+    assert '"skip": {"vi": "không tạo direction ảnh"' in BACKEND
+    assert "SCRIPT_TO_SCREEN_EXTRA_SCENE_OPTIONS" in PORTAL
+    assert '"2", "Thêm 2 cảnh kết"' in PORTAL
+    assert 'name: "scene_count"' in PORTAL and "max: 16" in PORTAL
+    assert 'name: "extra_scene_count"' in PORTAL
+    assert 'id="script-to-screen-planner-form"' in PORTAL
+    assert 'type="button" data-portal-action="script-to-screen-planner-compose" data-portal-route="/video-studio/script-to-screen-planner" data-portal-form-id="script-to-screen-planner-form"' in PORTAL
+    assert "SCRIPT_TO_SCREEN_SOURCE_KEYS" in INTEGRATION
+    assert "extra_scene_count" in INTEGRATION
+    assert "hasExtraSceneCount" in PORTAL
+    assert "hasExtraSceneCount" in INTEGRATION
+    assert "fields.extra_scene !== (extraSceneCount > 0)" in INTEGRATION
+    assert "value.extra_scene !== (extraSceneCount > 0)" in PORTAL
+    assert "source.scene_count + source.extra_scene_count" in INTEGRATION
+
+
+def test_script_to_screen_preserves_current_form_and_fences_stale_save_actions() -> None:
+    """A late receipt can never turn an edited brief back into a saveable plan."""
+
+    compose_action = _action_block("script-to-screen-planner-compose")
+    save_action = _action_block("script-to-screen-planner-save-plan")
+    current_form_match = "scriptToScreenPlanSaveSourceMatchesCurrentFields(source, fields)"
+
+    assert "scriptToScreenPlannerComposePendingRequestEpoch" in INTEGRATION
+    assert "function scriptToScreenCurrentFormSaveSource(fields)" in INTEGRATION
+    assert "function scriptToScreenPlannerCurrentFormFields(form)" in INTEGRATION
+    assert "function reconcileScriptToScreenPlannerSaveControls(route)" in INTEGRATION
+    assert "scriptToScreenPlannerCurrentFormFields(form)" in INTEGRATION
+    assert "collectFormFields(form)" not in INTEGRATION
+    assert "scriptToScreenPlannerComposePendingRequestEpoch = requestEpoch;" in compose_action
+    assert "scriptToScreenPlannerComposePendingRequestEpoch === requestEpoch" in compose_action
+    assert compose_action.index("scriptToScreenPlannerComposePendingRequestEpoch = requestEpoch;") < compose_action.index("reconcileScriptToScreenPlannerSaveControls(route);")
+    assert "scriptToScreenPlannerResult: {}, scriptToScreenPlannerSaveSource: {}" not in compose_action
+    assert "scriptToScreenPlannerRequestIsCurrent(\"compose\"" in compose_action
+    assert current_form_match in save_action
+    assert save_action.index(current_form_match) < save_action.index("acquireSubmission(")
+    assert "scriptToScreenPlannerComposePendingRequestEpoch" in save_action
+    assert "reconcileScriptToScreenPlannerSaveControls(route);" in save_action
+    assert 'new CustomEvent("toanaas:script-to-screen-draft-edited")' in PORTAL
+    assert 'window.addEventListener("toanaas:script-to-screen-draft-edited"' in INTEGRATION
+    assert 'selectedEpisode.dispatchEvent(new Event("change", { bubbles: true }));' in INTEGRATION
+    assert "data-script-to-screen-rendered-result" in PORTAL
+    assert "data-script-to-screen-saved-receipt" in PORTAL
+    assert "data-portal-form-id=\"script-to-screen-planner-form\"" in PORTAL
+    assert "if (!form.id) form.id = \"script-to-screen-planner-form\";" in PORTAL
+    assert "function renderScriptToScreenPlannerResult(raw, rawSource, rawReceipt, canSaveToVideoPlan)" in PORTAL
+    assert "const receipt = normalizeScriptToScreenPlannerSaveReceipt(rawReceipt);" in PORTAL
+    assert "const save = sourceMatches && !alreadySaved" in PORTAL
+    assert "const saveAllowed = fresh && !alreadySaved;" in PORTAL

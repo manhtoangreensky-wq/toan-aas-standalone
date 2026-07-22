@@ -97,6 +97,7 @@ def planner_payload(**overrides: Any) -> dict[str, Any]:
         "pace": "balanced",
         "image_plan": "per_scene",
         "extra_scene": False,
+        "extra_scene_count": 0,
         "output_target": "prompt_pack",
         "cta": "Lưu video để xem lại khi cần.",
         "language": "vi",
@@ -180,6 +181,12 @@ def assert_no_delivery_or_execution_reference(data: dict[str, Any]) -> None:
     assert not any("http://" in value.lower() or "https://" in value.lower() for value in strings)
 
 
+def expected_scene_count(source: dict[str, Any]) -> int:
+    """Canonical count, with the old boolean accepted only for old callers."""
+
+    return int(source["scene_count"]) + int(source.get("extra_scene_count", int(source.get("extra_scene", False))))
+
+
 def assert_planner_shape(planner: dict[str, Any], source: dict[str, Any]) -> None:
     """Keep the Bot prompt compiler's useful structure, without execution state."""
 
@@ -201,7 +208,7 @@ def assert_planner_shape(planner: dict[str, Any], source: dict[str, Any]) -> Non
         assert choice["id"] == source[field]
         assert isinstance(choice["label"], str) and choice["label"].strip()
 
-    count = source["scene_count"] + int(source["extra_scene"])
+    count = expected_scene_count(source)
     assert planner["scene_count"] == count
     assert len(planner["storyboard"]) == count
     series = planner["series"]
@@ -277,6 +284,7 @@ def test_script_to_screen_requires_signed_session_csrf_is_deterministic_and_stay
             pace="ad_rhythm",
             image_plan="single_continuity",
             extra_scene=True,
+            extra_scene_count=1,
             output_target="storyboard",
             cta="Review the plan before production.",
             language="en",
@@ -293,6 +301,64 @@ def test_script_to_screen_requires_signed_session_csrf_is_deterministic_and_stay
         assert storage_counts(db_path) == before
 
 
+def test_script_to_screen_accepts_bot_panel_grammar_and_canonical_two_extra_scenes(tmp_path, monkeypatch):
+    """The expanded planner remains bounded, recomputed and execution-free."""
+
+    compose_path = "/api/v1/video-studio/tools/script-to-screen-planner"
+    save_path = "/api/v1/video-studio/tools/script-to-screen-planner/save"
+    with make_client(tmp_path, monkeypatch) as client:
+        csrf = login(client, "script-to-screen-bot-grammar@example.com")
+        headers = {"X-CSRF-Token": csrf}
+
+        # The frozen Bot presents these familiar panel counts. Each is a
+        # fresh Web form choice, never a Bot session callback replay.
+        for panel_count in (6, 9, 12, 16):
+            response = client.post(compose_path, headers=headers, json=planner_payload(scene_count=panel_count))
+            assert response.status_code == 200
+            assert response.json()["data"]["planner"]["scene_count"] == panel_count
+
+        source = planner_payload(
+            project_kind="multi_scene_film",
+            brief="Chuỗi tập ngắn giới thiệu cách vận hành cửa hàng nhỏ có kiểm soát.",
+            platform="youtube",
+            aspect_ratio="16:9",
+            scene_count=16,
+            episode_count=3,
+            selected_episode=2,
+            style="realistic",
+            image_plan="skip",
+            extra_scene=True,
+            extra_scene_count=2,
+        )
+        composed = client.post(compose_path, headers=headers, json=source)
+        assert composed.status_code == 200 and composed.json()["ok"] is True
+        data = composed.json()["data"]
+        assert_transient_boundary(data)
+        assert_planner_shape(data["planner"], source)
+        assert data["planner"]["scene_count"] == 18
+        assert all("Không yêu cầu direction ảnh" in scene["image_prompt"] for scene in data["planner"]["storyboard"])
+
+        saved = client.post(
+            save_path,
+            headers=headers,
+            json={**source, "destination": "video_plan", "idempotency_key": "script-to-screen-18-scenes-0001"},
+        )
+        assert saved.status_code == 200 and saved.json()["ok"] is True
+        receipt = saved.json()["data"]
+        assert_save_receipt(receipt, expected_scene_count=18)
+        plan_id = receipt["plan"]["id"]
+        detail = client.get(f"/api/v1/video-studio/plans/{plan_id}")
+        assert detail.status_code == 200 and len(detail.json()["data"]["scenes"]) == 18
+
+        # The legacy flag remains one extra scene only when the count is
+        # genuinely omitted; it must not reject the new canonical 0/1/2 form.
+        legacy = planner_payload(extra_scene=True)
+        legacy.pop("extra_scene_count")
+        legacy_response = client.post(compose_path, headers=headers, json=legacy)
+        assert legacy_response.status_code == 200
+        assert legacy_response.json()["data"]["planner"]["scene_count"] == 7
+
+
 @pytest.mark.parametrize(
     "overrides",
     (
@@ -300,8 +366,9 @@ def test_script_to_screen_requires_signed_session_csrf_is_deterministic_and_stay
         {"platform": "instagram"},
         {"aspect_ratio": "3:2"},
         {"scene_count": 2},
-        {"scene_count": 13},
-        {"scene_count": 12, "extra_scene": True},
+        {"scene_count": 17},
+        {"extra_scene_count": 3},
+        {"extra_scene": False, "extra_scene_count": 1},
         {"episode_count": 0},
         {"episode_count": 9},
         {"selected_episode": 0},
@@ -385,7 +452,7 @@ def test_script_to_screen_save_is_server_recomputed_idempotent_and_private_to_ow
         body = created.json()
         assert body["ok"] is True and body["status"] == "draft"
         receipt = body["data"]
-        assert_save_receipt(receipt, expected_scene_count=source["scene_count"])
+        assert_save_receipt(receipt, expected_scene_count=expected_scene_count(source))
         assert brief not in created.text
         assert "planner" not in receipt and "prompt" not in receipt
 
@@ -404,7 +471,7 @@ def test_script_to_screen_save_is_server_recomputed_idempotent_and_private_to_ow
         detail_data = detail.json()["data"]
         assert detail_data["plan"]["state"] == "draft"
         assert "Web-native plan rebuilt on the server" in detail_data["plan"]["brief"]
-        assert len(detail_data["scenes"]) == source["scene_count"]
+        assert len(detail_data["scenes"]) == expected_scene_count(source)
         assert all(scene["state"] == "active" and scene["revision"] == 1 for scene in detail_data["scenes"])
         assert brief in detail_data["scenes"][0]["visual_direction"]
 
@@ -430,7 +497,8 @@ def test_script_to_screen_save_is_server_recomputed_idempotent_and_private_to_ow
             "SELECT action, target, detail FROM web_audit_events WHERE action=?",
             ("web.video.script_to_screen.save_plan",),
         ).fetchone()
-    expected = (1, 1, source["scene_count"], source["scene_count"], source["scene_count"] + 1)
+    scene_total = expected_scene_count(source)
+    expected = (1, 1, scene_total, scene_total, scene_total + 1)
     assert counts == expected
     assert idempotency is not None
     idempotency_data = json.loads(str(idempotency[0]))["data"]

@@ -338,6 +338,16 @@
   let cinematicConceptSessionEpoch = 0;
   let cinematicConceptComposeRequestEpoch = 0;
   let cinematicConceptSaveRequestEpoch = 0;
+  // Script-to-Screen has the same transient ownership rule: an older
+  // compose/save response must never overwrite a newer brief, episode,
+  // account, route or signed bootstrap.
+  let scriptToScreenPlannerSessionEpoch = 0;
+  let scriptToScreenPlannerComposeRequestEpoch = 0;
+  let scriptToScreenPlannerSaveRequestEpoch = 0;
+  // This is a DOM-only lock. It deliberately has no persisted state: a
+  // compose request must not make a prior receipt saveable while the user is
+  // asking the server to recompute the exact same or a newer brief.
+  let scriptToScreenPlannerComposePendingRequestEpoch = 0;
   // Operations and Notification Center contain customer/staff-private
   // incident, approval and delivery metadata. A late read must be ignored
   // after a signed-session change, feature disablement, route navigation or
@@ -6119,10 +6129,10 @@
   const SCRIPT_TO_SCREEN_PROJECT_KINDS = new Set(["script_image_video", "multi_scene_film"]);
   const SCRIPT_TO_SCREEN_PLATFORMS = new Set(["tiktok", "reels", "shorts", "youtube", "facebook", "custom"]);
   const SCRIPT_TO_SCREEN_RATIOS = new Set(["9:16", "16:9", "1:1", "4:5"]);
-  const SCRIPT_TO_SCREEN_STYLES = new Set(["product_demo", "ugc", "cinematic", "educational", "brand_story"]);
+  const SCRIPT_TO_SCREEN_STYLES = new Set(["product_demo", "ugc", "cinematic", "educational", "brand_story", "realistic", "cute_3d", "original_anime", "product_ad", "horror", "action", "luxury", "default"]);
   const SCRIPT_TO_SCREEN_COLORS = new Set(["warm", "bright", "premium", "dark_cinematic", "cheerful"]);
   const SCRIPT_TO_SCREEN_PACES = new Set(["slow_emotional", "balanced", "fast_dynamic", "ad_rhythm"]);
-  const SCRIPT_TO_SCREEN_IMAGE_PLANS = new Set(["per_scene", "hero_plus_details", "single_continuity"]);
+  const SCRIPT_TO_SCREEN_IMAGE_PLANS = new Set(["per_scene", "hero_plus_details", "single_continuity", "skip"]);
   const SCRIPT_TO_SCREEN_OUTPUT_TARGETS = new Set(["prompt_pack", "storyboard", "video_plan"]);
   const SCRIPT_TO_SCREEN_LANGUAGES = new Set(["vi", "en"]);
   const SCRIPT_TO_SCREEN_SERIES_MODES = new Set(["single_episode", "episodic_series"]);
@@ -6138,7 +6148,7 @@
   ]);
   const SCRIPT_TO_SCREEN_SOURCE_KEYS = Object.freeze([
     "project_kind", "brief", "audience", "platform", "aspect_ratio", "scene_count", "style", "color_mood",
-    "episode_count", "selected_episode", "pace", "image_plan", "extra_scene", "output_target", "cta", "language"
+    "episode_count", "selected_episode", "pace", "image_plan", "extra_scene", "extra_scene_count", "output_target", "cta", "language"
   ]);
   const SCRIPT_TO_SCREEN_SAVE_FALSE_FIELDS = Object.freeze([
     "telegram_state_changed", "bot_called", "bridge_called", "provider_called", "media_opened", "media_created",
@@ -6192,7 +6202,12 @@
     const colorMood = scriptToScreenText(fields.color_mood || "bright", "Màu sắc", 1, 64, false).toLowerCase();
     const pace = scriptToScreenText(fields.pace || "balanced", "Nhịp dựng", 1, 64, false).toLowerCase();
     const imagePlan = scriptToScreenText(fields.image_plan || "per_scene", "Kế hoạch hình ảnh", 1, 64, false).toLowerCase();
-    const extraScene = fields.extra_scene === true;
+    const hasExtraSceneFlag = Object.prototype.hasOwnProperty.call(fields, "extra_scene");
+    const hasExtraSceneCount = fields.extra_scene_count !== undefined && String(fields.extra_scene_count).trim() !== "";
+    const legacyExtraScene = !hasExtraSceneCount && fields.extra_scene === true;
+    const extraSceneCount = hasExtraSceneCount
+      ? Number(fields.extra_scene_count)
+      : (legacyExtraScene ? 1 : 0);
     const outputTarget = scriptToScreenText(fields.output_target || "prompt_pack", "Đầu ra planner", 1, 64, false).toLowerCase();
     const cta = scriptToScreenText(fields.cta || "", "CTA", 0, 280, true);
     const language = scriptToScreenText(fields.language || "vi", "Ngôn ngữ", 1, 16, false).toLowerCase();
@@ -6200,19 +6215,23 @@
       || !SCRIPT_TO_SCREEN_RATIOS.has(aspectRatio) || !SCRIPT_TO_SCREEN_STYLES.has(style)
       || !SCRIPT_TO_SCREEN_COLORS.has(colorMood) || !SCRIPT_TO_SCREEN_PACES.has(pace)
       || !SCRIPT_TO_SCREEN_IMAGE_PLANS.has(imagePlan) || !SCRIPT_TO_SCREEN_OUTPUT_TARGETS.has(outputTarget)
-      || !SCRIPT_TO_SCREEN_LANGUAGES.has(language) || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 12
+      || !SCRIPT_TO_SCREEN_LANGUAGES.has(language) || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 16
       || !Number.isInteger(episodeCount) || episodeCount < 1 || episodeCount > 8
       || !Number.isInteger(selectedEpisode) || selectedEpisode < 1 || selectedEpisode > episodeCount
       || (projectKind === "script_image_video" && (episodeCount !== 1 || selectedEpisode !== 1))
       || (projectKind === "multi_scene_film" && episodeCount < 2)
-      || (extraScene && sceneCount >= 12)) {
+      || !Number.isInteger(extraSceneCount) || extraSceneCount < 0 || extraSceneCount > 2
+      || (hasExtraSceneFlag && typeof fields.extra_scene !== "boolean")
+      || (hasExtraSceneFlag && hasExtraSceneCount && fields.extra_scene !== (extraSceneCount > 0))
+      || sceneCount + extraSceneCount > 18) {
       throw new Error("Một lựa chọn Script-to-Screen Planner không hợp lệ.");
     }
     const safety = scriptToScreenSafetyError(brief, audience, cta);
     if (safety) throw new Error(safety);
     return {
       project_kind: projectKind, brief, audience, platform, aspect_ratio: aspectRatio, scene_count: sceneCount,
-      episode_count: episodeCount, selected_episode: selectedEpisode, style, color_mood: colorMood, pace, image_plan: imagePlan, extra_scene: extraScene,
+      episode_count: episodeCount, selected_episode: selectedEpisode, style, color_mood: colorMood, pace, image_plan: imagePlan,
+      extra_scene: extraSceneCount > 0, extra_scene_count: extraSceneCount,
       output_target: outputTarget, cta, language
     };
   }
@@ -6289,7 +6308,7 @@
       && scriptToScreenChoiceIsSafe(planner.style, SCRIPT_TO_SCREEN_STYLES) && scriptToScreenChoiceIsSafe(planner.color_mood, SCRIPT_TO_SCREEN_COLORS)
       && scriptToScreenChoiceIsSafe(planner.pace, SCRIPT_TO_SCREEN_PACES) && scriptToScreenChoiceIsSafe(planner.image_plan, SCRIPT_TO_SCREEN_IMAGE_PLANS)
       && scriptToScreenChoiceIsSafe(planner.output_target, SCRIPT_TO_SCREEN_OUTPUT_TARGETS) && scriptToScreenString(planner.brief, 2, 1000)
-      && scriptToScreenString(planner.audience || "", 0, 400) && Number.isInteger(sceneCount) && sceneCount >= 3 && sceneCount <= 12
+      && scriptToScreenString(planner.audience || "", 0, 400) && Number.isInteger(sceneCount) && sceneCount >= 3 && sceneCount <= 18
       && scriptToScreenSeriesIsSafe(series, String(planner.project_kind.id || ""), sceneCount)
       && scriptToScreenString(planner.creative_summary, 2, 1800) && scriptToScreenExactKeys(script, ["hook", "arc", "voice_direction", "cta"])
       && Object.values(script).every((item) => scriptToScreenString(item, 2, 1200)) && scriptToScreenStoryboardIsSafe(planner.storyboard, sceneCount)
@@ -6309,6 +6328,29 @@
     try { return scriptToScreenPlannerPayload(source); } catch (_) { return null; }
   }
 
+  function scriptToScreenCurrentFormSaveSource(fields) {
+    // A visible form intentionally has no legacy `extra_scene` checkbox: it
+    // collects only the canonical 0/1/2 selector. Normalize that bounded
+    // form into the exact persisted source shape before comparing it with a
+    // prior prompt pack. The stored source itself still has to satisfy the
+    // exact-key check above.
+    try { return scriptToScreenPlannerPayload(fields && typeof fields === "object" ? fields : {}); } catch (_) { return null; }
+  }
+
+  function scriptToScreenPlannerCurrentFormFields(form) {
+    // Reconciliation runs outside the submit handler, so it cannot reuse the
+    // handler's transient `fields` object. Read only the visible native form
+    // controls here and feed them back through the same bounded payload
+    // normalizer used by compose/save. There is deliberately no browser cache
+    // or inferred Bot state in this comparison.
+    if (!(form instanceof HTMLFormElement)) return {};
+    const fields = {};
+    new FormData(form).forEach((value, key) => {
+      if (!Object.prototype.hasOwnProperty.call(fields, key)) fields[key] = typeof value === "string" ? value : "";
+    });
+    return fields;
+  }
+
   function scriptToScreenPlanSaveSourceMatchesResult(rawSource, rawResult) {
     const source = scriptToScreenPlanSaveSource(rawSource);
     const planner = rawResult && rawResult.planner && typeof rawResult.planner === "object" && !Array.isArray(rawResult.planner) ? rawResult.planner : {};
@@ -6316,9 +6358,35 @@
       && source.project_kind === planner.project_kind.id && source.brief === planner.brief && source.audience === planner.audience
       && source.platform === planner.platform.id && source.aspect_ratio === planner.aspect_ratio && source.style === planner.style.id
       && source.color_mood === planner.color_mood.id && source.pace === planner.pace.id && source.image_plan === planner.image_plan.id
-      && source.output_target === planner.output_target.id && source.scene_count + (source.extra_scene ? 1 : 0) === Number(planner.scene_count)
+      && source.output_target === planner.output_target.id && source.scene_count + source.extra_scene_count === Number(planner.scene_count)
       && source.episode_count === Number(planner.series && planner.series.episode_count)
       && source.selected_episode === Number(planner.series && planner.series.selected_episode));
+  }
+
+  function scriptToScreenPlanSaveSourceMatchesCurrentFields(rawSource, fields) {
+    const source = scriptToScreenPlanSaveSource(rawSource);
+    const current = scriptToScreenCurrentFormSaveSource(fields);
+    return Boolean(source && current && SCRIPT_TO_SCREEN_SOURCE_KEYS.every((key) => source[key] === current[key]));
+  }
+
+  function reconcileScriptToScreenPlannerSaveControls(route) {
+    if (route !== "/video-studio/script-to-screen-planner" || currentPortalPath() !== route) return;
+    const form = document.querySelector('form[data-portal-action="script-to-screen-planner-compose"]');
+    const source = scriptToScreenPlanSaveSource(base().scriptToScreenPlannerSaveSource);
+    const receipt = scriptToScreenPlanSaveReceipt(base().scriptToScreenPlannerSaveReceipt);
+    const resultIsCurrent = source && scriptToScreenPlanSaveSourceMatchesResult(source, base().scriptToScreenPlannerResult);
+    const fieldsAreCurrent = form && scriptToScreenPlanSaveSourceMatchesCurrentFields(source, scriptToScreenPlannerCurrentFormFields(form));
+    const current = Boolean(!receipt && !scriptToScreenPlannerComposePendingRequestEpoch && resultIsCurrent && fieldsAreCurrent);
+    document.querySelectorAll('[data-portal-action="script-to-screen-planner-save-plan"]').forEach((control) => {
+      const disabled = control.dataset.scriptToScreenInitialDisabled === "true" || !current;
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && !receipt && !current) {
+        control.setAttribute("title", "Prompt Pack không còn khớp brief hoặc đang được tạo lại; hãy tạo lại trước khi lưu.");
+      } else {
+        control.removeAttribute("title");
+      }
+    });
   }
 
   function scriptToScreenPlanSaveReceipt(value) {
@@ -6330,7 +6398,7 @@
       || data.draft_recomputed_on_server !== true || data.web_video_plan_persisted !== true
       || !SCRIPT_TO_SCREEN_SAVE_FALSE_FIELDS.every((field) => data[field] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft"
-      || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 12) return null;
+      || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 18) return null;
     return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: sceneCount };
   }
 
@@ -9858,6 +9926,10 @@
     ++cinematicConceptSessionEpoch;
     ++cinematicConceptComposeRequestEpoch;
     ++cinematicConceptSaveRequestEpoch;
+    ++scriptToScreenPlannerSessionEpoch;
+    ++scriptToScreenPlannerComposeRequestEpoch;
+    ++scriptToScreenPlannerSaveRequestEpoch;
+    scriptToScreenPlannerComposePendingRequestEpoch = 0;
     ++imageStudioSessionEpoch;
     ++operationsSessionEpoch;
     ++operationsDeskSessionEpoch;
@@ -10821,6 +10893,10 @@
     ++cinematicConceptSessionEpoch;
     ++cinematicConceptComposeRequestEpoch;
     ++cinematicConceptSaveRequestEpoch;
+    ++scriptToScreenPlannerSessionEpoch;
+    ++scriptToScreenPlannerComposeRequestEpoch;
+    ++scriptToScreenPlannerSaveRequestEpoch;
+    scriptToScreenPlannerComposePendingRequestEpoch = 0;
     ++videoStudioListHydrationEpoch;
     ++videoStudioDetailHydrationEpoch;
     ++imageMotionPlannerReferencesHydrationEpoch;
@@ -13902,6 +13978,21 @@
       && expectedPath === "/video-studio/cinematic-concept"
       && currentPortalPath() === expectedPath
       && base().cinematicConceptEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function scriptToScreenPlannerRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
+    const currentRequestEpoch = kind === "compose"
+      ? scriptToScreenPlannerComposeRequestEpoch
+      : kind === "save" ? scriptToScreenPlannerSaveRequestEpoch : -1;
+    const account = base().account && typeof base().account === "object" ? base().account : {};
+    return requestEpoch === currentRequestEpoch
+      && sessionEpoch === scriptToScreenPlannerSessionEpoch
+      && Boolean(expectedAccountId)
+      && String(account.id || "") === expectedAccountId
+      && expectedPath === "/video-studio/script-to-screen-planner"
+      && currentPortalPath() === expectedPath
+      && base().scriptToScreenPlannerEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
   }
 
@@ -23808,10 +23899,26 @@
         // session, media, prompt vault, package and renderer state are never
         // imported or reconstructed in the browser.
         const payload = scriptToScreenPlannerPayload(fields);
-        merge({
-          scriptToScreenPlannerResult: {}, scriptToScreenPlannerSaveSource: {}, scriptToScreenPlannerSaveReceipt: {},
-          pageStates: { ...(base().pageStates || {}), "/video-studio/script-to-screen-planner": "processing" }
-        });
+        const expectedPath = "/video-studio/script-to-screen-planner";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = scriptToScreenPlannerSessionEpoch;
+        const requestEpoch = ++scriptToScreenPlannerComposeRequestEpoch;
+        // A newer compose or any actual form edit must invalidate a prior
+        // save receipt as well as a late compose response.
+        ++scriptToScreenPlannerSaveRequestEpoch;
+        if (!scriptToScreenPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+        // Do not merge/reset the portal before this request settles. The form
+        // intentionally does not persist drafts in browser storage, so a
+        // pre-request remount would discard the user's brief on a network or
+        // validation error. The request fence and DOM-only pending lock make
+        // the old result unsaveable without replacing the visible form.
+        scriptToScreenPlannerComposePendingRequestEpoch = requestEpoch;
+        // Lock the previous receipt synchronously, before the network call
+        // starts.  The action handler already rejects a stale save, but the
+        // control itself must reflect that state immediately rather than
+        // remaining clickable until this compose request settles.
+        reconcileScriptToScreenPlannerSaveControls(route);
         setActionBusy(action, route, true);
         try {
           const result = await api("/video-studio/tools/script-to-screen-planner", {
@@ -23819,6 +23926,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
+          if (!scriptToScreenPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (!scriptToScreenPlannerResultIsSafe(data)) {
             throw new Error("Máy chủ chưa trả Script-to-Screen Prompt Pack Web-native an toàn.");
@@ -23827,6 +23935,7 @@
           if (!saveSource || !scriptToScreenPlanSaveSourceMatchesResult(saveSource, data)) {
             throw new Error("Prompt pack trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.");
           }
+          if (!scriptToScreenPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({
             scriptToScreenPlannerResult: data,
             scriptToScreenPlannerSaveSource: saveSource,
@@ -23834,8 +23943,18 @@
             pageStates: { ...(base().pageStates || {}), "/video-studio/script-to-screen-planner": "ready" }
           });
           toast(result.message || "Đã tạo Script-to-Screen Prompt Pack để review. Không có media, Bot, provider, output, job, ví, thanh toán hoặc publish action.");
+        } catch (error) {
+          if (!scriptToScreenPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          throw error;
         } finally {
-          setActionBusy(action, route, false);
+          // A newer edit or compose owns its own lock. Never clear that lock
+          // from an older response, but always restore the exact current form
+          // once this request is still the active one.
+          if (scriptToScreenPlannerComposePendingRequestEpoch === requestEpoch) {
+            scriptToScreenPlannerComposePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+            reconcileScriptToScreenPlannerSaveControls(route);
+          }
         }
         return;
       }
@@ -23846,11 +23965,28 @@
           && capabilities["video-plan-create"] === true)) {
           throw new Error("Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Script-to-Screen Prompt Pack thành Video Plan.");
         }
+        if (scriptToScreenPlannerComposePendingRequestEpoch) {
+          throw new Error("Script-to-Screen Prompt Pack đang được tạo lại từ brief hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.");
+        }
+        const savedReceipt = scriptToScreenPlanSaveReceipt(base().scriptToScreenPlannerSaveReceipt);
+        if (savedReceipt) {
+          toast("Script-to-Screen Prompt Pack này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.");
+          return;
+        }
         const source = scriptToScreenPlanSaveSource(base().scriptToScreenPlannerSaveSource);
         const currentResult = base().scriptToScreenPlannerResult;
         if (!source || !scriptToScreenPlanSaveSourceMatchesResult(source, currentResult)) {
           throw new Error("Script-to-Screen Prompt Pack hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại trước khi lưu Video Plan.");
         }
+        if (!scriptToScreenPlanSaveSourceMatchesCurrentFields(source, fields)) {
+          throw new Error("Brief hoặc tập đang hiển thị đã thay đổi. Hãy tạo lại Script-to-Screen Prompt Pack trước khi lưu Video Plan.");
+        }
+        const expectedPath = "/video-studio/script-to-screen-planner";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = scriptToScreenPlannerSessionEpoch;
+        const requestEpoch = ++scriptToScreenPlannerSaveRequestEpoch;
+        if (!scriptToScreenPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
         const payload = { ...source, destination: "video_plan" };
         const scope = "video-studio:script-to-screen-planner:save-plan";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
@@ -23869,20 +24005,29 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...payload, idempotency_key: submission.key })
           });
+          if (!scriptToScreenPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           acknowledged = true;
           if (result.status !== "draft") throw new Error("Máy chủ chưa xác nhận Video Plan Draft từ Script-to-Screen Prompt Pack.");
           const receipt = scriptToScreenPlanSaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Video Plan content-free và đúng ranh giới an toàn.");
+          if (!scriptToScreenPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({ scriptToScreenPlannerSaveReceipt: receipt });
           toast(result.message || "Đã lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư.");
         } catch (error) {
+          if (!scriptToScreenPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           merge({ scriptToScreenPlannerSaveReceipt: {} });
           throw error;
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
+          // Do not surface a stale receipt, but always release the visual
+          // lock so the user can compose the current brief again.
           setActionBusy(action, route, false);
+          // `setActionBusy(false)` is generic and could otherwise re-enable
+          // a stale save control. Restore the exact source/form contract
+          // immediately after every save outcome.
+          reconcileScriptToScreenPlannerSaveControls(route);
         }
         return;
       }
@@ -30214,6 +30359,10 @@
     }
     selectedEpisode.value = String(requested);
     synchronizeScriptToScreenEpisodeFields(selectedEpisode);
+    // The selector changes a real form value without a native input event.
+    // Bubble one explicit change so the Portal marks the displayed pack stale
+    // and fences any in-flight response before the user composes the episode.
+    selectedEpisode.dispatchEvent(new Event("change", { bubbles: true }));
     selectedEpisode.focus({ preventScroll: true });
     form.scrollIntoView({ behavior: "smooth", block: "center" });
     toast("Đã chọn Tập " + requested + ". Bấm “Tạo Prompt Pack” để máy chủ tạo lại storyboard từ brief gốc.");
@@ -30230,6 +30379,20 @@
     if (selectScriptToScreenEpisode(event.target)) event.preventDefault();
   });
 
+  window.addEventListener("toanaas:script-to-screen-draft-edited", () => {
+    // Portal UI emits this only for an actual user edit, never while mounting
+    // a fresh result. A delayed response for a prior brief/episode is then
+    // intentionally discarded instead of overwriting the current form.
+    ++scriptToScreenPlannerComposeRequestEpoch;
+    ++scriptToScreenPlannerSaveRequestEpoch;
+    if (scriptToScreenPlannerComposePendingRequestEpoch) {
+      // The edit belongs to a newer draft. Let the user compose it now rather
+      // than forcing them to wait for an intentionally discarded response.
+      scriptToScreenPlannerComposePendingRequestEpoch = 0;
+      setActionBusy("script-to-screen-planner-compose", "/video-studio/script-to-screen-planner", false);
+    }
+    reconcileScriptToScreenPlannerSaveControls("/video-studio/script-to-screen-planner");
+  });
   window.addEventListener("toanaas:portal-action", handleAction);
   let initialHydration = null;
   function startInitialHydration() {

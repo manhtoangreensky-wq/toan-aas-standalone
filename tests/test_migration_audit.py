@@ -1863,7 +1863,6 @@ def test_static_audit_maps_reviewed_dynamic_callback_namespaces_without_resolvin
         "pipe|stage|review|{*}": "/workboard",
         "storyboard|mode_ai|{*}": "/video-studio/storyboard-composer",
         "videodub|type|{*}": "/dubbing",
-        "vproduct|camera|{*}": "/video/product",
         "videoaddon|export|{*}": "/video/add-ons",
         "manual|history|{*}": "/wallet/topup",
     }
@@ -3437,3 +3436,94 @@ def test_cinematic_ad_audit_guards_bot_state_runtime_and_admin_callbacks() -> No
     unreviewed = audit._map_callback("adconcept|future_unreviewed_action", "callback_data", evidence, routes)
     assert unreviewed["target"] == "CINEMATIC_AD_SOURCE_REVIEW_REQUIRED"
     assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+
+def test_vproduct_audit_maps_only_four_fresh_intents_to_the_web_planner() -> None:
+    """Task3D callbacks must not inherit a broad Video Product Web route."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    assert all(prefix != "vproduct|" for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert audit.VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS == {
+        "vproduct|ideas|script_image_video",
+        "vproduct|input_text|script_image_video",
+        "vproduct|ideas|multi_scene_film",
+        "vproduct|input_text|multi_scene_film",
+    }
+    for token in sorted(audit.VPRODUCT_FRESH_WEB_PLANNER_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "/video-studio/script-to-screen-planner"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_vproduct_fresh_web_planner_navigation"
+        assert mapped["vproduct_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE_SCRIPT_TO_SCREEN_PLANNER"
+        assert mapped["vproduct_save_boundary"] == "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY"
+        assert "BOT_VPRODUCT_SESSION_NOT_REPLAYED" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    # Callback payloads are source-sensitive: a case variant is not an
+    # independently reviewed Web navigation intent.
+    case_variant = audit._map_callback("VPRODUCT|ideas|script_image_video", "callback_data", evidence, routes)
+    assert case_variant["target"] == "VPRODUCT_SOURCE_REVIEW_REQUIRED"
+    assert case_variant["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+
+def test_vproduct_audit_keeps_guided_prompt_runtime_and_dynamic_state_fail_closed() -> None:
+    """No Bot session, package, prompt or render transition becomes a browser action."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    for token in (
+        "vproduct|open|script_image_video",
+        "vproduct|open|multi_scene_film",
+        "vproduct|ideas|video_idea",
+        "vproduct|input_text|video_reference",
+        "vproduct|aspect|9:16",
+        "vproduct|camera|skip",
+        "vproduct|target|video",
+        "vproduct|scene_count|2",
+        "vproduct|scene_skip",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "BOT_VPRODUCT_GUIDED_STATE_NOT_REPLAYED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "BOT_VPRODUCT_GUIDED_SESSION_STATE" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for token in ("vproduct|prompt_image_copy", "vproduct|prompt_video|2", "vproduct|export|json"):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "BOT_VPRODUCT_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for token in ("vproduct|prompt_image_package|50", "vproduct|prompt_image_execute", "vproduct|prompt_video_create", "vproduct|render"):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "VPRODUCT_RUNTIME_PACKAGE_PROVIDER_OR_PAYMENT_CONTRACT_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "CANONICAL_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for token in ("vproduct|open|other", "vproduct|future_unreviewed_action"):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "VPRODUCT_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    expected_templates = {
+        "vproduct|camera|{*}": "BOT_VPRODUCT_GUIDED_STATE_NOT_REPLAYED",
+        "vproduct|input_text|{*}": "BOT_VPRODUCT_GUIDED_STATE_NOT_REPLAYED",
+        "vproduct|prompt_video|{*}": "BOT_VPRODUCT_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED",
+        "vproduct|prompt_image_package|{*}": "VPRODUCT_RUNTIME_PACKAGE_PROVIDER_OR_PAYMENT_CONTRACT_REQUIRED",
+        "vproduct|open|{*}": "VPRODUCT_SOURCE_REVIEW_REQUIRED",
+        "vproduct|{*}|{*}": "VPRODUCT_SOURCE_REVIEW_REQUIRED",
+    }
+    for template, target in expected_templates.items():
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == target
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
