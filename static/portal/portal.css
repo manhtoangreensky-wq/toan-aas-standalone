@@ -3156,6 +3156,9 @@ a { color: inherit; text-decoration: none; }
 .portal-storyboard-composer-review ul { display: grid; gap: 6px; padding-left: 17px; }
 .portal-storyboard-composer-review > div { padding-top: 9px; border-top: 1px solid rgba(255, 197, 117, .13); }
 .portal-storyboard-composer-result .portal-form-footer { align-items: flex-start; }
+.portal-storyboard-composer [data-storyboard-composer-rendered-result][data-stale],
+.portal-storyboard-composer [data-storyboard-composer-saved-receipt][data-stale] { border-color: var(--portal-warning); }
+.portal-storyboard-composer-stale-note { color: var(--portal-warning); font-weight: 650; line-height: 1.5; }
 
 @media (max-width: 980px) {
   .portal-storyboard-composer-intro, .portal-storyboard-composer-layout, .portal-storyboard-composer-canon, .portal-storyboard-composer-copy { grid-template-columns: 1fr; }

@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1666,
+      "line": 1745,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,12 +179,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4010,
+      "line": 4096,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4018,
+      "line": 4104,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -226,7 +226,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8391,
+      "line": 8750,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -292,7 +292,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6144,
+      "line": 6440,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6808,7 +6808,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 910,
+      "occurrences": 912,
       "provider": "PayOS"
     },
     {
@@ -7036,7 +7036,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2576,
+      "occurrences": 2640,
       "provider": "Telegram"
     }
   ],
@@ -12785,10 +12785,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 290,
-  "source_files_scanned": 290,
-  "source_fingerprint_sha256": "670088c7a29505039bdd6180ae0c8fb75aed3a79c73e67bccc151c30f14b0c7e",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast91-script-to-screen-web-native-flow",
+  "source_files_discovered": 291,
+  "source_files_scanned": 291,
+  "source_fingerprint_sha256": "188a0e9448103e15ff7b4b875112ba33467ecc3e835e887235672fb8dc812ee3",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast92-storypack-web-native-flow",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

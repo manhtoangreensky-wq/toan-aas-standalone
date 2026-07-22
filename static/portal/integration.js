@@ -348,6 +348,19 @@
   // compose request must not make a prior receipt saveable while the user is
   // asking the server to recompute the exact same or a newer brief.
   let scriptToScreenPlannerComposePendingRequestEpoch = 0;
+  // Storyboard Prompt Pack has the same signed-tab ownership boundary. An
+  // older compose/save response must never replace a newer brief, signed
+  // account, route or bootstrap; the pending lock is DOM-only and never a
+  // durable draft or a Bot callback replay mechanism.
+  let storyboardComposerSessionEpoch = 0;
+  let storyboardComposerComposeRequestEpoch = 0;
+  let storyboardComposerSaveRequestEpoch = 0;
+  let storyboardComposerComposePendingRequestEpoch = 0;
+  // A durable save locks the complete native composer until the server
+  // acknowledges it. Unlike a transient compose, an in-flight owner-plan
+  // write may already have committed when its response arrives, so edits or
+  // a second compose must not invalidate/lose its content-free receipt.
+  let storyboardComposerSavePendingRequestEpoch = 0;
   // Operations and Notification Center contain customer/staff-private
   // incident, approval and delivery metadata. A late read must be ignored
   // after a signed-session change, feature disablement, route navigation or
@@ -7069,6 +7082,26 @@
     }
   }
 
+  function storyboardComposerCurrentFormSaveSource(fields) {
+    // Reconcile only the visible, bounded native controls through the same
+    // strict normalizer used by compose/save. A rendered scene/prompt, Bot
+    // state or browser cache can never become part of this comparison.
+    try {
+      return storyboardComposerPayload(fields && typeof fields === "object" ? fields : {});
+    } catch (_) {
+      return null;
+    }
+  }
+
+  function storyboardComposerCurrentFormFields(form) {
+    if (!(form instanceof HTMLFormElement)) return {};
+    const fields = {};
+    new FormData(form).forEach((value, key) => {
+      if (!Object.prototype.hasOwnProperty.call(fields, key)) fields[key] = typeof value === "string" ? value : "";
+    });
+    return fields;
+  }
+
   function storyboardComposerPlanSaveSourceMatchesResult(source, result) {
     const selection = storyboardComposerPlanSaveSource(source);
     const data = result && typeof result === "object" && !Array.isArray(result) ? result : {};
@@ -7088,6 +7121,52 @@
       && selection.language === composer.language
       && selection.idea_choice === composer.idea_choice
       && selection.brief === composer.brief);
+  }
+
+  function storyboardComposerPlanSaveSourceMatchesCurrentFields(rawSource, fields) {
+    const source = storyboardComposerPlanSaveSource(rawSource);
+    const current = storyboardComposerCurrentFormSaveSource(fields);
+    const expected = ["topic", "template", "platform", "aspect_ratio", "duration_seconds", "style", "goal", "language", "idea_choice", "brief"];
+    return Boolean(source && current && expected.every((key) => source[key] === current[key]));
+  }
+
+  function reconcileStoryboardComposerSaveControls(route) {
+    if (route !== "/video-studio/storyboard-composer" || currentPortalPath() !== route) return;
+    const form = document.querySelector('form[data-portal-action="storyboard-composer-compose"]');
+    const source = storyboardComposerPlanSaveSource(base().storyboardComposerSaveSource);
+    const receipt = storyboardComposerPlanSaveReceipt(base().storyboardComposerSaveReceipt);
+    const resultIsCurrent = source && storyboardComposerPlanSaveSourceMatchesResult(source, base().storyboardComposerResult);
+    const fieldsAreCurrent = form && storyboardComposerPlanSaveSourceMatchesCurrentFields(source, storyboardComposerCurrentFormFields(form));
+    const savePending = Boolean(storyboardComposerSavePendingRequestEpoch);
+    // A durable write may already have committed on the server. Lock every
+    // editable control, including the direct Compose button, until its
+    // receipt/error settles so a local edit cannot make a real plan invisible.
+    if (form) {
+      form.setAttribute("aria-busy", String(savePending));
+      form.querySelectorAll("input, select, textarea, button").forEach((control) => {
+        if (!Object.prototype.hasOwnProperty.call(control.dataset, "storyboardComposerSaveInitialDisabled")) {
+          control.dataset.storyboardComposerSaveInitialDisabled = String(control.disabled);
+        }
+        const disabled = savePending || control.dataset.storyboardComposerSaveInitialDisabled === "true";
+        control.disabled = disabled;
+        control.setAttribute("aria-disabled", String(disabled));
+      });
+    }
+    const current = Boolean(!receipt && !savePending && !storyboardComposerComposePendingRequestEpoch && resultIsCurrent && fieldsAreCurrent);
+    document.querySelectorAll('[data-portal-action="storyboard-composer-save-plan"]').forEach((control) => {
+      const disabled = control.dataset.storyboardComposerInitialDisabled === "true" || !current;
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && savePending) {
+        control.setAttribute("title", "Video Plan đang được lưu. Brief và lựa chọn được khóa cho đến khi máy chủ xác nhận.");
+      } else if (disabled && !receipt && !current) {
+        control.setAttribute("title", "Prompt Pack không còn khớp brief hoặc đang được tạo lại; hãy tạo lại trước khi lưu.");
+      } else if (disabled && receipt) {
+        control.setAttribute("title", "Prompt Pack này đã được lưu thành Video Plan Draft. Tạo lại pack nếu cần lưu một plan khác.");
+      } else {
+        control.removeAttribute("title");
+      }
+    });
   }
 
   // The persistence receipt is deliberately content-free. It is accepted only
@@ -9930,6 +10009,11 @@
     ++scriptToScreenPlannerComposeRequestEpoch;
     ++scriptToScreenPlannerSaveRequestEpoch;
     scriptToScreenPlannerComposePendingRequestEpoch = 0;
+    ++storyboardComposerSessionEpoch;
+    ++storyboardComposerComposeRequestEpoch;
+    ++storyboardComposerSaveRequestEpoch;
+    storyboardComposerComposePendingRequestEpoch = 0;
+    storyboardComposerSavePendingRequestEpoch = 0;
     ++imageStudioSessionEpoch;
     ++operationsSessionEpoch;
     ++operationsDeskSessionEpoch;
@@ -10897,6 +10981,11 @@
     ++scriptToScreenPlannerComposeRequestEpoch;
     ++scriptToScreenPlannerSaveRequestEpoch;
     scriptToScreenPlannerComposePendingRequestEpoch = 0;
+    ++storyboardComposerSessionEpoch;
+    ++storyboardComposerComposeRequestEpoch;
+    ++storyboardComposerSaveRequestEpoch;
+    storyboardComposerComposePendingRequestEpoch = 0;
+    storyboardComposerSavePendingRequestEpoch = 0;
     ++videoStudioListHydrationEpoch;
     ++videoStudioDetailHydrationEpoch;
     ++imageMotionPlannerReferencesHydrationEpoch;
@@ -13993,6 +14082,21 @@
       && expectedPath === "/video-studio/script-to-screen-planner"
       && currentPortalPath() === expectedPath
       && base().scriptToScreenPlannerEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function storyboardComposerRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
+    const currentRequestEpoch = kind === "compose"
+      ? storyboardComposerComposeRequestEpoch
+      : kind === "save" ? storyboardComposerSaveRequestEpoch : -1;
+    const account = base().account && typeof base().account === "object" ? base().account : {};
+    return requestEpoch === currentRequestEpoch
+      && sessionEpoch === storyboardComposerSessionEpoch
+      && Boolean(expectedAccountId)
+      && String(account.id || "") === expectedAccountId
+      && expectedPath === "/video-studio/storyboard-composer"
+      && currentPortalPath() === expectedPath
+      && base().storyboardComposerEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
   }
 
@@ -24331,14 +24435,33 @@
         return;
       }
       if (action === "storyboard-composer-compose") {
+        const capabilities = base().capabilities && typeof base().capabilities === "object" ? base().capabilities : {};
+        if (capabilities["storyboard-composer-compose"] !== true) {
+          throw new Error("Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lập Storyboard Prompt Pack.");
+        }
+        if (storyboardComposerSavePendingRequestEpoch) {
+          throw new Error("Video Plan đang được lưu. Brief và lựa chọn hiện tại được khóa cho đến khi máy chủ xác nhận.");
+        }
+        // Only a fresh bounded Web brief crosses this boundary. The Bot's
+        // pending/latest Storypack memory, Telegram identity, prompt bundle,
+        // copy state and guarded media path are never imported or replayed.
         const payload = storyboardComposerPayload(fields);
-        // A new composition invalidates both the old source selection and any
-        // persistent-plan receipt. The transient pack is never restored from
-        // a browser cache, Bot state or a Video Studio record.
-        merge({
-          storyboardComposerResult: {}, storyboardComposerSaveSource: {}, storyboardComposerSaveReceipt: {},
-          pageStates: { ...(base().pageStates || {}), "/video-studio/storyboard-composer": "processing" }
-        });
+        const expectedPath = "/video-studio/storyboard-composer";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = storyboardComposerSessionEpoch;
+        const requestEpoch = ++storyboardComposerComposeRequestEpoch;
+        // A newer compose or actual form edit invalidates a previous save
+        // receipt as well as any delayed compose response.
+        ++storyboardComposerSaveRequestEpoch;
+        if (!storyboardComposerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+        // Do not reset/mount the form before the request settles. The native
+        // form deliberately has no browser persistence, so a network or
+        // validation error must leave the user's visible brief untouched.
+        storyboardComposerComposePendingRequestEpoch = requestEpoch;
+        // Lock an older receipt synchronously. The handler also rejects it,
+        // but the control must never remain clickable while recomputing.
+        reconcileStoryboardComposerSaveControls(route);
         setActionBusy(action, route, true);
         try {
           const result = await api("/video-studio/tools/storyboard-composer", {
@@ -24346,6 +24469,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
+          if (!storyboardComposerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (!storyboardComposerResultIsSafe(data)) {
             throw new Error("Máy chủ chưa trả Storyboard Composer Web-native an toàn.");
@@ -24354,6 +24478,7 @@
           if (!saveSource || !storyboardComposerPlanSaveSourceMatchesResult(saveSource, data)) {
             throw new Error("Bản nháp trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.");
           }
+          if (!storyboardComposerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({
             storyboardComposerResult: data,
             storyboardComposerSaveSource: saveSource,
@@ -24361,8 +24486,18 @@
             pageStates: { ...(base().pageStates || {}), "/video-studio/storyboard-composer": "ready" }
           });
           toast(result.message || "Đã tạo storyboard prompt pack để review. Không có ảnh, video hoặc audio được tạo.");
+        } catch (error) {
+          if (!storyboardComposerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          throw error;
         } finally {
-          setActionBusy(action, route, false);
+          // A newer edit or compose owns its own lock. Never clear it from
+          // an old response, but restore the exact current form when this
+          // request still owns the pending state.
+          if (storyboardComposerComposePendingRequestEpoch === requestEpoch) {
+            storyboardComposerComposePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+            reconcileStoryboardComposerSaveControls(route);
+          }
         }
         return;
       }
@@ -24373,11 +24508,32 @@
           && capabilities["video-plan-create"] === true)) {
           throw new Error("Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Storyboard Composer thành Video Plan.");
         }
+        if (storyboardComposerComposePendingRequestEpoch) {
+          throw new Error("Storyboard Prompt Pack đang được tạo lại từ brief hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.");
+        }
+        if (storyboardComposerSavePendingRequestEpoch) {
+          toast("Video Plan đang được lưu từ Storyboard Prompt Pack hiện tại. Vui lòng chờ receipt từ máy chủ.", "error");
+          return;
+        }
+        const savedReceipt = storyboardComposerPlanSaveReceipt(base().storyboardComposerSaveReceipt);
+        if (savedReceipt) {
+          toast("Storyboard Prompt Pack này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.");
+          return;
+        }
         const source = storyboardComposerPlanSaveSource(base().storyboardComposerSaveSource);
         const currentResult = base().storyboardComposerResult;
         if (!source || !storyboardComposerPlanSaveSourceMatchesResult(source, currentResult)) {
           throw new Error("Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Storyboard Composer trước khi lưu Video Plan.");
         }
+        if (!storyboardComposerPlanSaveSourceMatchesCurrentFields(source, fields)) {
+          throw new Error("Brief hoặc lựa chọn storyboard đang hiển thị đã thay đổi. Hãy tạo lại Storyboard Prompt Pack trước khi lưu Video Plan.");
+        }
+        const expectedPath = "/video-studio/storyboard-composer";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = storyboardComposerSessionEpoch;
+        const requestEpoch = ++storyboardComposerSaveRequestEpoch;
+        if (!storyboardComposerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
         const payload = { ...source, destination: "video_plan" };
         const scope = "video-studio:storyboard-composer:save-plan";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
@@ -24386,6 +24542,8 @@
           return;
         }
         let acknowledged = false;
+        storyboardComposerSavePendingRequestEpoch = requestEpoch;
+        reconcileStoryboardComposerSaveControls(route);
         setActionBusy(action, route, true);
         try {
           // Send only original bounded choices, the explicit destination and a
@@ -24397,20 +24555,32 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ ...payload, idempotency_key: submission.key })
           });
+          if (!storyboardComposerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           acknowledged = true;
           if (result.status !== "draft") throw new Error("Máy chủ chưa xác nhận Video Plan Draft từ Storyboard Composer.");
           const receipt = storyboardComposerPlanSaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Video Plan content-free và đúng ranh giới an toàn.");
+          if (!storyboardComposerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({ storyboardComposerSaveReceipt: receipt });
           toast(result.message || "Đã lưu storyboard thành Video Plan Draft riêng tư.");
         } catch (error) {
+          if (!storyboardComposerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
           merge({ storyboardComposerSaveReceipt: {} });
           throw error;
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
-          setActionBusy(action, route, false);
+          // Only the active durable write may unlock this composer. A newer
+          // signed bootstrap/route owns its own controls and must not be
+          // unlocked by an old response.
+          if (storyboardComposerSavePendingRequestEpoch === requestEpoch) {
+            storyboardComposerSavePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+            // Generic busy-state cleanup could otherwise re-enable a stale
+            // control. Reapply the exact source/result/form receipt contract.
+            reconcileStoryboardComposerSaveControls(route);
+          }
         }
         return;
       }
@@ -30392,6 +30562,25 @@
       setActionBusy("script-to-screen-planner-compose", "/video-studio/script-to-screen-planner", false);
     }
     reconcileScriptToScreenPlannerSaveControls("/video-studio/script-to-screen-planner");
+  });
+  window.addEventListener("toanaas:storyboard-composer-draft-edited", () => {
+    // A real native form edit owns a newer draft. Any older compose/save
+    // response must be discarded instead of resetting the form or restoring
+    // a stale save action from a prior Storypack selection.
+    if (storyboardComposerSavePendingRequestEpoch) {
+      // The form is disabled while a durable owner-plan save is pending. This
+      // defensive guard also covers synthetic events: never discard a receipt
+      // for a write the server may already have committed.
+      reconcileStoryboardComposerSaveControls("/video-studio/storyboard-composer");
+      return;
+    }
+    ++storyboardComposerComposeRequestEpoch;
+    ++storyboardComposerSaveRequestEpoch;
+    if (storyboardComposerComposePendingRequestEpoch) {
+      storyboardComposerComposePendingRequestEpoch = 0;
+      setActionBusy("storyboard-composer-compose", "/video-studio/storyboard-composer", false);
+    }
+    reconcileStoryboardComposerSaveControls("/video-studio/storyboard-composer");
   });
   window.addEventListener("toanaas:portal-action", handleAction);
   let initialHydration = null;

@@ -11956,8 +11956,13 @@
       : `<p>${safeText(fallback)}</p>`;
   }
 
-  function renderStoryboardComposerResult(raw, rawSaveSource, canSaveToVideoPlan) {
+  function renderStoryboardComposerSaveControl(canSaveToVideoPlan) {
+    return `<button class="portal-button portal-button--primary" type="button" data-portal-action="storyboard-composer-save-plan" data-portal-route="/video-studio/storyboard-composer" data-portal-form-id="storyboard-composer-form" data-portal-confirm="Lưu Storyboard Prompt Pack thành Video Plan Draft riêng tư? Máy chủ sẽ tự tạo lại plan từ lựa chọn đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh/video/audio, job, không đổi ví Xu, PayOS, asset, publish hoặc delivery."${canSaveToVideoPlan ? "" : " disabled"}>Lưu thành Video Plan</button>`;
+  }
+
+  function renderStoryboardComposerResult(raw, rawSaveSource, rawReceipt, canSaveToVideoPlan) {
     const result = raw && typeof raw === "object" ? raw : {};
+    const receipt = normalizeStoryboardComposerPlanSaveReceipt(rawReceipt);
     const composer = result.composer && typeof result.composer === "object" ? result.composer : null;
     if (!composer) {
       return `<section class="portal-card portal-card-pad portal-storyboard-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard Prompt Pack Composer</span><h2 class="portal-card-title">Chưa có storyboard prompt pack</h2><p class="portal-card-subtitle">Nhập một brief để server trả concept, visual canon, shot list và prompt areas theo contract Web-native. Browser không tự dựng storyboard, ảnh, video, audio hoặc preview trước khi nhận phản hồi hợp lệ.</p></div>${badge("empty")}</div></section>`;
@@ -11981,14 +11986,16 @@
       && saveSource.style === style.id && saveSource.goal === goal.id && saveSource.language === composer.language
       && saveSource.idea_choice === composer.idea_choice && saveSource.brief === composer.brief
     );
-    const saveControl = sourceMatchesComposer
-      ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="storyboard-composer-save-plan" data-portal-route="/video-studio/storyboard-composer" data-portal-confirm="Lưu storyboard Web hiện tại thành Video Plan Draft? Máy chủ sẽ tự tạo lại plan từ lựa chọn đã xác nhận; không tạo pending Telegram, không gọi Bot/provider, không tạo ảnh/video/audio, job, không đổi ví Xu, PayOS, asset, publish hoặc delivery."${canSaveToVideoPlan ? "" : " disabled"}>Lưu thành Video Plan</button>`
-      : "";
+    // A receipt is terminal for this exact visible pack. Generic rerenders
+    // must not restore a second active save control after the server has
+    // already created its owner-only Video Plan Draft.
+    const alreadySaved = Boolean(receipt.plan && validVideoStudioPlanId(receipt.plan.id));
+    const saveControl = sourceMatchesComposer && !alreadySaved ? renderStoryboardComposerSaveControl(canSaveToVideoPlan) : "";
     const canonLists = [
       ["Continuity locks", visualCanon.continuity_locks, "Không có continuity lock hiển thị."],
       ["Negative constraints", visualCanon.negative_constraints, "Không có negative constraint hiển thị."]
     ].map(([label, items, fallback]) => `<section class="portal-storyboard-composer-canon-list"><strong>${safeText(label)}</strong>${storyboardComposerListMarkup(items, fallback)}</section>`).join("");
-    return `<section class="portal-card portal-card-pad portal-storyboard-composer-result"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic storyboard</span><h2 class="portal-card-title">${safeText(String(composer.title || "Storyboard Prompt Pack"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.topic || ""))} · ${safeText(String(template.label || ""))} · ${safeText(String(platform.label || ""))} · ${safeText(String(composer.aspect_ratio || ""))} · ${safeText(String(composer.duration_seconds || ""))} giây. Đây là plan text để review, không phải ảnh, video, audio, preview hay media đã được tạo.</p></div>${badge("read_only")}</div><div class="portal-storyboard-composer-meta"><span>Style: ${safeText(String(style.label || ""))}</span><span>Mục tiêu: ${safeText(String(goal.label || ""))}</span><span>Ngôn ngữ: ${safeText(String(composer.language || "").toUpperCase())}</span><span>Concept ${safeText(String(composer.idea_choice || ""))}</span>${composer.brief ? `<span>Brief: ${safeText(String(composer.brief))}</span>` : ""}</div><section class="portal-storyboard-composer-directions"><div class="portal-card-header"><div><span class="portal-section-kicker">Creative directions</span><h3 class="portal-card-title">Ba hướng kể chuyện để so sánh</h3><p class="portal-card-subtitle">Chỉ concept text để review; không có chiến dịch, phê duyệt quảng cáo hoặc publish action nào được tạo.</p></div></div><ol>${directions.map((direction) => `<li${Number(direction.index) === Number(selected.index) ? " data-selected=\"true\"" : ""}><span class="portal-storyboard-composer-index">${safeText(String(direction.index || "").padStart(2, "0"))}</span><div><div class="portal-storyboard-composer-direction-head"><strong>${safeText(String(direction.title || ""))}</strong>${Number(direction.index) === Number(selected.index) ? "<em>Đang phát triển</em>" : ""}</div><dl><div><dt>Premise</dt><dd>${safeText(String(direction.premise || ""))}</dd></div><div><dt>Hook</dt><dd>${safeText(String(direction.hook || ""))}</dd></div><div><dt>Structure</dt><dd>${safeText(String(direction.structure || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(direction.cta || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-storyboard-composer-canon"><div><span class="portal-section-kicker">Visual canon</span><h3>Giữ tính nhất quán xuyên suốt</h3><p>Canon là checklist direction cho người review. Nó không xác minh identity, claim, quyền sử dụng hoặc khả năng tạo media.</p></div><dl><div><dt>Chủ thể</dt><dd>${safeText(String(visualCanon.subject || ""))}</dd></div><div><dt>Bối cảnh</dt><dd>${safeText(String(visualCanon.setting || ""))}</dd></div><div><dt>Style</dt><dd>${safeText(String(visualCanon.style || ""))}</dd></div><div><dt>Tỷ lệ</dt><dd>${safeText(String(visualCanon.aspect_ratio || ""))}</dd></div></dl><div class="portal-storyboard-composer-canon-lists">${canonLists}</div></section><section class="portal-storyboard-composer-shots portal-storyboard-composer-timeline"><div class="portal-card-header"><div><span class="portal-section-kicker">Shot pack</span><h3 class="portal-card-title">Nhịp hình ảnh theo từng cảnh</h3><p class="portal-card-subtitle">Shot list là direction text theo timeline, không phải footage, render timeline, player hay media output.</p></div><span class="portal-storyboard-composer-count">${safeText(String(shots.length))} shots</span></div><ol>${shots.map((shot) => `<li><span class="portal-storyboard-composer-index">${safeText(String(shot.index || "").padStart(2, "0"))}</span><div><div class="portal-storyboard-composer-shot-head"><strong>${safeText(String(shot.start_seconds || 0))}–${safeText(String(shot.end_seconds || 0))}s</strong><span>${safeText(String(shot.transition || ""))}</span></div><dl><div><dt>Beat</dt><dd>${safeText(String(shot.beat || ""))}</dd></div><div><dt>Visual</dt><dd>${safeText(String(shot.visual || ""))}</dd></div><div><dt>Action</dt><dd>${safeText(String(shot.action || ""))}</dd></div><div><dt>Camera</dt><dd>${safeText(String(shot.camera || ""))}</dd></div><div><dt>Voiceover</dt><dd>${safeText(String(shot.voiceover || ""))}</dd></div><div><dt>CTA space</dt><dd>${safeText(String(shot.cta_space || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-storyboard-composer-prompts"><div><span class="portal-section-kicker">Copy-friendly prompt areas</span><h3>Prompt ảnh và video từng cảnh</h3><p>Những vùng text dưới đây để copy/review; trang này không tự gửi prompt đến creative engine hoặc tạo bất kỳ media nào.</p></div><div class="portal-storyboard-composer-prompt-grid">${scenePrompts.map((item) => `<article class="portal-storyboard-composer-prompt"><div><span class="portal-section-kicker">Scene ${safeText(String(item.index || ""))}</span><strong>Prompt planning</strong></div><dl><div><dt>Image prompt</dt><dd><pre>${safeText(String(item.image_prompt || ""))}</pre></dd></div><div><dt>Video prompt</dt><dd><pre>${safeText(String(item.video_prompt || ""))}</pre></dd></div><div><dt>Negative constraint</dt><dd><pre>${safeText(String(item.negative_prompt || ""))}</pre></dd></div></dl></article>`).join("")}</div></section><section class="portal-storyboard-composer-meta-prompts"><div><span class="portal-section-kicker">Meta AI variants</span><h3>Ba prompt nháp để tham khảo</h3><p>Đây là text hướng dẫn để kiểm tra; không phải action tạo nội dung hoặc xác nhận kết quả.</p></div><ol>${metaPrompts.map((item) => `<li><span class="portal-storyboard-composer-index">${safeText(String(item.index || "").padStart(2, "0"))}</span><div><strong>${safeText(String(item.label || ""))}</strong><pre>${safeText(String(item.prompt || ""))}</pre></div></li>`).join("")}</ol></section><section class="portal-storyboard-composer-copy"><div><span class="portal-section-kicker">Caption, hashtag & CTA</span><h3>Thông điệp cuối để review</h3></div><dl><div><dt>Caption</dt><dd>${safeText(String(composer.caption || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(composer.cta || ""))}</dd></div></dl><div class="portal-storyboard-composer-hashtags">${hashtagMarkup}</div></section><section class="portal-storyboard-composer-review"><strong>Cảnh báo và rà soát trước khi dùng ở nơi khác</strong>${storyboardComposerListMarkup(composer.cautions, "Không có cảnh báo bổ sung từ template; bạn vẫn cần kiểm tra claim, quyền, thương hiệu và consent.")}<div>${storyboardComposerListMarkup(composer.review_before_use, "Luôn rà soát claim, quyền sử dụng, consent và brand safety trước khi đưa plan sang workflow khác.")}</div></section><div class="portal-form-footer"><span class="portal-form-note">Bạn có thể xác nhận lưu đúng lựa chọn này thành Video Plan Draft riêng tư. Máy chủ tự tạo lại storyboard; browser không gửi prompt/shot đã sinh và không tạo Bot pending-save, media, job, Xu, PayOS, asset, publish hoặc delivery.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a>${saveControl}</div></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-storyboard-composer-result" data-storyboard-composer-rendered-result><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic storyboard</span><h2 class="portal-card-title">${safeText(String(composer.title || "Storyboard Prompt Pack"))}</h2><p class="portal-card-subtitle">${safeText(String(composer.topic || ""))} · ${safeText(String(template.label || ""))} · ${safeText(String(platform.label || ""))} · ${safeText(String(composer.aspect_ratio || ""))} · ${safeText(String(composer.duration_seconds || ""))} giây. Đây là plan text để review, không phải ảnh, video, audio, preview hay media đã được tạo.</p></div>${badge("read_only")}</div><div class="portal-storyboard-composer-meta"><span>Style: ${safeText(String(style.label || ""))}</span><span>Mục tiêu: ${safeText(String(goal.label || ""))}</span><span>Ngôn ngữ: ${safeText(String(composer.language || "").toUpperCase())}</span><span>Concept ${safeText(String(composer.idea_choice || ""))}</span>${composer.brief ? `<span>Brief: ${safeText(String(composer.brief))}</span>` : ""}</div><section class="portal-storyboard-composer-directions"><div class="portal-card-header"><div><span class="portal-section-kicker">Creative directions</span><h3 class="portal-card-title">Ba hướng kể chuyện để so sánh</h3><p class="portal-card-subtitle">Chỉ concept text để review; không có chiến dịch, phê duyệt quảng cáo hoặc publish action nào được tạo.</p></div></div><ol>${directions.map((direction) => `<li${Number(direction.index) === Number(selected.index) ? " data-selected=\"true\"" : ""}><span class="portal-storyboard-composer-index">${safeText(String(direction.index || "").padStart(2, "0"))}</span><div><div class="portal-storyboard-composer-direction-head"><strong>${safeText(String(direction.title || ""))}</strong>${Number(direction.index) === Number(selected.index) ? "<em>Đang phát triển</em>" : ""}</div><dl><div><dt>Premise</dt><dd>${safeText(String(direction.premise || ""))}</dd></div><div><dt>Hook</dt><dd>${safeText(String(direction.hook || ""))}</dd></div><div><dt>Structure</dt><dd>${safeText(String(direction.structure || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(direction.cta || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-storyboard-composer-canon"><div><span class="portal-section-kicker">Visual canon</span><h3>Giữ tính nhất quán xuyên suốt</h3><p>Canon là checklist direction cho người review. Nó không xác minh identity, claim, quyền sử dụng hoặc khả năng tạo media.</p></div><dl><div><dt>Chủ thể</dt><dd>${safeText(String(visualCanon.subject || ""))}</dd></div><div><dt>Bối cảnh</dt><dd>${safeText(String(visualCanon.setting || ""))}</dd></div><div><dt>Style</dt><dd>${safeText(String(visualCanon.style || ""))}</dd></div><div><dt>Tỷ lệ</dt><dd>${safeText(String(visualCanon.aspect_ratio || ""))}</dd></div></dl><div class="portal-storyboard-composer-canon-lists">${canonLists}</div></section><section class="portal-storyboard-composer-shots portal-storyboard-composer-timeline"><div class="portal-card-header"><div><span class="portal-section-kicker">Shot pack</span><h3 class="portal-card-title">Nhịp hình ảnh theo từng cảnh</h3><p class="portal-card-subtitle">Shot list là direction text theo timeline, không phải footage, render timeline, player hay media output.</p></div><span class="portal-storyboard-composer-count">${safeText(String(shots.length))} shots</span></div><ol>${shots.map((shot) => `<li><span class="portal-storyboard-composer-index">${safeText(String(shot.index || "").padStart(2, "0"))}</span><div><div class="portal-storyboard-composer-shot-head"><strong>${safeText(String(shot.start_seconds || 0))}–${safeText(String(shot.end_seconds || 0))}s</strong><span>${safeText(String(shot.transition || ""))}</span></div><dl><div><dt>Beat</dt><dd>${safeText(String(shot.beat || ""))}</dd></div><div><dt>Visual</dt><dd>${safeText(String(shot.visual || ""))}</dd></div><div><dt>Action</dt><dd>${safeText(String(shot.action || ""))}</dd></div><div><dt>Camera</dt><dd>${safeText(String(shot.camera || ""))}</dd></div><div><dt>Voiceover</dt><dd>${safeText(String(shot.voiceover || ""))}</dd></div><div><dt>CTA space</dt><dd>${safeText(String(shot.cta_space || ""))}</dd></div></dl></div></li>`).join("")}</ol></section><section class="portal-storyboard-composer-prompts"><div><span class="portal-section-kicker">Copy-friendly prompt areas</span><h3>Prompt ảnh và video từng cảnh</h3><p>Những vùng text dưới đây để copy/review; trang này không tự gửi prompt đến creative engine hoặc tạo bất kỳ media nào.</p></div><div class="portal-storyboard-composer-prompt-grid">${scenePrompts.map((item) => `<article class="portal-storyboard-composer-prompt"><div><span class="portal-section-kicker">Scene ${safeText(String(item.index || ""))}</span><strong>Prompt planning</strong></div><dl><div><dt>Image prompt</dt><dd><pre>${safeText(String(item.image_prompt || ""))}</pre></dd></div><div><dt>Video prompt</dt><dd><pre>${safeText(String(item.video_prompt || ""))}</pre></dd></div><div><dt>Negative constraint</dt><dd><pre>${safeText(String(item.negative_prompt || ""))}</pre></dd></div></dl></article>`).join("")}</div></section><section class="portal-storyboard-composer-meta-prompts"><div><span class="portal-section-kicker">Meta AI variants</span><h3>Ba prompt nháp để tham khảo</h3><p>Đây là text hướng dẫn để kiểm tra; không phải action tạo nội dung hoặc xác nhận kết quả.</p></div><ol>${metaPrompts.map((item) => `<li><span class="portal-storyboard-composer-index">${safeText(String(item.index || "").padStart(2, "0"))}</span><div><strong>${safeText(String(item.label || ""))}</strong><pre>${safeText(String(item.prompt || ""))}</pre></div></li>`).join("")}</ol></section><section class="portal-storyboard-composer-copy"><div><span class="portal-section-kicker">Caption, hashtag & CTA</span><h3>Thông điệp cuối để review</h3></div><dl><div><dt>Caption</dt><dd>${safeText(String(composer.caption || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(composer.cta || ""))}</dd></div></dl><div class="portal-storyboard-composer-hashtags">${hashtagMarkup}</div></section><section class="portal-storyboard-composer-review"><strong>Cảnh báo và rà soát trước khi dùng ở nơi khác</strong>${storyboardComposerListMarkup(composer.cautions, "Không có cảnh báo bổ sung từ template; bạn vẫn cần kiểm tra claim, quyền, thương hiệu và consent.")}<div>${storyboardComposerListMarkup(composer.review_before_use, "Luôn rà soát claim, quyền sử dụng, consent và brand safety trước khi đưa plan sang workflow khác.")}</div></section><div class="portal-form-footer"><span class="portal-form-note">${alreadySaved ? "Prompt Pack này đã được lưu thành Video Plan Draft. Tạo lại pack từ brief mới nếu cần lưu một plan khác." : "Bạn có thể xác nhận lưu đúng lựa chọn này thành Video Plan Draft riêng tư. Máy chủ tự tạo lại storyboard; browser không gửi prompt/shot đã sinh và không tạo Bot pending-save, media, job, Xu, PayOS, asset, publish hoặc delivery."}</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a>${saveControl}</div></div></section>`;
   }
 
   function renderStoryboardComposerSaveReceipt(raw) {
@@ -11996,7 +12003,7 @@
     const plan = receipt.plan && typeof receipt.plan === "object" ? receipt.plan : null;
     if (!plan) return "";
     const planPath = `/video-studio/${encodeURIComponent(String(plan.id))}`;
-    return `<section class="portal-card portal-card-pad portal-storyboard-composer-result" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Video Production Studio riêng tư</span><h2 class="portal-card-title">Đã lưu Storyboard thành Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} scenes · revision ${safeText(String(plan.revision || 1))}. Receipt không giữ lại brief, concept, shot hay prompt đã sinh trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Đã tạo plan owner-only có thể biên tập. Không có pending Telegram, Bot/provider call, ảnh/video/audio, preview, output, job, ví Xu, PayOS, asset, publish, delivery, approval, lock hoặc generation.</span><a class="portal-button portal-button--primary" href="${safeText(planPath)}">Mở Video Plan</a></div></section>`;
+    return `<section class="portal-card portal-card-pad portal-storyboard-composer-result" aria-live="polite" data-storyboard-composer-saved-receipt><div class="portal-card-header"><div><span class="portal-section-kicker">Video Production Studio riêng tư</span><h2 class="portal-card-title">Đã lưu Storyboard thành Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} scenes · revision ${safeText(String(plan.revision || 1))}. Receipt không giữ lại brief, concept, shot hay prompt đã sinh trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Đã tạo plan owner-only có thể biên tập. Không có pending Telegram, Bot/provider call, ảnh/video/audio, preview, output, job, ví Xu, PayOS, asset, publish, delivery, approval, lock hoặc generation.</span><a class="portal-button portal-button--primary" href="${safeText(planPath)}">Mở Video Plan</a></div></section>`;
   }
 
   function renderStoryboardComposer(page, context) {
@@ -12008,8 +12015,8 @@
     };
     return `<article class="portal-page portal-storyboard-composer">${renderHero(page, context)}
       <section class="portal-storyboard-composer-intro"><div><span class="portal-section-kicker">Web-native storyboard planning</span><h2>Đi từ một chủ đề đến shot pack rõ ràng — không hề tạo media.</h2><p>Composer chuyển grammar storyboard prompt pack của Bot thành một không gian review trực quan: ba concept, visual canon, timeline shot và prompt areas dễ copy. Mọi phần là text planning do bạn kiểm tra trước khi dùng ở workflow khác.</p></div><dl><div><dt>3</dt><dd>Creative directions</dd></div><div><dt>5–10</dt><dd>Shots theo thời lượng</dd></div><div><dt>0</dt><dd>Media được tạo</dd></div></dl></section>
-      <div class="portal-storyboard-composer-layout"><section class="portal-card portal-card-pad portal-storyboard-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard brief</span><h2 class="portal-card-title">Storyboard Prompt Pack Composer</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Composer chỉ tạo bản review tạm thời; Video Plan chỉ được tạo sau khi bạn xác nhận riêng.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="storyboard-composer-compose" data-portal-route="/video-studio/storyboard-composer" novalidate>${renderFields(storyboardComposerFields(), canCompose, context, values, "storyboard-composer")}<div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ lập concept, visual canon, shot list và prompt text để review; không tạo ảnh, video, audio, preview, asset hoặc publish action.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo storyboard prompt pack</button></div></form></section><aside class="portal-card portal-card-pad portal-storyboard-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập shot pack, không chạy creative engine</h2><p class="portal-card-subtitle">Không có source media/upload, image/video/audio generation, render, preview, output, job, Xu, PayOS, asset, publish hoặc delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-storyboard-composer-guard-list"><span><strong>Source media / upload</strong><em>off</em></span><span><strong>Image / video / audio</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Render / preview</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
-      ${renderStoryboardComposerResult(context.storyboardComposerResult, context.storyboardComposerSaveSource, canSaveToVideoPlan)}
+      <div class="portal-storyboard-composer-layout"><section class="portal-card portal-card-pad portal-storyboard-composer-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard brief</span><h2 class="portal-card-title">Storyboard Prompt Pack Composer</h2><p class="portal-card-subtitle">Server xác minh signed session và CSRF rồi áp dụng template deterministic. Composer chỉ tạo bản review tạm thời; Video Plan chỉ được tạo sau khi bạn xác nhận riêng.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form id="storyboard-composer-form" class="portal-form" data-portal-form data-portal-no-transient data-portal-action="storyboard-composer-compose" data-portal-route="/video-studio/storyboard-composer" novalidate>${renderFields(storyboardComposerFields(), canCompose, context, values, "storyboard-composer")}<div class="portal-form-footer"><span class="portal-form-note portal-storyboard-composer-stale-note" data-storyboard-composer-stale-note hidden role="status" aria-live="polite"></span><span class="portal-form-note">Nút này chỉ lập concept, visual canon, shot list và prompt text để review; không tạo ảnh, video, audio, preview, asset hoặc publish action.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="storyboard-composer-compose" data-portal-route="/video-studio/storyboard-composer" data-portal-form-id="storyboard-composer-form"${canCompose ? "" : " disabled"}>Tạo storyboard prompt pack</button></div></form></section><aside class="portal-card portal-card-pad portal-storyboard-composer-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập shot pack, không chạy creative engine</h2><p class="portal-card-subtitle">Không có source media/upload, image/video/audio generation, render, preview, output, job, Xu, PayOS, asset, publish hoặc delivery trong tool này.</p></div>${badge("guarded")}</div><div class="portal-storyboard-composer-guard-list"><span><strong>Source media / upload</strong><em>off</em></span><span><strong>Image / video / audio</strong><em>off</em></span><span><strong>Model / provider</strong><em>off</em></span><span><strong>Render / preview</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span><span><strong>Bot / bridge</strong><em>off</em></span></div></aside></div>
+      ${renderStoryboardComposerResult(context.storyboardComposerResult, context.storyboardComposerSaveSource, context.storyboardComposerSaveReceipt, canSaveToVideoPlan)}
       ${renderStoryboardComposerSaveReceipt(context.storyboardComposerSaveReceipt)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Review storyboard trước, thực thi bằng contract riêng sau</h2><p class="portal-card-subtitle">Dùng prompt pack như một brief có cấu trúc để kiểm tra câu chuyện, claim, quyền sử dụng, consent và brand safety. Khi cần lưu version history, hãy tạo Video Plan riêng; việc đó cũng không render hay tạo media.</p></div></div>${renderNotes(page)}</section>
     </article>`;
@@ -22893,6 +22900,95 @@
     window.dispatchEvent(new CustomEvent("toanaas:script-to-screen-draft-edited"));
   }
 
+  function storyboardComposerFormMatchesSavedSource(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "storyboard-composer-compose") return false;
+    // HTML form controls yield strings, while the signed source holds the
+    // server-validated numeric duration/idea fields. Normalize only the two
+    // finite scalar select values before comparing; otherwise an unchanged
+    // native form would be marked stale after every render.
+    const current = normalizeStoryboardComposerFormSaveSource(collectFormFields(form));
+    const saved = normalizeStoryboardComposerPlanSaveSource(getBootstrap().storyboardComposerSaveSource);
+    return Boolean(current.topic && saved.topic
+      && STORYBOARD_COMPOSER_PLAN_SAVE_SOURCE_KEYS.every((key) => current[key] === saved[key]));
+  }
+
+  function storyboardComposerFormInteger(value) {
+    if (typeof value === "number" && Number.isSafeInteger(value)) return value;
+    const text = typeof value === "string" ? value.trim() : "";
+    if (!/^(?:0|[1-9]\d*)$/.test(text)) return NaN;
+    const parsed = Number(text);
+    return Number.isSafeInteger(parsed) ? parsed : NaN;
+  }
+
+  function normalizeStoryboardComposerFormSaveSource(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    return normalizeStoryboardComposerPlanSaveSource({
+      ...source,
+      duration_seconds: storyboardComposerFormInteger(source.duration_seconds),
+      idea_choice: storyboardComposerFormInteger(source.idea_choice)
+    });
+  }
+
+  function hydrateStoryboardComposerForm(form) {
+    if (!form || form.dataset.storyboardComposerSourceHydrated === "true") return;
+    const source = normalizeStoryboardComposerPlanSaveSource(getBootstrap().storyboardComposerSaveSource);
+    if (!source.topic) return;
+    for (const key of STORYBOARD_COMPOSER_PLAN_SAVE_SOURCE_KEYS) {
+      const control = form.querySelector(`[name="${key}"]`);
+      if (control) control.value = String(source[key]);
+    }
+    form.dataset.storyboardComposerSourceHydrated = "true";
+  }
+
+  function ensureStoryboardComposerDraftControls(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "storyboard-composer-compose") return;
+    if (!form.id) form.id = "storyboard-composer-form";
+    document.querySelectorAll('[data-portal-action="storyboard-composer-save-plan"]').forEach((control) => {
+      control.setAttribute("data-portal-form-id", form.id);
+    });
+  }
+
+  function synchronizeStoryboardComposerDraftFreshness(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "storyboard-composer-compose") return;
+    hydrateStoryboardComposerForm(form);
+    ensureStoryboardComposerDraftControls(form);
+    const page = form.closest(".portal-storyboard-composer");
+    const hasPack = Boolean(page && page.querySelector("[data-storyboard-composer-rendered-result], [data-storyboard-composer-saved-receipt]"));
+    if (!hasPack) return;
+    const receipt = normalizeStoryboardComposerPlanSaveReceipt(getBootstrap().storyboardComposerSaveReceipt);
+    const alreadySaved = Boolean(receipt.plan && validVideoStudioPlanId(receipt.plan.id));
+    const fresh = storyboardComposerFormMatchesSavedSource(form);
+    const saveAllowed = fresh && !alreadySaved;
+    const note = form.querySelector("[data-storyboard-composer-stale-note]");
+    form.dataset.storyboardComposerDraftState = fresh ? (alreadySaved ? "saved" : "fresh") : "stale";
+    if (note) {
+      note.hidden = fresh;
+      note.textContent = fresh
+        ? ""
+        : "Brief hoặc lựa chọn storyboard đã thay đổi. Prompt Pack hoặc Video Plan đang hiển thị thuộc lựa chọn trước; hãy tạo lại trước khi lưu.";
+    }
+    (page ? page.querySelectorAll("[data-storyboard-composer-rendered-result], [data-storyboard-composer-saved-receipt]") : []).forEach((surface) => {
+      surface.toggleAttribute("data-stale", !fresh);
+    });
+    (page ? page.querySelectorAll('[data-portal-action="storyboard-composer-save-plan"]') : []).forEach((control) => {
+      if (!Object.prototype.hasOwnProperty.call(control.dataset, "storyboardComposerInitialDisabled")) {
+        control.dataset.storyboardComposerInitialDisabled = String(control.disabled);
+      }
+      const disabled = !saveAllowed || control.dataset.storyboardComposerInitialDisabled === "true";
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && !fresh) control.setAttribute("title", "Brief hoặc lựa chọn storyboard đã thay đổi; hãy tạo lại Prompt Pack trước khi lưu.");
+      else if (disabled && alreadySaved) control.setAttribute("title", "Prompt Pack này đã được lưu thành Video Plan Draft. Tạo lại pack nếu cần lưu một plan khác.");
+      else control.removeAttribute("title");
+    });
+  }
+
+  function markStoryboardComposerDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "storyboard-composer-compose") return;
+    synchronizeStoryboardComposerDraftFreshness(form);
+    window.dispatchEvent(new CustomEvent("toanaas:storyboard-composer-draft-edited"));
+  }
+
   function synchronizeQuickImagePlannerForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "quick-image-planner-plan") return;
     const source = form.querySelector('[data-quick-image-planner-source]');
@@ -23957,6 +24053,9 @@
       if (form && form.getAttribute("data-portal-action") === "script-to-screen-planner-compose") {
         markScriptToScreenPlannerDraftEdited(form);
       }
+      if (form && form.getAttribute("data-portal-action") === "storyboard-composer-compose") {
+        markStoryboardComposerDraftEdited(form);
+      }
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
@@ -23985,6 +24084,9 @@
         }
         if (form.getAttribute("data-portal-action") === "script-to-screen-planner-compose") {
           markScriptToScreenPlannerDraftEdited(form);
+        }
+        if (form.getAttribute("data-portal-action") === "storyboard-composer-compose") {
+          markStoryboardComposerDraftEdited(form);
         }
         if (event.target && event.target.name === "preset") {
           synchronizeImageResizePreset(form);
@@ -24151,6 +24253,9 @@
     });
     main.querySelectorAll('[data-portal-action="script-to-screen-planner-compose"]').forEach((form) => {
       synchronizeScriptToScreenDraftFreshness(form);
+    });
+    main.querySelectorAll('[data-portal-action="storyboard-composer-compose"]').forEach((form) => {
+      synchronizeStoryboardComposerDraftFreshness(form);
     });
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
