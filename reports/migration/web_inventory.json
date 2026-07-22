@@ -231,7 +231,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9348,
+      "line": 9411,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +297,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6885,
+      "line": 6931,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -7041,7 +7041,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2773,
+      "occurrences": 2774,
       "provider": "Telegram"
     }
   ],
@@ -12810,8 +12810,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 294,
   "source_files_scanned": 294,
-  "source_fingerprint_sha256": "1c631a413b968a7484e46863c448bce5b58fc0564083afce4f19f944431f1fdd",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast97-media-cancel-boundary",
+  "source_fingerprint_sha256": "b83d571d08a563f4413c13a02737cc11887cddc52189651c775a2f97932f7fc0",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast98-quick-image-case-boundary",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

@@ -5369,6 +5369,42 @@ def _quick_image_planner_telegram_only_mapping(
     }
 
 
+def _quick_image_planner_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for a non-frozen Quick Image callback spelling.
+
+    The audited Bot payload is case-sensitive. A variant could change the
+    conversation/confirmation state machine, so it cannot inherit a fresh
+    Planner route, a canonical Bot checkout boundary, or a browser action.
+    """
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "quick_image_planner_callback_requires_exact_source_review",
+        "source_dispositions": (
+            "BOT_QUICK_IMAGE_CALLBACK_OR_CONVERSATION_STATE",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_TELEGRAM_STATE_OR_WEB_DRAFT_REPLAY",
+            "NO_PROVIDER_JOB_WALLET_PAYMENT_OR_DELIVERY_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "Only finite raw Quick Image callback literals/templates from the frozen Bot baseline are reviewed. "
+            "A case variant, suffix or other Quick Image spelling may alter Bot prompt, tier, confirmation or "
+            "checkout state and cannot inherit a Web Planner route, Telegram-only checkout disposition, browser "
+            "state reset, provider/job/wallet/payment action or delivery claim."
+        ),
+        "evidence": evidence,
+    }
+
+
 def _map_quick_image_planner_callback(
     identifier: str,
     source_kind: str,
@@ -5377,15 +5413,25 @@ def _map_quick_image_planner_callback(
 ) -> dict[str, Any] | None:
     """Map only finite Quick Image draft tokens; reject execution boundaries."""
 
-    token = str(identifier or "").casefold()
-    if token in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACKS:
+    raw_identifier = str(identifier or "")
+    token = raw_identifier.casefold()
+    if raw_identifier in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACKS:
         return _quick_image_planner_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
-    if token.startswith("create_media|qi_logo_pos|"):
-        position = token.rsplit("|", 1)[-1]
+    if raw_identifier.startswith("create_media|qi_logo_pos|"):
+        position = raw_identifier.rsplit("|", 1)[-1]
         if position in QUICK_IMAGE_LOGO_POSITION_VALUES:
             return _quick_image_planner_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
-    if token in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACKS:
+    if raw_identifier in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACKS:
         return _quick_image_planner_telegram_only_mapping(identifier, source_kind, evidence)
+    if (
+        token.startswith("create_media|quick_image")
+        or token.startswith("create_media|qi_")
+        or token == "shopai|confirm"
+        or token.startswith("shopai|confirm|")
+        or token == "shopai|package"
+        or token.startswith("shopai|package|")
+    ):
+        return _quick_image_planner_source_review_mapping(identifier, source_kind, evidence)
     return None
 
 
@@ -7589,7 +7635,8 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     remain ``NEEDS_WEB_IMPLEMENTATION`` in the generated parity report.
     """
 
-    token = str(template or "").casefold()
+    raw_template = str(template or "")
+    token = raw_template.casefold()
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(template, "callback_template", evidence, existing_routes)
     if cinematic_ad_concept_mapping is not None:
         return cinematic_ad_concept_mapping
@@ -7606,7 +7653,7 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # Preserve the raw static literal for finite contracts that are
         # intentionally case-sensitive. Normalized `token` remains only for
         # wildcard/prefix classification below.
-        return _map_callback(str(template or ""), "callback_template", evidence, existing_routes)
+        return _map_callback(raw_template, "callback_template", evidence, existing_routes)
     if token.startswith("archive|"):
         # Dynamic Archive suffixes can encode Bot department/type/search state
         # or identifiers.  Keep all of them fail-closed instead of inheriting
@@ -7617,10 +7664,19 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
         # reviewed literals are handled above by _map_callback; a template
         # must remain an explicit source-review boundary.
         return _map_interface_locale_callback(template, "callback_template", evidence, existing_routes)
-    if token in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
+    if raw_template in QUICK_IMAGE_PLANNER_FRESH_WEB_CALLBACK_TEMPLATES:
         return _quick_image_planner_fresh_web_mapping(template, "callback_template", evidence, existing_routes)
-    if token in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
+    if raw_template in QUICK_IMAGE_PLANNER_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         return _quick_image_planner_telegram_only_mapping(template, "callback_template", evidence)
+    if (
+        token.startswith("create_media|quick_image")
+        or token.startswith("create_media|qi_")
+        or token == "shopai|confirm"
+        or token.startswith("shopai|confirm|")
+        or token == "shopai|package"
+        or token.startswith("shopai|package|")
+    ):
+        return _quick_image_planner_source_review_mapping(template, "callback_template", evidence)
     if token in MEMORY_RECORD_TELEGRAM_ONLY_CALLBACK_TEMPLATES:
         # These callbacks embed a Bot note identifier. `delete_yes` is a
         # canonical Bot write, while view/delete resolve the same Bot row for
@@ -8911,6 +8967,12 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "bot_quick_image_tier_or_confirm_requires_canonical_bot_state",
             "opaque canonical checkout/confirmation; no browser payment, ledger, job or delivery action",
         ],
+        [
+            "case variants, suffixes or unreviewed create_media|quick_image / create_media|qi_* spellings; ShopAI confirm/package variants",
+            "QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED",
+            "quick_image_planner_callback_requires_exact_source_review",
+            "no Web route, Bot checkout disposition, browser state reset, provider/job/wallet/payment or delivery action",
+        ],
     ]
     vproduct_contract_rows = [
         [
@@ -9134,7 +9196,8 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             ["Frozen Bot source", "Web target/boundary", "Audit resolution", "Required boundary"],
             quick_image_planner_contract_rows,
         )
-        + "\n\nThe static auditor derives the nine `qi_logo_pos` values only from the direct frozen helper call that supplies the literal Quick Image prefix. It does not map the helper's shared dynamic `create_media|{*}|…` template globally because regular image/video flows also use it.\n\n"
+        + "\n\nOnly the exact lowercase frozen literals and templates in this table may inherit these dispositions. Case variants, suffixes, other `create_media|quick_image` / `create_media|qi_*` values, and `shopai|confirm|*` / `shopai|package|*` variants resolve to `QUICK_IMAGE_PLANNER_SOURCE_REVIEW_REQUIRED`; they never route to Planner, wallet/top-up or checkout.\n\n"
+        "The static auditor derives the nine `qi_logo_pos` values only from the direct frozen helper call that supplies the literal Quick Image prefix. It does not map the helper's shared dynamic `create_media|{*}|…` template globally because regular image/video flows also use it.\n\n"
         "The Web request accepts only a finite catalog key or an original bounded custom brief, deterministic variation, ratio, optional text brand direction and placement, and locale. It has no image upload, preview, source analysis, provider/Bot/Core Bridge call, tier, quote, confirmation token, job, asset, Xu/wallet mutation, PayOS payment, webhook, publish action or delivery. `prompt_plan_only_no_real_image` is a manual-review plan, not evidence that an image or watermark exists.\n",
     )
     write(
