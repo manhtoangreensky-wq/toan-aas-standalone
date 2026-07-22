@@ -64,6 +64,24 @@ browser.
 | --- | --- | --- | --- |
 | `menu|finance_tax`, `menu|tax_checklist`, `menu|tax_export`, `menu|tax_custom_help`, `menu|tax_export_custom_help` | `/admin/finance/tax-readiness` | signed canonical admin read | fresh checklist/handoff guidance only; no calculation, finance read, export/file, tax profile/compliance mutation, payment/ledger/provider action or runtime claim |
 
+## Separately guarded Postback Readiness
+
+The exact Bot `menu|hint_postback_setup` callback is a private administrator
+hint, not a browser configuration action. It opens only a fresh, static
+`/admin/growth/postback-readiness` guidance route after canonical signed-admin
+authorization. It transfers no Telegram identity, Bot hint context, connection
+material, credential, network value, affiliate/job reference, event,
+attribution, revenue, reward, payout, wallet/Xu, payment/PayOS, provider or
+runtime state to the Web App.
+
+| Bot source action | Web destination | Web authority | Boundary preserved |
+| --- | --- | --- | --- |
+| `menu|hint_postback_setup` | `/admin/growth/postback-readiness` | signed canonical admin guidance | fresh preparation/handoff guidance only; no configuration, connection material, event receipt/test/replay, affiliate/job read, attribution/reward/payout, financial/provider action or runtime claim |
+
+The corresponding Bot `/postback_setup` command remains a canonical
+source-review record. It cannot inherit this guidance route, an Admin Growth
+directory, a bridge module or a browser-side configuration/event control.
+
 ## Separately guarded Billing navigation
 
 `menu|billing` is deliberately outside the customer catalog and only appears

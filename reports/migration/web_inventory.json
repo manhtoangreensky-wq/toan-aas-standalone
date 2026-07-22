@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1814,
+      "line": 1881,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,17 +179,17 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4226,
+      "line": 4293,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4234,
+      "line": 4301,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 4242,
+      "line": 4309,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -231,7 +231,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 9088,
+      "line": 9233,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -297,7 +297,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 6698,
+      "line": 6802,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6813,7 +6813,7 @@
         "copyfast_web_engine.py",
         "customer_api.py"
       ],
-      "occurrences": 976,
+      "occurrences": 981,
       "provider": "PayOS"
     },
     {
@@ -7041,7 +7041,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2748,
+      "occurrences": 2756,
       "provider": "Telegram"
     }
   ],
@@ -9533,7 +9533,7 @@
     {
       "endpoint": "navigation",
       "file": "copyfast_admin_erp_navigation.py",
-      "line": 526,
+      "line": 528,
       "methods": [
         "GET"
       ],
@@ -12808,10 +12808,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 292,
-  "source_files_scanned": 292,
-  "source_fingerprint_sha256": "8e70dbe1ec0bbad034d8955459da8f2518112091bd0e2e1316e0943132c0902b",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast95-operator-erp-root-parity",
+  "source_files_discovered": 293,
+  "source_files_scanned": 293,
+  "source_fingerprint_sha256": "d2114c016a9477c4f61e2d02976de804b882eb05cfd33e693ff4557f6d1aaa97",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast96-postback-readiness-admin-guidance",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

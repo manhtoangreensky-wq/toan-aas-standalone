@@ -2164,7 +2164,12 @@ def test_portal_documents_and_auth_redirects_are_never_http_cached(tmp_path, mon
 
 def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_path, monkeypatch):
     with make_client(tmp_path, monkeypatch) as client:
-        for path in ("/admin", "/admin/finance/tax-readiness", "/admin/job-recovery-guide"):
+        for path in (
+            "/admin",
+            "/admin/finance/tax-readiness",
+            "/admin/growth/postback-readiness",
+            "/admin/job-recovery-guide",
+        ):
             unauthenticated = client.get(path, follow_redirects=False)
             assert unauthenticated.status_code == 401
             assert unauthenticated.json()["error_code"] == "REQUEST_DENIED"
@@ -2172,13 +2177,18 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
         # A callback may populate the display cache, but the HTML page itself
         # refuses access when the bot core cannot currently prove admin role.
         register_and_link(client, role="admin")
-        for path in ("/admin/users", "/admin/finance/tax-readiness", "/admin/job-recovery-guide"):
+        for path in (
+            "/admin/users",
+            "/admin/finance/tax-readiness",
+            "/admin/growth/postback-readiness",
+            "/admin/job-recovery-guide",
+        ):
             stale_cached_role = client.get(path, follow_redirects=False)
             assert stale_cached_role.status_code == 403
             assert stale_cached_role.json()["error_code"] == "REQUEST_DENIED"
 
-        # The static Tax Readiness shell is still a canonical-admin route.
-        # Proving this gate must not require a finance-data bridge request.
+        # Static readiness shells are still canonical-admin routes. Proving
+        # these gates must not require a finance-data or postback bridge request.
         application_module = sys.modules["app"]
         canonical_checks: list[str] = []
 
@@ -2187,10 +2197,14 @@ def test_admin_portal_requires_signed_session_and_current_canonical_role(tmp_pat
             return {"id": "canonical-admin", "role": "admin", "canonical_user_id": "canonical-admin"}
 
         monkeypatch.setattr(application_module, "require_canonical_admin", canonical_ok)
-        for path in ("/admin/finance/tax-readiness", "/admin/job-recovery-guide"):
+        for path in (
+            "/admin/finance/tax-readiness",
+            "/admin/growth/postback-readiness",
+            "/admin/job-recovery-guide",
+        ):
             allowed = client.get(path, follow_redirects=False)
             assert allowed.status_code == 200
-        assert canonical_checks == ["checked", "checked"]
+        assert canonical_checks == ["checked", "checked", "checked"]
 
 
 def test_web_local_admin_crm_page_is_signed_role_only_and_never_queries_bot_bridge(tmp_path, monkeypatch):

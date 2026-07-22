@@ -2661,6 +2661,62 @@ def test_system_data_stewardship_navigation_is_finite_and_never_leaks_bot_state(
     assert "menu|memory_storage_cleanup" not in serialized_catalog
 
 
+def test_postback_readiness_navigation_is_exact_and_never_becomes_a_configuration_or_event_action() -> None:
+    """Only one raw Bot admin hint may open the static readiness guidance."""
+
+    audit = _load_audit_module()
+    routes = {"/{page_path:path}"}
+    expected = {"menu|hint_postback_setup"}
+    assert set(audit.POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS) == expected
+
+    descriptor = audit.POSTBACK_READINESS_FRESH_WEB_ADMIN_NAVIGATION_ACTIONS["menu|hint_postback_setup"]
+    mapped = audit._map_callback("menu|hint_postback_setup", "callback_data", {"file": "bot.py", "line": 1}, routes)
+    assert mapped["target"] == "/admin/growth/postback-readiness"
+    assert mapped["classification"] == "admin"
+    assert mapped["status"] == "NAVIGATION_ONLY"
+    assert mapped["resolution"] == "reviewed_postback_readiness_fresh_web_navigation"
+    assert mapped["source_dispositions"] == descriptor["source_dispositions"]
+    assert mapped["postback_readiness_feature_key"] == "admin_postback_readiness"
+    assert mapped["postback_readiness_authority"] == "SIGNED_CANONICAL_ADMIN_GUIDANCE"
+    assert mapped["postback_readiness_launch_mode"] == "WEB_NAVIGATION"
+    for disposition in (
+        "BOT_ADMIN_ONLY",
+        "BOT_HINT_CONTEXT_NOT_REPLAYED",
+        "BOT_POSTBACK_CONFIGURATION_NOT_REPLAYED",
+        "NO_WEB_POSTBACK_CONFIGURATION_OR_EVENT_ACTION",
+        "NO_AFFILIATE_JOB_OR_ATTRIBUTION_TRANSFER",
+        "NO_REWARD_PAYOUT_OR_FINANCIAL_ACTION",
+        "NO_PROVIDER_OR_RUNTIME_ACTION",
+        "NO_RUNTIME_CLAIM",
+    ):
+        assert disposition in mapped["source_dispositions"]
+
+    # Bot callbacks are case-sensitive and this allowance is intentionally
+    # raw-identifier only. Variants never inherit the guidance route.
+    for token in ("MENU|HINT_POSTBACK_SETUP", "menu|hint_postback_setup_future"):
+        unknown = audit._map_callback(token, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert unknown["target"] != "/admin/growth/postback-readiness"
+        assert unknown["resolution"] != "reviewed_postback_readiness_fresh_web_navigation"
+
+    command = {
+        "command": "postback_setup",
+        "handler": "cmd_postback_setup",
+        "file": "bot.py",
+        "line": 1,
+        "admin_guarded": True,
+    }
+    command_mapping = audit._map_command(command, routes)
+    assert command_mapping["target"] == "CANONICAL_POSTBACK_CONFIGURATION_SOURCE_REVIEW_REQUIRED"
+    assert command_mapping["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert command_mapping["resolution"] == "reviewed_postback_configuration_command_requires_canonical_contract"
+    assert "CANONICAL_BOT_POSTBACK_CONFIGURATION_AND_EVENT_INGRESS" in command_mapping["source_dispositions"]
+
+    from copyfast_registry import menu_capability_catalog
+
+    serialized_catalog = json.dumps(menu_capability_catalog(), ensure_ascii=False)
+    assert "menu|hint_postback_setup" not in serialized_catalog
+
+
 def test_tax_accounting_guidance_navigation_is_finite_and_never_becomes_a_finance_adapter() -> None:
     """Only reviewed tax-menu guidance can open the static canonical-admin page."""
 

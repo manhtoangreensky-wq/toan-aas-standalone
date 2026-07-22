@@ -1671,6 +1671,13 @@
   adminPage("/admin/publishing", "Publishing & Channels", "Publish queue, channel và automation chỉ được Bot canonical phát hành; browser không tự gửi bài hoặc tạo lịch chạy.", ICONS.assets, { layout: "admin-domain" }, ["/admin/publish_cockpit", "/admin/publish_queue", "/admin/publish_pack", "/admin/publish_done", "/admin/publisher_status", "/admin/publisher_run", "/admin/publisher_auto"]);
   adminPage("/admin/analytics", "Analytics", "Campaign/performance analytics là dữ liệu vận hành đã redaction; không có export hay tính doanh thu ở client.", ICONS.reports, {}, ["/admin/campaign_stats", "/admin/campaign_report", "/admin/creative_report"]);
   adminPage("/admin/growth", "Growth & Affiliate", "Điều phối lead, referral, affiliate, promo và growth review trong một lớp quản trị rõ authority; không tự payout, gửi campaign hoặc sửa attribution từ browser.", ICONS.users, { layout: "admin-domain" }, ["/admin/affiliates", "/admin/affiliate", "/admin/referral"]);
+  adminPage("/admin/growth/postback-readiness", "Postback Readiness", "Hướng dẫn chuẩn bị postback chỉ đọc cho canonical admin; không hiển thị thông tin kết nối nhạy cảm, không gửi sự kiện và không thay đổi attribution hay payout.", ICONS.security, {
+    layout: "admin-postback-readiness", action: "none", status: "read_only",
+    notes: [
+      "Route này chỉ giúp chuẩn bị phạm vi và handoff. Browser không nhận Telegram identity, cấu hình mạng, thông tin kết nối nhạy cảm, affiliate/job reference, event, attribution, doanh thu hay payout từ Bot/Core Bridge.",
+      "Postback canonical tiếp tục thuộc Bot. Web không tạo cấu hình, không gửi bản thử, không nhận sự kiện, không thay đổi referral/reward và không tạo audit event thay thế."
+    ]
+  });
   adminPage("/admin/finance", "Finance & Revenue", "Không gian điều phối tài chính chỉ đọc cho payment, topup, revenue, refund, giá và package; Bot/PayOS vẫn là writer canonical.", ICONS.payments, { layout: "admin-domain" }, ["/admin/financials", "/admin/accounting"]);
   adminPage("/admin/finance/tax-readiness", "Tax Readiness & Accounting Guidance", "Checklist chuẩn bị hồ sơ và handoff accounting dành cho canonical admin; trang không tính thuế, không đọc ledger, không xuất file hay thay đổi dữ liệu tài chính.", ICONS.document, {
     layout: "admin-tax-readiness", action: "none", status: "read_only",
@@ -21104,7 +21111,7 @@
   function adminDirectoryGroup(path) {
     if (["/admin", "/admin/users", "/admin/wallet", "/admin/leads", "/admin/tickets", "/admin/support", "/admin/access", "/admin/security"].includes(path)) return "identity";
     if (["/admin/payments", "/admin/topups", "/admin/revenue", "/admin/refunds", "/admin/pricing", "/admin/packages", "/admin/finance", "/admin/finance/tax-readiness"].includes(path)) return "finance";
-    if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
+    if (["/admin/leads", "/admin/promos", "/admin/growth", "/admin/growth/postback-readiness", "/admin/affiliates", "/admin/trends"].includes(path)) return "growth";
     if (["/admin/campaigns", "/admin/calendar", "/admin/approvals", "/admin/publishing", "/admin/analytics"].includes(path)) return "content-ops";
     if (["/admin/jobs", "/admin/jobs/failed", "/admin/job-recovery-guide", "/admin/providers", "/admin/provider-cost", "/admin/workers", "/admin/features", "/admin/freezes", "/admin/runtime", "/admin/operations", "/admin/automation", "/admin/reliability", "/admin/work-queue"].includes(path)) return "operations";
     return "governance";
@@ -21239,6 +21246,38 @@
       <section class="portal-tax-readiness-section" aria-labelledby="tax-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="tax-readiness-checklist-title">Ba điểm kiểm tra trước khi handoff</h2><p>Chỉ lưu ý quy trình. Không yêu cầu nhập dữ liệu, không tạo file và không kết nối nguồn tài chính.</p></div>${badge("read_only")}</div><div class="portal-tax-readiness-grid">${checkpointCards}</div></section>
       <section class="portal-card portal-card-pad portal-tax-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Tách việc chuẩn bị khỏi quyền truy cập dữ liệu và khỏi quyết định nghiệp vụ để tránh suy đoán từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Chuẩn bị phạm vi review</strong><span>Xác định mục tiêu, câu hỏi và người chịu trách nhiệm theo quy trình nội bộ.</span></li><li><strong>Xác thực ở hệ thống được phê duyệt</strong><span>Chỉ người có quyền mới kiểm tra hồ sơ và dữ liệu nguồn tại nơi được cấp phép.</span></li><li><strong>Ghi nhận handoff có kiểm soát</strong><span>Chuyển cho kế toán hoặc tư vấn phù hợp; dùng kênh nội bộ đã được phê duyệt cho dữ liệu nhạy cảm.</span></li></ol>${financeLink ? `<div class="portal-form-footer">${financeLink}</div>` : ""}</section>
       <section class="portal-card portal-card-pad portal-tax-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là adapter dữ liệu tài chính, dịch vụ tư vấn thuế hay công cụ xử lý chứng từ.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
+    </article>`;
+  }
+
+  function renderAdminPostbackReadiness(page, context) {
+    // This static canonical-admin guide deliberately stops before configuration
+    // or inbound-event handling. It gives staff a clear handoff sequence while
+    // keeping Bot-owned connection data, attribution and financial effects out
+    // of the browser.
+    const checkpoints = [
+      { icon: ICONS.security, title: "Khoanh phạm vi được phê duyệt", text: "Xác định owner canonical, mục tiêu và kênh vận hành được phê duyệt trước khi yêu cầu thay đổi bên ngoài." },
+      { icon: ICONS.document, title: "Rà soát chống ghi nhận trùng", text: "Để owner canonical kiểm tra quy tắc nhận sự kiện và bằng chứng cần thiết trong hệ thống được cấp quyền." },
+      { icon: ICONS.users, title: "Handoff đúng authority", text: "Chuyển yêu cầu tới người phụ trách đã được ủy quyền; không sao chép dữ liệu nhạy cảm hay context Bot vào Web." }
+    ];
+    const boundaries = [
+      { icon: ICONS.security, title: "Không tạo cấu hình kết nối", text: "Không có trường nhập, thông tin kết nối, credential hay hướng dẫn sao chép giá trị nhạy cảm trong browser." },
+      { icon: ICONS.reports, title: "Không gửi hoặc nhận sự kiện", text: "Không có thao tác thử, replay hay ghi nhận event; Web không trở thành đường nhận dữ liệu thứ hai." },
+      { icon: ICONS.payments, title: "Không thay đổi attribution hay tài chính", text: "Không gắn referral, reward, doanh thu, payout, Xu, payment hay bất kỳ entitlement canonical nào." }
+    ];
+    const growthLink = serverAuthorizesAdminRoute(context, "/admin/growth")
+      ? '<a class="portal-button portal-button--quiet" href="/admin/growth">Về Growth &amp; Affiliate</a>'
+      : "";
+    const auditLink = serverAuthorizesAdminRoute(context, "/admin/audit")
+      ? '<a class="portal-button portal-button--quiet" href="/admin/audit">Mở Audit logs</a>'
+      : "";
+    const checkpointCards = checkpoints.map((item) => `<article class="portal-postback-readiness-card"><span class="portal-postback-readiness-card-icon" aria-hidden="true">${portalIcon(item.icon)}</span><div><h3>${safeText(item.title)}</h3><p>${safeText(item.text)}</p></div></article>`).join("");
+    const boundaryCards = boundaries.map((item) => `<li><span aria-hidden="true">${portalIcon(item.icon)}</span><span><strong>${safeText(item.title)}</strong><small>${safeText(item.text)}</small></span></li>`).join("");
+    const handoffLinks = [growthLink, auditLink].filter(Boolean).join("");
+    return `<article class="portal-page portal-admin-postback-readiness">${renderHero(page, context)}
+      <section class="portal-postback-readiness-intro"><div><span class="portal-section-kicker">Canonical admin guidance · read-only</span><h2>Chuẩn bị postback có kiểm soát, không biến Web thành nơi cấu hình hoặc nhận sự kiện</h2><p>Trang này làm rõ trình tự chuẩn bị và handoff. Mọi cấu hình, kiểm tra dữ liệu thực và quyết định vận hành vẫn thuộc canonical owner trong quy trình đã được phê duyệt.</p></div><div class="portal-postback-readiness-intro-status"><span aria-hidden="true">${portalIcon(ICONS.security)}</span><span><strong>Route được bảo vệ riêng</strong><small>Chỉ signed canonical admin được mở guidance này</small></span></div></section>
+      <section class="portal-postback-readiness-section" aria-labelledby="postback-readiness-checklist-title"><div class="portal-section-heading"><div><span class="portal-section-kicker">Preparation checklist</span><h2 id="postback-readiness-checklist-title">Ba điểm cần rõ trước khi handoff</h2><p>Không cần nhập dữ liệu tại đây. Checklist không đọc trạng thái thực, không tạo record và không kích hoạt workflow.</p></div>${badge("read_only")}</div><div class="portal-postback-readiness-grid">${checkpointCards}</div></section>
+      <section class="portal-card portal-card-pad portal-postback-readiness-process"><div class="portal-card-header"><div><span class="portal-section-kicker">Safe handoff</span><h2 class="portal-card-title">Trình tự đề xuất</h2><p class="portal-card-subtitle">Giữ việc chuẩn bị tách biệt khỏi quyền cấu hình và quyền ghi nhận để không tạo tác động ngoài ý muốn từ browser.</p></div>${badge("read_only")}</div><ol><li><strong>Xác định mục tiêu và owner</strong><span>Làm rõ phạm vi, quyền quyết định và nơi xử lý được phê duyệt trước khi yêu cầu thao tác.</span></li><li><strong>Kiểm tra tại authority canonical</strong><span>Chỉ người có quyền mới xác minh dữ liệu nguồn, quy tắc chống trùng và trạng thái vận hành thực.</span></li><li><strong>Handoff qua kênh nội bộ</strong><span>Chuyển yêu cầu kèm bối cảnh tối thiểu, không đưa dữ liệu nhạy cảm hoặc context Bot vào browser.</span></li></ol>${handoffLinks ? `<div class="portal-form-footer">${handoffLinks}</div>` : ""}</section>
+      <section class="portal-card portal-card-pad portal-postback-readiness-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Deliberate limits</span><h2 class="portal-card-title">Ranh giới được giữ cố ý</h2><p class="portal-card-subtitle">Guidance không phải là trang cấu hình, console nhận sự kiện hay adapter dữ liệu affiliate.</p></div>${badge("read_only")}</div><ul>${boundaryCards}</ul>${renderNotes(page)}</section>
     </article>`;
   }
 
@@ -21418,6 +21457,7 @@
       description: "Dùng một điểm vào để review lead, referral, promo và campaign. Khi Bot chưa công bố adapter read-only, từng route vẫn giữ guarded thay vì tạo số liệu giả.",
       streams: [
         { title: "Leads", text: "Theo dõi lead và handoff CSKH trong quyền server-side.", route: "/admin/leads", icon: ICONS.users },
+        { title: "Postback readiness", text: "Chuẩn bị phạm vi và handoff an toàn; không mở cấu hình, thông tin kết nối hay event từ browser.", route: "/admin/growth/postback-readiness", icon: ICONS.security },
         { title: "Khuyến mãi", text: "Review promo canonical; không tự cấp ưu đãi hoặc sửa entitlement.", route: "/admin/promos", icon: ICONS.pricing },
         { title: "Campaign", text: "Đi tới planning và review campaign có audit boundary.", route: "/admin/campaigns", icon: ICONS.prompt },
         { title: "Analytics", text: "Đọc performance metadata đã redaction khi adapter sẵn sàng.", route: "/admin/analytics", icon: ICONS.reports }
@@ -22845,6 +22885,7 @@
       case "admin-automation-monitor": return renderAdminAutomationMonitor(page, context);
       case "admin-system-stewardship": return renderAdminSystemStewardship(page, context);
       case "admin-tax-readiness": return renderAdminTaxReadiness(page, context);
+      case "admin-postback-readiness": return renderAdminPostbackReadiness(page, context);
       case "admin-job-recovery-guide": return renderAdminJobRecoveryGuide(page, context);
       case "admin-security-access-posture": return renderAdminSecurityAccessPosture(page, context);
       case "reliability-admin": return renderReliabilityAdmin(page, context);
