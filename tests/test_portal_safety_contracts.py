@@ -285,8 +285,14 @@ def test_keyboard_forms_and_mobile_navigation_are_accessible() -> None:
 
 def test_mobile_workspace_dock_is_signed_session_only_and_navigation_only() -> None:
     shell = (ROOT / "templates" / "portal_shell.html").read_text(encoding="utf-8")
+    pages = (ROOT / "copyfast_pages.py").read_text(encoding="utf-8")
     assert 'data-portal-mobile-nav' in shell
-    assert 'aria-label="Điều hướng nhanh"' in shell
+    # The static shell intentionally uses a server-side locale token.  A
+    # literal Vietnamese label would make English/Chinese signed portal pages
+    # announce the wrong navigation landmark to screen readers.
+    assert 'aria-label="__PORTAL_QUICK_NAVIGATION__"' in shell
+    for label in ('"quick_navigation": "Điều hướng nhanh"', '"quick_navigation": "Quick navigation"', '"quick_navigation": "快捷导航"'):
+        assert label in pages
     assert "function isMobileNavCurrent(key, page)" in PORTAL
     assert "function renderMobileNav(page)" in PORTAL
     dock = PORTAL[PORTAL.index("function renderMobileNav(page)"):PORTAL.index("function renderSidebar(page, context)")]
@@ -927,11 +933,14 @@ def test_personal_web_memory_is_native_while_bot_companions_preserve_telegram_fi
         assert f'customerPage("{route}", "{title}"' in PORTAL
         assert f'botCompanionPage("{route}", ' not in PORTAL
 
+    assert 'customerPage("/guides", "Guide Center"' in PORTAL
+    assert 'botCompanionPage("/guides", ' not in PORTAL
+    assert 'WebFeature("guides", "Guide Center", "account", "/guides"' in registry
+
     for route, key, title in (
         ("/referrals", "referrals", "Giới thiệu"),
         ("/rewards", "rewards", "Ưu đãi & quà"),
         ("/community", "community", "Cộng đồng"),
-        ("/guides", "guides", "Hướng dẫn Bot"),
     ):
         assert f'botCompanionPage("{route}", "{title}"' in PORTAL
         assert f'WebFeature("{key}", "{title}", "account", "{route}"' in registry

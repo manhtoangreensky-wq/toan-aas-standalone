@@ -2162,8 +2162,8 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         "menu|main_video": ("/video-studio", "video_studio", "video_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_music": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|main_audio": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
-        "menu|main_guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
-        "menu|guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER", "WEB_NAVIGATION"),
+        "menu|main_guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
+        "menu|guide": ("/guides", "guides", "guides", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|guide_quick_start": ("/features", "guided_start", "feature_catalog", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|guide_image_ai": ("/image-studio", "image_studio", "image_studio", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
         "menu|guide_music_add": ("/media-workspace", "media_workspace", "media_workspace", "SIGNED_CUSTOMER_WEB_NATIVE", "WEB_NAVIGATION"),
@@ -2192,6 +2192,18 @@ def test_static_audit_uses_only_the_finite_reviewed_menu_navigation_catalog() ->
         assert mapped["menu_feature_key"] == feature
         assert mapped["menu_authority"] == authority
         assert mapped["menu_launch_mode"] == launch_mode
+
+    # The Guide Center is a fresh signed Web catalog, not a replay of the
+    # Bot's guide menu, child callbacks or conversation state.
+    expected_guide_dispositions = (
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM",
+    )
+    for callback in ("menu|main_guide", "menu|guide"):
+        mapped = audit._map_callback(callback, "callback_data", {"file": "bot.py", "line": 1}, routes)
+        assert mapped["source_dispositions"] == expected_guide_dispositions
 
     # The static audit's private Bot token registry and the browser-safe public
     # catalog must stay in lockstep.  This prevents an audit mapping from

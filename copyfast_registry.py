@@ -66,7 +66,7 @@ CUSTOMER_FEATURES: tuple[WebFeature, ...] = (
     WebFeature("referrals", "Giới thiệu", "account", "/referrals", description="Referral/link thống kê cần Bot canonical xác minh."),
     WebFeature("rewards", "Ưu đãi & quà", "account", "/rewards", description="Gift, birthday và promo chỉ được Bot canonical xử lý."),
     WebFeature("community", "Cộng đồng", "account", "/community", description="Kênh chính thức và community handoff qua Bot."),
-    WebFeature("guides", "Hướng dẫn Bot", "account", "/guides", description="Trợ giúp và menu Bot cho các workflow chưa có adapter Web."),
+    WebFeature("guides", "Guide Center", "account", "/guides", description="Hướng dẫn Web-native chỉ đọc, theo locale signed và không replay Bot menu, callback hay state."),
     WebFeature("wallet", "Ví Xu", "wallet", "/wallet", description="Số dư và lịch sử canonical từ bot."),
     WebFeature("wallet_topup", "Nạp Xu", "wallet", "/wallet/topup", description="Tạo thanh toán qua core PayOS canonical."),
     WebFeature("packages", "Gói dịch vụ", "wallet", "/packages"),
@@ -448,10 +448,10 @@ MENU_CAPABILITIES: tuple[MenuCapability, ...] = (
     MenuCapability(
         "guides",
         "guides",
-        "SIGNED_CUSTOMER",
+        "SIGNED_CUSTOMER_WEB_NATIVE",
         "WEB_NAVIGATION",
         "NAVIGATION_ONLY",
-        "Mở guide Web; nội dung không cấp quyền chạy workflow Bot.",
+        "Mở Guide Center Web-native chỉ đọc; không phát lại Bot menu, callback, state hoặc cấp quyền chạy workflow.",
     ),
     MenuCapability(
         "pricing",

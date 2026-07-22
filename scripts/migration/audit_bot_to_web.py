@@ -1508,7 +1508,7 @@ def _job_lock_recovery_source_review_dispositions(action: dict[str, str]) -> tup
 # actions remain visible as guarded, Telegram-only, bridge-required, or
 # unresolved until a dedicated Web contract exists; they must not inherit a
 # route from a label or namespace prefix.
-MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
+MENU_ACTION_REGISTRY: dict[str, dict[str, Any]] = {
     "menu|main": {
         "capability_key": "workspace_home",
         "target": "/dashboard",
@@ -1793,15 +1793,27 @@ MENU_ACTION_REGISTRY: dict[str, dict[str, str]] = {
         "capability_key": "guides",
         "target": "/guides",
         "feature_key": "guides",
-        "authority": "SIGNED_CUSTOMER",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+            "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
     },
     "menu|guide": {
         "capability_key": "guides",
         "target": "/guides",
         "feature_key": "guides",
-        "authority": "SIGNED_CUSTOMER",
+        "authority": "SIGNED_CUSTOMER_WEB_NATIVE",
         "launch_mode": "WEB_NAVIGATION",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+            "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+            "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+            "NO_RUNTIME_CLAIM",
+        ),
     },
     "menu|guide_quick_start": {
         "capability_key": "guided_start",
@@ -6068,6 +6080,14 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
         result["menu_feature_key"] = menu_entry["feature_key"]
         result["menu_authority"] = menu_entry["authority"]
         result["menu_launch_mode"] = menu_entry["launch_mode"]
+        # A small number of finite menu actions have an explicit source
+        # boundary stronger than generic navigation. Preserve it in the
+        # report so the audit cannot later make a Bot guide menu look like a
+        # replayed Web flow merely because both happen to target one route.
+        if "source_dispositions" in menu_entry:
+            result["source_dispositions"] = tuple(menu_entry["source_dispositions"])
+        if "source_evidence" in menu_entry:
+            result["source_evidence"] = str(menu_entry["source_evidence"])
     return result
 
 
@@ -7474,6 +7494,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`VIDEO_POSTER_OPERATION_CONTRACT.md`](VIDEO_POSTER_OPERATION_CONTRACT.md) — disabled-by-default, bounded private JPEG poster extraction from an owner-scoped Asset Vault video; it is not Video Studio rendering, a Bot job, provider call, wallet/Xu or PayOS flow.\n"
         + "- [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md) — signed Web-owned notes, version history and view-only reminders.\n"
         + "- [`MEMORY_MENU_CALLBACK_CONTRACT.md`](MEMORY_MENU_CALLBACK_CONTRACT.md) — exact Memory menu/callback boundaries; fresh Web navigation never imports Bot notes, quota, add-ons, IDs or Telegram state.\n"
+        + "- [`WEB_GUIDE_CENTER_CONTRACT.md`](WEB_GUIDE_CENTER_CONTRACT.md) — signed, read-only Guide Center with a closed Web route catalog; it never replays Bot guide commands, callbacks, state or execution.\n"
         + "- [`TELEGRAM_WEB_CONNECTION.md`](TELEGRAM_WEB_CONNECTION.md) — browser-bound Telegram one-time link/login.\n"
         + "- [`BRIDGE_CONTRACT_INVENTORY.md`](BRIDGE_CONTRACT_INVENTORY.md) — static Web-to-Bot method/path compatibility, not live health.\n"
         + "- [`BOT_COMPANION_HANDOFF.md`](BOT_COMPANION_HANDOFF.md) — remaining Bot-first referral/rewards, community and help handoffs.\n"

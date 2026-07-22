@@ -10,7 +10,7 @@ their own signed customer routes:
 | `/referrals` | `/referral`, `/ref` | Referral identity, links and rewards remain canonical in Bot. |
 | `/rewards` | `/gift`, `/promos`, `/birthday` | Gift/promo/birthday eligibility and Xu effects remain Bot state. |
 | `/community` | `/community`, `/official_channels` | Bot publishes community/channel information. |
-| `/guides` | `/menu`, `/guide`, `/help` | Bot remains the current command/help authority. |
+| `/guides` | Bot reference: `/menu`, `/guide`, `/help` | Signed Web-native Guide Center is a static navigation catalog. It never replays Bot commands, child callbacks, conversation or identity state. |
 | `/account` | `/language`, `/mode`, `/profile`, `/mydata`, `/data_delete` | Web-owned profile metadata stays separate; data-deletion policy and confirmation remain in Bot. |
 | `/support`, `/tickets`, `/admin/support` | Bot reference: `/support`, `/tickets`, `/ticket_status`, `/support_tickets` | Web-owned Support Desk cases, private timeline and staff triage; never reads/writes Bot ticket tables, Telegram attachments or notifications. |
 | `/growth/ai` | `/growth_ai` remains a separate Bot conversation | Web now owns a manual, non-persistent Growth Review rule receipt only; it does not send command/data to Telegram. Bot still owns live/canonical analytics, model-based analysis, Xu, charge/refund and Telegram output. |
@@ -26,11 +26,13 @@ All remaining Bot-companion routes require the normal signed Web session and
 linked Telegram identity before they render. They receive only public
 `BOT_USERNAME` metadata from the safe Telegram connection-status endpoint,
 then offer a user-initiated `https://t.me/<BOT_USERNAME>` handoff and an
-allowlisted command copy action. `/notes` and `/reminders` are the explicit
-exception: they require a signed Web session but not a Telegram link, and they
-call only the owner-scoped Web Memory API documented in
-[`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md). `/support` and
-`/tickets` are a second explicit exception: they are handled by the
+allowlisted command copy action. `/notes`, `/reminders` and `/guides` are
+the explicit Web-native exceptions: they require a signed Web session but not
+a Telegram link. Notes/reminders call only the owner-scoped Web Memory API
+documented in [`MEMORY_CENTER_CONTRACT.md`](MEMORY_CENTER_CONTRACT.md);
+Guide Center is the read-only, closed navigation catalog documented in
+[`WEB_GUIDE_CENTER_CONTRACT.md`](WEB_GUIDE_CENTER_CONTRACT.md). `/support`
+and `/tickets` are a second explicit exception: they are handled by the
 owner-scoped Web Support Desk documented in
 [`WEB_SUPPORT_DESK_CONTRACT.md`](WEB_SUPPORT_DESK_CONTRACT.md), not a Bot
 handoff or a ticket-table mirror.

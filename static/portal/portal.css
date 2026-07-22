@@ -5064,3 +5064,56 @@ button, a, input, select, textarea { touch-action: manipulation; }
   .portal-interface-locale-choice-body { transition: none; }
   .portal-interface-locale-choice:hover .portal-interface-locale-choice-body { transform: none; }
 }
+
+/* Guide Center is a private, read-only navigation surface. It uses the same
+ * compact slate/teal workspace language as the app shell, rather than a
+ * marketing/landing treatment or a simulated execution flow. */
+.portal-guide-center { display: grid; gap: 18px; min-width: 0; }
+.portal-guide-center-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1.22fr) minmax(244px, .78fr);
+  gap: 20px;
+  align-items: center;
+  padding: clamp(22px, 3vw, 34px);
+}
+.portal-guide-center-intro h2 { max-width: 780px; margin: 7px 0 9px; color: var(--portal-text); font-size: clamp(26px, 3vw, 40px); letter-spacing: -.047em; }
+.portal-guide-center-intro p { max-width: 760px; margin: 0; color: var(--portal-muted-strong); line-height: 1.7; }
+.portal-guide-center-intro dl { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 0; }
+.portal-guide-center-intro dl > div { min-width: 0; min-height: 106px; padding: 15px; border: 1px solid var(--portal-border); border-radius: 14px; background: rgba(13, 29, 40, .56); }
+.portal-guide-center-intro dt { color: var(--portal-accent); font-size: clamp(25px, 2.6vw, 34px); font-weight: 850; letter-spacing: -.045em; }
+.portal-guide-center-intro dd { margin: 7px 0 0; color: var(--portal-muted-strong); font-size: 11px; font-weight: 720; line-height: 1.45; }
+.portal-guide-center-search { display: grid; gap: 12px; }
+.portal-guide-center-search .portal-card-header { margin-bottom: 0; }
+.portal-guide-center-search .portal-form-footer { margin-top: 0; }
+.portal-guide-center-groups { display: grid; gap: 22px; min-width: 0; }
+.portal-guide-center-group { display: grid; gap: 12px; min-width: 0; }
+.portal-guide-center-group > header { display: grid; gap: 5px; max-width: 760px; }
+.portal-guide-center-group > header h2 { margin: 0; color: var(--portal-text); font-size: clamp(19px, 2vw, 24px); letter-spacing: -.03em; }
+.portal-guide-center-group > header p { margin: 0; color: var(--portal-muted-strong); font-size: 13px; line-height: 1.6; }
+.portal-guide-center-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; min-width: 0; }
+.portal-guide-center-topic { display: flex; flex-direction: column; min-width: 0; min-height: 252px; }
+.portal-guide-center-topic .portal-card-header { margin-bottom: 13px; }
+.portal-guide-center-topic .portal-card-title,
+.portal-guide-center-topic .portal-card-subtitle,
+.portal-guide-center-topic li { overflow-wrap: anywhere; }
+.portal-guide-center-steps { display: grid; gap: 8px; }
+.portal-guide-center-steps h4 { margin: 0; color: var(--portal-text); font-size: 12px; letter-spacing: -.012em; }
+.portal-guide-center-steps ol { display: grid; gap: 7px; margin: 0; padding: 0; list-style: none; counter-reset: guide-center-step; }
+.portal-guide-center-steps li { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 8px; align-items: start; min-width: 0; color: var(--portal-muted-strong); font-size: 12px; line-height: 1.52; counter-increment: guide-center-step; }
+.portal-guide-center-steps li::before { display: grid; place-items: center; width: 22px; height: 22px; border: 1px solid rgba(81, 213, 188, .24); border-radius: 7px; color: var(--portal-accent); background: rgba(50, 190, 174, .08); content: counter(guide-center-step); font-size: 9px; font-weight: 820; }
+.portal-guide-center-topic .portal-form-footer { margin-top: auto; padding-top: 16px; }
+.portal-guide-center-topic .portal-button { min-width: min(100%, 190px); }
+.portal-guide-center-empty { border-style: dashed; }
+.portal-guide-center-boundary { background: rgba(13, 29, 40, .56); }
+
+@media (max-width: 980px) {
+  .portal-guide-center-intro { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 700px) {
+  .portal-guide-center-intro { gap: 16px; padding: 20px; border-radius: 18px; }
+  .portal-guide-center-intro dl,
+  .portal-guide-center-grid { grid-template-columns: 1fr; }
+  .portal-guide-center-topic { min-height: 0; }
+  .portal-guide-center-topic .portal-button { width: 100%; justify-content: center; }
+}

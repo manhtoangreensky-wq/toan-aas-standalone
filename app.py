@@ -43,6 +43,7 @@ import copyfast_data_controls
 import copyfast_document_operations
 import copyfast_document_workspace
 import copyfast_free_prompt_gallery
+import copyfast_guide_center
 import copyfast_frame_video_operations
 import copyfast_video_transform_operations
 import copyfast_governance
@@ -2264,6 +2265,7 @@ app.include_router(copyfast_content_studio.router)
 app.include_router(copyfast_channel_strategy.router)
 app.include_router(copyfast_content_handoff.router)
 app.include_router(copyfast_free_prompt_gallery.router)
+app.include_router(copyfast_guide_center.router)
 app.include_router(copyfast_trend_research.router)
 app.include_router(copyfast_growth_review.router)
 app.include_router(copyfast_media_factory.router)

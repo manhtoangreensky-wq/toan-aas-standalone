@@ -14417,12 +14417,18 @@
         "file": "bot.py",
         "line": 46708
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20450,12 +20456,18 @@
         "file": "bot.py",
         "line": 45359
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20466,12 +20478,18 @@
         "file": "bot.py",
         "line": 45396
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20482,12 +20500,18 @@
         "file": "bot.py",
         "line": 45432
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20498,12 +20522,18 @@
         "file": "bot.py",
         "line": 45442
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20514,12 +20544,18 @@
         "file": "bot.py",
         "line": 45574
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20530,12 +20566,18 @@
         "file": "bot.py",
         "line": 46982
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20546,12 +20588,18 @@
         "file": "bot.py",
         "line": 47028
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20562,12 +20610,18 @@
         "file": "bot.py",
         "line": 47040
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"
@@ -20578,12 +20632,18 @@
         "file": "bot.py",
         "line": 47051
       },
-      "menu_authority": "SIGNED_CUSTOMER",
+      "menu_authority": "SIGNED_CUSTOMER_WEB_NATIVE",
       "menu_capability_key": "guides",
       "menu_feature_key": "guides",
       "menu_launch_mode": "WEB_NAVIGATION",
       "resolution": "reviewed_exact_menu_navigation",
       "source": "menu|main_guide",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_GUIDE_NAVIGATION",
+        "BOT_GUIDE_SECTION_CONTEXT_NOT_REPLAYED",
+        "BOT_GUIDE_CHILD_CALLBACKS_NOT_REPLAYED",
+        "NO_RUNTIME_CLAIM"
+      ],
       "source_kind": "callback_data",
       "status": "NAVIGATION_ONLY",
       "target": "/guides"

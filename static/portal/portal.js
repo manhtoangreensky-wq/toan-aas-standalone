@@ -1217,11 +1217,10 @@
     { command: "/community", title: "Community hub", text: "Mở community hub do Bot phát hành." },
     { command: "/official_channels", title: "Kênh chính thức", text: "Xem danh sách kênh chính thức từ Bot thay vì một danh sách URL tĩnh trong Web." }
   ]);
-  botCompanionPage("/guides", "Hướng dẫn Bot", "Dùng menu/hướng dẫn Bot cho các thao tác Telegram-first chưa có adapter Web riêng.", ICONS.legal, [
-    { command: "/menu", title: "Menu chính", text: "Mở menu nhanh theo capability của tài khoản Bot hiện tại." },
-    { command: "/guide", title: "Hướng dẫn", text: "Mở hướng dẫn sử dụng được Bot phát hành." },
-    { command: "/help", title: "Trợ giúp lệnh", text: "Tra cứu lệnh Bot hiện hành trong cuộc hội thoại canonical." }
-  ]);
+  customerPage("/guides", "Guide Center", "Tìm bước bắt đầu, workspace phù hợp và nguyên tắc an toàn trong một catalog Web-native chỉ đọc.", ICONS.legal, {
+    type: "guide-center", layout: "guide-center", fields: [], action: "none", status: "read_only",
+    notes: ["Guide Center là catalog Web-native theo signed profile locale; không replay menu, command, callback, identity hoặc state của Bot.", "Trang chỉ điều hướng tới các workspace Web đã allowlist. Nó không gọi bridge/provider, tạo job, thay đổi wallet/payment, asset, publish hoặc delivery."]
+  });
   customerPage("/growth/ai", "Growth Review", "Đánh giá rule-based từ sáu số liệu bạn tự nhập, lấy logic score/gợi ý xác định của Bot nhưng không gọi AI, không đọc dữ liệu live hoặc doanh thu canonical.", ICONS.reports, {
     layout: "growth-review", type: "growth-review", fields: [], action: "none", status: "ready",
     notes: ["Chỉ dùng dữ liệu bạn tự nhập trong request hiện tại. Kết quả không được lưu, không kết nối nền tảng và không xác minh doanh thu/campaign.", "Bot /growth_ai vẫn là cuộc hội thoại canonical riêng cho analytics live, quota/Xu, model response và quy tắc charge/refund của Bot."]
@@ -2036,6 +2035,90 @@
   // whole narrow contract before presenting a title, seed prompt or copy
   // instruction; an incomplete response must not be repaired or remembered
   // by the browser.
+  // Guide Center is an independently signed, static navigation catalog. It is
+  // intentionally stricter than a generic help page: the browser accepts only
+  // a closed route/topic schema and never treats an explanatory card as an
+  // action, Bot handoff, provider request or payment shortcut.
+  const GUIDE_CENTER_GROUP_IDS = new Set(["start", "create", "media", "organize", "safe"]);
+  const GUIDE_CENTER_TOPIC_IDS = new Set([
+    "getting_started", "find_tools", "content_brief", "prompt_library", "image_preparation",
+    "audio_brief", "notes", "reminders", "safe_workspace", "get_support"
+  ]);
+  const GUIDE_CENTER_ROUTE_ALLOWLIST = new Set([
+    "/onboarding", "/workspace-setup", "/features", "/content-studio", "/prompt-library",
+    "/image-studio", "/media-workspace", "/notes", "/reminders", "/guides/source-rights",
+    "/account/security", "/support"
+  ]);
+  const GUIDE_CENTER_UI_KEYS = Object.freeze([
+    "kicker", "heading", "body", "search_label", "search_placeholder", "search_help",
+    "result_count", "all_count", "empty_title", "empty_body", "static_badge",
+    "availability_badge", "steps", "boundary_title", "boundary_body", "topic_count_label",
+    "execution_count"
+  ]);
+  const GUIDE_CENTER_BOUNDARY_FIELDS = Object.freeze([
+    "bot_called", "bridge_called", "provider_called", "job_created", "wallet_mutated",
+    "payment_started", "asset_saved", "content_published", "media_delivered"
+  ]);
+
+  function guideCenterText(value, minimum, maximum) {
+    return typeof value === "string" && value.length >= minimum && value.length <= maximum
+      && !/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/.test(value);
+  }
+
+  function guideCenterBoundaryIsSafe(value) {
+    const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
+    const expected = ["execution", "snapshot_read_only", ...GUIDE_CENTER_BOUNDARY_FIELDS];
+    return Object.keys(source).length === expected.length && expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))
+      && source.execution === "web_native_guide_center" && source.snapshot_read_only === true
+      && GUIDE_CENTER_BOUNDARY_FIELDS.every((field) => source[field] === false);
+  }
+
+  function normalizeGuideCenterCatalog(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const expected = ["snapshot_version", "locale", "description", "ui", "groups", "boundaries"];
+    const exactShape = Object.keys(source).length === expected.length && expected.every((key) => Object.prototype.hasOwnProperty.call(source, key));
+    const locale = reviewedInterfaceLocale(source.locale);
+    const ui = source.ui && typeof source.ui === "object" && !Array.isArray(source.ui) ? source.ui : {};
+    const uiExactShape = Object.keys(ui).length === GUIDE_CENTER_UI_KEYS.length && GUIDE_CENTER_UI_KEYS.every((key) => Object.prototype.hasOwnProperty.call(ui, key) && guideCenterText(ui[key], 1, 360));
+    const seenGroups = new Set();
+    const seenTopics = new Set();
+    const groups = Array.isArray(source.groups) ? source.groups.map((entry) => {
+      const group = entry && typeof entry === "object" && !Array.isArray(entry) ? entry : {};
+      const groupKeys = ["id", "title", "summary", "topics"];
+      const groupId = typeof group.id === "string" && GUIDE_CENTER_GROUP_IDS.has(group.id) ? group.id : "";
+      const topics = Array.isArray(group.topics) ? group.topics.map((candidate) => {
+        const topic = candidate && typeof candidate === "object" && !Array.isArray(candidate) ? candidate : {};
+        const topicKeys = ["id", "title", "summary", "steps", "route", "route_label", "availability"];
+        const steps = Array.isArray(topic.steps) ? topic.steps : [];
+        const valid = Object.keys(topic).length === topicKeys.length && topicKeys.every((key) => Object.prototype.hasOwnProperty.call(topic, key))
+          && typeof topic.id === "string" && GUIDE_CENTER_TOPIC_IDS.has(topic.id)
+          && GUIDE_CENTER_ROUTE_ALLOWLIST.has(topic.route)
+          && ["static", "capability_backed"].includes(topic.availability)
+          && guideCenterText(topic.title, 1, 100) && guideCenterText(topic.summary, 1, 240)
+          && guideCenterText(topic.route_label, 1, 100) && steps.length >= 2 && steps.length <= 4
+          && steps.every((step) => guideCenterText(step, 1, 220))
+          && !seenTopics.has(topic.id);
+        if (!valid) return null;
+        seenTopics.add(topic.id);
+        return { id: topic.id, title: topic.title, summary: topic.summary, steps: [...steps], route: topic.route, route_label: topic.route_label, availability: topic.availability };
+      }).filter(Boolean) : [];
+      const valid = Object.keys(group).length === groupKeys.length && groupKeys.every((key) => Object.prototype.hasOwnProperty.call(group, key))
+        && Boolean(groupId) && !seenGroups.has(groupId) && guideCenterText(group.title, 1, 80)
+        && guideCenterText(group.summary, 1, 240) && topics.length >= 1 && topics.length <= 8;
+      if (!valid) return null;
+      seenGroups.add(groupId);
+      return { id: groupId, title: group.title, summary: group.summary, topics };
+    }).filter(Boolean) : [];
+    if (!exactShape || !locale || !guideCenterText(source.snapshot_version, 1, 80)
+      || !guideCenterText(source.description, 1, 360) || !uiExactShape || groups.length !== GUIDE_CENTER_GROUP_IDS.size
+      || seenGroups.size !== GUIDE_CENTER_GROUP_IDS.size || seenTopics.size !== GUIDE_CENTER_TOPIC_IDS.size
+      || !guideCenterBoundaryIsSafe(source.boundaries)) return {};
+    return {
+      snapshot_version: source.snapshot_version, locale, description: source.description,
+      ui: { ...ui }, groups, boundaries: { ...source.boundaries }
+    };
+  }
+
   const FREE_PROMPT_GALLERY_BOUNDARY_FIELDS = Object.freeze([
     "gallery_request_persisted", "provider_called", "bot_called", "bridge_called", "job_created",
     "wallet_mutated", "payment_started", "asset_saved", "publish_action_created", "delivery_created"
@@ -6400,6 +6483,7 @@
       ? [...new Set(source.workspaceDraftFeatures.filter((item) => typeof item === "string" && /^[a-z][a-z0-9_]{1,120}$/.test(item)))].slice(0, 200)
       : [];
     const freePromptGalleryCatalog = normalizeFreePromptGalleryCatalog(source.freePromptGalleryCatalog);
+    const guideCenterCatalog = normalizeGuideCenterCatalog(source.guideCenterCatalog);
     const freePromptGalleryListing = normalizeFreePromptGalleryListing(source.freePromptGalleryListing, freePromptGalleryCatalog);
     const freePromptGalleryDetail = normalizeFreePromptGalleryDetail(source.freePromptGalleryDetail);
     const freePromptGallerySaveResult = normalizeFreePromptGallerySaveResult(source.freePromptGallerySaveResult);
@@ -6706,6 +6790,14 @@
       freePromptGallerySaveResult,
       freePromptGalleryReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.freePromptGalleryReadState || ""))
         ? String(source.freePromptGalleryReadState)
+        : "guarded",
+      // Guide Center has no client cache, query persistence, Bot handoff or
+      // execution capability. The server catalog is validated before it enters
+      // presentation state and cleared by integration on every session change.
+      guideCenterEnabled: source.guideCenterEnabled === true,
+      guideCenterCatalog,
+      guideCenterReadState: ["loading", "ready", "failed", "guarded"].includes(String(source.guideCenterReadState || ""))
+        ? String(source.guideCenterReadState)
         : "guarded",
       // Audio Library & Briefing is a separate owner-scoped Web workspace.
       // It retains only server-redacted metadata in presentation state and
@@ -7723,6 +7815,7 @@
     "Workspace": "nav.workspace",
     "Tổng quan": "nav.dashboard",
     "Chuyển workspace": "nav.workspaceMenu",
+    "Guide Center": "nav.guideCenter",
     "Starter Kits": "nav.starterKits",
     "Project Center": "nav.projects",
     "Workboard": "nav.workboard",
@@ -7753,6 +7846,7 @@
     if (path === "/account") return uiText("account.title", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.title", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.title", fallback);
+    if (path === "/guides") return uiText("page.guideCenter.title", fallback);
     if (path === "/workspace/setup") return uiText("setup.title", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("starter.title", fallback);
     return localizedNavigationLabel(fallback);
@@ -7765,6 +7859,7 @@
     if (path === "/account") return uiText("page.account.description", fallback);
     if (path === "/account/interface-language") return uiText("page.interfaceLocale.description", fallback);
     if (path === "/workspace-menu") return uiText("page.workspaceMenu.description", fallback);
+    if (path === "/guides") return uiText("page.guideCenter.description", fallback);
     if (path === "/workspace/setup") return uiText("page.workspaceSetup.description", fallback);
     if (path === "/starter-kits" || path.startsWith("/starter-kits/")) return uiText("page.starterKits.description", fallback);
     return fallback;
@@ -7895,13 +7990,13 @@
       {
         label: "Tài khoản & hỗ trợ",
         links: [
-          ["/account", "Tài khoản", ICONS.account], ["/account/interface-language", "Ngôn ngữ giao diện", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/account/workspace-care", "Chăm sóc dữ liệu Web", ICONS.security], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
+          ["/account", "Tài khoản", ICONS.account], ["/account/interface-language", "Ngôn ngữ giao diện", ICONS.account], ["/account/activity", "Hoạt động Web", ICONS.account], ["/account/data-controls", "Kiểm soát dữ liệu", ICONS.security], ["/account/workspace-care", "Chăm sóc dữ liệu Web", ICONS.security], ["/guides", "Guide Center", ICONS.legal], ["/inbox", "Inbox", ICONS.inbox], ["/automation", "Automation Center", ICONS.system], ["/tickets", "Ticket của tôi", ICONS.ticket], ["/support", "Hỗ trợ", ICONS.support], ["/operations", "Operations Center", ICONS.system], ["/status", "Trạng thái dịch vụ", ICONS.system]
         ]
       },
       {
         label: "Bot companion",
         links: [
-          ["/referrals", "Giới thiệu", ICONS.support], ["/rewards", "Ưu đãi", ICONS.pricing], ["/community", "Cộng đồng", ICONS.support], ["/guides", "Hướng dẫn Bot", ICONS.legal]
+          ["/referrals", "Giới thiệu", ICONS.support], ["/rewards", "Ưu đãi", ICONS.pricing], ["/community", "Cộng đồng", ICONS.support]
         ]
       }
     ];
@@ -9619,6 +9714,80 @@
     const industryCount = Array.isArray(catalog.industries) ? catalog.industries.length : 0;
     const catalogTotal = Number.isInteger(Number(catalog.total_items)) ? Number(catalog.total_items) : 0;
     return `<article class="portal-page portal-content-prompt-pack portal-free-prompt-gallery">${renderHero(page, context)}<section class="portal-content-prompt-pack-intro"><div><span class="portal-section-kicker">Signed Web-only · read-only snapshot</span><h2>Tìm một prompt seed rõ ngữ cảnh, rồi tự review trước khi dùng.</h2><p>Gallery thay việc lục lại Free Hub trong Telegram bằng catalog Web gọn, có bộ lọc server-side, phân trang và chi tiết theo thao tác của bạn. Nó không tạo AI output hoặc kết nối bất kỳ runtime nào.</p></div><dl><div><dt>${safeText(String(categoryCount))}</dt><dd>Nhóm prompt</dd></div><div><dt>${safeText(String(industryCount))}</dt><dd>Ngành</dd></div><div><dt>0</dt><dd>Execution / payment</dd></div></dl></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Snapshot catalog</span><h2 class="portal-card-title">Khám phá ${safeText(String(catalogTotal || "—"))} prompt seed</h2><p class="portal-card-subtitle">${safeText(String(catalog.description || "Catalog sẽ xuất hiện sau khi signed session được máy chủ xác nhận."))}</p></div>${badge(canBrowse ? "read_only" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="free-prompt-gallery-filter" data-portal-route="/free-prompt-gallery" novalidate>${renderFields(freePromptGalleryFilterFields(catalog), canBrowse, context, listing.filters, "free-prompt-gallery-filter")}<div class="portal-form-footer"><span class="portal-form-note">Bộ lọc và query chỉ dùng cho request hiện tại; không lưu vào URL, localStorage, sessionStorage, Project hay Memory Center.</span><div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="free-prompt-gallery-refresh" data-portal-route="/free-prompt-gallery"${canRead ? "" : " disabled"}>Làm mới catalog</button><button class="portal-button portal-button--primary" type="submit"${canBrowse ? "" : " disabled"}>Áp dụng bộ lọc</button></div></div></form></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Read-only results</span><h2 class="portal-card-title">Prompt phù hợp</h2><p class="portal-card-subtitle">Mỗi thẻ là dữ liệu snapshot đã trả về từ server; chỉ nút “Xem chi tiết” mới gọi endpoint chi tiết riêng.</p></div>${badge(canBrowse ? "ready" : "guarded")}</div>${renderFreePromptGalleryCards(listing.items, canBrowse)}${renderFreePromptGalleryPagination(listing.pagination, canBrowse)}</section>${renderFreePromptGalleryDetail(context.freePromptGalleryDetail, canBrowse, canSave)}${renderFreePromptGallerySaveResult(context.freePromptGallerySaveResult, context.freePromptGalleryDetail && context.freePromptGalleryDetail.item && context.freePromptGalleryDetail.item.id)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Catalog để tham khảo, không thực thi</h2><p class="portal-card-subtitle">Không có provider, Bot, Core Bridge, job, ví Xu, PayOS, asset, render, publish hoặc delivery trong Gallery. Hãy kiểm tra claim, nguồn và quyền dùng trước khi đưa prompt vào một workflow khác.</p></div>${badge("guarded")}</div><div class="portal-content-prompt-pack-guard-list"><span><strong>Provider / Bot / bridge</strong><em>off</em></span><span><strong>Job / wallet / PayOS</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span></div>${renderNotes(page)}</section></article>`;
+  }
+
+  function guideCenterCatalogState(context) {
+    const catalog = context && context.guideCenterCatalog && typeof context.guideCenterCatalog === "object"
+      ? context.guideCenterCatalog
+      : {};
+    return catalog && typeof catalog.snapshot_version === "string" && Array.isArray(catalog.groups)
+      && catalog.ui && typeof catalog.ui === "object"
+      ? catalog
+      : {};
+  }
+
+  function guideCenterCountText(template, count) {
+    const value = Number.isInteger(count) && count >= 0 ? String(count) : "0";
+    return String(template || "").replace("{count}", value);
+  }
+
+  function guideCenterTopicSearchText(topic) {
+    const steps = Array.isArray(topic && topic.steps) ? topic.steps : [];
+    return [topic && topic.title, topic && topic.summary, ...steps].map((value) => String(value || "")).join(" ").toLocaleLowerCase();
+  }
+
+  function renderGuideCenterTopic(topic, ui) {
+    const search = guideCenterTopicSearchText(topic);
+    const availability = topic.availability === "capability_backed" ? ui.availability_badge : ui.static_badge;
+    const steps = Array.isArray(topic.steps) ? topic.steps : [];
+    return `<article class="portal-card portal-card-pad portal-guide-center-topic" data-guide-center-item data-guide-center-search="${safeText(search)}"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(availability)}</span><h3 class="portal-card-title">${safeText(String(topic.title || ""))}</h3><p class="portal-card-subtitle">${safeText(String(topic.summary || ""))}</p></div></div><section class="portal-guide-center-steps"><h4>${safeText(String(ui.steps || ""))}</h4><ol>${steps.map((step) => `<li>${safeText(String(step || ""))}</li>`).join("")}</ol></section><div class="portal-form-footer"><a class="portal-button portal-button--quiet" href="${safeText(String(topic.route || ""))}">${safeText(String(topic.route_label || ""))}</a></div></article>`;
+  }
+
+  function guideCenterShellText(key, fallback) {
+    return uiText(`guideCenter.${key}`, fallback);
+  }
+
+  function renderGuideCenter(page, context) {
+    const catalog = guideCenterCatalogState(context);
+    const canRead = Boolean(context && context.capabilities && context.capabilities["guide-center-view"] === true);
+    const readState = String(context && context.guideCenterReadState || (canRead ? "loading" : "guarded"));
+    if (!canRead || readState === "guarded") {
+      return `<article class="portal-page portal-guide-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(guideCenterShellText("guardedTitle", "Guide Center đang được bảo vệ"), guideCenterShellText("guardedBody", "Đăng nhập bằng signed session để tải catalog hướng dẫn đã được máy chủ xác nhận. Không có fallback sang Bot hoặc command copy."), ICONS.legal)}</section></article>`;
+    }
+    if (readState === "loading") {
+      return `<article class="portal-page portal-guide-center">${renderHero(page, context)}<section class="portal-card portal-card-pad" aria-busy="true">${renderEmpty(guideCenterShellText("loadingTitle", "Đang tải Guide Center"), guideCenterShellText("loadingBody", "Portal đang kiểm tra catalog hướng dẫn theo signed session và locale hiện tại; không dùng cache cũ hoặc trạng thái ngoài Web để thay thế."), ICONS.legal)}</section></article>`;
+    }
+    if (!catalog.snapshot_version) {
+      return `<article class="portal-page portal-guide-center">${renderHero(page, context)}<section class="portal-card portal-card-pad">${renderEmpty(guideCenterShellText("failedTitle", "Guide Center chưa thể xác minh"), guideCenterShellText("failedBody", "Catalog đang được bảo vệ hoặc không khớp contract đã review. Tải lại trang để thử lại; Portal không dựng nội dung thay thế."), ICONS.legal)}</section></article>`;
+    }
+    const ui = catalog.ui && typeof catalog.ui === "object" ? catalog.ui : {};
+    const groups = Array.isArray(catalog.groups) ? catalog.groups : [];
+    const total = groups.reduce((count, group) => count + (Array.isArray(group.topics) ? group.topics.length : 0), 0);
+    return `<article class="portal-page portal-guide-center" data-guide-center data-guide-center-all-count="${safeText(guideCenterCountText(ui.all_count, total))}" data-guide-center-result-template="${safeText(String(ui.result_count || ""))}">${renderHero(page, context)}<section class="portal-guide-center-intro"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2>${safeText(String(ui.heading || ""))}</h2><p>${safeText(String(ui.body || catalog.description || ""))}</p></div><dl><div><dt>${safeText(localizedNumber(total))}</dt><dd>${safeText(String(ui.topic_count_label || ""))}</dd></div><div><dt>0</dt><dd>${safeText(String(ui.execution_count || ""))}</dd></div></dl></section><section class="portal-card portal-card-pad portal-guide-center-search"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.search_label || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.search_help || ""))}</p></div>${badge("read_only")}</div><label class="portal-field" for="guide-center-search"><span>${safeText(String(ui.search_label || ""))}</span><input class="portal-input" id="guide-center-search" type="search" maxlength="120" autocomplete="off" placeholder="${safeText(String(ui.search_placeholder || ""))}" data-guide-center-search aria-controls="guide-center-results" aria-describedby="guide-center-search-help"><small id="guide-center-search-help">${safeText(String(ui.search_help || ""))}</small></label><div class="portal-form-footer"><span class="portal-form-note" data-guide-center-result-count aria-live="polite">${safeText(guideCenterCountText(ui.all_count, total))}</span></div></section><section id="guide-center-results" class="portal-guide-center-groups" aria-label="${safeText(String(ui.search_label || ""))}">${groups.map((group) => `<section class="portal-guide-center-group" data-guide-center-group><header><h2>${safeText(String(group.title || ""))}</h2><p>${safeText(String(group.summary || ""))}</p></header><div class="portal-guide-center-grid">${(Array.isArray(group.topics) ? group.topics : []).map((topic) => renderGuideCenterTopic(topic, ui)).join("")}</div></section>`).join("")}</section><section class="portal-card portal-card-pad portal-guide-center-empty" data-guide-center-empty hidden aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.search_label || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.empty_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.empty_body || ""))}</p></div>${badge("empty")}</div></section><section class="portal-card portal-card-pad portal-guide-center-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">${safeText(String(ui.kicker || ""))}</span><h2 class="portal-card-title">${safeText(String(ui.boundary_title || ""))}</h2><p class="portal-card-subtitle">${safeText(String(ui.boundary_body || ""))}</p></div>${badge("read_only")}</div></section></article>`;
+  }
+
+  function filterGuideCenter(value) {
+    const root = document.querySelector("[data-guide-center]");
+    if (!root) return;
+    const query = String(value || "").replace(/\s+/g, " ").trim().slice(0, 120).toLocaleLowerCase();
+    const items = [...root.querySelectorAll("[data-guide-center-item]")];
+    let visible = 0;
+    items.forEach((item) => {
+      const haystack = String(item.getAttribute("data-guide-center-search") || "").toLocaleLowerCase();
+      const matched = !query || haystack.includes(query);
+      item.hidden = !matched;
+      if (matched) visible += 1;
+    });
+    root.querySelectorAll("[data-guide-center-group]").forEach((group) => {
+      group.hidden = ![...group.querySelectorAll("[data-guide-center-item]")].some((item) => !item.hidden);
+    });
+    const empty = root.querySelector("[data-guide-center-empty]");
+    if (empty) empty.hidden = visible !== 0;
+    const count = root.querySelector("[data-guide-center-result-count]");
+    if (count) {
+      const template = query ? root.getAttribute("data-guide-center-result-template") : root.getAttribute("data-guide-center-all-count");
+      count.textContent = query ? guideCenterCountText(template, visible) : String(template || "");
+    }
   }
 
   // Audio Library & Briefing is intentionally an authoring workspace, not a
@@ -22231,6 +22400,7 @@
       case "prompt-library": return renderPromptLibrary(page, context);
       case "prompt-library-detail": return renderPromptLibraryDetail(page, context);
       case "free-prompt-gallery": return renderFreePromptGallery(page, context);
+      case "guide-center": return renderGuideCenter(page, context);
       case "media-workspace": return renderMediaWorkspace(page, context);
       case "media-workspace-detail": return renderMediaWorkspaceDetail(page, context);
       case "music-prompt-composer": return renderMusicPromptComposer(page, context);
@@ -23519,6 +23689,7 @@
       if (form) rememberTransientFormDraft(form);
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
+      if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
     });
     document.addEventListener("change", (event) => {
       const form = event.target.closest && event.target.closest("[data-portal-form]");
