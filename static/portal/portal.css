@@ -3159,6 +3159,9 @@ a { color: inherit; text-decoration: none; }
 .portal-storyboard-composer [data-storyboard-composer-rendered-result][data-stale],
 .portal-storyboard-composer [data-storyboard-composer-saved-receipt][data-stale] { border-color: var(--portal-warning); }
 .portal-storyboard-composer-stale-note { color: var(--portal-warning); font-weight: 650; line-height: 1.5; }
+.portal-image-motion-planner [data-image-motion-planner-rendered-result][data-stale],
+.portal-image-motion-planner [data-image-motion-planner-saved-receipt][data-stale] { border-color: var(--portal-warning); }
+.portal-image-motion-planner-stale-note { color: var(--portal-warning); font-weight: 650; line-height: 1.5; }
 
 @media (max-width: 980px) {
   .portal-storyboard-composer-intro, .portal-storyboard-composer-layout, .portal-storyboard-composer-canon, .portal-storyboard-composer-copy { grid-template-columns: 1fr; }

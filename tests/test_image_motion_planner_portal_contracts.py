@@ -6,6 +6,7 @@ from pathlib import Path
 ROOT = Path(__file__).parents[1]
 PORTAL = (ROOT / "static" / "portal" / "portal.js").read_text(encoding="utf-8")
 INTEGRATION = (ROOT / "static" / "portal" / "integration.js").read_text(encoding="utf-8")
+CSS = (ROOT / "static" / "portal" / "portal.css").read_text(encoding="utf-8")
 ROUTER = (ROOT / "copyfast_video_studio.py").read_text(encoding="utf-8")
 WORKER = (ROOT / "static" / "portal" / "service-worker.js").read_text(encoding="utf-8")
 ENGINE = (ROOT / "copyfast_web_engine.py").read_text(encoding="utf-8")
@@ -73,6 +74,72 @@ def test_image_motion_uses_csrf_native_apis_and_recomputes_on_save() -> None:
         assert forbidden not in save
     assert "idempotency_key: submission.key" in save
     assert "imagemotionplansavereceipt(result.data)" in save
+
+
+def test_image_motion_fences_stale_replies_and_keeps_the_visible_form_until_compose_settles() -> None:
+    compose = _action('if (action === "image-motion-planner-compose")', 'if (action === "image-motion-planner-save-plan")')
+    save = _action('if (action === "image-motion-planner-save-plan")', 'if (action === "reference-format-planner-compose")')
+    for token in (
+        "imageMotionPlannerSessionEpoch",
+        "imageMotionPlannerComposeRequestEpoch",
+        "imageMotionPlannerSaveRequestEpoch",
+        "imageMotionPlannerComposePendingRequestEpoch",
+        "imageMotionPlannerSavePendingRequestEpoch",
+        "imageMotionPlannerSaveRecoveryRequestEpoch",
+        "function imageMotionPlannerRequestIsCurrent",
+        "function imageMotionPlannerCurrentFormFields",
+        "function imageMotionPlanSaveSourceMatchesCurrentFields",
+        "function reconcileImageMotionPlannerSaveControls",
+    ):
+        assert token in INTEGRATION
+    assert "imageMotionPlannerResult: {}, imageMotionPlannerSaveSource: {}, imageMotionPlannerSaveReceipt: {}" not in compose
+    assert compose.index("imageMotionPlannerComposePendingRequestEpoch = requestEpoch") < compose.index('await api("/video-studio/tools/image-motion-planner"')
+    assert compose.count('imageMotionPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)') >= 3
+    assert "++imageMotionPlannerSaveRequestEpoch;" in compose
+    assert "imageMotionPlanSaveSourceMatchesCurrentFields(source, fields)" in save
+    assert save.index("imageMotionPlanSaveSourceMatchesCurrentFields(source, fields)") < save.index("acquireSubmission(scope, JSON.stringify(payload))")
+    assert save.index("imageMotionPlannerSavePendingRequestEpoch = requestEpoch") < save.index('await api("/video-studio/tools/image-motion-planner/save"')
+    assert "if (imageMotionPlannerComposePendingRequestEpoch)" in save
+    assert "if (imageMotionPlannerSavePendingRequestEpoch)" in save
+    assert save.count('imageMotionPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)') >= 3
+    assert "if (imageMotionPlannerSavePendingRequestEpoch === requestEpoch)" in save
+    assert "const responseAcknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);" in save
+    assert "if (responseAcknowledged)" in save
+    assert "imageMotionPlannerSaveRecoveryRequestEpoch = requestEpoch;" in save
+    assert "if (acknowledged) discardSubmission(scope, submission);" in save
+
+
+def test_image_motion_locks_the_native_form_and_marks_stale_direction_selections() -> None:
+    for token in (
+        "function imageMotionPlannerFormInteger",
+        "function normalizeImageMotionPlannerFormSaveSource",
+        "function imageMotionPlannerFormMatchesSavedSource",
+        "function ensureImageMotionPlannerDraftControls",
+        "function synchronizeImageMotionPlannerDraftFreshness",
+        "function markImageMotionPlannerDraftEdited",
+        '"toanaas:image-motion-planner-draft-edited"',
+        '"image-motion-planner-form"',
+        '"data-portal-form-id"',
+        '"data-image-motion-planner-stale-note"',
+        '"data-image-motion-planner-rendered-result"',
+        '"data-image-motion-planner-saved-receipt"',
+    ):
+        assert token in PORTAL
+    assert "normalizeImageMotionPlannerFormSaveSource(collectFormFields(form))" in PORTAL
+    assert "duration_seconds: imageMotionPlannerFormInteger(source.duration_seconds)" in PORTAL
+    assert "Number.isSafeInteger(parsed)" in PORTAL
+    assert "IMAGE_MOTION_SAVE_SOURCE_KEYS.every((key) => current[key] === saved[key])" in PORTAL
+    assert "markImageMotionPlannerDraftEdited(form);" in PORTAL
+    lock = INTEGRATION[INTEGRATION.index("function reconcileImageMotionPlannerSaveControls"):INTEGRATION.index("// Reference Format Planner")]
+    assert 'form.querySelectorAll("input, select, textarea, button")' in lock
+    assert 'form.setAttribute("aria-busy", String(durableWriteLocked))' in lock
+    assert 'control.dataset.imageMotionPlannerSaveInitialDisabled' in lock
+    assert "imageMotionPlannerSavePendingRequestEpoch = requestEpoch;" in INTEGRATION
+    assert "const retryAllowed = Boolean(!receipt && saveRecoveryRequired" in lock
+    assert "imageMotionPlannerSaveRecoveryRequestEpoch = requestEpoch;" in INTEGRATION
+    assert "imageMotionPlannerSaveRecoveryRequestEpoch = 0;" in INTEGRATION
+    assert ".portal-image-motion-planner [data-image-motion-planner-rendered-result][data-stale]" in CSS
+    assert ".portal-image-motion-planner-stale-note" in CSS
 
 
 def test_image_motion_backend_checks_metadata_not_media_and_never_runs_execution() -> None:

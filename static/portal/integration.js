@@ -331,6 +331,19 @@
   let videoStudioDetailHydrationEpoch = 0;
   let imageMotionPlannerReferencesHydrationEpoch = 0;
   let referenceFormatPlannerReferencesHydrationEpoch = 0;
+  // Image Motion Planner creates a reviewable plan and may later persist a
+  // private Video Plan. Its compose/save replies must stay in the same signed
+  // account, route and native form; a durable save locks the whole form until
+  // the server has acknowledged its content-free receipt.
+  let imageMotionPlannerSessionEpoch = 0;
+  let imageMotionPlannerComposeRequestEpoch = 0;
+  let imageMotionPlannerSaveRequestEpoch = 0;
+  let imageMotionPlannerComposePendingRequestEpoch = 0;
+  let imageMotionPlannerSavePendingRequestEpoch = 0;
+  // A transport failure after a durable POST is not proof that the server did
+  // not commit. Preserve its idempotency key and lock the exact form until the
+  // customer retries that same save or leaves the signed view.
+  let imageMotionPlannerSaveRecoveryRequestEpoch = 0;
   // Cinematic Ad Concept is transient, signed-tab planning state. Compose and
   // save responses must never cross a newer request, account, route or
   // bootstrap; a save may create a private plan server-side but only the
@@ -6703,6 +6716,10 @@
     const items = data.references.map(imageMotionReference);
     return items.every(Boolean) ? items : [];
   }
+  function imageMotionPlannerOwnedReferences() {
+    return (Array.isArray(base().imageMotionPlannerReferences) ? base().imageMotionPlannerReferences : [])
+      .map(imageMotionReference).filter(Boolean);
+  }
   function imageMotionPlannerPayload(fields, references) {
     const directionId = String(fields.direction_id || "").trim();
     const style = String(fields.style || "").trim().toLowerCase();
@@ -6760,6 +6777,21 @@
       && String(planner.music && planner.music.id || "") === selection.music
       && Number(planner.duration_seconds) === selection.duration_seconds);
   }
+  function imageMotionPlannerCurrentFormFields(form) {
+    if (!(form instanceof HTMLFormElement)) return {};
+    const fields = {};
+    new FormData(form).forEach((value, key) => {
+      if (!Object.prototype.hasOwnProperty.call(fields, key)) fields[key] = typeof value === "string" ? value : "";
+    });
+    return fields;
+  }
+  function imageMotionPlanSaveSourceMatchesCurrentFields(rawSource, fields) {
+    const references = imageMotionPlannerOwnedReferences();
+    const source = imageMotionPlanSaveSource(rawSource, references);
+    const current = imageMotionPlanSaveSource(fields, references);
+    const expected = ["direction_id", "style", "motion", "music", "duration_seconds"];
+    return Boolean(source && current && expected.every((key) => source[key] === current[key]));
+  }
   function imageMotionPlanSaveReceipt(value) {
     const data = value && typeof value === "object" && !Array.isArray(value) ? value : {};
     const plan = data.plan && typeof data.plan === "object" && !Array.isArray(data.plan) ? data.plan : {};
@@ -6770,6 +6802,64 @@
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft"
       || !Number.isInteger(Number(data.scene_count)) || Number(data.scene_count) !== 3) return null;
     return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: 3 };
+  }
+
+  function reconcileImageMotionPlannerSaveControls(route) {
+    if (route !== "/video-studio/image-motion-planner" || currentPortalPath() !== route) return;
+    const form = document.querySelector('form[data-portal-action="image-motion-planner-compose"]');
+    const references = imageMotionPlannerOwnedReferences();
+    const source = imageMotionPlanSaveSource(base().imageMotionPlannerSaveSource, references);
+    const receipt = imageMotionPlanSaveReceipt(base().imageMotionPlannerSaveReceipt);
+    const resultIsCurrent = source && imageMotionPlanSaveSourceMatchesResult(source, base().imageMotionPlannerResult, references);
+    const fieldsAreCurrent = form && imageMotionPlanSaveSourceMatchesCurrentFields(source, imageMotionPlannerCurrentFormFields(form));
+    const savePending = Boolean(imageMotionPlannerSavePendingRequestEpoch);
+    const saveRecoveryRequired = Boolean(imageMotionPlannerSaveRecoveryRequestEpoch);
+    const durableWriteLocked = savePending || saveRecoveryRequired;
+    // A durable Video Plan write may already have committed before its reply
+    // reaches this browser. Lock every editable control until it settles so a
+    // newer local direction can never receive the older plan receipt.
+    if (form) {
+      form.setAttribute("aria-busy", String(durableWriteLocked));
+      form.querySelectorAll("input, select, textarea, button").forEach((control) => {
+        if (!Object.prototype.hasOwnProperty.call(control.dataset, "imageMotionPlannerSaveInitialDisabled")) {
+          control.dataset.imageMotionPlannerSaveInitialDisabled = String(control.disabled);
+        }
+        const disabled = durableWriteLocked || control.dataset.imageMotionPlannerSaveInitialDisabled === "true";
+        control.disabled = disabled;
+        control.setAttribute("aria-disabled", String(disabled));
+      });
+    }
+    const current = Boolean(!receipt && !durableWriteLocked && !imageMotionPlannerComposePendingRequestEpoch && resultIsCurrent && fieldsAreCurrent);
+    // A response-less transport error has one safe next action: retry this
+    // exact payload with the preserved idempotency key. The form stays locked
+    // so no changed direction can create a second durable plan meanwhile.
+    const retryAllowed = Boolean(!receipt && saveRecoveryRequired && !savePending && resultIsCurrent && fieldsAreCurrent);
+    const statusNote = form && form.querySelector("[data-image-motion-planner-stale-note]");
+    if (saveRecoveryRequired && statusNote) {
+      statusNote.hidden = false;
+      statusNote.textContent = "Kết nối chưa xác nhận lần lưu trước. Direction được khóa; bấm “Lưu thành Video Plan” để thử lại đúng request đó.";
+    }
+    document.querySelectorAll('[data-portal-action="image-motion-planner-save-plan"]').forEach((control) => {
+      if (!Object.prototype.hasOwnProperty.call(control.dataset, "imageMotionPlannerInitialDisabled")) {
+        control.dataset.imageMotionPlannerInitialDisabled = String(control.disabled);
+      }
+      const disabled = control.dataset.imageMotionPlannerInitialDisabled === "true" || !(current || retryAllowed);
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && savePending) {
+        control.setAttribute("title", "Video Plan đang được lưu. Direction và lựa chọn được khóa cho đến khi máy chủ xác nhận.");
+      } else if (!disabled && saveRecoveryRequired) {
+        control.setAttribute("title", "Kết nối chưa xác nhận lần lưu trước. Bấm để thử lại đúng Image Motion Plan với cùng idempotency key.");
+      } else if (disabled && saveRecoveryRequired) {
+        control.setAttribute("title", "Kết nối chưa xác nhận lần lưu trước. Direction được khóa cho tới khi request này được thử lại hoặc phiên được làm mới.");
+      } else if (disabled && !receipt && !current) {
+        control.setAttribute("title", "Image Motion Plan không còn khớp direction hoặc lựa chọn đang hiển thị; hãy tạo lại trước khi lưu.");
+      } else if (disabled && receipt) {
+        control.setAttribute("title", "Image Motion Plan này đã được lưu thành Video Plan Draft. Tạo lại plan nếu cần lưu một plan khác.");
+      } else {
+        control.removeAttribute("title");
+      }
+    });
   }
 
   // Reference Format Planner is the Web-native counterpart to the Bot's
@@ -10002,6 +10092,12 @@
     ++mediaWorkspaceSessionEpoch;
     ++voiceStudioSessionEpoch;
     ++videoStudioSessionEpoch;
+    ++imageMotionPlannerSessionEpoch;
+    ++imageMotionPlannerComposeRequestEpoch;
+    ++imageMotionPlannerSaveRequestEpoch;
+    imageMotionPlannerComposePendingRequestEpoch = 0;
+    imageMotionPlannerSavePendingRequestEpoch = 0;
+    imageMotionPlannerSaveRecoveryRequestEpoch = 0;
     ++cinematicConceptSessionEpoch;
     ++cinematicConceptComposeRequestEpoch;
     ++cinematicConceptSaveRequestEpoch;
@@ -10974,6 +11070,12 @@
     ++voiceStudioDetailHydrationEpoch;
     ++voiceStudioCueSheetHydrationEpoch;
     ++videoStudioSessionEpoch;
+    ++imageMotionPlannerSessionEpoch;
+    ++imageMotionPlannerComposeRequestEpoch;
+    ++imageMotionPlannerSaveRequestEpoch;
+    imageMotionPlannerComposePendingRequestEpoch = 0;
+    imageMotionPlannerSavePendingRequestEpoch = 0;
+    imageMotionPlannerSaveRecoveryRequestEpoch = 0;
     ++cinematicConceptSessionEpoch;
     ++cinematicConceptComposeRequestEpoch;
     ++cinematicConceptSaveRequestEpoch;
@@ -14097,6 +14199,21 @@
       && expectedPath === "/video-studio/storyboard-composer"
       && currentPortalPath() === expectedPath
       && base().storyboardComposerEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function imageMotionPlannerRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
+    const currentRequestEpoch = kind === "compose"
+      ? imageMotionPlannerComposeRequestEpoch
+      : kind === "save" ? imageMotionPlannerSaveRequestEpoch : -1;
+    const account = base().account && typeof base().account === "object" ? base().account : {};
+    return requestEpoch === currentRequestEpoch
+      && sessionEpoch === imageMotionPlannerSessionEpoch
+      && Boolean(expectedAccountId)
+      && String(account.id || "") === expectedAccountId
+      && expectedPath === "/video-studio/image-motion-planner"
+      && currentPortalPath() === expectedPath
+      && base().imageMotionPlannerEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
   }
 
@@ -24262,16 +24379,23 @@
         if (!(capabilities["image-motion-planner-view"] === true && capabilities["image-motion-planner-compose"] === true)) {
           throw new Error("Chỉ signed Web session có CSRF, Video Studio và Image Studio đang sẵn sàng mới có thể lập Image Motion Plan.");
         }
-        const references = (Array.isArray(base().imageMotionPlannerReferences) ? base().imageMotionPlannerReferences : [])
-          .map(imageMotionReference).filter(Boolean);
+        if (imageMotionPlannerSavePendingRequestEpoch || imageMotionPlannerSaveRecoveryRequestEpoch) {
+          throw new Error("Video Plan đang chờ máy chủ xác nhận. Direction và lựa chọn hiện tại được khóa cho đến khi request này hoàn tất.");
+        }
+        const references = imageMotionPlannerOwnedReferences();
         const payload = imageMotionPlannerPayload(fields, references);
-        // Every new composition invalidates the old bounded source and receipt.
-        // Nothing rendered by the browser, no raw Image Studio prompt and no
-        // source-media field may become a later write request.
-        merge({
-          imageMotionPlannerResult: {}, imageMotionPlannerSaveSource: {}, imageMotionPlannerSaveReceipt: {},
-          pageStates: { ...(base().pageStates || {}), "/video-studio/image-motion-planner": "processing" }
-        });
+        const expectedPath = "/video-studio/image-motion-planner";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = imageMotionPlannerSessionEpoch;
+        const requestEpoch = ++imageMotionPlannerComposeRequestEpoch;
+        // A newer composition or actual native form edit invalidates every
+        // delayed save/compose reply. Keep the currently visible plan intact
+        // while this request is pending so an error cannot reset the form.
+        ++imageMotionPlannerSaveRequestEpoch;
+        if (!imageMotionPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+        imageMotionPlannerComposePendingRequestEpoch = requestEpoch;
+        reconcileImageMotionPlannerSaveControls(route);
         setActionBusy(action, route, true);
         try {
           const result = await api("/video-studio/tools/image-motion-planner", {
@@ -24279,6 +24403,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
+          if (!imageMotionPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (!imageMotionPlannerResultIsSafe(data)) {
             throw new Error("Máy chủ chưa trả Image Motion Plan Web-native an toàn.");
@@ -24287,13 +24412,21 @@
           if (!saveSource || !imageMotionPlanSaveSourceMatchesResult(saveSource, data, references)) {
             throw new Error("Image Motion Plan trả về không khớp Image Studio direction đã chọn trong phiên này.");
           }
+          if (!imageMotionPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({
             imageMotionPlannerResult: data, imageMotionPlannerSaveSource: saveSource, imageMotionPlannerSaveReceipt: {},
             pageStates: { ...(base().pageStates || {}), "/video-studio/image-motion-planner": "ready" }
           });
           toast(result.message || "Đã tạo Image Motion Plan để review. Không có render, video, preview, provider, job, payment hoặc output.");
+        } catch (error) {
+          if (!imageMotionPlannerRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          throw error;
         } finally {
-          setActionBusy(action, route, false);
+          if (imageMotionPlannerComposePendingRequestEpoch === requestEpoch) {
+            imageMotionPlannerComposePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+            reconcileImageMotionPlannerSaveControls(route);
+          }
         }
         return;
       }
@@ -24305,13 +24438,33 @@
           && capabilities["video-plan-create"] === true)) {
           throw new Error("Chỉ signed Web session có CSRF, Image Studio và Video Studio đang sẵn sàng mới có thể lưu Image Motion Plan thành Video Plan.");
         }
-        const references = (Array.isArray(base().imageMotionPlannerReferences) ? base().imageMotionPlannerReferences : [])
-          .map(imageMotionReference).filter(Boolean);
+        if (imageMotionPlannerComposePendingRequestEpoch) {
+          throw new Error("Image Motion Plan đang được tạo lại từ direction hiện tại. Hãy chờ phản hồi trước khi lưu Video Plan.");
+        }
+        if (imageMotionPlannerSavePendingRequestEpoch) {
+          toast("Video Plan đang được lưu từ Image Motion Plan hiện tại. Vui lòng chờ receipt từ máy chủ.", "error");
+          return;
+        }
+        const savedReceipt = imageMotionPlanSaveReceipt(base().imageMotionPlannerSaveReceipt);
+        if (savedReceipt) {
+          toast("Image Motion Plan này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.");
+          return;
+        }
+        const references = imageMotionPlannerOwnedReferences();
         const source = imageMotionPlanSaveSource(base().imageMotionPlannerSaveSource, references);
         const currentResult = base().imageMotionPlannerResult;
         if (!source || !imageMotionPlanSaveSourceMatchesResult(source, currentResult, references)) {
           throw new Error("Bản Image Motion hiện tại không còn khớp Image Studio direction đang hoạt động. Hãy tạo lại trước khi lưu.");
         }
+        if (!imageMotionPlanSaveSourceMatchesCurrentFields(source, fields)) {
+          throw new Error("Direction hoặc lựa chọn Image Motion đang hiển thị đã thay đổi. Hãy tạo lại plan trước khi lưu Video Plan.");
+        }
+        const expectedPath = "/video-studio/image-motion-planner";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = imageMotionPlannerSessionEpoch;
+        const requestEpoch = ++imageMotionPlannerSaveRequestEpoch;
+        if (!imageMotionPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
         const payload = { ...source, destination: "video_plan" };
         const scope = "video-studio:image-motion-planner:save-plan";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
@@ -24320,6 +24473,8 @@
           return;
         }
         let acknowledged = false;
+        imageMotionPlannerSavePendingRequestEpoch = requestEpoch;
+        reconcileImageMotionPlannerSaveControls(route);
         setActionBusy(action, route, true);
         try {
           // Send original bounded choices only. The server re-checks current
@@ -24331,19 +24486,39 @@
             body: JSON.stringify({ ...payload, idempotency_key: submission.key })
           });
           acknowledged = true;
+          if (!imageMotionPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           if (result.status !== "draft") throw new Error("Máy chủ chưa xác nhận Video Plan Draft từ Image Motion Planner.");
           const receipt = imageMotionPlanSaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Image Motion Video Plan content-free và đúng ranh giới an toàn.");
+          if (!imageMotionPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          imageMotionPlannerSaveRecoveryRequestEpoch = 0;
           merge({ imageMotionPlannerSaveReceipt: receipt });
           toast(result.message || "Đã lưu Image Motion Plan thành Video Plan Draft riêng tư.");
         } catch (error) {
-          acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (!imageMotionPlannerRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          const responseAcknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          acknowledged = acknowledged || responseAcknowledged;
+          if (responseAcknowledged) {
+            imageMotionPlannerSaveRecoveryRequestEpoch = 0;
+          } else {
+            // `fetch` rejected before any HTTP response reached this tab. The
+            // request may still have committed, so leave its exact key/form
+            // available only for an idempotent retry, not a changed save.
+            imageMotionPlannerSaveRecoveryRequestEpoch = requestEpoch;
+            if (error && typeof error === "object") {
+              error.message = "Kết nối chưa xác nhận lần lưu. Direction đã được khóa; bấm Lưu thành Video Plan để thử lại đúng request này.";
+            }
+          }
           merge({ imageMotionPlannerSaveReceipt: {} });
           throw error;
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
-          setActionBusy(action, route, false);
+          if (imageMotionPlannerSavePendingRequestEpoch === requestEpoch) {
+            imageMotionPlannerSavePendingRequestEpoch = 0;
+            setActionBusy(action, route, false);
+            reconcileImageMotionPlannerSaveControls(route);
+          }
         }
         return;
       }
@@ -30581,6 +30756,23 @@
       setActionBusy("storyboard-composer-compose", "/video-studio/storyboard-composer", false);
     }
     reconcileStoryboardComposerSaveControls("/video-studio/storyboard-composer");
+  });
+  window.addEventListener("toanaas:image-motion-planner-draft-edited", () => {
+    // A true user edit owns a newer native direction. Never let a delayed
+    // compose/save reply restore a prior selection or receipt. A durable
+    // save is an exception: the form is locked, and its server-side write
+    // must be allowed to finish with the receipt for that exact selection.
+    if (imageMotionPlannerSavePendingRequestEpoch || imageMotionPlannerSaveRecoveryRequestEpoch) {
+      reconcileImageMotionPlannerSaveControls("/video-studio/image-motion-planner");
+      return;
+    }
+    ++imageMotionPlannerComposeRequestEpoch;
+    ++imageMotionPlannerSaveRequestEpoch;
+    if (imageMotionPlannerComposePendingRequestEpoch) {
+      imageMotionPlannerComposePendingRequestEpoch = 0;
+      setActionBusy("image-motion-planner-compose", "/video-studio/image-motion-planner", false);
+    }
+    reconcileImageMotionPlannerSaveControls("/video-studio/image-motion-planner");
   });
   window.addEventListener("toanaas:portal-action", handleAction);
   let initialHydration = null;
