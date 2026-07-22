@@ -112,6 +112,7 @@ async def dashboard():
         "BILLING_MENU_CALLBACK_CONTRACT.md",
         "PACKAGE_PURCHASE_CALLBACK_CONTRACT.md",
         "QUICK_IMAGE_PLANNER_CALLBACK_CONTRACT.md",
+        "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md",
         "VIDEO_JOB_CALLBACK_CONTRACT.md",
         "VIDEO_FINALIZATION_CALLBACK_CONTRACT.md",
         "STORAGE_ADDON_CALLBACK_CONTRACT.md",
@@ -123,6 +124,7 @@ async def dashboard():
     assert "BOT_COMPANION_HANDOFF.md" in readme
     assert "UNREFERENCED_STATIC_MODULES.md" in readme
     assert "BILLING_MENU_CALLBACK_CONTRACT.md" in readme
+    assert "CREATIVE_MOTION_GUIDE_CALLBACK_CONTRACT.md" in readme
     # These are deliberate project-wide contracts, not a claim that the tiny
     # fixture executes any media feature.  The generated migration index must
     # keep their discoverability on every audit run instead of silently
@@ -3353,6 +3355,102 @@ def test_static_audit_keeps_handler_modules_in_scope_when_entrypoint_imports_the
 
     assert observation["status"] == "HANDLERS_REACHABLE_FROM_OBSERVED_ENTRYPOINT"
     assert observation["unreferenced_module_files"] == []
+
+
+def test_static_audit_derives_all_creative_motion_guide_keyboard_literals_without_importing_bot(tmp_path: Path) -> None:
+    """Nested localized tuple labels must not hide the 23 finite Motion actions."""
+
+    audit = _load_audit_module()
+    bot_root = tmp_path / "bot"
+    bot_root.mkdir()
+    bot_source = bot_root / "bot.py"
+    bot_source.write_text(
+        '''
+raise RuntimeError("the static auditor must never execute this source")
+
+def creative_motion_topic_keyboard(lang="vi"):
+    return [
+        (ui_text(lang, "motion.product"), "motion|topic|product"),
+        (ui_text(lang, "motion.affiliate"), "motion|topic|affiliate"),
+        (ui_text(lang, "motion.ai_tool"), "motion|topic|ai_tool"),
+        (ui_text(lang, "motion.place"), "motion|topic|place"),
+        (ui_text(lang, "motion.fashion"), "motion|topic|fashion"),
+        (ui_text(lang, "motion.food"), "motion|topic|food"),
+        (ui_text(lang, "motion.education"), "motion|topic|education"),
+        (ui_text(lang, "motion.story"), "motion|topic|story"),
+        (ui_text(lang, "motion.custom"), "motion|topic|custom"),
+    ]
+
+def creative_motion_suggestions_keyboard(lang="vi"):
+    return [
+        ("one" if lang == "vi" else "one", "motion|choice|1"),
+        ("two" if lang == "vi" else "two", "motion|choice|2"),
+        ("three" if lang == "vi" else "three", "motion|choice|3"),
+        ("more" if lang == "vi" else "more", "motion|refresh"),
+        ("back" if lang == "vi" else "back", "motion|start"),
+    ]
+
+def creative_motion_style_keyboard(lang="vi"):
+    return [
+        (ui_text(lang, "motion.style.cinematic"), "motion|style|cinematic"),
+        (ui_text(lang, "motion.style.tiktok"), "motion|style|tiktok"),
+        (ui_text(lang, "motion.style.tutorial"), "motion|style|tutorial"),
+        (ui_text(lang, "motion.style.ads"), "motion|style|ads"),
+        (ui_text(lang, "motion.style.fpv"), "motion|style|fpv"),
+        (ui_text(lang, "motion.style.reveal"), "motion|style|reveal"),
+        (ui_text(lang, "motion.style.ugc"), "motion|style|ugc"),
+        ("back", "motion|back_suggestions"),
+    ]
+
+def creative_motion_result_keyboard(lang="vi"):
+    return [("back", "motion|back_style")]
+''',
+        encoding="utf-8",
+    )
+
+    original_max_ast_parse_bytes = audit.MAX_AST_PARSE_BYTES
+    try:
+        # Force the bounded text scanner; no Bot import or AST evaluation is
+        # necessary for the nested ``ui_text(...)`` keyboard rows.
+        audit.MAX_AST_PARSE_BYTES = 1
+        inventory = audit._extract_python_inventory(bot_root, [bot_source])
+    finally:
+        audit.MAX_AST_PARSE_BYTES = original_max_ast_parse_bytes
+
+    records = {record["token"]: record for record in inventory["callback_data"]}
+    assert set(records) == set(audit.CREATIVE_MOTION_GUIDE_CALLBACKS)
+    assert len(records) == 23
+    assert records["motion|topic|product"]["resolution"] == "reviewed_creative_motion_guide_keyboard_literal"
+    assert records["motion|topic|product"]["helper"] == "creative_motion_topic_keyboard"
+    assert records["motion|style|cinematic"]["helper"] == "creative_motion_style_keyboard"
+
+
+def test_creative_motion_guide_audit_maps_exactly_23_text_only_intents_and_fails_closed() -> None:
+    """The new guide is distinct from Image Motion and never replays Bot state."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    assert len(audit.CREATIVE_MOTION_GUIDE_CALLBACKS) == 23
+    assert all(prefix != "motion|" for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    for token in sorted(audit.CREATIVE_MOTION_GUIDE_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "/video-studio/motion-guide"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "COPIED_GUARDED"
+        assert mapped["resolution"] == "reviewed_creative_motion_guide_web_native_text_only"
+        assert mapped["creative_motion_guide_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE_TEXT_GUIDE"
+        assert mapped["creative_motion_guide_execution_boundary"] == "DETERMINISTIC_TEXT_ONLY_NO_PERSISTENCE_OR_EXTERNAL_RUNTIME"
+        assert "BOT_CREATIVE_MOTION_PENDING_STATE_NOT_REPLAYED" in mapped["source_dispositions"]
+        assert "NO_TELEGRAM_STATE_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_BRIDGE_ASSET_PUBLISH_OR_DELIVERY_ACTION" in mapped["source_dispositions"]
+        assert "image-motion" not in mapped["target"]
+
+    for token in ("motion|cancel", "motion|style|future", "MOTION|start"):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "CREATIVE_MOTION_GUIDE_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "SOURCE_STATE_MACHINE_REQUIRED" in mapped["source_dispositions"]
 
 
 def test_cinematic_ad_audit_maps_only_finite_planner_intents_to_fresh_web_navigation() -> None:

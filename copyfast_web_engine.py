@@ -120,6 +120,11 @@ ENGINE_SPECS.update(_many(("voice_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=
 # Telegram execution path.
 ENGINE_SPECS.update(_many(("voice_direction_composer",), mode=ENGINE_MODE_WEB_NATIVE, flags=("voice_studio_enabled",), handler="voice_direction_composer"))
 ENGINE_SPECS.update(_many(("video_studio",), mode=ENGINE_MODE_WEB_NATIVE, flags=("video_studio_enabled",), handler="video_studio"))
+# ``motion|`` is a text-only Creative Motion Guide from the frozen Bot.  It
+# deliberately has its own route and handler: it is not Image Motion Planner,
+# does not require Image Studio metadata, and cannot save a Video Plan or call
+# a provider/media/job/payment/Bot path.
+ENGINE_SPECS.update(_many(("creative_motion_guide",), mode=ENGINE_MODE_WEB_NATIVE, flags=("video_studio_enabled",), handler="creative_motion_guide"))
 # The Bot's video-factory flow is a read-only seven-step guide. This route is
 # navigational only; it does not carry data into linked tools or enable a
 # renderer, provider/Bot call, job, wallet/payment, media output or publish.

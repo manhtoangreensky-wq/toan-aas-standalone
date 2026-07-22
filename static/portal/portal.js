@@ -1032,6 +1032,17 @@
       "Không có source media, provider/bridge, image/video/audio, render, preview, output, job, ví Xu, PayOS, asset, publish hay delivery. Lưu chỉ tạo Video Plan Draft owner-only do server tự dựng lại."
     ]
   });
+  // `motion|` in the frozen Bot is a compact text-only conversation.  This
+  // Web route keeps its useful finite choices but makes each step visible and
+  // editable in one place: no Telegram pending state, implicit reset or
+  // browser-back behavior is carried over.
+  customerPage("/video-studio/motion-guide", "Creative Motion Guide", "Chọn chủ đề, so sánh ba gợi ý, chọn phong cách và nhận motion guide text để review — không tạo video.", ICONS.video, {
+    layout: "creative-motion-guide", type: "creative-motion-guide", fields: [], action: "none", status: "ready",
+    notes: [
+      "Flow chuyển phần text-only của Bot motion thành workspace có quy trình rõ: chọn nhóm hoặc chủ đề tự nhập → xem ba gợi ý → chọn một hướng → chọn style → tạo guide. Chỉnh bất kỳ lựa chọn nào cũng giữ kết quả cũ ở trạng thái cần tạo lại, không tự nhảy trang hoặc reset form.",
+      "Không có Telegram/Bot state, Image Studio, upload, provider, image/video/audio generation, render, preview, output, job, Xu, PayOS, asset, publish hoặc delivery trong module này."
+    ]
+  });
   // Bot `longvideo` collected topic, duration, style and structure before it
   // produced editorial roadmap text. The Web-native form preserves that
   // planning grammar but never carries over Bot session/project state.
@@ -3042,6 +3053,163 @@
       && source.topic === planner.topic && source.audience === planner.audience && source.goal === planner.goal && source.context === planner.context
       && source.platform === planner.platform && source.language === planner.language && source.duration_seconds === planner.duration_seconds
       && source.idea_set === planner.idea_set && source.idea_choice === Number(selected.index));
+  }
+
+  // The Bot's `motion|` conversation is a text-only Creative Motion Guide.
+  // It is deliberately not Image Motion Planner: there is no Image Studio
+  // reference, Video Plan save, media runtime, provider or payment surface.
+  // Keep only strict transient results in this portal state so malformed data
+  // cannot become a believable generated asset or a stale hidden selection.
+  const CREATIVE_MOTION_GUIDE_TOPIC_KINDS = new Set(["product", "affiliate", "ai_tool", "place", "fashion", "food", "education", "story", "custom"]);
+  const CREATIVE_MOTION_GUIDE_CATALOG_KINDS = new Set(["product", "affiliate", "ai_tool", "place", "fashion", "food", "education", "story"]);
+  const CREATIVE_MOTION_GUIDE_STYLES = new Set(["cinematic", "tiktok", "tutorial", "ads", "fpv", "reveal", "ugc"]);
+  const CREATIVE_MOTION_GUIDE_LANGUAGES = new Set(["vi", "en", "zh"]);
+  const CREATIVE_MOTION_GUIDE_MAX_SET = 24;
+  const CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS = Object.freeze([
+    "execution", "input_persisted", "telegram_state_changed", "bot_called", "bridge_called", "source_media_inspected",
+    "media_uploads", "provider_called", "image_created", "video_created", "audio_created", "preview_created",
+    "output_created", "job_created", "wallet_mutated", "payment_started", "asset_saved", "publish_action_created",
+    "delivery_created", "fact_checked", "rights_verified"
+  ]);
+  const CREATIVE_MOTION_GUIDE_SUGGESTIONS_RESULT_KEYS = Object.freeze(["suggestions", ...CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS]);
+  const CREATIVE_MOTION_GUIDE_RESULT_KEYS = Object.freeze(["guide", ...CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS]);
+  const CREATIVE_MOTION_GUIDE_SUGGESTION_SET_KEYS = Object.freeze(["topic_kind", "topic_label", "language", "suggestion_set", "suggestions"]);
+  const CREATIVE_MOTION_GUIDE_SUGGESTION_KEYS = Object.freeze(["index", "title", "video_prompt", "motion", "audio_direction"]);
+  const CREATIVE_MOTION_GUIDE_CHOICE_KEYS = Object.freeze(["id", "label"]);
+  const CREATIVE_MOTION_GUIDE_TIMELINE_KEYS = Object.freeze(["index", "start_seconds", "end_seconds", "direction"]);
+  const CREATIVE_MOTION_GUIDE_GUIDE_KEYS = Object.freeze([
+    "title", "topic_kind", "topic", "language", "style", "suggestion_set", "selected_suggestion",
+    "idea_15_seconds", "idea_30_seconds", "timeline", "camera_motions", "image_prompt", "video_motion_prompt",
+    "overlay_lines", "voiceover", "cta", "cautions", "review_before_use"
+  ]);
+
+  function creativeMotionGuideExactKeys(value, keys) {
+    if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+    const actual = Object.keys(value);
+    return actual.length === keys.length && keys.every((key) => Object.prototype.hasOwnProperty.call(value, key));
+  }
+
+  function creativeMotionGuideText(value, minimum, maximum, allowEmpty) {
+    if (typeof value !== "string" || value.length > maximum) return "";
+    const clean = value.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
+    if (!clean && allowEmpty === true) return "";
+    if (!clean || clean.length < minimum) return "";
+    return /<\s*\/?\s*(?:script|svg|img|iframe|object|embed|style|link|meta|base|form|input|video|audio)\b|\bon[a-z]+\s*=/i.test(clean) ? "" : clean;
+  }
+
+  function normalizeCreativeMotionGuideDraft(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const topicKind = typeof source.topic_kind === "string" ? source.topic_kind : "product";
+    const customTopic = creativeMotionGuideText(source.custom_topic, 0, 500, true);
+    const language = typeof source.language === "string" ? source.language : "vi";
+    const suggestionSet = Number(source.suggestion_set);
+    const selectedSuggestion = Number(source.selected_suggestion);
+    const style = typeof source.style === "string" ? source.style : "cinematic";
+    if (!CREATIVE_MOTION_GUIDE_TOPIC_KINDS.has(topicKind) || !CREATIVE_MOTION_GUIDE_LANGUAGES.has(language) || !CREATIVE_MOTION_GUIDE_STYLES.has(style)) return {};
+    if (topicKind === "custom") {
+      return { topic_kind: "custom", custom_topic: customTopic, language, suggestion_set: 0, selected_suggestion: 0, style };
+    }
+    return {
+      topic_kind: topicKind, custom_topic: "", language,
+      suggestion_set: Number.isInteger(suggestionSet) && suggestionSet >= 1 && suggestionSet <= CREATIVE_MOTION_GUIDE_MAX_SET ? suggestionSet : 1,
+      selected_suggestion: Number.isInteger(selectedSuggestion) && selectedSuggestion >= 1 && selectedSuggestion <= 3 ? selectedSuggestion : 0,
+      style
+    };
+  }
+
+  function normalizeCreativeMotionSuggestion(raw, expectedIndex) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const index = Number(source.index);
+    const title = creativeMotionGuideText(source.title, 2, 2400, false);
+    const videoPrompt = creativeMotionGuideText(source.video_prompt, 2, 2400, false);
+    const motion = creativeMotionGuideText(source.motion, 2, 2400, false);
+    const audioDirection = creativeMotionGuideText(source.audio_direction, 2, 2400, false);
+    if (!creativeMotionGuideExactKeys(source, CREATIVE_MOTION_GUIDE_SUGGESTION_KEYS)
+      || index !== expectedIndex || !title || !videoPrompt || !motion || !audioDirection) return null;
+    return { index, title, video_prompt: videoPrompt, motion, audio_direction: audioDirection };
+  }
+
+  function creativeMotionGuideBoundaryIsSafe(value) {
+    if (!creativeMotionGuideExactKeys(value, CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS)) return false;
+    return value.execution === "web_native_deterministic_creative_motion_guide_only"
+      && CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS.slice(1).every((key) => value[key] === false);
+  }
+
+  function normalizeCreativeMotionGuideSuggestions(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const suggestionSet = source.suggestions && typeof source.suggestions === "object" && !Array.isArray(source.suggestions) ? source.suggestions : {};
+    const topicKind = typeof suggestionSet.topic_kind === "string" ? suggestionSet.topic_kind : "";
+    const topicLabel = creativeMotionGuideText(suggestionSet.topic_label, 2, 240, false);
+    const language = typeof suggestionSet.language === "string" ? suggestionSet.language : "";
+    const offset = Number(suggestionSet.suggestion_set);
+    const suggestionsRaw = Array.isArray(suggestionSet.suggestions) ? suggestionSet.suggestions : [];
+    const suggestions = suggestionsRaw.map((item, index) => normalizeCreativeMotionSuggestion(item, index + 1));
+    const boundary = {};
+    CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS.forEach((key) => { boundary[key] = source[key]; });
+    if (!creativeMotionGuideExactKeys(source, CREATIVE_MOTION_GUIDE_SUGGESTIONS_RESULT_KEYS)
+      || !creativeMotionGuideExactKeys(suggestionSet, CREATIVE_MOTION_GUIDE_SUGGESTION_SET_KEYS)
+      || !creativeMotionGuideBoundaryIsSafe(boundary) || !CREATIVE_MOTION_GUIDE_CATALOG_KINDS.has(topicKind)
+      || !topicLabel || !CREATIVE_MOTION_GUIDE_LANGUAGES.has(language) || !Number.isInteger(offset)
+      || offset < 1 || offset > CREATIVE_MOTION_GUIDE_MAX_SET || suggestions.length !== 3 || suggestions.some((item) => item === null)) return {};
+    return { suggestions: { topic_kind: topicKind, topic_label: topicLabel, language, suggestion_set: offset, suggestions } };
+  }
+
+  function normalizeCreativeMotionGuideResult(raw) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const guide = source.guide && typeof source.guide === "object" && !Array.isArray(source.guide) ? source.guide : {};
+    const title = creativeMotionGuideText(guide.title, 2, 2400, false);
+    const topicKind = typeof guide.topic_kind === "string" ? guide.topic_kind : "";
+    const topic = creativeMotionGuideText(guide.topic, 2, 500, false);
+    const language = typeof guide.language === "string" ? guide.language : "";
+    const suggestionSet = Number(guide.suggestion_set);
+    const style = guide.style && typeof guide.style === "object" && !Array.isArray(guide.style) ? guide.style : {};
+    const styleId = typeof style.id === "string" ? style.id : "";
+    const styleLabel = creativeMotionGuideText(style.label, 2, 240, false);
+    const selectedRaw = guide.selected_suggestion;
+    const selected = selectedRaw === null ? null : normalizeCreativeMotionSuggestion(selectedRaw, Number(selectedRaw && selectedRaw.index));
+    const timelineRaw = Array.isArray(guide.timeline) ? guide.timeline : [];
+    const timeline = timelineRaw.map((item, index) => {
+      const step = item && typeof item === "object" && !Array.isArray(item) ? item : {};
+      const stepIndex = Number(step.index);
+      const start = Number(step.start_seconds);
+      const end = Number(step.end_seconds);
+      const direction = creativeMotionGuideText(step.direction, 2, 2400, false);
+      return creativeMotionGuideExactKeys(step, CREATIVE_MOTION_GUIDE_TIMELINE_KEYS)
+        && stepIndex === index + 1 && Number.isInteger(start) && Number.isInteger(end) && start >= 0 && end > start && end <= 30 && direction
+        ? { index: stepIndex, start_seconds: start, end_seconds: end, direction } : null;
+    });
+    const camera = Array.isArray(guide.camera_motions) ? guide.camera_motions.map((item) => creativeMotionGuideText(item, 2, 1200, false)) : [];
+    const overlays = Array.isArray(guide.overlay_lines) ? guide.overlay_lines.map((item) => creativeMotionGuideText(item, 2, 1200, false)) : [];
+    const cautions = Array.isArray(guide.cautions) ? guide.cautions.map((item) => creativeMotionGuideText(item, 2, 1200, false)) : [];
+    const review = Array.isArray(guide.review_before_use) ? guide.review_before_use.map((item) => creativeMotionGuideText(item, 2, 1200, false)) : [];
+    const idea15 = creativeMotionGuideText(guide.idea_15_seconds, 2, 2400, false);
+    const idea30 = creativeMotionGuideText(guide.idea_30_seconds, 2, 2400, false);
+    const imagePrompt = creativeMotionGuideText(guide.image_prompt, 2, 2400, false);
+    const videoPrompt = creativeMotionGuideText(guide.video_motion_prompt, 2, 2400, false);
+    const voiceover = creativeMotionGuideText(guide.voiceover, 2, 2400, false);
+    const cta = creativeMotionGuideText(guide.cta, 2, 2400, false);
+    const boundary = {};
+    CREATIVE_MOTION_GUIDE_BOUNDARY_KEYS.forEach((key) => { boundary[key] = source[key]; });
+    const custom = topicKind === "custom";
+    if (!creativeMotionGuideExactKeys(source, CREATIVE_MOTION_GUIDE_RESULT_KEYS)
+      || !creativeMotionGuideExactKeys(guide, CREATIVE_MOTION_GUIDE_GUIDE_KEYS) || !creativeMotionGuideBoundaryIsSafe(boundary)
+      || !title || !CREATIVE_MOTION_GUIDE_TOPIC_KINDS.has(topicKind) || !topic || !CREATIVE_MOTION_GUIDE_LANGUAGES.has(language)
+      || !creativeMotionGuideExactKeys(style, CREATIVE_MOTION_GUIDE_CHOICE_KEYS) || !CREATIVE_MOTION_GUIDE_STYLES.has(styleId) || !styleLabel
+      || !Number.isInteger(suggestionSet) || suggestionSet < 0 || suggestionSet > CREATIVE_MOTION_GUIDE_MAX_SET
+      || (!custom && (!CREATIVE_MOTION_GUIDE_CATALOG_KINDS.has(topicKind) || suggestionSet < 1 || !selected || selected.title !== topic))
+      || (custom && (suggestionSet !== 0 || selected !== null))
+      || !idea15 || !idea30 || timeline.length !== 4 || timeline.some((item) => item === null)
+      || camera.length < 6 || camera.length > 10 || camera.some((item) => !item)
+      || !imagePrompt || !videoPrompt || overlays.length !== 4 || overlays.some((item) => !item)
+      || !voiceover || !cta || cautions.length < 2 || cautions.length > 4 || cautions.some((item) => !item)
+      || review.length < 2 || review.length > 4 || review.some((item) => !item)) return {};
+    return {
+      guide: {
+        title, topic_kind: topicKind, topic, language, style: { id: styleId, label: styleLabel }, suggestion_set: suggestionSet,
+        selected_suggestion: selected, idea_15_seconds: idea15, idea_30_seconds: idea30, timeline, camera_motions: camera,
+        image_prompt: imagePrompt, video_motion_prompt: videoPrompt, overlay_lines: overlays, voiceover, cta, cautions, review_before_use: review
+      }
+    };
   }
 
   // The long-video Bot conversation becomes a strict temporary Web roadmap.
@@ -7072,6 +7240,13 @@
       videoIdeaPlannerResult: normalizeVideoIdeaPlannerResult(source.videoIdeaPlannerResult),
       videoIdeaPlannerSaveSource: normalizeVideoIdeaPlanSaveSource(source.videoIdeaPlannerSaveSource),
       videoIdeaPlannerSaveReceipt: normalizeVideoIdeaPlanSaveReceipt(source.videoIdeaPlannerSaveReceipt),
+      // Creative Motion Guide is a tab-local finite planning flow. Its form
+      // draft, cards and result are never read from Bot pending state,
+      // Image Studio, Video Plans, a provider response or browser storage.
+      creativeMotionGuideEnabled: source.creativeMotionGuideEnabled === true,
+      creativeMotionGuideDraft: normalizeCreativeMotionGuideDraft(source.creativeMotionGuideDraft),
+      creativeMotionGuideSuggestions: normalizeCreativeMotionGuideSuggestions(source.creativeMotionGuideSuggestions),
+      creativeMotionGuideResult: normalizeCreativeMotionGuideResult(source.creativeMotionGuideResult),
       // Long-form Roadmap carries only a fully validated temporary planning
       // receipt and content-free save identity. It never hydrates Bot
       // long_video_projects/scenes, provider state or browser-persisted text.
@@ -8078,7 +8253,8 @@
           ["/video-studio/idea-planner", "Video Idea Planner", ICONS.video],
           ["/video-studio/story-video-plan", "Story Video Planner", ICONS.video],
           ["/video-studio/prompt-planner", "Video Prompt Planner", ICONS.video],
-          ["/video-studio/cinematic-concept", "Cinematic Concept", ICONS.video]
+          ["/video-studio/cinematic-concept", "Cinematic Concept", ICONS.video],
+          ["/video-studio/motion-guide", "Creative Motion Guide", ICONS.video]
         ]
       },
       {
@@ -8142,6 +8318,7 @@
     if (linkPath === "/video-studio/story-video-plan") return path === "/video-studio/story-video-plan";
     if (linkPath === "/video-studio/prompt-planner") return path === "/video-studio/prompt-planner";
     if (linkPath === "/video-studio/idea-planner") return path === "/video-studio/idea-planner";
+    if (linkPath === "/video-studio/motion-guide") return path === "/video-studio/motion-guide";
     if (linkPath === "/video-studio/long-form-planner") return path === "/video-studio/long-form-planner";
     if (linkPath === "/video-studio/self-shot-planner") return path === "/video-studio/self-shot-planner";
     if (linkPath === "/video-studio" && path === "/video-studio/self-shot-planner") return false;
@@ -8151,7 +8328,7 @@
     if (linkPath === "/video-studio/image-motion-planner") return path === "/video-studio/image-motion-planner";
     if (linkPath === "/video-studio/reference-format-planner") return path === "/video-studio/reference-format-planner";
     if (linkPath === "/video-studio/storyboard-composer") return path === "/video-studio/storyboard-composer";
-    if (linkPath === "/video-studio") return !["/video-studio/workflow", "/video-studio/story-video-plan", "/video-studio/prompt-planner", "/video-studio/idea-planner", "/video-studio/long-form-planner", "/video-studio/self-shot-planner", "/video-studio/script-to-screen-planner", "/video-studio/cinematic-concept", "/video-studio/image-motion-planner", "/video-studio/reference-format-planner", "/video-studio/storyboard-composer"].includes(path) && matchesRouteFamily(path, "/video-studio");
+    if (linkPath === "/video-studio") return !["/video-studio/workflow", "/video-studio/story-video-plan", "/video-studio/prompt-planner", "/video-studio/idea-planner", "/video-studio/motion-guide", "/video-studio/long-form-planner", "/video-studio/self-shot-planner", "/video-studio/script-to-screen-planner", "/video-studio/cinematic-concept", "/video-studio/image-motion-planner", "/video-studio/reference-format-planner", "/video-studio/storyboard-composer"].includes(path) && matchesRouteFamily(path, "/video-studio");
     if (linkPath === "/subtitle-studio") return matchesRouteFamily(path, "/subtitle-studio");
     if (linkPath === "/subtitle/assets") return path === "/subtitle/assets";
     if (linkPath === "/subtitle/formats") return path === "/subtitle/formats";
@@ -11414,6 +11591,64 @@
       ${renderVideoIdeaPlannerSaveReceipt(context.videoIdeaPlannerSaveReceipt)}
       <section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Planning trước, thực thi bằng contract riêng sau</h2><p class="portal-card-subtitle">Dùng Video Idea để kiểm tra hook, cấu trúc, claim, quyền sử dụng và consent. Khi cần version history, xác nhận lưu thành Video Plan riêng; hành động đó cũng không render hay tạo media.</p></div></div>${renderNotes(page)}</section>
     </article>`;
+  }
+
+  const CREATIVE_MOTION_GUIDE_TOPIC_OPTIONS = Object.freeze([
+    ["product", "Sản phẩm / quảng cáo"], ["affiliate", "Affiliate / TikTok Shop"], ["ai_tool", "AI tool / phần mềm"],
+    ["place", "Địa điểm / không gian"], ["fashion", "Thời trang / lifestyle"], ["food", "Food / nhà hàng / đồ uống"],
+    ["education", "Giáo dục / hướng dẫn"], ["story", "Câu chuyện cinematic"], ["custom", "Tự nhập chủ đề"]
+  ]);
+  const CREATIVE_MOTION_GUIDE_STYLE_OPTIONS = Object.freeze([
+    ["cinematic", "Cinematic"], ["tiktok", "TikTok / Reels nhanh"], ["tutorial", "Tutorial hướng dẫn"],
+    ["ads", "Quảng cáo bán hàng"], ["fpv", "FPV / drone motion"], ["reveal", "3D / product reveal"], ["ugc", "UGC đời thường"]
+  ]);
+  const CREATIVE_MOTION_GUIDE_LANGUAGE_OPTIONS = Object.freeze([["vi", "Tiếng Việt"], ["en", "English"], ["zh", "中文（简体）"]]);
+
+  function creativeMotionGuideOptions(options, value) {
+    return options.map(([id, label]) => `<option value="${safeText(id)}"${id === value ? " selected" : ""}>${safeText(label)}</option>`).join("");
+  }
+
+  function creativeMotionGuideListMarkup(items) {
+    const list = Array.isArray(items) ? items : [];
+    return list.length ? `<ul>${list.map((item) => `<li>${safeText(String(item))}</li>`).join("")}</ul>` : "";
+  }
+
+  function renderCreativeMotionGuideResult(raw) {
+    // `context` has already passed `normalizeBootstrap`, so normalizing this
+    // compact projection a second time would incorrectly expect the original
+    // transport boundary fields and erase a valid guide during render.
+    const result = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const guide = result.guide && typeof result.guide === "object" ? result.guide : null;
+    if (!guide) return "";
+    const selected = guide.selected_suggestion && typeof guide.selected_suggestion === "object" ? guide.selected_suggestion : null;
+    const selectedMarkup = selected
+      ? `<section class="portal-creative-motion-guide-selected"><div><span class="portal-section-kicker">Selected direction</span><h3>${safeText(String(selected.title || ""))}</h3></div><dl><div><dt>Video prompt</dt><dd>${safeText(String(selected.video_prompt || ""))}</dd></div><div><dt>Motion</dt><dd>${safeText(String(selected.motion || ""))}</dd></div><div><dt>Audio direction</dt><dd>${safeText(String(selected.audio_direction || ""))}</dd></div></dl></section>`
+      : `<section class="portal-creative-motion-guide-selected"><div><span class="portal-section-kicker">Custom direction</span><h3>${safeText(String(guide.topic || ""))}</h3><p>Chủ đề tự nhập được dùng trực tiếp; không có gợi ý Bot hoặc card ẩn nào được chọn thay bạn.</p></div></section>`;
+    const timeline = (Array.isArray(guide.timeline) ? guide.timeline : []).map((item) => `<li><strong>${safeText(String(item.start_seconds || 0))}–${safeText(String(item.end_seconds || 0))}s</strong><span>${safeText(String(item.direction || ""))}</span></li>`).join("");
+    const overlays = (Array.isArray(guide.overlay_lines) ? guide.overlay_lines : []).map((item) => `<li>${safeText(String(item))}</li>`).join("");
+    return `<section class="portal-card portal-card-pad portal-creative-motion-guide-result" data-creative-motion-guide-rendered-result aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic motion guide</span><h2 class="portal-card-title">${safeText(String(guide.title || "Creative Motion Guide"))}</h2><p class="portal-card-subtitle">${safeText(String(guide.topic || ""))} · ${safeText(String(guide.style && guide.style.label || ""))} · ${safeText(String(guide.language || "").toUpperCase())}. Đây là text direction để review, không phải image, video, audio, preview, output hay xác nhận provider.</p></div>${badge("read_only")}</div><p class="portal-creative-motion-guide-stale-note" data-creative-motion-guide-result-stale hidden role="status">Các lựa chọn ở form đã thay đổi. Guide bên dưới vẫn được giữ để so sánh nhưng không còn khớp form hiện tại; hãy tạo lại khi đã sẵn sàng.</p>${selectedMarkup}<section class="portal-creative-motion-guide-ideas"><article><span class="portal-section-kicker">15-second idea</span><p>${safeText(String(guide.idea_15_seconds || ""))}</p></article><article><span class="portal-section-kicker">30-second idea</span><p>${safeText(String(guide.idea_30_seconds || ""))}</p></article></section><section class="portal-creative-motion-guide-timeline"><div><span class="portal-section-kicker">Motion map</span><h3>Nhịp chuyển động có thể review</h3><p>Đây là direction timeline, không có footage, player, render timeline hoặc output media.</p></div><ol>${timeline}</ol></section><section class="portal-creative-motion-guide-prompts"><article><span class="portal-section-kicker">Image prompt direction</span><pre>${safeText(String(guide.image_prompt || ""))}</pre></article><article><span class="portal-section-kicker">Video motion prompt</span><pre>${safeText(String(guide.video_motion_prompt || ""))}</pre></article></section><section class="portal-creative-motion-guide-editorial"><article><span class="portal-section-kicker">Camera motions</span>${creativeMotionGuideListMarkup(guide.camera_motions)}</article><article><span class="portal-section-kicker">Text overlay</span><ol>${overlays}</ol></article><article><span class="portal-section-kicker">Voiceover</span><p>${safeText(String(guide.voiceover || ""))}</p></article><article><span class="portal-section-kicker">CTA</span><p>${safeText(String(guide.cta || ""))}</p></article></section><section class="portal-creative-motion-guide-review"><strong>Rà soát trước khi dùng ở workflow khác</strong>${creativeMotionGuideListMarkup(guide.cautions)}${creativeMotionGuideListMarkup(guide.review_before_use)}</section><div class="portal-form-footer"><span class="portal-form-note">Guide chỉ tồn tại trong state phiên đã xác thực. Trang này không tự lưu, gửi prompt tới engine/provider, xuất file hoặc tạo video.</span><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a></div></section>`;
+  }
+
+  function renderCreativeMotionGuide(page, context) {
+    const canCompose = Boolean(context.capabilities && context.capabilities["creative-motion-guide-compose"] === true);
+    const canSuggest = Boolean(context.capabilities && context.capabilities["creative-motion-guide-suggest"] === true);
+    const draft = normalizeCreativeMotionGuideDraft(context.creativeMotionGuideDraft);
+    const values = {
+      topic_kind: draft.topic_kind || "product", custom_topic: draft.custom_topic || "", language: draft.language || "vi",
+      suggestion_set: Number(draft.suggestion_set || 1), selected_suggestion: Number(draft.selected_suggestion || 0), style: draft.style || "cinematic"
+    };
+    const rawSuggestions = context.creativeMotionGuideSuggestions && typeof context.creativeMotionGuideSuggestions === "object" ? context.creativeMotionGuideSuggestions.suggestions : null;
+    const suggestionSet = rawSuggestions && rawSuggestions.topic_kind === values.topic_kind && rawSuggestions.language === values.language && Number(rawSuggestions.suggestion_set) === values.suggestion_set
+      ? rawSuggestions : null;
+    const cards = suggestionSet && Array.isArray(suggestionSet.suggestions) ? suggestionSet.suggestions : [];
+    const isCustom = values.topic_kind === "custom";
+    const hasSelectedCard = !isCustom && cards.some((item) => Number(item.index) === values.selected_suggestion);
+    const canRefresh = canSuggest && Boolean(suggestionSet && cards.length === 3);
+    const composeDisabled = !canCompose || (isCustom ? values.custom_topic.length < 2 : !hasSelectedCard);
+    const cardMarkup = cards.length
+      ? `<div class="portal-creative-motion-guide-cards" data-creative-motion-guide-cards>${cards.map((item) => { const chosen = Number(item.index) === values.selected_suggestion; return `<button class="portal-creative-motion-guide-card" type="button" data-portal-action="creative-motion-guide-select-suggestion" data-portal-route="/video-studio/motion-guide" data-creative-motion-guide-choice="${safeText(String(item.index))}" aria-pressed="${chosen ? "true" : "false"}"${canSuggest ? "" : " disabled"}><span class="portal-creative-motion-guide-card-index">${safeText(String(item.index).padStart(2, "0"))}</span><strong>${safeText(String(item.title || ""))}</strong><span><b>Prompt</b>${safeText(String(item.video_prompt || ""))}</span><span><b>Motion</b>${safeText(String(item.motion || ""))}</span><span><b>Audio</b>${safeText(String(item.audio_direction || ""))}</span></button>`; }).join("")}</div>`
+      : `<div class="portal-creative-motion-guide-empty" data-creative-motion-guide-empty><strong>${isCustom ? "Chủ đề tự nhập không cần bộ gợi ý" : "Chưa có ba gợi ý"}</strong><p>${isCustom ? "Nhập chủ đề, chọn style rồi tạo guide. Không có card hoặc lựa chọn ngầm nào được tự áp dụng." : "Chọn nhóm và ngôn ngữ rồi bấm “Tạo 3 gợi ý” để xem đúng một bộ direction."}</p></div>`;
+    return `<article class="portal-page portal-creative-motion-guide">${renderHero(page, context)}<section class="portal-creative-motion-guide-intro"><div><span class="portal-section-kicker">Bot-first · Web-native planning layer</span><h2>Chọn hướng chuyển động rõ ràng — không tự tạo video.</h2><p>Luồng được làm lại từ motion guide của Bot: chọn nhóm hoặc chủ đề riêng, xem đúng ba gợi ý, chọn một hướng rồi mới tạo guide. Mọi điều chỉnh giữ form tại chỗ; không dùng browser back, không reset ngầm và không gọi provider.</p></div><ol aria-label="Quy trình Creative Motion Guide"><li data-active="true"><span>1</span>Chủ đề</li><li${suggestionSet ? " data-active=\"true\"" : ""}><span>2</span>Gợi ý</li><li${hasSelectedCard || isCustom ? " data-active=\"true\"" : ""}><span>3</span>Phong cách</li><li><span>4</span>Guide</li></ol></section><div class="portal-creative-motion-guide-layout"><section class="portal-card portal-card-pad portal-creative-motion-guide-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Creative direction</span><h2 class="portal-card-title">Lập Creative Motion Guide</h2><p class="portal-card-subtitle">Signed session và CSRF được kiểm tra cho mỗi bước. Các lựa chọn chỉ ở state phiên hiện tại; không được ghi sang Bot, Telegram, browser storage, provider, job hoặc payment.</p></div>${badge(canCompose && canSuggest ? "ready" : "guarded")}</div><form id="creative-motion-guide-form" class="portal-form" data-portal-form data-portal-no-transient data-portal-action="creative-motion-guide-compose" data-portal-route="/video-studio/motion-guide" data-creative-motion-guide-form novalidate><div class="portal-form-grid"><label class="portal-field"><span>Nhóm nội dung</span><select name="topic_kind" data-creative-motion-guide-topic-kind${canCompose ? "" : " disabled"}>${creativeMotionGuideOptions(CREATIVE_MOTION_GUIDE_TOPIC_OPTIONS, values.topic_kind)}</select><small>Nhóm có sẵn dùng ba gợi ý server tạo lại; chủ đề riêng không mượn gợi ý hay state Bot.</small></label><label class="portal-field"><span>Ngôn ngữ guide</span><select name="language" data-creative-motion-guide-language${canCompose ? "" : " disabled"}>${creativeMotionGuideOptions(CREATIVE_MOTION_GUIDE_LANGUAGE_OPTIONS, values.language)}</select><small>VI, English và 中文 đều là output text-only có thể review.</small></label><label class="portal-field portal-field--wide" data-creative-motion-guide-custom-topic${isCustom ? "" : " hidden"}><span>Chủ đề tự nhập</span><textarea name="custom_topic" minlength="2" maxlength="500" placeholder="Ví dụ: giới thiệu một quy trình onboarding gọn gàng cho khách hàng mới"${canCompose ? "" : " disabled"}>${safeText(values.custom_topic)}</textarea><small>Không nhập URL, media/file ID, token, chứng từ thanh toán hoặc yêu cầu mô phỏng người/tác phẩm cụ thể.</small></label><input type="hidden" name="suggestion_set" value="${safeText(String(isCustom ? 0 : values.suggestion_set))}" data-creative-motion-guide-set><input type="hidden" name="selected_suggestion" value="${safeText(String(isCustom ? 0 : values.selected_suggestion))}" data-creative-motion-guide-selected></div><div class="portal-form-footer"><span class="portal-form-note" data-creative-motion-guide-stale-note hidden role="status"></span><span class="portal-form-note">Bước 1: tạo hoặc làm mới đúng ba gợi ý. Không tự thay nhóm, không chọn card thay bạn.</span><button class="portal-button portal-button--secondary" type="button" data-portal-action="creative-motion-guide-suggest" data-portal-route="/video-studio/motion-guide"${!canSuggest || isCustom ? " disabled" : ""}>Tạo 3 gợi ý</button></div><section class="portal-creative-motion-guide-suggestions" data-creative-motion-guide-suggestions><div class="portal-card-header"><div><span class="portal-section-kicker">Step 2 · Compare</span><h3>Ba gợi ý, một lựa chọn rõ ràng</h3><p>${suggestionSet ? `Bộ ${safeText(String(suggestionSet.suggestion_set))} · ${safeText(String(suggestionSet.topic_label))}` : "Kết quả chỉ xuất hiện sau khi bạn yêu cầu một bộ gợi ý."}</p></div>${badge(suggestionSet ? "draft" : "empty")}</div>${cardMarkup}<div class="portal-inline-actions"><button class="portal-button portal-button--quiet" type="button" data-portal-action="creative-motion-guide-refresh" data-portal-route="/video-studio/motion-guide"${!canRefresh ? " disabled" : ""}>Đổi sang bộ gợi ý tiếp theo</button><button class="portal-button portal-button--quiet" type="button" data-portal-action="creative-motion-guide-focus-topic" data-portal-route="/video-studio/motion-guide">Chỉnh nhóm / chủ đề</button></div></section><section class="portal-creative-motion-guide-style"><div><span class="portal-section-kicker">Step 3 · Style</span><h3>Chọn phong cách sau khi đã xác định hướng</h3><p>Thay style không tự tạo lại guide. Nút cuối chỉ sẵn sàng khi có đúng một card hoặc chủ đề tự nhập hợp lệ.</p></div><label class="portal-field"><span>Phong cách chuyển động</span><select name="style" data-creative-motion-guide-style${canCompose ? "" : " disabled"}>${creativeMotionGuideOptions(CREATIVE_MOTION_GUIDE_STYLE_OPTIONS, values.style)}</select></label></section><div class="portal-form-footer"><span class="portal-form-note">Bước 4: tạo guide text từ lựa chọn hiện tại. Server tự dựng lại card đã chọn; browser không gửi title/prompt đã render.</span><button class="portal-button portal-button--primary" type="submit" data-creative-motion-guide-compose-control${composeDisabled ? " disabled" : ""}>Tạo Motion Guide</button></div></form></section><aside class="portal-card portal-card-pad portal-creative-motion-guide-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Lập direction, không chạy video engine</h2><p class="portal-card-subtitle">Creative Motion Guide chỉ trả prompt và hướng biên tập dạng text. Nó không là Image Motion Planner và không yêu cầu/chạm Image Studio.</p></div>${badge("guarded")}</div><div class="portal-creative-motion-guide-guard-list"><span><strong>Telegram / Bot / bridge</strong><em>off</em></span><span><strong>Image Studio / source media / upload</strong><em>off</em></span><span><strong>Provider / image / video / audio</strong><em>off</em></span><span><strong>Render / preview / output / job</strong><em>off</em></span><span><strong>Wallet / Xu / PayOS</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span></div></aside></div>${renderCreativeMotionGuideResult(context.creativeMotionGuideResult)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Giữ flow có kiểm soát, tránh tạo kết quả giả</h2><p class="portal-card-subtitle">Nếu cần tạo media thật, hãy đi qua workflow riêng có asset ownership, provider readiness, confirmation và audit. Guide này không giả vờ đã thực thi điều đó.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   // Long-form Roadmap exposes the Bot's topic → duration → style → structure
@@ -22541,6 +22776,7 @@
       case "image-prompt-composer": return renderImagePromptComposer(page, context);
       case "video-prompt-planner": return renderVideoPromptPlanner(page, context);
       case "video-idea-planner": return renderVideoIdeaPlanner(page, context);
+      case "creative-motion-guide": return renderCreativeMotionGuide(page, context);
       case "long-form-planner": return renderLongFormPlanner(page, context);
       case "self-shot-scene-planner": return renderSelfShotScenePlanner(page, context);
       case "script-to-screen-planner": return renderScriptToScreenPlanner(page, context);
@@ -23090,6 +23326,168 @@
     if (!form || form.getAttribute("data-portal-action") !== "image-motion-planner-compose") return;
     synchronizeImageMotionPlannerDraftFreshness(form);
     window.dispatchEvent(new CustomEvent("toanaas:image-motion-planner-draft-edited"));
+  }
+
+  // Creative Motion Guide is a finite in-place decision flow. These DOM
+  // helpers never manufacture a result or navigate; they only make the next
+  // valid control explicit and mark a visible older guide stale after a user
+  // changes the source selection.
+  function creativeMotionGuideInteger(value) {
+    const text = typeof value === "string" ? value.trim() : String(value || "").trim();
+    if (!/^(?:0|[1-9]\d*)$/.test(text)) return NaN;
+    const parsed = Number(text);
+    return Number.isSafeInteger(parsed) ? parsed : NaN;
+  }
+
+  function creativeMotionGuideCurrentDraft(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "creative-motion-guide-compose") return null;
+    const fields = collectFormFields(form);
+    const topicKind = String(fields.topic_kind || "").trim();
+    const language = String(fields.language || "").trim();
+    const style = String(fields.style || "").trim();
+    // `collectFormFields()` intentionally supports legacy forms that need
+    // disabled values. For this finite flow, a hidden/disabled custom field
+    // is not part of the current choice; preserve its DOM value without
+    // letting a previous custom topic poison a catalog request.
+    const customTopic = topicKind === "custom" ? creativeMotionGuideText(fields.custom_topic, 0, 500, true) : "";
+    const suggestionSet = creativeMotionGuideInteger(fields.suggestion_set);
+    const selectedSuggestion = creativeMotionGuideInteger(fields.selected_suggestion);
+    if (!CREATIVE_MOTION_GUIDE_TOPIC_KINDS.has(topicKind) || !CREATIVE_MOTION_GUIDE_LANGUAGES.has(language)
+      || !CREATIVE_MOTION_GUIDE_STYLES.has(style)) return null;
+    if (topicKind === "custom") {
+      return customTopic.length >= 2 && suggestionSet === 0 && selectedSuggestion === 0
+        ? { topic_kind: topicKind, custom_topic: customTopic, language, suggestion_set: 0, selected_suggestion: 0, style } : null;
+    }
+    return customTopic === "" && suggestionSet >= 1 && suggestionSet <= CREATIVE_MOTION_GUIDE_MAX_SET
+      && selectedSuggestion >= 0 && selectedSuggestion <= 3
+      ? { topic_kind: topicKind, custom_topic: "", language, suggestion_set: suggestionSet, selected_suggestion: selectedSuggestion, style } : null;
+  }
+
+  function creativeMotionGuideSuggestionSetMatchesDraft(raw, draft) {
+    const set = raw && raw.suggestions && typeof raw.suggestions === "object" && !Array.isArray(raw.suggestions) ? raw.suggestions : null;
+    return Boolean(draft && draft.topic_kind !== "custom" && set
+      && set.topic_kind === draft.topic_kind && set.language === draft.language && Number(set.suggestion_set) === draft.suggestion_set);
+  }
+
+  function creativeMotionGuideResultMatchesDraft(raw, draft) {
+    const guide = raw && raw.guide && typeof raw.guide === "object" && !Array.isArray(raw.guide) ? raw.guide : null;
+    if (!guide || !draft || guide.topic_kind !== draft.topic_kind || guide.language !== draft.language
+      || guide.style.id !== draft.style || Number(guide.suggestion_set) !== draft.suggestion_set) return false;
+    if (draft.topic_kind === "custom") return guide.topic === draft.custom_topic && guide.selected_suggestion === null;
+    const selected = guide.selected_suggestion && typeof guide.selected_suggestion === "object" ? guide.selected_suggestion : null;
+    return Boolean(selected && Number(selected.index) === draft.selected_suggestion && selected.title === guide.topic);
+  }
+
+  function synchronizeCreativeMotionGuideForm(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "creative-motion-guide-compose") return;
+    const topic = form.querySelector("[data-creative-motion-guide-topic-kind]");
+    const customField = form.querySelector("[data-creative-motion-guide-custom-topic]");
+    const customInput = form.querySelector('[name="custom_topic"]');
+    const suggestionSet = form.querySelector("[data-creative-motion-guide-set]");
+    const selectedSuggestion = form.querySelector("[data-creative-motion-guide-selected]");
+    const currentTopic = topic ? String(topic.value || "").trim() : "";
+    const isCustom = currentTopic === "custom";
+    const capabilities = getBootstrap().capabilities && typeof getBootstrap().capabilities === "object" ? getBootstrap().capabilities : {};
+    const canCompose = capabilities["creative-motion-guide-compose"] === true;
+    const busyKind = String(form.dataset.creativeMotionGuideBusy || "");
+    const flowPending = busyKind === "suggestions" || busyKind === "compose";
+    const formDisabled = !canCompose || flowPending;
+    form.querySelectorAll("[data-creative-motion-guide-topic-kind], [data-creative-motion-guide-language], [data-creative-motion-guide-style]").forEach((control) => {
+      control.disabled = formDisabled;
+      control.setAttribute("aria-disabled", String(formDisabled));
+    });
+    if (customField) {
+      customField.hidden = !isCustom;
+      customField.setAttribute("aria-hidden", String(!isCustom));
+      customField.classList.toggle("is-muted", !isCustom);
+    }
+    if (customInput) {
+      customInput.disabled = formDisabled || !isCustom;
+      customInput.required = isCustom;
+      customInput.setAttribute("aria-disabled", String(formDisabled || !isCustom));
+      customInput.setAttribute("aria-required", String(isCustom));
+    }
+    if (isCustom) {
+      if (suggestionSet) suggestionSet.value = "0";
+      if (selectedSuggestion) selectedSuggestion.value = "0";
+    } else {
+      if (suggestionSet && !(creativeMotionGuideInteger(suggestionSet.value) >= 1 && creativeMotionGuideInteger(suggestionSet.value) <= CREATIVE_MOTION_GUIDE_MAX_SET)) suggestionSet.value = "1";
+      if (selectedSuggestion && !(creativeMotionGuideInteger(selectedSuggestion.value) >= 0 && creativeMotionGuideInteger(selectedSuggestion.value) <= 3)) selectedSuggestion.value = "0";
+    }
+    const draft = creativeMotionGuideCurrentDraft(form);
+    const canSuggest = capabilities["creative-motion-guide-suggest"] === true && !isCustom;
+    const matchingSuggestions = creativeMotionGuideSuggestionSetMatchesDraft(getBootstrap().creativeMotionGuideSuggestions, draft);
+    const selectedIsCurrent = Boolean(draft && !isCustom && matchingSuggestions && draft.selected_suggestion >= 1 && draft.selected_suggestion <= 3);
+    document.querySelectorAll('[data-portal-action="creative-motion-guide-suggest"]').forEach((control) => {
+      const disabled = !canSuggest || flowPending;
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+    });
+    document.querySelectorAll('[data-portal-action="creative-motion-guide-refresh"]').forEach((control) => {
+      const disabled = !canSuggest || !matchingSuggestions || flowPending;
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+    });
+    document.querySelectorAll("[data-creative-motion-guide-choice]").forEach((control) => {
+      const choice = creativeMotionGuideInteger(control.getAttribute("data-creative-motion-guide-choice"));
+      const disabled = !canSuggest || !matchingSuggestions || flowPending || !(choice >= 1 && choice <= 3);
+      const pressed = !disabled && Boolean(draft && draft.selected_suggestion === choice);
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      control.setAttribute("aria-pressed", String(pressed));
+    });
+    document.querySelectorAll("[data-creative-motion-guide-compose-control]").forEach((control) => {
+      const disabled = !canCompose || flowPending || !draft || (isCustom ? draft.custom_topic.length < 2 : !selectedIsCurrent);
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && !formDisabled) control.setAttribute("title", isCustom ? "Nhập chủ đề tự chọn hợp lệ trước khi tạo guide." : "Tạo rồi chọn đúng một card gợi ý trước khi tạo guide.");
+      else control.removeAttribute("title");
+    });
+    const hasGuide = Boolean(getBootstrap().creativeMotionGuideResult && getBootstrap().creativeMotionGuideResult.guide);
+    const fresh = hasGuide && creativeMotionGuideResultMatchesDraft(getBootstrap().creativeMotionGuideResult, draft);
+    const stale = hasGuide && !fresh;
+    const note = form.querySelector("[data-creative-motion-guide-stale-note]");
+    if (note) {
+      note.hidden = !stale;
+      note.textContent = stale ? "Chủ đề, card hoặc phong cách đã thay đổi. Guide đang hiển thị thuộc lựa chọn trước; hãy tạo lại khi đã sẵn sàng." : "";
+    }
+    const suggestionPanel = form.querySelector("[data-creative-motion-guide-suggestions]");
+    const suggestionCards = form.querySelector("[data-creative-motion-guide-cards]");
+    const staleSuggestions = Boolean(getBootstrap().creativeMotionGuideSuggestions && (isCustom || !matchingSuggestions));
+    if (suggestionPanel) {
+      suggestionPanel.classList.toggle("is-stale", staleSuggestions);
+      let suggestionNote = suggestionPanel.querySelector("[data-creative-motion-guide-suggestions-stale]");
+      if (!suggestionNote) {
+        suggestionNote = document.createElement("p");
+        suggestionNote.className = "portal-form-note portal-creative-motion-guide-suggestions-stale";
+        suggestionNote.setAttribute("data-creative-motion-guide-suggestions-stale", "");
+        suggestionNote.setAttribute("role", "status");
+        const actions = suggestionPanel.querySelector(".portal-inline-actions");
+        suggestionPanel.insertBefore(suggestionNote, actions || null);
+      }
+      suggestionNote.hidden = !staleSuggestions;
+      suggestionNote.textContent = staleSuggestions
+        ? (isCustom
+          ? "Chủ đề tự nhập không dùng card gợi ý. Các card của nhóm trước được ẩn và không thể được chọn."
+          : "Nhóm hoặc ngôn ngữ đã đổi. Các card của bộ trước được ẩn; hãy tạo lại đúng ba gợi ý cho lựa chọn hiện tại.")
+        : "";
+    }
+    if (suggestionCards) suggestionCards.hidden = staleSuggestions;
+    document.querySelectorAll('[data-portal-action="creative-motion-guide-focus-topic"]').forEach((control) => {
+      control.disabled = flowPending;
+      control.setAttribute("aria-disabled", String(flowPending));
+    });
+    form.dataset.creativeMotionGuideState = flowPending ? "processing" : (stale ? "stale" : (hasGuide ? "fresh" : "draft"));
+    document.querySelectorAll("[data-creative-motion-guide-rendered-result]").forEach((surface) => surface.toggleAttribute("data-stale", stale));
+    document.querySelectorAll("[data-creative-motion-guide-result-stale]").forEach((surface) => { surface.hidden = !stale; });
+  }
+
+  function markCreativeMotionGuideDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "creative-motion-guide-compose") return;
+    synchronizeCreativeMotionGuideForm(form);
+    // Integration owns request epochs; this event contains no input/content
+    // and only tells it that an in-flight response cannot still be current.
+    window.dispatchEvent(new CustomEvent("toanaas:creative-motion-guide-draft-edited"));
   }
 
   function synchronizeQuickImagePlannerForm(form) {
@@ -23783,7 +24181,7 @@
       });
     }
     const event = new CustomEvent(ACTION_EVENT, {
-      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", contentBriefId: source.getAttribute("data-content-brief-id") || "", contentBriefRevision: source.getAttribute("data-content-brief-revision") || "", contentBriefVersion: source.getAttribute("data-content-brief-version") || "", contentVariantId: source.getAttribute("data-content-variant-id") || "", contentVariantRevision: source.getAttribute("data-content-variant-revision") || "", imageArtboardId: source.getAttribute("data-image-artboard-id") || "", imageArtboardRevision: source.getAttribute("data-image-artboard-revision") || "", imageArtboardVersion: source.getAttribute("data-image-artboard-version") || "", imageArtboardState: source.getAttribute("data-image-artboard-state") || "", imageDirectionId: source.getAttribute("data-image-direction-id") || "", imageDirectionRevision: source.getAttribute("data-image-direction-revision") || "", imageDirectionVersion: source.getAttribute("data-image-direction-version") || "", videoPlanId: source.getAttribute("data-video-plan-id") || "", videoPlanRevision: source.getAttribute("data-video-plan-revision") || "", videoPlanVersion: source.getAttribute("data-video-plan-version") || "", videoPlanState: source.getAttribute("data-video-plan-state") || "", videoSceneId: source.getAttribute("data-video-scene-id") || "", videoSceneRevision: source.getAttribute("data-video-scene-revision") || "", videoSceneVersion: source.getAttribute("data-video-scene-version") || "", videoSceneDirection: source.getAttribute("data-video-scene-direction") || "", subtitleProjectId: source.getAttribute("data-subtitle-project-id") || "", subtitleProjectRevision: source.getAttribute("data-subtitle-project-revision") || "", subtitleProjectVersion: source.getAttribute("data-subtitle-project-version") || "", subtitleProjectState: source.getAttribute("data-subtitle-project-state") || "", subtitleCueId: source.getAttribute("data-subtitle-cue-id") || "", subtitleCueRevision: source.getAttribute("data-subtitle-cue-revision") || "", subtitleCueVersion: source.getAttribute("data-subtitle-cue-version") || "", subtitleCueDirection: source.getAttribute("data-subtitle-cue-direction") || "", subtitleExportFormat: source.getAttribute("data-subtitle-export-format") || "", voiceVaultId: source.getAttribute("data-voice-vault-id") || "", voiceVaultRevision: source.getAttribute("data-voice-vault-revision") || "", voiceVaultVersion: source.getAttribute("data-voice-vault-version") || "", voiceScriptId: source.getAttribute("data-voice-script-id") || "", voiceScriptRevision: source.getAttribute("data-voice-script-revision") || "", voiceScriptVersion: source.getAttribute("data-voice-script-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", apiBase: context.apiBase || null }),
+      detail: Object.freeze({ action, route, fields, jobFilter: source.getAttribute("data-job-filter") || "", assetFilter: source.getAttribute("data-asset-filter") || "", ticketFilter: source.getAttribute("data-ticket-filter") || "", paymentId: source.getAttribute("data-payment-id") || "", workspaceDraftId: source.getAttribute("data-workspace-draft-id") || "", projectId: source.getAttribute("data-project-id") || "", studioDocumentId: source.getAttribute("data-studio-document-id") || "", studioDocumentRevision: source.getAttribute("data-studio-document-revision") || "", studioDocumentVersion: source.getAttribute("data-studio-document-version") || "", vaultAssetId: source.getAttribute("data-vault-asset-id") || "", memoryNoteId: source.getAttribute("data-memory-note-id") || "", memoryNoteRevision: source.getAttribute("data-memory-note-revision") || "", memoryNoteVersion: source.getAttribute("data-memory-note-version") || "", memoryReminderId: source.getAttribute("data-memory-reminder-id") || "", memoryReminderRevision: source.getAttribute("data-memory-reminder-revision") || "", memoryReminderVersion: source.getAttribute("data-memory-reminder-version") || "", promptTemplateId: source.getAttribute("data-prompt-template-id") || "", promptTemplateRevision: source.getAttribute("data-prompt-template-revision") || "", promptTemplateVersion: source.getAttribute("data-prompt-template-version") || "", mediaCollectionId: source.getAttribute("data-media-collection-id") || "", mediaCollectionRevision: source.getAttribute("data-media-collection-revision") || "", mediaCollectionVersion: source.getAttribute("data-media-collection-version") || "", mediaItemId: source.getAttribute("data-media-item-id") || "", contentBriefId: source.getAttribute("data-content-brief-id") || "", contentBriefRevision: source.getAttribute("data-content-brief-revision") || "", contentBriefVersion: source.getAttribute("data-content-brief-version") || "", contentVariantId: source.getAttribute("data-content-variant-id") || "", contentVariantRevision: source.getAttribute("data-content-variant-revision") || "", imageArtboardId: source.getAttribute("data-image-artboard-id") || "", imageArtboardRevision: source.getAttribute("data-image-artboard-revision") || "", imageArtboardVersion: source.getAttribute("data-image-artboard-version") || "", imageArtboardState: source.getAttribute("data-image-artboard-state") || "", imageDirectionId: source.getAttribute("data-image-direction-id") || "", imageDirectionRevision: source.getAttribute("data-image-direction-revision") || "", imageDirectionVersion: source.getAttribute("data-image-direction-version") || "", videoPlanId: source.getAttribute("data-video-plan-id") || "", videoPlanRevision: source.getAttribute("data-video-plan-revision") || "", videoPlanVersion: source.getAttribute("data-video-plan-version") || "", videoPlanState: source.getAttribute("data-video-plan-state") || "", videoSceneId: source.getAttribute("data-video-scene-id") || "", videoSceneRevision: source.getAttribute("data-video-scene-revision") || "", videoSceneVersion: source.getAttribute("data-video-scene-version") || "", videoSceneDirection: source.getAttribute("data-video-scene-direction") || "", subtitleProjectId: source.getAttribute("data-subtitle-project-id") || "", subtitleProjectRevision: source.getAttribute("data-subtitle-project-revision") || "", subtitleProjectVersion: source.getAttribute("data-subtitle-project-version") || "", subtitleProjectState: source.getAttribute("data-subtitle-project-state") || "", subtitleCueId: source.getAttribute("data-subtitle-cue-id") || "", subtitleCueRevision: source.getAttribute("data-subtitle-cue-revision") || "", subtitleCueVersion: source.getAttribute("data-subtitle-cue-version") || "", subtitleCueDirection: source.getAttribute("data-subtitle-cue-direction") || "", subtitleExportFormat: source.getAttribute("data-subtitle-export-format") || "", voiceVaultId: source.getAttribute("data-voice-vault-id") || "", voiceVaultRevision: source.getAttribute("data-voice-vault-revision") || "", voiceVaultVersion: source.getAttribute("data-voice-vault-version") || "", voiceScriptId: source.getAttribute("data-voice-script-id") || "", voiceScriptRevision: source.getAttribute("data-voice-script-revision") || "", voiceScriptVersion: source.getAttribute("data-voice-script-version") || "", supportCaseId: source.getAttribute("data-support-case-id") || "", supportCaseRevision: source.getAttribute("data-support-case-revision") || "", adminJobId: source.getAttribute("data-admin-job-id") || "", adminFeature: source.getAttribute("data-admin-feature") || "", adminFrozen: source.getAttribute("data-admin-frozen") || "", copyText: source.getAttribute("data-copy-text") || "", creativeMotionGuideChoice: source.getAttribute("data-creative-motion-guide-choice") || "", apiBase: context.apiBase || null }),
       bubbles: false,
       cancelable: true
     });
@@ -24162,6 +24560,9 @@
       if (form && form.getAttribute("data-portal-action") === "image-motion-planner-compose") {
         markImageMotionPlannerDraftEdited(form);
       }
+      if (form && form.getAttribute("data-portal-action") === "creative-motion-guide-compose") {
+        markCreativeMotionGuideDraftEdited(form);
+      }
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
@@ -24196,6 +24597,9 @@
         }
         if (form.getAttribute("data-portal-action") === "image-motion-planner-compose") {
           markImageMotionPlannerDraftEdited(form);
+        }
+        if (form.getAttribute("data-portal-action") === "creative-motion-guide-compose") {
+          markCreativeMotionGuideDraftEdited(form);
         }
         if (event.target && event.target.name === "preset") {
           synchronizeImageResizePreset(form);
@@ -24369,6 +24773,9 @@
     main.querySelectorAll('[data-portal-action="image-motion-planner-compose"]').forEach((form) => {
       synchronizeImageMotionPlannerDraftFreshness(form);
     });
+    main.querySelectorAll('[data-portal-action="creative-motion-guide-compose"]').forEach((form) => {
+      synchronizeCreativeMotionGuideForm(form);
+    });
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
     main.querySelectorAll('[data-portal-action="video-transform-operation-estimate"]').forEach((form) => synchronizeVideoTransformEstimateForm(form));
@@ -24388,6 +24795,15 @@
     clearTransientFormDraft,
     restoreWorkspaceDraft,
     states: Object.freeze({ ...STATE_LABELS })
+  });
+
+  // Integration may release its generic busy flag after a response or an
+  // invalidated request. Reapply this module's finite step rules immediately
+  // so a generic unlock cannot enable “Tạo guide” before a valid card/custom
+  // topic exists.
+  window.addEventListener("toanaas:creative-motion-guide-sync", () => {
+    const form = document.querySelector('form[data-portal-action="creative-motion-guide-compose"]');
+    synchronizeCreativeMotionGuideForm(form);
   });
 
   bindPwaInstallEvents();
