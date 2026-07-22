@@ -3066,6 +3066,9 @@ a { color: inherit; text-decoration: none; }
 .portal-cinematic-concept-result .portal-form-footer { align-items: flex-start; }
 .portal-cinematic-concept-result[data-stale] { border-color: var(--portal-warning); }
 .portal-cinematic-concept-stale-note { color: var(--portal-warning); font-weight: 650; line-height: 1.5; }
+.portal-script-to-screen-planner [data-script-to-screen-rendered-result][data-stale],
+.portal-script-to-screen-planner [data-script-to-screen-saved-receipt][data-stale] { border-color: var(--portal-warning); }
+.portal-script-to-screen-stale-note { color: var(--portal-warning); font-weight: 650; line-height: 1.5; }
 
 @media (max-width: 980px) {
   .portal-cinematic-concept-intro, .portal-cinematic-concept-layout, .portal-cinematic-concept-scripts, .portal-cinematic-concept-motion { grid-template-columns: 1fr; }

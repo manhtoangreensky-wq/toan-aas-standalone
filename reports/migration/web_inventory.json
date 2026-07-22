@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1607,
+      "line": 1666,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,12 +179,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3944,
+      "line": 4010,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3952,
+      "line": 4018,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -226,7 +226,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 8039,
+      "line": 8391,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -292,7 +292,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5854,
+      "line": 6144,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -6808,7 +6808,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 908,
+      "occurrences": 910,
       "provider": "PayOS"
     },
     {
@@ -7036,7 +7036,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2269,
+      "occurrences": 2576,
       "provider": "Telegram"
     }
   ],
@@ -11814,7 +11814,7 @@
     {
       "endpoint": "compose_script_to_screen_planner",
       "file": "copyfast_video_studio.py",
-      "line": 9539,
+      "line": 9572,
       "methods": [
         "POST"
       ],
@@ -11823,7 +11823,7 @@
     {
       "endpoint": "save_script_to_screen_planner_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 9560,
+      "line": 9593,
       "methods": [
         "POST"
       ],
@@ -12785,10 +12785,10 @@
     }
   ],
   "schema_version": "1.7",
-  "source_files_discovered": 289,
-  "source_files_scanned": 289,
-  "source_fingerprint_sha256": "619d5910f5c0509cad65a1fd054e7b7a7a2dde1dff84abc836d845b322b3f749",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast90-adconcept-web-native-flow",
+  "source_files_discovered": 290,
+  "source_files_scanned": 290,
+  "source_fingerprint_sha256": "670088c7a29505039bdd6180ae0c8fb75aed3a79c73e67bccc151c30f14b0c7e",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast91-script-to-screen-web-native-flow",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",

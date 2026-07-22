@@ -3289,12 +3289,17 @@
   const SCRIPT_TO_SCREEN_PROJECT_KINDS = new Set(["script_image_video", "multi_scene_film"]);
   const SCRIPT_TO_SCREEN_PLATFORMS = new Set(["tiktok", "reels", "shorts", "youtube", "facebook", "custom"]);
   const SCRIPT_TO_SCREEN_RATIOS = new Set(["9:16", "16:9", "1:1", "4:5"]);
-  const SCRIPT_TO_SCREEN_STYLES = new Set(["product_demo", "ugc", "cinematic", "educational", "brand_story"]);
+  const SCRIPT_TO_SCREEN_STYLES = new Set(["product_demo", "ugc", "cinematic", "educational", "brand_story", "realistic", "cute_3d", "original_anime", "product_ad", "horror", "action", "luxury", "default"]);
   const SCRIPT_TO_SCREEN_COLORS = new Set(["warm", "bright", "premium", "dark_cinematic", "cheerful"]);
   const SCRIPT_TO_SCREEN_PACES = new Set(["slow_emotional", "balanced", "fast_dynamic", "ad_rhythm"]);
-  const SCRIPT_TO_SCREEN_IMAGE_PLANS = new Set(["per_scene", "hero_plus_details", "single_continuity"]);
+  const SCRIPT_TO_SCREEN_IMAGE_PLANS = new Set(["per_scene", "hero_plus_details", "single_continuity", "skip"]);
   const SCRIPT_TO_SCREEN_OUTPUT_TARGETS = new Set(["prompt_pack", "storyboard", "video_plan"]);
   const SCRIPT_TO_SCREEN_LANGUAGES = new Set(["vi", "en"]);
+  const SCRIPT_TO_SCREEN_SERIES_MODES = new Set(["single_episode", "episodic_series"]);
+  const SCRIPT_TO_SCREEN_PLAN_SAVE_SOURCE_KEYS = [
+    "project_kind", "brief", "audience", "platform", "aspect_ratio", "scene_count", "episode_count", "selected_episode",
+    "style", "color_mood", "pace", "image_plan", "extra_scene", "extra_scene_count", "output_target", "cta", "language"
+  ];
   const SCRIPT_TO_SCREEN_SAVE_FALSE_FIELDS = ["telegram_state_changed", "bot_called", "bridge_called", "provider_called", "media_opened", "media_created", "preview_created", "output_created", "job_created", "wallet_changed", "payment_changed", "asset_created", "published", "delivered"];
 
   function scriptToScreenPlannerText(value, minimum, maximum, allowEmpty) {
@@ -3353,12 +3358,13 @@
       hook: scriptToScreenPlannerText(script.hook, 2, 1200, false), arc: scriptToScreenPlannerText(script.arc, 2, 1200, false),
       voice_direction: scriptToScreenPlannerText(script.voice_direction, 2, 1200, false), cta: scriptToScreenPlannerText(script.cta, 2, 1200, false)
     };
-    const storyboard = Number.isInteger(sceneCount) && sceneCount >= 3 && sceneCount <= 12 ? normalizeScriptToScreenStoryboard(planner.storyboard, sceneCount) : [];
+    const storyboard = Number.isInteger(sceneCount) && sceneCount >= 3 && sceneCount <= 18 ? normalizeScriptToScreenStoryboard(planner.storyboard, sceneCount) : [];
+    const series = normalizeScriptToScreenSeries(planner.series, String(projectKind.id || ""), sceneCount);
     const normalized = {
       title: scriptToScreenPlannerText(planner.title, 2, 180, false), project_kind: projectKind, platform, aspect_ratio: String(planner.aspect_ratio || ""),
       style, color_mood: colorMood, pace, image_plan: imagePlan, output_target: outputTarget,
       brief: scriptToScreenPlannerText(planner.brief, 2, 1000, false), audience: scriptToScreenPlannerText(planner.audience || "", 0, 400, true),
-      scene_count: sceneCount, creative_summary: scriptToScreenPlannerText(planner.creative_summary, 2, 1800, false), script: normalizedScript,
+      scene_count: sceneCount, series, creative_summary: scriptToScreenPlannerText(planner.creative_summary, 2, 1800, false), script: normalizedScript,
       storyboard, caption: scriptToScreenPlannerText(planner.caption, 2, 1600, false),
       hashtags: normalizeScriptToScreenList(planner.hashtags, 3, 6, 100), negative_constraints: normalizeScriptToScreenList(planner.negative_constraints, 2, 4, 1200),
       review_before_use: normalizeScriptToScreenList(planner.review_before_use, 3, 6, 1200)
@@ -3370,9 +3376,39 @@
       && source.published === false && source.delivered === false;
     if (!boundaryOk || !normalized.title || !normalized.project_kind.id || !normalized.platform.id || !SCRIPT_TO_SCREEN_RATIOS.has(normalized.aspect_ratio)
       || !normalized.style.id || !normalized.color_mood.id || !normalized.pace.id || !normalized.image_plan.id || !normalized.output_target.id
-      || !normalized.brief || !Number.isInteger(normalized.scene_count) || !normalized.creative_summary || !Object.values(normalizedScript).every(Boolean)
-      || normalized.storyboard.length !== normalized.scene_count || !normalized.caption || !normalized.hashtags.length || !normalized.negative_constraints.length || !normalized.review_before_use.length) return {};
+      || !normalized.brief || !Number.isInteger(normalized.scene_count) || normalized.scene_count < 3 || normalized.scene_count > 18 || !normalized.creative_summary || !Object.values(normalizedScript).every(Boolean)
+      || !normalized.series || normalized.storyboard.length !== normalized.scene_count || !normalized.caption || !normalized.hashtags.length || !normalized.negative_constraints.length || !normalized.review_before_use.length) return {};
     return { planner: normalized };
+  }
+
+  function normalizeScriptToScreenSeries(raw, projectKind, sceneCount) {
+    const source = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+    const mode = String(source.mode || "");
+    const episodeCount = Number(source.episode_count);
+    const selectedEpisode = Number(source.selected_episode);
+    const rawEpisodes = Array.isArray(source.episodes) ? source.episodes : [];
+    const continuityBible = normalizeScriptToScreenList(source.continuity_bible, 3, 3, 1200);
+    const saveScope = scriptToScreenPlannerText(source.save_scope, 2, 1200, false);
+    if (!SCRIPT_TO_SCREEN_SERIES_MODES.has(mode) || !Number.isInteger(episodeCount) || episodeCount < 1 || episodeCount > 8
+      || !Number.isInteger(selectedEpisode) || selectedEpisode < 1 || selectedEpisode > episodeCount
+      || (projectKind === "script_image_video" && (mode !== "single_episode" || episodeCount !== 1 || selectedEpisode !== 1))
+      || (projectKind === "multi_scene_film" && (mode !== "episodic_series" || episodeCount < 2))
+      || rawEpisodes.length !== episodeCount || continuityBible.length !== 3 || !saveScope) return null;
+    const episodes = rawEpisodes.map((rawEpisode, index) => {
+      const episode = rawEpisode && typeof rawEpisode === "object" && !Array.isArray(rawEpisode) ? rawEpisode : {};
+      const normalized = {
+        index: Number(episode.index),
+        title: scriptToScreenPlannerText(episode.title, 2, 180, false),
+        arc: scriptToScreenPlannerText(episode.arc, 2, 1200, false),
+        focus: scriptToScreenPlannerText(episode.focus, 2, 1200, false),
+        cliffhanger: scriptToScreenPlannerText(episode.cliffhanger, 2, 1200, false),
+        scene_count: Number(episode.scene_count)
+      };
+      return normalized.index === index + 1 && normalized.scene_count === sceneCount
+        && normalized.title && normalized.arc && normalized.focus && normalized.cliffhanger ? normalized : null;
+    });
+    if (episodes.some((episode) => !episode)) return null;
+    return { mode, episode_count: episodeCount, selected_episode: selectedEpisode, episodes, continuity_bible: continuityBible, save_scope: saveScope };
   }
 
   function normalizeScriptToScreenPlannerSaveSource(raw) {
@@ -3387,15 +3423,28 @@
     const outputTarget = String(value.output_target || "");
     const language = String(value.language || "");
     const sceneCount = Number(value.scene_count);
-    const extraScene = value.extra_scene === true;
+    const episodeCount = Number(value.episode_count);
+    const selectedEpisode = Number(value.selected_episode);
+    const hasExtraSceneFlag = Object.prototype.hasOwnProperty.call(value, "extra_scene");
+    const hasExtraSceneCount = value.extra_scene_count !== undefined && String(value.extra_scene_count).trim() !== "";
+    const legacyExtraScene = !hasExtraSceneCount && value.extra_scene === true;
+    const extraSceneCount = hasExtraSceneCount
+      ? Number(value.extra_scene_count)
+      : (legacyExtraScene ? 1 : 0);
     const brief = scriptToScreenPlannerText(value.brief, 2, 1000, false);
     const audience = scriptToScreenPlannerText(value.audience || "", 0, 400, true);
     const cta = scriptToScreenPlannerText(value.cta || "", 0, 280, true);
     if (!SCRIPT_TO_SCREEN_PROJECT_KINDS.has(projectKind) || !SCRIPT_TO_SCREEN_PLATFORMS.has(platform) || !SCRIPT_TO_SCREEN_RATIOS.has(aspectRatio)
       || !SCRIPT_TO_SCREEN_STYLES.has(style) || !SCRIPT_TO_SCREEN_COLORS.has(colorMood) || !SCRIPT_TO_SCREEN_PACES.has(pace)
       || !SCRIPT_TO_SCREEN_IMAGE_PLANS.has(imagePlan) || !SCRIPT_TO_SCREEN_OUTPUT_TARGETS.has(outputTarget) || !SCRIPT_TO_SCREEN_LANGUAGES.has(language)
-      || !brief || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 12 || (extraScene && sceneCount >= 12)) return {};
-    return { project_kind: projectKind, brief, audience, platform, aspect_ratio: aspectRatio, scene_count: sceneCount, style, color_mood: colorMood, pace, image_plan: imagePlan, extra_scene: extraScene, output_target: outputTarget, cta, language };
+      || !brief || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 16 || !Number.isInteger(episodeCount) || episodeCount < 1 || episodeCount > 8
+      || !Number.isInteger(selectedEpisode) || selectedEpisode < 1 || selectedEpisode > episodeCount
+      || (projectKind === "script_image_video" && (episodeCount !== 1 || selectedEpisode !== 1))
+      || (projectKind === "multi_scene_film" && episodeCount < 2) || !Number.isInteger(extraSceneCount) || extraSceneCount < 0 || extraSceneCount > 2
+      || (hasExtraSceneFlag && typeof value.extra_scene !== "boolean")
+      || (hasExtraSceneFlag && hasExtraSceneCount && value.extra_scene !== (extraSceneCount > 0))
+      || sceneCount + extraSceneCount > 18) return {};
+    return { project_kind: projectKind, brief, audience, platform, aspect_ratio: aspectRatio, scene_count: sceneCount, episode_count: episodeCount, selected_episode: selectedEpisode, style, color_mood: colorMood, pace, image_plan: imagePlan, extra_scene: extraSceneCount > 0, extra_scene_count: extraSceneCount, output_target: outputTarget, cta, language };
   }
 
   function normalizeScriptToScreenPlannerSaveReceipt(raw) {
@@ -3406,7 +3455,7 @@
       || value.draft_recomputed_on_server !== true || value.web_video_plan_persisted !== true
       || !SCRIPT_TO_SCREEN_SAVE_FALSE_FIELDS.every((key) => value[key] === false)
       || !validVideoStudioPlanId(plan.id) || Number(plan.revision) !== 1 || plan.state !== "draft"
-      || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 12) return {};
+      || !Number.isInteger(sceneCount) || sceneCount < 3 || sceneCount > 18) return {};
     return { destination: "video_plan", plan: { id: String(plan.id), revision: 1, state: "draft" }, scene_count: sceneCount };
   }
 
@@ -3417,7 +3466,9 @@
     return Boolean(source.brief && source.project_kind === planner.project_kind.id && source.brief === planner.brief && source.audience === planner.audience
       && source.platform === planner.platform.id && source.aspect_ratio === planner.aspect_ratio && source.style === planner.style.id
       && source.color_mood === planner.color_mood.id && source.pace === planner.pace.id && source.image_plan === planner.image_plan.id
-      && source.output_target === planner.output_target.id && source.scene_count + (source.extra_scene ? 1 : 0) === planner.scene_count);
+      && source.output_target === planner.output_target.id && source.scene_count + source.extra_scene_count === planner.scene_count
+      && source.episode_count === Number(planner.series && planner.series.episode_count)
+      && source.selected_episode === Number(planner.series && planner.series.selected_episode));
   }
 
   // The Cinematic Concept Composer is a narrow, text-only adaptation of the
@@ -11503,10 +11554,16 @@
   const SCRIPT_TO_SCREEN_KIND_OPTIONS = Object.freeze([["script_image_video", "Kịch bản → Ảnh → Video"], ["multi_scene_film", "Phim dài tập"]]);
   const SCRIPT_TO_SCREEN_PLATFORM_OPTIONS = Object.freeze([["tiktok", "TikTok"], ["reels", "Instagram Reels"], ["shorts", "YouTube Shorts"], ["youtube", "YouTube"], ["facebook", "Facebook"], ["custom", "Nền tảng riêng"]]);
   const SCRIPT_TO_SCREEN_RATIO_OPTIONS = Object.freeze([["9:16", "Dọc 9:16"], ["16:9", "Ngang 16:9"], ["1:1", "Vuông 1:1"], ["4:5", "Feed 4:5"]]);
-  const SCRIPT_TO_SCREEN_STYLE_OPTIONS = Object.freeze([["product_demo", "Demo sản phẩm rõ ràng"], ["ugc", "UGC tự nhiên"], ["cinematic", "Cinematic có kiểm soát"], ["educational", "Giải thích dễ hiểu"], ["brand_story", "Câu chuyện thương hiệu"]]);
+  const SCRIPT_TO_SCREEN_STYLE_OPTIONS = Object.freeze([
+    ["product_demo", "Demo sản phẩm rõ ràng"], ["ugc", "UGC tự nhiên"], ["cinematic", "Cinematic có kiểm soát"],
+    ["educational", "Giải thích dễ hiểu"], ["brand_story", "Câu chuyện thương hiệu"], ["realistic", "Hiện thực, rõ chi tiết"],
+    ["cute_3d", "3D thân thiện"], ["original_anime", "Minh họa nguyên bản"], ["product_ad", "Quảng cáo sản phẩm"],
+    ["horror", "Bí ẩn, căng thẳng"], ["action", "Năng lượng, hành động"], ["luxury", "Cao cấp, tiết chế"], ["default", "Cân bằng mặc định"]
+  ]);
   const SCRIPT_TO_SCREEN_COLOR_OPTIONS = Object.freeze([["warm", "Ấm áp"], ["bright", "Tươi sáng"], ["premium", "Cao cấp"], ["dark_cinematic", "Trầm điện ảnh"], ["cheerful", "Vui tươi"]]);
   const SCRIPT_TO_SCREEN_PACE_OPTIONS = Object.freeze([["slow_emotional", "Chậm, có cảm xúc"], ["balanced", "Vừa, dễ theo dõi"], ["fast_dynamic", "Nhanh, năng động"], ["ad_rhythm", "Nhịp quảng cáo"]]);
-  const SCRIPT_TO_SCREEN_IMAGE_PLAN_OPTIONS = Object.freeze([["per_scene", "Mỗi cảnh một keyframe"], ["hero_plus_details", "Hero frame + cận cảnh"], ["single_continuity", "Visual canon xuyên suốt"]]);
+  const SCRIPT_TO_SCREEN_IMAGE_PLAN_OPTIONS = Object.freeze([["per_scene", "Mỗi cảnh một keyframe"], ["hero_plus_details", "Hero frame + cận cảnh"], ["single_continuity", "Visual canon xuyên suốt"], ["skip", "Không tạo direction ảnh"]]);
+  const SCRIPT_TO_SCREEN_EXTRA_SCENE_OPTIONS = Object.freeze([["0", "Không thêm cảnh"], ["1", "Thêm 1 cảnh kết"], ["2", "Thêm 2 cảnh kết"]]);
   const SCRIPT_TO_SCREEN_OUTPUT_OPTIONS = Object.freeze([["prompt_pack", "Prompt pack để review"], ["storyboard", "Storyboard để biên tập"], ["video_plan", "Ưu tiên lưu Video Plan"]]);
 
   function scriptToScreenPlannerFields() {
@@ -11518,12 +11575,12 @@
       { name: "aspect_ratio", label: "Tỷ lệ khung hình", control: "select", required: true, options: SCRIPT_TO_SCREEN_RATIO_OPTIONS },
       { name: "episode_count", label: "Số tập", type: "number", required: true, min: 1, max: 8, step: 1, inputMode: "numeric", help: "Kịch bản → Ảnh → Video dùng 1 tập. Chọn Phim dài tập thì nhập 2–8 tập để tạo roadmap season có thể review." },
       { name: "selected_episode", label: "Tập cần phát triển", type: "number", required: true, min: 1, max: 8, step: 1, inputMode: "numeric", help: "Pack này chỉ mở rộng một tập tại một thời điểm. Khi lưu, chỉ tập đang chọn trở thành Video Plan Draft; không tạo render hoặc toàn bộ season." },
-      { name: "scene_count", label: "Số cảnh mỗi tập", type: "number", required: true, min: 3, max: 12, step: 1, inputMode: "numeric", help: "3–12 cảnh định hướng cho tập đang chọn. Đây là storyboard text, không phải batch render hoặc job." },
+      { name: "scene_count", label: "Số cảnh cơ bản mỗi tập", type: "number", required: true, min: 3, max: 16, step: 1, inputMode: "numeric", help: "Hỗ trợ 3–16 cảnh cơ bản; các mốc Bot quen thuộc là 6, 9, 12 và 16. Đây là storyboard text, không phải batch render hoặc job." },
       { name: "style", label: "Phong cách kể", control: "select", required: true, options: SCRIPT_TO_SCREEN_STYLE_OPTIONS },
       { name: "color_mood", label: "Màu sắc / mood", control: "select", required: true, options: SCRIPT_TO_SCREEN_COLOR_OPTIONS },
       { name: "pace", label: "Nhịp dựng", control: "select", required: true, options: SCRIPT_TO_SCREEN_PACE_OPTIONS },
       { name: "image_plan", label: "Cách chia prompt ảnh", control: "select", required: true, options: SCRIPT_TO_SCREEN_IMAGE_PLAN_OPTIONS },
-      { name: "extra_scene", label: "Thêm cảnh kết riêng", type: "checkbox", wide: true, help: "Thêm một cảnh CTA/hero frame vào storyboard. Không chọn nếu bạn đã dùng 12 cảnh cơ bản." },
+      { name: "extra_scene_count", label: "Cảnh kết / chuyển tiếp bổ sung", control: "select", required: true, options: SCRIPT_TO_SCREEN_EXTRA_SCENE_OPTIONS, help: "Chọn 0, 1 hoặc 2 cảnh bổ sung như flow Bot. Tổng storyboard tối đa 18 cảnh và vẫn chỉ là planning text." },
       { name: "output_target", label: "Mục tiêu review", control: "select", required: true, options: SCRIPT_TO_SCREEN_OUTPUT_OPTIONS },
       { name: "cta", label: "CTA tùy chọn", control: "textarea", placeholder: "Ví dụ: Lưu checklist để xem lại trước khi chọn giải pháp phù hợp", maxLength: 280, wide: true, help: "CTA là text direction cần tự review; không phải publish hoặc cam kết kết quả." },
       { name: "language", label: "Ngôn ngữ plan", control: "select", required: true, options: [["vi", "Tiếng Việt"], ["en", "English"]] }
@@ -11559,26 +11616,35 @@
     const plan = receipt.plan && typeof receipt.plan === "object" ? receipt.plan : null;
     if (!plan) return "";
     const path = `/video-studio/${encodeURIComponent(String(plan.id))}`;
-    return `<section class="portal-card portal-card-pad" aria-live="polite"><div class="portal-card-header"><div><span class="portal-section-kicker">Private Video Plan</span><h2 class="portal-card-title">Đã lưu Script-to-Screen Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} scenes · revision ${safeText(String(plan.revision || 1))}. Receipt không giữ brief, prompt, media, Task3D state hoặc package trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Server đã tự dựng lại script/storyboard từ lựa chọn gốc. Không có Telegram/Bot, media, provider, preview, output, job, wallet, payment, asset, publish hoặc delivery.</span><a class="portal-button portal-button--primary" href="${safeText(path)}">Mở Video Plan</a></div></section>`;
+    return `<section class="portal-card portal-card-pad" aria-live="polite" data-script-to-screen-saved-receipt><div class="portal-card-header"><div><span class="portal-section-kicker">Private Video Plan</span><h2 class="portal-card-title">Đã lưu Script-to-Screen Video Plan Draft</h2><p class="portal-card-subtitle">${safeText(String(receipt.scene_count || 0))} scenes · revision ${safeText(String(plan.revision || 1))}. Receipt không giữ brief, prompt, media, Task3D state hoặc package trong browser.</p></div>${badge("draft")}</div><div class="portal-form-footer"><span class="portal-form-note">Server đã tự dựng lại script/storyboard từ lựa chọn gốc. Không có Telegram/Bot, media, provider, preview, output, job, wallet, payment, asset, publish hoặc delivery.</span><a class="portal-button portal-button--primary" href="${safeText(path)}">Mở Video Plan</a></div></section>`;
   }
 
-  function renderScriptToScreenPlannerResult(raw, rawSource, canSaveToVideoPlan) {
+  function renderScriptToScreenPlannerSaveControl(canSaveToVideoPlan) {
+    return `<button class="portal-button portal-button--primary" type="button" data-portal-action="script-to-screen-planner-save-plan" data-portal-route="/video-studio/script-to-screen-planner" data-portal-form-id="script-to-screen-planner-form" data-portal-confirm="Lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư? Server sẽ tự tạo lại script/storyboard từ lựa chọn gốc; không nhận Bot session, media, provider, job, wallet, payment, asset, publish hoặc delivery."${canSaveToVideoPlan ? "" : " disabled"}>Lưu thành Video Plan</button>`;
+  }
+
+  function renderScriptToScreenPlannerResult(raw, rawSource, rawReceipt, canSaveToVideoPlan) {
     const result = normalizeScriptToScreenPlannerResult(raw);
+    const receipt = normalizeScriptToScreenPlannerSaveReceipt(rawReceipt);
     const planner = result.planner && typeof result.planner === "object" ? result.planner : null;
     if (!planner) return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Reviewable planning receipt</span><h2 class="portal-card-title">Chưa có Script-to-Screen Prompt Pack</h2><p class="portal-card-subtitle">Điền brief để server trả script, storyboard, prompt ảnh/video và review checklist. Browser không tự tạo media, preview hoặc video.</p></div>${badge("empty")}</div></section>`;
     const sourceMatches = scriptToScreenPlanSourceMatchesVisibleResult(rawSource, result);
-    const save = sourceMatches ? `<button class="portal-button portal-button--primary" type="button" data-portal-action="script-to-screen-planner-save-plan" data-portal-route="/video-studio/script-to-screen-planner" data-portal-confirm="Lưu Script-to-Screen Prompt Pack thành Video Plan Draft riêng tư? Server sẽ tự tạo lại script/storyboard từ lựa chọn gốc; không nhận Bot session, media, provider, job, wallet, payment, asset, publish hoặc delivery."${canSaveToVideoPlan ? "" : " disabled"}>Lưu thành Video Plan</button>` : "";
+    // A valid save receipt is terminal for this exact prompt pack. Never
+    // remount an active duplicate-save control after a generic rerender; a
+    // new save becomes available only after the user composes a fresh pack.
+    const alreadySaved = Boolean(receipt.plan && validVideoStudioPlanId(receipt.plan.id));
+    const save = sourceMatches && !alreadySaved ? renderScriptToScreenPlannerSaveControl(canSaveToVideoPlan) : "";
     const scenes = Array.isArray(planner.storyboard) ? planner.storyboard : [];
     const seriesMarkup = scriptToScreenSeriesMarkup(planner.series);
     const scenesMarkup = scenes.map((scene) => `<article class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scene ${safeText(String(scene.index || ""))} · ${safeText(String(scene.phase || ""))}</span><h3 class="portal-card-title">${safeText(String(scene.title || ""))}</h3><p class="portal-card-subtitle">${safeText(String(scene.duration_seconds || ""))}s · ${safeText(String(scene.purpose || ""))}</p></div>${badge("draft")}</div><dl class="portal-detail-grid"><div><dt>Narration</dt><dd>${safeText(String(scene.narration || ""))}</dd></div><div><dt>On-screen text</dt><dd>${safeText(String(scene.on_screen_text || ""))}</dd></div><div><dt>Camera / motion</dt><dd>${safeText(String(scene.shot || ""))}</dd></div><div><dt>Transition</dt><dd>${safeText(String(scene.transition || ""))}</dd></div></dl><div class="portal-split-grid"><article class="portal-card"><span class="portal-section-kicker">Image prompt direction</span><pre>${safeText(String(scene.image_prompt || ""))}</pre></article><article class="portal-card"><span class="portal-section-kicker">Video prompt direction</span><pre>${safeText(String(scene.video_prompt || ""))}</pre></article></div></article>`).join("");
-    return `<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic Script-to-Screen</span><h2 class="portal-card-title">${safeText(String(planner.title || "Script-to-Screen Prompt Pack"))}</h2><p class="portal-card-subtitle">${safeText(String(planner.project_kind.label || ""))} · ${safeText(String(planner.platform.label || ""))} · ${safeText(String(planner.aspect_ratio || ""))} · ${safeText(String(planner.scene_count || 0))} scenes. Đây là planning text để review, không phải video, preview, asset hoặc output.</p></div>${badge("read_only")}</div><div class="portal-cinematic-concept-meta"><span>Style: ${safeText(String(planner.style.label || ""))}</span><span>Color: ${safeText(String(planner.color_mood.label || ""))}</span><span>Pace: ${safeText(String(planner.pace.label || ""))}</span><span>Image plan: ${safeText(String(planner.image_plan.label || ""))}</span></div><section class="portal-card portal-card-pad"><span class="portal-section-kicker">Creative summary</span><p>${safeText(String(planner.creative_summary || ""))}</p><dl class="portal-detail-grid"><div><dt>Hook</dt><dd>${safeText(String(planner.script.hook || ""))}</dd></div><div><dt>Arc</dt><dd>${safeText(String(planner.script.arc || ""))}</dd></div><div><dt>Voice direction</dt><dd>${safeText(String(planner.script.voice_direction || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(planner.script.cta || ""))}</dd></div></dl></section>${seriesMarkup}<section><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard của tập đang chọn</span><h3 class="portal-card-title">${safeText(String(planner.scene_count || 0))} cảnh có thể review</h3><p class="portal-card-subtitle">Mỗi cảnh là direction text của tập đang chọn. Không tạo ảnh, video, voice, music, output hoặc job.</p></div></div><div class="portal-stack">${scenesMarkup}</div></section><section class="portal-split-grid"><article class="portal-card portal-card-pad"><span class="portal-section-kicker">Caption direction</span><p>${safeText(String(planner.caption || ""))}</p>${scriptToScreenListMarkup(planner.hashtags, "Chưa có hashtag an toàn.")}</article><article class="portal-card portal-card-pad"><span class="portal-section-kicker">Negative constraints</span>${scriptToScreenListMarkup(planner.negative_constraints, "Luôn review quyền sử dụng và claim trước khi dùng.")}</article></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Explicit Web-only handoff</span><h3 class="portal-card-title">Lưu Video Plan Draft riêng tư</h3><p class="portal-card-subtitle">Nút này chỉ gửi lại lựa chọn gốc trong phiên. Server tự dựng lại script/storyboard; browser không gửi kết quả hiển thị, Bot state, media hay package.</p></div>${badge(sourceMatches && canSaveToVideoPlan ? "ready" : "guarded")}</div><div class="portal-form-footer"><span class="portal-form-note">Lưu chỉ tạo Video Plan Draft của tập đang chọn; không tạo toàn bộ season, render, provider, preview, output, job, wallet, payment, asset, publish hoặc delivery.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a>${save}</div></div></section><section class="portal-card portal-card-pad"><span class="portal-section-kicker">Review before production</span>${scriptToScreenListMarkup(planner.review_before_use, "Luôn tự review claim, quyền sử dụng và nội dung trước khi dùng.")}</section></section>`;
+    return `<section class="portal-card portal-card-pad" data-script-to-screen-rendered-result><div class="portal-card-header"><div><span class="portal-section-kicker">Web-native deterministic Script-to-Screen</span><h2 class="portal-card-title">${safeText(String(planner.title || "Script-to-Screen Prompt Pack"))}</h2><p class="portal-card-subtitle">${safeText(String(planner.project_kind.label || ""))} · ${safeText(String(planner.platform.label || ""))} · ${safeText(String(planner.aspect_ratio || ""))} · ${safeText(String(planner.scene_count || 0))} scenes. Đây là planning text để review, không phải video, preview, asset hoặc output.</p></div>${badge("read_only")}</div><div class="portal-cinematic-concept-meta"><span>Style: ${safeText(String(planner.style.label || ""))}</span><span>Color: ${safeText(String(planner.color_mood.label || ""))}</span><span>Pace: ${safeText(String(planner.pace.label || ""))}</span><span>Image plan: ${safeText(String(planner.image_plan.label || ""))}</span></div><section class="portal-card portal-card-pad"><span class="portal-section-kicker">Creative summary</span><p>${safeText(String(planner.creative_summary || ""))}</p><dl class="portal-detail-grid"><div><dt>Hook</dt><dd>${safeText(String(planner.script.hook || ""))}</dd></div><div><dt>Arc</dt><dd>${safeText(String(planner.script.arc || ""))}</dd></div><div><dt>Voice direction</dt><dd>${safeText(String(planner.script.voice_direction || ""))}</dd></div><div><dt>CTA</dt><dd>${safeText(String(planner.script.cta || ""))}</dd></div></dl></section>${seriesMarkup}<section><div class="portal-card-header"><div><span class="portal-section-kicker">Storyboard của tập đang chọn</span><h3 class="portal-card-title">${safeText(String(planner.scene_count || 0))} cảnh có thể review</h3><p class="portal-card-subtitle">Mỗi cảnh là direction text của tập đang chọn. Không tạo ảnh, video, voice, music, output hoặc job.</p></div></div><div class="portal-stack">${scenesMarkup}</div></section><section class="portal-split-grid"><article class="portal-card portal-card-pad"><span class="portal-section-kicker">Caption direction</span><p>${safeText(String(planner.caption || ""))}</p>${scriptToScreenListMarkup(planner.hashtags, "Chưa có hashtag an toàn.")}</article><article class="portal-card portal-card-pad"><span class="portal-section-kicker">Negative constraints</span>${scriptToScreenListMarkup(planner.negative_constraints, "Luôn review quyền sử dụng và claim trước khi dùng.")}</article></section><section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Explicit Web-only handoff</span><h3 class="portal-card-title">Lưu Video Plan Draft riêng tư</h3><p class="portal-card-subtitle">${alreadySaved ? "Prompt Pack này đã được lưu thành Video Plan Draft. Tạo lại pack từ brief mới nếu cần lưu một plan khác." : "Nút này chỉ gửi lại lựa chọn gốc trong phiên. Server tự dựng lại script/storyboard; browser không gửi kết quả hiển thị, Bot state, media hay package."}</p></div>${badge(alreadySaved ? "draft" : (sourceMatches && canSaveToVideoPlan ? "ready" : "guarded"))}</div><div class="portal-form-footer"><span class="portal-form-note">Lưu chỉ tạo Video Plan Draft của tập đang chọn; không tạo toàn bộ season, render, provider, preview, output, job, wallet, payment, asset, publish hoặc delivery.</span><div class="portal-inline-actions"><a class="portal-button portal-button--quiet" href="/video-studio">Mở Video Studio</a>${save}</div></div></section><section class="portal-card portal-card-pad"><span class="portal-section-kicker">Review before production</span>${scriptToScreenListMarkup(planner.review_before_use, "Luôn tự review claim, quyền sử dụng và nội dung trước khi dùng.")}</section></section>`;
   }
 
   function renderScriptToScreenPlanner(page, context) {
     const canCompose = Boolean(context.capabilities && context.capabilities["script-to-screen-planner-compose"] === true);
     const canSaveToVideoPlan = Boolean(context.capabilities && context.capabilities["script-to-screen-planner-save-plan"] === true && context.capabilities["video-plan-create"] === true);
-    const values = { project_kind: "script_image_video", brief: "", audience: "", platform: "tiktok", aspect_ratio: "9:16", episode_count: "1", selected_episode: "1", scene_count: "4", style: "product_demo", color_mood: "bright", pace: "balanced", image_plan: "per_scene", extra_scene: false, output_target: "prompt_pack", cta: "", language: "vi" };
-    return `<article class="portal-page portal-script-to-screen-planner">${renderHero(page, context)}<section class="portal-video-prompt-planner-intro"><div><span class="portal-section-kicker">Bot-first · Web-native planning layer</span><h2>Biến brief thành storyboard, không tự giả vờ đã sản xuất video.</h2><p>Planner chuyển hai flow text-first của <code>vproduct</code> — Script→Ảnh→Video và Phim dài tập — thành script, prompt ảnh/video, motion và review pack rõ ràng để người mới cũng dùng được.</p></div><dl><div><dt>3–12</dt><dd>Cảnh reviewable</dd></div><div><dt>2</dt><dd>Task3D flows</dd></div><div><dt>0</dt><dd>Media / runtime calls</dd></div></dl></section><div class="portal-video-prompt-planner-layout"><section class="portal-card portal-card-pad portal-video-prompt-planner-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Script-to-Screen brief</span><h2 class="portal-card-title">Lập pack trước khi sản xuất</h2><p class="portal-card-subtitle">Signed session và CSRF là bắt buộc. Server dùng template deterministic, không đọc Bot session, prompt vault, file/media reference hay gói render.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form class="portal-form" data-portal-form data-portal-no-transient data-portal-action="script-to-screen-planner-compose" data-portal-route="/video-studio/script-to-screen-planner" novalidate>${renderFields(scriptToScreenPlannerFields(), canCompose, context, values, "script-to-screen-planner")}<div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo script/storyboard/prompt text để review; không gửi request tạo image/video/audio, asset, job hoặc payment.</span><button class="portal-button portal-button--primary" type="submit"${canCompose ? "" : " disabled"}>Tạo Prompt Pack</button></div></form></section><aside class="portal-card portal-card-pad portal-video-prompt-planner-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Planner không phải render engine</h2><p class="portal-card-subtitle">Không có Task3D Bot session, prompt vault, media/source upload, package, provider, renderer, preview, output, job, Xu, PayOS, asset, publish hoặc delivery.</p></div>${badge("guarded")}</div><div class="portal-video-prompt-planner-guard-list"><span><strong>Telegram / Bot / bridge</strong><em>off</em></span><span><strong>Task3D session / prompt vault</strong><em>off</em></span><span><strong>Source media / upload</strong><em>off</em></span><span><strong>Provider / renderer / preview</strong><em>off</em></span><span><strong>Image / video / audio output</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span></div></aside></div>${renderScriptToScreenPlannerResult(context.scriptToScreenPlannerResult, context.scriptToScreenPlannerSaveSource, canSaveToVideoPlan)}${renderScriptToScreenPlannerSaveReceipt(context.scriptToScreenPlannerSaveReceipt)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Review pack trước, execution contract riêng sau</h2><p class="portal-card-subtitle">Dùng pack để rà script, continuity, claim, quyền sử dụng và CTA. Mọi hành động production hoặc publish thật cần workflow riêng có confirmation và audit.</p></div></div>${renderNotes(page)}</section></article>`;
+    const values = { project_kind: "script_image_video", brief: "", audience: "", platform: "tiktok", aspect_ratio: "9:16", episode_count: "1", selected_episode: "1", scene_count: "6", style: "product_demo", color_mood: "bright", pace: "balanced", image_plan: "per_scene", extra_scene_count: "0", output_target: "prompt_pack", cta: "", language: "vi" };
+    return `<article class="portal-page portal-script-to-screen-planner">${renderHero(page, context)}<section class="portal-video-prompt-planner-intro"><div><span class="portal-section-kicker">Bot-first · Web-native planning layer</span><h2>Biến brief thành storyboard, không tự giả vờ đã sản xuất video.</h2><p>Planner chuyển hai flow text-first của <code>vproduct</code> — Script→Ảnh→Video và Phim dài tập — thành script, prompt ảnh/video, motion và review pack rõ ràng để người mới cũng dùng được.</p></div><dl><div><dt>3–18</dt><dd>Cảnh planning tối đa</dd></div><div><dt>2</dt><dd>Task3D flows</dd></div><div><dt>0</dt><dd>Media / runtime calls</dd></div></dl></section><div class="portal-video-prompt-planner-layout"><section class="portal-card portal-card-pad portal-video-prompt-planner-form"><div class="portal-card-header"><div><span class="portal-section-kicker">Script-to-Screen brief</span><h2 class="portal-card-title">Lập pack trước khi sản xuất</h2><p class="portal-card-subtitle">Signed session và CSRF là bắt buộc. Server dùng template deterministic, không đọc Bot session, prompt vault, file/media reference hay gói render.</p></div>${badge(canCompose ? "ready" : "guarded")}</div><form id="script-to-screen-planner-form" class="portal-form" data-portal-form data-portal-no-transient data-portal-action="script-to-screen-planner-compose" data-portal-route="/video-studio/script-to-screen-planner" novalidate>${renderFields(scriptToScreenPlannerFields(), canCompose, context, values, "script-to-screen-planner")}<div class="portal-form-footer"><span class="portal-form-note">Nút này chỉ tạo script/storyboard/prompt text để review; không gửi request tạo image/video/audio, asset, job hoặc payment.</span><button class="portal-button portal-button--primary" type="button" data-portal-action="script-to-screen-planner-compose" data-portal-route="/video-studio/script-to-screen-planner" data-portal-form-id="script-to-screen-planner-form"${canCompose ? "" : " disabled"}>Tạo Prompt Pack</button></div></form></section><aside class="portal-card portal-card-pad portal-video-prompt-planner-boundary"><div class="portal-card-header"><div><span class="portal-section-kicker">Execution boundary</span><h2 class="portal-card-title">Planner không phải render engine</h2><p class="portal-card-subtitle">Không có Task3D Bot session, prompt vault, media/source upload, package, provider, renderer, preview, output, job, Xu, PayOS, asset, publish hoặc delivery.</p></div>${badge("guarded")}</div><div class="portal-video-prompt-planner-guard-list"><span><strong>Telegram / Bot / bridge</strong><em>off</em></span><span><strong>Task3D session / prompt vault</strong><em>off</em></span><span><strong>Source media / upload</strong><em>off</em></span><span><strong>Provider / renderer / preview</strong><em>off</em></span><span><strong>Image / video / audio output</strong><em>off</em></span><span><strong>Job / wallet / payment</strong><em>off</em></span><span><strong>Asset / publish / delivery</strong><em>off</em></span></div></aside></div>${renderScriptToScreenPlannerResult(context.scriptToScreenPlannerResult, context.scriptToScreenPlannerSaveSource, context.scriptToScreenPlannerSaveReceipt, canSaveToVideoPlan)}${renderScriptToScreenPlannerSaveReceipt(context.scriptToScreenPlannerSaveReceipt)}<section class="portal-card portal-card-pad"><div class="portal-card-header"><div><span class="portal-section-kicker">Scope rõ ràng</span><h2 class="portal-card-title">Review pack trước, execution contract riêng sau</h2><p class="portal-card-subtitle">Dùng pack để rà script, continuity, claim, quyền sử dụng và CTA. Mọi hành động production hoặc publish thật cần workflow riêng có confirmation và audit.</p></div></div>${renderNotes(page)}</section></article>`;
   }
 
   const CINEMATIC_CONCEPT_MESSAGE_THEME_OPTIONS = Object.freeze([
@@ -22739,6 +22805,94 @@
     });
   }
 
+  function scriptToScreenFormMatchesSavedSource(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "script-to-screen-planner-compose") return false;
+    const current = normalizeScriptToScreenPlannerSaveSource(collectFormFields(form));
+    const saved = normalizeScriptToScreenPlannerSaveSource(getBootstrap().scriptToScreenPlannerSaveSource);
+    return Boolean(current.brief && saved.brief
+      && SCRIPT_TO_SCREEN_PLAN_SAVE_SOURCE_KEYS.every((key) => current[key] === saved[key]));
+  }
+
+  function hydrateScriptToScreenPlannerForm(form) {
+    if (!form || form.dataset.scriptToScreenSourceHydrated === "true") return;
+    const source = normalizeScriptToScreenPlannerSaveSource(getBootstrap().scriptToScreenPlannerSaveSource);
+    if (!source.brief) return;
+    for (const key of SCRIPT_TO_SCREEN_PLAN_SAVE_SOURCE_KEYS) {
+      const control = form.querySelector(`[name="${key}"]`);
+      if (!control) continue;
+      if (control instanceof HTMLInputElement && control.type === "checkbox") control.checked = source[key] === true;
+      else control.value = String(source[key]);
+    }
+    form.dataset.scriptToScreenSourceHydrated = "true";
+  }
+
+  function ensureScriptToScreenPlannerDraftControls(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "script-to-screen-planner-compose") return;
+    if (!form.id) form.id = "script-to-screen-planner-form";
+    const page = form.closest(".portal-script-to-screen-planner");
+    const metric = page && page.querySelector(".portal-video-prompt-planner-intro dl div:first-child dt");
+    const metricLabel = metric && metric.parentElement ? metric.parentElement.querySelector("dd") : null;
+    // The original template is intentionally compact, but its visible metric
+    // must reflect the actual bounded grammar: 3–16 base + 0/1/2 extras,
+    // never more than 18 planning scenes in one selected episode.
+    if (metric) metric.textContent = "3–18";
+    if (metricLabel) metricLabel.textContent = "Cảnh planning tối đa";
+    const footer = form.querySelector(".portal-form-footer");
+    if (footer && !footer.querySelector("[data-script-to-screen-stale-note]")) {
+      const note = document.createElement("span");
+      note.className = "portal-form-note portal-script-to-screen-stale-note";
+      note.setAttribute("data-script-to-screen-stale-note", "");
+      note.setAttribute("role", "status");
+      note.setAttribute("aria-live", "polite");
+      note.hidden = true;
+      footer.insertBefore(note, footer.firstChild);
+    }
+    document.querySelectorAll('[data-portal-action="script-to-screen-planner-save-plan"]').forEach((control) => {
+      control.setAttribute("data-portal-form-id", form.id);
+    });
+  }
+
+  function synchronizeScriptToScreenDraftFreshness(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "script-to-screen-planner-compose") return;
+    hydrateScriptToScreenPlannerForm(form);
+    ensureScriptToScreenPlannerDraftControls(form);
+    const page = form.closest(".portal-script-to-screen-planner");
+    const hasPack = Boolean(page && page.querySelector("[data-script-to-screen-rendered-result], [data-script-to-screen-saved-receipt]"));
+    if (!hasPack) return;
+    const receipt = normalizeScriptToScreenPlannerSaveReceipt(getBootstrap().scriptToScreenPlannerSaveReceipt);
+    const alreadySaved = Boolean(receipt.plan && validVideoStudioPlanId(receipt.plan.id));
+    const fresh = scriptToScreenFormMatchesSavedSource(form);
+    const saveAllowed = fresh && !alreadySaved;
+    const note = form.querySelector("[data-script-to-screen-stale-note]");
+    form.dataset.scriptToScreenDraftState = fresh ? (alreadySaved ? "saved" : "fresh") : "stale";
+    if (note) {
+      note.hidden = fresh;
+      note.textContent = fresh
+        ? ""
+        : "Brief hoặc tập đang chọn đã thay đổi. Prompt Pack hoặc Video Plan đang hiển thị thuộc lựa chọn trước; hãy tạo lại trước khi lưu.";
+    }
+    (page ? page.querySelectorAll("[data-script-to-screen-rendered-result], [data-script-to-screen-saved-receipt]") : []).forEach((surface) => {
+      surface.toggleAttribute("data-stale", !fresh);
+    });
+    (page ? page.querySelectorAll('[data-portal-action="script-to-screen-planner-save-plan"]') : []).forEach((control) => {
+      if (!Object.prototype.hasOwnProperty.call(control.dataset, "scriptToScreenInitialDisabled")) {
+        control.dataset.scriptToScreenInitialDisabled = String(control.disabled);
+      }
+      const disabled = !saveAllowed || control.dataset.scriptToScreenInitialDisabled === "true";
+      control.disabled = disabled;
+      control.setAttribute("aria-disabled", String(disabled));
+      if (disabled && !fresh) control.setAttribute("title", "Brief hoặc tập đang chọn đã thay đổi; hãy tạo lại Prompt Pack trước khi lưu.");
+      else if (disabled && alreadySaved) control.setAttribute("title", "Prompt Pack này đã được lưu thành Video Plan Draft. Tạo lại pack nếu cần lưu một plan khác.");
+      else control.removeAttribute("title");
+    });
+  }
+
+  function markScriptToScreenPlannerDraftEdited(form) {
+    if (!form || form.getAttribute("data-portal-action") !== "script-to-screen-planner-compose") return;
+    synchronizeScriptToScreenDraftFreshness(form);
+    window.dispatchEvent(new CustomEvent("toanaas:script-to-screen-draft-edited"));
+  }
+
   function synchronizeQuickImagePlannerForm(form) {
     if (!form || form.getAttribute("data-portal-action") !== "quick-image-planner-plan") return;
     const source = form.querySelector('[data-quick-image-planner-source]');
@@ -23800,6 +23954,9 @@
       if (form && form.getAttribute("data-portal-action") === "cinematic-concept-compose") {
         synchronizeCinematicConceptDraftFreshness(form);
       }
+      if (form && form.getAttribute("data-portal-action") === "script-to-screen-planner-compose") {
+        markScriptToScreenPlannerDraftEdited(form);
+      }
       if (event.target.matches && event.target.matches("[data-portal-catalog-search]")) filterFeatureCatalog(event.target.value);
       if (event.target.matches && event.target.matches("[data-portal-command-search]")) filterCommandPalette(event.target.value);
       if (event.target.matches && event.target.matches("[data-guide-center-search]")) filterGuideCenter(event.target.value);
@@ -23825,6 +23982,9 @@
         }
         if (form.getAttribute("data-portal-action") === "cinematic-concept-compose") {
           synchronizeCinematicConceptDraftFreshness(form);
+        }
+        if (form.getAttribute("data-portal-action") === "script-to-screen-planner-compose") {
+          markScriptToScreenPlannerDraftEdited(form);
         }
         if (event.target && event.target.name === "preset") {
           synchronizeImageResizePreset(form);
@@ -23988,6 +24148,9 @@
     main.querySelectorAll('[data-portal-action="cinematic-concept-compose"]').forEach((form) => {
       synchronizeCinematicConceptMessageMode(form);
       synchronizeCinematicConceptDraftFreshness(form);
+    });
+    main.querySelectorAll('[data-portal-action="script-to-screen-planner-compose"]').forEach((form) => {
+      synchronizeScriptToScreenDraftFreshness(form);
     });
     main.querySelectorAll('[data-portal-action="subtitle-asset-operation-submit"]').forEach((form) => synchronizeSubtitleAssetOperationForm(form));
     main.querySelectorAll('[data-portal-action="quick-image-planner-plan"]').forEach((form) => synchronizeQuickImagePlannerForm(form));
