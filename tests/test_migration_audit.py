@@ -3354,3 +3354,86 @@ def test_static_audit_keeps_handler_modules_in_scope_when_entrypoint_imports_the
 
     assert observation["status"] == "HANDLERS_REACHABLE_FROM_OBSERVED_ENTRYPOINT"
     assert observation["unreferenced_module_files"] == []
+
+
+def test_cinematic_ad_audit_maps_only_finite_planner_intents_to_fresh_web_navigation() -> None:
+    """Cinematic Ad cannot inherit a generic `adconcept|` compatibility route."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    assert all(prefix != "adconcept|" for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+
+    for token in sorted(audit.CINEMATIC_AD_CONCEPT_FRESH_WEB_PLANNER_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "/video-studio/cinematic-concept"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_cinematic_ad_fresh_web_planner_navigation"
+        assert mapped["cinematic_ad_concept_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE_COMPOSER"
+        assert mapped["cinematic_ad_concept_save_boundary"] == "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY"
+        assert "BOT_CINEMATIC_AD_PENDING_STATE_NOT_REPLAYED" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for action in ("concept_choice", "motion_choice", "image_prompt_choice", "video_prompt_choice", "music_choice"):
+        for ordinal in sorted(audit.CINEMATIC_AD_CONCEPT_PLANNER_ORDINALS):
+            mapped = audit._map_callback(f"adconcept|{action}|{ordinal}", "callback_data", evidence, routes)
+            assert mapped["target"] == "BOT_CINEMATIC_AD_TRANSIENT_STATE_NOT_REPLAYED"
+            assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        unreviewed = audit._map_callback(f"adconcept|{action}|4", "callback_data", evidence, routes)
+        assert unreviewed["target"] == "CINEMATIC_AD_SOURCE_REVIEW_REQUIRED"
+        assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+
+def test_cinematic_ad_audit_guards_bot_state_runtime_and_admin_callbacks() -> None:
+    """The Bot conversation cannot turn lock/save/provider paths into Web actions."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    for token in sorted(audit.CINEMATIC_AD_CONCEPT_BOT_STATE_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "BOT_CINEMATIC_AD_TRANSIENT_STATE_NOT_REPLAYED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert mapped["resolution"] == "bot_cinematic_ad_transient_state_requires_fresh_web_compose"
+        assert "BOT_CINEMATIC_AD_SELECTION_LOCK_OR_PACKAGE_STATE_NOT_REPLAYED" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for template in sorted(audit.CINEMATIC_AD_CONCEPT_BOT_STATE_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "BOT_CINEMATIC_AD_TRANSIENT_STATE_NOT_REPLAYED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    save = audit._map_callback("adconcept|save_video_package", "callback_data", evidence, routes)
+    assert "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED" in save["source_dispositions"]
+
+    for token in sorted(audit.CINEMATIC_AD_CONCEPT_RUNTIME_GUARDED_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "CINEMATIC_AD_RUNTIME_CONTRACT_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "CANONICAL_PROVIDER_JOB_WALLET_PAYMENT_OR_FINALIZATION_GUARD" in mapped["source_dispositions"]
+
+    for template in sorted(audit.CINEMATIC_AD_CONCEPT_RUNTIME_GUARDED_CALLBACK_TEMPLATES):
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == "CINEMATIC_AD_RUNTIME_CONTRACT_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+    for token in sorted(audit.CINEMATIC_AD_CONCEPT_TELEGRAM_ONLY_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "TELEGRAM_ONLY"
+        assert mapped["classification"] == "admin"
+        assert mapped["status"] == "TELEGRAM_ONLY"
+        assert "BOT_PROVIDER_SMOKE_EXECUTION" in mapped["source_dispositions"]
+
+    stale = audit._map_callback("adconcept|image_prompts", "callback_data", evidence, routes)
+    assert stale["target"] == "CINEMATIC_AD_STALE_CALLBACK_REVIEW_REQUIRED"
+    assert stale["status"] == "NEEDS_FEATURE_DISPOSITION"
+    assert "NO_RUNTIME_CLAIM" in stale["source_dispositions"]
+
+    unreviewed = audit._map_callback("adconcept|future_unreviewed_action", "callback_data", evidence, routes)
+    assert unreviewed["target"] == "CINEMATIC_AD_SOURCE_REVIEW_REQUIRED"
+    assert unreviewed["status"] == "NEEDS_FEATURE_DISPOSITION"

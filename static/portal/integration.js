@@ -331,6 +331,13 @@
   let videoStudioDetailHydrationEpoch = 0;
   let imageMotionPlannerReferencesHydrationEpoch = 0;
   let referenceFormatPlannerReferencesHydrationEpoch = 0;
+  // Cinematic Ad Concept is transient, signed-tab planning state. Compose and
+  // save responses must never cross a newer request, account, route or
+  // bootstrap; a save may create a private plan server-side but only the
+  // current signed view may receive its content-free receipt.
+  let cinematicConceptSessionEpoch = 0;
+  let cinematicConceptComposeRequestEpoch = 0;
+  let cinematicConceptSaveRequestEpoch = 0;
   // Operations and Notification Center contain customer/staff-private
   // incident, approval and delivery metadata. A late read must be ignored
   // after a signed-session change, feature disablement, route navigation or
@@ -6332,9 +6339,10 @@
   // execution path and therefore validates every display field before state.
   const CINEMATIC_CONCEPT_THEMES = new Set(["memory", "success", "confidence", "time_save", "luxury", "future", "family", "before_after", "custom"]);
   const CINEMATIC_CONCEPT_STYLES = new Set(["cinematic", "bw_luxury", "viral", "direct_sales", "ugc", "fpv", "product_reveal"]);
-  const CINEMATIC_CONCEPT_LANGUAGES = new Set(["vi", "en"]);
+  const CINEMATIC_CONCEPT_LANGUAGES = new Set(["vi", "en", "zh"]);
+  const CINEMATIC_CONCEPT_MESSAGE_MODES = new Set(["provided", "bot_default"]);
   const CINEMATIC_CONCEPT_DURATIONS = new Set([5, 10, 15]);
-  const CINEMATIC_CONCEPT_MUSIC_CHOICES = new Set(["1", "2", "3", "none"]);
+  const CINEMATIC_CONCEPT_MUSIC_CHOICES = new Set(["1", "2", "3", "ai_prompt", "none"]);
   const CINEMATIC_CONCEPT_MARKUP_PATTERN = /<\s*\/?\s*(?:script|svg|img|iframe|object|embed|style|link|meta|base|form|input|video|audio)\b|\bon[a-z]+\s*=/i;
   const CINEMATIC_CONCEPT_ORIGINALITY_PATTERN = /(?:in\s+the\s+style\s+of|sound\s+like|looks?\s+like|same\s+face\s+as|deepfake|clone\s+(?:voice|face)|giống\s+(?:người\s+nổi\s+tiếng|ca\s+sĩ|diễn\s+viên|nghệ\s+sĩ)|phong\s+cách\s+của|bắt\s+chước|nhái\s+(?:giọng|người)|mô\s+phỏng\s+(?:người|gương\s+mặt)|gương\s+mặt\s+giống)/i;
   const CINEMATIC_CONCEPT_CLAIM_PATTERN = /(?:\b100\s*%|guarantee(?:d)?|cure(?:s|d)?|proven\s+(?:result|cure)|cam\s+kết|chắc\s+chắn|chữa\s+khỏi|được\s+chứng\s+minh)/i;
@@ -6367,7 +6375,8 @@
   }
   function cinematicConceptPayload(fields) {
     const product = videoStudioLine(fields.product, "Sản phẩm hoặc dịch vụ", 2, 500, false);
-    const message = videoStudioBody(fields.message, "Thông điệp", 500, false);
+    const messageMode = videoStudioLine(fields.message_mode || "provided", "Chế độ thông điệp", 1, 32, false).toLowerCase();
+    const message = videoStudioBody(fields.message, "Thông điệp", 500, messageMode === "bot_default");
     const messageTheme = videoStudioLine(fields.message_theme || "custom", "Chủ đề thông điệp", 1, 32, false).toLowerCase();
     const style = videoStudioLine(fields.style || "cinematic", "Phong cách", 1, 32, false).toLowerCase();
     const language = videoStudioLine(fields.language || "vi", "Ngôn ngữ", 1, 8, false).toLowerCase();
@@ -6375,15 +6384,21 @@
     const motionChoice = Number(fields.motion_choice);
     const duration = Number(fields.video_duration_variant);
     const musicChoice = String(fields.music_choice || "1").trim();
-    if (!CINEMATIC_CONCEPT_THEMES.has(messageTheme) || !CINEMATIC_CONCEPT_STYLES.has(style) || !CINEMATIC_CONCEPT_LANGUAGES.has(language)) {
+    if (!CINEMATIC_CONCEPT_MESSAGE_MODES.has(messageMode) || !CINEMATIC_CONCEPT_THEMES.has(messageTheme)
+      || !CINEMATIC_CONCEPT_STYLES.has(style) || !CINEMATIC_CONCEPT_LANGUAGES.has(language)) {
       throw new Error("Chủ đề, phong cách hoặc ngôn ngữ Cinematic Concept không hợp lệ.");
+    }
+    if ((messageMode === "provided" && message.length < 2) || (messageMode === "bot_default" && message)) {
+      throw new Error(messageMode === "provided"
+        ? "Thông điệp tự nhập cần ít nhất 2 ký tự hợp lệ."
+        : "Chế độ thông điệp mặc định không nhận thông điệp tự nhập.");
     }
     if (!Number.isInteger(ideaChoice) || ideaChoice < 1 || ideaChoice > 3 || !Number.isInteger(motionChoice) || motionChoice < 1 || motionChoice > 3 || !CINEMATIC_CONCEPT_DURATIONS.has(duration) || !CINEMATIC_CONCEPT_MUSIC_CHOICES.has(musicChoice)) {
       throw new Error("Lựa chọn creative direction, motion, thời lượng hoặc nhạc không hợp lệ.");
     }
-    const safety = cinematicConceptSafetyError(product, message, messageTheme, style, language, musicChoice);
+    const safety = cinematicConceptSafetyError(product, messageMode === "provided" ? message : "", messageTheme, style, language, musicChoice);
     if (safety) throw new Error(safety);
-    return { product, message, message_theme: messageTheme, style, language, idea_choice: ideaChoice, motion_choice: motionChoice, video_duration_variant: duration, music_choice: musicChoice };
+    return { product, message, message_mode: messageMode, message_theme: messageTheme, style, language, idea_choice: ideaChoice, motion_choice: motionChoice, video_duration_variant: duration, music_choice: musicChoice };
   }
   function cinematicConceptChoiceIsSafe(value, allowed) {
     return Boolean(cinematicConceptExactKeys(value, ["id", "label"])
@@ -6471,7 +6486,7 @@
   // asset reference.
   function cinematicConceptPlanSaveSource(value) {
     const source = value && typeof value === "object" && !Array.isArray(value) ? value : {};
-    const expected = ["product", "message", "message_theme", "style", "language", "idea_choice", "motion_choice", "video_duration_variant", "music_choice"];
+    const expected = ["product", "message", "message_mode", "message_theme", "style", "language", "idea_choice", "motion_choice", "video_duration_variant", "music_choice"];
     if (Object.keys(source).length !== expected.length || !expected.every((key) => Object.prototype.hasOwnProperty.call(source, key))) return null;
     try {
       return cinematicConceptPayload(source);
@@ -6480,15 +6495,28 @@
     }
   }
 
+  // A save action may be outside the form for layout purposes. Compare the
+  // exact live form fields with the source behind the rendered concept before
+  // acquiring an idempotency key, so an edited brief can never save an older
+  // concept through a stale click or manually replayed DOM event.
+  function cinematicConceptPlanSaveSourceMatchesCurrentFields(source, fields) {
+    const saved = cinematicConceptPlanSaveSource(source);
+    const current = cinematicConceptPlanSaveSource(fields);
+    const keys = ["product", "message", "message_mode", "message_theme", "style", "language", "idea_choice", "motion_choice", "video_duration_variant", "music_choice"];
+    return Boolean(saved && current && keys.every((key) => saved[key] === current[key]));
+  }
+
   function cinematicConceptPlanSaveSourceMatchesResult(source, result) {
     const selection = cinematicConceptPlanSaveSource(source);
     const data = result && typeof result === "object" && !Array.isArray(result) ? result : {};
     const composer = data.composer && typeof data.composer === "object" && !Array.isArray(data.composer) ? data.composer : {};
     const theme = composer.message_theme && typeof composer.message_theme === "object" && !Array.isArray(composer.message_theme) ? composer.message_theme : {};
     const style = composer.style && typeof composer.style === "object" && !Array.isArray(composer.style) ? composer.style : {};
-    return Boolean(selection && cinematicConceptResultIsSafe(data)
+    const messageMatches = selection && selection.message_mode === "bot_default"
+      ? selection.message === "" && typeof composer.message === "string" && composer.message.trim().length >= 2
+      : Boolean(selection && selection.message_mode === "provided" && selection.message === composer.message);
+    return Boolean(selection && cinematicConceptResultIsSafe(data) && messageMatches
       && selection.product === composer.product
-      && selection.message === composer.message
       && selection.message_theme === theme.id
       && selection.style === style.id
       && selection.language === composer.language
@@ -9827,6 +9855,9 @@
     ++mediaWorkspaceSessionEpoch;
     ++voiceStudioSessionEpoch;
     ++videoStudioSessionEpoch;
+    ++cinematicConceptSessionEpoch;
+    ++cinematicConceptComposeRequestEpoch;
+    ++cinematicConceptSaveRequestEpoch;
     ++imageStudioSessionEpoch;
     ++operationsSessionEpoch;
     ++operationsDeskSessionEpoch;
@@ -10787,6 +10818,9 @@
     ++voiceStudioDetailHydrationEpoch;
     ++voiceStudioCueSheetHydrationEpoch;
     ++videoStudioSessionEpoch;
+    ++cinematicConceptSessionEpoch;
+    ++cinematicConceptComposeRequestEpoch;
+    ++cinematicConceptSaveRequestEpoch;
     ++videoStudioListHydrationEpoch;
     ++videoStudioDetailHydrationEpoch;
     ++imageMotionPlannerReferencesHydrationEpoch;
@@ -13853,6 +13887,21 @@
       && currentPortalPath() === expectedPath
       && isNativeVideoStudioPath(expectedPath)
       && base().videoStudioEnabled === true
+      && Boolean(base().session && base().session.authenticated === true);
+  }
+
+  function cinematicConceptRequestIsCurrent(kind, requestEpoch, sessionEpoch, expectedAccountId, expectedPath) {
+    const currentRequestEpoch = kind === "compose"
+      ? cinematicConceptComposeRequestEpoch
+      : kind === "save" ? cinematicConceptSaveRequestEpoch : -1;
+    const account = base().account && typeof base().account === "object" ? base().account : {};
+    return requestEpoch === currentRequestEpoch
+      && sessionEpoch === cinematicConceptSessionEpoch
+      && Boolean(expectedAccountId)
+      && String(account.id || "") === expectedAccountId
+      && expectedPath === "/video-studio/cinematic-concept"
+      && currentPortalPath() === expectedPath
+      && base().cinematicConceptEnabled === true
       && Boolean(base().session && base().session.authenticated === true);
   }
 
@@ -23839,6 +23888,15 @@
       }
     if (action === "cinematic-concept-compose") {
         const payload = cinematicConceptPayload(fields);
+        const expectedPath = "/video-studio/cinematic-concept";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = cinematicConceptSessionEpoch;
+        const requestEpoch = ++cinematicConceptComposeRequestEpoch;
+        // A new composition also invalidates a previous save response: a
+        // receipt can only belong to the exact brief currently on screen.
+        ++cinematicConceptSaveRequestEpoch;
+        if (!cinematicConceptRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
         // A new composition invalidates the old bounded source selection and
         // receipt. The transient concept is never restored from a browser
         // cache, Bot pending state or a Video Studio record.
@@ -23853,6 +23911,7 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload)
           });
+          if (!cinematicConceptRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           const data = result.data && typeof result.data === "object" ? result.data : {};
           if (!cinematicConceptResultIsSafe(data)) {
             throw new Error("Máy chủ chưa trả Cinematic Concept Web-native an toàn.");
@@ -23861,6 +23920,7 @@
           if (!saveSource || !cinematicConceptPlanSaveSourceMatchesResult(saveSource, data)) {
             throw new Error("Bản nháp trả về không còn khớp lựa chọn Web hiện tại để lưu an toàn.");
           }
+          if (!cinematicConceptRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({
             cinematicConceptResult: data,
             cinematicConceptSaveSource: saveSource,
@@ -23868,8 +23928,13 @@
             pageStates: { ...(base().pageStates || {}), "/video-studio/cinematic-concept": "ready" }
           });
           toast(result.message || "Đã tạo concept/storyboard/prompt để review. Không có ảnh, video, audio, tác vụ, tài sản, thanh toán hoặc publish action.");
+        } catch (error) {
+          if (!cinematicConceptRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
+          throw error;
         } finally {
-          setActionBusy(action, route, false);
+          if (cinematicConceptRequestIsCurrent("compose", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }
@@ -23880,11 +23945,28 @@
           && capabilities["video-plan-create"] === true)) {
           throw new Error("Chỉ signed Web session có CSRF và Video Production Studio đang sẵn sàng mới có thể lưu Cinematic Ad Concept thành Video Plan.");
         }
+        // The renderer removes the save control after a valid receipt. Keep
+        // the handler defensive too, so a replayed/stale DOM event cannot
+        // create another plan with a new idempotency key.
+        const savedReceipt = cinematicConceptPlanSaveReceipt(base().cinematicConceptSaveReceipt);
+        if (savedReceipt) {
+          toast("Cinematic Ad Concept này đã được lưu thành Video Plan Draft. Hãy mở plan hiện tại để tiếp tục.");
+          return;
+        }
         const source = cinematicConceptPlanSaveSource(base().cinematicConceptSaveSource);
         const currentResult = base().cinematicConceptResult;
         if (!source || !cinematicConceptPlanSaveSourceMatchesResult(source, currentResult)) {
           throw new Error("Bản nháp hiện tại không còn khớp lựa chọn Web trong phiên này. Hãy tạo lại Cinematic Ad Concept trước khi lưu Video Plan.");
         }
+        if (!cinematicConceptPlanSaveSourceMatchesCurrentFields(source, fields)) {
+          throw new Error("Brief đang hiển thị đã thay đổi hoặc không còn khớp Cinematic Ad Concept. Hãy tạo lại concept trước khi lưu Video Plan.");
+        }
+        const expectedPath = "/video-studio/cinematic-concept";
+        const account = base().account && typeof base().account === "object" ? base().account : {};
+        const expectedAccountId = String(account.id || "");
+        const sessionEpoch = cinematicConceptSessionEpoch;
+        const requestEpoch = ++cinematicConceptSaveRequestEpoch;
+        if (!cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
         const payload = { ...source, destination: "video_plan" };
         const scope = "video-studio:cinematic-concept:save-plan";
         const submission = acquireSubmission(scope, JSON.stringify(payload));
@@ -23905,19 +23987,24 @@
             body: JSON.stringify({ ...payload, idempotency_key: submission.key })
           });
           acknowledged = true;
+          if (!cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           if (result.status !== "draft") throw new Error("Máy chủ chưa xác nhận Video Plan Draft từ Cinematic Ad Concept.");
           const receipt = cinematicConceptPlanSaveReceipt(result.data);
           if (!receipt) throw new Error("Máy chủ chưa trả receipt Video Plan content-free và đúng ranh giới an toàn.");
+          if (!cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({ cinematicConceptSaveReceipt: receipt });
           toast(result.message || "Đã lưu Cinematic Ad Concept thành Video Plan Draft riêng tư.");
         } catch (error) {
           acknowledged = acknowledged || Boolean(error && Number.isInteger(error.status) && error.status > 0);
+          if (!cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) return;
           merge({ cinematicConceptSaveReceipt: {} });
           throw error;
         } finally {
           releaseSubmission(submission);
           if (acknowledged) discardSubmission(scope, submission);
-          setActionBusy(action, route, false);
+          if (cinematicConceptRequestIsCurrent("save", requestEpoch, sessionEpoch, expectedAccountId, expectedPath)) {
+            setActionBusy(action, route, false);
+          }
         }
         return;
       }

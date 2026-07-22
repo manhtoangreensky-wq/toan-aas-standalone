@@ -140,8 +140,11 @@ ENGINE_SPECS.update(_many(("source_rights_guide",), mode=ENGINE_MODE_WEB_NATIVE,
 # publishes.
 ENGINE_SPECS.update(_many(("video_prompt_planner",), mode=ENGINE_MODE_WEB_NATIVE, flags=("video_studio_enabled",), handler="video_prompt_planner"))
 # Cinematic Ad Concept Composer reuses only the Bot's static ad-concept
-# planning vocabulary.  It is request/response text only: no media/provider,
-# preview/output/job, wallet/payment, asset save or publish authority exists.
+# planning vocabulary. Compose is transient request/response text only; it
+# does not import Bot state or call media/provider, preview/output/job,
+# wallet/payment, asset or publish authority. A separately confirmed save may
+# create only a server-recomputed owner Web Video Plan Draft, never a Bot
+# save/lock/finalize or a render, generation, payment or delivery action.
 ENGINE_SPECS.update(_many(("cinematic_ad_concept",), mode=ENGINE_MODE_WEB_NATIVE, flags=("video_studio_enabled",), handler="cinematic_ad_concept"))
 # Image Motion Planner replaces the Bot's short-lived image-video save state
 # with a signed Image Studio metadata selector and a durable Video Plan draft.

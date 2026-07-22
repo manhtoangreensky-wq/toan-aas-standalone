@@ -18,7 +18,7 @@ import uuid
 from typing import Any, Callable
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, StrictInt, StrictStr, field_validator, model_validator
 
 from copyfast_auth import _record_audit, _request_id, envelope, require_account, require_csrf
 from copyfast_db import ensure_copyfast_schema, read_transaction, transaction, utc_now, video_studio_enabled
@@ -186,39 +186,48 @@ VIDEO_PROMPT_PLANNER_AUDIO_MODES: dict[str, dict[str, str]] = {
 # translation of the Bot's static ``adconcept`` menu.  These tables reproduce
 # only its broad creative choices; they are not a provider/model catalog and
 # do not describe an execution workflow.
+CINEMATIC_AD_SUPPORTED_LANGUAGES = frozenset({"vi", "en", "zh"})
+CINEMATIC_AD_MESSAGE_MODES = frozenset({"provided", "bot_default"})
+CINEMATIC_AD_DEFAULT_MESSAGES = {
+    "vi": "giới thiệu sản phẩm/dịch vụ rõ ràng, dễ hiểu, tạo sự tin tưởng và kêu gọi hành động nhẹ nhàng.",
+    "en": "introduce the product/service clearly, build trust, and use a light call to action.",
+    "zh": "清晰易懂地介绍产品/服务，建立信任，并用轻柔 CTA 引导行动。",
+}
+
 CINEMATIC_AD_MESSAGE_THEMES: dict[str, dict[str, Any]] = {
-    "memory": {"label": {"vi": "Ký ức & khoảnh khắc", "en": "Memory & meaningful moments"}, "angle": {"vi": "một khoảnh khắc đời thường đáng được trân trọng", "en": "an everyday moment worth noticing"}},
-    "success": {"label": {"vi": "Bước tiến & cơ hội", "en": "Progress & opportunity"}, "angle": {"vi": "một bước tiến nhỏ nhưng có ý nghĩa", "en": "a small but meaningful next step"}},
-    "confidence": {"label": {"vi": "Tự tin để bắt đầu", "en": "Confidence to begin"}, "angle": {"vi": "chuyển từ do dự sang tự tin", "en": "a shift from hesitation to confidence"}},
-    "time_save": {"label": {"vi": "Nhẹ việc, tiết kiệm thời gian", "en": "Time-saving, lighter work"}, "angle": {"vi": "một cách làm gọn gàng và dễ theo dõi hơn", "en": "a clearer, lighter way to work"}},
-    "luxury": {"label": {"vi": "Trải nghiệm cao cấp", "en": "Elevated experience"}, "angle": {"vi": "một trải nghiệm được chăm chút và có chủ đích", "en": "a considered, elevated experience"}},
-    "future": {"label": {"vi": "Công nghệ & tương lai", "en": "Technology & future"}, "angle": {"vi": "một trải nghiệm hiện đại, dễ hiểu", "en": "a modern experience that remains human and clear"}},
-    "family": {"label": {"vi": "Gia đình & sự quan tâm", "en": "Family & care"}, "angle": {"vi": "một hành động quan tâm trong nhịp sống hằng ngày", "en": "an act of care in everyday life"}},
-    "before_after": {"label": {"vi": "Trước & sau có kiểm chứng", "en": "Reviewable before & after"}, "angle": {"vi": "một thay đổi thị giác cần được kiểm tra trước khi công bố", "en": "a visual change that needs review before publication"}},
-    "custom": {"label": {"vi": "Thông điệp tùy chỉnh", "en": "Custom message"}, "angle": {"vi": "thông điệp do người dùng cung cấp", "en": "the message supplied by the author"}},
+    "memory": {"label": {"vi": "Ký ức & khoảnh khắc", "en": "Memory & meaningful moments", "zh": "记忆与重要时刻"}, "angle": {"vi": "một khoảnh khắc đời thường đáng được trân trọng", "en": "an everyday moment worth noticing", "zh": "一个值得珍视的日常瞬间"}},
+    "success": {"label": {"vi": "Bước tiến & cơ hội", "en": "Progress & opportunity", "zh": "进步与机会"}, "angle": {"vi": "một bước tiến nhỏ nhưng có ý nghĩa", "en": "a small but meaningful next step", "zh": "一个虽小却重要的进步"}},
+    "confidence": {"label": {"vi": "Tự tin để bắt đầu", "en": "Confidence to begin", "zh": "自信地开始"}, "angle": {"vi": "chuyển từ do dự sang tự tin", "en": "a shift from hesitation to confidence", "zh": "从犹豫转为自信"}},
+    "time_save": {"label": {"vi": "Nhẹ việc, tiết kiệm thời gian", "en": "Time-saving, lighter work", "zh": "省时、轻松工作"}, "angle": {"vi": "một cách làm gọn gàng và dễ theo dõi hơn", "en": "a clearer, lighter way to work", "zh": "一种更清晰、更轻松的工作方式"}},
+    "luxury": {"label": {"vi": "Trải nghiệm cao cấp", "en": "Elevated experience", "zh": "高端体验"}, "angle": {"vi": "một trải nghiệm được chăm chút và có chủ đích", "en": "a considered, elevated experience", "zh": "一个经过精心设计的高端体验"}},
+    "future": {"label": {"vi": "Công nghệ & tương lai", "en": "Technology & future", "zh": "科技与未来"}, "angle": {"vi": "một trải nghiệm hiện đại, dễ hiểu", "en": "a modern experience that remains human and clear", "zh": "现代、清晰且具有人情味的体验"}},
+    "family": {"label": {"vi": "Gia đình & sự quan tâm", "en": "Family & care", "zh": "家庭与关怀"}, "angle": {"vi": "một hành động quan tâm trong nhịp sống hằng ngày", "en": "an act of care in everyday life", "zh": "日常生活中的一份关怀"}},
+    "before_after": {"label": {"vi": "Trước & sau có kiểm chứng", "en": "Reviewable before & after", "zh": "可审查的前后对比"}, "angle": {"vi": "một thay đổi thị giác cần được kiểm tra trước khi công bố", "en": "a visual change that needs review before publication", "zh": "发布前需要审核的可见变化"}},
+    "custom": {"label": {"vi": "Thông điệp tùy chỉnh", "en": "Custom message", "zh": "自定义信息"}, "angle": {"vi": "thông điệp do người dùng cung cấp", "en": "the message supplied by the author", "zh": "由创作者提供的信息"}},
 }
 
 CINEMATIC_AD_STYLES: dict[str, dict[str, Any]] = {
-    "cinematic": {"label": {"vi": "Điện ảnh cảm xúc", "en": "Emotional cinematic"}, "lighting": "soft directional light, restrained contrast", "camera": "slow push-in with stable close detail", "mood": "grounded, human and deliberate"},
-    "bw_luxury": {"label": {"vi": "Đen trắng cao cấp", "en": "Black-and-white luxury"}, "lighting": "sculpted monochrome light with precise highlights", "camera": "measured detail orbit and clean hero framing", "mood": "quiet, premium and precise"},
-    "viral": {"label": {"vi": "Nhịp social ngắn", "en": "Short-form social rhythm"}, "lighting": "bright practical light with clear focal separation", "camera": "controlled handheld detail and motivated quick cuts", "mood": "clear, energetic and reviewable"},
-    "direct_sales": {"label": {"vi": "Lợi ích trực tiếp", "en": "Direct benefit-led"}, "lighting": "clean commercial light with visible product detail", "camera": "clear product inserts and a stable explanation frame", "mood": "plain-spoken, useful and restrained"},
-    "ugc": {"label": {"vi": "UGC đời thường", "en": "Everyday UGC"}, "lighting": "natural window or practical phone light", "camera": "stable first-person framing with authentic detail", "mood": "observational and relatable"},
-    "fpv": {"label": {"vi": "Quay lướt có kiểm soát", "en": "Controlled FPV movement"}, "lighting": "environment-led light with a legible route", "camera": "smooth foreground travel with safe visual anchors", "mood": "immersive without visual overload"},
-    "product_reveal": {"label": {"vi": "Hé lộ sản phẩm", "en": "Product reveal"}, "lighting": "controlled studio key and restrained rim highlight", "camera": "macro detail into a stable hero reveal", "mood": "precise, tactile and product-led"},
+    "cinematic": {"label": {"vi": "Điện ảnh cảm xúc", "en": "Emotional cinematic", "zh": "情感电影感"}, "lighting": {"vi": "ánh sáng hướng mềm, tương phản tiết chế", "en": "soft directional light with restrained contrast", "zh": "柔和的定向光与克制的对比"}, "camera": {"vi": "push-in chậm với cận cảnh ổn định", "en": "slow push-in with stable close detail", "zh": "缓慢推进并保持稳定近景"}, "mood": {"vi": "chân thực, gần gũi và có chủ đích", "en": "grounded, human and deliberate", "zh": "真实、有人情味且有目的"}},
+    "bw_luxury": {"label": {"vi": "Đen trắng cao cấp", "en": "Black-and-white luxury", "zh": "黑白高级感"}, "lighting": {"vi": "ánh sáng đơn sắc điêu khắc với highlight chính xác", "en": "sculpted monochrome light with precise highlights", "zh": "有层次的黑白光线与精准高光"}, "camera": {"vi": "orbit chi tiết có nhịp và khung hero sạch", "en": "measured detail orbit and clean hero framing", "zh": "有节奏的细节环绕与干净主画面"}, "mood": {"vi": "tĩnh, cao cấp và chính xác", "en": "quiet, premium and precise", "zh": "安静、高级且精准"}},
+    "viral": {"label": {"vi": "Nhịp social ngắn", "en": "Short-form social rhythm", "zh": "短视频社交节奏"}, "lighting": {"vi": "ánh sáng thực dụng sáng rõ với điểm nhìn tách bạch", "en": "bright practical light with clear focal separation", "zh": "明亮实用光并清晰分离视觉焦点"}, "camera": {"vi": "cầm tay có kiểm soát, cận cảnh và quick cut có động cơ", "en": "controlled handheld detail and motivated quick cuts", "zh": "受控手持细节与有动机的快速剪辑"}, "mood": {"vi": "rõ, giàu năng lượng và dễ review", "en": "clear, energetic and reviewable", "zh": "清晰、有活力且便于审核"}},
+    "direct_sales": {"label": {"vi": "Lợi ích trực tiếp", "en": "Direct benefit-led", "zh": "直接利益导向"}, "lighting": {"vi": "ánh sáng thương mại sạch làm rõ chi tiết sản phẩm", "en": "clean commercial light with visible product detail", "zh": "干净的商业光线，清晰展示产品细节"}, "camera": {"vi": "insert sản phẩm rõ ràng và khung giải thích ổn định", "en": "clear product inserts and a stable explanation frame", "zh": "清晰的产品特写与稳定说明画面"}, "mood": {"vi": "thẳng thắn, hữu ích và tiết chế", "en": "plain-spoken, useful and restrained", "zh": "直接、实用且克制"}},
+    "ugc": {"label": {"vi": "UGC đời thường", "en": "Everyday UGC", "zh": "日常 UGC"}, "lighting": {"vi": "ánh sáng cửa sổ tự nhiên hoặc ánh sáng điện thoại thực tế", "en": "natural window or practical phone light", "zh": "自然窗光或真实手机灯光"}, "camera": {"vi": "góc nhìn thứ nhất ổn định với chi tiết chân thực", "en": "stable first-person framing with authentic detail", "zh": "稳定的第一人称构图与真实细节"}, "mood": {"vi": "quan sát và dễ đồng cảm", "en": "observational and relatable", "zh": "观察感强、容易共鸣"}},
+    "fpv": {"label": {"vi": "Quay lướt có kiểm soát", "en": "Controlled FPV movement", "zh": "受控 FPV 运动"}, "lighting": {"vi": "ánh sáng theo môi trường với lộ trình dễ đọc", "en": "environment-led light with a legible route", "zh": "由环境光引导并保持清晰路线"}, "camera": {"vi": "di chuyển tiền cảnh mượt với điểm neo thị giác an toàn", "en": "smooth foreground travel with safe visual anchors", "zh": "平滑前景移动并保留安全视觉锚点"}, "mood": {"vi": "đắm chìm nhưng không quá tải thị giác", "en": "immersive without visual overload", "zh": "沉浸但不过度刺激视觉"}},
+    "product_reveal": {"label": {"vi": "Hé lộ sản phẩm", "en": "Product reveal", "zh": "产品揭示"}, "lighting": {"vi": "key light studio có kiểm soát và viền sáng tiết chế", "en": "controlled studio key and restrained rim highlight", "zh": "受控棚拍主光与克制轮廓高光"}, "camera": {"vi": "macro chi tiết chuyển sang khung hero ổn định", "en": "macro detail into a stable hero reveal", "zh": "微距细节过渡到稳定主视觉揭示"}, "mood": {"vi": "chính xác, giàu xúc giác và ưu tiên sản phẩm", "en": "precise, tactile and product-led", "zh": "精准、有质感且以产品为中心"}},
 }
 
 CINEMATIC_AD_MOTION_PLANS: dict[int, dict[str, Any]] = {
-    1: {"id": "1", "title": {"vi": "Push-in cảm xúc", "en": "Emotional push-in"}, "timeline": "open on a quiet detail, move closer only as the message becomes clear, then settle into a stable final frame", "camera": "slow push-in, close detail, final locked frame", "transitions": "clean cuts and one motivated match cut", "shot_direction": "one primary action per shot; preserve stable subject and empty CTA space"},
-    2: {"id": "2", "title": {"vi": "Orbit hé lộ", "en": "Reveal orbit"}, "timeline": "move from context to product detail, reveal the central benefit through a measured orbit, then hold on the result", "camera": "macro insert, gentle orbit, composed hero push-in", "transitions": "detail match cut and controlled light transition", "shot_direction": "keep the product or subject consistent; do not invent readable text or marks"},
-    3: {"id": "3", "title": {"vi": "Nhịp before/after", "en": "Before/after rhythm"}, "timeline": "show matched context, introduce one reviewable visible change, then conclude with a calm comparison frame", "camera": "locked comparison frame, short tracking transition, final wide hold", "transitions": "motivated wipe or match cut only", "shot_direction": "keep the comparison credible and leave CTA space empty for later editorial work"},
+    1: {"id": "1", "title": {"vi": "Push-in cảm xúc", "en": "Emotional push-in", "zh": "情感推进"}, "timeline": {"vi": "mở bằng một chi tiết yên, chỉ tiến gần khi thông điệp rõ hơn rồi ổn định ở khung cuối", "en": "open on a quiet detail, move closer only as the message becomes clear, then settle into a stable final frame", "zh": "从安静细节开始，只在信息清晰时推进，最后稳定在最终画面"}, "camera": {"vi": "push-in chậm, cận cảnh, khóa khung cuối", "en": "slow push-in, close detail, final locked frame", "zh": "缓慢推进、近景细节、最终锁定画面"}, "transitions": {"vi": "clean cut và một match cut có động cơ", "en": "clean cuts and one motivated match cut", "zh": "干净切换与一次有动机的匹配剪辑"}, "shot_direction": {"vi": "mỗi cảnh chỉ có một hành động chính; giữ chủ thể ổn định và vùng CTA trống", "en": "one primary action per shot; preserve stable subject and empty CTA space", "zh": "每个镜头只保留一个主要动作；保持主体稳定并预留 CTA 空间"}},
+    2: {"id": "2", "title": {"vi": "Orbit hé lộ", "en": "Reveal orbit", "zh": "环绕揭示"}, "timeline": {"vi": "đi từ bối cảnh tới chi tiết sản phẩm, hé lộ lợi ích trung tâm qua orbit có nhịp rồi giữ ở kết quả", "en": "move from context to product detail, reveal the central benefit through a measured orbit, then hold on the result", "zh": "从场景进入产品细节，通过有节奏的环绕揭示核心利益，最后停留在结果"}, "camera": {"vi": "macro insert, orbit nhẹ, hero push-in có bố cục", "en": "macro insert, gentle orbit, composed hero push-in", "zh": "微距特写、轻柔环绕、构图完整的主视觉推进"}, "transitions": {"vi": "match cut chi tiết và chuyển sáng có kiểm soát", "en": "detail match cut and controlled light transition", "zh": "细节匹配剪辑与受控光线转场"}, "shot_direction": {"vi": "giữ sản phẩm hoặc chủ thể nhất quán; không tự sinh chữ hay dấu hiệu nhận diện", "en": "keep the product or subject consistent; do not invent readable text or marks", "zh": "保持产品或主体一致；不要生成可读文字或标记"}},
+    3: {"id": "3", "title": {"vi": "Nhịp before/after", "en": "Before/after rhythm", "zh": "前后对比节奏"}, "timeline": {"vi": "cho thấy bối cảnh tương ứng, đưa vào một thay đổi có thể review rồi kết lại ở khung so sánh bình tĩnh", "en": "show matched context, introduce one reviewable visible change, then conclude with a calm comparison frame", "zh": "展示对应场景，引入一项可审核的可见变化，最后以平静的对比画面结束"}, "camera": {"vi": "khung so sánh khóa, tracking ngắn, giữ toàn cảnh cuối", "en": "locked comparison frame, short tracking transition, final wide hold", "zh": "锁定对比画面、短跟拍转场、最终广角停留"}, "transitions": {"vi": "chỉ dùng wipe hoặc match cut có động cơ", "en": "motivated wipe or match cut only", "zh": "仅使用有动机的擦拭或匹配剪辑"}, "shot_direction": {"vi": "giữ so sánh đáng tin và để CTA trống cho bước biên tập sau", "en": "keep the comparison credible and leave CTA space empty for later editorial work", "zh": "保持对比可信，并为后续编辑预留 CTA 空间"}},
 }
 
 CINEMATIC_AD_MUSIC_CHOICES: dict[str, dict[str, Any]] = {
-    "1": {"label": {"vi": "Piano điện ảnh nhẹ", "en": "Light cinematic piano"}, "direction": {"vi": "Nhịp piano nhẹ, khoảng nghỉ rõ và kết thúc êm để nâng nhịp kể chuyện.", "en": "Light piano pacing with clear rests and a soft narrative resolve."}, "ai_music_prompt": {"vi": "Hướng âm nhạc tham khảo: piano điện ảnh nhẹ, nhịp vừa, không lời, kết thúc êm; chỉ để biên tập, không tạo audio.", "en": "Reference music direction: light cinematic piano, moderate pace, instrumental, soft resolve; editorial text only, no audio creation."}},
-    "2": {"label": {"vi": "Ambient cao cấp", "en": "Premium ambient"}, "direction": {"vi": "Ambient tinh tế, texture tối giản và chuyển cảnh nhẹ để giữ cảm giác cao cấp.", "en": "Refined ambient texture with minimal movement and soft transitions for a premium feel."}, "ai_music_prompt": {"vi": "Hướng âm nhạc tham khảo: ambient cao cấp, texture tối giản, không lời, không dùng sample nhận diện; chỉ để biên tập, không tạo audio.", "en": "Reference music direction: premium ambient, minimal texture, instrumental, no recognizable samples; editorial text only, no audio creation."}},
-    "3": {"label": {"vi": "Electronic hiện đại", "en": "Modern electronic"}, "direction": {"vi": "Electronic hiện đại, pulse gọn và điểm nhấn chuyển cảnh tiết chế.", "en": "Modern electronic pulse with restrained transition accents."}, "ai_music_prompt": {"vi": "Hướng âm nhạc tham khảo: electronic hiện đại, pulse rõ, nhịp gọn, không lời; chỉ để biên tập, không tạo audio.", "en": "Reference music direction: modern electronic, clear pulse, tidy rhythm, instrumental; editorial text only, no audio creation."}},
-    "none": {"label": {"vi": "Không dùng nhạc", "en": "No music"}, "direction": {"vi": "Không đưa hướng nhạc; chỉ giữ nhịp hình ảnh để biên tập sau.", "en": "No music direction; retain visual timing only for later editing."}, "ai_music_prompt": {"vi": "Không có prompt nhạc và không có yêu cầu tạo audio hoặc gọi provider.", "en": "No music prompt and no audio creation or provider call is requested."}},
+    "1": {"label": {"vi": "Piano điện ảnh nhẹ", "en": "Light cinematic piano", "zh": "轻电影钢琴"}, "direction": {"vi": "Nhịp piano nhẹ, khoảng nghỉ rõ và kết thúc êm để nâng nhịp kể chuyện.", "en": "Light piano pacing with clear rests and a soft narrative resolve.", "zh": "轻柔钢琴节奏，留出清晰停顿，并以柔和结尾支撑叙事。"}, "ai_music_prompt": {"vi": "Hướng âm nhạc tham khảo: piano điện ảnh nhẹ, nhịp vừa, không lời, kết thúc êm; chỉ để biên tập, không tạo audio.", "en": "Reference music direction: light cinematic piano, moderate pace, instrumental, soft resolve; editorial text only, no audio creation.", "zh": "参考音乐方向：轻电影钢琴，中速，无人声，柔和收束；仅供编辑，不创建音频。"}},
+    "2": {"label": {"vi": "Ambient cao cấp", "en": "Premium ambient", "zh": "高级氛围音乐"}, "direction": {"vi": "Ambient tinh tế, texture tối giản và chuyển cảnh nhẹ để giữ cảm giác cao cấp.", "en": "Refined ambient texture with minimal movement and soft transitions for a premium feel.", "zh": "精致氛围质感，极简变化与柔和转场，保持高级感。"}, "ai_music_prompt": {"vi": "Hướng âm nhạc tham khảo: ambient cao cấp, texture tối giản, không lời, không dùng sample nhận diện; chỉ để biên tập, không tạo audio.", "en": "Reference music direction: premium ambient, minimal texture, instrumental, no recognizable samples; editorial text only, no audio creation.", "zh": "参考音乐方向：高级氛围、极简质感、无人声、无可识别采样；仅供编辑，不创建音频。"}},
+    "3": {"label": {"vi": "Electronic hiện đại", "en": "Modern electronic", "zh": "现代电子乐"}, "direction": {"vi": "Electronic hiện đại, pulse gọn và điểm nhấn chuyển cảnh tiết chế.", "en": "Modern electronic pulse with restrained transition accents.", "zh": "现代电子律动，转场强调克制。"}, "ai_music_prompt": {"vi": "Hướng âm nhạc tham khảo: electronic hiện đại, pulse rõ, nhịp gọn, không lời; chỉ để biên tập, không tạo audio.", "en": "Reference music direction: modern electronic, clear pulse, tidy rhythm, instrumental; editorial text only, no audio creation.", "zh": "参考音乐方向：现代电子乐、清晰律动、紧凑节奏、无人声；仅供编辑，不创建音频。"}},
+    "ai_prompt": {"label": {"vi": "Prompt nhạc AI", "en": "AI music prompt", "zh": "AI 音乐提示词"}, "direction": {"vi": "Chuẩn bị prompt nhạc AI theo brief; chỉ là văn bản để biên tập, không tạo audio hoặc gọi provider.", "en": "Prepare an AI music prompt from the brief; editorial text only, with no audio creation or provider call.", "zh": "根据 brief 准备 AI 音乐提示词；仅限编辑文本，不创建音频或调用 provider。"}, "ai_music_prompt": {"vi": "Prompt nhạc AI sẽ được tạo từ brief; chỉ để biên tập, không tạo audio.", "en": "An AI music prompt will be prepared from the brief; editorial text only, no audio creation.", "zh": "将根据 brief 准备 AI 音乐提示词；仅供编辑，不创建音频。"}},
+    "none": {"label": {"vi": "Không dùng nhạc", "en": "No music", "zh": "不使用音乐"}, "direction": {"vi": "Không đưa hướng nhạc; chỉ giữ nhịp hình ảnh để biên tập sau.", "en": "No music direction; retain visual timing only for later editing.", "zh": "不提供音乐方向；仅保留视觉节奏供后续编辑。"}, "ai_music_prompt": {"vi": "Không có prompt nhạc và không có yêu cầu tạo audio hoặc gọi provider.", "en": "No music prompt and no audio creation or provider call is requested.", "zh": "没有音乐提示词，也没有创建音频或调用 provider 的请求。"}},
 }
 
 # Image Motion Planner is the safe Web-native replacement for the Bot's
@@ -2672,7 +2681,8 @@ class CinematicAdConceptRequest(BaseModel):
     model_config = ConfigDict(extra="forbid", str_strip_whitespace=True)
 
     product: str
-    message: str
+    message: str = ""
+    message_mode: str = "provided"
     message_theme: str = "custom"
     style: str
     language: str
@@ -2689,7 +2699,18 @@ class CinematicAdConceptRequest(BaseModel):
     @field_validator("message")
     @classmethod
     def validate_message(cls, value: str) -> str:
-        return _cinematic_ad_line(value, label="Thông điệp", minimum=2, maximum=CINEMATIC_AD_MAX_MESSAGE)
+        return _cinematic_ad_line(
+            value,
+            label="Thông điệp",
+            minimum=0,
+            maximum=CINEMATIC_AD_MAX_MESSAGE,
+            allow_empty=True,
+        )
+
+    @field_validator("message_mode")
+    @classmethod
+    def validate_message_mode(cls, value: str) -> str:
+        return _cinematic_ad_code(value, label="Chế độ thông điệp", allowed=CINEMATIC_AD_MESSAGE_MODES)
 
     @field_validator("message_theme")
     @classmethod
@@ -2704,7 +2725,7 @@ class CinematicAdConceptRequest(BaseModel):
     @field_validator("language")
     @classmethod
     def validate_language(cls, value: str) -> str:
-        return _cinematic_ad_code(value, label="Ngôn ngữ", allowed={"vi", "en"})
+        return _cinematic_ad_code(value, label="Ngôn ngữ", allowed=CINEMATIC_AD_SUPPORTED_LANGUAGES)
 
     @field_validator("video_duration_variant")
     @classmethod
@@ -2716,10 +2737,30 @@ class CinematicAdConceptRequest(BaseModel):
     @field_validator("music_choice")
     @classmethod
     def validate_music_choice(cls, value: StrictStr) -> str:
-        normalized = _cinematic_ad_line(value, label="Lựa chọn nhạc", minimum=1, maximum=4).lower()
-        if normalized not in CINEMATIC_AD_MUSIC_CHOICES:
-            raise ValueError("Lựa chọn nhạc không hợp lệ")
-        return normalized
+        return _cinematic_ad_code(value, label="Lựa chọn nhạc", allowed=set(CINEMATIC_AD_MUSIC_CHOICES))
+
+    @model_validator(mode="after")
+    def resolve_message_mode(self) -> CinematicAdConceptRequest:
+        """Reproduce only the Bot's safe default-message skip semantics.
+
+        Telegram's ``skip`` button chose a fixed local sentence; it did not
+        create a provider request or save state.  The Web contract makes that
+        choice explicit, rejects ambiguous mixed input and retains the resolved
+        text as the sole composer input.
+        """
+
+        if self.message_mode == "bot_default":
+            if self.message:
+                raise ValueError("Chế độ thông điệp mặc định không nhận thông điệp tự nhập")
+            self.message = CINEMATIC_AD_DEFAULT_MESSAGES[self.language]
+            return self
+        self.message = _cinematic_ad_line(
+            self.message,
+            label="Thông điệp",
+            minimum=2,
+            maximum=CINEMATIC_AD_MAX_MESSAGE,
+        )
+        return self
 
 
 class CinematicAdConceptPlanSaveRequest(CinematicAdConceptRequest):
@@ -2920,7 +2961,7 @@ class CinematicAdConceptResult(BaseModel):
     @field_validator("language")
     @classmethod
     def validate_language(cls, value: str) -> str:
-        if value not in {"vi", "en"}:
+        if value not in CINEMATIC_AD_SUPPORTED_LANGUAGES:
             raise ValueError("Ngôn ngữ concept không hợp lệ")
         return value
 
@@ -3001,6 +3042,45 @@ def _cinematic_ad_label(entry: dict[str, Any], language: str) -> str:
     return str(entry["label"][language])
 
 
+def _cinematic_ad_text(entry: dict[str, Any], field: str, language: str) -> str:
+    """Read localized static catalog text without introducing a runtime adapter."""
+
+    return str(entry[field][language])
+
+
+def _cinematic_ad_style_text(payload: CinematicAdConceptRequest, field: str) -> str:
+    return _cinematic_ad_text(CINEMATIC_AD_STYLES[payload.style], field, payload.language)
+
+
+def _cinematic_ad_motion_text(motion: dict[str, Any], field: str, language: str) -> str:
+    return _cinematic_ad_text(motion, field, language)
+
+
+def _cinematic_ad_music_prompt(payload: CinematicAdConceptRequest, music: dict[str, Any]) -> str:
+    """Return editorial music direction only; never an audio/provider request."""
+
+    if payload.music_choice != "ai_prompt":
+        return _cinematic_ad_text(music, "ai_music_prompt", payload.language)
+    style = _cinematic_ad_label(CINEMATIC_AD_STYLES[payload.style], payload.language)
+    if payload.language == "vi":
+        return (
+            "Prompt nhạc AI (chỉ văn bản, không tạo audio hay gọi provider): "
+            f"nhạc nền quảng cáo ngắn cho {payload.product}; thông điệp {payload.message}; "
+            f"phong cách {style}; không lời, không khí thương mại sạch, 15 giây."
+        )
+    if payload.language == "zh":
+        return (
+            "AI 音乐提示词（仅文本，不创建音频或调用 provider）："
+            f"为{payload.product}制作短广告背景音乐；信息为{payload.message}；"
+            f"风格为{style}；无人声、干净商业氛围、15 秒。"
+        )
+    return (
+        "AI music prompt (editorial text only, no audio creation or provider call): "
+        f"short advertising background music for {payload.product}; message {payload.message}; "
+        f"style {style}; instrumental, clean commercial mood, 15 seconds."
+    )
+
+
 def _cinematic_ad_choice(catalog: dict[Any, dict[str, Any]], key: Any, language: str) -> dict[str, str]:
     entry = catalog[key]
     return {"id": str(key), "label": _cinematic_ad_label(entry, language)}
@@ -3017,17 +3097,25 @@ def _cinematic_ad_duration_cuts(duration: int) -> tuple[int, int]:
 def _cinematic_ad_directions(payload: CinematicAdConceptRequest) -> list[dict[str, Any]]:
     product = payload.product
     message = payload.message
-    angle = str(CINEMATIC_AD_MESSAGE_THEMES[payload.message_theme]["angle"][payload.language])
+    angle = _cinematic_ad_text(CINEMATIC_AD_MESSAGE_THEMES[payload.message_theme], "angle", payload.language)
+    style_label = _cinematic_ad_label(CINEMATIC_AD_STYLES[payload.style], payload.language)
+    mood = _cinematic_ad_style_text(payload, "mood")
     if payload.language == "vi":
         return [
-            {"index": 1, "title": "Hướng cảm xúc", "premise": f"Đặt {product} trong {angle}, rồi dẫn người xem từ quan sát sang một lựa chọn rõ ràng.", "brand_story": f"Mở bằng một tình huống thật, để {product} xuất hiện như điểm chuyển có chủ đích; thông điệp trọng tâm là: {message}", "hook": "Bắt đầu bằng một chi tiết gần gũi trước khi mở rộng bối cảnh.", "cta": "Chừa một khung CTA trống để đội ngũ tự kiểm tra và thêm nội dung sau."},
-            {"index": 2, "title": "Hướng lợi ích rõ ràng", "premise": f"Cho thấy bối cảnh, một thao tác hoặc chi tiết của {product}, rồi kết lại bằng lợi ích cần review.", "brand_story": f"Cấu trúc đi từ vấn đề dễ nhận biết tới cách {product} hỗ trợ quy trình; thông điệp cần được kiểm tra là: {message}", "hook": "Mở bằng một điểm ma sát đời thường, không dùng claim tuyệt đối.", "cta": "Giữ cuối khung hình sạch và trống để thêm CTA đã được duyệt riêng."},
-            {"index": 3, "title": "Hướng nhịp social", "premise": f"Dùng hook nhanh, ba nhịp hình ảnh rõ và một kết thúc yên để giới thiệu {product}.", "brand_story": f"Đi từ pattern interrupt tới minh họa có thể review, rồi quay lại thông điệp: {message}", "hook": "Bắt đầu bằng tương phản thị giác hoặc chuyển động có động cơ, không sao chép clip cụ thể.", "cta": "Dành khoảng âm hình cuối cho CTA trống; không sinh chữ tự động."},
+            {"index": 1, "title": "Hướng cảm xúc", "premise": f"Đặt {product} trong {angle}, rồi dẫn người xem từ quan sát sang một lựa chọn rõ ràng theo chất {style_label}.", "brand_story": f"Mở bằng một tình huống thật, để {product} xuất hiện như điểm chuyển có chủ đích; giữ cảm xúc {mood}; thông điệp trọng tâm là: {message}", "hook": "Bắt đầu bằng một chi tiết gần gũi trước khi mở rộng bối cảnh.", "cta": "Chừa một khung CTA trống để đội ngũ tự kiểm tra và thêm nội dung sau."},
+            {"index": 2, "title": "Hướng lợi ích rõ ràng", "premise": f"Cho thấy bối cảnh, một thao tác hoặc chi tiết của {product}, rồi kết lại bằng lợi ích cần review theo phong cách {style_label}.", "brand_story": f"Cấu trúc đi từ vấn đề dễ nhận biết tới cách {product} hỗ trợ quy trình; giữ nhịp {mood}; thông điệp cần được kiểm tra là: {message}", "hook": "Mở bằng một điểm ma sát đời thường, không dùng claim tuyệt đối.", "cta": "Giữ cuối khung hình sạch và trống để thêm CTA đã được duyệt riêng."},
+            {"index": 3, "title": "Hướng nhịp social", "premise": f"Dùng hook nhanh, ba nhịp hình ảnh rõ và một kết thúc yên để giới thiệu {product} theo chất {style_label}.", "brand_story": f"Đi từ tương phản thị giác tới minh họa có thể review, giữ cảm xúc {mood}, rồi quay lại thông điệp: {message}", "hook": "Bắt đầu bằng tương phản thị giác hoặc chuyển động có động cơ, không sao chép clip cụ thể.", "cta": "Dành khoảng âm hình cuối cho CTA trống; không sinh chữ tự động."},
+        ]
+    if payload.language == "zh":
+        return [
+            {"index": 1, "title": "情感方向", "premise": f"将{product}放在{angle}中，引导观众从观察走向清晰、审慎的选择，并保持{style_label}质感。", "brand_story": f"从真实情境开始，让{product}成为有目的的转折点；保持{mood}的情绪；待审核信息为：{message}", "hook": "先从熟悉的细节开始，再打开更大的场景。", "cta": "为团队审核和后续添加内容预留空白 CTA 画面。"},
+            {"index": 2, "title": "清晰利益方向", "premise": f"展示场景、{product}的一项动作或细节，再以需要审核的利益收束，并采用{style_label}风格。", "brand_story": f"从可识别的摩擦点转到{product}如何支持流程；保持{mood}节奏；待审核信息为：{message}", "hook": "从日常摩擦点开始，不使用绝对化声明。", "cta": "保持最终画面干净、留白，以便单独添加审核后的 CTA 文案。"},
+            {"index": 3, "title": "社交节奏方向", "premise": f"用快速 hook、三个清晰视觉节拍和安静收尾介绍{product}，保持{style_label}质感。", "brand_story": f"从有动机的视觉对比进入可审核的画面说明，保持{mood}氛围，再回到信息：{message}", "hook": "从有动机的视觉对比或运动开始，不复制具体视频。", "cta": "为 CTA 保留最后的负空间；不要生成可读文字。"},
         ]
     return [
-        {"index": 1, "title": "Emotional direction", "premise": f"Place {product} inside {angle}, then move the viewer from observation toward a clear, considered choice.", "brand_story": f"Open with a grounded situation and let {product} become the deliberate turning point; the message to review is: {message}", "hook": "Begin with a familiar detail before opening the wider context.", "cta": "Leave an empty CTA frame for the team to review and add later."},
-        {"index": 2, "title": "Clear-benefit direction", "premise": f"Show context, one action or detail of {product}, then close on a benefit that needs review.", "brand_story": f"Move from a recognizable friction point to how {product} supports the workflow; the message to review is: {message}", "hook": "Open with an everyday friction point without absolute claims.", "cta": "Keep the final frame clean and empty for separately approved CTA text."},
-        {"index": 3, "title": "Social-rhythm direction", "premise": f"Use a quick hook, three clear visual beats and a calm ending to introduce {product}.", "brand_story": f"Move from a pattern interrupt to reviewable visual illustration, then return to the message: {message}", "hook": "Start with a motivated visual contrast or movement, without copying a specific clip.", "cta": "Reserve final negative space for CTA; do not generate readable text."},
+        {"index": 1, "title": "Emotional direction", "premise": f"Place {product} inside {angle}, then move the viewer from observation toward a clear, considered choice in a {style_label} treatment.", "brand_story": f"Open with a grounded situation and let {product} become the deliberate turning point; keep the mood {mood}; the message to review is: {message}", "hook": "Begin with a familiar detail before opening the wider context.", "cta": "Leave an empty CTA frame for the team to review and add later."},
+        {"index": 2, "title": "Clear-benefit direction", "premise": f"Show context, one action or detail of {product}, then close on a benefit that needs review in a {style_label} treatment.", "brand_story": f"Move from a recognizable friction point to how {product} supports the workflow; keep the mood {mood}; the message to review is: {message}", "hook": "Open with an everyday friction point without absolute claims.", "cta": "Keep the final frame clean and empty for separately approved CTA text."},
+        {"index": 3, "title": "Social-rhythm direction", "premise": f"Use a quick hook, three clear visual beats and a calm ending to introduce {product} in a {style_label} treatment.", "brand_story": f"Move from a motivated visual contrast to reviewable illustration, keep the mood {mood}, then return to the message: {message}", "hook": "Start with a motivated visual contrast or movement, without copying a specific clip.", "cta": "Reserve final negative space for CTA; do not generate readable text."},
     ]
 
 
@@ -3039,6 +3127,12 @@ def _cinematic_ad_scripts(payload: CinematicAdConceptRequest) -> dict[str, str]:
             "15s": f"Hook ngắn → bối cảnh → {product} xuất hiện như một lựa chọn → chi tiết thị giác cần review → khung CTA trống. Thông điệp: {message}",
             "30s": f"Hook → tình huống đời thường → ba nhịp minh họa cho {product} → chuyển cảnh có động cơ → kết quả cần review → khung CTA trống. Thông điệp: {message}",
             "60s": f"Bối cảnh nhân vật/chủ thể → điểm ma sát → hành trình thay đổi có thể review → minh họa {product} → kết thúc có khoảng thở → khung CTA trống. Thông điệp: {message}",
+        }
+    if payload.language == "zh":
+        return {
+            "15s": f"快速 hook → 场景 → {product}作为审慎选择出现 → 可审核视觉细节 → 空白 CTA 画面。信息：{message}",
+            "30s": f"Hook → 日常情境 → {product}的三个视觉节拍 → 有动机转场 → 可审核结果 → 空白 CTA 画面。信息：{message}",
+            "60s": f"人物或主体场景 → 摩擦点 → 可审核的变化过程 → {product}说明 → 结尾留出呼吸空间 → 空白 CTA 画面。信息：{message}",
         }
     return {
         "15s": f"Short hook → context → {product} appears as a considered choice → reviewable visual detail → empty CTA frame. Message: {message}",
@@ -3052,17 +3146,28 @@ def _cinematic_ad_storyboard(payload: CinematicAdConceptRequest, motion: dict[st
     product = payload.product
     message = payload.message
     style = _cinematic_ad_label(CINEMATIC_AD_STYLES[payload.style], payload.language)
+    lighting = _cinematic_ad_style_text(payload, "lighting")
+    style_camera = _cinematic_ad_style_text(payload, "camera")
+    mood = _cinematic_ad_style_text(payload, "mood")
+    motion_camera = _cinematic_ad_motion_text(motion, "camera", payload.language)
+    transitions = _cinematic_ad_motion_text(motion, "transitions", payload.language)
     if payload.language == "vi":
         values = [
-            {"setting": f"Bối cảnh đời thường theo phong cách {style}", "subject": product, "action": "Mở bằng chi tiết gây tò mò, chưa vội đưa kết luận.", "emotion": "quan sát và gần gũi", "camera": motion["camera"], "transition": "clean cut có động cơ", "voiceover": f"Gợi ý lời dẫn: {message}", "cta_space": "Chừa vùng CTA trống, không sinh chữ đọc được hoặc watermark."},
-            {"setting": "Bối cảnh sáng và rõ hơn để minh họa quy trình", "subject": product, "action": "Hé lộ một chi tiết hoặc thao tác có thể review.", "emotion": "rõ ràng và tự tin", "camera": motion["camera"], "transition": motion["transitions"], "voiceover": "Gợi ý lời dẫn: mô tả điều người xem có thể quan sát, tránh claim tuyệt đối.", "cta_space": "Giữ bố cục sạch, để khoảng trống CTA cho biên tập sau."},
-            {"setting": "Khung kết thúc yên, đủ khoảng thở", "subject": product, "action": "Giữ kết quả thị giác ổn định thay vì tạo output hay lời hứa.", "emotion": "bình tĩnh và có chủ đích", "camera": "khóa khung hero ổn định", "transition": "final hold", "voiceover": "Gợi ý lời dẫn: mời người xem tự tìm hiểu thêm sau khi thông tin được duyệt.", "cta_space": "Khung CTA hoàn toàn trống; không có chữ, logo tự phát hoặc watermark."},
+            {"setting": f"Bối cảnh đời thường theo phong cách {style}; {lighting}.", "subject": product, "action": "Mở bằng chi tiết gây tò mò, chưa vội đưa kết luận.", "emotion": mood, "camera": f"{style_camera}; {motion_camera}.", "transition": "cut sạch có động cơ", "voiceover": f"Gợi ý lời dẫn: {message}", "cta_space": "Chừa vùng CTA trống, không sinh chữ đọc được hoặc watermark."},
+            {"setting": f"Bối cảnh sáng và rõ hơn để minh họa quy trình; duy trì {lighting}.", "subject": product, "action": "Hé lộ một chi tiết hoặc thao tác có thể review.", "emotion": f"rõ ràng, tự tin và {mood}", "camera": f"{style_camera}; {motion_camera}.", "transition": transitions, "voiceover": "Gợi ý lời dẫn: mô tả điều người xem có thể quan sát, tránh claim tuyệt đối.", "cta_space": "Giữ bố cục sạch, để khoảng trống CTA cho biên tập sau."},
+            {"setting": f"Khung kết thúc yên, đủ khoảng thở, giữ chất {style}.", "subject": product, "action": "Giữ kết quả thị giác ổn định thay vì tạo output hay lời hứa.", "emotion": f"bình tĩnh, có chủ đích và {mood}", "camera": f"{style_camera}; khóa khung hero ổn định.", "transition": "giữ khung cuối", "voiceover": "Gợi ý lời dẫn: mời người xem tự tìm hiểu thêm sau khi thông tin được duyệt.", "cta_space": "Khung CTA hoàn toàn trống; không có chữ, logo tự phát hoặc watermark."},
+        ]
+    elif payload.language == "zh":
+        values = [
+            {"setting": f"采用{style}风格的日常场景；{lighting}。", "subject": product, "action": "从引发好奇的细节开始，不急于下结论。", "emotion": mood, "camera": f"{style_camera}；{motion_camera}。", "transition": "有动机的干净切换", "voiceover": f"旁白方向：{message}", "cta_space": "预留空白 CTA 区域，不生成可读文字或水印。"},
+            {"setting": f"更明亮、清晰的场景用于展示可审核流程；保持{lighting}。", "subject": product, "action": "揭示一项可审核的细节或动作。", "emotion": f"清晰、自信且{mood}", "camera": f"{style_camera}；{motion_camera}。", "transition": transitions, "voiceover": "旁白方向：描述观众可以观察到的内容，避免绝对化声明。", "cta_space": "保持构图干净，为后续编辑保留 CTA 空间。"},
+            {"setting": f"平静的最终画面，留出充足呼吸空间，保持{style}质感。", "subject": product, "action": "保持稳定的视觉结果，而不是声称已生成输出或承诺。", "emotion": f"平静、有目的且{mood}", "camera": f"{style_camera}；稳定锁定主画面。", "transition": "最终停留", "voiceover": "旁白方向：信息获得批准后，邀请观众进一步了解。", "cta_space": "CTA 画面完全留白；没有虚构文字、logo 或水印。"},
         ]
     else:
         values = [
-            {"setting": f"Everyday context in a {style} treatment", "subject": product, "action": "Open on a curious detail without making a conclusion yet.", "emotion": "observant and relatable", "camera": motion["camera"], "transition": "motivated clean cut", "voiceover": f"Voiceover direction: {message}", "cta_space": "Leave empty CTA space; do not generate readable text or watermark."},
-            {"setting": "A brighter, clearer context for a reviewable workflow illustration", "subject": product, "action": "Reveal one detail or action that can be reviewed.", "emotion": "clear and confident", "camera": motion["camera"], "transition": motion["transitions"], "voiceover": "Voiceover direction: describe what can be observed and avoid absolute claims.", "cta_space": "Keep the composition clean and reserve CTA space for later editorial work."},
-            {"setting": "A calm final frame with adequate breathing room", "subject": product, "action": "Hold a stable visual result rather than asserting an output or promise.", "emotion": "calm and deliberate", "camera": "stable locked hero frame", "transition": "final hold", "voiceover": "Voiceover direction: invite further review after the information is approved.", "cta_space": "CTA frame remains completely empty; no invented text, logo or watermark."},
+            {"setting": f"Everyday context in a {style} treatment; {lighting}.", "subject": product, "action": "Open on a curious detail without making a conclusion yet.", "emotion": mood, "camera": f"{style_camera}; {motion_camera}.", "transition": "motivated clean cut", "voiceover": f"Voiceover direction: {message}", "cta_space": "Leave empty CTA space; do not generate readable text or watermark."},
+            {"setting": f"A brighter, clearer context for a reviewable workflow illustration; retain {lighting}.", "subject": product, "action": "Reveal one detail or action that can be reviewed.", "emotion": f"clear, confident and {mood}", "camera": f"{style_camera}; {motion_camera}.", "transition": transitions, "voiceover": "Voiceover direction: describe what can be observed and avoid absolute claims.", "cta_space": "Keep the composition clean and reserve CTA space for later editorial work."},
+            {"setting": f"A calm final frame with adequate breathing room in a {style} treatment.", "subject": product, "action": "Hold a stable visual result rather than asserting an output or promise.", "emotion": f"calm, deliberate and {mood}", "camera": f"{style_camera}; stable locked hero frame.", "transition": "final hold", "voiceover": "Voiceover direction: invite further review after the information is approved.", "cta_space": "CTA frame remains completely empty; no invented text, logo or watermark."},
         ]
     boundaries = ((0, first_end), (first_end, second_end), (second_end, payload.video_duration_variant))
     return [
@@ -3074,28 +3179,29 @@ def _cinematic_ad_storyboard(payload: CinematicAdConceptRequest, motion: dict[st
 def _cinematic_ad_image_prompts(payload: CinematicAdConceptRequest) -> list[dict[str, Any]]:
     product = payload.product
     style = _cinematic_ad_label(CINEMATIC_AD_STYLES[payload.style], payload.language)
-    labels = ("Cảnh mở", "Cảnh hé lộ", "Cảnh kết") if payload.language == "vi" else ("Opening scene", "Reveal scene", "Closing scene")
-    bodies = (
-        "bối cảnh đời thường, ánh sáng có chủ đích, chi tiết gần gũi",
-        "chi tiết sản phẩm hoặc quy trình rõ ràng, bố cục sạch, chuyển động được gợi ý bằng hình ảnh",
-        "khung hero ổn định, nền gọn và vùng CTA trống cho biên tập sau",
-    ) if payload.language == "vi" else (
-        "everyday context, deliberate light and a relatable close detail",
-        "a clear product or workflow detail, clean composition and implied motivated movement",
-        "a stable hero frame, tidy background and empty CTA space for later editorial work",
-    )
-    negative = (
-        "watermark, chữ tự phát hoặc sai chính tả, logo không được cấp quyền, khuôn mặt/chủ thể biến dạng, hình học rung, claim chưa kiểm chứng"
-        if payload.language == "vi"
-        else "watermark, invented or misspelled readable text, unauthorized logo, distorted face or subject, unstable geometry, unverified claim"
-    )
+    lighting = _cinematic_ad_style_text(payload, "lighting")
+    camera = _cinematic_ad_style_text(payload, "camera")
+    mood = _cinematic_ad_style_text(payload, "mood")
+    if payload.language == "vi":
+        labels = ("Cảnh mở", "Cảnh hé lộ", "Cảnh kết")
+        bodies = ("bối cảnh đời thường và chi tiết gần gũi", "chi tiết sản phẩm hoặc quy trình rõ ràng, bố cục sạch", "khung hero ổn định, nền gọn và vùng CTA trống cho biên tập sau")
+        negative = "watermark, chữ tự phát hoặc sai chính tả, logo không được cấp quyền, khuôn mặt/chủ thể biến dạng, hình học rung, claim chưa kiểm chứng"
+        build_prompt = lambda body: f"Hướng visual để biên tập cho {product}: {body}; phong cách {style}; ánh sáng {lighting}; camera {camera}; cảm xúc {mood}; giữ chủ thể nhất quán, chừa vùng CTA trống, không sinh chữ đọc được hoặc watermark."
+    elif payload.language == "zh":
+        labels = ("开场画面", "揭示画面", "收尾画面")
+        bodies = ("日常场景和容易共鸣的近景细节", "清晰的产品或流程细节与干净构图", "稳定主画面、整洁背景与供后续编辑使用的空白 CTA 空间")
+        negative = "水印、虚构或拼写错误的可读文字、未授权 logo、变形的人脸或主体、不稳定几何、未经验证的声明"
+        build_prompt = lambda body: f"{product}的编辑视觉方向：{body}；{style}风格；光线为{lighting}；镜头为{camera}；情绪为{mood}；保持主体一致，预留空白 CTA 区域，不生成可读文字或水印。"
+    else:
+        labels = ("Opening scene", "Reveal scene", "Closing scene")
+        bodies = ("everyday context and a relatable close detail", "a clear product or workflow detail with clean composition", "a stable hero frame, tidy background and empty CTA space for later editorial work")
+        negative = "watermark, invented or misspelled readable text, unauthorized logo, distorted face or subject, unstable geometry, unverified claim"
+        build_prompt = lambda body: f"Editorial visual direction for {product}: {body}; {style} treatment; lighting {lighting}; camera {camera}; mood {mood}; keep the subject consistent, reserve empty CTA space, no invented readable text or watermark."
     return [
         {
             "index": index,
             "label": labels[index - 1],
-            "prompt": f"Hướng visual để biên tập cho {product}: {bodies[index - 1]}, phong cách {style}, giữ chủ thể nhất quán, chừa vùng CTA trống, không sinh chữ đọc được hoặc watermark."
-            if payload.language == "vi"
-            else f"Editorial visual direction for {product}: {bodies[index - 1]}, {style} treatment, keep the subject consistent, reserve empty CTA space, no invented readable text or watermark.",
+            "prompt": build_prompt(bodies[index - 1]),
             "negative_prompt": negative,
         }
         for index in range(1, 4)
@@ -3105,17 +3211,25 @@ def _cinematic_ad_image_prompts(payload: CinematicAdConceptRequest) -> list[dict
 def _cinematic_ad_video_prompts(payload: CinematicAdConceptRequest, motion: dict[str, Any]) -> list[dict[str, Any]]:
     product = payload.product
     style = _cinematic_ad_label(CINEMATIC_AD_STYLES[payload.style], payload.language)
-    negative = (
-        "flicker, khuôn mặt/chủ thể biến dạng, chữ tự phát, watermark, hành động không khả thi, thay đổi logo/bao bì, claim chưa kiểm chứng"
-        if payload.language == "vi"
-        else "flicker, distorted face or subject, invented text, watermark, implausible action, altered logo or packaging, unverified claim"
-    )
+    lighting = _cinematic_ad_style_text(payload, "lighting")
+    style_camera = _cinematic_ad_style_text(payload, "camera")
+    mood = _cinematic_ad_style_text(payload, "mood")
+    timeline = _cinematic_ad_motion_text(motion, "timeline", payload.language)
+    motion_camera = _cinematic_ad_motion_text(motion, "camera", payload.language)
+    shot_direction = _cinematic_ad_motion_text(motion, "shot_direction", payload.language)
+    if payload.language == "vi":
+        negative = "flicker, khuôn mặt/chủ thể biến dạng, chữ tự phát, watermark, hành động không khả thi, thay đổi logo/bao bì, claim chưa kiểm chứng"
+        build_prompt = lambda duration: f"Hướng motion video {duration}s để biên tập cho {product}: phong cách {style}; ánh sáng {lighting}; camera phong cách {style_camera}; cảm xúc {mood}; {timeline}; camera chuyển động {motion_camera}; {shot_direction}; giữ chủ thể ổn định, chừa vùng CTA trống; chỉ là kế hoạch văn bản, không tạo output."
+    elif payload.language == "zh":
+        negative = "闪烁、变形的人脸或主体、虚构文字、水印、不合理动作、改变 logo 或包装、未经验证的声明"
+        build_prompt = lambda duration: f"{product}的{duration}秒视频运动编辑方向：{style}风格；光线为{lighting}；风格镜头为{style_camera}；情绪为{mood}；{timeline}；运动镜头为{motion_camera}；{shot_direction}；保持主体稳定并预留 CTA 空间；仅是文本计划，不生成输出。"
+    else:
+        negative = "flicker, distorted face or subject, invented text, watermark, implausible action, altered logo or packaging, unverified claim"
+        build_prompt = lambda duration: f"Editorial {duration}s video motion direction for {product}: {style} treatment; lighting {lighting}; style camera {style_camera}; mood {mood}; {timeline}; motion camera {motion_camera}; {shot_direction}; keep the subject stable, reserve empty CTA space; planning text only, no generated output."
     return [
         {
             "duration_seconds": duration,
-            "prompt": f"Hướng motion video {duration}s để biên tập cho {product}: phong cách {style}; {motion['timeline']}; camera {motion['camera']}; {motion['shot_direction']}; giữ chủ thể ổn định, chừa vùng CTA trống; planning text only, no generated output."
-            if payload.language == "en"
-            else f"Hướng motion video {duration}s để biên tập cho {product}: phong cách {style}; {motion['timeline']}; camera {motion['camera']}; {motion['shot_direction']}; giữ chủ thể ổn định, chừa vùng CTA trống; chỉ là kế hoạch văn bản, không tạo output.",
+            "prompt": build_prompt(duration),
             "negative_prompt": negative,
         }
         for duration in (5, 10, 15)
@@ -3161,6 +3275,28 @@ def _compose_cinematic_ad_concept(payload: CinematicAdConceptRequest) -> dict[st
             "Xác nhận quyền sử dụng thương hiệu, logo, con người, địa điểm và mọi reference trước khi dùng.",
             "Giữ CTA ở bước biên tập riêng; không dựa vào text, logo hoặc kết quả được sinh tự động.",
         ]
+    elif payload.language == "zh":
+        title = f"广告概念：{_excerpt(payload.product, 180)}"
+        topic = f"面向{payload.product}的{style_label}广告概念；待审核信息：{payload.message}。主题：{theme_label}。"
+        shot_list = [
+            "受控的产品或主体近景细节。",
+            "保留故事线的广角场景镜头。",
+            "用于展示一个清晰动作的肩后或观察式构图。",
+            "根据运动方案进行克制推进或环绕。",
+            "有动机的匹配剪辑或转场，不叠加随机特效。",
+            "干净的最终画面与空白 CTA 空间，不生成文字或水印。",
+        ]
+        cautions = [
+            "这是文字概念与提示词方向；不会创建图片、视频、音频、预览、输出或任务。",
+            "每一项声明、数字、比较、价格、品牌、logo、人物和地点都需要在使用前单独审核。",
+        ]
+        if payload.message_theme == "before_after":
+            cautions.append("只有具备证据和发布权时才能使用前后对比；此概念不会验证其中任何一项。")
+        review = [
+            "在任何公开发布前审核信息与每项声明的准确性。",
+            "确认品牌、logo、人物、地点和每一项参考资料的使用权。",
+            "将 CTA 保留为独立编辑步骤；不要依赖生成的文字、logo 或结果。",
+        ]
     else:
         title = f"Advertising concept: {_excerpt(payload.product, 180)}"
         topic = f"{style_label} advertising concept for {payload.product}; message to review: {payload.message}. Theme: {theme_label}."
@@ -3204,17 +3340,17 @@ def _compose_cinematic_ad_concept(payload: CinematicAdConceptRequest) -> dict[st
         "video_prompts": _cinematic_ad_video_prompts(payload, motion),
         "motion_plan": {
             "id": str(motion["id"]),
-            "title": str(motion["title"][payload.language]),
-            "timeline": str(motion["timeline"]),
-            "camera": str(motion["camera"]),
-            "transitions": str(motion["transitions"]),
-            "shot_direction": str(motion["shot_direction"]),
+            "title": _cinematic_ad_text(motion, "title", payload.language),
+            "timeline": _cinematic_ad_motion_text(motion, "timeline", payload.language),
+            "camera": _cinematic_ad_motion_text(motion, "camera", payload.language),
+            "transitions": _cinematic_ad_motion_text(motion, "transitions", payload.language),
+            "shot_direction": _cinematic_ad_motion_text(motion, "shot_direction", payload.language),
         },
         "music_direction": {
             "id": payload.music_choice,
-            "label": str(music["label"][payload.language]),
-            "direction": str(music["direction"][payload.language]),
-            "ai_music_prompt": str(music["ai_music_prompt"][payload.language]),
+            "label": _cinematic_ad_text(music, "label", payload.language),
+            "direction": _cinematic_ad_text(music, "direction", payload.language),
+            "ai_music_prompt": _cinematic_ad_music_prompt(payload, music),
         },
         "cautions": cautions,
         "review_before_use": review,

@@ -16,7 +16,7 @@
     {
       "file": "scripts/migration/audit_bot_to_web.py",
       "kind": "function",
-      "line": 1490,
+      "line": 1607,
       "target": "_job_lock_recovery_source_review_dispositions"
     },
     {
@@ -179,12 +179,12 @@
   "callback_data": [
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3827,
+      "line": 3944,
       "token": "<dynamic:callback_data>"
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 3835,
+      "line": 3952,
       "token": "<dynamic:callback_data>"
     }
   ],
@@ -226,7 +226,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 7665,
+      "line": 8039,
       "operation": "UPDATE",
       "table": "active"
     },
@@ -292,7 +292,7 @@
     },
     {
       "file": "scripts/migration/audit_bot_to_web.py",
-      "line": 5478,
+      "line": 5854,
       "operation": "UPDATE",
       "table": "choices"
     },
@@ -2872,13 +2872,13 @@
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 4976,
+      "line": 5112,
       "operation": "DELETE FROM",
       "table": "web_idempotency"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5009,
+      "line": 5145,
       "operation": "INSERT INTO",
       "table": "web_idempotency"
     },
@@ -4960,7 +4960,7 @@
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5302,
+      "line": 5438,
       "operation": "INSERT INTO",
       "table": "web_video_plan_versions"
     },
@@ -4972,13 +4972,13 @@
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5272,
+      "line": 5408,
       "operation": "INSERT INTO",
       "table": "web_video_plans"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5287,
+      "line": 5423,
       "operation": "UPDATE",
       "table": "web_video_plans"
     },
@@ -4990,7 +4990,7 @@
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5340,
+      "line": 5476,
       "operation": "INSERT INTO",
       "table": "web_video_scene_versions"
     },
@@ -5002,43 +5002,43 @@
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5309,
+      "line": 5445,
       "operation": "INSERT INTO",
       "table": "web_video_scenes"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5325,
+      "line": 5461,
       "operation": "UPDATE",
       "table": "web_video_scenes"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5383,
+      "line": 5519,
       "operation": "UPDATE",
       "table": "web_video_scenes"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5388,
+      "line": 5524,
       "operation": "UPDATE",
       "table": "web_video_scenes"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 6694,
+      "line": 6830,
       "operation": "UPDATE",
       "table": "web_video_scenes"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 6760,
+      "line": 6896,
       "operation": "UPDATE",
       "table": "web_video_scenes"
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 6765,
+      "line": 6901,
       "operation": "UPDATE",
       "table": "web_video_scenes"
     },
@@ -5050,7 +5050,7 @@
     },
     {
       "file": "copyfast_video_studio.py",
-      "line": 5395,
+      "line": 5531,
       "operation": "INSERT INTO",
       "table": "web_video_studio_events"
     },
@@ -6808,7 +6808,7 @@
         "customer_api.py",
         "customer_app.html"
       ],
-      "occurrences": 907,
+      "occurrences": 908,
       "provider": "PayOS"
     },
     {
@@ -7036,7 +7036,7 @@
         "copyfast_subtitle_asset_operations.py",
         "copyfast_subtitle_workspace.py"
       ],
-      "occurrences": 2261,
+      "occurrences": 2269,
       "provider": "Telegram"
     }
   ],
@@ -8880,7 +8880,7 @@
     {
       "endpoint": "list_events",
       "file": "copyfast_video_studio.py",
-      "line": 6788,
+      "line": 6924,
       "methods": [
         "GET"
       ],
@@ -9825,7 +9825,7 @@
     {
       "endpoint": "list_plans",
       "file": "copyfast_video_studio.py",
-      "line": 6345,
+      "line": 6481,
       "methods": [
         "GET"
       ],
@@ -9834,7 +9834,7 @@
     {
       "endpoint": "create_plan",
       "file": "copyfast_video_studio.py",
-      "line": 6382,
+      "line": 6518,
       "methods": [
         "POST"
       ],
@@ -9843,7 +9843,7 @@
     {
       "endpoint": "get_plan",
       "file": "copyfast_video_studio.py",
-      "line": 6406,
+      "line": 6542,
       "methods": [
         "GET"
       ],
@@ -9852,7 +9852,7 @@
     {
       "endpoint": "update_plan",
       "file": "copyfast_video_studio.py",
-      "line": 6416,
+      "line": 6552,
       "methods": [
         "PATCH"
       ],
@@ -9861,7 +9861,7 @@
     {
       "endpoint": "plan_estimate",
       "file": "copyfast_video_studio.py",
-      "line": 6776,
+      "line": 6912,
       "methods": [
         "GET"
       ],
@@ -9870,7 +9870,7 @@
     {
       "endpoint": "set_plan_lifecycle",
       "file": "copyfast_video_studio.py",
-      "line": 6459,
+      "line": 6595,
       "methods": [
         "POST"
       ],
@@ -9879,7 +9879,7 @@
     {
       "endpoint": "restore_plan_version",
       "file": "copyfast_video_studio.py",
-      "line": 6490,
+      "line": 6626,
       "methods": [
         "POST"
       ],
@@ -9888,7 +9888,7 @@
     {
       "endpoint": "create_scene",
       "file": "copyfast_video_studio.py",
-      "line": 6533,
+      "line": 6669,
       "methods": [
         "POST"
       ],
@@ -9897,7 +9897,7 @@
     {
       "endpoint": "reorder_scenes",
       "file": "copyfast_video_studio.py",
-      "line": 6726,
+      "line": 6862,
       "methods": [
         "POST"
       ],
@@ -9906,7 +9906,7 @@
     {
       "endpoint": "update_scene",
       "file": "copyfast_video_studio.py",
-      "line": 6577,
+      "line": 6713,
       "methods": [
         "PATCH"
       ],
@@ -9915,7 +9915,7 @@
     {
       "endpoint": "archive_scene",
       "file": "copyfast_video_studio.py",
-      "line": 6708,
+      "line": 6844,
       "methods": [
         "POST"
       ],
@@ -9924,7 +9924,7 @@
     {
       "endpoint": "restore_scene",
       "file": "copyfast_video_studio.py",
-      "line": 6714,
+      "line": 6850,
       "methods": [
         "POST"
       ],
@@ -9933,7 +9933,7 @@
     {
       "endpoint": "restore_scene_version",
       "file": "copyfast_video_studio.py",
-      "line": 6720,
+      "line": 6856,
       "methods": [
         "POST"
       ],
@@ -10059,7 +10059,7 @@
     {
       "endpoint": "video_studio_policy",
       "file": "copyfast_video_studio.py",
-      "line": 6319,
+      "line": 6455,
       "methods": [
         "GET"
       ],
@@ -10599,7 +10599,7 @@
     {
       "endpoint": "video_studio_references",
       "file": "copyfast_video_studio.py",
-      "line": 6336,
+      "line": 6472,
       "methods": [
         "GET"
       ],
@@ -11265,7 +11265,7 @@
     {
       "endpoint": "video_studio_summary",
       "file": "copyfast_video_studio.py",
-      "line": 6310,
+      "line": 6446,
       "methods": [
         "GET"
       ],
@@ -11625,7 +11625,7 @@
     {
       "endpoint": "compose_cinematic_ad_concept",
       "file": "copyfast_video_studio.py",
-      "line": 6026,
+      "line": 6162,
       "methods": [
         "POST"
       ],
@@ -11634,7 +11634,7 @@
     {
       "endpoint": "save_cinematic_ad_concept_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 6054,
+      "line": 6190,
       "methods": [
         "POST"
       ],
@@ -11661,7 +11661,7 @@
     {
       "endpoint": "compose_image_motion_planner",
       "file": "copyfast_video_studio.py",
-      "line": 5733,
+      "line": 5869,
       "methods": [
         "POST"
       ],
@@ -11670,7 +11670,7 @@
     {
       "endpoint": "image_motion_planner_references",
       "file": "copyfast_video_studio.py",
-      "line": 5712,
+      "line": 5848,
       "methods": [
         "GET"
       ],
@@ -11679,7 +11679,7 @@
     {
       "endpoint": "save_image_motion_planner_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 5766,
+      "line": 5902,
       "methods": [
         "POST"
       ],
@@ -11688,7 +11688,7 @@
     {
       "endpoint": "compose_long_form_roadmap",
       "file": "copyfast_video_studio.py",
-      "line": 8036,
+      "line": 8172,
       "methods": [
         "POST"
       ],
@@ -11697,7 +11697,7 @@
     {
       "endpoint": "save_long_form_roadmap_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 8059,
+      "line": 8195,
       "methods": [
         "POST"
       ],
@@ -11760,7 +11760,7 @@
     {
       "endpoint": "create_video_prompt_plan",
       "file": "copyfast_video_studio.py",
-      "line": 5556,
+      "line": 5692,
       "methods": [
         "POST"
       ],
@@ -11769,7 +11769,7 @@
     {
       "endpoint": "save_video_prompt_plan_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 5590,
+      "line": 5726,
       "methods": [
         "POST"
       ],
@@ -11787,7 +11787,7 @@
     {
       "endpoint": "compose_reference_format_planner",
       "file": "copyfast_video_studio.py",
-      "line": 5899,
+      "line": 6035,
       "methods": [
         "POST"
       ],
@@ -11796,7 +11796,7 @@
     {
       "endpoint": "reference_format_planner_references",
       "file": "copyfast_video_studio.py",
-      "line": 5878,
+      "line": 6014,
       "methods": [
         "GET"
       ],
@@ -11805,7 +11805,7 @@
     {
       "endpoint": "save_reference_format_planner_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 5923,
+      "line": 6059,
       "methods": [
         "POST"
       ],
@@ -11814,7 +11814,7 @@
     {
       "endpoint": "compose_script_to_screen_planner",
       "file": "copyfast_video_studio.py",
-      "line": 9403,
+      "line": 9539,
       "methods": [
         "POST"
       ],
@@ -11823,7 +11823,7 @@
     {
       "endpoint": "save_script_to_screen_planner_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 9424,
+      "line": 9560,
       "methods": [
         "POST"
       ],
@@ -11832,7 +11832,7 @@
     {
       "endpoint": "compose_self_shot_scene_planner",
       "file": "copyfast_video_studio.py",
-      "line": 8656,
+      "line": 8792,
       "methods": [
         "POST"
       ],
@@ -11841,7 +11841,7 @@
     {
       "endpoint": "save_self_shot_scene_planner_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 8686,
+      "line": 8822,
       "methods": [
         "POST"
       ],
@@ -11850,7 +11850,7 @@
     {
       "endpoint": "compose_storyboard_prompt_pack",
       "file": "copyfast_video_studio.py",
-      "line": 6167,
+      "line": 6303,
       "methods": [
         "POST"
       ],
@@ -11859,7 +11859,7 @@
     {
       "endpoint": "save_storyboard_composer_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 6195,
+      "line": 6331,
       "methods": [
         "POST"
       ],
@@ -11868,7 +11868,7 @@
     {
       "endpoint": "compose_video_idea_planner",
       "file": "copyfast_video_studio.py",
-      "line": 7361,
+      "line": 7497,
       "methods": [
         "POST"
       ],
@@ -11877,7 +11877,7 @@
     {
       "endpoint": "save_video_idea_planner_to_video_plan",
       "file": "copyfast_video_studio.py",
-      "line": 7382,
+      "line": 7518,
       "methods": [
         "POST"
       ],
@@ -12787,8 +12787,8 @@
   "schema_version": "1.7",
   "source_files_discovered": 289,
   "source_files_scanned": 289,
-  "source_fingerprint_sha256": "426076cc7cfce3b2cdf5794e5f71b45b360618a3d63753d5a423a4a289d07376",
-  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast89-guide-center-web-native",
+  "source_fingerprint_sha256": "619d5910f5c0509cad65a1fd054e7b7a7a2dde1dff84abc836d845b322b3f749",
+  "source_root": "C:\\Users\\toann\\Documents\\Codex\\2026-07-10\\1-ngu-n-ch-nh-v\\work\\toanaas-webapp-copyfast90-adconcept-web-native-flow",
   "ui_path_references": [
     {
       "file": "templates/dashboard.html",
