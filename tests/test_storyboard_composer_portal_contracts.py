@@ -36,6 +36,12 @@ def _integration_action() -> str:
     return INTEGRATION[start:end]
 
 
+def _integration_save_action() -> str:
+    start = INTEGRATION.index('if (action === "storyboard-composer-save-plan")')
+    end = INTEGRATION.index('if (action === "video-studio-refresh")', start)
+    return INTEGRATION[start:end]
+
+
 def test_storyboard_composer_is_a_native_private_video_route_and_catalog_feature() -> None:
     assert 'customerPage("/video-studio/storyboard-composer", "Storyboard Prompt Pack Composer"' in PORTAL
     assert 'layout: "storyboard-composer", type: "storyboard-composer"' in PORTAL
@@ -129,7 +135,10 @@ def test_storyboard_composer_uses_only_signed_csrf_native_api_without_browser_pe
     assert '"/video-studio/storyboard-composer": account && storyboardComposerEnabled ? "ready" : "guarded"' in INTEGRATION
     assert 'api("/video-studio/tools/storyboard-composer", {' in INTEGRATION
     assert "storyboardComposerResult: data" in INTEGRATION
-    assert "storyboardComposerResult: {}," in INTEGRATION
+    # The current native form must remain mounted on a failed compose. The
+    # old receipt is locked by a DOM-only pending fence, not erased first.
+    assert "Do not reset/mount the form before the request settles" in INTEGRATION
+    assert "storyboardComposerComposePendingRequestEpoch = requestEpoch" in INTEGRATION
 
     action = _integration_action().lower()
     for forbidden in (
@@ -188,6 +197,56 @@ def test_storyboard_composer_save_is_explicit_content_free_and_tab_bound() -> No
         "generation_started",
     ):
         assert boundary in receipt
+
+
+def test_storyboard_composer_fences_stale_form_edits_and_locks_durable_save_until_receipt() -> None:
+    """A changed brief cannot save an old pack or hide an acknowledged plan."""
+
+    compose = _integration_action()
+    save = _integration_save_action()
+    assert "storyboardComposerSessionEpoch" in INTEGRATION
+    assert "storyboardComposerComposeRequestEpoch" in INTEGRATION
+    assert "storyboardComposerSaveRequestEpoch" in INTEGRATION
+    assert "storyboardComposerComposePendingRequestEpoch" in INTEGRATION
+    assert "storyboardComposerSavePendingRequestEpoch" in INTEGRATION
+    assert "function storyboardComposerRequestIsCurrent" in INTEGRATION
+    assert "function storyboardComposerCurrentFormFields" in INTEGRATION
+    assert "function storyboardComposerPlanSaveSourceMatchesCurrentFields" in INTEGRATION
+    assert "function reconcileStoryboardComposerSaveControls" in INTEGRATION
+    assert "storyboardComposerPlanSaveSourceMatchesCurrentFields(source, fields)" in save
+    assert "storyboardComposerSavePendingRequestEpoch = requestEpoch;" in save
+    assert save.index("storyboardComposerSavePendingRequestEpoch = requestEpoch;") < save.index('api("/video-studio/tools/storyboard-composer/save", {')
+    assert 'form.querySelectorAll("input, select, textarea, button")' in INTEGRATION
+    assert "Video Plan đang được lưu. Brief và lựa chọn hiện tại được khóa" in compose
+    assert "toanaas:storyboard-composer-draft-edited" in INTEGRATION
+    assert "never discard a receipt" in INTEGRATION
+
+    assert 'id="storyboard-composer-form"' in PORTAL
+    assert 'data-portal-form-id="storyboard-composer-form"' in PORTAL
+    assert 'data-storyboard-composer-stale-note' in PORTAL
+    assert "function hydrateStoryboardComposerForm" in PORTAL
+    assert "function synchronizeStoryboardComposerDraftFreshness" in PORTAL
+    assert "function markStoryboardComposerDraftEdited" in PORTAL
+    assert "data-storyboard-composer-rendered-result" in PORTAL
+    assert "data-storyboard-composer-saved-receipt" in PORTAL
+    assert "renderStoryboardComposerResult(context.storyboardComposerResult, context.storyboardComposerSaveSource, context.storyboardComposerSaveReceipt" in PORTAL
+    assert "alreadySaved" in PORTAL
+    assert ".portal-storyboard-composer-stale-note" in CSS
+    assert "[data-storyboard-composer-rendered-result][data-stale]" in CSS
+
+
+def test_storyboard_composer_freshness_normalizes_native_select_scalars_before_comparing() -> None:
+    """A remounted HTML form returns select values as strings, not stale input."""
+
+    start = PORTAL.index("function storyboardComposerFormMatchesSavedSource(form)")
+    end = PORTAL.index("function hydrateStoryboardComposerForm(form)", start)
+    freshness = PORTAL[start:end]
+    assert "function storyboardComposerFormInteger(value)" in freshness
+    assert "function normalizeStoryboardComposerFormSaveSource(raw)" in freshness
+    assert "normalizeStoryboardComposerFormSaveSource(collectFormFields(form))" in freshness
+    assert "duration_seconds: storyboardComposerFormInteger(source.duration_seconds)" in freshness
+    assert "idea_choice: storyboardComposerFormInteger(source.idea_choice)" in freshness
+    assert "Number.isSafeInteger(parsed)" in freshness
 
 
 def test_storyboard_composer_backend_stays_request_only_and_never_claims_delivery() -> None:

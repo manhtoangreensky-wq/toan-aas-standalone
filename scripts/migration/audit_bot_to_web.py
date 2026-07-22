@@ -605,6 +605,85 @@ VPRODUCT_RUNTIME_OR_PAYMENT_PREFIXES = (
     "vproduct|prompt_video_create",
 )
 
+# Frozen baseline b29d0d4: Storypack is a deterministic Telegram planning
+# conversation. Its topic/brief/concept/prompt choices live in short-lived
+# ``USER_PENDING`` / latest-plan memory, while ``save`` writes a Bot-local
+# SQLite pack. A signed Web composer may start fresh from the finite template
+# menu only; it never receives the callback, Telegram identity, pending text,
+# selected direction, prompt bundle, Bot pack ID or guarded media state.
+STORYPACK_ROUTE = "/video-studio/storyboard-composer"
+STORYPACK_FRESH_WEB_COMPOSER_CALLBACKS = frozenset(
+    {
+        "storypack|start",
+        "storypack|template|product_ad",
+        "storypack|template|cinematic_story",
+        "storypack|template|tiktok_reels",
+        "storypack|template|tutorial",
+        "storypack|template|shop_affiliate",
+        "storypack|template|custom",
+    }
+)
+STORYPACK_BOT_STATE_CALLBACKS = frozenset(
+    {
+        "storypack|back_topic",
+        "storypack|back_brief",
+        "storypack|back_concepts",
+        "storypack|back_detail",
+        "storypack|brief_custom",
+        "storypack|edit_requirement",
+        "storypack|generate_concepts",
+        "storypack|regenerate_concepts",
+        "storypack|refresh",
+        "storypack|detail",
+        "storypack|save",
+        "storypack|lock",
+    }
+)
+STORYPACK_BOT_STATE_PREFIXES = (
+    "storypack|set_platform|",
+    "storypack|set_ratio|",
+    "storypack|set_duration|",
+    "storypack|set_style|",
+    "storypack|set_goal|",
+    "storypack|concept|",
+)
+STORYPACK_PROMPT_OR_DELIVERY_CALLBACKS = frozenset(
+    {
+        "storypack|image_prompts",
+        "storypack|video_prompts",
+        "storypack|meta_ai_prompt",
+        "storypack|copy_plan",
+        "storypack|copy_meta_ai_prompt",
+        "storypack|regenerate_prompts",
+        "storypack|regenerate_meta_ai_prompt",
+    }
+)
+STORYPACK_PROMPT_OR_DELIVERY_PREFIXES = (
+    "storypack|copy_",
+    "storypack|regenerate_",
+    "storypack|image_prompt|",
+    "storypack|video_prompt|",
+    "storypack|meta_ai_prompt|",
+)
+STORYPACK_RUNTIME_OR_MEDIA_CALLBACKS = frozenset(
+    {
+        "storypack|create_or_upload_images",
+        "storypack|upload_images_guard",
+        "storypack|image_keyframes",
+        "storypack|preview",
+        "storypack|create_video_ai",
+        "storypack|ai_video",
+    }
+)
+STORYPACK_RUNTIME_OR_MEDIA_PREFIXES = (
+    "storypack|create_or_upload_images|",
+    "storypack|upload_images_guard|",
+    "storypack|image_keyframes|",
+    "storypack|preview|",
+    "storypack|create_video_ai|",
+    "storypack|ai_video|",
+)
+
 # Dynamic Bot callbacks are intentionally inventory-only by default: the
 # auditor must never evaluate their formatted values.  A small number of
 # namespaces have nevertheless been manually reviewed against real signed Web
@@ -2401,8 +2480,15 @@ FALLBACK_FEATURE_DISPOSITIONS: dict[str, dict[str, Any]] = {
     "storypack": {
         "priority": "P1",
         "candidate_boundary": "/video-studio/storyboard-composer",
-        "authority": "Web-native planning",
-        "next_contract": "Map finite brief/concept/template choices to the signed storyboard composer and keep copy/export effects locally reviewable.",
+        "authority": "Fresh signed Web-native planning; Bot Storypack state/runtime remain canonical Bot context",
+        "next_contract": "Only the reviewed Storypack start/template literals may open a fresh Storyboard Composer. Bot pending/latest state, setters, concept/prompt/copy actions, Bot-local save/lock and guarded image/video/preview paths remain non-replayable until a separate signed owner-scoped Web contract exists.",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+            "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+            "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": "The frozen Bot Storypack flow stores template, topic, brief, platform, ratio, duration, style, goal, concept and prompt state in short-lived Telegram memory; save/lock use a Bot-local pack record. Its image/video/preview entries are explicitly guarded. The Web composer owns only a newly entered brief and a separately confirmed server-recomputed owner plan.",
     },
     "create_media": {
         "priority": "P1",
@@ -5659,6 +5745,213 @@ def _map_vproduct_callback(
     return _vproduct_source_review_mapping(identifier, source_kind, evidence)
 
 
+def _storypack_fresh_web_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Map a finite Storypack entry/template choice to a fresh Web composer."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": STORYPACK_ROUTE,
+        "classification": "customer",
+        "status": _mapping_status(
+            STORYPACK_ROUTE,
+            existing_routes,
+            telegram_only=False,
+            navigation_only=True,
+        ),
+        "resolution": "reviewed_storypack_fresh_web_composer_navigation",
+        "source_dispositions": (
+            "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+            "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+            "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+            "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+            "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens "
+            "a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, "
+            "setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment "
+            "or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed "
+            "owner Video Plan save."
+        ),
+        "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+        "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+        "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+        "evidence": evidence,
+    }
+
+
+def _storypack_bot_state_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Keep Bot-local Storypack conversation/persistence state out of Web."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "BOT_STORYPACK_STATE_NOT_REPLAYED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_storypack_state_requires_fresh_web_compose",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+            "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+            "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+            "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: "
+            "template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/"
+            "`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; "
+            "it begins with a fresh account-owned form and validates the visible form before its own durable save."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _storypack_prompt_or_delivery_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Guard Bot prompt/copy presentation state from becoming a Web artifact."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+            "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and "
+            "can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent "
+            "prompt, asset, download, export or delivery without a separate signed owner-scoped contract."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _storypack_runtime_guard_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Guard Bot media/video branches behind a separate Web runtime contract."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "bot_storypack_runtime_or_media_guard",
+        "source_dispositions": (
+            "TELEGRAM_IDENTITY_CONTEXT",
+            "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+            "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "The frozen Bot action enters image upload/keyframe, preview or AI-video paths that are explicitly guarded by "
+            "price/confirmation or Local Worker/ffmpeg readiness. The standalone Web planner and owner-plan save do not "
+            "expose a media upload/render/provider/job/wallet/payment/output adapter for this Bot transition."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _storypack_source_review_mapping(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+) -> dict[str, Any]:
+    """Fail closed for every Storypack spelling outside the finite review."""
+
+    return {
+        "source_kind": source_kind,
+        "source": identifier,
+        "target": "STORYPACK_SOURCE_REVIEW_REQUIRED",
+        "classification": "customer",
+        "status": "NEEDS_FEATURE_DISPOSITION",
+        "resolution": "storypack_callback_requires_source_review",
+        "source_dispositions": (
+            "BOT_STORYPACK_STATE_OR_IDENTIFIER_SOURCE_REVIEW",
+            "SOURCE_STATE_MACHINE_REQUIRED",
+            "NO_RUNTIME_CLAIM",
+        ),
+        "source_evidence": (
+            "No broad `storypack|` route override is permitted. A callback can encode a Bot template, pending text, "
+            "selected concept, prompt state, pack identifier or media transition, so it cannot inherit a Web composer, "
+            "provider, wallet, job, payment, render, asset or delivery meaning."
+        ),
+        "evidence": evidence,
+    }
+
+
+def _map_storypack_callback_template(
+    template: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any]:
+    """Disposition opaque Storypack templates before generic namespace handling."""
+
+    del existing_routes
+    token = str(template or "").casefold()
+    if token.startswith(STORYPACK_RUNTIME_OR_MEDIA_PREFIXES):
+        return _storypack_runtime_guard_mapping(template, "callback_template", evidence)
+    if token.startswith(STORYPACK_PROMPT_OR_DELIVERY_PREFIXES):
+        return _storypack_prompt_or_delivery_mapping(template, "callback_template", evidence)
+    if token.startswith(STORYPACK_BOT_STATE_PREFIXES):
+        return _storypack_bot_state_mapping(template, "callback_template", evidence)
+    return _storypack_source_review_mapping(template, "callback_template", evidence)
+
+
+def _map_storypack_callback(
+    identifier: str,
+    source_kind: str,
+    evidence: dict[str, Any],
+    existing_routes: set[str],
+) -> dict[str, Any] | None:
+    """Map finite Storypack starts only; all Bot state remains fail-closed."""
+
+    token = str(identifier or "").casefold()
+    if not token.startswith("storypack|"):
+        return None
+    if "{*}" in token:
+        return _map_storypack_callback_template(identifier, evidence, existing_routes)
+    # Only the finite entry/template literals below can navigate. State and
+    # guarded branches stay symbolic and may be normalized here because no
+    # spelling can inherit a Web action; this preserves the frozen Bot's
+    # visible `set_platform|Facebook` case without relaxing route safety.
+    if identifier in STORYPACK_FRESH_WEB_COMPOSER_CALLBACKS:
+        return _storypack_fresh_web_mapping(identifier, source_kind, evidence, existing_routes)
+    if token in STORYPACK_BOT_STATE_CALLBACKS or token.startswith(STORYPACK_BOT_STATE_PREFIXES):
+        return _storypack_bot_state_mapping(identifier, source_kind, evidence)
+    if token in STORYPACK_RUNTIME_OR_MEDIA_CALLBACKS or token.startswith(STORYPACK_RUNTIME_OR_MEDIA_PREFIXES):
+        return _storypack_runtime_guard_mapping(identifier, source_kind, evidence)
+    if token in STORYPACK_PROMPT_OR_DELIVERY_CALLBACKS or token.startswith(STORYPACK_PROMPT_OR_DELIVERY_PREFIXES):
+        return _storypack_prompt_or_delivery_mapping(identifier, source_kind, evidence)
+    return _storypack_source_review_mapping(identifier, source_kind, evidence)
+
+
 def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], existing_routes: set[str]) -> dict[str, Any]:
     token = identifier.casefold()
     cinematic_ad_concept_mapping = _map_cinematic_ad_concept_callback(identifier, source_kind, evidence, existing_routes)
@@ -5667,6 +5960,9 @@ def _map_callback(identifier: str, source_kind: str, evidence: dict[str, Any], e
     vproduct_mapping = _map_vproduct_callback(identifier, source_kind, evidence, existing_routes)
     if vproduct_mapping is not None:
         return vproduct_mapping
+    storypack_mapping = _map_storypack_callback(identifier, source_kind, evidence, existing_routes)
+    if storypack_mapping is not None:
+        return storypack_mapping
     translation_source_mapping = _map_translation_source_intake_callback(identifier, source_kind, evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
@@ -6822,6 +7118,9 @@ def _map_callback_template(template: str, evidence: dict[str, Any], existing_rou
     vproduct_mapping = _map_vproduct_callback(template, "callback_template", evidence, existing_routes)
     if vproduct_mapping is not None:
         return vproduct_mapping
+    storypack_mapping = _map_storypack_callback(template, "callback_template", evidence, existing_routes)
+    if storypack_mapping is not None:
+        return storypack_mapping
     translation_source_mapping = _map_translation_source_intake_callback(template, "callback_template", evidence, existing_routes)
     if translation_source_mapping is not None:
         return translation_source_mapping
@@ -8127,6 +8426,43 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
             "opaque product/state/identifier values never inherit a Web route or action",
         ],
     ]
+    storypack_contract_rows = [
+        [
+            ", ".join(sorted(STORYPACK_FRESH_WEB_COMPOSER_CALLBACKS)),
+            STORYPACK_ROUTE,
+            "reviewed_storypack_fresh_web_composer_navigation",
+            "NAVIGATION_ONLY",
+            "fresh signed composer only; no Telegram callback, Bot pending/latest plan or runtime state is transferred",
+        ],
+        [
+            "storypack|set_{platform,ratio,duration,style,goal}|*, concept|*, brief_custom, edit_requirement, generate/regenerate, back*, save, lock",
+            "BOT_STORYPACK_STATE_NOT_REPLAYED",
+            "bot_storypack_state_requires_fresh_web_compose",
+            "NEEDS_FEATURE_DISPOSITION",
+            "Bot pending/latest plan, selected concept and Bot-local SQLite pack ID never become Web draft or plan state",
+        ],
+        [
+            "storypack|image_prompts, video_prompts, meta_ai_prompt, copy_*, regenerate_*",
+            "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED",
+            "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
+            "NEEDS_FEATURE_DISPOSITION",
+            "Bot prompt bundle/copy presentation is not a Web asset, export, download or delivery",
+        ],
+        [
+            "storypack|create_or_upload_images, upload_images_guard, image_keyframes, preview, create_video_ai, ai_video",
+            "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED",
+            "bot_storypack_runtime_or_media_guard",
+            "NEEDS_FEATURE_DISPOSITION",
+            "guarded image/video/preview requires a separate Web media/runtime contract; no fake job/output claim",
+        ],
+        [
+            "storypack|template|{*}, every unreviewed/case-variant storypack|* spelling",
+            "STORYPACK_SOURCE_REVIEW_REQUIRED",
+            "storypack_callback_requires_source_review",
+            "NEEDS_FEATURE_DISPOSITION",
+            "opaque Bot state/identifier values never inherit a Web route or action",
+        ],
+    ]
 
     write(
         "README.md",
@@ -8180,7 +8516,7 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         + "- [`VIDEO_PROMPT_PLANNER_CONTRACT.md`](VIDEO_PROMPT_PLANNER_CONTRACT.md) — signed, stateless deterministic video planning adapted from Bot prompt/shot rules without source-media/provider/preview/job/payment/asset/publish claims.\n"
         + "- [`CINEMATIC_AD_CONCEPT_CONTRACT.md`](CINEMATIC_AD_CONCEPT_CONTRACT.md) — signed, stateless Bot-derived cinematic ad concept, storyboard and prompt direction with no media/provider/job/payment/asset/publish claim.\n"
         + "- [`SCRIPT_TO_SCREEN_PLANNER_CONTRACT.md`](SCRIPT_TO_SCREEN_PLANNER_CONTRACT.md) and [`VPRODUCT_CALLBACK_CONTRACT.md`](VPRODUCT_CALLBACK_CONTRACT.md) — signed Script-to-Screen planning grammar and finite Task3D callback dispositions; Bot session, prompt/export and runtime branches never become browser actions.\n"
-        + "- [`STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md`](STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived storyboard prompt-pack planning with a visual canon and no render/provider/job/payment/asset/publish claim.\n"
+        + "- [`STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md`](STORYBOARD_PROMPT_PACK_COMPOSER_CONTRACT.md) and [`STORYPACK_CALLBACK_CONTRACT.md`](STORYPACK_CALLBACK_CONTRACT.md) — signed storyboard planning and finite Storypack callback dispositions; Bot pending/latest/save/prompt/runtime branches never become browser actions.\n"
         + "- [`VOICE_DIRECTION_COMPOSER_CONTRACT.md`](VOICE_DIRECTION_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived voice delivery directions with no clone/TTS/provider/audio/job/payment/asset/Telegram action.\n"
         + "- [`MUSIC_PROMPT_COMPOSER_CONTRACT.md`](MUSIC_PROMPT_COMPOSER_CONTRACT.md) — signed, stateless Bot-derived music prompt directions with no Suno/provider/audio/job/payment/asset/collection/Telegram action.\n"
         + "- [`JOB_SUPPORT_RECOVERY.md`](JOB_SUPPORT_RECOVERY.md) — safe job-to-ticket recovery handoff.\n"
@@ -8259,6 +8595,29 @@ def _render_docs(docs_dir: Path, preflight: dict[str, Any], bot: dict[str, Any],
         "No Task3D callback can create an image/video/voice/music output, provider action, quote, package, Xu mutation, "
         "PayOS action, job, render, asset, publication or delivery claim. Any future Web runtime must start from an "
         "independent owner-scoped contract and cannot replay a Bot callback or session value.\n",
+    )
+    write(
+        "STORYPACK_CALLBACK_CONTRACT.md",
+        "# Storypack callback disposition contract\n\n"
+        "The frozen baseline Storypack flow is a deterministic Telegram planning conversation backed by short-lived "
+        "pending/latest Bot memory. Only the finite start/template literals below may open a **fresh signed** Web "
+        "Storyboard Composer. That navigation transfers no callback, Telegram identity, topic, brief, setter, "
+        "selected concept, prompt bundle, Bot-local pack ID, media state, Xu, provider/job state, payment state or "
+        "Telegram delivery state. Every other branch below remains a symbolic authority boundary, never a browser "
+        "callback/action.\n\n"
+        + _markdown_table(
+            ["Frozen Bot source", "Web target/boundary", "Audit resolution", "Status", "Required boundary"],
+            storypack_contract_rows,
+        )
+        + "\n\nThe Web composer accepts only a new signed bounded form: topic, template, platform, ratio, duration, "
+        "style, goal, language, selected creative direction and optional brief. Compose is transient; durable save "
+        "sends only the original bounded source and the server recomputes one owner-only Video Plan. The browser must "
+        "compare the currently visible form with the source receipt before it acquires a save idempotency key.\n\n"
+        "No Storypack callback can create an image/video/audio output, preview, provider action, quote, package, Xu "
+        "mutation, PayOS action, job, render, asset, publication or delivery claim. The Bot handler's unknown callback "
+        "fallback is deliberately not copied: unknown or case-variant source values are rejected for review and leave "
+        "the current Web draft untouched. Any future Web runtime must start from an independent owner-scoped contract "
+        "and cannot replay a Bot callback or session value.\n",
     )
     write(
         "PAYOS_ALERT_CALLBACK_CONTRACT.md",

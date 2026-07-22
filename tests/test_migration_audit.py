@@ -3500,6 +3500,122 @@ def test_vproduct_audit_keeps_guided_prompt_runtime_and_dynamic_state_fail_close
         assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
         assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
 
+
+def test_storypack_audit_maps_only_finite_entry_and_template_literals_to_fresh_web_navigation() -> None:
+    """Storypack must not inherit a broad callback-family compatibility route."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    assert all(prefix != "storypack|" for prefix, _target, _classification in audit.DYNAMIC_CALLBACK_TEMPLATE_ROUTE_OVERRIDES)
+    assert audit.STORYPACK_FRESH_WEB_COMPOSER_CALLBACKS == {
+        "storypack|start",
+        "storypack|template|product_ad",
+        "storypack|template|cinematic_story",
+        "storypack|template|tiktok_reels",
+        "storypack|template|tutorial",
+        "storypack|template|shop_affiliate",
+        "storypack|template|custom",
+    }
+    for token in sorted(audit.STORYPACK_FRESH_WEB_COMPOSER_CALLBACKS):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "/video-studio/storyboard-composer"
+        assert mapped["classification"] == "customer"
+        assert mapped["status"] == "NAVIGATION_ONLY"
+        assert mapped["resolution"] == "reviewed_storypack_fresh_web_composer_navigation"
+        assert mapped["storypack_authority"] == "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER"
+        assert mapped["storypack_save_boundary"] == "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY"
+        assert "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    case_variant = audit._map_callback("STORYPACK|start", "callback_data", evidence, routes)
+    assert case_variant["target"] == "STORYPACK_SOURCE_REVIEW_REQUIRED"
+    assert case_variant["status"] == "NEEDS_FEATURE_DISPOSITION"
+
+
+def test_storypack_audit_keeps_bot_state_prompt_runtime_and_dynamic_values_fail_closed() -> None:
+    """Storypack state/copy/media paths cannot reset, mutate or execute through Web."""
+
+    audit = _load_audit_module()
+    evidence = {"file": "bot.py", "line": 1}
+    routes = {"/{page_path:path}"}
+
+    for token in (
+        "storypack|set_platform|facebook",
+        # The frozen Bot keyboard uses this exact capitalized label. It is a
+        # symbolic state disposition, never a fresh route/action.
+        "storypack|set_platform|Facebook",
+        "storypack|set_ratio|9:16",
+        "storypack|set_duration|30",
+        "storypack|set_style|cinematic",
+        "storypack|set_goal|introduce",
+        "storypack|concept|2",
+        "storypack|brief_custom",
+        "storypack|edit_requirement",
+        "storypack|regenerate_concepts",
+        "storypack|back_detail",
+        "storypack|save",
+        "storypack|lock",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "BOT_STORYPACK_STATE_NOT_REPLAYED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for token in (
+        "storypack|image_prompts",
+        "storypack|video_prompts",
+        "storypack|meta_ai_prompt",
+        "storypack|copy_plan",
+        "storypack|copy_meta_ai_prompt",
+        "storypack|regenerate_meta_ai_prompts",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for token in (
+        "storypack|create_or_upload_images",
+        "storypack|upload_images_guard",
+        "storypack|image_keyframes",
+        "storypack|preview",
+        "storypack|create_video_ai",
+        "storypack|ai_video",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD" in mapped["source_dispositions"]
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    for token in (
+        "storypack|template|unknown",
+        "storypack|future_unreviewed_action",
+        "storypack|start|unexpected",
+    ):
+        mapped = audit._map_callback(token, "callback_data", evidence, routes)
+        assert mapped["target"] == "STORYPACK_SOURCE_REVIEW_REQUIRED"
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
+    expected_templates = {
+        "storypack|set_platform|{*}": "BOT_STORYPACK_STATE_NOT_REPLAYED",
+        "storypack|concept|{*}": "BOT_STORYPACK_STATE_NOT_REPLAYED",
+        "storypack|copy_meta_ai_prompt|{*}": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED",
+        "storypack|create_video_ai|{*}": "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED",
+        "storypack|template|{*}": "STORYPACK_SOURCE_REVIEW_REQUIRED",
+        "storypack|{*}|{*}": "STORYPACK_SOURCE_REVIEW_REQUIRED",
+    }
+    for template, target in expected_templates.items():
+        mapped = audit._map_callback_template(template, evidence, routes)
+        assert mapped is not None
+        assert mapped["target"] == target
+        assert mapped["status"] == "NEEDS_FEATURE_DISPOSITION"
+        assert "NO_RUNTIME_CLAIM" in mapped["source_dispositions"]
+
     for token in ("vproduct|prompt_image_package|50", "vproduct|prompt_image_execute", "vproduct|prompt_video_create", "vproduct|render"):
         mapped = audit._map_callback(token, "callback_data", evidence, routes)
         assert mapped["target"] == "VPRODUCT_RUNTIME_PACKAGE_PROVIDER_OR_PAYMENT_CONTRACT_REQUIRED"

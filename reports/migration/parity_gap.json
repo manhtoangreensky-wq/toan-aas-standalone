@@ -31542,11 +31542,20 @@
         "line": 53648
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_brief",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31555,11 +31564,20 @@
         "line": 56222
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_brief",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31568,11 +31586,20 @@
         "line": 53835
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_concepts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31581,11 +31608,20 @@
         "line": 56292
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_concepts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31594,11 +31630,20 @@
         "line": 53907
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_detail",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31607,11 +31652,20 @@
         "line": 53955
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_detail",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31620,11 +31674,20 @@
         "line": 53967
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_detail",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31633,11 +31696,20 @@
         "line": 53977
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_detail",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31646,11 +31718,20 @@
         "line": 53532
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|back_topic",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31659,11 +31740,20 @@
         "line": 53529
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|brief_custom",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31672,11 +31762,20 @@
         "line": 53641
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|concept|1",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31685,11 +31784,20 @@
         "line": 53642
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|concept|2",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31698,11 +31806,20 @@
         "line": 53643
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|concept|3",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31711,11 +31828,19 @@
         "line": 53949
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|copy_meta_1",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31724,11 +31849,19 @@
         "line": 53950
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|copy_meta_2",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31737,11 +31870,19 @@
         "line": 53951
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|copy_meta_3",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31750,11 +31891,19 @@
         "line": 53829
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|copy_plan",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31762,11 +31911,19 @@
         "file": "bot.py",
         "line": 53832
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_runtime_or_media_guard",
       "source": "storypack|create_or_upload_images",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot action enters image upload/keyframe, preview or AI-video paths that are explicitly guarded by price/confirmation or Local Worker/ffmpeg readiness. The standalone Web planner and owner-plan save do not expose a media upload/render/provider/job/wallet/payment/output adapter for this Bot transition.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED"
     },
     {
       "classification": "customer",
@@ -31774,11 +31931,19 @@
         "file": "bot.py",
         "line": 53964
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_runtime_or_media_guard",
       "source": "storypack|create_or_upload_images",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot action enters image upload/keyframe, preview or AI-video paths that are explicitly guarded by price/confirmation or Local Worker/ffmpeg readiness. The standalone Web planner and owner-plan save do not expose a media upload/render/provider/job/wallet/payment/output adapter for this Bot transition.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED"
     },
     {
       "classification": "customer",
@@ -31786,11 +31951,19 @@
         "file": "bot.py",
         "line": 53831
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_runtime_or_media_guard",
       "source": "storypack|create_video_ai",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot action enters image upload/keyframe, preview or AI-video paths that are explicitly guarded by price/confirmation or Local Worker/ffmpeg readiness. The standalone Web planner and owner-plan save do not expose a media upload/render/provider/job/wallet/payment/output adapter for this Bot transition.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED"
     },
     {
       "classification": "customer",
@@ -31799,11 +31972,20 @@
         "line": 53645
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|edit_requirement",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31812,11 +31994,20 @@
         "line": 53825
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|edit_requirement",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31825,11 +32016,20 @@
         "line": 53527
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|generate_concepts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31838,11 +32038,20 @@
         "line": 53528
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|generate_concepts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31850,11 +32059,20 @@
         "file": "bot.py",
         "line": 53826
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|image_prompts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31862,11 +32080,20 @@
         "file": "bot.py",
         "line": 53973
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|image_prompts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31874,11 +32101,20 @@
         "file": "bot.py",
         "line": 53828
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|meta_ai_prompt",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/content"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31886,11 +32122,20 @@
         "file": "bot.py",
         "line": 53962
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|meta_ai_prompt",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/content"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31899,11 +32144,20 @@
         "line": 53644
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|regenerate_concepts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31912,11 +32166,20 @@
         "line": 53824
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|regenerate_concepts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31924,11 +32187,20 @@
         "file": "bot.py",
         "line": 53952
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|regenerate_meta_ai_prompts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/content"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31937,11 +32209,20 @@
         "line": 53830
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|save",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31950,11 +32231,20 @@
         "line": 53904
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|save",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31963,11 +32253,20 @@
         "line": 53963
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|save",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31976,11 +32275,20 @@
         "line": 53517
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_duration|15s",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -31989,11 +32297,20 @@
         "line": 53518
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_duration|30s",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32002,11 +32319,20 @@
         "line": 53519
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_duration|60s",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32015,11 +32341,20 @@
         "line": 53512
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_platform|Facebook",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32028,11 +32363,20 @@
         "line": 53515
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_ratio|16:9",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32041,11 +32385,20 @@
         "line": 53516
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_ratio|1:1",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32054,11 +32407,20 @@
         "line": 53514
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_ratio|9:16",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32067,11 +32429,20 @@
         "line": 53521
       },
       "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "bot_storypack_state_requires_fresh_web_compose",
       "source": "storypack|set_style|cinematic",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "BOT_STORYPACK_TEMPLATE_TOPIC_BRIEF_OR_SELECTED_CONCEPT_NOT_REPLAYED",
+        "BOT_STORYPACK_LOCAL_PACK_SAVE_NOT_REUSED",
+        "WEB_EXPLICIT_SERVER_RECOMPUTED_OWNER_PLAN_SAVE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot transition reads or mutates its per-Telegram short-lived Storypack pending/latest state: template, topic, custom brief, platform, ratio, duration, style, goal, concept or navigation. `save`/`lock` write a Bot-local storyboard pack. The Web never receives/reconstructs that state or Bot pack ID; it begins with a fresh account-owned form and validates the visible form before its own durable save.",
       "source_kind": "callback_data",
       "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "target": "BOT_STORYPACK_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32079,12 +32450,23 @@
         "file": "bot.py",
         "line": 53444
       },
-      "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storypack_fresh_web_composer_navigation",
       "source": "storypack|template|cinematic_story",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed owner Video Plan save.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+      "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+      "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+      "target": "/video-studio/storyboard-composer"
     },
     {
       "classification": "customer",
@@ -32092,12 +32474,23 @@
         "file": "bot.py",
         "line": 53448
       },
-      "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storypack_fresh_web_composer_navigation",
       "source": "storypack|template|custom",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed owner Video Plan save.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+      "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+      "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+      "target": "/video-studio/storyboard-composer"
     },
     {
       "classification": "customer",
@@ -32105,12 +32498,23 @@
         "file": "bot.py",
         "line": 53443
       },
-      "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storypack_fresh_web_composer_navigation",
       "source": "storypack|template|product_ad",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed owner Video Plan save.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+      "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+      "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+      "target": "/video-studio/storyboard-composer"
     },
     {
       "classification": "customer",
@@ -32118,12 +32522,23 @@
         "file": "bot.py",
         "line": 53447
       },
-      "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storypack_fresh_web_composer_navigation",
       "source": "storypack|template|shop_affiliate",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed owner Video Plan save.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+      "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+      "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+      "target": "/video-studio/storyboard-composer"
     },
     {
       "classification": "customer",
@@ -32131,12 +32546,23 @@
         "file": "bot.py",
         "line": 53445
       },
-      "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storypack_fresh_web_composer_navigation",
       "source": "storypack|template|tiktok_reels",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed owner Video Plan save.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+      "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+      "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+      "target": "/video-studio/storyboard-composer"
     },
     {
       "classification": "customer",
@@ -32144,12 +32570,23 @@
         "file": "bot.py",
         "line": 53446
       },
-      "fallback_family": "storypack",
-      "resolution": "unreviewed_dashboard_fallback_requires_feature_disposition",
+      "resolution": "reviewed_storypack_fresh_web_composer_navigation",
       "source": "storypack|template|tutorial",
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "FINITE_BOT_STORYPACK_ENTRY_OR_TEMPLATE_ONLY",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "WEB_COMPOSE_IS_TRANSIENT_UNTIL_EXPLICIT_OWNER_PLAN_SAVE",
+        "NO_PROVIDER_JOB_PAYMENT_WALLET_OR_BRIDGE_ACTION",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot literal only opens Storypack or chooses one finite visible template. The Web opens a fresh signed Storyboard Composer and never accepts the callback, Telegram identity, topic, note, setter, selected concept, prompt bundle, Bot pack ID, media state, Xu, quote, provider, job, payment or delivery state. The customer enters/reviews a Web brief and separately confirms a server-recomputed owner Video Plan save.",
       "source_kind": "callback_data",
-      "status": "NEEDS_FEATURE_DISPOSITION",
-      "target": "/dashboard"
+      "status": "NAVIGATION_ONLY",
+      "storypack_authority": "SIGNED_CUSTOMER_WEB_NATIVE_STORYBOARD_COMPOSER",
+      "storypack_launch_mode": "FRESH_WEB_NAVIGATION",
+      "storypack_save_boundary": "EXPLICIT_SERVER_RECOMPUTED_OWNER_VIDEO_PLAN_ONLY",
+      "target": "/video-studio/storyboard-composer"
     },
     {
       "classification": "customer",
@@ -32157,11 +32594,19 @@
         "file": "bot.py",
         "line": 53974
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_runtime_or_media_guard",
       "source": "storypack|upload_images_guard",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_PENDING_OR_LATEST_PLAN_STATE",
+        "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot action enters image upload/keyframe, preview or AI-video paths that are explicitly guarded by price/confirmation or Local Worker/ffmpeg readiness. The standalone Web planner and owner-plan save do not expose a media upload/render/provider/job/wallet/payment/output adapter for this Bot transition.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/image"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "STORYPACK_RUNTIME_OR_MEDIA_CONTRACT_REQUIRED"
     },
     {
       "classification": "customer",
@@ -32169,11 +32614,20 @@
         "file": "bot.py",
         "line": 53827
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|video_prompts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -32181,11 +32635,20 @@
         "file": "bot.py",
         "line": 53961
       },
-      "resolution": "explicit_static_route_mapping",
+      "fallback_family": "storypack",
+      "resolution": "bot_storypack_prompt_or_telegram_delivery_requires_separate_web_contract",
       "source": "storypack|video_prompts",
+      "source_dispositions": [
+        "TELEGRAM_IDENTITY_CONTEXT",
+        "BOT_STORYPACK_SELECTED_CONCEPT_OR_PROMPT_BUNDLE_STATE",
+        "BOT_TELEGRAM_COPY_OR_DELIVERY_CONTEXT",
+        "SOURCE_STATE_MACHINE_REQUIRED",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot prompt/copy branch depends on its selected concept, scene prompt or meta-prompt bundle and can present/copy text through Telegram. A Web composer cannot accept that callback or claim an equivalent prompt, asset, download, export or delivery without a separate signed owner-scoped contract.",
       "source_kind": "callback_data",
-      "status": "COPIED_GUARDED",
-      "target": "/features/video"
+      "status": "NEEDS_FEATURE_DISPOSITION",
+      "target": "BOT_STORYPACK_PROMPT_OR_DELIVERY_STATE_NOT_REPLAYED"
     },
     {
       "classification": "customer",
@@ -61070,11 +61533,11 @@
       ]
     },
     {
-      "authority": "Web-native planning",
+      "authority": "Fresh signed Web-native planning; Bot Storypack state/runtime remain canonical Bot context",
       "candidate_boundary": "/video-studio/storyboard-composer",
-      "count": 40,
+      "count": 45,
       "family": "storypack",
-      "next_contract": "Map finite brief/concept/template choices to the signed storyboard composer and keep copy/export effects locally reviewable.",
+      "next_contract": "Only the reviewed Storypack start/template literals may open a fresh Storyboard Composer. Bot pending/latest state, setters, concept/prompt/copy actions, Bot-local save/lock and guarded image/video/preview paths remain non-replayable until a separate signed owner-scoped Web contract exists.",
       "priority": "P1",
       "sample_sources": [
         "storypack|back_brief",
@@ -61090,6 +61553,13 @@
         "storypack|copy_meta_3",
         "storypack|copy_plan"
       ],
+      "source_dispositions": [
+        "FRESH_SIGNED_WEB_STORYBOARD_COMPOSER_NAVIGATION",
+        "BOT_STORYPACK_PENDING_AND_LATEST_STATE_NOT_REPLAYED",
+        "CANONICAL_MEDIA_PROVIDER_JOB_WALLET_PAYMENT_OR_RENDER_GUARD",
+        "NO_RUNTIME_CLAIM"
+      ],
+      "source_evidence": "The frozen Bot Storypack flow stores template, topic, brief, platform, ratio, duration, style, goal, concept and prompt state in short-lived Telegram memory; save/lock use a Bot-local pack record. Its image/video/preview entries are explicitly guarded. The Web composer owns only a newly entered brief and a separately confirmed server-recomputed owner plan.",
       "source_kinds": [
         "callback_data"
       ]
@@ -61376,7 +61846,7 @@
     },
     {
       "area": "dashboard_navigation_fallbacks",
-      "count": 488,
+      "count": 493,
       "detail": "Concrete Bot actions with no reviewed feature-family disposition are deliberately excluded from static Web-surface coverage and must be mapped to a Web-native workflow, a guarded runtime boundary, an admin-only contract, or TELEGRAM_ONLY. Callback dispatcher registrations are counted separately as source evidence.",
       "families": [
         {
@@ -61395,7 +61865,7 @@
           "priority": "P1"
         },
         {
-          "count": 40,
+          "count": 45,
           "family": "storypack",
           "priority": "P1"
         },
@@ -61638,12 +62108,12 @@
       "handlers/video_handler.py"
     ]
   },
-  "mapping_coverage_percent": 87.24,
+  "mapping_coverage_percent": 87.1,
   "mapping_status_counts": {
-    "COPIED_GUARDED": 2067,
+    "COPIED_GUARDED": 2056,
     "NAVIGATION_ENTRYPOINT": 2,
-    "NAVIGATION_ONLY": 750,
-    "NEEDS_FEATURE_DISPOSITION": 488,
+    "NAVIGATION_ONLY": 756,
+    "NEEDS_FEATURE_DISPOSITION": 493,
     "TELEGRAM_ONLY": 516
   },
   "metric_scope": {
@@ -61665,7 +62135,7 @@
     "Workflow-equivalence coverage is intentionally zero in a static-only audit until a separate runtime evidence suite verifies each claimed flow.",
     "TELEGRAM_ONLY records are intentionally not made browser actions without a separate product/security decision."
   ],
-  "safe_disposition_coverage_percent": 87.24,
+  "safe_disposition_coverage_percent": 87.1,
   "schema_version": "1.7",
   "source_counts": {
     "callback_data": 2824,
@@ -61675,15 +62145,15 @@
     "commands": 773,
     "conversations": 0,
     "observed_runtime_product_action_mappings": 3823,
-    "resolved_static_source_count": 3335,
+    "resolved_static_source_count": 3330,
     "telegram_transport_handler_records": 54,
     "total_audited_source_records": 3934,
     "total_mappings": 3823,
     "unreferenced_static_module_records": 57,
     "unresolved_callback_templates": 62,
-    "unresolved_source_count": 488
+    "unresolved_source_count": 493
   },
-  "static_web_surface_coverage_percent": 54.07,
+  "static_web_surface_coverage_percent": 53.78,
   "telegram_link_callback_contract": {
     "audit_mode": "static-only",
     "bot": {
